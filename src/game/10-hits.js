@@ -3,7 +3,7 @@
 //   hitbox / hurtbox：攻击框和受击框；tryHit：这一帧有没有打中；predictHit：给 AI 用的"现在出手打不打得到"
 //   applyHit：打中以后的一切（伤害、格挡、破防、击退、挑飞、顿帧、加气、秘卷效果）
 //   fighterDown / hitStopOf / hitVisual：倒地、顿帧长短、打击特效；pushApart：两人别重叠
-// 找 bug 提示：对局里按 F1 打开判定框透视（debugHitbox）能直接看到框；伤害数字不对就在 applyHit 里按顺序看各个倍率。
+// 找 bug 提示：训练场里按 F1 打开判定框透视（debugHitbox）能直接看到框；伤害数字不对就在 applyHit 里按顺序看各个倍率。
 function hitbox(f, b) {
   const x0 = f.x + f.face * b[0], x1 = f.x + f.face * b[2];
   return [Math.min(x0, x1), f.y + b[1], Math.max(x0, x1), f.y + b[3]];
@@ -46,7 +46,7 @@ function drawHitboxOverlay(fighters) {
       ctx.font = 'bold 11px monospace';
       ctx.fillStyle = isAct ? '#ff4055' : isStart ? '#ffc040' : '#60b0ff';
       ctx.textAlign = 'center';
-      const frameTxt = isAct ? `活跃帧 [${Math.round((f.t - su) * 60)}/${Math.round(ac * 60)}F]` : isStart ? `前摇 [${Math.round(f.t * 60)}/${Math.round(su * 60)}F]` : `收招 [${Math.round((f.t - su - ac) * 60)}/${Math.round(rec * 60)}F]`;
+      const frameTxt = isAct ? `活跃帧 [${Math.round((f.t - su) / STEP)}/${Math.round(ac / STEP)}F]` : isStart ? `前摇 [${Math.round(f.t / STEP)}/${Math.round(su / STEP)}F]` : `收招 [${Math.round((f.t - su - ac) / STEP)}/${Math.round(rec / STEP)}F]`;
       ctx.fillText(frameTxt, (hb[0] + hb[2]) / 2, hb[1] - 8);
     }
 
@@ -58,10 +58,10 @@ function drawHitboxOverlay(fighters) {
     if (other && f.state === 'attack' && f.move) {
       const remainingAtk = Math.max(0, (f.move.su || 0.04) + (f.move.ac || 0.08) + (f.move.rec || 0.18) - f.t);
       const foeStun = other.stun || 0;
-      const advFrames = Math.round((foeStun - remainingAtk) * 60);
+      const advFrames = Math.round((foeStun - remainingAtk) / STEP);
       advText = advFrames >= 0 ? ` +${advFrames}F 优势` : ` ${advFrames}F 劣势`;
     }
-    const stDesc = `${f.state}${f.stun > 0 ? ` (硬直 ${(f.stun * 60).toFixed(0)}F)` : ''}${advText}`;
+    const stDesc = `${f.state}${f.stun > 0 ? ` (硬直 ${Math.round(f.stun / STEP)}F)` : ''}${advText}`;
     ctx.fillStyle = advText.includes('+') ? '#70ff90' : advText.includes('-') ? '#ff7070' : '#efe8d8';
     ctx.fillText(stDesc, f.x, f.y - 125 * (f.size || 1));
   }

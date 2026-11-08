@@ -5,7 +5,13 @@ window.addEventListener('keydown', e => {
   initAudio();
   if (e.code === 'KeyM') { muted = !muted; return; }
   if (e.code === 'Backquote' || e.code === 'F2') { NET_HUD = !NET_HUD; return; }
-  if (e.code === 'F1') { debugHitbox = !debugHitbox; say(debugHitbox ? '判定框透视：开启' : '判定框透视：关闭', 0.8, 'go'); return; }
+  if (e.code === 'F1') {
+    if (M.mode === 'train' && !REPLAY.on) {
+      e.preventDefault(); debugHitbox = !debugHitbox; trainInspectRender();
+      say(debugHitbox ? '判定框透视：开启' : '判定框透视：关闭', 0.8, 'go');
+    } else debugHitbox = false;
+    return;
+  }
   if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) {
     const scr = e.target.closest('.scr');
     if ((scr && !scr.classList.contains('on')) || e.target.offsetParent === null) {

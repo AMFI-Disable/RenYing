@@ -341,11 +341,24 @@ function simTick(real) {
   if (ROLL.on && M.mode === 'net') return rollTick(real);
   if (slowmo > 0) slowmo -= real;
   if (REPLAY.on) return replayTick(real);
+  if (trainingInspectTick(real)) return;
   acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
   if (acc > STEP * 5) acc = STEP * 5;
   let n = 0;
   while (acc >= STEP && n < 5) { step(); acc -= STEP; n++; }
   if (n >= 5) acc = 0;
+}
+function trainingInspectTick(real) {
+  if (M.mode !== 'train') return false;
+  if (TRAIN.inspectPaused) { TRAIN.inspectAcc = 0; acc = 0; return true; }
+  const hz = Math.max(1, Math.min(120, Math.round(TRAIN.inspectHz || 120)));
+  if (hz >= 120) { TRAIN.inspectAcc = 0; return false; }
+  TRAIN.inspectAcc += real * hz;
+  let n = 0;
+  while (TRAIN.inspectAcc >= 1 && n < 5) { step(); TRAIN.inspectAcc -= 1; n++; }
+  if (n >= 5) TRAIN.inspectAcc = 0;
+  acc = 0;
+  return true;
 }
 // 切到后台时浏览器会停掉 requestAnimationFrame，联机对局靠这个小 Worker 接着算。
 // 只在网页藏起来的时候开着：回到前台就关掉，不然每 8 毫秒唤醒一次主线程，白白费电
@@ -815,7 +828,7 @@ function frameBody(now) {
     if (document.hidden && backgroundLocalActive() && (bgWorker || bgAiTimer)) { /* background ticker owns local simulation */ }
     else if (ROLL.on && M.mode === 'net') rollTick(real);
     else if (REPLAY.on) replayTick(real);
-    else {
+    else if (!trainingInspectTick(real)) {
       acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
       if (acc > STEP * 5) acc = STEP * 5;
       let n = 0;
@@ -852,6 +865,7 @@ function frameBody(now) {
   render();
   touchUIUpdate();
   dummyBarUpdate();
+  trainInspectUpdate();
 }
 function updateCamera(dt) {
   if (WORLD.on) { worldCamera(dt); return; }

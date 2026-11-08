@@ -25,7 +25,7 @@ function drawTrainStats(cx, top, bh) {
   ];
   ctx.save(); ctx.font = `${fs}px ${BODY_FONT}`;
   for (const l of lines) { l[0] = cvT(l[0]); l[1] = cvT(l[1]); }
-  const hint = cvT(TOUCH ? '点左上角「对手行为」换动作' : `按 ${dummyBarKey()} 换对手行为 | F1 判定框透视`);
+  const hint = cvT(TOUCH ? '点左上角「对手行为」换动作' : `按 ${dummyBarKey()} 换对手行为 | F1 判定框 · Hz 慢放 · 单帧推进`);
   const pw = Math.min(fs * 22, Math.max(fs * 17, ctx.measureText(hint).width, ...lines.map(([k, v]) => ctx.measureText(k).width + ctx.measureText(v).width + fs * 1.5)));   // 英文长：卡片跟着变宽（不超过 fs * 22）
   const cardH = (lines.length + 2) * fs * 1.75 + 16;
   ctx.fillStyle = 'rgba(10,10,24,0.68)'; ctx.fillRect(x - pw - 14, y - 12, pw + 28, cardH);
@@ -1047,7 +1047,7 @@ function render() {
   drawParticles();
   drawComboTotals();
   drawIdentityTags(order);
-  if (debugHitbox) drawHitboxOverlay(order);
+  if (M.mode === 'train' && debugHitbox) drawHitboxOverlay(order);
   ctx.restore();
   if (SETTINGS.bloom > 0 && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸上不要月亮和萤火的光晕
   if (FOREST.on) {

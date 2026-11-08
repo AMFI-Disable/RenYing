@@ -464,7 +464,7 @@ function mapTick(dt) {
 const CN = ['', '一', '二', '三', '四', '五'];
 let hitstop = 0, slowmo = 0, superFreeze = 0, superOwner = null, shake = 0, flashA = 0, flashRGB = '255,255,255', dimA = 0, paused = false;
 let shakeDirX = 0, shakeDirY = 0; // 方向性屏幕震动向量 (Directional screen shake)
-let debugHitbox = false;          // 试剑模式：判定框与帧优势实时透视 (F1 切换)
+let debugHitbox = false;          // 仅训练场：判定框与帧优势实时透视 (F1 切换)
 let announce = null;
 const announceQueue = [];
 const comboUI = [{ n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }];
@@ -486,6 +486,9 @@ function randomPair() { const a = Math.random() * CHARS.length | 0; let b = Math
 // 还在等人进房间或在排队时开始单人模式：先关掉房间，免得有人进来把你拉去选人
 function netDropWaiting() { if (!NET.open && p2pActive()) { netLeave(); $id('roomCode').textContent = ''; netStatus(''); } }
 function startMatch(mode, level, chars, isWatch = false) {
+  // 训练场的观察工具不能带入任何正式对局。
+  debugHitbox = false;
+  TRAIN.inspectHz = 120; TRAIN.inspectAcc = 0; TRAIN.inspectPaused = false;
   if (mode !== 'demo') refocusGame();
   if (mode !== 'net' && mode !== 'demo' && mode !== 'replay') netDropWaiting();
   human[0].rec = null;

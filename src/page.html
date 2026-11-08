@@ -397,7 +397,7 @@
               <button type="button" data-drill="combo-escape"><b>受压与脱身</b><span>面对连段与腾空闪，练习防守和重新进攻</span></button>
             </div>
           </section>
-          <section class="xiwu-training-card">
+          <section class="xiwu-training-card xiwu-match-card">
             <h4>实战演练</h4>
             <p>用当前选择的电脑境界开始一场完整对局，检验训练成果。</p>
             <button class="go small" id="xiwuTrainingCpuBtn" type="button">前往对战电脑</button>
@@ -1261,6 +1261,12 @@
     <div class="db-lab">特性</div>
     <div class="db-feats" id="dummyFeats"></div>
     <p class="db-note" id="dummyNote"></p>
+  </div>
+  <div class="train-inspect hidden" id="trainInspect" aria-label="训练帧控制">
+    <button class="train-inspect-hitbox" id="trainHitboxBtn" type="button" aria-pressed="false">F1 判定框：关</button>
+    <label class="train-inspect-rate" for="trainHz"><span>模拟频率</span><input id="trainHz" type="range" min="1" max="120" step="1" value="120"><output id="trainHzValue" for="trainHz">120 Hz</output></label>
+    <button id="trainPauseBtn" type="button" aria-pressed="false">暂停时间</button>
+    <button id="trainStepBtn" type="button" disabled>推进 1 帧</button>
   </div>
   <div id="touchUI" class="hidden">
     <button class="tbtn tpause" id="tPause" aria-label="暂停">❚❚</button>

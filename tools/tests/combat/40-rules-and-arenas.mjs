@@ -375,4 +375,33 @@ export default [
       REPLAY.on = false; toMenu(); return { pass: true, error: null };
     })()`
   },
+  {
+    name: 'Training simulation runs at integer Hz, pauses, and never slows normal fights',
+    fn: `(() => {
+      REPLAY.on = false; ROLL.on = false; paused = false; slowmo = 0; hitstop = 0; acc = 0; cine.t = -1; swapFreezeTimer = 0;
+      startMatch('train', 'stand', [0, 1]); M.phase = 'fight';
+      showScreen(null); DB.open = false; DB.paused = false;
+      TRAIN.inspectHz = 1; TRAIN.inspectAcc = 0; TRAIN.inspectPaused = false;
+      let before = clock;
+      simTick(0.5);
+      if (clock !== before) return { pass: false, error: '1 Hz advanced before a full second elapsed' };
+      simTick(0.5);
+      if (Math.abs((clock - before) - STEP) > 1e-9) return { pass: false, error: '1 Hz did not advance exactly one 1/120-second simulation frame' };
+      TRAIN.inspectPaused = true; before = clock;
+      simTick(0.5);
+      if (clock !== before) return { pass: false, error: 'paused training continued advancing' };
+      const stepped = trainInspectStep();
+      if (!stepped || Math.abs((clock - before) - STEP) > 1e-9) return { pass: false, error: 'single-step did not advance exactly one simulation frame' };
+      TRAIN.inspectPaused = false;
+      before = clock;
+      if (trainInspectStep() || clock !== before) return { pass: false, error: 'single-step worked while the training clock was running' };
+      debugHitbox = true;
+      startMatch('cpu', 'normal', [0, 1]); M.phase = 'fight';
+      if (debugHitbox || TRAIN.inspectHz !== 120 || TRAIN.inspectPaused) return { pass: false, error: 'starting a fight carried training tools into the match' };
+      TRAIN.inspectHz = 1; acc = 0; before = clock;
+      simTick(STEP);
+      if (Math.abs((clock - before) - STEP) > 1e-9) return { pass: false, error: 'training Hz setting slowed a normal fight' };
+      toMenu(); return { pass: true, error: null };
+    })()`
+  },
 ];

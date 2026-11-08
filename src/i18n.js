@@ -119,7 +119,7 @@
     [/^擂主已设定切磋规则：(.+)$/, (m0, r) => `The host set the room rule: ${lookup(r) || r}`],
     // 木人桩的对手行为栏和左上角提示（src/game/21-buttons-02-training.js、16-draw-ui.js）
     [/^(.+)（只做一次）$/, (m0, a) => `${lookup(a) || a} (once)`],
-    [/^按 (\S+) 换对手行为 \| F1 判定框透视$/, (m0, k) => `${k}: dummy actions · F1 hitboxes`],
+    [/^按 (\S+) 换对手行为 \| F1 判定框 · Hz 慢放 · 单帧推进$/, (m0, k) => `${k}: dummy actions · F1 hitboxes · Hz slow motion · step frame`],
     [/^(\S+) 打开 · Esc 关闭$/, (m0, k) => `${k} opens · Esc closes`],
     [/^（冷却\s*(\d+(?:\.\d+)?)\s*秒）$/, (m0, n) => ` (cooldown ${n}s)`],
     [/^(.+?)禁用一名侠客$/, (m0, w) => `${lookup(w) || w} · Ban a hero`],

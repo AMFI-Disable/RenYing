@@ -696,7 +696,7 @@ class DummyCtrl extends Ctrl {
     if (!c.rep) this.done = true;
   }
 }
-const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0 };
+const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0, inspectHz: 120, inspectAcc: 0, inspectPaused: false };
 
 // 电脑：按键都由 src/ai.js 里的 AIBrain 决定，这里只是接到操作上
 class AICtrl extends Ctrl {

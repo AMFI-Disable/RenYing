@@ -80,6 +80,50 @@ function dummyBarUpdate() {
   if (btn) btn.classList.toggle('hidden', !ok || DB.open || !!document.querySelector('.scr.on'));
   if (DB.open && !ok) dummyBarShow(false);
 }
+// 帧检查器只属于木人训练，频率按逻辑帧计；最高 120 Hz 即标准速度。
+function trainInspectRender() {
+  const rate = $id('trainHz'), value = $id('trainHzValue'), hitbox = $id('trainHitboxBtn'), pause = $id('trainPauseBtn'), advance = $id('trainStepBtn');
+  if (rate && rate.value !== String(TRAIN.inspectHz)) rate.value = String(TRAIN.inspectHz);
+  if (value && value.textContent !== `${TRAIN.inspectHz} Hz`) value.textContent = `${TRAIN.inspectHz} Hz`;
+  if (hitbox) { hitbox.setAttribute('aria-pressed', String(debugHitbox)); const label = cvT(`F1 判定框：${debugHitbox ? '开' : '关'}`); if (hitbox.textContent !== label) hitbox.textContent = label; }
+  if (pause) { pause.setAttribute('aria-pressed', String(TRAIN.inspectPaused)); const label = cvT(TRAIN.inspectPaused ? '恢复时间' : '暂停时间'); if (pause.textContent !== label) pause.textContent = label; }
+  if (advance && advance.textContent !== cvT('推进 1 帧')) advance.textContent = cvT('推进 1 帧');
+  if (advance) advance.disabled = !TRAIN.inspectPaused || M.mode !== 'train' || paused || DB.open || !!currentScreen;
+}
+function trainInspectUpdate() {
+  const panel = $id('trainInspect');
+  if (!panel) return;
+  const active = M.mode === 'train' && !REPLAY.on && M.phase !== 'end' && !currentScreen;
+  panel.classList.toggle('hidden', !active || paused || DB.open);
+  trainInspectRender();
+}
+function trainInspectStep() {
+  if (M.mode !== 'train' || !TRAIN.inspectPaused || paused || DB.open || REPLAY.on || currentScreen) return false;
+  acc = 0; TRAIN.inspectAcc = 0;
+  step();
+  trainInspectRender();
+  return true;
+}
+if ($id('trainInspect')) {
+  $id('trainHz').addEventListener('input', e => {
+    TRAIN.inspectHz = Math.max(1, Math.min(120, Math.round(+e.target.value || 120)));
+    TRAIN.inspectAcc = 0;
+    trainInspectRender();
+  });
+  $id('trainHitboxBtn').addEventListener('click', () => {
+    if (M.mode !== 'train') return;
+    debugHitbox = !debugHitbox;
+    trainInspectRender();
+  });
+  $id('trainPauseBtn').addEventListener('click', () => {
+    if (M.mode !== 'train') return;
+    TRAIN.inspectPaused = !TRAIN.inspectPaused;
+    TRAIN.inspectAcc = 0;
+    acc = 0;
+    trainInspectRender();
+  });
+  $id('trainStepBtn').addEventListener('click', trainInspectStep);
+}
 if ($id('dummyBar')) {
   $id('dummyBar').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b || b.disabled) return;

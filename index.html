@@ -2858,6 +2858,15 @@ body.kb-only.has-nav .kb-hint { display: block; }
 .dummy-bar-btn:hover, .dummy-bar-btn:focus-visible { background: rgba(233,196,106,.22); }
 .dummy-bar-btn.hidden, .dummy-bar.hidden { display: none; }
 body.touchdev .dummy-bar-btn { display: none; }
+.train-inspect { position: fixed; right: calc(14px + env(safe-area-inset-right)); bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 17; display: flex; align-items: center; flex-wrap: wrap; gap: 7px; max-width: min(680px, calc(100vw - 24px)); padding: 8px 10px; border: 1px solid rgba(233,196,106,.4); border-radius: 8px; background: rgba(10,10,24,.86); color: #f4ecd8; box-shadow: 0 5px 22px rgba(0,0,0,.35); font: 12px var(--body); }
+.train-inspect.hidden { display: none; }
+.train-inspect button { min-height: 32px; padding: 5px 9px; border: 1px solid rgba(255,255,255,.2); border-radius: 5px; background: rgba(255,255,255,.06); color: inherit; font: inherit; cursor: pointer; }
+.train-inspect button[aria-pressed="true"] { border-color: #e9c46a; background: rgba(233,196,106,.2); color: #fff2c8; }
+.train-inspect button:disabled { opacity: .42; cursor: default; }
+.train-inspect-rate { display: grid; grid-template-columns: auto minmax(80px, 145px) auto; align-items: center; gap: 6px; }
+.train-inspect-rate input { width: 100%; accent-color: #e9c46a; }
+.train-inspect-rate output { min-width: 48px; color: #e9c46a; font: 600 12px ui-monospace, monospace; text-align: right; }
+@media (max-width: 560px) { .train-inspect { left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); justify-content: center; gap: 5px; padding: 7px; } .train-inspect-rate { grid-template-columns: auto minmax(80px, 1fr) auto; flex: 1 1 100%; order: -1; } .train-inspect button { min-height: 36px; } }
 .dummy-bar { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 30; width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; box-sizing: border-box;
 padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); border: 1px solid rgba(233,196,106,.45); color: #efe8d8; font: 13px var(--body); box-shadow: 0 10px 40px rgba(0,0,0,.5); }
 .dummy-bar .db-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
@@ -3004,16 +3013,23 @@ body.offline #mMatch { display: none !important; }
 #single .xiwu-mutator-row { margin: 0 0 14px; }
 #single .xiwu-mode-content { padding-top: 14px; border-top: 1px solid rgba(233,196,106,.16); }
 #single .single-action-row { justify-content: flex-start; }
-#single .xiwu-training-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+#single .xiwu-training-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
 #single .xiwu-training-card { min-width: 0; padding: 14px; border: 1px solid rgba(233,196,106,.18); border-radius: 7px; background: rgba(15,16,29,.38); }
 #single .xiwu-training-card h4 { margin: 0 0 6px; color: var(--gold); font: 600 16px var(--title); }
-#single .xiwu-training-card p { min-height: 42px; margin: 0 0 12px; color: rgba(255,255,255,.72); font-size: 13px; line-height: 1.5; }
-#single .xiwu-drill-list { display: grid; gap: 6px; margin-top: 8px; }
+#single .xiwu-training-card p { margin: 0 0 12px; color: rgba(255,255,255,.72); font-size: 13px; line-height: 1.5; }
+#single .xiwu-scenario-card { grid-column: 1 / -1; }
+#single .xiwu-drill-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
 #single .xiwu-drill-list button { display: grid; gap: 3px; padding: 9px 10px; border: 1px solid rgba(233,196,106,.15); border-radius: 5px; background: rgba(8,10,18,.55); color: #fff; text-align: left; cursor: pointer; }
 #single .xiwu-drill-list button:hover { border-color: rgba(233,196,106,.5); background: rgba(233,196,106,.08); }
 #single .xiwu-drill-list button b { font-size: 13px; }
 #single .xiwu-drill-list button span { color: rgba(255,255,255,.62); font-size: 12px; line-height: 1.4; }
-@media (max-width: 760px) { #single .xiwu-training-grid { grid-template-columns: 1fr; } #single .xiwu-training-card p { min-height: 0; } }
+#single .xiwu-match-card { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 12px 16px; background: linear-gradient(100deg, rgba(233,196,106,.09), rgba(15,16,29,.38) 55%); }
+#single .xiwu-match-card h4 { margin-bottom: 3px; }
+#single .xiwu-match-card p { margin: 0; }
+#single .xiwu-match-card .go { flex: 0 0 auto; }
+@media (max-width: 980px) { #single .xiwu-drill-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { #single .xiwu-training-grid { grid-template-columns: 1fr; } #single .xiwu-scenario-card, #single .xiwu-match-card { grid-column: auto; } #single .xiwu-match-card { align-items: flex-start; flex-direction: column; gap: 10px; } }
+@media (max-width: 460px) { #single .xiwu-drill-list { grid-template-columns: 1fr; } }
 #single [hidden] { display: none !important; }
 @media (max-width: 760px) {
 .xiwu-studio { grid-template-columns: minmax(0, 1fr); gap: 14px; }
@@ -3550,7 +3566,7 @@ white-space: nowrap;
               <button type="button" data-drill="combo-escape"><b>受压与脱身</b><span>面对连段与腾空闪，练习防守和重新进攻</span></button>
             </div>
           </section>
-          <section class="xiwu-training-card">
+          <section class="xiwu-training-card xiwu-match-card">
             <h4>实战演练</h4>
             <p>用当前选择的电脑境界开始一场完整对局，检验训练成果。</p>
             <button class="go small" id="xiwuTrainingCpuBtn" type="button">前往对战电脑</button>
@@ -4414,6 +4430,12 @@ white-space: nowrap;
     <div class="db-lab">特性</div>
     <div class="db-feats" id="dummyFeats"></div>
     <p class="db-note" id="dummyNote"></p>
+  </div>
+  <div class="train-inspect hidden" id="trainInspect" aria-label="训练帧控制">
+    <button class="train-inspect-hitbox" id="trainHitboxBtn" type="button" aria-pressed="false">F1 判定框：关</button>
+    <label class="train-inspect-rate" for="trainHz"><span>模拟频率</span><input id="trainHz" type="range" min="1" max="120" step="1" value="120"><output id="trainHzValue" for="trainHz">120 Hz</output></label>
+    <button id="trainPauseBtn" type="button" aria-pressed="false">暂停时间</button>
+    <button id="trainStepBtn" type="button" disabled>推进 1 帧</button>
   </div>
   <div id="touchUI" class="hidden">
     <button class="tbtn tpause" id="tPause" aria-label="暂停">❚❚</button>
@@ -5987,7 +6009,7 @@ const PATTERNS_EN = [
 [/^已设定切磋规则：(.+)$/, (m0, r) => `Room rule set: ${lookup(r) || r}`],
 [/^擂主已设定切磋规则：(.+)$/, (m0, r) => `The host set the room rule: ${lookup(r) || r}`],
 [/^(.+)（只做一次）$/, (m0, a) => `${lookup(a) || a} (once)`],
-[/^按 (\S+) 换对手行为 \| F1 判定框透视$/, (m0, k) => `${k}: dummy actions · F1 hitboxes`],
+[/^按 (\S+) 换对手行为 \| F1 判定框 · Hz 慢放 · 单帧推进$/, (m0, k) => `${k}: dummy actions · F1 hitboxes · Hz slow motion · step frame`],
 [/^(\S+) 打开 · Esc 关闭$/, (m0, k) => `${k} opens · Esc closes`],
 [/^（冷却\s*(\d+(?:\.\d+)?)\s*秒）$/, (m0, n) => ` (cooldown ${n}s)`],
 [/^(.+?)禁用一名侠客$/, (m0, w) => `${lookup(w) || w} · Ban a hero`],
@@ -9350,6 +9372,13 @@ Object.assign(UI_COPY_EN, {
 "点左上角「对手行为」换动作": "Tap Dummy Actions at top left to change",
 "对手行为": "Dummy Actions",
 "继续练": "Resume",
+"训练帧控制": "Training Frame Controls",
+"F1 判定框：关": "F1 Hitboxes: Off",
+"F1 判定框：开": "F1 Hitboxes: On",
+"模拟频率": "Simulation Rate",
+"暂停时间": "Pause Time",
+"恢复时间": "Resume Time",
+"推进 1 帧": "Advance 1 Frame",
 "动作": "Action",
 "次数": "Times",
 "间隔": "Interval",
@@ -14547,7 +14576,7 @@ this.job = null; this.wait = c.gap;
 if (!c.rep) this.done = true;
 }
 }
-const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0 };
+const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0, inspectHz: 120, inspectAcc: 0, inspectPaused: false };
 class AICtrl extends Ctrl {
 constructor(level) { super(); this.level = level; this.brain = new AIBrain(this, level); this.L = this.brain.L; }
 updateTactic() { this.brain.newRound(); }
@@ -14980,7 +15009,7 @@ if (f.ch.id === 'qianji' && f.skillCD > 0) f.skillCD = Math.max(0, f.skillCD - 0
 const CN = ['', '一', '二', '三', '四', '五'];
 let hitstop = 0, slowmo = 0, superFreeze = 0, superOwner = null, shake = 0, flashA = 0, flashRGB = '255,255,255', dimA = 0, paused = false;
 let shakeDirX = 0, shakeDirY = 0; // 方向性屏幕震动向量 (Directional screen shake)
-let debugHitbox = false;          // 试剑模式：判定框与帧优势实时透视 (F1 切换)
+let debugHitbox = false;          // 仅训练场：判定框与帧优势实时透视 (F1 切换)
 let announce = null;
 const announceQueue = [];
 const comboUI = [{ n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }];
@@ -14999,6 +15028,8 @@ announceQueue.push(item);
 function randomPair() { const a = Math.random() * CHARS.length | 0; let b = Math.random() * (CHARS.length - 1) | 0; if (b >= a) b++; return [a, b]; }
 function netDropWaiting() { if (!NET.open && p2pActive()) { netLeave(); $id('roomCode').textContent = ''; netStatus(''); } }
 function startMatch(mode, level, chars, isWatch = false) {
+debugHitbox = false;
+TRAIN.inspectHz = 120; TRAIN.inspectAcc = 0; TRAIN.inspectPaused = false;
 if (mode !== 'demo') refocusGame();
 if (mode !== 'net' && mode !== 'demo' && mode !== 'replay') netDropWaiting();
 human[0].rec = null;
@@ -16804,7 +16835,7 @@ ctx.strokeRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
 ctx.font = 'bold 11px monospace';
 ctx.fillStyle = isAct ? '#ff4055' : isStart ? '#ffc040' : '#60b0ff';
 ctx.textAlign = 'center';
-const frameTxt = isAct ? `活跃帧 [${Math.round((f.t - su) * 60)}/${Math.round(ac * 60)}F]` : isStart ? `前摇 [${Math.round(f.t * 60)}/${Math.round(su * 60)}F]` : `收招 [${Math.round((f.t - su - ac) * 60)}/${Math.round(rec * 60)}F]`;
+const frameTxt = isAct ? `活跃帧 [${Math.round((f.t - su) / STEP)}/${Math.round(ac / STEP)}F]` : isStart ? `前摇 [${Math.round(f.t / STEP)}/${Math.round(su / STEP)}F]` : `收招 [${Math.round((f.t - su - ac) / STEP)}/${Math.round(rec / STEP)}F]`;
 ctx.fillText(frameTxt, (hb[0] + hb[2]) / 2, hb[1] - 8);
 }
 ctx.font = 'bold 11px monospace';
@@ -16814,10 +16845,10 @@ const other = foeOf ? foeOf(f) : null;
 if (other && f.state === 'attack' && f.move) {
 const remainingAtk = Math.max(0, (f.move.su || 0.04) + (f.move.ac || 0.08) + (f.move.rec || 0.18) - f.t);
 const foeStun = other.stun || 0;
-const advFrames = Math.round((foeStun - remainingAtk) * 60);
+const advFrames = Math.round((foeStun - remainingAtk) / STEP);
 advText = advFrames >= 0 ? ` +${advFrames}F 优势` : ` ${advFrames}F 劣势`;
 }
-const stDesc = `${f.state}${f.stun > 0 ? ` (硬直 ${(f.stun * 60).toFixed(0)}F)` : ''}${advText}`;
+const stDesc = `${f.state}${f.stun > 0 ? ` (硬直 ${Math.round(f.stun / STEP)}F)` : ''}${advText}`;
 ctx.fillStyle = advText.includes('+') ? '#70ff90' : advText.includes('-') ? '#ff7070' : '#efe8d8';
 ctx.fillText(stDesc, f.x, f.y - 125 * (f.size || 1));
 }
@@ -17691,11 +17722,24 @@ function simTick(real) {
 if (ROLL.on && M.mode === 'net') return rollTick(real);
 if (slowmo > 0) slowmo -= real;
 if (REPLAY.on) return replayTick(real);
+if (trainingInspectTick(real)) return;
 acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
 if (acc > STEP * 5) acc = STEP * 5;
 let n = 0;
 while (acc >= STEP && n < 5) { step(); acc -= STEP; n++; }
 if (n >= 5) acc = 0;
+}
+function trainingInspectTick(real) {
+if (M.mode !== 'train') return false;
+if (TRAIN.inspectPaused) { TRAIN.inspectAcc = 0; acc = 0; return true; }
+const hz = Math.max(1, Math.min(120, Math.round(TRAIN.inspectHz || 120)));
+if (hz >= 120) { TRAIN.inspectAcc = 0; return false; }
+TRAIN.inspectAcc += real * hz;
+let n = 0;
+while (TRAIN.inspectAcc >= 1 && n < 5) { step(); TRAIN.inspectAcc -= 1; n++; }
+if (n >= 5) TRAIN.inspectAcc = 0;
+acc = 0;
+return true;
 }
 function backgroundLocalActive() {
 return SETTINGS.backgroundPlay === true && M.mode !== 'net' && M.mode !== 'demo' && !REPLAY.on && !isAiVsAi() && !paused && !EXT.on && !document.querySelector('.scr.on');
@@ -18133,7 +18177,7 @@ for (const f of [A, B]) { if (f.vox) f.vox = damp(f.vox, 0, 14, real); if (f.voy
 if (document.hidden && backgroundLocalActive() && (bgWorker || bgAiTimer)) { /* background ticker owns local simulation */ }
 else if (ROLL.on && M.mode === 'net') rollTick(real);
 else if (REPLAY.on) replayTick(real);
-else {
+else if (!trainingInspectTick(real)) {
 acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
 if (acc > STEP * 5) acc = STEP * 5;
 let n = 0;
@@ -18170,6 +18214,7 @@ netTick(real);
 render();
 touchUIUpdate();
 dummyBarUpdate();
+trainInspectUpdate();
 }
 function updateCamera(dt) {
 if (WORLD.on) { worldCamera(dt); return; }
@@ -22055,7 +22100,7 @@ const lines = [
 ];
 ctx.save(); ctx.font = `${fs}px ${BODY_FONT}`;
 for (const l of lines) { l[0] = cvT(l[0]); l[1] = cvT(l[1]); }
-const hint = cvT(TOUCH ? '点左上角「对手行为」换动作' : `按 ${dummyBarKey()} 换对手行为 | F1 判定框透视`);
+const hint = cvT(TOUCH ? '点左上角「对手行为」换动作' : `按 ${dummyBarKey()} 换对手行为 | F1 判定框 · Hz 慢放 · 单帧推进`);
 const pw = Math.min(fs * 22, Math.max(fs * 17, ctx.measureText(hint).width, ...lines.map(([k, v]) => ctx.measureText(k).width + ctx.measureText(v).width + fs * 1.5)));   // 英文长：卡片跟着变宽（不超过 fs * 22）
 const cardH = (lines.length + 2) * fs * 1.75 + 16;
 ctx.fillStyle = 'rgba(10,10,24,0.68)'; ctx.fillRect(x - pw - 14, y - 12, pw + 28, cardH);
@@ -23013,7 +23058,7 @@ if (!pf.f.hitDone) drawFu(f.x, f.y - 150 + Math.sin(clock * 6) * 4, pf.a, pf.f.s
 drawParticles();
 drawComboTotals();
 drawIdentityTags(order);
-if (debugHitbox) drawHitboxOverlay(order);
+if (M.mode === 'train' && debugHitbox) drawHitboxOverlay(order);
 ctx.restore();
 if (SETTINGS.bloom > 0 && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸上不要月亮和萤火的光晕
 if (FOREST.on) {
@@ -26890,6 +26935,49 @@ function dummyBarUpdate() {
 const ok = dummyBarAvail(), btn = $id('dummyBarBtn');
 if (btn) btn.classList.toggle('hidden', !ok || DB.open || !!document.querySelector('.scr.on'));
 if (DB.open && !ok) dummyBarShow(false);
+}
+function trainInspectRender() {
+const rate = $id('trainHz'), value = $id('trainHzValue'), hitbox = $id('trainHitboxBtn'), pause = $id('trainPauseBtn'), advance = $id('trainStepBtn');
+if (rate && rate.value !== String(TRAIN.inspectHz)) rate.value = String(TRAIN.inspectHz);
+if (value && value.textContent !== `${TRAIN.inspectHz} Hz`) value.textContent = `${TRAIN.inspectHz} Hz`;
+if (hitbox) { hitbox.setAttribute('aria-pressed', String(debugHitbox)); const label = cvT(`F1 判定框：${debugHitbox ? '开' : '关'}`); if (hitbox.textContent !== label) hitbox.textContent = label; }
+if (pause) { pause.setAttribute('aria-pressed', String(TRAIN.inspectPaused)); const label = cvT(TRAIN.inspectPaused ? '恢复时间' : '暂停时间'); if (pause.textContent !== label) pause.textContent = label; }
+if (advance && advance.textContent !== cvT('推进 1 帧')) advance.textContent = cvT('推进 1 帧');
+if (advance) advance.disabled = !TRAIN.inspectPaused || M.mode !== 'train' || paused || DB.open || !!currentScreen;
+}
+function trainInspectUpdate() {
+const panel = $id('trainInspect');
+if (!panel) return;
+const active = M.mode === 'train' && !REPLAY.on && M.phase !== 'end' && !currentScreen;
+panel.classList.toggle('hidden', !active || paused || DB.open);
+trainInspectRender();
+}
+function trainInspectStep() {
+if (M.mode !== 'train' || !TRAIN.inspectPaused || paused || DB.open || REPLAY.on || currentScreen) return false;
+acc = 0; TRAIN.inspectAcc = 0;
+step();
+trainInspectRender();
+return true;
+}
+if ($id('trainInspect')) {
+$id('trainHz').addEventListener('input', e => {
+TRAIN.inspectHz = Math.max(1, Math.min(120, Math.round(+e.target.value || 120)));
+TRAIN.inspectAcc = 0;
+trainInspectRender();
+});
+$id('trainHitboxBtn').addEventListener('click', () => {
+if (M.mode !== 'train') return;
+debugHitbox = !debugHitbox;
+trainInspectRender();
+});
+$id('trainPauseBtn').addEventListener('click', () => {
+if (M.mode !== 'train') return;
+TRAIN.inspectPaused = !TRAIN.inspectPaused;
+TRAIN.inspectAcc = 0;
+acc = 0;
+trainInspectRender();
+});
+$id('trainStepBtn').addEventListener('click', trainInspectStep);
 }
 if ($id('dummyBar')) {
 $id('dummyBar').addEventListener('click', e => {
@@ -32497,7 +32585,13 @@ window.addEventListener('keydown', e => {
 initAudio();
 if (e.code === 'KeyM') { muted = !muted; return; }
 if (e.code === 'Backquote' || e.code === 'F2') { NET_HUD = !NET_HUD; return; }
-if (e.code === 'F1') { debugHitbox = !debugHitbox; say(debugHitbox ? '判定框透视：开启' : '判定框透视：关闭', 0.8, 'go'); return; }
+if (e.code === 'F1') {
+if (M.mode === 'train' && !REPLAY.on) {
+e.preventDefault(); debugHitbox = !debugHitbox; trainInspectRender();
+say(debugHitbox ? '判定框透视：开启' : '判定框透视：关闭', 0.8, 'go');
+} else debugHitbox = false;
+return;
+}
 if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) {
 const scr = e.target.closest('.scr');
 if ((scr && !scr.classList.contains('on')) || e.target.offsetParent === null) {

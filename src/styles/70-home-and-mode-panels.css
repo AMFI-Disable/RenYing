@@ -102,6 +102,15 @@ body.kb-only.has-nav .kb-hint { display: block; }
 .dummy-bar-btn:hover, .dummy-bar-btn:focus-visible { background: rgba(233,196,106,.22); }
 .dummy-bar-btn.hidden, .dummy-bar.hidden { display: none; }
 body.touchdev .dummy-bar-btn { display: none; }
+.train-inspect { position: fixed; right: calc(14px + env(safe-area-inset-right)); bottom: calc(14px + env(safe-area-inset-bottom)); z-index: 17; display: flex; align-items: center; flex-wrap: wrap; gap: 7px; max-width: min(680px, calc(100vw - 24px)); padding: 8px 10px; border: 1px solid rgba(233,196,106,.4); border-radius: 8px; background: rgba(10,10,24,.86); color: #f4ecd8; box-shadow: 0 5px 22px rgba(0,0,0,.35); font: 12px var(--body); }
+.train-inspect.hidden { display: none; }
+.train-inspect button { min-height: 32px; padding: 5px 9px; border: 1px solid rgba(255,255,255,.2); border-radius: 5px; background: rgba(255,255,255,.06); color: inherit; font: inherit; cursor: pointer; }
+.train-inspect button[aria-pressed="true"] { border-color: #e9c46a; background: rgba(233,196,106,.2); color: #fff2c8; }
+.train-inspect button:disabled { opacity: .42; cursor: default; }
+.train-inspect-rate { display: grid; grid-template-columns: auto minmax(80px, 145px) auto; align-items: center; gap: 6px; }
+.train-inspect-rate input { width: 100%; accent-color: #e9c46a; }
+.train-inspect-rate output { min-width: 48px; color: #e9c46a; font: 600 12px ui-monospace, monospace; text-align: right; }
+@media (max-width: 560px) { .train-inspect { left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); justify-content: center; gap: 5px; padding: 7px; } .train-inspect-rate { grid-template-columns: auto minmax(80px, 1fr) auto; flex: 1 1 100%; order: -1; } .train-inspect button { min-height: 36px; } }
 .dummy-bar { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 30; width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; box-sizing: border-box;
   padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); border: 1px solid rgba(233,196,106,.45); color: #efe8d8; font: 13px var(--body); box-shadow: 0 10px 40px rgba(0,0,0,.5); }
 .dummy-bar .db-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
@@ -256,16 +265,23 @@ body.offline #mMatch { display: none !important; }
 #single .xiwu-mutator-row { margin: 0 0 14px; }
 #single .xiwu-mode-content { padding-top: 14px; border-top: 1px solid rgba(233,196,106,.16); }
 #single .single-action-row { justify-content: flex-start; }
-#single .xiwu-training-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+#single .xiwu-training-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; align-items: stretch; }
 #single .xiwu-training-card { min-width: 0; padding: 14px; border: 1px solid rgba(233,196,106,.18); border-radius: 7px; background: rgba(15,16,29,.38); }
 #single .xiwu-training-card h4 { margin: 0 0 6px; color: var(--gold); font: 600 16px var(--title); }
-#single .xiwu-training-card p { min-height: 42px; margin: 0 0 12px; color: rgba(255,255,255,.72); font-size: 13px; line-height: 1.5; }
-#single .xiwu-drill-list { display: grid; gap: 6px; margin-top: 8px; }
+#single .xiwu-training-card p { margin: 0 0 12px; color: rgba(255,255,255,.72); font-size: 13px; line-height: 1.5; }
+#single .xiwu-scenario-card { grid-column: 1 / -1; }
+#single .xiwu-drill-list { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; margin-top: 8px; }
 #single .xiwu-drill-list button { display: grid; gap: 3px; padding: 9px 10px; border: 1px solid rgba(233,196,106,.15); border-radius: 5px; background: rgba(8,10,18,.55); color: #fff; text-align: left; cursor: pointer; }
 #single .xiwu-drill-list button:hover { border-color: rgba(233,196,106,.5); background: rgba(233,196,106,.08); }
 #single .xiwu-drill-list button b { font-size: 13px; }
 #single .xiwu-drill-list button span { color: rgba(255,255,255,.62); font-size: 12px; line-height: 1.4; }
-@media (max-width: 760px) { #single .xiwu-training-grid { grid-template-columns: 1fr; } #single .xiwu-training-card p { min-height: 0; } }
+#single .xiwu-match-card { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 12px 16px; background: linear-gradient(100deg, rgba(233,196,106,.09), rgba(15,16,29,.38) 55%); }
+#single .xiwu-match-card h4 { margin-bottom: 3px; }
+#single .xiwu-match-card p { margin: 0; }
+#single .xiwu-match-card .go { flex: 0 0 auto; }
+@media (max-width: 980px) { #single .xiwu-drill-list { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 760px) { #single .xiwu-training-grid { grid-template-columns: 1fr; } #single .xiwu-scenario-card, #single .xiwu-match-card { grid-column: auto; } #single .xiwu-match-card { align-items: flex-start; flex-direction: column; gap: 10px; } }
+@media (max-width: 460px) { #single .xiwu-drill-list { grid-template-columns: 1fr; } }
 #single [hidden] { display: none !important; }
 @media (max-width: 760px) {
   .xiwu-studio { grid-template-columns: minmax(0, 1fr); gap: 14px; }
