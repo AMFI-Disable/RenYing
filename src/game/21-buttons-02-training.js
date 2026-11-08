@@ -1,5 +1,34 @@
 // ======================= 木人训练与对手行为栏 =======================
 // 本文件：木人桩：练哪位侠客、木人的特性开关、对手行为栏（稻草人做什么，见 src/data/14-dummy.js）、几种练习的开局。
+function xiwuTrainingTab(name) {
+  const tabs = document.querySelectorAll('#xiwuTrainingTabs [data-training-tab]');
+  const panes = document.querySelectorAll('#single [data-training-pane]');
+  for (const tab of tabs) {
+    const selected = tab.dataset.trainingTab === name;
+    tab.classList.toggle('sel', selected);
+    tab.setAttribute('aria-selected', String(selected));
+    tab.tabIndex = selected ? 0 : -1;
+  }
+  for (const pane of panes) pane.hidden = pane.dataset.trainingPane !== name;
+}
+if ($id('xiwuTrainingTabs')) {
+  $id('xiwuTrainingTabs').addEventListener('click', e => {
+    const tab = e.target.closest('button[data-training-tab]');
+    if (!tab) return;
+    xiwuTrainingTab(tab.dataset.trainingTab);
+    SFX.slice();
+  });
+  $id('xiwuTrainingTabs').addEventListener('keydown', e => {
+    if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(e.key)) return;
+    const tabs = [...$id('xiwuTrainingTabs').querySelectorAll('[data-training-tab]')];
+    const at = tabs.indexOf(document.activeElement);
+    if (at < 0) return;
+    e.preventDefault();
+    const next = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : (at + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
+    tabs[next].focus(); tabs[next].click();
+  });
+  xiwuTrainingTab('lesson');
+}
 let trainChar = 0, trainTargetMode = 'dummy';
 const trainModeSegEl = $id('trainModeSeg');
 if (trainModeSegEl) {

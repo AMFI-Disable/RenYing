@@ -1047,7 +1047,7 @@ function render() {
   drawParticles();
   drawComboTotals();
   drawIdentityTags(order);
-  if (M.mode === 'train' && debugHitbox) drawHitboxOverlay(order);
+  if ((M.mode === 'train' || (M.mode === 'replay' && REPLAY.on && M.phase !== 'end')) && debugHitbox) drawHitboxOverlay(order);
   ctx.restore();
   if (SETTINGS.bloom > 0 && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸上不要月亮和萤火的光晕
   if (FOREST.on) {

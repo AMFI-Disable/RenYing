@@ -374,20 +374,26 @@
           <h3 class="spt">训练场</h3>
           <span class="sub-badge">从基础招式到实战应对</span>
         </div>
-        <div class="xiwu-training-grid">
-          <section class="xiwu-training-card">
+        <div class="xiwu-training-tabs" id="xiwuTrainingTabs" role="tablist" aria-label="训练项目">
+          <button type="button" role="tab" id="xiwuTabLesson" aria-controls="xiwuPaneLesson" aria-selected="true" class="sel" data-training-tab="lesson">招式教学</button>
+          <button type="button" role="tab" id="xiwuTabFree" aria-controls="xiwuPaneFree" aria-selected="false" data-training-tab="free">自由训练</button>
+          <button type="button" role="tab" id="xiwuTabScenario" aria-controls="xiwuPaneScenario" aria-selected="false" data-training-tab="scenario">情景训练</button>
+          <button type="button" role="tab" id="xiwuTabMatch" aria-controls="xiwuPaneMatch" aria-selected="false" data-training-tab="match">实战演练</button>
+        </div>
+        <div class="xiwu-training-content">
+          <section class="xiwu-training-card" id="xiwuPaneLesson" role="tabpanel" aria-labelledby="xiwuTabLesson" data-training-pane="lesson">
             <h4>招式教学</h4>
             <p>跟随步骤练习移动、连招、门派技能、格挡、精准招架、腾空闪与奥义。</p>
             <button class="go small" id="xiwuFullTutBtn" type="button">开始完整教学</button>
           </section>
-          <section class="xiwu-training-card">
+          <section class="xiwu-training-card" id="xiwuPaneFree" role="tabpanel" aria-labelledby="xiwuTabFree" data-training-pane="free" hidden>
             <h4>自由训练</h4>
             <p>在木人桩上练习招式与连段。开练后可随时调整木人的动作和特性。</p>
             <div class="sec-sub-label">木人桩特性</div>
             <div class="dummy-feat-list" id="dummyFeatList" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px;justify-content:center"></div>
             <button class="go small" id="trainBtn" type="button">开始自由训练</button>
           </section>
-          <section class="xiwu-training-card xiwu-scenario-card">
+          <section class="xiwu-training-card xiwu-scenario-card" id="xiwuPaneScenario" role="tabpanel" aria-labelledby="xiwuTabScenario" data-training-pane="scenario" hidden>
             <h4>情景训练</h4>
             <p>选择一个对手行为，反复练习对应的进攻或防守应对。</p>
             <div class="xiwu-drill-list">
@@ -397,7 +403,7 @@
               <button type="button" data-drill="combo-escape"><b>受压与脱身</b><span>面对连段与腾空闪，练习防守和重新进攻</span></button>
             </div>
           </section>
-          <section class="xiwu-training-card xiwu-match-card">
+          <section class="xiwu-training-card xiwu-match-card" id="xiwuPaneMatch" role="tabpanel" aria-labelledby="xiwuTabMatch" data-training-pane="match" hidden>
             <h4>实战演练</h4>
             <p>用当前选择的电脑境界开始一场完整对局，检验训练成果。</p>
             <button class="go small" id="xiwuTrainingCpuBtn" type="button">前往对战电脑</button>
@@ -1293,6 +1299,8 @@
 
   <div id="end" class="scr">
     <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p><div class="combat-card" id="endCombatCard"></div><p class="end-arm" id="endArm"></p>
+      <button class="ghost hidden" id="endReviewBtn" type="button" aria-expanded="false" aria-controls="endReview">AI 复盘</button>
+      <section class="end-review hidden" id="endReview" aria-live="polite"></section>
       <div class="row">
         <button class="go" id="againBtn">再战</button>
         <button class="ghost hidden" id="netRepickBtn">换人再战</button>
@@ -1321,7 +1329,7 @@
   </div>
 </div>
 
-<div id="rpBar" class="hidden"><span id="rpInfo">回放</span><button id="rpPause">暂停</button><button data-sp="0.25">0.25×</button><button data-sp="0.5">0.5×</button><button data-sp="1" class="sel">1×</button><button data-sp="2">2×</button><button data-sp="4">4×</button><button id="rpExit">退出</button></div>
+<div id="rpBar" class="hidden"><span id="rpInfo">回放</span><button id="rpPause">暂停</button><button data-sp="0.25">0.25×</button><button data-sp="0.5">0.5×</button><button data-sp="1" class="sel">1×</button><button data-sp="2">2×</button><button data-sp="4">4×</button><label class="rp-rate" for="rpHz"><span>频率</span><input id="rpHz" type="range" min="1" max="120" step="1" value="120"><output id="rpHzValue" for="rpHz">120 Hz</output></label><button id="rpHitbox" type="button" aria-pressed="false">F1 判定框：关</button><button id="rpStep" type="button" disabled>推进 1 帧</button><button id="rpExit">退出</button></div>
 <div id="extGame" class="hidden"><iframe id="extFrame" title="青锋行" allow="autoplay; fullscreen; gamepad"></iframe><div id="extToast"></div><button id="extBack">返回刃影</button></div>
 <!--@music-->
 <!--@scripts-->

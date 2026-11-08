@@ -194,7 +194,7 @@ const GRNG = { s: 1 };
 function grnd() { let t = (GRNG.s = (GRNG.s + 0x6D2B79F5) | 0); t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }
 const grand = (a, b) => a + grnd() * (b - a);
 let RESIM = false;
-const REC = { on: false }, REPLAY = { on: false, speed: 1, paused: false }, RP = { last: null };   // 对战回放：录制和播放的状态   // 回滚重算时为 true：不播特效和音效
+const REC = { on: false }, REPLAY = { on: false, speed: 1, hz: 120, frameAcc: 0, paused: false }, RP = { last: null };   // 对战回放：录制和播放的状态   // 回滚重算时为 true：不播特效和音效
 const damp = (cur, target, k, dt) => target + (cur - target) * Math.exp(-k * dt);
 const hash = k => { const s = Math.sin(k * 127.1 + 311.7) * 43758.5453; return s - Math.floor(s); };
 const TITLE_FONT = '"Ma Shan Zheng", "STKaiti", "KaiTi", serif';

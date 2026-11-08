@@ -6,8 +6,9 @@ window.addEventListener('keydown', e => {
   if (e.code === 'KeyM') { muted = !muted; return; }
   if (e.code === 'Backquote' || e.code === 'F2') { NET_HUD = !NET_HUD; return; }
   if (e.code === 'F1') {
-    if (M.mode === 'train' && !REPLAY.on) {
-      e.preventDefault(); debugHitbox = !debugHitbox; trainInspectRender();
+    if ((M.mode === 'train' && !REPLAY.on) || (M.mode === 'replay' && REPLAY.on && M.phase !== 'end')) {
+      e.preventDefault(); e.stopImmediatePropagation(); debugHitbox = !debugHitbox;
+      if (M.mode === 'train') trainInspectRender(); else replayInspectRender();
       say(debugHitbox ? '判定框透视：开启' : '判定框透视：关闭', 0.8, 'go');
     } else debugHitbox = false;
     return;

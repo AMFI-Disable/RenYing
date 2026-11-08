@@ -377,11 +377,16 @@
 .redeemrow { gap: 8px; margin: 4px 0 10px; align-items: center; }
 .redeemrow input { flex: 1; min-width: 0; padding: 8px 12px; border-radius: 8px; border: 1px solid rgba(233,196,106,.4); background: rgba(0,0,0,.35); color: #f3ead8; font: inherit; }
 #tasks #rdBtn { font-size: 16px; padding: 8px 24px; min-width: 0; letter-spacing: 2px; }
-#rpBar { position: fixed; left: 50%; bottom: 14px; transform: translateX(-50%); z-index: 40; display: flex; gap: 6px; align-items: center; padding: 6px 10px; border-radius: 999px; background: rgba(8,8,18,.72); border: 1px solid rgba(233,196,106,.35); font: 14px var(--body); color: #efe8d8; }
+#rpBar { position: fixed; left: 50%; bottom: calc(14px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 40; display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; align-items: center; width: max-content; max-width: min(980px, calc(100vw - 24px)); padding: 8px 10px; border-radius: 12px; background: rgba(8,8,18,.88); border: 1px solid rgba(233,196,106,.45); font: 13px var(--body); color: #efe8d8; box-shadow: 0 8px 28px rgba(0,0,0,.4); }
 #rpBar.hidden { display: none; }
-#rpBar button { background: transparent; border: 1px solid rgba(239,232,216,.25); color: #efe8d8; border-radius: 999px; padding: 4px 10px; font: inherit; cursor: pointer; }
+#rpBar button { min-height: 32px; background: transparent; border: 1px solid rgba(239,232,216,.25); color: #efe8d8; border-radius: 999px; padding: 4px 10px; font: inherit; cursor: pointer; white-space: nowrap; }
+#rpBar button:disabled { opacity: .42; cursor: default; }
 #rpBar button.sel { border-color: #e9c46a; color: #e9c46a; }
 #rpBar #rpInfo { padding: 0 8px; color: #e9c46a; white-space: nowrap; }
+.rp-rate { display: flex; align-items: center; gap: 5px; padding: 0 4px; font-size: 12px; white-space: nowrap; }
+.rp-rate input { width: 96px; accent-color: #e9c46a; }
+.rp-rate output { min-width: 42px; color: #e9c46a; font: 600 11px ui-monospace, monospace; text-align: right; }
+@media (max-width: 720px) { #rpBar { bottom: calc(10px + env(safe-area-inset-bottom)); gap: 4px; padding: 7px; max-width: calc(100vw - 16px); border-radius: 10px; } #rpBar button { min-height: 36px; padding: 4px 8px; font-size: 12px; } #rpBar #rpInfo { flex: 1 0 100%; text-align: center; } .rp-rate { flex: 1 1 100%; justify-content: center; } .rp-rate input { flex: 0 1 180px; } }
 .rprow { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 10px; background: rgba(255,255,255,.05); margin-bottom: 6px; }
 .rprow .rpm { flex: 1; min-width: 0; }
 .rprow .rpt { font-size: 15px; }

@@ -421,7 +421,7 @@ function ctrlKey(c) {
 }
 function recBegin(kind) {
   Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], post: ['', ''], last: [-1, -1],
-    meta: { v: VERSION, kind, mode: M.mode, mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
+    meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
   if (M.hasBuffs && M.competitiveScrolls) REC.meta.competitiveScrolls = JSON.parse(JSON.stringify(M.competitiveScrolls));
   // pl：哪几个人按玩家的规则选目标。回放里大家都是普通 Ctrl，不记的话玩家会被当成电脑去配合队友，回放就走样了
   if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], pl: [A, B, C, D].map(f => !cpuTeamwork(f)) }); REC.post = ['', '', '', '']; }
@@ -554,13 +554,69 @@ function recSave(w) {
   REC.on = false;
   if (M.stage || FOREST.on || REC.bad || !REC.meta) return;
   const m = REC.meta;
-  Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, skins: rpFighters(m).map(f => f.skinKey || ''),
+  Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, stats: M.combatStats ? M.combatStats.map(s => ({ ...s })) : null, skins: rpFighters(m).map(f => f.skinKey || ''),
     names: M.mode === 'net' ? rpNetNames(m)
       : m.four ? ({ p_cc: [ACC.name || '你', '电脑'], pp_cc: ['1P · 2P', '电脑'], pp_pp: ['1P · 2P', '3P · 4P'] }[m.sub] || ['苍龙', '赤凤']) : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
   RP.last = m;
   const list = rpList(); list.unshift(m); while (list.length > RP_MAX) list.pop();
   rpStore(list);
+  return m;
 }
+function matchReviewData(m) {
+  if (!m || !['cpu', 'net'].includes(m.mode) || m.four || m.raid || (!Array.isArray(m.stats) && !(Array.isArray(m.tr) && m.tr.length))) return null;
+  const side = m.playerSide === 1 ? 1 : 0, own = (m.stats || [])[side] || {}, foe = (m.stats || [])[side ^ 1] || {};
+  const dealt = Math.max(0, +own.damage || 0), taken = Math.max(0, +foe.damage || 0), combo = Math.max(0, +own.combo || 0), breaks = Math.max(0, +own.breaks || 0), falls = Math.max(0, +own.falls || 0);
+  const rows = (Array.isArray(m.tr) ? m.tr : []).filter(r => Array.isArray(r) && r.length >= 21 && r.slice(0, 19).every(Number.isFinite));
+  let attacks = 0, far = 0, misfaced = 0;
+  for (const r of rows) {
+    const ownBits = +r[19 + side] || 0;
+    if (!(ownBits & 8)) continue;
+    attacks++;
+    const ownX = r[side ? 9 : 8], foeX = r[side ? 8 : 9];
+    if (Math.abs(ownX - foeX) > 0.2) far++;
+    const ownFace = r[side ? 13 : 12], toward = foeX > ownX ? 1 : -1;
+    if (ownFace !== toward) misfaced++;
+  }
+  const strengths = [], errors = [], next = [];
+  if (dealt > taken && dealt > 0) strengths.push(`伤害交换占优：造成 ${Math.round(dealt)}，承受 ${Math.round(taken)}。`);
+  if (combo >= 3) strengths.push(`最长连击：${combo} 段。`);
+  if (breaks > 0) strengths.push(`成功破防：${breaks} 次。`);
+  if (!strengths.length) strengths.push('本局操作轨迹已保存，可在回放中逐段复核起手与防守。');
+  if (taken > dealt * 1.2 && taken > 0) {
+    errors.push('承受伤害明显高于输出，交换中还可以减少硬吃招式。');
+    next.push('先练习格挡与腾空闪，等对手招式结束后再反击。');
+  }
+  if (attacks >= 8 && far / attacks >= 0.25) {
+    const pct = Math.round(far / attacks * 100);
+    errors.push(`约 ${pct}% 的攻击输入发生在较远距离，可能有部分出手够不到对手。`);
+    next.push('把回放频率调到 1 Hz 并打开判定框，确认攻击范围覆盖对手后再出手。');
+  }
+  if (attacks >= 8 && misfaced / attacks >= 0.2) {
+    const pct = Math.round(misfaced / attacks * 100);
+    errors.push(`约 ${pct}% 的攻击输入发生时没有正对对手。`);
+    next.push('起手前确认朝向，必要时先用方向键调整再攻击。');
+  }
+  if (falls > 0) { errors.push(`本局坠崖 ${falls} 次，边缘位置需要更早回到场地中央。`); next.push('把对手引向场地内侧，自己靠近边缘时优先撤回安全位置。'); }
+  if (!errors.length) errors.push('现有数据未发现明显的远距离出手或失衡交换。');
+  if (!next.length) next.push('用慢放和判定框复核命中后的硬直窗口，再练习一套稳定的追击。');
+  return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, strengths, errors, next };
+}
+function endReviewShow(m) {
+  const btn = $id('endReviewBtn'), panel = $id('endReview');
+  if (!btn || !panel) return;
+  const review = matchReviewData(m);
+  btn.classList.toggle('hidden', !review);
+  btn.setAttribute('aria-expanded', 'false');
+  panel.classList.add('hidden');
+  if (!review) { panel.innerHTML = ''; return; }
+  const list = items => `<ul>${items.map(s => `<li>${escapeHTML(cvT(s))}</li>`).join('')}</ul>`;
+  panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3><div class="end-review-stats"><span>${cvT('造成伤害')} ${review.dealt}</span><span>${cvT('承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section></div><p class="end-review-note">${cvT('复盘根据本局记录的战斗统计与操作轨迹生成。')}</p>`;
+}
+$id('endReviewBtn').addEventListener('click', () => {
+  const panel = $id('endReview'), btn = $id('endReviewBtn'), open = panel.classList.contains('hidden');
+  panel.classList.toggle('hidden', !open);
+  btn.setAttribute('aria-expanded', String(open));
+});
 // 联机录像两队的名字：双人共斗是两个人一队打电脑，其余是房主一队、加入的人一队
 function rpNetNames(m) {
   const h = (NET.names || {}).host || '游客', c = (NET.names || {}).client || '游客';
@@ -694,6 +750,7 @@ if ($id('rpImportBtn')) {
 }
 function startReplay(m) {
   if (!m || !m.ev || !m.st0) return;
+  debugHitbox = false;
   if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
   ROLL.on = false; REC.on = false; paused = false; BP = null; B.dummy = false; M.stage = null;
   setChars(m.ch[0], m.ch[1]);
@@ -710,7 +767,7 @@ function startReplay(m) {
   M.mode = 'replay';
   M.competitiveScrolls = m.competitiveScrolls && typeof m.competitiveScrolls === 'object' ? JSON.parse(JSON.stringify(m.competitiveScrolls)) : null;
   M.hasBuffs = !!(M.competitiveScrolls && Object.values(M.competitiveScrolls).some(team => Object.keys(team || {}).length));
-  Object.assign(REPLAY, { on: true, m, kind: m.kind, ev: m.ev, p: 0, f: 0, nf: 0, lh: [0, 0], paused: false, speed: 1, names: m.names || null });
+  Object.assign(REPLAY, { on: true, m, kind: m.kind, ev: m.ev, p: 0, f: 0, nf: 0, lh: [0, 0], paused: false, speed: 1, hz: 120, frameAcc: 0, names: m.names || null });
   if (isRaid()) raidBossSkills();   // 读存档那一刻还不知道是在放同袍肉鸽的录像：魔首的招这里再接上
   acc = 0; creditT = 0; particles.length = 0;
   showScreen(null);
@@ -719,10 +776,25 @@ function startReplay(m) {
   pickScene();
   $id('rpPause').textContent = '暂停';
   for (const x of document.querySelectorAll('#rpBar [data-sp]')) x.classList.toggle('sel', x.dataset.sp === '1');
+  replayInspectRender();
   $id('rpBar').classList.remove('hidden');
   rpInfo();
 }
-function rpInfo() { if (REPLAY.on) $id('rpInfo').textContent = `回放 · 第${CN[M.round] || M.round}回合${REPLAY.paused ? ' · 已暂停' : ''}`; }
+function rpInfo() {
+  if (REPLAY.on) $id('rpInfo').textContent = cvT(`回放 · 第${M.round}回合${REPLAY.paused ? ' · 已暂停' : ''} · F1 判定框`);
+  replayInspectRender();
+}
+function replayInspectRender() {
+  const rate = $id('rpHz'), value = $id('rpHzValue'), hitbox = $id('rpHitbox'), advance = $id('rpStep');
+  if (rate && rate.value !== String(REPLAY.hz || 120)) rate.value = String(REPLAY.hz || 120);
+  if (value && value.textContent !== `${REPLAY.hz || 120} Hz`) value.textContent = `${REPLAY.hz || 120} Hz`;
+  if (hitbox) {
+    hitbox.setAttribute('aria-pressed', String(debugHitbox));
+    const label = cvT(`F1 判定框：${debugHitbox ? '开' : '关'}`);
+    if (hitbox.textContent !== label) hitbox.textContent = label;
+  }
+  if (advance) advance.disabled = !REPLAY.on || !REPLAY.paused || M.phase === 'end';
+}
 // 联机录像里每台电脑管哪几个人（fighter 序号）；以前的录像没记，那时只有 1v1：房主 A、加入的人 B
 const rpSlots = m => (m && Array.isArray(m.slots) && m.slots.length === 2) ? m.slots : [[0], [1]];
 function replayFrame() {
@@ -736,11 +808,18 @@ function replayFrame() {
 }
 function replayTick(real) {
   if (REPLAY.paused || M.phase === 'end') return;
-  acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed() * REPLAY.speed;
+  REPLAY.frameAcc += real * Math.max(1, Math.min(120, REPLAY.hz || 120)) * REPLAY.speed;
   let n = 0;
-  while (acc >= STEP && n < 48) { replayFrame(); acc -= STEP; n++; if (M.phase === 'end' || !REPLAY.on) break; }
-  if (n >= 48) acc = 0;
+  while (REPLAY.frameAcc >= 1 && n < 48) { replayFrame(); REPLAY.frameAcc -= 1; n++; if (M.phase === 'end' || !REPLAY.on) break; }
+  if (n >= 48) REPLAY.frameAcc = 0;
   rpInfo();
+}
+function replayStep() {
+  if (!REPLAY.on || !REPLAY.paused || M.phase === 'end') return false;
+  REPLAY.frameAcc = 0;
+  replayFrame();
+  replayInspectRender();
+  return true;
 }
 function replayEnd(w) {
   $id('rpBar').classList.add('hidden');
@@ -751,10 +830,14 @@ function replayEnd(w) {
   $id('againBtn').style.display = 'none';
   $id('rpWatch').style.display = ''; $id('rpWatch').textContent = '再看一遍';
   RP.last = REPLAY.m;
+  endReviewShow(REPLAY.m);
   setTimeout(() => showScreen('end'), 300);
 }
 $id('rpWatch').addEventListener('click', () => { if (RP.last) startReplay(RP.last); });
-$id('rpPause').addEventListener('click', () => { REPLAY.paused = !REPLAY.paused; $id('rpPause').textContent = REPLAY.paused ? '继续' : '暂停'; rpInfo(); });
+$id('rpPause').addEventListener('click', () => { REPLAY.paused = !REPLAY.paused; $id('rpPause').textContent = cvT(REPLAY.paused ? '继续' : '暂停'); rpInfo(); });
+$id('rpHz').addEventListener('input', e => { REPLAY.hz = Math.max(1, Math.min(120, Math.round(+e.target.value || 120))); REPLAY.frameAcc = 0; replayInspectRender(); });
+$id('rpHitbox').addEventListener('click', () => { if (!REPLAY.on || M.phase === 'end') return; debugHitbox = !debugHitbox; replayInspectRender(); });
+$id('rpStep').addEventListener('click', replayStep);
 $id('rpExit').addEventListener('click', toMenu);
 for (const b of document.querySelectorAll('#rpBar [data-sp]')) b.addEventListener('click', () => {
   REPLAY.speed = +b.dataset.sp;

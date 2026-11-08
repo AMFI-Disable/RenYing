@@ -120,6 +120,13 @@
     // 木人桩的对手行为栏和左上角提示（src/game/21-buttons-02-training.js、16-draw-ui.js）
     [/^(.+)（只做一次）$/, (m0, a) => `${lookup(a) || a} (once)`],
     [/^按 (\S+) 换对手行为 \| F1 判定框 · Hz 慢放 · 单帧推进$/, (m0, k) => `${k}: dummy actions · F1 hitboxes · Hz slow motion · step frame`],
+    [/^回放 · 第(\d+)回合( · 已暂停)? · F1 判定框$/, (m0, n, paused) => `Replay · Round ${n}${paused || ''} · F1 hitboxes`],
+    [/^伤害交换占优：造成 (\d+)，承受 (\d+)。$/, (m0, dealt, taken) => `Favorable damage trade: dealt ${dealt}, took ${taken}.`],
+    [/^最长连击：(\d+) 段。$/, (m0, n) => `Longest combo: ${n} hits.`],
+    [/^成功破防：(\d+) 次。$/, (m0, n) => `Guard breaks: ${n}.`],
+    [/^约 (\d+)% 的攻击输入发生在较远距离，可能有部分出手够不到对手。$/, (m0, n) => `About ${n}% of attack inputs were made from far away and may not have reached the opponent.`],
+    [/^约 (\d+)% 的攻击输入发生时没有正对对手。$/, (m0, n) => `You were not facing the opponent for about ${n}% of attack inputs.`],
+    [/^本局坠崖 (\d+) 次，边缘位置需要更早回到场地中央。$/, (m0, n) => `You fell off the stage ${n} times. Return toward center sooner near an edge.`],
     [/^(\S+) 打开 · Esc 关闭$/, (m0, k) => `${k} opens · Esc closes`],
     [/^（冷却\s*(\d+(?:\.\d+)?)\s*秒）$/, (m0, n) => ` (cooldown ${n}s)`],
     [/^(.+?)禁用一名侠客$/, (m0, w) => `${lookup(w) || w} · Ban a hero`],

@@ -404,4 +404,34 @@ export default [
       toMenu(); return { pass: true, error: null };
     })()`
   },
+  {
+    name: 'AI match review identifies strengths, spacing and facing issues from saved match data',
+    fn: `(() => {
+      const rows = Array.from({ length: 8 }, () => {
+        const r = Array(21).fill(0); r[0] = 0.8; r[1] = 0.7; r[8] = 0.1; r[9] = 0.5; r[12] = -1; r[19] = 8; return r;
+      });
+      const report = matchReviewData({ mode: 'cpu', playerSide: 0, stats: [{ damage: 120, combo: 5, breaks: 1, falls: 0 }, { damage: 80 }], tr: rows });
+      if (!report || report.strengths.length < 2 || !report.errors.some(x => x.includes('100%')) || report.next.length < 2) {
+        return { pass: false, error: 'AI review did not explain measured strengths and actionable spacing/facing errors' };
+      }
+      if (matchReviewData({ mode: 'cpu', four: true, stats: [{ damage: 100 }] })) return { pass: false, error: 'AI review treated incomplete team telemetry as a 1v1 report' };
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Replay rate controls advance exact 120 Hz simulation frames and support single stepping',
+    fn: `(() => {
+      REPLAY.on = false; ROLL.on = false; paused = false; slowmo = 0; hitstop = 0; acc = 0; cine.t = -1; swapFreezeTimer = 0;
+      startMatch('cpu', 'normal', [0, 1]); M.phase = 'fight'; showScreen(null);
+      M.mode = 'replay'; Object.assign(REPLAY, { on: true, paused: false, kind: 'loc', ev: [], m: {}, f: 0, p: 0, nf: 0, frameAcc: 0, hz: 1, speed: 1 });
+      let before = clock;
+      replayTick(0.5);
+      if (REPLAY.f !== 0 || clock !== before) return { pass: false, error: '1 Hz replay advanced before one second elapsed' };
+      replayTick(0.5);
+      if (REPLAY.f !== 1 || Math.abs((clock - before) - STEP) > 1e-9) return { pass: false, error: '1 Hz replay did not advance exactly one simulation frame per second' };
+      REPLAY.paused = true; before = clock;
+      if (!replayStep() || Math.abs((clock - before) - STEP) > 1e-9) return { pass: false, error: 'paused replay did not step exactly one simulation frame' };
+      REPLAY.on = false; toMenu(); return { pass: true, error: null };
+    })()`
+  },
 ];

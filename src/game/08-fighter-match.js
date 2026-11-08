@@ -658,7 +658,8 @@ function inkTitle(name, lost) {
 function showEnd(w) {
   if (REPLAY.on) { replayEnd(w); return; }
   if (M.worldKey) { worldKeyRound(w); return; }
-  if (REC.on) recSave(w);
+  const reviewRecord = REC.on ? recSave(w) : null;
+  if (typeof endReviewShow === 'function') endReviewShow(reviewRecord);
   const stats = M.combatStats && M.combatStats[localIdx()];
   const card = $id('endCombatCard');
   if (card) card.textContent = stats ? `总伤害 ${Math.round(stats.damage)} · 最长连击 ${stats.combo} · 破防 ${stats.breaks} · 坠崖 ${stats.falls}` : '';
