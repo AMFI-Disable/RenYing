@@ -195,7 +195,7 @@ More in the wiki: [Multiplayer And Netcode](https://github.com/AMFI-Disable/RenY
 | `src/models/` | Trained AI weights |
 | `tools/` | `build.py` plus `ai/`, `admin/`, `audits/`, `checks/`, `tests/` and `music/` |
 | `docs/` | By topic: `ai/` (AI specs, frame data, trainer reports), `bugs/`, `design/`, `ops/` (deploy runbook in Chinese, admin guide), `project/`, `history/` (changelog, version history), and `wiki/` (wiki source) |
-| `.github/` | CI workflows, issue and pull request templates, `contributing.md`, `security.md` |
+| `.github/` | CI workflows, issue and pull request templates, `contributing.md` |
 | `index.html`, `renying-offline.html` | **Generated.** Online and offline editions |
 | `renying.html` | Notice page for the old address |
 
@@ -246,7 +246,7 @@ Read [contributing.md](.github/contributing.md) first. In short:
 - Rebuild and commit the generated pages together with the source change.
 - Only pull requests from the maintainer and repository collaborators are merged.
 
-Bugs and ideas go in [Issues](https://github.com/AMFI-Disable/RenYing/issues). Security problems go through [security.md](.github/security.md), not public issues.
+Bugs and ideas go in [Issues](https://github.com/AMFI-Disable/RenYing/issues). Security problems go through [security.md](security.md), not public issues.
 
 ---
 

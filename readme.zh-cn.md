@@ -195,7 +195,7 @@ flowchart LR
 | `src/models/` | 训练好的电脑 AI 权重 |
 | `tools/` | `build.py`，以及 `ai/`、`admin/`、`audits/`、`checks/`、`tests/` 和 `music/` |
 | `docs/` | 按主题分：`ai/`（AI 设计、帧数表、平衡报告）、`bugs/`、`design/`、`ops/`（部署手册、管理后台说明）、`project/`、`history/`（更新日志、版本历史），以及 `wiki/`（Wiki 源文件） |
-| `.github/` | CI 流程、issue 和 PR 模板、`contributing.md`、`security.md` |
+| `.github/` | CI 流程、issue 和 PR 模板、`contributing.md` |
 | `index.html`、`renying-offline.html` | **生成的文件。** 在线版和离线版 |
 | `renying.html` | 旧地址的提示页 |
 
@@ -246,7 +246,7 @@ python3 tools/build.py --check
 - 改了源码要重新生成网页，和源码一起提交。
 - 只合并维护者和仓库协作者开的 PR。
 
-问题和想法提到 [Issues](https://github.com/AMFI-Disable/RenYing/issues)。安全问题请按 [security.md](.github/security.md) 私下报告，不要公开发 issue。
+问题和想法提到 [Issues](https://github.com/AMFI-Disable/RenYing/issues)。安全问题请按 [security.md](security.md) 私下报告，不要公开发 issue。
 
 ---
 
