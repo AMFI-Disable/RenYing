@@ -34,7 +34,8 @@ const KEY_ACTIONS = [
   ['dash', '疾步冲刺'],
   ['special', '绝技（气满）'],
   ['skill', '门派绝学（Q）'],
-  ['skill2', '特殊突进（R）']
+  ['skill2', '特殊突进（R）'],
+  ['stance', '切换架势']
 ];
 let rebindingKey = null;
 function handleKeyRebind(e) {

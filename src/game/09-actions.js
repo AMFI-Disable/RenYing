@@ -15,7 +15,7 @@ function toNeutral(f) {
 }
 function startAttack(f, name) {
   endEscape(f);
-  f.state = 'attack'; f.move = f.moves[name]; f.moveName = name; f.t = 0;
+  f.state = 'attack'; f.move = typeof stanceMove === 'function' ? stanceMove(f, name) : f.moves[name]; f.moveName = name; f.t = 0;
   if (f.ch.passive === 'armor' && HEAVY_MOVES.includes(name)) { f.armorT = f.move.su + f.move.ac; f.armorHits = 1; }
   if (chaosNow('armor')) { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.move.ac || 0.15)); f.armorHits = Math.max(f.armorHits, 1); }
   f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
@@ -34,6 +34,7 @@ function doJump(f, dir) {
 }
 function startDash(f, dir) {
   f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * dir; f.vy = 0;
+  if (f.badgeId === 'pursuit') f.badgeDashT = 1.0;
   f.invul = 0.13; f.dashCD = DODGE_CD;
   if (f.onGround()) dust(f.x - dir * 20, 0, 8);
   SFX.dash();
@@ -70,6 +71,7 @@ function startSpecial(f) {
 }
 function neutral(f, foe) {
   const c = f.ctrl, onG = f.onGround();
+  if (typeof trySwitchStance === 'function' && onG && trySwitchStance(f)) return;
   if (onG && f.state !== 'victory') f.face = faceDir(f, foe);
   if (M.phase !== 'fight') {
     if (onG && f.state !== 'victory') { f.state = 'idle'; }
@@ -1226,6 +1228,8 @@ function updateFighter(f, foe) {
   holdBuf(f);
   f.t += STEP;
   f.dashCD = Math.max(0, f.dashCD - STEP);
+  f.stanceT = Math.max(0, (f.stanceT || 0) - STEP);
+  f.badgeDashT = Math.max(0, (f.badgeDashT || 0) - STEP);
   f.breakCD = Math.max(0, f.breakCD - STEP);
   f.skill2CD = Math.max(0, f.skill2CD - STEP);
   if (f.ch.inkShot) f.ink = Math.min(INK_MAX, (f.ink || 0) + INK_REGEN * STEP);
@@ -1286,7 +1290,8 @@ function updateFighter(f, foe) {
     // 现实武侠调息呼吸法：静止调息更快，体力消耗过半后调息变缓，移动/出招时调息减半
     const hpFactor = clamp(0.55 + 0.45 * (f.hp / f.maxHp), 0.55, 1.0);
     const stateBonus = (f.state === 'idle' && f.onGround()) ? 1.25 : (['walk', 'air'].includes(f.state) ? 0.8 : 0.5);
-    const regen = baseRegen * hpFactor * stateBonus * STEP;
+    const stanceRegen = f.stance && f.stanceUnlocked && ['tieshan', 'yuehua'].includes(f.ch.id) ? 1.2 : 1;
+    const regen = baseRegen * hpFactor * stateBonus * stanceRegen * STEP;
     f.guard = Math.min(f.maxGuard, (f.guard !== undefined ? f.guard : f.maxGuard) + regen);
   }
   if (f.state === 'skill' && f.skill === 'mirror') f.parryT = Math.max(0, f.parryT - STEP);
@@ -1301,6 +1306,7 @@ function updateFighter(f, foe) {
   if (f.beaconT > 0) f.beaconT = Math.max(0, f.beaconT - STEP);
   switch (f.state) {
     case 'idle': case 'walk': case 'air': case 'block': neutral(f, foe); break;
+    case 'stance': if (f.stanceT <= 0) toNeutral(f); else { f.vx = damp(f.vx, 0, 12, STEP); } break;
     case 'attack': attackUpdate(f, foe); break;
     case 'dash':
       if (M.phase === 'fight' && f.t > 0.07) {

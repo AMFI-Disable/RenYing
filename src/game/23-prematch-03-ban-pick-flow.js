@@ -125,9 +125,10 @@ function bpFinish() {
         : is2v2Net && Array.isArray(picks[0]) ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
         : (duo ? [duo[0][0], duo[1][0]] : picks);
       const mv = netMapVotes(), mut = netTeamMutator();
-      const start = { ch: flatCh, seed: matchSeed, duo, mv, map: mapId, mut, competitiveScrolls };
+      const loadouts = [typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}, NET.peerLoadout || {}];
+      const start = { ch: flatCh, seed: matchSeed, duo, mv, map: mapId, mut, competitiveScrolls, loadouts };
       send({ rstart: start });
-      rollStart(flatCh, matchSeed, duo, mv, mapId, mut, competitiveScrolls);
+      rollStart(flatCh, matchSeed, duo, mv, mapId, mut, competitiveScrolls, loadouts);
     };
     onlineCompetitiveDraft = { state: currentPreMatch, onComplete: complete, remoteDeadline: Date.now() + COMPETITIVE_DRAFT_SECONDS * Math.max(1, currentPreMatch.picks[1].length), finishing: false };
     competitiveDraftStart(currentPreMatch, mode, opts, complete, true);
@@ -162,8 +163,9 @@ function launchBpMatch(mode, opts, picks, bans, mapId, preMatch) {
       const mv = netMapVotes();   // 山河异境：两边的票（别的房间规则用不上）
       const mut = netTeamMutator();
       const competitiveScrolls = preMatch ? competitiveScrollMap(preMatch) : null;
-      send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId, mut, competitiveScrolls } : { ch: flatCh, seed, mv, map: mapId, mut, competitiveScrolls } });
-      rollStart(flatCh, seed, duo, mv, mapId, mut, competitiveScrolls);
+      const loadouts = [typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}, NET.peerLoadout || {}];
+      send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId, mut, competitiveScrolls, loadouts } : { ch: flatCh, seed, mv, map: mapId, mut, competitiveScrolls, loadouts } });
+      rollStart(flatCh, seed, duo, mv, mapId, mut, competitiveScrolls, loadouts);
     }
   } else if (mode === 'chaos') {
     startChaos(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);

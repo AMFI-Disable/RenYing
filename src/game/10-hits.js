@@ -219,6 +219,7 @@ function applyHit(att, def, m, pt) {
       for (let i = 0; i < 6; i++) addP({ type: 'spark', x: pt[0], y: pt[1], vx: rand(-240, 240), vy: rand(-240, 240), rgb: '120,230,255', life: 0.22, max: 0.22 });
       addP({ type: 'text', text: '🛡️ 精准招架', x: def.x, y: def.y - 110, life: 0.9, max: 0.9, rgb: '120,230,255' });
       ev.justGuard = true;
+      if (typeof applyCombatBadgeGuard === 'function') applyCombatBadgeGuard(def, ev);
       if (typeof TUT !== 'undefined' && TUT && def.idx === 0) TUT.justGuards = (TUT.justGuards || 0) + 1;
       hitVisual(ev); netEmit(ev);
       return;
@@ -254,6 +255,7 @@ function applyHit(att, def, m, pt) {
       SFX.heavy();
       haptic(45);
       ev.guardBreak = true;
+      if (typeof applyCombatBadgeBreak === 'function') applyCombatBadgeBreak(att, ev);
       hitVisual(ev); netEmit(ev);
       return;
     }
@@ -273,6 +275,7 @@ function applyHit(att, def, m, pt) {
     if (isDefFixed) { def.vy = 0; def.y = 0; }
     if (!m.isProj) att.vx -= att.face * (120 / Math.sqrt(massRatio));
     att.meter = Math.min(100, att.meter + 0.6 * mm); def.meter = Math.min(100, def.meter + 1.5);
+    if (typeof applyCombatBadgeGuard === 'function') applyCombatBadgeGuard(def, ev);
     if (scOn()) scFire(def, 'blk', att, false, m);
     hitVisual(ev); netEmit(ev);
     return;
@@ -292,6 +295,7 @@ function applyHit(att, def, m, pt) {
       def.skill2CD = Math.max(0, def.skill2CD - 0.4);
       ring(def.x, def.y - 60, 90, '255,200,120', 0.25);
     }
+    if (typeof applyCombatBadgeHit === 'function') applyCombatBadgeHit(att, def, m, ev);
     ev.armor = true; ev.dd = dmg;
     hitVisual(ev); netEmit(ev);
     return;
@@ -420,6 +424,7 @@ function applyHit(att, def, m, pt) {
   const chaosMeterMul = (chaosNow('meter_gain') || { val: 1 }).val;
   if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul);
   def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.08 : 0.14));
+  if (typeof applyCombatBadgeHit === 'function') applyCombatBadgeHit(att, def, m, ev);
   if (!m.noStun || def.hp <= 0) def.move = null;
   if (isBlockedCs2 && def.hp > 0) {
     // 格挡满蓄力斩：强制被压倒在地（带来击倒），但伤害减轻且快速起身

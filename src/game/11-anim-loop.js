@@ -75,7 +75,7 @@ function targetPose(f) {
     p = POSES[pn] || POSES.idle;
   } else if (s === 'dash') { p = POSES[f.dashDir === f.face ? 'dash' : 'bdash']; k = 30; }
   else if (s === 'air') { p = POSES[f.vy < 0 ? 'jump' : 'fall']; k = 14; }
-  else if (s === 'block' || s === 'blockstun') { p = POSES.block; k = 30; }
+  else if (s === 'block' || s === 'blockstun' || s === 'stance') { p = POSES.block; k = s === 'stance' ? 42 : 30; }
   else if (s === 'hitstun') { p = POSES.hurt; k = 34; }
   else if (s === 'launched' || s === 'held') { p = POSES.hurtAir; k = 22; }
   else if (s === 'knockdown') { p = POSES.lying; k = 16; }

@@ -1229,7 +1229,7 @@
   "skills": {
    "skill": {
     "id": "throwball",
-    "hit": 18,
+    "hit": 17,
     "total": 42
    },
    "skill2": null,

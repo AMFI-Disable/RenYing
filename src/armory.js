@@ -342,6 +342,7 @@
     try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip || {})); } catch (e) {}
     if (window.CloudSave) CloudSave.saveProfile(PROF);
     baseApply(PROF);
+    if ((M.mode === 'net' || bpMode === 'net' || NET.open) && typeof send === 'function' && typeof armoryCombatLoadoutMap === 'function') send({ pload: armoryCombatLoadoutMap() });
     for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
   }
   const patchOf = (env, skins0, equip0) => {
@@ -450,7 +451,7 @@
   }
 
   /* ---------- 页面 ---------- */
-  const TABS = [['inv', '库存'], ['codex', '皮肤图鉴'], ['cases', '武器箱'], ['term', '货郎'], ['market', '玩家市场'], ['trade', '熔铸契'], ['op', '江湖行动']];
+  const TABS = [['inv', '库存'], ['codex', '皮肤图鉴'], ['badges', '武学'], ['cases', '武器箱'], ['term', '货郎'], ['market', '玩家市场'], ['trade', '熔铸契'], ['op', '江湖行动']];
   function dots() {
     if (!ST || MODE === 'none') return {};
     const d = {};
@@ -471,7 +472,7 @@
       : MODE === 'offline' ? uiState('error', '连不上服务器，武库暂时只能看。', 'ar-banner')
       : MODE === 'old' ? `<p class="ar-banner">服务器上还是旧版武库，现在只能看。等服务器更新到新版就能开箱、交易，你的饰品和武器箱都在${OLDV === 1 ? '，没用完的钥匙会一把换一台货郎' : ''}。</p>`
       : MODE === 'local' && cloudOn() ? '<p class="ar-banner soft">测试期：服务器还没开武库，现在开箱、交易都只记在你的存档里，用来试玩。服务器版上线以后武库从零开始（会重新发新手礼），测试期开出来的东西不会带过去。</p>' : '';
-    const R = { inv: pInv, codex: pCodex, cases: pCases, term: pTerm, market: pMarket, trade: pTrade, op: pOp }[TAB] || pInv;
+    const R = { inv: pInv, codex: pCodex, badges: pBadges, cases: pCases, term: pTerm, market: pMarket, trade: pTrade, op: pOp }[TAB] || pInv;
     $id('arMain').innerHTML = banner + R();
     if (TAB === 'market' || TAB === 'term') loadMarket().then(fresh => { if (fresh && (TAB === 'market' || TAB === 'term') && $id('armory').classList.contains('on') && $id('arModal').hidden) render(); });
     if (TAB === 'inv') markSeenSoon();
@@ -1073,6 +1074,20 @@
       <h4 class="ar-h">星章兑换 <small>饰品都从普通武器箱里出，神兵、星座武器箱的换不到</small></h4><div class="ar-grid3">${shop}</div>
       <p class="ar-note">对局掉落：每局 ${Math.round(C.cv(CF(), 'dropP') * 100)}% 机会掉一件饰品或武器箱，每周最多 ${C.cv(CF(), 'dropCap')} 次（本周已掉 ${s.drop.n} 次）。</p>`;
   }
+  function pBadges() {
+    const s = blankS(), ids = Object.keys(C.BADGES), owned = Object.entries(s.badgeOwned || {}), totalKOs = Object.values(s.heroKOs || {}).reduce((n, x) => n + x, 0);
+    const gift = !s.badgeGift ? `<div class="ar-badge-gift"><div><h3>初入武学 · 银徽赠礼</h3><p>任选一枚银徽体验武学效果。徽记绑定账号，可在不同侠客之间调换。</p></div><div class="ar-grid3">${ids.map(id => { const b = C.BADGES[id]; return `<article class="ar-card"><b>${cvT(b.name)}</b><p>${cvT(b.desc)}</p><button type="button" class="go small" data-badge-gift="${id}" ${live() ? '' : 'disabled'}>领取银徽</button></article>`; }).join('')}</div></div>` : '';
+    const stock = owned.length ? `<div class="ar-grid3">${owned.map(([id, tier]) => { const b = C.BADGES[id], up = C.BADGE_UPGRADE[tier]; return `<article class="ar-card"><b>${cvT(b.name)} · ${cvT(tier === 'silver' ? '银徽' : tier === 'gold' ? '金徽' : '紫金徽')}</b><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT((window.COMBAT_BADGES && window.COMBAT_BADGES[id] && window.COMBAT_BADGES[id].trigger) || b.effect)}</small>${up ? `<button type="button" class="go small" data-badge-upgrade="${id}" ${live() && totalKOs >= up.kos && s.badgeSigils >= up.sigils && PROF.ink >= up.ink ? '' : 'disabled'}>升阶 ${cvT(up.to === 'gold' ? '金徽' : '紫金徽')} · ${up.sigils} 碎片 · ${fmt(up.ink)} 墨锭 · ${up.kos} 斩</button>` : '<small>已达最高阶</small>'}</article>`; }).join('')}</div>` : '<p class="ar-note">领取一枚银徽后，会在这里查看、升阶和装备。</p>';
+    const heroes = CHARS.map(ch => {
+      const kos = s.heroKOs[ch.id] || 0, unlocked = kos >= 20, stance = s.stances[ch.id] === 1 ? 1 : 0, equipped = s.badgeEquip[ch.id] || '';
+      const options = [`<option value="">不装备</option>`, ...owned.map(([id]) => `<option value="${id}" ${equipped === id ? 'selected' : ''}>${cvT(C.BADGES[id].name)} · ${cvT(s.badgeOwned[id] === 'silver' ? '银徽' : s.badgeOwned[id] === 'gold' ? '金徽' : '紫金徽')}</option>`)].join('');
+      const stanceTitle = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(window.HERO_STANCES[ch.id].name) : cvT('第二架势');
+      const stanceDesc = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(window.HERO_STANCES[ch.id].desc) : '';
+      return `<article class="ar-card ar-loadout"><b>${escapeHTML(ch.name)}</b><small>${unlocked ? `${kos} / 20 ${cvT('斩')}` : `${kos} / 20 ${cvT('斩')} · ${cvT('未解锁')}`}</small><p>${stanceDesc}</p><div class="row"><button type="button" class="${stance ? 'ghost' : 'go'} small" data-stance="${ch.id}" data-value="0" ${live() ? '' : 'disabled'}>${cvT('本式')}</button><button type="button" class="${stance ? 'go' : 'ghost'} small" data-stance="${ch.id}" data-value="1" ${live() && unlocked ? '' : 'disabled'}>${stanceTitle}</button></div><div class="row"><select data-badge-choice="${ch.id}" aria-label="${escapeHTML(ch.name)} ${cvT('徽记')}">${options}</select><button type="button" class="go small" data-badge-set="${ch.id}" ${live() ? '' : 'disabled'}>${cvT('装备')}</button></div></article>`;
+    }).join('');
+    return `<div class="ar-ophead"><div><span class="ar-k">${cvT('武学与徽记')}</span><h3>${cvT('徽记碎片')} <b>${s.badgeSigils || 0}</b> · ${cvT('累计斩获')} <b>${totalKOs}</b></h3></div><p class="ar-note">${cvT('每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。')}</p></div>
+      ${gift}<h4 class="ar-h">${cvT('我的徽记')}</h4>${stock}<h4 class="ar-h">${cvT('侠客架势与装备')}</h4><div class="ar-grid3">${heroes}</div>`;
+  }
   function covPick() {
     const list = C.ofTierReg('cov');   // 神兵武器箱的不能拿星章换
     modal(`<h3>自选一件赤霄饰品</h3><div class="ar-grid sm">${list.map(k => `<button type="button" class="ar-it" style="--tc:${tc(k)}" data-opcov="${k}"><img src="${art(k)}" alt=""><b>${escapeHTML(skinName(k))}</b><small>${charName(k)} · ${colName(k)}</small><i class="ar-bar"></i></button>`).join('')}</div><div class="row"><button class="ghost small" data-ar-close>取消</button></div>`, 'wide');
@@ -1107,6 +1122,10 @@
       const b = e.target.closest('button'); if (!b || b.disabled) return;
       const d = b.dataset;
       if (d.gotab) { TAB = d.gotab; if (d.mkv) MK.view = d.mkv; render(); return; }
+      if (d.badgeGift) { const r = await act('badgeGift', { id: d.badgeGift }); if (r && r.ok) { toast(`获得银徽「${cvT(C.BADGES[r.id].name)}」`); render(); } return; }
+      if (d.badgeUpgrade) { const r = await act('badgeUpgrade', { id: d.badgeUpgrade }); if (r && r.ok) { toast(`徽记已升阶：${cvT(C.BADGES[r.id].name)} · ${cvT(r.tier === 'gold' ? '金徽' : '紫金徽')}`); render(); } return; }
+      if (d.stance) { const r = await act('stanceSet', { hero: d.stance, stance: +d.value }); if (r && r.ok) { toast('已设置出战架势'); render(); } return; }
+      if (d.badgeSet) { const sel = main.querySelector(`[data-badge-choice="${d.badgeSet}"]`); const r = await act('badgeEquip', { hero: d.badgeSet, id: sel ? sel.value : '' }); if (r && r.ok) { toast(r.id ? '徽记已装备；原佩戴者已卸下' : '徽记已卸下'); render(); } return; }
       if (d.it && !d.sel) { const it = ST && ST.inv.find(x => x.i === +d.it); if (it) inspect(it, 'inv'); return; }
       if (d.mk) { marketItem(d.mk); return; }
       if (d.mkv) { MK.view = d.mkv; render(); return; }
@@ -1187,6 +1206,14 @@
     POLL = setInterval(() => { if (!$id('armory').classList.contains('on')) { clearInterval(POLL); return; } if (!BUSY && !REEL.on && !bulkOpening) act('sync', {}, { bg: true }).then(() => { if (!BUSY && !REEL.on && !bulkOpening && $id('arModal').hidden && $id('arIns').hidden) render(); }); }, 60000);
   }
   window.openArmory = openArmory;
+  window.armoryCombatLoadoutMap = function () {
+    const s = blankS(), out = {};
+    for (const hero of C.HERO_IDS) {
+      const id = s.badgeEquip[hero] || '';
+      out[hero] = { unlocked: (s.heroKOs[hero] || 0) >= 20, stance: s.stances[hero] === 1 ? 1 : 0, badge: id, tier: id ? s.badgeOwned[id] || '' : '' };
+    }
+    return out;
+  };
   bind();
   document.addEventListener('keydown', e => {   // Esc 关掉弹窗 / 检视
     if (e.key !== 'Escape' || !$id('armory').classList.contains('on')) return;

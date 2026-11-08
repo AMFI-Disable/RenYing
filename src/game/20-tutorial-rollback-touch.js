@@ -300,12 +300,13 @@ function localInput() {
   } else NET.presses2.length = 0;
   return { h, p: pr };
 }
-function rollStart(ch, seed, duo, mv, map, mut, competitiveScrolls = null) {
+function rollStart(ch, seed, duo, mv, map, mut, competitiveScrolls = null, loadouts = null) {
   if (typeof currentScreen !== 'undefined' && (currentScreen === 'buffDraft' || currentScreen === 'mapBriefing')) showScreen(null);   // 加入方：房主开打时收起通览和密卷页
   refocusGame();
   setChars(ch[0], ch[1]);
   if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }
   setupNetMatch();
+  M.combatLoadouts = Array.isArray(loadouts) ? loadouts : [combatLoadoutMap(), NET.peerLoadout || {}];
   M.competitiveScrolls = competitiveScrolls && typeof competitiveScrolls === 'object' ? competitiveScrolls : null;
   M.hasBuffs = !!(M.competitiveScrolls && Object.values(M.competitiveScrolls).some(team => Object.keys(team || {}).length));
   M.teamMutator = !NET.isRanked && ['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode) && ['chaos', 'mayhem'].includes(mut) ? mut : 'normal';
@@ -449,7 +450,7 @@ const TUI = { stick: null, stickUp: false, jumpHeld: false };
 function touchHeldJump() { human[0].held.jump = TUI.stickUp || TUI.jumpHeld; }
 function touchUIUpdate() {
   if (!TOUCH) return;
-  const inFight = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'train' || M.mode === 'tag3') && !paused && !document.querySelector('.scr.on');
+  const inFight = ['cpu', 'pvp', 'net', 'train', 'tag3', '2v2', 'watch2v2', 'tower', 'chaos', 'mayhem', 'maps', 'saga', 'raid'].includes(M.mode) && !paused && !document.querySelector('.scr.on');
   document.documentElement.classList.toggle('touch-game-active', inFight);
   document.body.classList.toggle('touch-game-active', inFight);
   $id('touchUI').classList.toggle('hidden', !inFight);

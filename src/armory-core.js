@@ -17,7 +17,7 @@
 (function (G) {
   'use strict';
   const C = {};
-  C.VER = 4;                                   // 4：市场只剩玩家之间买卖，武器箱和货郎改成商店固定价格（3：爆率调高，加神兵武器箱，改成限制每天开几个；2：去掉磨损和玉珏，加货郎）
+  C.VER = 5;                                   // 5：加入武学徽记和架势进度（4：市场只剩玩家之间买卖，武器箱和货郎改成商店固定价格）
   C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
   C.SEASON_DAYS = 32;
   C.INV_MAX = 1000000000, C.HIST_MAX = 40;
@@ -38,6 +38,17 @@
   C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji'];
   C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem'];
   C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
+  C.BADGES = {
+    flowing: { name: '连势', desc: '连续普攻命中后，获得少量额外真气。', en: 'Flow', effect: 'normal' },
+    focus: { name: '凝锋', desc: '蓄力斩命中后，获得少量额外真气。', en: 'Focus', effect: 'charged' },
+    riposte: { name: '回锋', desc: '精准招架成功后，恢复少量架势。', en: 'Riposte', effect: 'parry' },
+    breaker: { name: '破军', desc: '造成破防后，获得少量额外真气。', en: 'Breaker', effect: 'break' },
+    ascent: { name: '凌空', desc: '空中攻击命中后，获得少量额外真气。', en: 'Ascent', effect: 'air' },
+    pursuit: { name: '追影', desc: '闪避后首次命中，获得少量额外真气。', en: 'Pursuit', effect: 'dash' },
+  };
+  C.BADGE_TIER = { silver: 1, gold: 2, purpgold: 3 };
+  C.BADGE_UPGRADE = { silver: { to: 'gold', sigils: 3, ink: 2000, kos: 100 }, gold: { to: 'purpgold', sigils: 7, ink: 6000, kos: 300 } };
+  C.BADGE_SIGIL_KOS = 40;
 
   // 一次性、按天按周的奖励：领没领过记在武库存档的 rw 里（云端账号就是服务器上那份，玩家改不了），墨锭由这里发。
   // 本机的领取记录（localStorage）不算数：换设备、清缓存、退出再登录都领不到第二次。离线版和本机账号没有服务器，照旧本机算
@@ -373,6 +384,7 @@
   C.rwBlank = () => ({ d: 0, w: 0, dp: { games: 0, wins: 0, combo: 0, ults: 0 }, wp: { games: 0, wins: 0, combo: 0, ults: 0 }, dc: [], wc: [], ev: 0, ec: 0, comp: 0, tut: 0, ss: {}, sg: {}, seeded: 0 });
   C.blank = () => ({
     v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
+    badgeGift: 0, badgeOwned: {}, badgeEquip: {}, badgeSigils: 0, heroKOs: {}, stances: {},
     lst: [], hist: [], od: { d: 0, n: 0 }, pd: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, zw: { w: 0, n: 0 }, zf: 0, drop: { w: 0, g: 0, n: 0, sup: 0 },
     op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
     stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
@@ -399,6 +411,14 @@
     }
     for (const k of Object.keys(s)) if (!(k in b)) delete s[k];
     s.v = C.VER;
+    s.badgeGift = s.badgeGift ? 1 : 0;
+    s.badgeOwned = Object.fromEntries(Object.entries(s.badgeOwned).filter(([id, tier]) => own(C.BADGES, id) && own(C.BADGE_TIER, tier)));
+    s.badgeEquip = Object.fromEntries(Object.entries(s.badgeEquip).filter(([h, id]) => C.HERO_IDS.includes(h) && own(s.badgeOwned, id)).slice(0, C.HERO_IDS.length));
+    const equippedBadges = new Set();
+    for (const [h, id] of Object.entries(s.badgeEquip)) { if (equippedBadges.has(id)) delete s.badgeEquip[h]; else equippedBadges.add(id); }
+    s.badgeSigils = int(s.badgeSigils, 0, 1e6);
+    s.heroKOs = Object.fromEntries(Object.entries(s.heroKOs).filter(([h]) => C.HERO_IDS.includes(h)).map(([h, n]) => [h, int(n, 0, 1e6)]));
+    s.stances = Object.fromEntries(Object.entries(s.stances).filter(([h, n]) => C.HERO_IDS.includes(h) && (n === 0 || n === 1) && (n === 0 || (s.heroKOs[h] || 0) >= 20)));
     s.tags = int(s.tags, 0, 1e9); s.term = int(s.term, 0, 1e6) + oldKeys;
     s.cases = Object.fromEntries(C.CASES.map(c => [c, int(s.cases[c], 0, 1e6)]));
     const seen = new Set();
@@ -878,6 +898,38 @@
     s.eq[char] = it.i; env.equip[char] = it.k;
     return { ok: true, char };
   };
+  A.badgeGift = (s, a) => {
+    const id = String(a.id || '');
+    if (s.badgeGift) return { err: '已经领过徽记礼了' };
+    if (!own(C.BADGES, id)) return { err: '没有这枚徽记' };
+    s.badgeOwned[id] = 'silver'; s.badgeGift = 1;
+    return { ok: true, id, tier: 'silver' };
+  };
+  A.badgeEquip = (s, a) => {
+    const hero = String(a.hero || ''), id = String(a.id || '');
+    if (!C.HERO_IDS.includes(hero)) return { err: '没有这位侠客' };
+    if (id && !own(s.badgeOwned, id)) return { err: '还没有这枚徽记' };
+    for (const h of Object.keys(s.badgeEquip)) if (s.badgeEquip[h] === id || h === hero) delete s.badgeEquip[h];
+    if (id) s.badgeEquip[hero] = id;
+    return { ok: true, hero, id };
+  };
+  A.stanceSet = (s, a) => {
+    const hero = String(a.hero || ''), stance = +a.stance;
+    if (!C.HERO_IDS.includes(hero) || (stance !== 0 && stance !== 1)) return { err: '架势设置不正确' };
+    if (stance && (s.heroKOs[hero] || 0) < 20) return { err: '这位侠客还没有解锁第二架势' };
+    s.stances[hero] = stance;
+    return { ok: true, hero, stance };
+  };
+  A.badgeUpgrade = (s, a, env) => {
+    const id = String(a.id || ''), tier = s.badgeOwned[id], rule = C.BADGE_UPGRADE[tier];
+    if (!rule) return { err: '这枚徽记已升至最高阶' };
+    const totalKOs = Object.values(s.heroKOs).reduce((sum, n) => sum + n, 0);
+    if (totalKOs < rule.kos) return { err: `累计斩获 ${rule.kos} 次后才可升阶` };
+    if (s.badgeSigils < rule.sigils) return { err: `徽记碎片不足，需要 ${rule.sigils} 枚` };
+    if (env.ink < rule.ink) return { err: `墨锭不足，需要 ${rule.ink}` };
+    s.badgeSigils -= rule.sigils; giveInk(env, -rule.ink); s.badgeOwned[id] = rule.to;
+    return { ok: true, id, tier: rule.to, sigils: s.badgeSigils, ink: rule.ink };
+  };
   A.unequip = (s, a, env) => {
     const char = String(a.char || ''); if (!C.HERO_IDS.includes(char)) return { err: '没有这位侠客' };
     delete s.eq[char]; env.equip[char] = '';
@@ -968,7 +1020,7 @@
     if (!C.ctxOk(c)) return { err: '这局不算' };
     if (env.server) {   // 服务器上：要有开局时领的票，打够时间，两局之间隔开，每天有上限
       const tk = s.tk; s.tk = null;
-      if (!tk || env.now - tk.t0 < C.MATCH_MIN_MS || env.now - tk.t0 > C.MATCH_MAX_MS) return { err: '这局时间不对，不算' };
+      if (!tk || tk.mode !== c.mode || env.now - tk.t0 < C.MATCH_MIN_MS || env.now - tk.t0 > C.MATCH_MAX_MS) return { err: '这局时间不对，不算' };
       if (env.now - (s.last || 0) < C.MATCH_GAP_MS) return { err: '太快了，不算' };
       if (s.dm.n >= C.MATCH_DAY_CAP) return { err: '今天的对局奖励已经拿满了' };
     }
@@ -998,6 +1050,19 @@
       left -= add; eq.st += add;
       res.st.push({ i: eq.i, k: eq.k, add, total: eq.st });
     }
+    const totalBefore = Object.values(s.heroKOs).reduce((sum, n) => sum + n, 0);
+    let koLeft = C.KO_MAX;
+    for (const [h, raw] of Object.entries(isObj(c.ko) ? c.ko : {}).slice(0, 3)) {
+      if (!C.HERO_IDS.includes(h) || !Number.isFinite(+raw) || +raw <= 0 || koLeft <= 0) continue;
+      const add = Math.min(koLeft, Math.floor(+raw));
+      koLeft -= add;
+      const old = s.heroKOs[h] || 0;
+      s.heroKOs[h] = Math.min(1e6, old + add);
+      if (old < 20 && s.heroKOs[h] >= 20) res.stanceUnlocks = (res.stanceUnlocks || []).concat(h);
+    }
+    const totalAfter = Object.values(s.heroKOs).reduce((sum, n) => sum + n, 0);
+    const sigils = Math.floor(totalAfter / C.BADGE_SIGIL_KOS) - Math.floor(totalBefore / C.BADGE_SIGIL_KOS);
+    if (sigils > 0) { s.badgeSigils = Math.min(1e6, s.badgeSigils + sigils); res.badgeSigils = sigils; }
     if (s.drop.n < C.cv(env.cfg, 'dropCap') && env.rnd() < C.cv(env.cfg, 'dropP') && !C.invFull(s)) {
       s.drop.n++;
       if (env.rnd() < 0.3) { const cid = pickOf(env.rnd, C.REG); s.cases[cid]++; res.drop = { t: 'case', c: cid }; }

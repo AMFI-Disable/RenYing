@@ -102,7 +102,7 @@ section('只有墨锭：没有充值、玉珏和钥匙；兑换码只有管理�
   ok(!['jade', 'keys', 'orders', 'age', 'codes'].some(k => k in s), '存档里没有玉珏、钥匙、充值记录这些字段', Object.keys(s));
   ok(!C.ACTIONS.some(a => /topup|redeem|pay|jade|^age$|key/i.test(a)), '规则核心里也没有这些动作', C.ACTIONS);
   const h = await call('GET', '/api/health');
-  ok(h.econ === C.VER && C.VER === 4, '服务器报的规则版本是 4（网页据此判断服务器是不是新版）', h);
+  ok(h.econ === C.VER && C.VER === 5, '服务器报的规则版本是 5（网页据此判断服务器是不是新版）', h);
   ok(!C.ACTIONS.some(a => ['quick', 'sellCase', 'sellTerm'].includes(a)), '也没有卖给系统的动作：饰品只能卖给别的玩家', C.ACTIONS);
 }
 

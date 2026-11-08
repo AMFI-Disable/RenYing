@@ -15,7 +15,7 @@ class Ctrl {
 // 1P 攻击用鼠标（左键攻击/蓄力，右键重斩）或者 X 键（按住蓄力），其余用键盘；2P 全键盘
 // X 不和 2P、3P、4P 的任何键重复，同一台电脑多人玩时也不打架
 const DEFAULT_1P_KEYS = {
-  left: 'KeyA', right: 'KeyD', jump: 'KeyW', jump2: 'Space', down: 'KeyS', atk: 'KeyX', dash: 'ShiftLeft', special: 'KeyE', skill: 'KeyQ', skill2: 'KeyR'
+  left: 'KeyA', right: 'KeyD', jump: 'KeyW', jump2: 'Space', down: 'KeyS', atk: 'KeyX', dash: 'ShiftLeft', special: 'KeyE', skill: 'KeyQ', skill2: 'KeyR', stance: 'KeyZ'
 };
 let custom1PKeys = { ...DEFAULT_1P_KEYS };
 try {
@@ -35,9 +35,9 @@ function keyLabel(code) {
 }
 const KEYS = [
   {},
-  { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'jump', ArrowDown: 'down', KeyK: 'atk', KeyJ: 'dash', KeyO: 'skill2', KeyI: 'special', KeyU: 'skill' },
-  { KeyF: 'left', KeyH: 'right', KeyT: 'jump', KeyG: 'down', KeyC: 'atk', KeyV: 'dash', KeyB: 'skill', KeyN: 'skill2', KeyM: 'special' },
-  { Numpad4: 'left', Numpad6: 'right', Numpad8: 'jump', Numpad5: 'down', Numpad1: 'atk', Numpad2: 'dash', Numpad7: 'skill', Numpad9: 'skill2', Numpad3: 'special' },
+  { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'jump', ArrowDown: 'down', KeyK: 'atk', KeyJ: 'dash', KeyO: 'skill2', KeyI: 'special', KeyU: 'skill', KeyL: 'stance' },
+  { KeyF: 'left', KeyH: 'right', KeyT: 'jump', KeyG: 'down', KeyC: 'atk', KeyV: 'dash', KeyB: 'skill', KeyN: 'skill2', KeyM: 'special', KeyP: 'stance' },
+  { Numpad4: 'left', Numpad6: 'right', Numpad8: 'jump', Numpad5: 'down', Numpad1: 'atk', Numpad2: 'dash', Numpad7: 'skill', Numpad9: 'skill2', Numpad3: 'special', Numpad0: 'stance' },
 ];
 function applyCustomKeys() {
   KEYS[0] = {};
@@ -219,6 +219,7 @@ function send(o) { p2pSend(o); }
 function onNetOpen() {
   netStatus('已连接');
   send({ pskin: mySkinMap() });
+  send({ pload: typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {} });
   initAudio();
   if (NET.role === 'host') bpStart('net');
   else netStatus('已连接，即刻选人…');
@@ -314,7 +315,7 @@ function netLost() {
   NET.lastResult = '';
 }
 // 状态快照：房主每帧发一次
-const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits',
+const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits', 'stance', 'stanceUnlocked', 'stanceT', 'badgeId', 'badgeTier', 'badgeDashT',
   'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
   'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'defDebuffT', 'swapFreezeT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir', 'clones', 'cloneN', 'swapId'];
 // 同步数据用数组而不是对象，体积小一半多
@@ -366,7 +367,7 @@ function onNetMsg(msg) {
     // 开局只由房主发起：加入方收到才照办，形状不对的直接扔掉（以前 {} 就能把对面打崩）
     const r = msg.rstart;
     if (NET.role === 'host' || !r || !Array.isArray(r.ch) || r.ch.length < 2 || typeof r.seed !== 'number' || !isFinite(r.seed)) return;
-    rollStart(r.ch, r.seed, r.duo, r.mv, r.map, r.mut, r.competitiveScrolls); return;
+    rollStart(r.ch, r.seed, r.duo, r.mv, r.map, r.mut, r.competitiveScrolls, r.loadouts); return;
   }
   if (msg.rsync) {
     // 纠正状态只有房主会发：加入方收到才接受，而且状态要是 capState() 那个样子
@@ -392,6 +393,7 @@ function onNetMsg(msg) {
   }
   if (msg.avail && NET.role === 'host') { NET.peerAvail = msg.avail; if (BP && BP.avail) { BP.avail[1] = msg.avail; send({ bps: BP }); renderBP(); } }
   if (msg.pskin) NET.peerSkins = msg.pskin;
+  if (msg.pload && typeof msg.pload === 'object') NET.peerLoadout = msg.pload;
   if (msg.bp !== undefined && NET.role === 'host' && BP && BP.step < bpSteps().length && bpSteps()[BP.step][0] === 1) bpApply(msg.bp);
   if (msg.s && NET.role === 'client' && M.mode === 'net') applySnapshot(msg.s);
 }

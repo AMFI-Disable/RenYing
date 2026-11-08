@@ -483,6 +483,15 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
   .ar-supi { display: grid; place-items: center; font-family: var(--title); font-size: 40px; color: rgb(var(--tc)); background: rgba(var(--tc), .08); border: 1px solid rgba(var(--tc), .3); }
   .ar-supo b { font-size: 13px; text-align: center; overflow-wrap: anywhere; }
   .ar-grid3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 10px; }
+  .ar-badge-gift { display: grid; gap: 10px; margin: 14px 0 22px; padding: 14px; background: linear-gradient(120deg, rgba(233,196,106,.13), rgba(13,21,30,.34)); border: 1px solid rgba(233,196,106,.32); }
+  .ar-badge-gift h3 { margin: 0; color: #fff; }
+  .ar-badge-gift p, .ar-card p { margin: 0; color: var(--dim); font-size: 13px; }
+  .ar-badge-gift .ar-card, .ar-loadout { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; }
+  .ar-badge-gift .ar-card > b, .ar-loadout > b { color: #fff; }
+  .ar-badge-gift .ar-card > p { min-height: 38px; }
+  .ar-loadout small { color: var(--dim); }
+  .ar-loadout .row { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+  .ar-loadout select { min-width: 0; flex: 1 1 150px; padding: 7px 9px; color: var(--v-white); background: #151722; border: 1px solid var(--line); }
   .ar-starg { flex-wrap: wrap; }
   .ar-starg b { flex: 1 1 auto; font-size: 14px; color: #fff; }
   .ar-starc { font-size: 14px; letter-spacing: .1em; white-space: nowrap; color: var(--gold); }

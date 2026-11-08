@@ -539,6 +539,7 @@
   .tq { right: 16px; bottom: 102px; width: 58px; height: 58px; }
   .tesc { right: 168px; bottom: 138px; width: 52px; height: 52px; }
   .tult { right: 84px; bottom: 150px; width: 58px; height: 58px; }
+  .tstance { right: 160px; bottom: 72px; width: 48px; height: 48px; font-size: 11px !important; }
   .tult.ready { box-shadow: 0 0 20px rgba(233,196,106,.9); border-color: #e9c46a !important; color: #e9c46a !important; }
   #rotateTip { display: none; position: fixed; inset: 0; z-index: 60; background: #0b0b1c; color: var(--ink); font: 26px var(--title); align-items: center; justify-content: center; }
   @media (pointer: coarse) and (orientation: portrait) { #rotateTip { display: flex; } }

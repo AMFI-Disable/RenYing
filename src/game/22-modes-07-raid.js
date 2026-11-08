@@ -301,8 +301,9 @@ document.getElementById('againBtn').addEventListener('click', () => {
       send({ sys: 'rematch', action: 'start' });
       const mut = netTeamMutator();
       const competitiveScrolls = M.hasBuffs && M.competitiveScrolls ? JSON.parse(JSON.stringify(M.competitiveScrolls)) : null;
-      send({ rstart: duo ? { ch: picks, seed, duo, mv, mut, competitiveScrolls } : { ch: picks, seed, mv, mut, competitiveScrolls } });
-      rollStart(picks, seed, duo, mv, undefined, mut, competitiveScrolls);
+      const loadouts = [typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}, NET.peerLoadout || {}];
+      send({ rstart: duo ? { ch: picks, seed, duo, mv, mut, competitiveScrolls, loadouts } : { ch: picks, seed, mv, mut, competitiveScrolls, loadouts } });
+      rollStart(picks, seed, duo, mv, undefined, mut, competitiveScrolls, loadouts);
     } else {
       send({ sys: 'rematch', action: 'ask' });
       toast('已向房主发送再战请求');

@@ -527,6 +527,7 @@ html.touch-game-active, body.touch-game-active { touch-action: none; }
 .tq { right: 16px; bottom: 102px; width: 58px; height: 58px; }
 .tesc { right: 168px; bottom: 138px; width: 52px; height: 52px; }
 .tult { right: 84px; bottom: 150px; width: 58px; height: 58px; }
+.tstance { right: 160px; bottom: 72px; width: 48px; height: 48px; font-size: 11px !important; }
 .tult.ready { box-shadow: 0 0 20px rgba(233,196,106,.9); border-color: #e9c46a !important; color: #e9c46a !important; }
 #rotateTip { display: none; position: fixed; inset: 0; z-index: 60; background: #0b0b1c; color: var(--ink); font: 26px var(--title); align-items: center; justify-content: center; }
 @media (pointer: coarse) and (orientation: portrait) { #rotateTip { display: flex; } }
@@ -1973,6 +1974,15 @@ animation: arSpin 16s linear infinite, arFade .7s ease-out both; }
 .ar-supi { display: grid; place-items: center; font-family: var(--title); font-size: 40px; color: rgb(var(--tc)); background: rgba(var(--tc), .08); border: 1px solid rgba(var(--tc), .3); }
 .ar-supo b { font-size: 13px; text-align: center; overflow-wrap: anywhere; }
 .ar-grid3 { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(260px, 100%), 1fr)); gap: 10px; }
+.ar-badge-gift { display: grid; gap: 10px; margin: 14px 0 22px; padding: 14px; background: linear-gradient(120deg, rgba(233,196,106,.13), rgba(13,21,30,.34)); border: 1px solid rgba(233,196,106,.32); }
+.ar-badge-gift h3 { margin: 0; color: #fff; }
+.ar-badge-gift p, .ar-card p { margin: 0; color: var(--dim); font-size: 13px; }
+.ar-badge-gift .ar-card, .ar-loadout { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; }
+.ar-badge-gift .ar-card > b, .ar-loadout > b { color: #fff; }
+.ar-badge-gift .ar-card > p { min-height: 38px; }
+.ar-loadout small { color: var(--dim); }
+.ar-loadout .row { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; }
+.ar-loadout select { min-width: 0; flex: 1 1 150px; padding: 7px 9px; color: var(--v-white); background: #151722; border: 1px solid var(--line); }
 .ar-starg { flex-wrap: wrap; }
 .ar-starg b { flex: 1 1 auto; font-size: 14px; color: #fff; }
 .ar-starc { font-size: 14px; letter-spacing: .1em; white-space: nowrap; color: var(--gold); }
@@ -4496,6 +4506,7 @@ white-space: nowrap;
       <button class="tbtn tq" data-a="skill">技能</button>
       <button class="tbtn tesc" data-a="dash">闪</button>
       <button class="tbtn tult" data-a="special">大招</button>
+      <button class="tbtn tstance" data-a="stance">架势</button>
     </div>
   </div>
   <div id="rotateTip">请把手机横过来玩</div>
@@ -8439,6 +8450,71 @@ Object.assign(UI_COPY_EN, {
 "龙卷": "Tornado Storm",
 });
 Object.assign(UI_COPY_EN, {
+"连势": "Flow",
+"凝锋": "Focus",
+"回锋": "Riposte",
+"凌空": "Ascent",
+"追影": "Pursuit",
+"连续普攻命中后，获得少量额外真气。": "Gain a small amount of extra Qi when a normal attack lands during a combo.",
+"蓄力斩命中后，获得少量额外真气。": "Gain a small amount of extra Qi when a charged attack hits.",
+"精准招架成功后，恢复少量架势。": "Recover a little posture after a Just Guard.",
+"造成破防后，获得少量额外真气。": "Gain a small amount of extra Qi after breaking an opponent's guard.",
+"空中攻击命中后，获得少量额外真气。": "Gain a small amount of extra Qi when an aerial attack hits.",
+"闪避后首次命中，获得少量额外真气。": "Gain a small amount of extra Qi on the first hit within one second after dodging.",
+"回风式": "Returning Gale",
+"潜影式": "Veiled Step",
+"沉山式": "Mountain Brace",
+"穿云式": "Cloud Piercer",
+"逐风式": "Wind Chase",
+"连岳式": "Rising Mountain",
+"泼墨式": "Splashed Ink",
+"守月式": "Moon Guard",
+"掠空式": "Sky Skim",
+"清商式": "Clear Tone",
+"醉步式": "Drunken Step",
+"缠锋式": "Binding Chain",
+"穿叶式": "Threading Leaf",
+"照影式": "Reflected Mist",
+"双仪式": "Twin Poles",
+"游线式": "Tether Flow",
+"初入武学 · 银徽赠礼": "First Steps in Martial Arts · Silver Badge Gift",
+"任选一枚银徽体验武学效果。徽记绑定账号，可在不同侠客之间调换。": "Choose one Silver badge to try its effect. Badges are account-bound and can be reassigned between heroes.",
+"领取银徽": "Claim Silver Badge",
+"触发": "Trigger",
+"已达最高阶": "Maximum tier reached",
+"徽记碎片": "Badge Shards",
+"累计斩获": "Career KOs",
+"每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。": "Earn one badge shard for every 40 career KOs. Upgrades also require Ink and KO milestones.",
+"我的徽记": "My Badges",
+"领取一枚银徽后，会在这里查看、升阶和装备。": "Claim a Silver badge to view, upgrade, and equip it here.",
+"侠客架势与装备": "Hero Stances and Loadouts",
+"第二架势": "Alternate Stance",
+"斩": "KOs",
+"银徽": "Silver Badge",
+"金徽": "Gold Badge",
+"紫金徽": "Purple Gold Badge",
+"本式": "Base Stance",
+"徽记": "Badge",
+"装备": "Equip",
+"徽记已装备；原佩戴者已卸下": "Badge equipped; it was removed from its previous hero.",
+"徽记已卸下": "Badge unequipped.",
+"已设置出战架势": "Starting stance set.",
+"徽记已升阶：": "Badge upgraded: ",
+"徽记已升阶": "Badge upgraded",
+"获得银徽「": "Received Silver badge “",
+"连续普攻命中": "Consecutive normal hits",
+"蓄力斩命中": "Charged attack hits",
+"造成破防": "Break an opponent's guard",
+"空中攻击命中": "Aerial attack hits",
+"闪避后命中": "Hit after a dodge",
+"起手更快，收招更长，单次伤害略低。": "Faster startup and longer recovery, with slightly lower damage per hit.",
+"短距攻击更窄更远，蓄力斩后摇增加。": "Short attacks have a narrower, longer hitbox; charged attacks recover more slowly.",
+"攻击伤害略低，静止调息时架势恢复更快。": "Slightly lower attack damage, with faster posture recovery while standing still.",
+"攻击更远，伤害略低，出招稍慢。": "Longer reach and slightly lower damage, with slower startup.",
+"轻击更快，后摇更长，重击伤害略低。": "Faster light attacks and longer recovery; heavy attacks deal slightly less damage.",
+"重击更重，前后摇都更长。": "Heavier attacks with longer startup and recovery.",
+"命中硬直更久，伤害略低，攻击距离缩短。": "Longer hitstun and shorter reach, at slightly lower damage.",
+"空中出招更快，空中攻击收招略长。": "Faster aerial startup, with slightly longer aerial recovery.",
 "登录之后，方可领任务": "Log in to claim tasks",
 "进度先替你记着，登录之后就能领": "Progress is kept; log in to claim it",
 "领取": "Claim",
@@ -11954,7 +12030,7 @@ localStorage.setItem('renying-settings', JSON.stringify(SETTINGS));
 if (SETTINGS.lang) localStorage.setItem('renying-lang', SETTINGS.lang);
 } catch (e) {}
 }
-const VERSION = '1.0.10';        // 每次更新改一下，联机时双方版本必须一样
+const VERSION = '1.0.11';        // 每次更新改一下，联机时双方版本必须一样
 const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用
 const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上加全服排行榜
@@ -13735,7 +13811,7 @@ consume(a) { const t = this.buf[a]; if (t !== undefined && clock - t <= BUF) { d
 clear() { this.buf = {}; this.held.left = this.held.right = this.held.down = this.held.atk = this.held.jump = false; this.held.aim = 0; }
 }
 const DEFAULT_1P_KEYS = {
-left: 'KeyA', right: 'KeyD', jump: 'KeyW', jump2: 'Space', down: 'KeyS', atk: 'KeyX', dash: 'ShiftLeft', special: 'KeyE', skill: 'KeyQ', skill2: 'KeyR'
+left: 'KeyA', right: 'KeyD', jump: 'KeyW', jump2: 'Space', down: 'KeyS', atk: 'KeyX', dash: 'ShiftLeft', special: 'KeyE', skill: 'KeyQ', skill2: 'KeyR', stance: 'KeyZ'
 };
 let custom1PKeys = { ...DEFAULT_1P_KEYS };
 try {
@@ -13755,9 +13831,9 @@ return code;
 }
 const KEYS = [
 {},
-{ ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'jump', ArrowDown: 'down', KeyK: 'atk', KeyJ: 'dash', KeyO: 'skill2', KeyI: 'special', KeyU: 'skill' },
-{ KeyF: 'left', KeyH: 'right', KeyT: 'jump', KeyG: 'down', KeyC: 'atk', KeyV: 'dash', KeyB: 'skill', KeyN: 'skill2', KeyM: 'special' },
-{ Numpad4: 'left', Numpad6: 'right', Numpad8: 'jump', Numpad5: 'down', Numpad1: 'atk', Numpad2: 'dash', Numpad7: 'skill', Numpad9: 'skill2', Numpad3: 'special' },
+{ ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'jump', ArrowDown: 'down', KeyK: 'atk', KeyJ: 'dash', KeyO: 'skill2', KeyI: 'special', KeyU: 'skill', KeyL: 'stance' },
+{ KeyF: 'left', KeyH: 'right', KeyT: 'jump', KeyG: 'down', KeyC: 'atk', KeyV: 'dash', KeyB: 'skill', KeyN: 'skill2', KeyM: 'special', KeyP: 'stance' },
+{ Numpad4: 'left', Numpad6: 'right', Numpad8: 'jump', Numpad5: 'down', Numpad1: 'atk', Numpad2: 'dash', Numpad7: 'skill', Numpad9: 'skill2', Numpad3: 'special', Numpad0: 'stance' },
 ];
 function applyCustomKeys() {
 KEYS[0] = {};
@@ -13926,6 +14002,7 @@ function send(o) { p2pSend(o); }
 function onNetOpen() {
 netStatus('已连接');
 send({ pskin: mySkinMap() });
+send({ pload: typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {} });
 initAudio();
 if (NET.role === 'host') bpStart('net');
 else netStatus('已连接，即刻选人…');
@@ -14013,7 +14090,7 @@ netStatus(rkMsg || '对局已中断（未完成，不扣分）。可重新建房
 if (rkMsg) toast(rkMsg);
 NET.lastResult = '';
 }
-const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits',
+const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits', 'stance', 'stanceUnlocked', 'stanceT', 'badgeId', 'badgeTier', 'badgeDashT',
 'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
 'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'defDebuffT', 'swapFreezeT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir', 'clones', 'cloneN', 'swapId'];
 function snapF(f) { return FK.map(k => f[k] === undefined ? null : r2(f[k])); }
@@ -14059,7 +14136,7 @@ rollRecv(msg); return;
 if (msg.rstart) {
 const r = msg.rstart;
 if (NET.role === 'host' || !r || !Array.isArray(r.ch) || r.ch.length < 2 || typeof r.seed !== 'number' || !isFinite(r.seed)) return;
-rollStart(r.ch, r.seed, r.duo, r.mv, r.map, r.mut, r.competitiveScrolls); return;
+rollStart(r.ch, r.seed, r.duo, r.mv, r.map, r.mut, r.competitiveScrolls, r.loadouts); return;
 }
 if (msg.rsync) {
 const p = msg.rsync, st = p && p.st;
@@ -14084,6 +14161,7 @@ if (!BP.avail || !BP.avail[1]) send({ avail: availList() });
 }
 if (msg.avail && NET.role === 'host') { NET.peerAvail = msg.avail; if (BP && BP.avail) { BP.avail[1] = msg.avail; send({ bps: BP }); renderBP(); } }
 if (msg.pskin) NET.peerSkins = msg.pskin;
+if (msg.pload && typeof msg.pload === 'object') NET.peerLoadout = msg.pload;
 if (msg.bp !== undefined && NET.role === 'host' && BP && BP.step < bpSteps().length && bpSteps()[BP.step][0] === 1) bpApply(msg.bp);
 if (msg.s && NET.role === 'client' && M.mode === 'net') applySnapshot(msg.s);
 }
@@ -14905,6 +14983,7 @@ skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, es
 notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, needleMarkT: 0, lqNormHits: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0, pol: 0, polT: 0, magN: 0, magTg: -1, mChain: 0, mT: 0, sw: null, squashT: 0,
 guard: this.maxGuard, sinceBlock: 0,
 state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
+stance: 0, stanceUnlocked: false, stanceT: 0, badgeId: '', badgeTier: '', badgeDashT: 0,
 juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
 breakCD: 0, beaconT: 0, quickGetup: false, quickGetupPhase: false, plat: -1, dropT: 0 });   // plat：站在山河异境第几个平台上（-1 是地上或空中）；dropT：刚从平台上落下，这段时间穿过平台
 this.scarf = []; this.trail = []; this.ghosts = [];
@@ -15373,6 +15452,8 @@ if (A.ctrl && typeof A.ctrl.updateTactic === 'function') A.ctrl.updateTactic(A, 
 if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
 }
 magRoll();
+if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts();
+if (REC.on && REC.meta) REC.meta.loadouts = [A, B, C, D].map(f => ({ unlocked: !!f.stanceUnlocked, stance: f.stance || 0, badge: f.badgeId || '', tier: f.badgeTier || '' }));
 if (M.round === 1) M.combatStats = Array.from({ length: 4 }, () => ({ damage: 0, combo: 0, breaks: 0, falls: 0 }));
 const isMayhem = mayhemOn();
 if (isMayhem) {
@@ -15772,7 +15853,7 @@ if (f.onGround()) { f.juggle = 0; f.huiMaHits = 0; }
 }
 function startAttack(f, name) {
 endEscape(f);
-f.state = 'attack'; f.move = f.moves[name]; f.moveName = name; f.t = 0;
+f.state = 'attack'; f.move = typeof stanceMove === 'function' ? stanceMove(f, name) : f.moves[name]; f.moveName = name; f.t = 0;
 if (f.ch.passive === 'armor' && HEAVY_MOVES.includes(name)) { f.armorT = f.move.su + f.move.ac; f.armorHits = 1; }
 if (chaosNow('armor')) { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.move.ac || 0.15)); f.armorHits = Math.max(f.armorHits, 1); }
 f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
@@ -15791,6 +15872,7 @@ if (scOn()) scFire(f, 'jump', foeOf(f));
 }
 function startDash(f, dir) {
 f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * dir; f.vy = 0;
+if (f.badgeId === 'pursuit') f.badgeDashT = 1.0;
 f.invul = 0.13; f.dashCD = DODGE_CD;
 if (f.onGround()) dust(f.x - dir * 20, 0, 8);
 SFX.dash();
@@ -15827,6 +15909,7 @@ addP({ type: 'spark', x: f.x, y: f.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) 
 }
 function neutral(f, foe) {
 const c = f.ctrl, onG = f.onGround();
+if (typeof trySwitchStance === 'function' && onG && trySwitchStance(f)) return;
 if (onG && f.state !== 'victory') f.face = faceDir(f, foe);
 if (M.phase !== 'fight') {
 if (onG && f.state !== 'victory') { f.state = 'idle'; }
@@ -16900,6 +16983,8 @@ function updateFighter(f, foe) {
 holdBuf(f);
 f.t += STEP;
 f.dashCD = Math.max(0, f.dashCD - STEP);
+f.stanceT = Math.max(0, (f.stanceT || 0) - STEP);
+f.badgeDashT = Math.max(0, (f.badgeDashT || 0) - STEP);
 f.breakCD = Math.max(0, f.breakCD - STEP);
 f.skill2CD = Math.max(0, f.skill2CD - STEP);
 if (f.ch.inkShot) f.ink = Math.min(INK_MAX, (f.ink || 0) + INK_REGEN * STEP);
@@ -16957,7 +17042,8 @@ if (f.state !== 'block' && f.state !== 'blockstun' && f.sinceBlock > 0.6) {
 const baseRegen = ((f.ch && f.ch.stat && f.ch.stat.guardRegen) || 26);
 const hpFactor = clamp(0.55 + 0.45 * (f.hp / f.maxHp), 0.55, 1.0);
 const stateBonus = (f.state === 'idle' && f.onGround()) ? 1.25 : (['walk', 'air'].includes(f.state) ? 0.8 : 0.5);
-const regen = baseRegen * hpFactor * stateBonus * STEP;
+const stanceRegen = f.stance && f.stanceUnlocked && ['tieshan', 'yuehua'].includes(f.ch.id) ? 1.2 : 1;
+const regen = baseRegen * hpFactor * stateBonus * stanceRegen * STEP;
 f.guard = Math.min(f.maxGuard, (f.guard !== undefined ? f.guard : f.maxGuard) + regen);
 }
 if (f.state === 'skill' && f.skill === 'mirror') f.parryT = Math.max(0, f.parryT - STEP);
@@ -16971,6 +17057,7 @@ f.flash = Math.max(0, f.flash - STEP);
 if (f.beaconT > 0) f.beaconT = Math.max(0, f.beaconT - STEP);
 switch (f.state) {
 case 'idle': case 'walk': case 'air': case 'block': neutral(f, foe); break;
+case 'stance': if (f.stanceT <= 0) toNeutral(f); else { f.vx = damp(f.vx, 0, 12, STEP); } break;
 case 'attack': attackUpdate(f, foe); break;
 case 'dash':
 if (M.phase === 'fight' && f.t > 0.07) {
@@ -17375,6 +17462,7 @@ ring(pt[0], pt[1], 130, '120,230,255', 0.4);
 for (let i = 0; i < 6; i++) addP({ type: 'spark', x: pt[0], y: pt[1], vx: rand(-240, 240), vy: rand(-240, 240), rgb: '120,230,255', life: 0.22, max: 0.22 });
 addP({ type: 'text', text: '🛡️ 精准招架', x: def.x, y: def.y - 110, life: 0.9, max: 0.9, rgb: '120,230,255' });
 ev.justGuard = true;
+if (typeof applyCombatBadgeGuard === 'function') applyCombatBadgeGuard(def, ev);
 if (typeof TUT !== 'undefined' && TUT && def.idx === 0) TUT.justGuards = (TUT.justGuards || 0) + 1;
 hitVisual(ev); netEmit(ev);
 return;
@@ -17406,6 +17494,7 @@ addP({ type: 'text', text: '💥 破防崩势', x: def.x, y: def.y - 110, life: 
 SFX.heavy();
 haptic(45);
 ev.guardBreak = true;
+if (typeof applyCombatBadgeBreak === 'function') applyCombatBadgeBreak(att, ev);
 hitVisual(ev); netEmit(ev);
 return;
 }
@@ -17424,6 +17513,7 @@ def.vx = isDefFixed ? 0 : fx * (180 + Math.abs(m.kb[0]) * 0.35) * Math.sqrt(mass
 if (isDefFixed) { def.vy = 0; def.y = 0; }
 if (!m.isProj) att.vx -= att.face * (120 / Math.sqrt(massRatio));
 att.meter = Math.min(100, att.meter + 0.6 * mm); def.meter = Math.min(100, def.meter + 1.5);
+if (typeof applyCombatBadgeGuard === 'function') applyCombatBadgeGuard(def, ev);
 if (scOn()) scFire(def, 'blk', att, false, m);
 hitVisual(ev); netEmit(ev);
 return;
@@ -17442,6 +17532,7 @@ def.skillCD = Math.max(0, def.skillCD - 0.4);
 def.skill2CD = Math.max(0, def.skill2CD - 0.4);
 ring(def.x, def.y - 60, 90, '255,200,120', 0.25);
 }
+if (typeof applyCombatBadgeHit === 'function') applyCombatBadgeHit(att, def, m, ev);
 ev.armor = true; ev.dd = dmg;
 hitVisual(ev); netEmit(ev);
 return;
@@ -17564,6 +17655,7 @@ att.hitConfirmed = true;
 const chaosMeterMul = (chaosNow('meter_gain') || { val: 1 }).val;
 if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul);
 def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.08 : 0.14));
+if (typeof applyCombatBadgeHit === 'function') applyCombatBadgeHit(att, def, m, ev);
 if (!m.noStun || def.hp <= 0) def.move = null;
 if (isBlockedCs2 && def.hp > 0) {
 def.state = 'knockdown';
@@ -17859,7 +17951,7 @@ if (f.skAir && airH(f) > 4) pn = (AIR_SKILL_POSE[f.skill] || {})[pn] || (pn === 
 p = POSES[pn] || POSES.idle;
 } else if (s === 'dash') { p = POSES[f.dashDir === f.face ? 'dash' : 'bdash']; k = 30; }
 else if (s === 'air') { p = POSES[f.vy < 0 ? 'jump' : 'fall']; k = 14; }
-else if (s === 'block' || s === 'blockstun') { p = POSES.block; k = 30; }
+else if (s === 'block' || s === 'blockstun' || s === 'stance') { p = POSES.block; k = s === 'stance' ? 42 : 30; }
 else if (s === 'hitstun') { p = POSES.hurt; k = 34; }
 else if (s === 'launched' || s === 'held') { p = POSES.hurtAir; k = 22; }
 else if (s === 'knockdown') { p = POSES.lying; k = 16; }
@@ -22991,6 +23083,11 @@ ctx.fillStyle = '#3a2416'; ctx.fillRect(-10, bot - 6, W + 20, 16); ctx.fillStyle
 ctx.fillStyle = '#c9a24a'; ctx.fillRect(-6, bot - 9, 18, 22); ctx.fillRect(W - 12, bot - 9, 18, 22);
 ctx.restore();
 }
+function combatLoadoutLabel(f) {
+const stance = f && f.stance && HERO_STANCES[f.ch.id] ? HERO_STANCES[f.ch.id].name : '本式';
+const badge = f && f.badgeId && COMBAT_BADGES[f.badgeId] ? `${COMBAT_BADGES[f.badgeId].n} · ${f.badgeTier === 'purpgold' ? '紫金' : f.badgeTier === 'gold' ? '金' : '银'}` : '';
+return [stance, badge].filter(Boolean).map(cvT).join(' · ');
+}
 function drawHUD2v2() {
 const bh = Math.max(12, H * 0.02);
 const top = Math.max(22, H * 0.04) + (H < 520 ? 8 : 0);
@@ -23047,7 +23144,7 @@ fTag = (f === A || f === C) ? (f.ctrl === human[0] ? ' [我]' : ' [队友]') : '
 fTag = (f === A || f === C) ? (NET.role === 'host' ? ' [我方]' : ' [敌方]') : (NET.role === 'client' ? ' [我方]' : ' [敌方]');
 }
 }
-const dispName = cvT(f.look.name) + (fTag && window.I18N ? fTag.replace(/\[(.+)\]/, (m0, w) => `[${I18N.t(w)}]`) : fTag);   // 英文界面：[队友] 这类标签也换成英文
+const loadout = combatLoadoutLabel(f), dispName = cvT(f.look.name) + (fTag && window.I18N ? fTag.replace(/\[(.+)\]/, (m0, w) => `[${I18N.t(w)}]`) : fTag) + ` · ${loadout}`;   // 显示双方当前架势与徽记
 ctx.font = `bold ${fsN}px ${TITLE_FONT}`; const nameW = ctx.measureText(dispName).width;
 ctx.font = `${fsNum}px ${BODY_FONT}`; const hpW = ctx.measureText(hpTxt).width, gW = ctx.measureText(gTxt).width;
 const total = nameW + hpW + gW + txtGap * 2;
@@ -23148,7 +23245,7 @@ ctx.fillStyle = dead ? '#ff7676' : '#f4efe6';
 ctx.textAlign = left ? 'left' : 'right';
 const tx = left ? x + 6 : x + w - 6;
 const statusTxt = dead ? cvT('【重伤倒地】') : `${Math.ceil(f.hp)}/${f.maxHp}`;
-ctx.fillText(`${cvT(roleTag)} · ${cvT(f.look.name)}  ${statusTxt}`, tx, y + barH - 3);
+ctx.fillText(`${cvT(roleTag)} · ${cvT(f.look.name)} · ${combatLoadoutLabel(f)}  ${statusTxt}`, tx, y + barH - 3);
 ctx.restore();
 };
 allies.forEach((f, idx) => {
@@ -23281,6 +23378,8 @@ ctx.fillStyle = `rgb(${f.look.slash})`;
 ctx.textAlign = i === 0 ? 'left' : 'right';
 const nm = cvT(f.look.name);
 ctx.fillText(nm, i === 0 ? x0 : x0 + barW, top + bh + 8);
+ctx.font = `${Math.max(10, Math.round(bh * 0.78))}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.78)';
+ctx.fillText(combatLoadoutLabel(f), i === 0 ? x0 : x0 + barW, top + bh * 3.15);
 let badgeW = 0;
 if (f.ch.passive === 'magnet') {   // 磁仙：名字旁边一个大的红 ⊕ / 蓝 ⊖，一眼看出现在是哪一极
 const r = bh * 0.85, nw = ctx.measureText(nm).width; badgeW = r * 2 + 8;
@@ -24411,7 +24510,8 @@ const KEY_ACTIONS = [
 ['dash', '疾步冲刺'],
 ['special', '绝技（气满）'],
 ['skill', '门派绝学（Q）'],
-['skill2', '特殊突进（R）']
+['skill2', '特殊突进（R）'],
+['stance', '切换架势']
 ];
 let rebindingKey = null;
 function handleKeyRebind(e) {
@@ -27376,12 +27476,13 @@ pr = pr.concat(NET.presses2.splice(0).map(a => '2' + a));
 } else NET.presses2.length = 0;
 return { h, p: pr };
 }
-function rollStart(ch, seed, duo, mv, map, mut, competitiveScrolls = null) {
+function rollStart(ch, seed, duo, mv, map, mut, competitiveScrolls = null, loadouts = null) {
 if (typeof currentScreen !== 'undefined' && (currentScreen === 'buffDraft' || currentScreen === 'mapBriefing')) showScreen(null);   // 加入方：房主开打时收起通览和密卷页
 refocusGame();
 setChars(ch[0], ch[1]);
 if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }
 setupNetMatch();
+M.combatLoadouts = Array.isArray(loadouts) ? loadouts : [combatLoadoutMap(), NET.peerLoadout || {}];
 M.competitiveScrolls = competitiveScrolls && typeof competitiveScrolls === 'object' ? competitiveScrolls : null;
 M.hasBuffs = !!(M.competitiveScrolls && Object.values(M.competitiveScrolls).some(team => Object.keys(team || {}).length));
 M.teamMutator = !NET.isRanked && ['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode) && ['chaos', 'mayhem'].includes(mut) ? mut : 'normal';
@@ -27518,7 +27619,7 @@ const TUI = { stick: null, stickUp: false, jumpHeld: false };
 function touchHeldJump() { human[0].held.jump = TUI.stickUp || TUI.jumpHeld; }
 function touchUIUpdate() {
 if (!TOUCH) return;
-const inFight = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'train' || M.mode === 'tag3') && !paused && !document.querySelector('.scr.on');
+const inFight = ['cpu', 'pvp', 'net', 'train', 'tag3', '2v2', 'watch2v2', 'tower', 'chaos', 'mayhem', 'maps', 'saga', 'raid'].includes(M.mode) && !paused && !document.querySelector('.scr.on');
 document.documentElement.classList.toggle('touch-game-active', inFight);
 document.body.classList.toggle('touch-game-active', inFight);
 $id('touchUI').classList.toggle('hidden', !inFight);
@@ -29167,8 +29268,9 @@ const mv = netMapVotes();
 send({ sys: 'rematch', action: 'start' });
 const mut = netTeamMutator();
 const competitiveScrolls = M.hasBuffs && M.competitiveScrolls ? JSON.parse(JSON.stringify(M.competitiveScrolls)) : null;
-send({ rstart: duo ? { ch: picks, seed, duo, mv, mut, competitiveScrolls } : { ch: picks, seed, mv, mut, competitiveScrolls } });
-rollStart(picks, seed, duo, mv, undefined, mut, competitiveScrolls);
+const loadouts = [typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}, NET.peerLoadout || {}];
+send({ rstart: duo ? { ch: picks, seed, duo, mv, mut, competitiveScrolls, loadouts } : { ch: picks, seed, mv, mut, competitiveScrolls, loadouts } });
+rollStart(picks, seed, duo, mv, undefined, mut, competitiveScrolls, loadouts);
 } else {
 send({ sys: 'rematch', action: 'ask' });
 toast('已向房主发送再战请求');
@@ -32027,9 +32129,10 @@ const flatCh = raidNet ? [picks[0][0], picks[0][0], picks[1][0], picks[0][1]]
 : is2v2Net && Array.isArray(picks[0]) ? [picks[0][0], picks[1][0], picks[0][1], picks[1][1]]
 : (duo ? [duo[0][0], duo[1][0]] : picks);
 const mv = netMapVotes(), mut = netTeamMutator();
-const start = { ch: flatCh, seed: matchSeed, duo, mv, map: mapId, mut, competitiveScrolls };
+const loadouts = [typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}, NET.peerLoadout || {}];
+const start = { ch: flatCh, seed: matchSeed, duo, mv, map: mapId, mut, competitiveScrolls, loadouts };
 send({ rstart: start });
-rollStart(flatCh, matchSeed, duo, mv, mapId, mut, competitiveScrolls);
+rollStart(flatCh, matchSeed, duo, mv, mapId, mut, competitiveScrolls, loadouts);
 };
 onlineCompetitiveDraft = { state: currentPreMatch, onComplete: complete, remoteDeadline: Date.now() + COMPETITIVE_DRAFT_SECONDS * Math.max(1, currentPreMatch.picks[1].length), finishing: false };
 competitiveDraftStart(currentPreMatch, mode, opts, complete, true);
@@ -32063,8 +32166,9 @@ const flatCh = raidNet ? [picks[0][0], picks[0][0], picks[1][0], picks[0][1]]
 const mv = netMapVotes();   // 山河异境：两边的票（别的房间规则用不上）
 const mut = netTeamMutator();
 const competitiveScrolls = preMatch ? competitiveScrollMap(preMatch) : null;
-send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId, mut, competitiveScrolls } : { ch: flatCh, seed, mv, map: mapId, mut, competitiveScrolls } });
-rollStart(flatCh, seed, duo, mv, mapId, mut, competitiveScrolls);
+const loadouts = [typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}, NET.peerLoadout || {}];
+send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId, mut, competitiveScrolls, loadouts } : { ch: flatCh, seed, mv, map: mapId, mut, competitiveScrolls, loadouts } });
+rollStart(flatCh, seed, duo, mv, mapId, mut, competitiveScrolls, loadouts);
 }
 } else if (mode === 'chaos') {
 startChaos(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
@@ -34039,6 +34143,100 @@ kbHelpFrom = null;
 if (kbHelp.addEventListener) kbHelp.addEventListener('click', e => { if (e.target === kbHelp) kbHelpShow(false); });
 if ($id('mKbOnly')) $id('mKbOnly').addEventListener('click', () => kbOnlySet(!kbOnly()));
 kbOnlyApply();
+var HERO_STANCES = {
+qingfeng: { name: '回风式', en: 'Returning Gale', kind: 'swift', desc: '起手更快，收招更长，单次伤害略低。' },
+feiying: { name: '潜影式', en: 'Veiled Step', kind: 'precision', desc: '短距攻击更窄更远，蓄力斩后摇增加。' },
+tieshan: { name: '沉山式', en: 'Mountain Brace', kind: 'guard', desc: '攻击伤害略低，静止调息时架势恢复更快。' },
+lingshuang: { name: '穿云式', en: 'Cloud Piercer', kind: 'reach', desc: '攻击更远，伤害略低，出招稍慢。' },
+liuyun: { name: '逐风式', en: 'Wind Chase', kind: 'swift', desc: '轻击更快，后摇更长，重击伤害略低。' },
+leiming: { name: '连岳式', en: 'Rising Mountain', kind: 'power', desc: '重击更重，前后摇都更长。' },
+moyu: { name: '泼墨式', en: 'Splashed Ink', kind: 'control', desc: '命中硬直更久，伤害略低，攻击距离缩短。' },
+yuehua: { name: '守月式', en: 'Moon Guard', kind: 'guard', desc: '攻击伤害略低，静止调息时架势恢复更快。' },
+yanling: { name: '掠空式', en: 'Sky Skim', kind: 'swift', desc: '空中出招更快，空中攻击收招略长。' },
+yuxiao: { name: '清商式', en: 'Clear Tone', kind: 'control', desc: '攻击硬直更长，伤害略低，攻击距离缩短。' },
+zuixian: { name: '醉步式', en: 'Drunken Step', kind: 'precision', desc: '轻击判定更窄更远，蓄力斩后摇增加。' },
+gouchen: { name: '缠锋式', en: 'Binding Chain', kind: 'reach', desc: '攻击更远，伤害略低，出招稍慢。' },
+lingque: { name: '穿叶式', en: 'Threading Leaf', kind: 'precision', desc: '轻击判定更窄更远，蓄力斩后摇增加。' },
+liying: { name: '照影式', en: 'Reflected Mist', kind: 'control', desc: '攻击硬直更长，伤害略低，攻击距离缩短。' },
+cixian: { name: '双仪式', en: 'Twin Poles', kind: 'power', desc: '重击更重，前后摇都更长。' },
+qianji: { name: '游线式', en: 'Tether Flow', kind: 'reach', desc: '攻击更远，伤害略低，出招稍慢。' },
+};
+var COMBAT_BADGES = {
+flowing: { n: '连势', en: 'Flow', trigger: '连续普攻命中', effect: '连段普攻命中后获得额外真气。' },
+focus: { n: '凝锋', en: 'Focus', trigger: '蓄力斩命中', effect: '蓄力斩命中后获得额外真气。' },
+riposte: { n: '回锋', en: 'Riposte', trigger: '精准招架', effect: '精准招架后恢复少量架势。' },
+breaker: { n: '破军', en: 'Breaker', trigger: '造成破防', effect: '造成破防后获得额外真气。' },
+ascent: { n: '凌空', en: 'Ascent', trigger: '空中攻击命中', effect: '空中攻击命中后获得额外真气。' },
+pursuit: { n: '追影', en: 'Pursuit', trigger: '闪避后命中', effect: '闪避后一秒内命中可获得额外真气。' },
+};
+var BADGE_TIER_POWER = { silver: 1, gold: 1.5, purpgold: 2 };
+if (typeof window !== 'undefined') { window.HERO_STANCES = HERO_STANCES; window.COMBAT_BADGES = COMBAT_BADGES; }
+function combatLoadoutMap() {
+try { return typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}; } catch (e) { return {}; }
+}
+function applyCombatLoadouts() {
+const local = combatLoadoutMap(), maps = M.combatLoadouts;
+for (const f of allFighters()) {
+if (!f || !f.ch) continue;
+let profile = local[f.ch.id] || {};
+if (M.mode === 'replay' && REPLAY.on) {
+const saved = (REPLAY.seg || REPLAY.m || {}).loadouts;
+profile = Array.isArray(saved) ? (saved[f.idx] || {}) : {};
+} else if (M.mode === 'net' && ROLL.on && Array.isArray(maps) && Array.isArray(ROLL.slots)) {
+const side = ROLL.slots[0].includes(f.idx) ? 0 : ROLL.slots[1].includes(f.idx) ? 1 : -1;
+profile = side >= 0 ? ((maps[side] || {})[f.ch.id] || {}) : {};
+} else if (M.watchAi || (M.mode !== 'pvp' && fighterTeam(f) !== (typeof localTeam === 'function' ? localTeam() : 0))) profile = {};
+f.stanceUnlocked = !!profile.unlocked;
+f.stance = f.stanceUnlocked && profile.stance === 1 ? 1 : 0;
+f.badgeId = COMBAT_BADGES && COMBAT_BADGES[profile.badge] ? profile.badge : '';
+f.badgeTier = BADGE_TIER_POWER && BADGE_TIER_POWER[profile.tier] ? profile.tier : '';
+f.badgeDashT = 0;
+f.stanceT = 0;
+}
+}
+function stanceMove(f, name) {
+const base = f.moves[name];
+if (!base || !f.stance || !f.stanceUnlocked) return base;
+const spec = HERO_STANCES[f.ch.id];
+if (!spec) return base;
+const m = { ...base, box: base.box && base.box.slice(), kb: base.kb && base.kb.slice() };
+const kind = spec.kind, aerial = name === 'a1' || name === 'a2', heavy = name === 'hv' || name === 'cs1' || name === 'cs2';
+if (kind === 'swift') { m.su *= aerial ? 0.9 : 0.93; m.rc += aerial ? 0.025 : 0.035; m.dmg *= heavy ? 0.9 : 0.96; }
+else if (kind === 'precision') { if (m.box) { m.box[0] += 5; m.box[2] += 9; } if (name.startsWith('l')) m.lunge = (m.lunge || 0) * 1.06; if (heavy) m.rc += 0.05; }
+else if (kind === 'reach') { if (m.box) m.box[2] += 12; if (m.lunge) m.lunge *= 1.08; m.dmg *= 0.94; if (m.su) m.su += 0.012; }
+else if (kind === 'power' && heavy) { m.su *= 1.1; m.rc += 0.04; m.dmg *= 1.05; if (m.kb) m.kb[0] *= 1.04; }
+else if (kind === 'control') { m.stun = Math.min(0.75, m.stun * 1.08); m.dmg *= 0.92; if (m.box) m.box[2] -= 6; }
+else if (kind === 'guard') m.dmg *= 0.92;
+return m;
+}
+function trySwitchStance(f) {
+const c = f && f.ctrl;
+if (!c || !f.stanceUnlocked || f.stanceT > 0 || M.phase !== 'fight' || !c.consume('stance')) return false;
+f.stance = f.stance ? 0 : 1;
+f.stanceT = 0.18; f.state = 'stance'; f.t = 0; f.move = null; f.skill = null; f.sp = null; f.vx *= 0.18;
+addP({ type: 'text', text: f.stance ? (HERO_STANCES[f.ch.id] || {}).name : '本式', x: f.x, y: f.y - 130, life: 0.7, max: 0.7, rgb: f.look.slash || '230,210,150' });
+ring(f.x, f.y - 54, 62, f.look.slash || '230,210,150', 0.28);
+return true;
+}
+function applyCombatBadgeHit(att, def, move, ev) {
+if (!att || !att.badgeId || !att.badgeTier || !ev || ev.blk || ev.armor || ev.dd <= 0) return;
+const power = BADGE_TIER_POWER[att.badgeTier] || 1, name = att.moveName || move.name || '';
+let gain = 0;
+if (att.badgeId === 'flowing' && /^l[1-5]$/.test(name) && (att.comboHits || 0) >= 2) gain = 0.7 * power;
+else if (att.badgeId === 'focus' && (name === 'cs1' || name === 'cs2')) gain = 1.2 * power;
+else if (att.badgeId === 'ascent' && (att.y < -10 || name === 'a1' || name === 'a2')) gain = 1.1 * power;
+else if (att.badgeId === 'pursuit' && att.badgeDashT > 0) { gain = 1.1 * power; att.badgeDashT = 0; }
+if (gain) att.meter = Math.min(100, att.meter + gain);
+}
+function applyCombatBadgeGuard(def, ev) {
+if (!def || !def.badgeId || !def.badgeTier || !ev) return;
+const power = BADGE_TIER_POWER[def.badgeTier] || 1;
+if (ev.justGuard && def.badgeId === 'riposte') def.guard = Math.min(def.maxGuard, def.guard + 2.5 * power);
+}
+function applyCombatBadgeBreak(att, ev) {
+if (att && att.badgeId === 'breaker' && att.badgeTier && ev && ev.guardBreak)
+att.meter = Math.min(100, att.meter + 2 * (BADGE_TIER_POWER[att.badgeTier] || 1));
+}
 </script>
 <script>
 'use strict';
@@ -35294,7 +35492,7 @@ document.addEventListener('visibilitychange', () => { if (socVisible() && SOC.da
 (function (G) {
 'use strict';
 const C = {};
-C.VER = 4;                                   // 4：市场只剩玩家之间买卖，武器箱和货郎改成商店固定价格（3：爆率调高，加神兵武器箱，改成限制每天开几个；2：去掉磨损和玉珏，加货郎）
+C.VER = 5;                                   // 5：加入武学徽记和架势进度（4：市场只剩玩家之间买卖，武器箱和货郎改成商店固定价格）
 C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
 C.SEASON_DAYS = 32;
 C.INV_MAX = 1000000000, C.HIST_MAX = 40;
@@ -35313,6 +35511,17 @@ C.KO_MAX = 12;                               // 一局最多记 12 斩（三人�
 C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji'];
 C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem'];
 C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
+C.BADGES = {
+flowing: { name: '连势', desc: '连续普攻命中后，获得少量额外真气。', en: 'Flow', effect: 'normal' },
+focus: { name: '凝锋', desc: '蓄力斩命中后，获得少量额外真气。', en: 'Focus', effect: 'charged' },
+riposte: { name: '回锋', desc: '精准招架成功后，恢复少量架势。', en: 'Riposte', effect: 'parry' },
+breaker: { name: '破军', desc: '造成破防后，获得少量额外真气。', en: 'Breaker', effect: 'break' },
+ascent: { name: '凌空', desc: '空中攻击命中后，获得少量额外真气。', en: 'Ascent', effect: 'air' },
+pursuit: { name: '追影', desc: '闪避后首次命中，获得少量额外真气。', en: 'Pursuit', effect: 'dash' },
+};
+C.BADGE_TIER = { silver: 1, gold: 2, purpgold: 3 };
+C.BADGE_UPGRADE = { silver: { to: 'gold', sigils: 3, ink: 2000, kos: 100 }, gold: { to: 'purpgold', sigils: 7, ink: 6000, kos: 300 } };
+C.BADGE_SIGIL_KOS = 40;
 C.TASKS = { d1: ['d', 'games', 1, 30], d2: ['d', 'combo', 5, 40], d3: ['d', 'wins', 1, 50], w1: ['w', 'games', 5, 120], w2: ['w', 'wins', 3, 180], w3: ['w', 'ults', 5, 200], e1000: ['e', 'cpu', 3, 1000] };
 C.EVENT = { start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 4, 16) };   // 全皮肤限免活动（和 src/game/01-core.js 的 FREE_SKIN_EVENT 一样）：活动任务、系统补偿只在这段时间能领
 C.inEvent = now => now >= C.EVENT.start && now < C.EVENT.end;
@@ -35601,6 +35810,7 @@ C.isLid = l => typeof l === 'string' && LID_RE.test(l);   // 挂单编号：服�
 C.rwBlank = () => ({ d: 0, w: 0, dp: { games: 0, wins: 0, combo: 0, ults: 0 }, wp: { games: 0, wins: 0, combo: 0, ults: 0 }, dc: [], wc: [], ev: 0, ec: 0, comp: 0, tut: 0, ss: {}, sg: {}, seeded: 0 });
 C.blank = () => ({
 v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
+badgeGift: 0, badgeOwned: {}, badgeEquip: {}, badgeSigils: 0, heroKOs: {}, stances: {},
 lst: [], hist: [], od: { d: 0, n: 0 }, pd: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, zw: { w: 0, n: 0 }, zf: 0, drop: { w: 0, g: 0, n: 0, sup: 0 },
 op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
 stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
@@ -35623,6 +35833,14 @@ if (!okType) s[k] = b[k];
 }
 for (const k of Object.keys(s)) if (!(k in b)) delete s[k];
 s.v = C.VER;
+s.badgeGift = s.badgeGift ? 1 : 0;
+s.badgeOwned = Object.fromEntries(Object.entries(s.badgeOwned).filter(([id, tier]) => own(C.BADGES, id) && own(C.BADGE_TIER, tier)));
+s.badgeEquip = Object.fromEntries(Object.entries(s.badgeEquip).filter(([h, id]) => C.HERO_IDS.includes(h) && own(s.badgeOwned, id)).slice(0, C.HERO_IDS.length));
+const equippedBadges = new Set();
+for (const [h, id] of Object.entries(s.badgeEquip)) { if (equippedBadges.has(id)) delete s.badgeEquip[h]; else equippedBadges.add(id); }
+s.badgeSigils = int(s.badgeSigils, 0, 1e6);
+s.heroKOs = Object.fromEntries(Object.entries(s.heroKOs).filter(([h]) => C.HERO_IDS.includes(h)).map(([h, n]) => [h, int(n, 0, 1e6)]));
+s.stances = Object.fromEntries(Object.entries(s.stances).filter(([h, n]) => C.HERO_IDS.includes(h) && (n === 0 || n === 1) && (n === 0 || (s.heroKOs[h] || 0) >= 20)));
 s.tags = int(s.tags, 0, 1e9); s.term = int(s.term, 0, 1e6) + oldKeys;
 s.cases = Object.fromEntries(C.CASES.map(c => [c, int(s.cases[c], 0, 1e6)]));
 const seen = new Set();
@@ -36077,6 +36295,38 @@ if (!char) return { err: '这件穿不上' };
 s.eq[char] = it.i; env.equip[char] = it.k;
 return { ok: true, char };
 };
+A.badgeGift = (s, a) => {
+const id = String(a.id || '');
+if (s.badgeGift) return { err: '已经领过徽记礼了' };
+if (!own(C.BADGES, id)) return { err: '没有这枚徽记' };
+s.badgeOwned[id] = 'silver'; s.badgeGift = 1;
+return { ok: true, id, tier: 'silver' };
+};
+A.badgeEquip = (s, a) => {
+const hero = String(a.hero || ''), id = String(a.id || '');
+if (!C.HERO_IDS.includes(hero)) return { err: '没有这位侠客' };
+if (id && !own(s.badgeOwned, id)) return { err: '还没有这枚徽记' };
+for (const h of Object.keys(s.badgeEquip)) if (s.badgeEquip[h] === id || h === hero) delete s.badgeEquip[h];
+if (id) s.badgeEquip[hero] = id;
+return { ok: true, hero, id };
+};
+A.stanceSet = (s, a) => {
+const hero = String(a.hero || ''), stance = +a.stance;
+if (!C.HERO_IDS.includes(hero) || (stance !== 0 && stance !== 1)) return { err: '架势设置不正确' };
+if (stance && (s.heroKOs[hero] || 0) < 20) return { err: '这位侠客还没有解锁第二架势' };
+s.stances[hero] = stance;
+return { ok: true, hero, stance };
+};
+A.badgeUpgrade = (s, a, env) => {
+const id = String(a.id || ''), tier = s.badgeOwned[id], rule = C.BADGE_UPGRADE[tier];
+if (!rule) return { err: '这枚徽记已升至最高阶' };
+const totalKOs = Object.values(s.heroKOs).reduce((sum, n) => sum + n, 0);
+if (totalKOs < rule.kos) return { err: `累计斩获 ${rule.kos} 次后才可升阶` };
+if (s.badgeSigils < rule.sigils) return { err: `徽记碎片不足，需要 ${rule.sigils} 枚` };
+if (env.ink < rule.ink) return { err: `墨锭不足，需要 ${rule.ink}` };
+s.badgeSigils -= rule.sigils; giveInk(env, -rule.ink); s.badgeOwned[id] = rule.to;
+return { ok: true, id, tier: rule.to, sigils: s.badgeSigils, ink: rule.ink };
+};
 A.unequip = (s, a, env) => {
 const char = String(a.char || ''); if (!C.HERO_IDS.includes(char)) return { err: '没有这位侠客' };
 delete s.eq[char]; env.equip[char] = '';
@@ -36164,7 +36414,7 @@ const c = a.ctx;
 if (!C.ctxOk(c)) return { err: '这局不算' };
 if (env.server) {   // 服务器上：要有开局时领的票，打够时间，两局之间隔开，每天有上限
 const tk = s.tk; s.tk = null;
-if (!tk || env.now - tk.t0 < C.MATCH_MIN_MS || env.now - tk.t0 > C.MATCH_MAX_MS) return { err: '这局时间不对，不算' };
+if (!tk || tk.mode !== c.mode || env.now - tk.t0 < C.MATCH_MIN_MS || env.now - tk.t0 > C.MATCH_MAX_MS) return { err: '这局时间不对，不算' };
 if (env.now - (s.last || 0) < C.MATCH_GAP_MS) return { err: '太快了，不算' };
 if (s.dm.n >= C.MATCH_DAY_CAP) return { err: '今天的对局奖励已经拿满了' };
 }
@@ -36194,6 +36444,19 @@ if (!add || !eq || eq.st < 0) continue;
 left -= add; eq.st += add;
 res.st.push({ i: eq.i, k: eq.k, add, total: eq.st });
 }
+const totalBefore = Object.values(s.heroKOs).reduce((sum, n) => sum + n, 0);
+let koLeft = C.KO_MAX;
+for (const [h, raw] of Object.entries(isObj(c.ko) ? c.ko : {}).slice(0, 3)) {
+if (!C.HERO_IDS.includes(h) || !Number.isFinite(+raw) || +raw <= 0 || koLeft <= 0) continue;
+const add = Math.min(koLeft, Math.floor(+raw));
+koLeft -= add;
+const old = s.heroKOs[h] || 0;
+s.heroKOs[h] = Math.min(1e6, old + add);
+if (old < 20 && s.heroKOs[h] >= 20) res.stanceUnlocks = (res.stanceUnlocks || []).concat(h);
+}
+const totalAfter = Object.values(s.heroKOs).reduce((sum, n) => sum + n, 0);
+const sigils = Math.floor(totalAfter / C.BADGE_SIGIL_KOS) - Math.floor(totalBefore / C.BADGE_SIGIL_KOS);
+if (sigils > 0) { s.badgeSigils = Math.min(1e6, s.badgeSigils + sigils); res.badgeSigils = sigils; }
 if (s.drop.n < C.cv(env.cfg, 'dropCap') && env.rnd() < C.cv(env.cfg, 'dropP') && !C.invFull(s)) {
 s.drop.n++;
 if (env.rnd() < 0.3) { const cid = pickOf(env.rnd, C.REG); s.cases[cid]++; res.drop = { t: 'case', c: cid }; }
@@ -36599,6 +36862,7 @@ if (own && PORTRAITS.length) { PORTRAITS.length = 0; ensurePortraits(); }
 try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip || {})); } catch (e) {}
 if (window.CloudSave) CloudSave.saveProfile(PROF);
 baseApply(PROF);
+if ((M.mode === 'net' || bpMode === 'net' || NET.open) && typeof send === 'function' && typeof armoryCombatLoadoutMap === 'function') send({ pload: armoryCombatLoadoutMap() });
 for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
 }
 const patchOf = (env, skins0, equip0) => {
@@ -36697,7 +36961,7 @@ return `<button type="button" class="ar-it${eq ? ' eq' : ''}" style="--tc:${tc(i
 <img src="${art(it.k)}" alt="" loading="lazy">${it.st >= 0 ? `<span class="ar-st">斩数 ${it.st}</span>` : ''}${eq ? '<span class="ar-eq">穿着</span>' : ''}${fresh ? '<span class="ar-new">新</span>' : ''}
 <b>${tierOf(it.k) === 'gold' ? '★ ' : ''}${escapeHTML(skinName(it.k))}</b><small>${charName(it.k)}${it.n ? ` · ‘${escapeHTML(it.n)}’` : ''}</small><i class="ar-bar"></i></button>`;
 }
-const TABS = [['inv', '库存'], ['codex', '皮肤图鉴'], ['cases', '武器箱'], ['term', '货郎'], ['market', '玩家市场'], ['trade', '熔铸契'], ['op', '江湖行动']];
+const TABS = [['inv', '库存'], ['codex', '皮肤图鉴'], ['badges', '武学'], ['cases', '武器箱'], ['term', '货郎'], ['market', '玩家市场'], ['trade', '熔铸契'], ['op', '江湖行动']];
 function dots() {
 if (!ST || MODE === 'none') return {};
 const d = {};
@@ -36718,7 +36982,7 @@ const banner = MODE === 'none' ? '<p class="ar-banner">登录之后才能开箱�
 : MODE === 'offline' ? uiState('error', '连不上服务器，武库暂时只能看。', 'ar-banner')
 : MODE === 'old' ? `<p class="ar-banner">服务器上还是旧版武库，现在只能看。等服务器更新到新版就能开箱、交易，你的饰品和武器箱都在${OLDV === 1 ? '，没用完的钥匙会一把换一台货郎' : ''}。</p>`
 : MODE === 'local' && cloudOn() ? '<p class="ar-banner soft">测试期：服务器还没开武库，现在开箱、交易都只记在你的存档里，用来试玩。服务器版上线以后武库从零开始（会重新发新手礼），测试期开出来的东西不会带过去。</p>' : '';
-const R = { inv: pInv, codex: pCodex, cases: pCases, term: pTerm, market: pMarket, trade: pTrade, op: pOp }[TAB] || pInv;
+const R = { inv: pInv, codex: pCodex, badges: pBadges, cases: pCases, term: pTerm, market: pMarket, trade: pTrade, op: pOp }[TAB] || pInv;
 $id('arMain').innerHTML = banner + R();
 if (TAB === 'market' || TAB === 'term') loadMarket().then(fresh => { if (fresh && (TAB === 'market' || TAB === 'term') && $id('armory').classList.contains('on') && $id('arModal').hidden) render(); });
 if (TAB === 'inv') markSeenSoon();
@@ -37297,6 +37561,20 @@ return `<div class="ar-ophead"><div><span class="ar-k">江湖行动 · 第 ${se.
 <h4 class="ar-h">星章兑换 <small>饰品都从普通武器箱里出，神兵、星座武器箱的换不到</small></h4><div class="ar-grid3">${shop}</div>
 <p class="ar-note">对局掉落：每局 ${Math.round(C.cv(CF(), 'dropP') * 100)}% 机会掉一件饰品或武器箱，每周最多 ${C.cv(CF(), 'dropCap')} 次（本周已掉 ${s.drop.n} 次）。</p>`;
 }
+function pBadges() {
+const s = blankS(), ids = Object.keys(C.BADGES), owned = Object.entries(s.badgeOwned || {}), totalKOs = Object.values(s.heroKOs || {}).reduce((n, x) => n + x, 0);
+const gift = !s.badgeGift ? `<div class="ar-badge-gift"><div><h3>初入武学 · 银徽赠礼</h3><p>任选一枚银徽体验武学效果。徽记绑定账号，可在不同侠客之间调换。</p></div><div class="ar-grid3">${ids.map(id => { const b = C.BADGES[id]; return `<article class="ar-card"><b>${cvT(b.name)}</b><p>${cvT(b.desc)}</p><button type="button" class="go small" data-badge-gift="${id}" ${live() ? '' : 'disabled'}>领取银徽</button></article>`; }).join('')}</div></div>` : '';
+const stock = owned.length ? `<div class="ar-grid3">${owned.map(([id, tier]) => { const b = C.BADGES[id], up = C.BADGE_UPGRADE[tier]; return `<article class="ar-card"><b>${cvT(b.name)} · ${cvT(tier === 'silver' ? '银徽' : tier === 'gold' ? '金徽' : '紫金徽')}</b><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT((window.COMBAT_BADGES && window.COMBAT_BADGES[id] && window.COMBAT_BADGES[id].trigger) || b.effect)}</small>${up ? `<button type="button" class="go small" data-badge-upgrade="${id}" ${live() && totalKOs >= up.kos && s.badgeSigils >= up.sigils && PROF.ink >= up.ink ? '' : 'disabled'}>升阶 ${cvT(up.to === 'gold' ? '金徽' : '紫金徽')} · ${up.sigils} 碎片 · ${fmt(up.ink)} 墨锭 · ${up.kos} 斩</button>` : '<small>已达最高阶</small>'}</article>`; }).join('')}</div>` : '<p class="ar-note">领取一枚银徽后，会在这里查看、升阶和装备。</p>';
+const heroes = CHARS.map(ch => {
+const kos = s.heroKOs[ch.id] || 0, unlocked = kos >= 20, stance = s.stances[ch.id] === 1 ? 1 : 0, equipped = s.badgeEquip[ch.id] || '';
+const options = [`<option value="">不装备</option>`, ...owned.map(([id]) => `<option value="${id}" ${equipped === id ? 'selected' : ''}>${cvT(C.BADGES[id].name)} · ${cvT(s.badgeOwned[id] === 'silver' ? '银徽' : s.badgeOwned[id] === 'gold' ? '金徽' : '紫金徽')}</option>`)].join('');
+const stanceTitle = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(window.HERO_STANCES[ch.id].name) : cvT('第二架势');
+const stanceDesc = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(window.HERO_STANCES[ch.id].desc) : '';
+return `<article class="ar-card ar-loadout"><b>${escapeHTML(ch.name)}</b><small>${unlocked ? `${kos} / 20 ${cvT('斩')}` : `${kos} / 20 ${cvT('斩')} · ${cvT('未解锁')}`}</small><p>${stanceDesc}</p><div class="row"><button type="button" class="${stance ? 'ghost' : 'go'} small" data-stance="${ch.id}" data-value="0" ${live() ? '' : 'disabled'}>${cvT('本式')}</button><button type="button" class="${stance ? 'go' : 'ghost'} small" data-stance="${ch.id}" data-value="1" ${live() && unlocked ? '' : 'disabled'}>${stanceTitle}</button></div><div class="row"><select data-badge-choice="${ch.id}" aria-label="${escapeHTML(ch.name)} ${cvT('徽记')}">${options}</select><button type="button" class="go small" data-badge-set="${ch.id}" ${live() ? '' : 'disabled'}>${cvT('装备')}</button></div></article>`;
+}).join('');
+return `<div class="ar-ophead"><div><span class="ar-k">${cvT('武学与徽记')}</span><h3>${cvT('徽记碎片')} <b>${s.badgeSigils || 0}</b> · ${cvT('累计斩获')} <b>${totalKOs}</b></h3></div><p class="ar-note">${cvT('每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。')}</p></div>
+${gift}<h4 class="ar-h">${cvT('我的徽记')}</h4>${stock}<h4 class="ar-h">${cvT('侠客架势与装备')}</h4><div class="ar-grid3">${heroes}</div>`;
+}
 function covPick() {
 const list = C.ofTierReg('cov');   // 神兵武器箱的不能拿星章换
 modal(`<h3>自选一件赤霄饰品</h3><div class="ar-grid sm">${list.map(k => `<button type="button" class="ar-it" style="--tc:${tc(k)}" data-opcov="${k}"><img src="${art(k)}" alt=""><b>${escapeHTML(skinName(k))}</b><small>${charName(k)} · ${colName(k)}</small><i class="ar-bar"></i></button>`).join('')}</div><div class="row"><button class="ghost small" data-ar-close>取消</button></div>`, 'wide');
@@ -37329,6 +37607,10 @@ if (pv) { inspect({ i: -1, k: pv.dataset.pv, st: -1, t: 0 }, 'pv'); return; }
 const b = e.target.closest('button'); if (!b || b.disabled) return;
 const d = b.dataset;
 if (d.gotab) { TAB = d.gotab; if (d.mkv) MK.view = d.mkv; render(); return; }
+if (d.badgeGift) { const r = await act('badgeGift', { id: d.badgeGift }); if (r && r.ok) { toast(`获得银徽「${cvT(C.BADGES[r.id].name)}」`); render(); } return; }
+if (d.badgeUpgrade) { const r = await act('badgeUpgrade', { id: d.badgeUpgrade }); if (r && r.ok) { toast(`徽记已升阶：${cvT(C.BADGES[r.id].name)} · ${cvT(r.tier === 'gold' ? '金徽' : '紫金徽')}`); render(); } return; }
+if (d.stance) { const r = await act('stanceSet', { hero: d.stance, stance: +d.value }); if (r && r.ok) { toast('已设置出战架势'); render(); } return; }
+if (d.badgeSet) { const sel = main.querySelector(`[data-badge-choice="${d.badgeSet}"]`); const r = await act('badgeEquip', { hero: d.badgeSet, id: sel ? sel.value : '' }); if (r && r.ok) { toast(r.id ? '徽记已装备；原佩戴者已卸下' : '徽记已卸下'); render(); } return; }
 if (d.it && !d.sel) { const it = ST && ST.inv.find(x => x.i === +d.it); if (it) inspect(it, 'inv'); return; }
 if (d.mk) { marketItem(d.mk); return; }
 if (d.mkv) { MK.view = d.mkv; render(); return; }
@@ -37407,6 +37689,14 @@ clearInterval(POLL);
 POLL = setInterval(() => { if (!$id('armory').classList.contains('on')) { clearInterval(POLL); return; } if (!BUSY && !REEL.on && !bulkOpening) act('sync', {}, { bg: true }).then(() => { if (!BUSY && !REEL.on && !bulkOpening && $id('arModal').hidden && $id('arIns').hidden) render(); }); }, 60000);
 }
 window.openArmory = openArmory;
+window.armoryCombatLoadoutMap = function () {
+const s = blankS(), out = {};
+for (const hero of C.HERO_IDS) {
+const id = s.badgeEquip[hero] || '';
+out[hero] = { unlocked: (s.heroKOs[hero] || 0) >= 20, stance: s.stances[hero] === 1 ? 1 : 0, badge: id, tier: id ? s.badgeOwned[id] || '' : '' };
+}
+return out;
+};
 bind();
 document.addEventListener('keydown', e => {   // Esc 关掉弹窗 / 检视
 if (e.key !== 'Escape' || !$id('armory').classList.contains('on')) return;

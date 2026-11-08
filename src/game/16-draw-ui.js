@@ -179,6 +179,11 @@ function drawShanshuiScroll(e, a, op) {
 // ============ 2v2 天道演武专用 HUD ============
 // 四名角色分左右两队两行排布：每行 = 名字 + 血量数值 + 势值，下面依次是血条、架势条、真气条。
 // 中线只留给计时器；"👁️ 2v2 天道演武 · 禁选" 挪到屏幕底部，避免与任何顶部信息打架。
+function combatLoadoutLabel(f) {
+  const stance = f && f.stance && HERO_STANCES[f.ch.id] ? HERO_STANCES[f.ch.id].name : '本式';
+  const badge = f && f.badgeId && COMBAT_BADGES[f.badgeId] ? `${COMBAT_BADGES[f.badgeId].n} · ${f.badgeTier === 'purpgold' ? '紫金' : f.badgeTier === 'gold' ? '金' : '银'}` : '';
+  return [stance, badge].filter(Boolean).map(cvT).join(' · ');
+}
 function drawHUD2v2() {
   const bh = Math.max(12, H * 0.02);
   const top = Math.max(22, H * 0.04) + (H < 520 ? 8 : 0);
@@ -241,7 +246,7 @@ function drawHUD2v2() {
           fTag = (f === A || f === C) ? (NET.role === 'host' ? ' [我方]' : ' [敌方]') : (NET.role === 'client' ? ' [我方]' : ' [敌方]');
         }
       }
-      const dispName = cvT(f.look.name) + (fTag && window.I18N ? fTag.replace(/\[(.+)\]/, (m0, w) => `[${I18N.t(w)}]`) : fTag);   // 英文界面：[队友] 这类标签也换成英文
+      const loadout = combatLoadoutLabel(f), dispName = cvT(f.look.name) + (fTag && window.I18N ? fTag.replace(/\[(.+)\]/, (m0, w) => `[${I18N.t(w)}]`) : fTag) + ` · ${loadout}`;   // 显示双方当前架势与徽记
       ctx.font = `bold ${fsN}px ${TITLE_FONT}`; const nameW = ctx.measureText(dispName).width;
       ctx.font = `${fsNum}px ${BODY_FONT}`; const hpW = ctx.measureText(hpTxt).width, gW = ctx.measureText(gTxt).width;
       const total = nameW + hpW + gW + txtGap * 2;
@@ -345,7 +350,7 @@ function drawHUDRaid() {
     ctx.textAlign = left ? 'left' : 'right';
     const tx = left ? x + 6 : x + w - 6;
     const statusTxt = dead ? cvT('【重伤倒地】') : `${Math.ceil(f.hp)}/${f.maxHp}`;
-    ctx.fillText(`${cvT(roleTag)} · ${cvT(f.look.name)}  ${statusTxt}`, tx, y + barH - 3);
+    ctx.fillText(`${cvT(roleTag)} · ${cvT(f.look.name)} · ${combatLoadoutLabel(f)}  ${statusTxt}`, tx, y + barH - 3);
     ctx.restore();
   };
   allies.forEach((f, idx) => {
@@ -485,6 +490,8 @@ function drawHUD() {
     ctx.textAlign = i === 0 ? 'left' : 'right';
     const nm = cvT(f.look.name);
     ctx.fillText(nm, i === 0 ? x0 : x0 + barW, top + bh + 8);
+    ctx.font = `${Math.max(10, Math.round(bh * 0.78))}px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.78)';
+    ctx.fillText(combatLoadoutLabel(f), i === 0 ? x0 : x0 + barW, top + bh * 3.15);
     let badgeW = 0;
     if (f.ch.passive === 'magnet') {   // 磁仙：名字旁边一个大的红 ⊕ / 蓝 ⊖，一眼看出现在是哪一极
       const r = bh * 0.85, nw = ctx.measureText(nm).width; badgeW = r * 2 + 8;
