@@ -19,6 +19,10 @@ export default [
         if (A.maxHp !== wantHp || A.hp !== wantHp) {
           return { pass: false, error: ch.name + ' maxHp mismatch: got ' + A.maxHp + ', expected ' + wantHp };
         }
+        const codexHp = statRows(ch).find(([name]) => name === '生命上限');
+        if (!codexHp || codexHp[1] !== A.maxHp || codexHp[2] !== CODEX_HP_MAX || codexHp[3] !== String(A.maxHp)) {
+          return { pass: false, error: ch.name + ' Codex HP mismatch: got ' + JSON.stringify(codexHp) + ', expected ' + A.maxHp };
+        }
       }
       if (CHARS[2].stat.weight !== 1.35) return { pass: false, error: 'TieShan weight mismatch' };
       if (CHARS[3].stat.weight !== 1.05) return { pass: false, error: 'LingShuang weight mismatch' };

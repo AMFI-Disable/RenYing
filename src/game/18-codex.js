@@ -2,11 +2,13 @@
 // 本文件：角色图鉴的界面：属性条（statRows）、整页渲染（renderCodex）、演示卡片的播放导演（startCodexCardsDirector）、打开图鉴。
 let cxIdx = 0, cxActiveMove = 'full', cxDemoSpeed = 1.0;
 demoLoop($id('cxDemo'), () => cxIdx, () => $id('codex').classList.contains('on'), () => (cxPrev !== null ? cxPrev : mySkin(CHARS[cxIdx].id)), () => cxActiveMove === 'full' ? null : cxActiveMove);
+const codexHeroMaxHp = c => Math.round(c.stat.hp * ((BAL[c.id] || BAL.qingfeng).hp || 1) * HERO_HP_SCALE);
+const CODEX_HP_MAX = Math.max(...CHARS.map(codexHeroMaxHp));
 function statRows(c) {
   const m = CHAR_MOVES[CHAR_IDX[c.id]];
-  const st = c.stat, B = BAL[c.id] || BAL.qingfeng, hp = Math.round(st.hp * B.hp), dmg = +(st.dmg * B.normal).toFixed(2);
+  const st = c.stat, B = BAL[c.id] || BAL.qingfeng, hp = codexHeroMaxHp(c), dmg = +(st.dmg * B.normal).toFixed(2);
   const rows = [
-    ['生命上限', hp, 1000, `${hp}`],
+    ['生命上限', hp, CODEX_HP_MAX, `${hp}`],
     ['体量压制', st.weight || 1, 2.0, `${st.weight || 1}×`],
     ['防御减伤', st.defRating || 1, 1.25, `×${st.defRating || 1}`],
     ['格挡架势', st.guardMax || 100, 160, `${st.guardMax || 100}`],
