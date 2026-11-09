@@ -201,7 +201,8 @@ function drawHUD2v2() {
   // 行 1（先锋 A/B）与行 2（次锋 C/D）的纵向节奏
   const r1 = { y: top, fs: fsTop, hpY: top + fsTop + 4, hpH: hpTopH };
   r1.gmY = r1.hpY + r1.hpH + 2;
-  const r2 = { y: r1.gmY + gmH + rowGap, fs: fsSub, hpH: hpSubH };
+  const hasLocalHudPlayer = [A, B, C, D].some(hudLocalPlayer);
+  const r2 = { y: r1.gmY + gmH + rowGap + (hasLocalHudPlayer ? 15 : 0), fs: fsSub, hpH: hpSubH };
   r2.hpY = r2.y + fsSub + 4; r2.gmY = r2.hpY + r2.hpH + 2;
 
   // —— 中央计时（正好落在左右两队之间的空档里）
@@ -279,6 +280,15 @@ function drawHUD2v2() {
       if (full) { ctx.save(); ctx.shadowColor = `rgba(${f.look.slash},0.9)`; ctx.shadowBlur = 8 + 4 * (0.5 + 0.5 * Math.sin(clock * 14)); }
       bar(rev ? x : x + blk - mW2, R.gmY, mW2, gmH, mRatio, full ? '#ffe9a8' : `rgba(${f.look.slash},0.85)`, !rev, 0);
       if (full) ctx.restore();
+      if (hudLocalPlayer(f) && !f.dummy) {
+        const q = Math.max(0, f.skillCD || 0), r = Math.max(0, f.skill2CD || 0);
+        const qText = q < 0.05 ? 'Q ✓' : `Q ${q.toFixed(1)}`, rText = r < 0.05 ? 'R ✓' : `R ${r.toFixed(1)}`;
+        ctx.save(); ctx.font = `${Math.max(10, Math.round(fsNum * 0.8))}px ${BODY_FONT}`;
+        ctx.textAlign = rev ? 'right' : 'left'; ctx.textBaseline = 'top';
+        ctx.fillStyle = 'rgba(255,255,255,0.68)';
+        ctx.fillText(`${qText} · ${rText}`, rev ? x + blk : x, R.gmY + gmH + 5);
+        ctx.restore();
+      }
     }
   };
   team(A, C, 0);
@@ -299,7 +309,30 @@ function drawHUD2v2() {
     else if (M.mode === 'net' && netRoomMode === 'pp_cc') bTitle = '🌐 2v2 双人联机共斗 (抗击双天道)';
     else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 四人对决 (全员切磋)';
   }
+  if (chaosOn()) bTitle += ' · 天机乱斗';
+  if (chaosOn()) drawChaosHUD(cx, H - 48, true);
   ctx.fillText(window.I18N ? I18N.t(bTitle) : bTitle, cx, H - 10);
+  ctx.restore();
+}
+function hudLocalPlayer(f) {
+  if (!f) return false;
+  if (M.mode === 'net') return !!((ROLL.slots || [])[localIdx()] || []).includes([A, B, C, D].indexOf(f));
+  return human.includes(f.ctrl);
+}
+function drawChaosHUD(cx, y, compact) {
+  const mutation = chaosNow();
+  const name = mutation ? `${mutation.icon} ${cvT(mutation.name)} · ${chaosLeft()}s` : cvT('🎲 乾坤异变');
+  const desc = mutation && mutation.desc ? cvT(mutation.desc).split(' · ')[0] : '';
+  ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `bold ${Math.max(11, Math.round(H * (compact ? 0.015 : 0.018)))}px ${TITLE_FONT}`;
+  ctx.fillStyle = '#e9c46a'; ctx.fillText(name, cx, y);
+  if (desc) {
+    ctx.font = `${Math.max(10, Math.round(H * 0.013))}px ${BODY_FONT}`;
+    ctx.fillStyle = 'rgba(239,232,216,0.82)';
+    let text = desc;
+    while (text.length > 8 && ctx.measureText(text).width > W * 0.88) text = text.slice(0, -2);
+    ctx.fillText(text, cx, y + (compact ? 13 : 15));
+  }
   ctx.restore();
 }
 function drawHUDRaid() {
@@ -683,41 +716,7 @@ function drawHUD() {
     ctx.fillText(cvT(`问剑 · 第 ${M.towerFloor || 1} 层`), cx, top + bh + 18);
     ctx.restore();
   } else if (chaosOn()) {
-    ctx.save();
-    ctx.font = `bold ${Math.max(12, Math.round(bh * 0.92))}px ${TITLE_FONT}`;
-    ctx.fillStyle = '#e9c46a';
-    const remSec = chaosLeft(), currentChaosMutation = chaosNow();
-    const mutTxt = currentChaosMutation ? (currentChaosMutation.icon + ' ' + cvT(currentChaosMutation.name) + ' (' + remSec + 's)') : cvT('🎲 乾坤异变');
-    ctx.fillText(mutTxt, cx, top + bh + 18);
-    if (currentChaosMutation && currentChaosMutation.desc) {
-      ctx.font = `${Math.max(12, Math.round(bh * 0.68))}px ${BODY_FONT}`;
-      ctx.fillStyle = 'rgba(239,232,216,0.88)';
-      let md = cvT(currentChaosMutation.desc);
-      if (ctx.measureText(md).width > W * 0.94) md = md.split(' · ')[0];   // 英文太长放不下：只留效果，星宿那半句省掉
-      ctx.fillText(md, cx, top + bh + 34);
-    }
-    if (currentChaosMutation && (!announce || announce.text !== ('天机异变 · ' + currentChaosMutation.name))) {
-      const mn = cvT(currentChaosMutation.name), md = cvT(currentChaosMutation.desc), head = `${currentChaosMutation.icon} ${mn}${mn !== currentChaosMutation.name ? ': ' : '：'}`;
-      const bFs = Math.max(12, Math.round(bh * 0.65));
-      ctx.font = `${bFs}px ${BODY_FONT}`;
-      let badgeTxt = head + md, tw = ctx.measureText(badgeTxt).width;
-      if (tw + 28 > W * 0.92) { badgeTxt = head + md.split(' · ')[0]; tw = ctx.measureText(badgeTxt).width; }   // 窄屏放不下：星宿那半句省掉
-      if (tw + 28 > W * 0.92) { badgeTxt = `${currentChaosMutation.icon} ${mn}`; tw = ctx.measureText(badgeTxt).width; }   // 还放不下就只留名字（效果在计时下面那行）
-      const padX = 14, bw = Math.min(W * 0.92, tw + padX * 2), bhBadge = Math.max(20, Math.round(bh * 1.05));
-      const bx = cx - bw / 2, by = Math.max(2, top - bhBadge - 4);
-      ctx.fillStyle = 'rgba(6,5,14,0.78)';
-      ctx.strokeStyle = 'rgba(233,196,106,0.45)';
-      ctx.lineWidth = 1;
-      ctx.beginPath();
-      if (ctx.roundRect) ctx.roundRect(bx, by, bw, bhBadge, 4);
-      else ctx.rect(bx, by, bw, bhBadge);
-      ctx.fill(); ctx.stroke();
-      ctx.fillStyle = '#f4ecd8';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
-      ctx.fillText(badgeTxt, cx, by + bhBadge / 2);
-    }
-    ctx.restore();
+    drawChaosHUD(cx, H - 42, false);
   } else if (M.mode === 'mayhem') {
     ctx.save();
     ctx.font = `bold ${Math.max(12, Math.round(bh * 0.95))}px ${TITLE_FONT}`;

@@ -442,7 +442,7 @@ $id('extBack').addEventListener('click', closeQfx);
 const RP_KEY = 'renying-replays', RP_MAX = 10;
 // 训AI 用的真实轨迹：录这一局时每 TR_EVERY 帧采一条「状态 + 双方操作」，一局最多留 TR_PER_MATCH 条。
 // 以前这里导出的是写死的常量数组（同一个假状态、同一个动作、奖励只看输赢），拿这种数据训练只会学到乱按。
-const TR_KEY = 'renying-train-set', TR_SET_MAX = 4000, TR_EVERY = 6, TR_PER_MATCH = 480;
+const TR_KEY = 'renying-train-set', TR_SET_MAX = 4000, TR_EVERY = 4, TR_LEGACY_EVERY = 6, TR_PER_MATCH = 3600;
 
 function ctrlKey(c) {
   const b = c.buf;
@@ -453,7 +453,7 @@ function ctrlKey(c) {
 function recBegin(kind) {
   M.reviewReady = false;
   Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], trStart: null, post: ['', ''], last: [-1, -1],
-    meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), trainSlots: kind === 'net' ? [...((ROLL.slots || [])[localIdx()] || [])] : allFighters().filter(f => human.includes(f.ctrl)).map(f => [A, B, C, D].indexOf(f)), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
+    meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), trainSlots: kind === 'net' ? [...((ROLL.slots || [])[localIdx()] || [])] : allFighters().filter(f => human.includes(f.ctrl)).map(f => [A, B, C, D].indexOf(f)), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], trEvery: TR_EVERY, st0: capState(), t: Date.now() } });
   if (M.hasBuffs && M.competitiveScrolls) REC.meta.competitiveScrolls = JSON.parse(JSON.stringify(M.competitiveScrolls));
   // pl：哪几个人按玩家的规则选目标。回放里大家都是普通 Ctrl，不记的话玩家会被当成电脑去配合队友，回放就走样了
   if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], pl: [A, B, C, D].map(f => !cpuTeamwork(f)) }); REC.post = ['', '', '', '']; }
@@ -576,7 +576,7 @@ function trEpisodes(m) {
       let r = 0;
       if (prev) r = ((prev[0] - s[0]) - (prev[1] - s[1])) * 10 + ((prev[2] - s[2]) - (prev[3] - s[3])) * 2;
       prev = s;
-      out.push({ hero: (CHARS[heroIdx] || {}).id || 'hero', heroIdx, s, a, r: Math.round(r * 1000) / 1000, mode: m.mode || 'cpu', frame: Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * TR_EVERY, source: 'user_replay' });
+      out.push({ hero: (CHARS[heroIdx] || {}).id || 'hero', heroIdx, s, a, r: Math.round(r * 1000) / 1000, mode: m.mode || 'cpu', frame: Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * (+m.trEvery || TR_LEGACY_EVERY), source: 'user_replay' });
     }
     if (out.length) {
       const last = out[out.length - 1], winner = m.w === -1 ? -1 : side ? 1 - m.w : m.w;
@@ -655,7 +655,7 @@ function rpRunReplay(run, winner) {
   let frameOffset = 0;
   for (const s of segments) {
     const segmentRows = Array.isArray(s.tr) ? s.tr : [];
-    segmentRows.forEach((row, i) => { rows.push(row); trFrames.push(frameOffset + (+s.trStart || 0) + i * TR_EVERY); });
+    segmentRows.forEach((row, i) => { rows.push(row); trFrames.push(frameOffset + (+s.trStart || 0) + i * (+s.trEvery || TR_LEGACY_EVERY)); });
     frameOffset += Math.max(0, +s.frames || 0);
   }
   const stats = Array.from({ length: 4 }, (_, i) => segments.reduce((sum, s) => {
@@ -683,8 +683,10 @@ function matchReviewData(m) {
   const own = sumStats(ownIdx), foe = sumStats(foeIdx);
   const dealt = Math.max(0, +own.damage || 0), taken = Math.max(0, +foe.damage || 0), combo = Math.max(0, +own.combo || 0), breaks = Math.max(0, +own.breaks || 0), falls = Math.max(0, +own.falls || 0);
   const rows = (team ? [] : Array.isArray(m.tr) ? m.tr : []).filter(r => Array.isArray(r) && r.length >= 21 && r.slice(0, 19).every(Number.isFinite));
-  const playerIdx = (m.ch || [])[side] ?? (m.ch || [])[0] ?? 0, hero = CHARS[playerIdx] || {}, heroFrames = aiBrainData().frames && aiBrainData().frames[hero.id] || {};
-  const rowFrame = i => Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * TR_EVERY;
+  const playerIdx = (m.ch4 || m.ch || [])[m.raid ? 0 : m.four ? ownIdx[0] : side] ?? (m.ch || [])[side] ?? (m.ch || [])[0] ?? 0;
+  const foePlayerIdx = (m.ch4 || m.ch || [])[foeIdx[0]] ?? (m.ch || [])[side ^ 1] ?? 0;
+  const hero = CHARS[playerIdx] || {}, opponent = CHARS[foePlayerIdx] || {}, heroFrames = aiBrainData().frames && aiBrainData().frames[hero.id] || {};
+  const rowFrame = i => Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * (+m.trEvery || TR_LEGACY_EVERY);
   let attacks = 0, far = 0, misfaced = 0, farFrame = null, misfacedFrame = null;
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
     const r = rows[rowIndex];
@@ -760,13 +762,24 @@ function matchReviewData(m) {
     if (misfacedFrame !== null) moments.push({ frame: misfacedFrame, text: '朝向检查：攻击输入发生时没有正对对手。' });
     next.push('起手前确认朝向，必要时先用方向键调整再攻击。');
   }
+  const ownQ = SKILLS[hero.skill] || {}, ownR = SKILLS[hero.skill2] || {}, foeQ = SKILLS[opponent.skill] || {}, foeR = SKILLS[opponent.skill2] || {};
+  const matchup = hero.id && opponent.id ? {
+    hero: hero.name || '', heroId: hero.id, opponent: opponent.name || '', opponentId: opponent.id,
+    ownMove: ownR.name || ownQ.name || '', foeMove: foeR.name || foeQ.name || '',
+    choice: attacks >= 6 && far / attacks > 0.3 && ownR.name ? 'ranged' : misfaced / Math.max(1, attacks) > 0.2 ? 'face' : 'defense',
+    ownChoice: attacks >= 6 && far / attacks > 0.3 && ownR.name ? (ownR.name || '') : (ownQ.name || ownR.name || '')
+  } : null;
   if (falls > 0) { errors.push(`本局坠崖 ${falls} 次，边缘位置需要更早回到场地中央。`); next.push('把对手引向场地内侧，自己靠近边缘时优先撤回安全位置。'); }
   if (!errors.length) errors.push('现有数据未发现明显的远距离出手或失衡交换。');
   if (!next.length) next.push('用慢放和判定框复核命中后的硬直窗口，再练习一套稳定的追击。');
   const context = { hero: hero.name || '', heroId: hero.id || '', mode: m.mode || '', level: m.level || '' };
   const focus = falls > 0 ? 'edge' : taken > dealt * 1.2 && taken > 0 ? 'defense' : misfaced / Math.max(1, attacks) >= 0.2 ? 'facing' : 'range';
   const evidence = rows.length < 12 ? 'limited' : rows.length < 60 ? 'sampled' : 'strong';
-  return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, context, focus, evidence, strengths, errors, next, moments: moments.slice(0, 4) };
+  const duration = Math.max(0, +m.frames || 0), closeFinish = m.w !== -1 && (m.w === side ? taken > dealt * 0.62 : dealt > taken * 0.62);
+  const practiceSignal = falls > 0 || combo >= 3 || taken > dealt * 1.2 || (attacks >= 8 && (far / attacks >= 0.25 || misfaced / attacks >= 0.2));
+  const worthwhile = duration >= 120 * 12 && (practiceSignal || closeFinish);
+  const reviewReason = falls > 0 ? 'edge' : closeFinish ? 'close' : combo >= 5 ? 'combo' : 'decision';
+  return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, context, matchup, focus, evidence, worthwhile, reviewReason, strengths, errors, next, moments: moments.slice(0, 4) };
 }
 function endReviewShow(m) {
   const btn = $id('endReviewBtn'), panel = $id('endReview');
@@ -780,7 +793,10 @@ function endReviewShow(m) {
   const moments = review.moments.length ? `<section class="end-review-block end-review-moments"><h4>${cvT('关键时刻')}</h4><ul>${review.moments.map(x => `<li><button type="button" class="end-review-jump" data-review-frame="${Math.max(0, Math.floor(x.frame))}">${cvT('回放')} ${formatReviewTime(x.frame)} · ${escapeHTML(cvT(x.text))}</button></li>`).join('')}</ul></section>` : '';
   const context = review.context && review.context.hero ? `<p class="end-review-context">${escapeHTML(cvT(review.context.hero))} · ${cvT(review.context.mode === 'net' ? '联机对局' : review.context.mode === 'cpu' ? '人机对局' : '本地对局')}${review.context.level ? ` · ${escapeHTML(cvT(LV_NAME[review.context.level] || review.context.level))}` : ''}</p>` : '';
   const evidenceText = review.evidence === 'limited' ? '样本较少，建议先当作线索' : review.evidence === 'sampled' ? '依据录像抽样帧与统计' : '录像抽样较充分';
-  panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3>${context}<p class="end-review-note">${cvT(evidenceText)} · ${cvT('复盘由本机规则根据战斗统计与抽样状态生成，不会调用云端 AI。')}</p><div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')}</p><div class="row end-review-actions"><button class="ghost" type="button" data-review-practice="${escapeHTML(review.context.heroId)}" data-review-focus="${review.focus}">${cvT('用这位侠客去练习')}</button><span>${cvT('这份复盘有帮助吗？')}</span><button class="ghost" type="button" data-review-vote="yes">${cvT('有帮助')}</button><button class="ghost" type="button" data-review-vote="no">${cvT('没帮助')}</button></div>`;
+  if (review.worthwhile) btn.textContent = cvT('建议复盘 · AI 复盘'); else btn.textContent = cvT('AI 复盘');
+  const matchup = review.matchup ? `<section class="end-review-block"><h4>${cvT('本局对阵建议')}</h4><p>「${escapeHTML(cvT(review.matchup.hero))}」${cvT('迎战')}「${escapeHTML(cvT(review.matchup.opponent))}」 · ${cvT('关注对方')}「${escapeHTML(cvT(review.matchup.foeMove))}」${cvT('；建议选择')}「${escapeHTML(cvT(review.matchup.ownChoice))}」${cvT(review.matchup.choice === 'ranged' ? '保持距离牵制并趁收招接近。' : review.matchup.choice === 'face' ? '校正朝向后起手。' : '先防守脱身，再抓收招反击。')}</p></section>` : '';
+  const worth = review.worthwhile ? `<p class="end-review-note"><strong>${cvT('这局值得复盘')}</strong> · ${cvT(review.reviewReason === 'edge' ? '坠崖说明边缘决策值得重看。' : review.reviewReason === 'close' ? '胜负接近，重看关键交换能找到改变结果的选择。' : review.reviewReason === 'combo' ? '本局出现长连段，可以重看起手和追击选择。' : '录像中发现可练习的决策点。')}</p>` : '';
+  panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3>${context}${worth}<p class="end-review-note">${cvT(evidenceText)} · ${cvT('分析结合双方侠客、技能、站位与输入，给出可复核的战术选择建议。')}</p><div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${matchup}${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')}</p><div class="row end-review-actions"><button class="ghost" type="button" data-review-practice="${escapeHTML(review.context.heroId)}" data-review-focus="${review.focus}">${cvT('用这位侠客去练习')}</button><span>${cvT('这份复盘有帮助吗？')}</span><button class="ghost" type="button" data-review-vote="yes">${cvT('有帮助')}</button><button class="ghost" type="button" data-review-vote="no">${cvT('没帮助')}</button></div>`;
 }
 function reviewCopy(value) {
   const s = String(value || '');

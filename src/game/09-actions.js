@@ -454,6 +454,17 @@ function spawnProj(f, o) {
   }
   if ((f.state === 'skill' || (f.state === 'special' && o.ult)) && !o.noRangeBoost && Number.isFinite(o.vx) && Math.abs(o.vx) > 1 && o.life < 1000) o.life *= 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
   const projectile = Object.assign({ id: ++projSeq, owner: f.idx, vy: 0, life: 1, age: 0, hits: 0, hitCD: 0, delay: 0, isProj: true }, o);
+  if (projectile.autoAim) {
+    const target = foeOf(f), speed = Math.hypot(projectile.vx || 0, projectile.vy || 0);
+    if (target && speed > 0) {
+      const authored = Math.atan2(projectile.vy || 0, projectile.vx || 0), base = f.face < 0 ? Math.PI : 0;
+      const spread = Math.atan2(Math.sin(authored - base), Math.cos(authored - base));
+      const tx = target.x + target.vx * 0.12, ty = target.y - 62 + target.vy * 0.08;
+      const angle = Math.atan2(ty - projectile.y, tx - projectile.x) + spread;
+      projectile.vx = Math.cos(angle) * speed; projectile.vy = Math.sin(angle) * speed;
+      projectile.autoAimTurn = projectile.autoAimTurn || 1.4;
+    }
+  }
   projs.push(projectile);
   if (f.ch.passive === 'mist' && f.clones && f.clones.length && !o.cloneEcho && !projectile.ult && projectile.dmg) {
     for (const c of f.clones) {
@@ -491,6 +502,16 @@ function updateProjs() {
     if (p.dead) continue;
     p.age += STEP; p.life -= STEP; p.hitCD -= STEP;
     const wasDelay = p.delay > 0;
+    if (p.autoAim && p.delay <= 0) {
+      const owner = fighterByIdx(p.owner), target = owner && foeOf(owner), speed = Math.hypot(p.vx || 0, p.vy || 0);
+      if (target && target.hp > 0 && speed > 0) {
+        const desired = Math.atan2(target.y - 62 - p.y, target.x - p.x), current = Math.atan2(p.vy || 0, p.vx || 0);
+        let turn = Math.atan2(Math.sin(desired - current), Math.cos(desired - current));
+        turn = clamp(turn, -(p.autoAimTurn || 1.4) * STEP, (p.autoAimTurn || 1.4) * STEP);
+        const angle = current + turn;
+        p.vx = Math.cos(angle) * speed; p.vy = Math.sin(angle) * speed;
+      }
+    }
     if (p.track || p.home || p.stick) {
       const tg = foeOf(fighterByIdx(p.owner));
       if (tg && tg.hp > 0) {

@@ -3,6 +3,23 @@
 // 找 bug 提示：测试失败时报的是 name，在本文件里搜这个 name 就能找到它的代码。
 export default [
   {
+    name: 'Selected ranged projectiles aim toward vertical targets and gently follow their movement while horizontal shots remain unchanged',
+    fn: `(() => {
+      startMatch('train', 'stand', [CHAR_IDX.qingfeng, 0]); showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.invul = 0; f.hp = f.maxHp; }
+      A.x = 300; A.y = 0; A.face = 1; B.x = 900; B.y = -250; B.vx = 0; B.vy = 0;
+      projs.length = 0;
+      spawnProj(A, { kind: 'test-aim', x: A.x + 20, y: -60, vx: 700, vy: 0, autoAim: true, life: 1, w: 12, h: 12, dmg: 0 });
+      const aimed = projs[0], initialVy = aimed && aimed.vy;
+      if (!aimed || !(initialVy < -100)) return { pass: false, error: 'auto-aim did not tilt toward an elevated target: ' + initialVy };
+      B.y = 0; updateProjs();
+      if (!(aimed.vy > initialVy)) return { pass: false, error: 'auto-aim did not smoothly follow the target height' };
+      spawnProj(A, { kind: 'test-horizontal', x: A.x + 20, y: -60, vx: 700, vy: 0, life: 1, w: 12, h: 12, dmg: 0 });
+      if (Math.abs(projs[1].vy) > 0.001) return { pass: false, error: 'a non-aimed horizontal projectile changed lanes' };
+      toMenu(); return { pass: true, error: null };
+    })()`
+  },
+  {
     name: 'Lingque R (shadowdash) feints & drifts back, homes non-stop on far/fleeing/jumping targets, wall- and cliff-edge-bounces, cannot be Just Guarded, and block stuns without knockdown',
     fn: `(() => {
       const run = (setup, perFrame, maxFrames = 150) => {

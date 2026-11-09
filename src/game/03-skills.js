@@ -190,7 +190,7 @@ const SKILLS = {
     update(f) {
       if (f.skPh === 0 && f.t >= 0.04) {
         f.skPh = 1; SFX.swing();
-        for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1100, vy, w: 70, h: 58, life: 1.1, dmg: 28, kb: [360, -80], stun: 0.18, hs: 0.03 });
+        for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1100, vy, autoAim: true, w: 70, h: 58, life: 1.1, dmg: 28, kb: [360, -80], stun: 0.18, hs: 0.03 });
       }
       if (f.skPh === 1 && f.t >= 0.11) toNeutral(f);
     },
@@ -251,7 +251,7 @@ const SKILLS = {
   swordqi: { name: '剑气', cd: 5, desc: '沉步拔刀，横扫出一道宏大弧月剑气。中距离直接【掀天挑空】（无地面硬直，直接送上半空），暗器更不在话下。',
     start(f) { f.vx = 0; },
     update(f) {
-      if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'qi', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 880, w: 92, h: 96, life: 0.46, dmg: 52, kb: [180, -700], stun: 0.3, hs: 0.08, launch: true }); }
+      if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'qi', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 880, autoAim: true, w: 92, h: 96, life: 0.46, dmg: 52, kb: [180, -700], stun: 0.3, hs: 0.08, launch: true }); }
       if (f.skPh === 1 && f.t >= 0.32) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['qf_charge', 30] : ['qf_thrust', 60], ai: (m, o, d) => d > 120 && d < 380 },
@@ -261,7 +261,7 @@ const SKILLS = {
     update(f) {
       if (f.skPh === 0 && f.t >= 0.08) {
         f.skPh = 1; SFX.slice();
-        for (const a of [-0.18, -0.06, 0.06, 0.18]) spawnProj(f, { kind: 'kunai', x: f.x + f.face * 30, y: f.y - 70, vx: f.face * 1250 * Math.cos(a), vy: 1250 * Math.sin(a), w: 26, h: 14, life: 0.55, dmg: 25, kb: [80, 0], stun: 0.18, hs: 0.03, launch: false });
+        for (const a of [-0.18, -0.06, 0.06, 0.18]) spawnProj(f, { kind: 'kunai', x: f.x + f.face * 30, y: f.y - 70, vx: f.face * 1250 * Math.cos(a), vy: 1250 * Math.sin(a), autoAim: true, w: 26, h: 14, life: 0.55, dmg: 25, kb: [80, 0], stun: 0.18, hs: 0.03, launch: false });
       }
       if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
     },
@@ -412,7 +412,7 @@ const SKILLS = {
       if (f.skPh === 0 && f.t >= 0.08) {
         f.skPh = 1; SFX.slice();
         const air = airH(f) > 30;
-        for (const k of [-1, 0, 1]) spawnProj(f, { kind: 'feather', x: f.x + f.face * 30, y: f.y - 70 + k * 14, vx: f.face * (air ? 880 : 1100), vy: air ? 580 + k * 90 : k * 45, w: 24, h: 36, life: 3, dmg: 22, kb: [100, 0], stun: 0.20, hs: 0.03, launch: false });
+        for (const k of [-1, 0, 1]) spawnProj(f, { kind: 'feather', x: f.x + f.face * 30, y: f.y - 70 + k * 14, vx: f.face * (air ? 880 : 1100), vy: air ? 580 + k * 90 : k * 45, autoAim: true, w: 24, h: 36, life: 3, dmg: 22, kb: [100, 0], stun: 0.20, hs: 0.03, launch: false });
       }
       if (f.skPh === 1 && f.t >= 0.24) toNeutral(f);
     },
@@ -443,7 +443,7 @@ const SKILLS = {
       if (f.skPh === 0 && f.t >= 0.12) {
         f.skPh = 1; const n = Math.min(3, f.notes || 0); f.notes = 0;
         SFX.note(n);
-        spawnProj(f, { kind: 'note', x: f.x + f.face * 40, y: f.y - 70, vx: f.face * (620 + 60 * n), w: 54 + 16 * n, h: 54 + 16 * n, grow: 40 + 14 * n, life: 0.95,
+        spawnProj(f, { kind: 'note', x: f.x + f.face * 40, y: f.y - 70, vx: f.face * (620 + 60 * n), autoAim: true, w: 54 + 16 * n, h: 54 + 16 * n, grow: 40 + 14 * n, life: 0.95,
           dmg: 22 + 20 * n, kb: [200 + 40 * n, n >= 3 ? -420 : 0], stun: 0.3 + 0.06 * n, hs: 0.05 + 0.015 * n, launch: n >= 3, unbreakable: n >= 3, maxHits: 1, notes: n });
         if (n >= 3) addP({ type: 'text', text: '三律齐鸣', x: f.x, y: f.y - 120, life: 0.8, max: 0.8, rgb: '150,240,200' });
       }
@@ -506,7 +506,7 @@ const SKILLS = {
   hook: { name: '飞锤', cd: 4, air: true, desc: '把链锤朝对手甩出去（射程约 495），锤头砸中就扯链把对手拽到身前，并施加【震魄】：1.2 秒内对手受到的伤害提高 25%。被格挡或被霸体吃掉时带不动。',
     start(f) { f.vx *= 0.2; },
     update(f) {
-      if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; SFX.heavy(); spawnProj(f, { kind: 'hook', x: f.x + f.face * 40, y: f.y - 72, vx: f.face * 1500, w: 44, h: 40, life: 0.33, dmg: 18, kb: [0, 0], stun: 0.35, hs: 0.06, hook: true }); }
+      if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; SFX.heavy(); spawnProj(f, { kind: 'hook', x: f.x + f.face * 40, y: f.y - 72, vx: f.face * 1500, autoAim: true, w: 44, h: 40, life: 0.33, dmg: 18, kb: [0, 0], stun: 0.35, hs: 0.06, hook: true }); }
       if (f.skPh === 1 && f.t >= 0.36) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['gc_wind', 30] : f.t < 0.18 ? ['gc_throw', 60] : ['gc_pull', 40],
@@ -540,7 +540,7 @@ const SKILLS = {
       if (f.skPh === 0 && f.t >= 0.12) {
         f.skPh = 1; f.t = 0;
         SFX.slice(); SFX.dash();
-        spawnProj(f, { kind: 'spindle', x: f.x + f.face * 40, y: f.y - 55, vx: f.face * 1050, vy: 0, w: 46, h: 26, life: 0.65, dmg: 30, kb: [150, 0], stun: 0.30, hs: 0.05, mark: true, pierce: true, maxHits: 2 });
+        spawnProj(f, { kind: 'spindle', x: f.x + f.face * 40, y: f.y - 55, vx: f.face * 1050, vy: 0, autoAim: true, w: 46, h: 26, life: 0.65, dmg: 30, kb: [150, 0], stun: 0.30, hs: 0.05, mark: true, pierce: true, maxHits: 2 });
       }
       if (f.skPh === 1 && f.t >= 0.16) toNeutral(f);
     },

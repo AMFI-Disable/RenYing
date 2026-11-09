@@ -9661,10 +9661,23 @@ Object.assign(UI_COPY_EN, {
 "推进 1 帧": "Advance 1 Frame",
 "AI 复盘": "AI Review",
 "本局 AI 复盘": "Match Review",
+"建议复盘 · AI 复盘": "Worth Reviewing · AI Review",
+"本局对阵建议": "Matchup Plan",
+"迎战": "vs",
+"关注对方": "Watch for",
+"；建议选择": "; choose",
+"保持距离牵制并趁收招接近。": "to keep them at range, then close in during recovery.",
+"校正朝向后起手。": "after correcting your facing.",
+"先防守脱身，再抓收招反击。": "to defend or escape, then punish its recovery.",
+"这局值得复盘": "Worth another look",
+"坠崖说明边缘决策值得重看。": "The ring-out makes your edge decisions worth reviewing.",
+"胜负接近，重看关键交换能找到改变结果的选择。": "The close result may reveal a choice that could have changed the match.",
+"本局出现长连段，可以重看起手和追击选择。": "Review the opening and follow-up choices behind the long combo.",
+"录像中发现可练习的决策点。": "The replay contains a decision you can practice.",
 "关键时刻": "Key Moments",
 "样本较少，建议先当作线索": "Limited sample; treat these findings as clues.",
-"依据录像抽样帧与统计": "Based on replay samples and match statistics.",
-"录像抽样较充分": "Replay sampling is substantial.",
+"依据录像抽样帧与统计": "Based on denser replay samples and match-wide statistics.",
+"录像抽样较充分": "The replay has enough samples for detailed tactical analysis.",
 "这份复盘有帮助吗？": "Was this review helpful?",
 "有帮助": "Helpful",
 "没帮助": "Not helpful",
@@ -9689,6 +9702,7 @@ Object.assign(UI_COPY_EN, {
 "团队造成伤害": "Team Damage Dealt",
 "团队承受伤害": "Team Damage Taken",
 "分析帧数": "Frames Analyzed",
+"分析结合双方侠客、技能、站位与输入，给出可复核的战术选择建议。": "The analysis combines both heroes, their skills, spacing, and inputs to produce tactical choices you can verify in the replay.",
 "做得好": "What Went Well",
 "可改进": "What to Improve",
 "下一步": "Next Steps",
@@ -9781,7 +9795,6 @@ Object.assign(UI_COPY_EN, {
 "键位": "Key Bindings",
 "语言 / Language": "Language",
 "关闭选项": "Off",
-"复盘由本机规则根据战斗统计与抽样状态生成，不会调用云端 AI。": "This local, rule-based review uses match stats and sampled states; it does not call a cloud AI.",
 "用这位侠客去练习": "Practice with this hero",
 "查看战绩": "Match History",
 "换侠客再战": "Change Hero & Rematch",
@@ -12482,7 +12495,7 @@ start() {},
 update(f) {
 if (f.skPh === 0 && f.t >= 0.04) {
 f.skPh = 1; SFX.swing();
-for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1100, vy, w: 70, h: 58, life: 1.1, dmg: 28, kb: [360, -80], stun: 0.18, hs: 0.03 });
+for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1100, vy, autoAim: true, w: 70, h: 58, life: 1.1, dmg: 28, kb: [360, -80], stun: 0.18, hs: 0.03 });
 }
 if (f.skPh === 1 && f.t >= 0.11) toNeutral(f);
 },
@@ -12538,7 +12551,7 @@ ai: (me, foe, d) => d > 110 && d < 360 },
 swordqi: { name: '剑气', cd: 5, desc: '沉步拔刀，横扫出一道宏大弧月剑气。中距离直接【掀天挑空】（无地面硬直，直接送上半空），暗器更不在话下。',
 start(f) { f.vx = 0; },
 update(f) {
-if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'qi', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 880, w: 92, h: 96, life: 0.46, dmg: 52, kb: [180, -700], stun: 0.3, hs: 0.08, launch: true }); }
+if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'qi', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 880, autoAim: true, w: 92, h: 96, life: 0.46, dmg: 52, kb: [180, -700], stun: 0.3, hs: 0.08, launch: true }); }
 if (f.skPh === 1 && f.t >= 0.32) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['qf_charge', 30] : ['qf_thrust', 60], ai: (m, o, d) => d > 120 && d < 380 },
@@ -12547,7 +12560,7 @@ start() {},
 update(f) {
 if (f.skPh === 0 && f.t >= 0.08) {
 f.skPh = 1; SFX.slice();
-for (const a of [-0.18, -0.06, 0.06, 0.18]) spawnProj(f, { kind: 'kunai', x: f.x + f.face * 30, y: f.y - 70, vx: f.face * 1250 * Math.cos(a), vy: 1250 * Math.sin(a), w: 26, h: 14, life: 0.55, dmg: 25, kb: [80, 0], stun: 0.18, hs: 0.03, launch: false });
+for (const a of [-0.18, -0.06, 0.06, 0.18]) spawnProj(f, { kind: 'kunai', x: f.x + f.face * 30, y: f.y - 70, vx: f.face * 1250 * Math.cos(a), vy: 1250 * Math.sin(a), autoAim: true, w: 26, h: 14, life: 0.55, dmg: 25, kb: [80, 0], stun: 0.18, hs: 0.03, launch: false });
 }
 if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
 },
@@ -12686,7 +12699,7 @@ update(f) {
 if (f.skPh === 0 && f.t >= 0.08) {
 f.skPh = 1; SFX.slice();
 const air = airH(f) > 30;
-for (const k of [-1, 0, 1]) spawnProj(f, { kind: 'feather', x: f.x + f.face * 30, y: f.y - 70 + k * 14, vx: f.face * (air ? 880 : 1100), vy: air ? 580 + k * 90 : k * 45, w: 24, h: 36, life: 3, dmg: 22, kb: [100, 0], stun: 0.20, hs: 0.03, launch: false });
+for (const k of [-1, 0, 1]) spawnProj(f, { kind: 'feather', x: f.x + f.face * 30, y: f.y - 70 + k * 14, vx: f.face * (air ? 880 : 1100), vy: air ? 580 + k * 90 : k * 45, autoAim: true, w: 24, h: 36, life: 3, dmg: 22, kb: [100, 0], stun: 0.20, hs: 0.03, launch: false });
 }
 if (f.skPh === 1 && f.t >= 0.24) toNeutral(f);
 },
@@ -12715,7 +12728,7 @@ update(f) {
 if (f.skPh === 0 && f.t >= 0.12) {
 f.skPh = 1; const n = Math.min(3, f.notes || 0); f.notes = 0;
 SFX.note(n);
-spawnProj(f, { kind: 'note', x: f.x + f.face * 40, y: f.y - 70, vx: f.face * (620 + 60 * n), w: 54 + 16 * n, h: 54 + 16 * n, grow: 40 + 14 * n, life: 0.95,
+spawnProj(f, { kind: 'note', x: f.x + f.face * 40, y: f.y - 70, vx: f.face * (620 + 60 * n), autoAim: true, w: 54 + 16 * n, h: 54 + 16 * n, grow: 40 + 14 * n, life: 0.95,
 dmg: 22 + 20 * n, kb: [200 + 40 * n, n >= 3 ? -420 : 0], stun: 0.3 + 0.06 * n, hs: 0.05 + 0.015 * n, launch: n >= 3, unbreakable: n >= 3, maxHits: 1, notes: n });
 if (n >= 3) addP({ type: 'text', text: '三律齐鸣', x: f.x, y: f.y - 120, life: 0.8, max: 0.8, rgb: '150,240,200' });
 }
@@ -12772,7 +12785,7 @@ drunkstep: { name: '醉步', cd: 4.5, desc: '东倒西歪一个滚翻。', start
 hook: { name: '飞锤', cd: 4, air: true, desc: '把链锤朝对手甩出去（射程约 495），锤头砸中就扯链把对手拽到身前，并施加【震魄】：1.2 秒内对手受到的伤害提高 25%。被格挡或被霸体吃掉时带不动。',
 start(f) { f.vx *= 0.2; },
 update(f) {
-if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; SFX.heavy(); spawnProj(f, { kind: 'hook', x: f.x + f.face * 40, y: f.y - 72, vx: f.face * 1500, w: 44, h: 40, life: 0.33, dmg: 18, kb: [0, 0], stun: 0.35, hs: 0.06, hook: true }); }
+if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; SFX.heavy(); spawnProj(f, { kind: 'hook', x: f.x + f.face * 40, y: f.y - 72, vx: f.face * 1500, autoAim: true, w: 44, h: 40, life: 0.33, dmg: 18, kb: [0, 0], stun: 0.35, hs: 0.06, hook: true }); }
 if (f.skPh === 1 && f.t >= 0.36) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['gc_wind', 30] : f.t < 0.18 ? ['gc_throw', 60] : ['gc_pull', 40],
@@ -12804,7 +12817,7 @@ update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.12) {
 f.skPh = 1; f.t = 0;
 SFX.slice(); SFX.dash();
-spawnProj(f, { kind: 'spindle', x: f.x + f.face * 40, y: f.y - 55, vx: f.face * 1050, vy: 0, w: 46, h: 26, life: 0.65, dmg: 30, kb: [150, 0], stun: 0.30, hs: 0.05, mark: true, pierce: true, maxHits: 2 });
+spawnProj(f, { kind: 'spindle', x: f.x + f.face * 40, y: f.y - 55, vx: f.face * 1050, vy: 0, autoAim: true, w: 46, h: 26, life: 0.65, dmg: 30, kb: [150, 0], stun: 0.30, hs: 0.05, mark: true, pierce: true, maxHits: 2 });
 }
 if (f.skPh === 1 && f.t >= 0.16) toNeutral(f);
 },
@@ -16278,6 +16291,17 @@ ring(o.x, o.y, 110, f.look.slash || '255,215,80', 0.35);
 }
 if ((f.state === 'skill' || (f.state === 'special' && o.ult)) && !o.noRangeBoost && Number.isFinite(o.vx) && Math.abs(o.vx) > 1 && o.life < 1000) o.life *= 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
 const projectile = Object.assign({ id: ++projSeq, owner: f.idx, vy: 0, life: 1, age: 0, hits: 0, hitCD: 0, delay: 0, isProj: true }, o);
+if (projectile.autoAim) {
+const target = foeOf(f), speed = Math.hypot(projectile.vx || 0, projectile.vy || 0);
+if (target && speed > 0) {
+const authored = Math.atan2(projectile.vy || 0, projectile.vx || 0), base = f.face < 0 ? Math.PI : 0;
+const spread = Math.atan2(Math.sin(authored - base), Math.cos(authored - base));
+const tx = target.x + target.vx * 0.12, ty = target.y - 62 + target.vy * 0.08;
+const angle = Math.atan2(ty - projectile.y, tx - projectile.x) + spread;
+projectile.vx = Math.cos(angle) * speed; projectile.vy = Math.sin(angle) * speed;
+projectile.autoAimTurn = projectile.autoAimTurn || 1.4;
+}
+}
 projs.push(projectile);
 if (f.ch.passive === 'mist' && f.clones && f.clones.length && !o.cloneEcho && !projectile.ult && projectile.dmg) {
 for (const c of f.clones) {
@@ -16315,6 +16339,16 @@ for (const p of projs) {
 if (p.dead) continue;
 p.age += STEP; p.life -= STEP; p.hitCD -= STEP;
 const wasDelay = p.delay > 0;
+if (p.autoAim && p.delay <= 0) {
+const owner = fighterByIdx(p.owner), target = owner && foeOf(owner), speed = Math.hypot(p.vx || 0, p.vy || 0);
+if (target && target.hp > 0 && speed > 0) {
+const desired = Math.atan2(target.y - 62 - p.y, target.x - p.x), current = Math.atan2(p.vy || 0, p.vx || 0);
+let turn = Math.atan2(Math.sin(desired - current), Math.cos(desired - current));
+turn = clamp(turn, -(p.autoAimTurn || 1.4) * STEP, (p.autoAimTurn || 1.4) * STEP);
+const angle = current + turn;
+p.vx = Math.cos(angle) * speed; p.vy = Math.sin(angle) * speed;
+}
+}
 if (p.track || p.home || p.stick) {
 const tg = foeOf(fighterByIdx(p.owner));
 if (tg && tg.hp > 0) {
@@ -18293,7 +18327,7 @@ try { if (AC) AC.resume(); } catch (e) {}
 }
 $id('extBack').addEventListener('click', closeQfx);
 const RP_KEY = 'renying-replays', RP_MAX = 10;
-const TR_KEY = 'renying-train-set', TR_SET_MAX = 4000, TR_EVERY = 6, TR_PER_MATCH = 480;
+const TR_KEY = 'renying-train-set', TR_SET_MAX = 4000, TR_EVERY = 4, TR_LEGACY_EVERY = 6, TR_PER_MATCH = 3600;
 function ctrlKey(c) {
 const b = c.buf;
 let s = inBits(c.held) + ':' + c.atkT;
@@ -18303,7 +18337,7 @@ return s;
 function recBegin(kind) {
 M.reviewReady = false;
 Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], trStart: null, post: ['', ''], last: [-1, -1],
-meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), trainSlots: kind === 'net' ? [...((ROLL.slots || [])[localIdx()] || [])] : allFighters().filter(f => human.includes(f.ctrl)).map(f => [A, B, C, D].indexOf(f)), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], st0: capState(), t: Date.now() } });
+meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), trainSlots: kind === 'net' ? [...((ROLL.slots || [])[localIdx()] || [])] : allFighters().filter(f => human.includes(f.ctrl)).map(f => [A, B, C, D].indexOf(f)), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], trEvery: TR_EVERY, st0: capState(), t: Date.now() } });
 if (M.hasBuffs && M.competitiveScrolls) REC.meta.competitiveScrolls = JSON.parse(JSON.stringify(M.competitiveScrolls));
 if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], pl: [A, B, C, D].map(f => !cpuTeamwork(f)) }); REC.post = ['', '', '', '']; }
 if (kind === 'loc' && M.mode === 'raid') { Object.assign(REC.meta, { raid: true, four: true, sub: 'local', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], raidSquadSize: M.raidSquadSize || 3, raidWave: M.raidWave || 1 }); REC.post = ['', '', '', '']; }
@@ -18416,7 +18450,7 @@ for (const [x, y] of [[0,1],[2,3],[4,5],[6,7],[8,9],[10,11],[14,15],[16,17]]) [s
 let r = 0;
 if (prev) r = ((prev[0] - s[0]) - (prev[1] - s[1])) * 10 + ((prev[2] - s[2]) - (prev[3] - s[3])) * 2;
 prev = s;
-out.push({ hero: (CHARS[heroIdx] || {}).id || 'hero', heroIdx, s, a, r: Math.round(r * 1000) / 1000, mode: m.mode || 'cpu', frame: Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * TR_EVERY, source: 'user_replay' });
+out.push({ hero: (CHARS[heroIdx] || {}).id || 'hero', heroIdx, s, a, r: Math.round(r * 1000) / 1000, mode: m.mode || 'cpu', frame: Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * (+m.trEvery || TR_LEGACY_EVERY), source: 'user_replay' });
 }
 if (out.length) {
 const last = out[out.length - 1], winner = m.w === -1 ? -1 : side ? 1 - m.w : m.w;
@@ -18494,7 +18528,7 @@ const rows = [], trFrames = [];
 let frameOffset = 0;
 for (const s of segments) {
 const segmentRows = Array.isArray(s.tr) ? s.tr : [];
-segmentRows.forEach((row, i) => { rows.push(row); trFrames.push(frameOffset + (+s.trStart || 0) + i * TR_EVERY); });
+segmentRows.forEach((row, i) => { rows.push(row); trFrames.push(frameOffset + (+s.trStart || 0) + i * (+s.trEvery || TR_LEGACY_EVERY)); });
 frameOffset += Math.max(0, +s.frames || 0);
 }
 const stats = Array.from({ length: 4 }, (_, i) => segments.reduce((sum, s) => {
@@ -18522,8 +18556,10 @@ return sum;
 const own = sumStats(ownIdx), foe = sumStats(foeIdx);
 const dealt = Math.max(0, +own.damage || 0), taken = Math.max(0, +foe.damage || 0), combo = Math.max(0, +own.combo || 0), breaks = Math.max(0, +own.breaks || 0), falls = Math.max(0, +own.falls || 0);
 const rows = (team ? [] : Array.isArray(m.tr) ? m.tr : []).filter(r => Array.isArray(r) && r.length >= 21 && r.slice(0, 19).every(Number.isFinite));
-const playerIdx = (m.ch || [])[side] ?? (m.ch || [])[0] ?? 0, hero = CHARS[playerIdx] || {}, heroFrames = aiBrainData().frames && aiBrainData().frames[hero.id] || {};
-const rowFrame = i => Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * TR_EVERY;
+const playerIdx = (m.ch4 || m.ch || [])[m.raid ? 0 : m.four ? ownIdx[0] : side] ?? (m.ch || [])[side] ?? (m.ch || [])[0] ?? 0;
+const foePlayerIdx = (m.ch4 || m.ch || [])[foeIdx[0]] ?? (m.ch || [])[side ^ 1] ?? 0;
+const hero = CHARS[playerIdx] || {}, opponent = CHARS[foePlayerIdx] || {}, heroFrames = aiBrainData().frames && aiBrainData().frames[hero.id] || {};
+const rowFrame = i => Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * (+m.trEvery || TR_LEGACY_EVERY);
 let attacks = 0, far = 0, misfaced = 0, farFrame = null, misfacedFrame = null;
 for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
 const r = rows[rowIndex];
@@ -18599,13 +18635,24 @@ errors.push(`约 ${pct}% 的攻击输入发生时没有正对对手。`);
 if (misfacedFrame !== null) moments.push({ frame: misfacedFrame, text: '朝向检查：攻击输入发生时没有正对对手。' });
 next.push('起手前确认朝向，必要时先用方向键调整再攻击。');
 }
+const ownQ = SKILLS[hero.skill] || {}, ownR = SKILLS[hero.skill2] || {}, foeQ = SKILLS[opponent.skill] || {}, foeR = SKILLS[opponent.skill2] || {};
+const matchup = hero.id && opponent.id ? {
+hero: hero.name || '', heroId: hero.id, opponent: opponent.name || '', opponentId: opponent.id,
+ownMove: ownR.name || ownQ.name || '', foeMove: foeR.name || foeQ.name || '',
+choice: attacks >= 6 && far / attacks > 0.3 && ownR.name ? 'ranged' : misfaced / Math.max(1, attacks) > 0.2 ? 'face' : 'defense',
+ownChoice: attacks >= 6 && far / attacks > 0.3 && ownR.name ? (ownR.name || '') : (ownQ.name || ownR.name || '')
+} : null;
 if (falls > 0) { errors.push(`本局坠崖 ${falls} 次，边缘位置需要更早回到场地中央。`); next.push('把对手引向场地内侧，自己靠近边缘时优先撤回安全位置。'); }
 if (!errors.length) errors.push('现有数据未发现明显的远距离出手或失衡交换。');
 if (!next.length) next.push('用慢放和判定框复核命中后的硬直窗口，再练习一套稳定的追击。');
 const context = { hero: hero.name || '', heroId: hero.id || '', mode: m.mode || '', level: m.level || '' };
 const focus = falls > 0 ? 'edge' : taken > dealt * 1.2 && taken > 0 ? 'defense' : misfaced / Math.max(1, attacks) >= 0.2 ? 'facing' : 'range';
 const evidence = rows.length < 12 ? 'limited' : rows.length < 60 ? 'sampled' : 'strong';
-return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, context, focus, evidence, strengths, errors, next, moments: moments.slice(0, 4) };
+const duration = Math.max(0, +m.frames || 0), closeFinish = m.w !== -1 && (m.w === side ? taken > dealt * 0.62 : dealt > taken * 0.62);
+const practiceSignal = falls > 0 || combo >= 3 || taken > dealt * 1.2 || (attacks >= 8 && (far / attacks >= 0.25 || misfaced / attacks >= 0.2));
+const worthwhile = duration >= 120 * 12 && (practiceSignal || closeFinish);
+const reviewReason = falls > 0 ? 'edge' : closeFinish ? 'close' : combo >= 5 ? 'combo' : 'decision';
+return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, context, matchup, focus, evidence, worthwhile, reviewReason, strengths, errors, next, moments: moments.slice(0, 4) };
 }
 function endReviewShow(m) {
 const btn = $id('endReviewBtn'), panel = $id('endReview');
@@ -18619,7 +18666,10 @@ const list = items => `<ul>${items.map(s => `<li>${escapeHTML(reviewCopy(s))}</l
 const moments = review.moments.length ? `<section class="end-review-block end-review-moments"><h4>${cvT('关键时刻')}</h4><ul>${review.moments.map(x => `<li><button type="button" class="end-review-jump" data-review-frame="${Math.max(0, Math.floor(x.frame))}">${cvT('回放')} ${formatReviewTime(x.frame)} · ${escapeHTML(cvT(x.text))}</button></li>`).join('')}</ul></section>` : '';
 const context = review.context && review.context.hero ? `<p class="end-review-context">${escapeHTML(cvT(review.context.hero))} · ${cvT(review.context.mode === 'net' ? '联机对局' : review.context.mode === 'cpu' ? '人机对局' : '本地对局')}${review.context.level ? ` · ${escapeHTML(cvT(LV_NAME[review.context.level] || review.context.level))}` : ''}</p>` : '';
 const evidenceText = review.evidence === 'limited' ? '样本较少，建议先当作线索' : review.evidence === 'sampled' ? '依据录像抽样帧与统计' : '录像抽样较充分';
-panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3>${context}<p class="end-review-note">${cvT(evidenceText)} · ${cvT('复盘由本机规则根据战斗统计与抽样状态生成，不会调用云端 AI。')}</p><div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')}</p><div class="row end-review-actions"><button class="ghost" type="button" data-review-practice="${escapeHTML(review.context.heroId)}" data-review-focus="${review.focus}">${cvT('用这位侠客去练习')}</button><span>${cvT('这份复盘有帮助吗？')}</span><button class="ghost" type="button" data-review-vote="yes">${cvT('有帮助')}</button><button class="ghost" type="button" data-review-vote="no">${cvT('没帮助')}</button></div>`;
+if (review.worthwhile) btn.textContent = cvT('建议复盘 · AI 复盘'); else btn.textContent = cvT('AI 复盘');
+const matchup = review.matchup ? `<section class="end-review-block"><h4>${cvT('本局对阵建议')}</h4><p>「${escapeHTML(cvT(review.matchup.hero))}」${cvT('迎战')}「${escapeHTML(cvT(review.matchup.opponent))}」 · ${cvT('关注对方')}「${escapeHTML(cvT(review.matchup.foeMove))}」${cvT('；建议选择')}「${escapeHTML(cvT(review.matchup.ownChoice))}」${cvT(review.matchup.choice === 'ranged' ? '保持距离牵制并趁收招接近。' : review.matchup.choice === 'face' ? '校正朝向后起手。' : '先防守脱身，再抓收招反击。')}</p></section>` : '';
+const worth = review.worthwhile ? `<p class="end-review-note"><strong>${cvT('这局值得复盘')}</strong> · ${cvT(review.reviewReason === 'edge' ? '坠崖说明边缘决策值得重看。' : review.reviewReason === 'close' ? '胜负接近，重看关键交换能找到改变结果的选择。' : review.reviewReason === 'combo' ? '本局出现长连段，可以重看起手和追击选择。' : '录像中发现可练习的决策点。')}</p>` : '';
+panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3>${context}${worth}<p class="end-review-note">${cvT(evidenceText)} · ${cvT('分析结合双方侠客、技能、站位与输入，给出可复核的战术选择建议。')}</p><div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${matchup}${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')}</p><div class="row end-review-actions"><button class="ghost" type="button" data-review-practice="${escapeHTML(review.context.heroId)}" data-review-focus="${review.focus}">${cvT('用这位侠客去练习')}</button><span>${cvT('这份复盘有帮助吗？')}</span><button class="ghost" type="button" data-review-vote="yes">${cvT('有帮助')}</button><button class="ghost" type="button" data-review-vote="no">${cvT('没帮助')}</button></div>`;
 }
 function reviewCopy(value) {
 const s = String(value || '');
@@ -23105,7 +23155,8 @@ const gmH = Math.max(4, Math.round(bh * 0.32));
 const txtGap = 8, rowGap = Math.max(7, Math.round(bh * 0.55));
 const r1 = { y: top, fs: fsTop, hpY: top + fsTop + 4, hpH: hpTopH };
 r1.gmY = r1.hpY + r1.hpH + 2;
-const r2 = { y: r1.gmY + gmH + rowGap, fs: fsSub, hpH: hpSubH };
+const hasLocalHudPlayer = [A, B, C, D].some(hudLocalPlayer);
+const r2 = { y: r1.gmY + gmH + rowGap + (hasLocalHudPlayer ? 15 : 0), fs: fsSub, hpH: hpSubH };
 r2.hpY = r2.y + fsSub + 4; r2.gmY = r2.hpY + r2.hpH + 2;
 ctx.save();
 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
@@ -23177,6 +23228,15 @@ const mRatio = clamp(f.meter / 100, 0, 1), full = f.meter >= 100;
 if (full) { ctx.save(); ctx.shadowColor = `rgba(${f.look.slash},0.9)`; ctx.shadowBlur = 8 + 4 * (0.5 + 0.5 * Math.sin(clock * 14)); }
 bar(rev ? x : x + blk - mW2, R.gmY, mW2, gmH, mRatio, full ? '#ffe9a8' : `rgba(${f.look.slash},0.85)`, !rev, 0);
 if (full) ctx.restore();
+if (hudLocalPlayer(f) && !f.dummy) {
+const q = Math.max(0, f.skillCD || 0), r = Math.max(0, f.skill2CD || 0);
+const qText = q < 0.05 ? 'Q ✓' : `Q ${q.toFixed(1)}`, rText = r < 0.05 ? 'R ✓' : `R ${r.toFixed(1)}`;
+ctx.save(); ctx.font = `${Math.max(10, Math.round(fsNum * 0.8))}px ${BODY_FONT}`;
+ctx.textAlign = rev ? 'right' : 'left'; ctx.textBaseline = 'top';
+ctx.fillStyle = 'rgba(255,255,255,0.68)';
+ctx.fillText(`${qText} · ${rText}`, rev ? x + blk : x, R.gmY + gmH + 5);
+ctx.restore();
+}
 }
 };
 team(A, C, 0);
@@ -23195,7 +23255,30 @@ else if (M.subMode === 'pp_pp') bTitle = '⚔️ 2v2 四方争锋 (双人对决)
 else if (M.mode === 'net' && netRoomMode === 'pp_cc') bTitle = '🌐 2v2 双人联机共斗 (抗击双天道)';
 else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 四人对决 (全员切磋)';
 }
+if (chaosOn()) bTitle += ' · 天机乱斗';
+if (chaosOn()) drawChaosHUD(cx, H - 48, true);
 ctx.fillText(window.I18N ? I18N.t(bTitle) : bTitle, cx, H - 10);
+ctx.restore();
+}
+function hudLocalPlayer(f) {
+if (!f) return false;
+if (M.mode === 'net') return !!((ROLL.slots || [])[localIdx()] || []).includes([A, B, C, D].indexOf(f));
+return human.includes(f.ctrl);
+}
+function drawChaosHUD(cx, y, compact) {
+const mutation = chaosNow();
+const name = mutation ? `${mutation.icon} ${cvT(mutation.name)} · ${chaosLeft()}s` : cvT('🎲 乾坤异变');
+const desc = mutation && mutation.desc ? cvT(mutation.desc).split(' · ')[0] : '';
+ctx.save(); ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+ctx.font = `bold ${Math.max(11, Math.round(H * (compact ? 0.015 : 0.018)))}px ${TITLE_FONT}`;
+ctx.fillStyle = '#e9c46a'; ctx.fillText(name, cx, y);
+if (desc) {
+ctx.font = `${Math.max(10, Math.round(H * 0.013))}px ${BODY_FONT}`;
+ctx.fillStyle = 'rgba(239,232,216,0.82)';
+let text = desc;
+while (text.length > 8 && ctx.measureText(text).width > W * 0.88) text = text.slice(0, -2);
+ctx.fillText(text, cx, y + (compact ? 13 : 15));
+}
 ctx.restore();
 }
 function drawHUDRaid() {
@@ -23563,41 +23646,7 @@ ctx.fillStyle = '#e9c46a';
 ctx.fillText(cvT(`问剑 · 第 ${M.towerFloor || 1} 层`), cx, top + bh + 18);
 ctx.restore();
 } else if (chaosOn()) {
-ctx.save();
-ctx.font = `bold ${Math.max(12, Math.round(bh * 0.92))}px ${TITLE_FONT}`;
-ctx.fillStyle = '#e9c46a';
-const remSec = chaosLeft(), currentChaosMutation = chaosNow();
-const mutTxt = currentChaosMutation ? (currentChaosMutation.icon + ' ' + cvT(currentChaosMutation.name) + ' (' + remSec + 's)') : cvT('🎲 乾坤异变');
-ctx.fillText(mutTxt, cx, top + bh + 18);
-if (currentChaosMutation && currentChaosMutation.desc) {
-ctx.font = `${Math.max(12, Math.round(bh * 0.68))}px ${BODY_FONT}`;
-ctx.fillStyle = 'rgba(239,232,216,0.88)';
-let md = cvT(currentChaosMutation.desc);
-if (ctx.measureText(md).width > W * 0.94) md = md.split(' · ')[0];   // 英文太长放不下：只留效果，星宿那半句省掉
-ctx.fillText(md, cx, top + bh + 34);
-}
-if (currentChaosMutation && (!announce || announce.text !== ('天机异变 · ' + currentChaosMutation.name))) {
-const mn = cvT(currentChaosMutation.name), md = cvT(currentChaosMutation.desc), head = `${currentChaosMutation.icon} ${mn}${mn !== currentChaosMutation.name ? ': ' : '：'}`;
-const bFs = Math.max(12, Math.round(bh * 0.65));
-ctx.font = `${bFs}px ${BODY_FONT}`;
-let badgeTxt = head + md, tw = ctx.measureText(badgeTxt).width;
-if (tw + 28 > W * 0.92) { badgeTxt = head + md.split(' · ')[0]; tw = ctx.measureText(badgeTxt).width; }   // 窄屏放不下：星宿那半句省掉
-if (tw + 28 > W * 0.92) { badgeTxt = `${currentChaosMutation.icon} ${mn}`; tw = ctx.measureText(badgeTxt).width; }   // 还放不下就只留名字（效果在计时下面那行）
-const padX = 14, bw = Math.min(W * 0.92, tw + padX * 2), bhBadge = Math.max(20, Math.round(bh * 1.05));
-const bx = cx - bw / 2, by = Math.max(2, top - bhBadge - 4);
-ctx.fillStyle = 'rgba(6,5,14,0.78)';
-ctx.strokeStyle = 'rgba(233,196,106,0.45)';
-ctx.lineWidth = 1;
-ctx.beginPath();
-if (ctx.roundRect) ctx.roundRect(bx, by, bw, bhBadge, 4);
-else ctx.rect(bx, by, bw, bhBadge);
-ctx.fill(); ctx.stroke();
-ctx.fillStyle = '#f4ecd8';
-ctx.textAlign = 'center';
-ctx.textBaseline = 'middle';
-ctx.fillText(badgeTxt, cx, by + bhBadge / 2);
-}
-ctx.restore();
+drawChaosHUD(cx, H - 42, false);
 } else if (M.mode === 'mayhem') {
 ctx.save();
 ctx.font = `bold ${Math.max(12, Math.round(bh * 0.95))}px ${TITLE_FONT}`;

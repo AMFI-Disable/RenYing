@@ -415,7 +415,7 @@ export default [
         const r = Array(21).fill(0); r[0] = 0.8; r[1] = 0.7; r[8] = 0.1; r[9] = 0.5; r[12] = -1; r[19] = 8; return r;
       });
       rows[3][1] = 0.6;
-      const report = matchReviewData({ mode: 'cpu', playerSide: 0, stats: [{ damage: 120, combo: 5, breaks: 1, falls: 0 }, { damage: 80 }], tr: rows, trStart: 120 });
+      const report = matchReviewData({ mode: 'cpu', playerSide: 0, stats: [{ damage: 120, combo: 5, breaks: 1, falls: 0 }, { damage: 80 }], tr: rows, trStart: 120, trEvery: 6 });
       if (!report || report.strengths.length < 2 || !report.errors.some(x => x.includes('100%')) || report.next.length < 2) {
         return { pass: false, error: 'AI review did not explain measured strengths and actionable spacing/facing errors' };
       }
@@ -430,14 +430,24 @@ export default [
       flowRows[1][21] = 'air'; flowRows[1][23] = 1;
       flowRows[2][21] = 'block';
       flowRows[3][21] = 'idle'; flowRows[3][24] = 'hitstun'; flowRows[3][17] = 0.5;
-      const flow = matchReviewData({ mode: 'cpu', playerSide: 0, ch: [0, 1], stats: [{ damage: 50 }, { damage: 30 }], tr: flowRows, trStart: 60 });
-      if (!flow || !flow.moments.some(x => x.text.includes('脱身时机')) || !flow.moments.some(x => x.text.includes('防守成功')) || !flow.moments.some(x => x.text.includes('追击窗口')) || flow.context.heroId !== 'qingfeng') {
-        return { pass: false, error: 'AI review missed escape, safe block, follow-up or hero context evidence' };
+      const flow = matchReviewData({ mode: 'cpu', playerSide: 0, ch: [0, 1], stats: [{ damage: 50 }, { damage: 30 }], tr: flowRows, trStart: 60, trEvery: 6, frames: 2400 });
+      if (!flow || !flow.moments.some(x => x.text.includes('脱身时机')) || !flow.moments.some(x => x.text.includes('防守成功')) || !flow.moments.some(x => x.text.includes('追击窗口')) || flow.context.heroId !== 'qingfeng' || flow.matchup.opponentId !== 'feiying' || !flow.worthwhile) {
+        return { pass: false, error: 'AI review missed escape, safe block, follow-up, matchup advice or worthwhile review signal' };
       }
       const team = matchReviewData({ mode: 'net', four: true, sub: 'pp_cc', playerSide: 1, stats: [{ damage: 100 }, { damage: 90 }, { damage: 40 }, { damage: 20 }] });
       if (!team || !team.team || team.dealt !== 140 || team.taken !== 110) return { pass: false, error: 'AI review did not aggregate team performance correctly' };
       for (const mode of ['maps', 'tag3', 'chaos', 'mayhem', 'tower', 'saga', 'raid']) {
         if (!matchReviewData({ mode, stats: [{ damage: 20 }, { damage: 10 }] })) return { pass: false, error: 'AI review does not support ' + mode + ' match recaps' };
+      }
+      for (let hero = 0; hero < CHARS.length; hero++) for (let foe = 0; foe < CHARS.length; foe++) {
+        if (hero === foe) continue;
+        const pair = matchReviewData({ mode: 'cpu', ch: [hero, foe], w: 0, frames: 2400, stats: [{ damage: 100 }, { damage: 80 }] });
+        if (!pair || !pair.matchup || pair.matchup.heroId !== CHARS[hero].id || pair.matchup.opponentId !== CHARS[foe].id || !pair.matchup.ownChoice) {
+          return { pass: false, error: 'AI review lacks hero-vs-opponent advice for ' + CHARS[hero].id + ' vs ' + CHARS[foe].id };
+        }
+      }
+      if (!drawHUD2v2.toString().includes('drawChaosHUD') || !drawHUD2v2.toString().includes('qText') || !drawHUD2v2.toString().includes('rText') || !drawHUD.toString().includes('drawChaosHUD')) {
+        return { pass: false, error: '2v2 HUD omitted the chaos overlay or local Q/R cooldown display' };
       }
       const variant = replayModeTag({ mode: '2v2', sub: 'pp_cc', st0: { M: { teamMutator: 'chaos' } } });
       if (!variant.includes('双人共斗') || !variant.includes('天机乱斗')) return { pass: false, error: 'replay list does not label the 2v2 variant and mutator' };
@@ -445,6 +455,7 @@ export default [
         { mode: 'tower', towerFloor: 1, frames: 120, st0: { start: 1 }, trStart: 6, tr: [[1]], stats: [{ damage: 30 }, { damage: 10 }] },
         { mode: 'tower', towerFloor: 2, frames: 240, st0: { start: 2 }, trStart: 12, tr: [[2]], stats: [{ damage: 40 }, { damage: 15 }] }
       ];
+      parts[0].trEvery = 6; parts[1].trEvery = 4;
       const run = rpRunReplay({ id: 'test-run', mode: 'tower', segments: parts }, 0);
       if (run.frames !== 360 || run.segments.length !== 2 || run.st0 !== parts[0].st0 || run.towerFloor !== 2 || run.stats[0].damage !== 70 || run.trFrames.join(',') !== '6,132') return { pass: false, error: 'multi-floor replay did not preserve all segments, frame offsets and aggregate run data' };
       return { pass: true, error: null };
