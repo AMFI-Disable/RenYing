@@ -47,6 +47,33 @@ The game is bilingual: Simplified Chinese and English, switchable at any time fr
 
 ---
 
+## Screenshots
+
+These captures show the English interface in combat, hero draft and the Armory. [Browse the full screenshot set](docs/media/screenshots/readme.md).
+
+<p align="center">
+  <a href="docs/media/screenshots/en/01-home.jpg"><img src="docs/media/screenshots/en/01-home.jpg" width="48%" alt="English home screen with Qing Feng under the moon" /></a>
+  <a href="docs/media/screenshots/en/03-combo.jpg"><img src="docs/media/screenshots/en/03-combo.jpg" width="48%" alt="Qing Feng's seven-hit combo with Sword Qi returning" /></a>
+</p>
+
+<p align="center"><strong>Home screen</strong> · <strong>Combo and returning Sword Qi</strong></p>
+
+<p align="center">
+  <a href="docs/media/screenshots/en/04-ultimate.jpg"><img src="docs/media/screenshots/en/04-ultimate.jpg" width="48%" alt="Qing Feng's Crescent Moon ultimate" /></a>
+  <a href="docs/media/screenshots/en/06-2v2.jpg"><img src="docs/media/screenshots/en/06-2v2.jpg" width="48%" alt="A 2v2 fight with lightning strikes" /></a>
+</p>
+
+<p align="center"><strong>Crescent Moon ultimate</strong> · <strong>2v2 battle</strong></p>
+
+<p align="center">
+  <a href="docs/media/screenshots/en/07-hero-draft.jpg"><img src="docs/media/screenshots/en/07-hero-draft.jpg" width="48%" alt="Hero draft with all sixteen heroes" /></a>
+  <a href="docs/media/screenshots/en/08-case-opening.jpg"><img src="docs/media/screenshots/en/08-case-opening.jpg" width="48%" alt="Opening a Zodiac Case in the Armory" /></a>
+</p>
+
+<p align="center"><strong>Hero draft</strong> · <strong>Armory case opening</strong></p>
+
+---
+
 ## Play It
 
 | Way | How |
