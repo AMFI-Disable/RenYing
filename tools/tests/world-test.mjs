@@ -43,7 +43,7 @@ async function connect(line, ctx, dobj) {
   finally { globalThis.Response = RealResponse; }
   return sock;
 }
-const hi = (dobj, s, name, ch = 'qingfeng') => dobj.webSocketMessage(s, JSON.stringify({ t: 'hi', v: '1.0.6', name, ch }));
+const hi = (dobj, s, name, ch = 'qingfeng') => dobj.webSocketMessage(s, JSON.stringify({ t: 'hi', v: '1.0.11', name, ch }));
 const st = (dobj, s, x, extra = {}) => dobj.webSocketMessage(s, JSON.stringify({ t: 's', x, y: 0, f: 1, st: 'idle', hp: 100, mh: 100, ...extra }));
 
 // ---------- 一条线：40 人封顶 ----------
@@ -361,7 +361,7 @@ function lineOf(n) {
 }
 async function join(d, name, tk) {
   const s = await connect(d.line, d.ctx, d);
-  await d.webSocketMessage(s, JSON.stringify({ t: 'hi', v: '1.0.6', name, ch: 'qingfeng', tk }));
+  await d.webSocketMessage(s, JSON.stringify({ t: 'hi', v: '1.0.11', name, ch: 'qingfeng', tk }));
   clearInterval(d.timer); d.timer = 0;
   await (d.cqBusy || Promise.resolve());
   for (let i = 0; i < 20 && d.sim.players.size && [...d.sim.players.values()].some(p => tk && !p.uid); i++) await new Promise(r => setTimeout(r, 5));   // 等登录令牌核对完

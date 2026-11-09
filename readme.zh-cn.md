@@ -8,7 +8,7 @@
 *由 Even、Luffy、Opus 5.5 和 Gemini 4 Argon 制作。纯 JavaScript 画在一块 canvas 上，点对点联机，账号和存档用可选的 Cloudflare Worker。*
 
 [![在线游玩](https://img.shields.io/badge/在线游玩-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
-[![版本 1.0.6](https://img.shields.io/badge/版本-1.0.6-blue.svg?style=flat-square)](docs/history/changelog.md)
+[![客户端 1.0.11](https://img.shields.io/badge/客户端-1.0.11-blue.svg?style=flat-square)](docs/history/changelog.md)
 [![侠客 16 位](https://img.shields.io/badge/侠客-16%20位-red.svg?style=flat-square)](#侠客)
 [![技术 HTML5 Canvas](https://img.shields.io/badge/技术-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](#工作原理)
 [![联机 WebRTC 回滚](https://img.shields.io/badge/联机-WebRTC%20%2B%20回滚-blue.svg?style=flat-square)](#工作原理)
@@ -177,6 +177,7 @@
 - **熔铸契** 把同一档的十件换成高一档的一件。
 - **玩家市场** 玩家之间用墨锭买卖，每笔成交扣一点手续费，免得墨锭越攒越多。
 - **货郎** 一次报一件、按固定价格卖。
+- **战斗配置** 每位侠客都有可解锁的第二架势，还能装备账号绑定、由指定动作触发效果的武学徽记。斩获可解锁架势并获得徽记升阶材料；这些系统与外观皮肤分开。
 
 云端账号的每一次武库操作都由服务器核对并记录。详见 [Wiki：武库与市场](https://github.com/AMFI-Disable/RenYing/wiki/Armory-and-Marketplace)。
 
