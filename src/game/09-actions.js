@@ -503,7 +503,16 @@ function spawnProj(f, o) {
     if (o.h) o.h = Math.round(o.h * 1.8);
     ring(o.x, o.y, 110, f.look.slash || '255,215,80', 0.35);
   }
-  if ((f.state === 'skill' || (f.state === 'special' && o.ult)) && !o.noRangeBoost && Number.isFinite(o.vx) && Math.abs(o.vx) > 1 && o.life < 1000) o.life *= 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
+  const skillProjectile = f.state === 'skill' || (f.state === 'special' && o.ult);
+  if ((skillProjectile || o.isWave) && Number.isFinite(o.vx) && Math.abs(o.vx) > 1 && o.life < 1000) {
+    if (skillProjectile && !o.noRangeBoost) o.life *= 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
+    // Ranged skills and Li Ying's shadow waves travel to the edge on every map, even when that map is wider than their old fixed lifetime.
+    if (Number.isFinite(o.x) && Math.abs(o.vy || 0) < Math.abs(o.vx) * 0.45) {
+      const edge = o.vx > 0 ? STAGE_W - WALL : WALL;
+      const travel = Math.max(0, (edge - o.x) * Math.sign(o.vx));
+      o.life = Math.max(o.life, (travel + (o.w || 0)) / Math.abs(o.vx));
+    }
+  }
   const projectile = Object.assign({ id: ++projSeq, owner: f.idx, vy: 0, life: 1, age: 0, hits: 0, hitCD: 0, delay: 0, isProj: true }, o);
   projs.push(projectile);
   if (f.ch.passive === 'mist' && f.clones && f.clones.length && !o.cloneEcho && !projectile.ult && projectile.dmg) {
@@ -516,22 +525,25 @@ function spawnProj(f, o) {
   }
 }
 function projBox(p) { return [p.x - p.w / 2, p.y - p.h / 2, p.x + p.w / 2, p.y + p.h / 2]; }
+const ironBallInvulnerable = f => f.invul > 0 && !(f.onGround() && ['idle', 'walk', 'block', 'blockstun'].includes(f.state));
 function resolveYoyoBallHits(p, owner, box) {
   if (!owner || !p.dmg) return;
   const foes = isMulti() ? foesOf(owner) : [foeOf(owner)];
   p.yoyoHitAt = p.yoyoHitAt || {};
   p.yoyoUltDealt = p.yoyoUltDealt || {};
   for (const foe of foes) {
-    if (!foe || foe.hp <= 0 || foe.invul > 0 || foe.ballGuardBreakT > 0 || !overlap(box, hurtbox(foe))) continue;
+    if (!foe || foe.hp <= 0 || ironBallInvulnerable(foe) || foe.ballGuardBreakT > 0 || !overlap(box, hurtbox(foe))) continue;
     if ((p.yoyoHitAt[foe.idx] || -99) + (p.yoyoPhase === 'loop' ? 0.72 : 0.3) > p.age) continue;
+    const speed = Math.abs(p.vx || 0);
+    const speedDmg = clamp(0.8 + speed / 5000, 0.9, 1.45);
     if (p.yoyoPhase === 'ult-pass' || p.yoyoPhase === 'ult-return') {
       const remain = 120 - (p.yoyoUltDealt[foe.idx] || 0);
       if (remain <= 0) continue;
-      const dmg = Math.min(p.dmg, remain);
-      applyHit(owner, foe, { dmg, kb: [260, -300], stun: 0.32, hs: 0.08, launch: true, ult: true, noScale: true, guardDamage: 24, blockGuardDamage: 12, dir: p.yoyoDir || owner.face }, [p.x, p.y]);
+      const dmg = Math.min(p.dmg * speedDmg, remain);
+      applyHit(owner, foe, { dmg, kb: [260, -300], stun: 0.32, hs: 0.08, launch: true, ult: true, noScale: true, isProj: true, guardDamage: 24, blockGuardDamage: 12, dir: Math.sign(p.vx) || p.yoyoDir || owner.face, srcX: p.x, backAttack: true }, [p.x, p.y]);
       p.yoyoUltDealt[foe.idx] = (p.yoyoUltDealt[foe.idx] || 0) + dmg;
     } else {
-      applyHit(owner, foe, { dmg: p.dmg, kb: [180, -120], stun: p.yoyoPhase === 'lash' ? 0.38 : 0.24, hs: 0.06, launch: false, guardDamage: p.yoyoPhase === 'lash' ? 44 : 34, blockGuardDamage: p.yoyoPhase === 'lash' ? 18 : 12, dir: p.yoyoDir || owner.face }, [p.x, p.y]);
+      applyHit(owner, foe, { dmg: p.dmg * speedDmg, kb: [180, -120], stun: p.yoyoPhase === 'lash' ? 0.38 : 0.24, hs: 0.06, launch: false, isProj: true, guardDamage: p.yoyoPhase === 'lash' ? 44 : 34, blockGuardDamage: p.yoyoPhase === 'lash' ? 18 : 12, dir: Math.sign(p.vx) || p.yoyoDir || owner.face, srcX: p.x, backAttack: true }, [p.x, p.y]);
     }
     p.yoyoHitAt[foe.idx] = p.age;
     p.hits = (p.hits || 0) + 1;
@@ -561,10 +573,10 @@ function updateProjs() {
     if (p.kind === 'ironball' && p.yoyo) {
       const owner = fighterByIdx(p.owner), phase = p.yoyoPhase || 'loop';
       if (!owner || owner.hp <= 0) { p.dead = true; continue; }
-      const ice = !!(mapNow() && mapNow().ice), qRange = Math.min(600, STAGE_W * 0.24);
+      const ice = !!(mapNow() && mapNow().ice), qRange = STAGE_W - WALL * 2;
       const arenaMin = WALL + 18, arenaMax = STAGE_W - WALL - 18;
       const gearBoost = p.yoyoBoostT > 0 ? (p.yoyoGearBoost ? 1.4 : 1.25) : 1;
-      const loopSpeed = (ice ? 1550 : 1850) * gearBoost;
+      const loopSpeed = (ice ? 2050 : 2300) * gearBoost;
       p.yoyoBoostT = Math.max(0, (p.yoyoBoostT || 0) - STEP);
       if (phase === 'loop') {
         if (p.yoyoDmgT > 0) { p.yoyoDmgT = Math.max(0, p.yoyoDmgT - STEP); if (!p.yoyoDmgT) { p.dmg = 24; p.yoyoGearBoost = false; } }
@@ -615,9 +627,9 @@ function updateProjs() {
           const minVy = -260;
           if (p.vy > 60 || Math.abs(p.vy) > 80) {
             const eavesBonus = terrainMap === MAPS.pagoda && mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji';
-            p.vy = -Math.abs(p.vy) * (eavesBonus ? 0.98 : 0.85);
+            p.vy = -Math.abs(p.vy) * (eavesBonus ? 0.99 : 0.92);
             if (p.vy > minVy) p.vy = minVy;
-            p.vx *= ice ? (mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji' ? 0.985 : 0.97) : 0.94;
+            p.vx *= ice ? (mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji' ? 0.99 : 0.985) : 0.975;
             p.bounceCount = (p.bounceCount || 0) + 1;
             dust(p.x, 0, 7); ring(p.x, 0, 36, '235,165,70', 0.18); SFX.ballHit();
           } else {
@@ -626,15 +638,15 @@ function updateProjs() {
             p.vx *= ice ? (mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji' ? 0.99 : 0.985) : 0.96;
           }
         }
-        // 墙壁弹性高反弹（保留 88% 水平动能并获得轻微上弹）
+        // 墙壁弹性高反弹（保留 94% 水平动能并获得轻微上弹）
         if (p.x + p.vx * STEP <= WALL + 18) {
           p.x = WALL + 18;
-          p.vx = Math.max(380, Math.abs(p.vx) * 0.88);
+          p.vx = Math.max(520, Math.abs(p.vx) * 0.94);
           p.vy = Math.min(p.vy, -160);
           ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
         } else if (p.x + p.vx * STEP >= STAGE_W - WALL - 18) {
           p.x = STAGE_W - WALL - 18;
-          p.vx = -Math.max(380, Math.abs(p.vx) * 0.88);
+          p.vx = -Math.max(520, Math.abs(p.vx) * 0.94);
           p.vy = Math.min(p.vy, -160);
           ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
         }
@@ -703,7 +715,7 @@ function updateProjs() {
     }
     hitClones(box, p.owner, p.dmg);
     if (hitDecoyBox(box, p.owner)) { if (!p.pierce) p.dead = true; continue; }
-    if (p.hitCD > 0 || foe.invul > 0 || (p.kind === 'ironball' && foe.ballGuardBreakT > 0) || foe.hp <= 0) continue;
+    if (p.hitCD > 0 || (p.kind === 'ironball' ? ironBallInvulnerable(foe) || foe.ballGuardBreakT > 0 : foe.invul > 0) || foe.hp <= 0) continue;
     if ((p.groundOnly || p.kind === 'quake') && (foe.y < -16 || foe.flying)) continue;
     if (!overlap(box, hurtbox(foe))) continue;
     if (p.feast) {   // 与民同乐：砸中就得陪着喝

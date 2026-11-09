@@ -170,6 +170,9 @@ function applyHit(att, def, m, pt) {
   def.drinkT = 0;
   if (isClient()) { predictHit(att, def, m, pt); return; }   // 联机时由房主判定；加入方先播放自己出手的效果
   const fx = m.dir || att.face, sx = m.srcX !== undefined ? m.srcX : att.x;
+  const impactSide = Math.sign(sx - def.x) || -fx || def.face;
+  const backAttack = !!m.backAttack && impactSide !== def.face;
+  if (backAttack) m = { ...m, dmg: m.dmg * 1.35, guardDamage: 0, blockGuardDamage: 0 };
   // 醉翁被动：醉意过半，两成几率闪开近身攻击
   if (def.ch.passive === 'drunk' && (def.drunk || 0) >= 50 && !m.isProj && !m.ult && !m.unblockable && !m.hold && ['idle', 'walk', 'air'].includes(def.state) && grnd() < 0.2) {
     def.invul = Math.max(def.invul, 0.2); def.vx = fx * 320; def.drunk = Math.max(0, def.drunk - 10);
@@ -185,7 +188,8 @@ function applyHit(att, def, m, pt) {
     return;
   }
   const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
-  const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
+  const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround()
+    && (!m.backAttack || !backAttack);
   const isCs2 = !!(m && m.name === 'cs2');   // 只认这一招本身：moveName 收招后不清，之后的技能、暗器、大招不能被当成蓄力斩
   if (wasBlocking && (!m.unblockable || isCs2)) {
     const atkDir = Math.sign(sx - def.x) || -fx || def.face;
