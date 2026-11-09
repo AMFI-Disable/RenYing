@@ -682,11 +682,12 @@ function matchReviewData(m) {
   }, { damage: 0, combo: 0, breaks: 0, falls: 0 });
   const own = sumStats(ownIdx), foe = sumStats(foeIdx);
   const dealt = Math.max(0, +own.damage || 0), taken = Math.max(0, +foe.damage || 0), combo = Math.max(0, +own.combo || 0), breaks = Math.max(0, +own.breaks || 0), falls = Math.max(0, +own.falls || 0);
-  const rows = (team ? [] : Array.isArray(m.tr) ? m.tr : []).filter(r => Array.isArray(r) && r.length >= 21 && r.slice(0, 19).every(Number.isFinite));
+  const samples = (team ? [] : Array.isArray(m.tr) ? m.tr : []).map((row, index) => ({ row, index })).filter(({ row }) => Array.isArray(row) && row.length >= 21 && row.slice(0, 19).every(Number.isFinite));
+  const rows = samples.map(sample => sample.row);
   const playerIdx = (m.ch4 || m.ch || [])[m.raid ? 0 : m.four ? ownIdx[0] : side] ?? (m.ch || [])[side] ?? (m.ch || [])[0] ?? 0;
   const foePlayerIdx = (m.ch4 || m.ch || [])[foeIdx[0]] ?? (m.ch || [])[side ^ 1] ?? 0;
   const hero = CHARS[playerIdx] || {}, opponent = CHARS[foePlayerIdx] || {}, heroFrames = aiBrainData().frames && aiBrainData().frames[hero.id] || {};
-  const rowFrame = i => Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[i]) ? +m.trFrames[i] : (+m.trStart || 0) + i * (+m.trEvery || TR_LEGACY_EVERY);
+  const rowFrame = i => { const index = samples[i].index; return Array.isArray(m.trFrames) && Number.isFinite(+m.trFrames[index]) ? +m.trFrames[index] : (+m.trStart || 0) + index * (+m.trEvery || TR_LEGACY_EVERY); };
   let attacks = 0, far = 0, misfaced = 0, farFrame = null, misfacedFrame = null;
   for (let rowIndex = 0; rowIndex < rows.length; rowIndex++) {
     const r = rows[rowIndex];
@@ -706,6 +707,7 @@ function matchReviewData(m) {
   if (!strengths.length) strengths.push('对局统计已保存，可在回放中复核攻防交换。');
   const sampleFrame = rowFrame;
   for (let i = 1; i < rows.length; i++) {
+    if (samples[i].index !== samples[i - 1].index + 1) continue;
     const prev = rows[i - 1], cur = rows[i], atk = (+prev[19 + side] || 0) & 8 || (+cur[19 + side] || 0) & 8;
     const ownHp = side ? 1 : 0, foeHp = side ? 0 : 1;
     const foeLoss = prev[foeHp] - cur[foeHp], ownLoss = prev[ownHp] - cur[ownHp];
@@ -715,6 +717,7 @@ function matchReviewData(m) {
     }
   }
   for (let i = 1; i < rows.length; i++) {
+    if (samples[i].index !== samples[i - 1].index + 1) continue;
     const prev = rows[i - 1], cur = rows[i], ownAt = side ? 24 : 21, foeAt = side ? 21 : 24;
     if (cur.length < 27 || prev.length < 27) break;
     const escapedFromHit = ['hitstun', 'launched', 'knockdown'].includes(prev[ownAt]) && cur[ownAt + 2] === 1;
@@ -724,6 +727,7 @@ function matchReviewData(m) {
     }
   }
   for (let i = 1; i < rows.length; i++) {
+    if (samples[i].index !== samples[i - 1].index + 1) continue;
     const prev = rows[i - 1], cur = rows[i], ownAt = side ? 24 : 21, foeAt = side ? 21 : 24;
     if (cur.length < 27 || prev.length < 27) break;
     const foeActing = ['attack', 'skill', 'special'].includes(prev[foeAt]) || ['attack', 'skill', 'special'].includes(cur[foeAt]);
@@ -736,6 +740,7 @@ function matchReviewData(m) {
   }
   const quickRange = +(heroFrames.l1 && heroFrames.l1.max) || 100;
   for (let i = 1; i < rows.length; i++) {
+    if (samples[i].index !== samples[i - 1].index + 1) continue;
     const prev = rows[i - 1], cur = rows[i], ownAt = side ? 24 : 21, foeAt = side ? 21 : 24;
     if (cur.length < 27 || prev.length < 27) break;
     const foeStun = cur[side ? 16 : 17] || 0, ownIdle = ['idle', 'block', 'air'].includes(cur[ownAt]);

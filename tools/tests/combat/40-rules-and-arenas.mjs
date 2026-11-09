@@ -424,6 +424,13 @@ export default [
       if (!goodMoment || goodMoment.frame !== 138 || !spacingMoment || spacingMoment.frame !== 120) {
         return { pass: false, error: 'AI review moments did not retain evidence frame timestamps' };
       }
+      const brokenRows = [null, ...rows.map(r => r.slice())];
+      const broken = matchReviewData({ mode: 'cpu', stats: [{}, {}], tr: brokenRows, trFrames: [10, 50, 61, 73, 90, 101, 112, 123, 134] });
+      if (broken.moments.find(x => x.text.includes('远距离出手'))?.frame !== 50 || broken.moments.find(x => x.text.includes('有利交换'))?.frame !== 90) {
+        return { pass: false, error: 'invalid review samples shifted evidence timestamps' };
+      }
+      const gap = matchReviewData({ mode: 'cpu', stats: [{}, {}], tr: [rows[0], null, rows[3]], trStart: 120, trEvery: 6 });
+      if (gap.moments.some(x => x.text.includes('有利交换'))) return { pass: false, error: 'review inferred an exchange across a missing sample' };
       const flowRows = Array.from({ length: 4 }, () => {
         const r = Array(27).fill(0); r[0] = 0.8; r[1] = 0.8; r[8] = 0.25; r[9] = 0.3; r[19] = 0; r[20] = 8; r[21] = 'hitstun'; r[24] = 'attack'; return r;
       });
