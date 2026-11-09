@@ -35,6 +35,12 @@ function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
 }
 
 const tag3StartBtn = document.getElementById('tag3StartBtn');
+const tag3QuickBtn = document.getElementById('tag3QuickBtn');
+if (tag3QuickBtn) tag3QuickBtn.addEventListener('click', () => {
+  initAudio();
+  paused = false;
+  bpStart('tag3', { level: pickLevel, quickRelay: true });
+});
 if (tag3StartBtn) {
   tag3StartBtn.addEventListener('click', () => {
     initAudio();

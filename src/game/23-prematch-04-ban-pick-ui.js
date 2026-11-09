@@ -200,7 +200,7 @@ function renderBP() {
 
   // 模式名和这一步分开放，英文界面才能各自查表
   document.getElementById('bpStep').innerHTML = (modePrefix ? `<span>${modePrefix.slice(0, -3)}</span> · ` : '') + `<span>${stepTitle}</span>`
-    + (done ? '' : `<span class="bpcount">第 ${BP.step + 1} / ${bpSteps().length} 步</span>`);
+    + (done ? '' : `<span class="bpcount">第 ${BP.step + 1} / ${bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay ? 3 : bpSteps().length} 步</span>`);
   document.getElementById('bpStep').style.color = myTurn ? '#e9c46a' : 'var(--ink)';
   document.getElementById('bpTime').textContent = done ? '' : `${Math.ceil(BP.t)} 秒`;
 

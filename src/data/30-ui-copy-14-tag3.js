@@ -20,4 +20,6 @@ Object.assign(UI_COPY_EN, {
   "联机打魔首": "Online Boss Raid",
   "建房前选好；进了房间以后房主还能改，对面会跟着变。2v2 的全服匹配和同一台电脑对战在「开始演武」的 2v2 组队里。": "Pick before you create the room; inside the room the host can still change it and the other side follows. 2v2 matchmaking and same-computer 2v2 are under 2v2 Team in Play.",
 
+  "快速车轮 · 自选三将": "Quick Relay · Choose Three",
+  "快速车轮免禁选，电脑自动选将，双方使用推荐密卷；完整点将保留禁选与密卷选择。": "Quick Relay skips bans, chooses the opposing team automatically, and equips recommended scrolls for both sides. Full draft keeps bans and scroll selection.",
 });

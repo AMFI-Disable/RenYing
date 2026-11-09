@@ -10,5 +10,6 @@ const BP_ORDERS = {
   squadNet: [[0, 'pick'], [1, 'pick'], [0, 'pick']],                            // 联机同袍肉鸽：房主、好友各选自己，房主再给电脑同袍选一个
   duo: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']],   // 2v2：各禁 1 人，蛇形各选 2 人
   trio: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']],        // 本机车轮战：各禁 1 人，轮流各选 3 人
+  trioQuick: [[0, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [1, 'pick']], // 快速车轮：先选三人，电脑补齐
   trioSnake: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick']],   // 联机车轮接力：各禁 1 人，蛇形各选 3 人
 };

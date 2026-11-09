@@ -170,7 +170,7 @@ function competitiveDraftStart(state, mode, opts, onComplete, online = false) {
     const remoteHuman = online && side !== sides[0] && competitiveHumanSlots(state, mode, opts, side).includes(slot);
     if (!human && !remoteHuman && !state.selections[side][slot] && recommendations[side][slot]) preMatchSelect(state, side, slot, recommendations[side][slot]);
   }
-  if (skipInteractiveDraft()) {
+  if (skipInteractiveDraft() || (mode === 'tag3' && opts.quickRelay)) {
     for (let side = 0; side < 2; side++) for (let slot = 0; slot < state.picks[side].length; slot++)
       if (!state.selections[side][slot] && recommendations[side][slot]) preMatchSelect(state, side, slot, recommendations[side][slot]);
     if ((!online || NET.role === 'host') && onComplete) onComplete(state);

@@ -4,7 +4,7 @@
 function bpStart(mode, customOpts = null) {
   currentPreMatch = null;
   customOpts = { ...(customOpts || {}) };
-  if (BP_BRIEFING_MODES.has(mode) && !customOpts.mapBriefed && !skipInteractiveDraft()) {
+  if (BP_BRIEFING_MODES.has(mode) && !customOpts.mapBriefed && !customOpts.quickRelay && !skipInteractiveDraft()) {
     customOpts.mapId = briefingMapId(mode, customOpts);
     customOpts.mapBriefed = true;
     if (mode === 'net' && NET.role === 'host') send({ mbrief: { mapId: customOpts.mapId } });
@@ -22,7 +22,7 @@ function bpStart(mode, customOpts = null) {
   // 顺序和每边选几个人都按模式表来（src/data/10-modes.js、11-bp-orders.js）
   const md = bpModeDef(mode);
   const squad = customOpts && customOpts.squadSize === 2 ? 2 : 3;
-  const steps = BP_ORDERS[(md.squadBp && md.squadBp[squad]) || md.bp].map(st => st.slice());
+  const steps = BP_ORDERS[mode === 'tag3' && customOpts.quickRelay ? 'trioQuick' : (md.squadBp && md.squadBp[squad]) || md.bp].map(st => st.slice());
   const bans = steps.some(st => st[1] === 'ban') ? [-1, -1] : [];
   const count = side => steps.filter(st => st[0] === side && st[1] === 'pick').length;
   const picks = md.team ? [count(0), count(1)].map(n => Array(n).fill(-1)) : [0, 1].filter(count).map(() => -1);
@@ -93,9 +93,12 @@ function bpApply(i) {
   if (type === 'ban') SFX.thud(); else { SFX.block(); }
   if (bpMode === 'net') send({ bps: BP });
   renderBP();
+  if (bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && side === 0 && BP.step === 3) {
+    while (BP && BP.step < bpSteps().length && bpValidList().length) bpApply(bpCpuChoice());
+  }
   if (BP.step >= bpSteps().length) {
     if (bpFinishTimer) clearTimeout(bpFinishTimer);
-    bpFinishTimer = setTimeout(bpFinish, 1100);
+    bpFinishTimer = setTimeout(bpFinish, bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay ? 0 : 1100);
   }
 }
 function bpFinish() {

@@ -3,6 +3,24 @@
 // 找 bug 提示：测试失败时报的是 name，在本文件里搜这个 name 就能找到它的代码。
 export default [
   {
+    name: 'Quick relay selects three ordered heroes and starts with valid automatic opponents and scrolls',
+    fn: `(() => {
+      toMenu(); bpStart('tag3', { level: 'hard', quickRelay: true });
+      if (BP.steps.length !== 6 || BP.steps.some(s => s[1] === 'ban') || BP.steps.slice(0, 3).some(s => s[0] !== 0)) return { pass: false, error: 'quick relay draft order is incorrect' };
+      const picks = bpValidList().slice(0, 3);
+      for (const i of picks) bpApply(i);
+      if (BP.step !== 6 || JSON.stringify(BP.picks[0]) !== JSON.stringify(picks) || new Set(BP.picks.flat()).size !== 6) return { pass: false, error: 'quick relay did not retain the chosen team and fill distinct opponents' };
+      const teams = BP.picks.map(x => x.slice()), map = BP.mapId;
+      const skipDraft = skipInteractiveDraft; skipInteractiveDraft = () => false;
+      try { currentScreen = 'bp'; bpFinish(); } finally { skipInteractiveDraft = skipDraft; }
+      const scrolls = M.competitiveScrolls;
+      if (M.mode !== 'tag3' || JSON.stringify(M.teams) !== JSON.stringify(teams) || M.map !== map || M.bans.length || !scrolls || Object.keys(scrolls[0]).length !== 3 || Object.keys(scrolls[1]).length !== 3) return { pass: false, error: 'quick relay did not start with both teams and recommended scrolls' };
+      toMenu(); bpStart('tag3', { level: 'hard' });
+      const full = BP.steps.length === 8 && BP.steps.filter(s => s[1] === 'ban').length === 2;
+      toMenu(); return { pass: full, error: 'full relay draft changed' };
+    })()`
+  },
+  {
     name: '2v2 has three local variants (you + AI ally, two players vs two AIs, two vs two): each starts, ends and replays frame-for-frame',
     fn: `(() => {
       const snap = () => JSON.stringify([A, B, C, D].map(f => [f.chIdx, f.state, Math.round(f.x), Math.round(f.y), Math.round(f.hp * 10)]));

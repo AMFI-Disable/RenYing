@@ -54,7 +54,7 @@ window.__tutdoneDemo = () => {
 
 const PANELS = [
   ['menu', `backToMenu()`], ['single', `openScreen('single')`], ['cpu', `openScreen('cpu')`],
-  ['stage', `openScreen('stage')`], ['train', `openScreen('train')`], ['netp', `openScreen('netp')`],
+  ['stage', `openScreen('stage')`], ['train', `openScreen('train')`], ['tag3', `openScreen('tag3')`], ['netp', `openScreen('netp')`],
   ['help', `openScreen('help')`], ['codex', `openScreen('codex')`], ['settings', `openScreen('settings')`],
   ['community', `openScreen('community')`], ['acc', `showScreen('acc')`], ['lb', `openLeaderboard()`],
   ['welfare', `openWelfare()`], ['replays', `openScreen('replays')`],
