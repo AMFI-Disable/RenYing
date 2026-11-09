@@ -1,18 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
-  <defs>
-    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
-      <stop offset="0" stop-color="#202b40"/>
-      <stop offset="1" stop-color="#090e18"/>
-    </linearGradient>
-    <linearGradient id="gold" x1="0" y1="0" x2="0.9" y2="1">
-      <stop offset="0" stop-color="#fff0b5"/>
-      <stop offset="0.52" stop-color="#e9c46a"/>
-      <stop offset="1" stop-color="#bd7b35"/>
-    </linearGradient>
-  </defs>
-  <rect x="2" y="2" width="60" height="60" rx="15" fill="url(#bg)"/>
-  <path d="M32 6.5 53 14v17.1c0 12.8-7.7 21.7-21 27.5-13.3-5.8-21-14.7-21-27.5V14z" fill="#111827" stroke="url(#gold)" stroke-width="2.6" stroke-linejoin="round"/>
-  <path d="M32 10.5 49 16.6v14.5c0 10.5-6 18.1-17 23.4-11-5.3-17-12.9-17-23.4V16.6z" fill="none" stroke="#e9c46a" stroke-opacity=".2" stroke-width="1"/>
-  <text x="32" y="43" text-anchor="middle" font-family="Noto Serif SC, Songti SC, serif" font-size="34" font-weight="700" fill="url(#gold)">刃</text>
-  <path d="m42.5 40.5 5.2-3.2-2.1 6.1-5.2 3.2z" fill="#d85b4a" stroke="#f0a07a" stroke-width=".7" stroke-linejoin="round"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <rect x="2" y="2" width="28" height="28" rx="6" fill="#b8392e"/>
+  <path d="M10 9h12M16 9v15M11 15l5 4 5-4" fill="none" stroke="#fbeee0" stroke-width="2.6" stroke-linecap="round"/>
 </svg>

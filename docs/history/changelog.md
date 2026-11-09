@@ -41,7 +41,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
-- **刃影 browser icon (`assets/favicon.svg`, `src/page.html`, `tools/build.py`)**: added a gold-edged crest with a clear 刃 mark and linked it from the main, offline, and legacy page heads.
+- **刃影 browser icon (`assets/favicon.svg`, `src/page.html`, `tools/build.py`)**: matched the admin panel's vermilion seal and cream 刃 mark across the main, offline, and legacy pages.
 
 - **Playstyle-focused martial badges (`src/game/27-combat-loadouts.js`, `src/game/09-actions.js`, `src/game/10-hits.js`, `src/armory.js`)**: added distinct combo, pressure, parry, guard-break, aerial, and dodge follow-ups; badge windows show combat cues and synchronize through rollback and replay state. No account migration is needed. Needs a Worker redeploy.
 
