@@ -23,5 +23,12 @@ Object.assign(UI_COPY_EN, {
   "快速车轮 · 自选三将": "Quick Relay · Choose Three",
   "撤销上一名": "Undo Last Pick",
   "交换先锋与中坚": "Swap First Two",
+  "轮换三人顺序": "Rotate Team Order",
+  "待确认": "Preview",
+  "我方出战顺序": "Your Team Order",
+  "对方出战顺序": "Opposing Team Order",
+  "更换队伍再战": "Choose a New Team",
+  "原阵容再战": "Rematch Same Teams",
+  "（已击败）": " (defeated)",
   "快速车轮免禁选，电脑自动选将，双方使用推荐密卷；完整点将保留禁选与密卷选择。": "Quick Relay skips bans, chooses the opposing team automatically, and equips recommended scrolls for both sides. Full draft keeps bans and scroll selection.",
 });

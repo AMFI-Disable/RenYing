@@ -87,6 +87,15 @@ function bpSwapQuickPicks() {
   renderBP();
   return true;
 }
+function bpRotateQuickPicks() {
+  if (currentScreen !== 'bp' || !BP || bpMode !== 'tag3' || !bpCustomOpts || !bpCustomOpts.quickRelay || BP.step !== 2 || !isMyTurnBP() || !bpValid(bpSel)) return false;
+  const picks = BP.picks[0];
+  if (!Array.isArray(picks) || picks[0] < 0 || picks[1] < 0) return false;
+  [picks[0], picks[1], bpSel] = [picks[1], bpSel, picks[0]];
+  bpHover = -1;
+  renderBP();
+  return true;
+}
 function bpApply(i) {
   if (!BP || BP.step >= bpSteps().length) return;
   if (!bpValid(i)) {

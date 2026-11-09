@@ -380,9 +380,11 @@
     #bp.bp-quick .bpbot { height: auto; overflow: visible; }
     #bp.bp-quick .bpdetail, #bp.bp-quick .bpmovedeck { height: auto; }
     #bp.bp-quick .bps .slot2 { min-width: 40px; }
+    #bp.bp-quick .bps .slot2 { overflow-wrap: anywhere; }
+    #bp.bp-quick .dhitname { white-space: normal; flex-wrap: wrap; }
     #bp.bp-quick .bpact { position: sticky; bottom: 0; z-index: 2; background: rgba(8,10,18,.96); }
   }
-  @media (max-width: 600px) {
+  @media (max-width: 1000px) {
     #bp.bp-quick .bpact { flex-wrap: wrap; }
   }
   #bp .bpact #bpGo {

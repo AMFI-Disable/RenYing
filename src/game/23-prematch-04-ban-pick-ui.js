@@ -152,7 +152,7 @@ function renderBP() {
   $id('bp').classList.toggle('bp-quick', bpMode === 'tag3' && !!(bpCustomOpts && bpCustomOpts.quickRelay));
   // 2v2 专属天道演武禁选走独立状态与独立渲染
   bpMapBanner();
-  if (bpMode === 'watch2v2') { $id('bpUndo').hidden = true; $id('bpSwap').hidden = true; if (watch2v2Bp) renderBPWatch2v2(); return; }
+  if (bpMode === 'watch2v2') { $id('bpUndo').hidden = true; $id('bpSwap').hidden = true; $id('bpRotate').hidden = true; if (watch2v2Bp) renderBPWatch2v2(); return; }
   if (!BP) return;
   $id('bpChat').classList.toggle('hidden', bpMode !== 'net');
   const my = bpMySide(), done = BP.step >= bpSteps().length;
@@ -239,9 +239,10 @@ function renderBP() {
     } else if (isTag3BP) {
       const picks = BP.picks[sd] || [-1, -1, -1];
       const slotsHtml = [0, 1, 2].map(slotIdx => {
-        const idx = picks[slotIdx];
+        const preview = sd === 0 && slotIdx === 2 && bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && BP.step === 2 && myTurn && bpValid(bpSel);
+        const idx = preview ? bpSel : picks[slotIdx];
         const isActive = !done && side === sd && type === 'pick' && (BP.picks[sd].filter(x => x >= 0).length === slotIdx);
-        return `<div class="slot2 pick${isActive ? ' on' : ''}">${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${TAG3_ROLES[slotIdx]} ${CHARS[idx].name}</span>` : TAG3_ROLES[slotIdx]}</div>`;
+        return `<div class="slot2 pick${isActive ? ' on' : ''}">${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${TAG3_ROLES[slotIdx]} ${CHARS[idx].name}${preview ? ` · ${cvT('待确认')}` : ''}</span>` : TAG3_ROLES[slotIdx]}</div>`;
       }).join('');
       const sideLabel = bpMode === 'tag3' ? `${escapeHTML(bpSideName(sd))}阵线` : escapeHTML(bpSideName(sd));
       el.innerHTML = `<div class="who" style="color:${sd === 0 ? 'var(--p1)' : 'var(--p2)'}">${sideLabel}</div>
@@ -290,6 +291,7 @@ function renderBP() {
   const goB = document.getElementById('bpGo');
   $id('bpUndo').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step > 0 && BP.step < 3);
   $id('bpSwap').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step === 2);
+  $id('bpRotate').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step === 2 && bpValid(bpSel));
   if (isWatch) {
     goB.disabled = true;
     goB.textContent = done ? '即将开战 · 演武观战' : 'AI 演武禁选中…';
@@ -370,4 +372,5 @@ function bpConfirm() {
 document.getElementById('bpGo').addEventListener('click', bpConfirm);
 document.getElementById('bpUndo').addEventListener('click', bpUndoQuickPick);
 document.getElementById('bpSwap').addEventListener('click', bpSwapQuickPicks);
+document.getElementById('bpRotate').addEventListener('click', bpRotateQuickPicks);
 document.getElementById('bpQuit').addEventListener('click', () => toMenu());

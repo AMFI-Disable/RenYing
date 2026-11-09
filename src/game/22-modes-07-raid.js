@@ -327,7 +327,7 @@ document.getElementById('againBtn').addEventListener('click', () => {
     return;
   }
   if (M.mode === 'tag3') {
-    bpStart('tag3', { level: pickLevel, isWatch: false });
+    tag3Rematch();
     return;
   }
   if (isRaid()) {

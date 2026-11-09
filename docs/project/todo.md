@@ -16,9 +16,13 @@ This is an ambitious working draft, not a list of committed designs. Its directi
 - [x] Improve hero selection and drafting without making the default flow cumbersome.
 - [ ] Explore improvements to hero order, transitions between fighters, and meaningful team combinations while retaining the relay format.
   - [x] Let Quick Relay players swap their first two heroes before choosing the third.
+  - [x] Preview and rotate all three selected heroes before the final pick.
+  - [x] Document existing transition and team mechanics for player evaluation.
 - [ ] Explore maps, match pacing, and comeback opportunities; test that changes preserve short, enjoyable matches.
-- [ ] Improve post-match results and investigate fast rematches and changing teams between matches.
+- [x] Improve post-match results and investigate fast rematches and changing teams between matches.
 - [ ] Test the full flow with school players and record where they hesitate or leave.
+
+See [3v3 Relay Review And Playtest](relay-playtest.md) for the rule review, automated coverage and proposed player sessions. The broader exploration and playtest remain open until actual players evaluate pace, combinations and maps.
 
 ## Match Review And Replays
 

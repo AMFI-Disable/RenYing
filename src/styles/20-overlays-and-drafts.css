@@ -349,7 +349,7 @@
   .bpact { display: flex; gap: 8px; justify-content: space-between; align-items: center; padding: 6px 0 0; flex: none; }
   .bpact .go { margin: 0; font-size: clamp(15px, 1.3vw, 18px); min-width: min(220px, 36vw); white-space: nowrap; padding: 0 24px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
   .bpact .ghost { padding: 0 18px; font-size: clamp(12px, 1vw, 14px); min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
-  .bpact #bpUndo[hidden], .bpact #bpSwap[hidden] { display: none; }
+  .bpact #bpUndo[hidden], .bpact #bpSwap[hidden], .bpact #bpRotate[hidden] { display: none; }
   @media (max-width: 768px) {
     .msmall { width: min(94vw, 560px); flex-wrap: wrap; justify-content: center; gap: 6px; bottom: 5%; }
     .msmall button { font-size: 13px; padding: 6px 13px; }

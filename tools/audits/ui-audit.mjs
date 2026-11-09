@@ -59,7 +59,8 @@ const PANELS = [
   ['community', `openScreen('community')`], ['acc', `showScreen('acc')`], ['lb', `openLeaderboard()`],
   ['welfare', `openWelfare()`], ['replays', `openScreen('replays')`],
   ['tasks', `openScreen('tasks')`], ['bp', `PROF.owned = CHARS.map(c => c.id); bpStart('cpu', { mapBriefed: true }); bpCpuT = 9999; bpApply(3); bpApply(6); bpCpuT = 9999; bpSel = 4; renderBP(); showScreen('bp');`], ['pause', `showScreen('pause')`],
-  ['bpquick', `bpStart('tag3', { quickRelay: true }); bpApply(bpValidList()[0]); bpApply(bpValidList()[0]);`],
+  ['bpquick', `bpStart('tag3', { quickRelay: true }); bpApply(bpValidList()[0]); bpApply(bpValidList()[0]); bpSel = bpValidList()[0]; renderBP();`],
+  ['endtag3', `M.map = 'ice'; startTag3Match([0,1,2], [3,4,5], 'normal'); M.teamIdx = [3,1]; M.wins = [1,3]; showEnd(1); showScreen('end');`],
   ['end', `__endDemo()`], ['forestEnd', `__forestDemo()`], ['tutask', `showScreen('tutask')`],
   ['tutdone', `__tutdoneDemo()`], ['armory', `openScreen('armory')`],
 ];

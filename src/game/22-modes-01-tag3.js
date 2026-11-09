@@ -3,6 +3,19 @@
 // 车轮战设置页没有自己的设置了：电脑境界用单人页顶上共用的那一条（pickLevel），选人统一在点将台里做（各禁 1 选 3）
 function renderTag3() {}
 
+function tag3Rematch() {
+  if (M.mode !== 'tag3' || M.watchAi || !Array.isArray(M.teams) || M.teams.length !== 2 || M.teams.some(team => !Array.isArray(team) || team.length !== 3)) return false;
+  const teams = M.teams.map(team => team.slice());
+  teamMutator = M.teamMutator || 'normal';
+  startTag3Match(teams[0], teams[1], M.level || pickLevel);
+  return true;
+}
+function tag3Repick() {
+  if (M.mode !== 'tag3' || M.watchAi) return false;
+  initAudio(); paused = false;
+  bpStart('tag3', { level: M.level || pickLevel, quickRelay: true });
+  return true;
+}
 function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
   if (p2pActive()) netDropWaiting();
   refocusGame();

@@ -1102,6 +1102,7 @@ function replayEnd(w) {
   $id('againBtn').style.display = 'none';
   $id('rpWatch').style.display = ''; $id('rpWatch').textContent = '再看一遍';
   $id('endChangeHeroBtn').classList.add('hidden');
+  $id('endRelayTeams').classList.add('hidden');
   $id('endHistoryBtn').classList.toggle('hidden', !rpList().length);
   RP.last = REPLAY.m;
   endReviewShow(REPLAY.m);

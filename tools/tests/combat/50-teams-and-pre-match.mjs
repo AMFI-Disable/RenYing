@@ -3,6 +3,43 @@
 // 找 bug 提示：测试失败时报的是 name，在本文件里搜这个 name 就能找到它的代码。
 export default [
   {
+    name: 'Relay preserves map and health rules across terrain and a drawn round',
+    fn: `(() => {
+      for (const id of MAP_POOL) {
+        M.map = id; teamMutator = 'normal'; startTag3Match([0, 1, 2], [3, 4, 5], 'normal', true);
+        if (!mapNow() || mapNow() !== MAPS[id] || M.timer !== ROUND_TIME) return { pass: false, error: id + ': terrain or timer missing' };
+        A.hp = A.maxHp - 10; B.hp = 0; M.koWinner = 0; endRound();
+        if (M.map !== id || A.hp !== A.maxHp || B.chIdx !== 4 || B.hp !== B.maxHp || M.timer !== ROUND_TIME) return { pass: false, error: id + ': transition did not cap recovery or reset the next fighter' };
+        M.koWinner = -1; endRound();
+        if (M.teamIdx.join() !== '0,1' || A.chIdx !== 0 || B.chIdx !== 4 || M.map !== id) return { pass: false, error: id + ': drawn round changed the team order or map' };
+      }
+      toMenu(); return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Local relay transitions preserve order and offer same-team rematch or full repick',
+    fn: `(() => {
+      toMenu(); M.map = 'ice'; teamMutator = 'normal'; M.hasBuffs = false; M.competitiveScrolls = null;
+      const teams = [[0, 1, 2], [3, 4, 5]];
+      const prep = preMatchCreate('ice', 42); preMatchSetPicks(prep, teams);
+      for (let side = 0; side < 2; side++) for (let slot = 0; slot < 3; slot++) preMatchSelect(prep, side, slot, prep.recommendations[side][slot]);
+      M.competitiveScrolls = competitiveScrollMap(prep); M.hasBuffs = true;
+      const scrolls = JSON.stringify(M.competitiveScrolls);
+      startTag3Match(teams[0], teams[1], 'hard');
+      A.hp = 100; B.hp = 0; M.koWinner = 0; endRound();
+      if (A.chIdx !== 0 || B.chIdx !== 4 || A.hp !== Math.min(A.maxHp, 100 + CARRY_HEAL) || B.hp !== B.maxHp || M.teamIdx.join() !== '0,1') return { pass: false, error: 'first relay transition lost the order or carried health' };
+      A.hp = 0; B.hp = 90; M.koWinner = 1; endRound();
+      if (A.chIdx !== 1 || B.chIdx !== 4 || A.hp !== A.maxHp || B.hp !== Math.min(B.maxHp, 90 + CARRY_HEAL) || M.teamIdx.join() !== '1,1') return { pass: false, error: 'opposing relay transition lost the order or carried health' };
+      A.hp = 0; B.hp = 80; M.koWinner = 1; endRound();
+      if (A.chIdx !== 2 || M.teamIdx.join() !== '2,1') return { pass: false, error: 'final team member did not enter in order' };
+      A.hp = 0; B.hp = 70; M.koWinner = 1; endRound();
+      if (M.phase !== 'end' || $id('endRelayTeams').classList.contains('hidden') || !teams.flat().every(i => $id('endRelayTeams').textContent.includes(cvT(CHARS[i].name)))) return { pass: false, error: 'relay result did not show both lineups' };
+      if (!tag3Rematch() || M.mode !== 'tag3' || M.round !== 1 || M.level !== 'hard' || M.map !== 'ice' || JSON.stringify(M.competitiveScrolls) !== scrolls || JSON.stringify(M.teams) !== JSON.stringify(teams) || M.teamIdx.join() !== '0,0' || A.chIdx !== 0 || B.chIdx !== 3 || A.hp !== A.maxHp || B.hp !== B.maxHp) return { pass: false, error: 'same-team rematch did not reset the match and preserve its setup' };
+      if (!tag3Repick() || bpMode !== 'tag3' || !bpCustomOpts.quickRelay || bpCustomOpts.level !== 'hard' || BP.step !== 0) return { pass: false, error: 'team repick did not open a new quick relay draft' };
+      toMenu(); return { pass: true, error: null };
+    })()`
+  },
+  {
     name: 'Quick relay selects three ordered heroes and starts with valid automatic opponents and scrolls',
     fn: `(() => {
       toMenu(); bpStart('tag3', { level: 'hard', quickRelay: true });
@@ -11,6 +48,8 @@ export default [
       if (bpUndoQuickPick() || bpSwapQuickPicks()) return { pass: false, error: 'undo or swap succeeded before any pick' };
       bpApply(choices[0]); bpApply(choices[1]);
       bpSel = choices[2]; BP.t = 12;
+      if (!bpRotateQuickPicks() || BP.picks[0][0] !== choices[1] || BP.picks[0][1] !== choices[2] || bpSel !== choices[0] || BP.t !== 12 || !bpValid(bpSel)) return { pass: false, error: 'rotation did not move the selected third hero into the lineup' };
+      if (!bpRotateQuickPicks() || !bpRotateQuickPicks() || BP.picks[0][0] !== choices[0] || BP.picks[0][1] !== choices[1] || bpSel !== choices[2]) return { pass: false, error: 'three rotations did not restore the team order' };
       if (!bpSwapQuickPicks() || BP.picks[0][0] !== choices[1] || BP.picks[0][1] !== choices[0] || BP.step !== 2 || bpSel !== choices[2] || BP.t !== 12) return { pass: false, error: 'swapping changed the draft state or lost the current selection' };
       if (!bpSwapQuickPicks() || BP.picks[0][0] !== choices[0] || BP.picks[0][1] !== choices[1]) return { pass: false, error: 'swapping back did not restore the order' };
       if (!bpUndoQuickPick() || BP.step !== 1 || BP.picks[0][0] !== choices[0] || BP.picks[0][1] !== -1 || bpSel !== choices[1] || !bpValid(choices[1])) return { pass: false, error: 'undo did not restore the previous pick for editing' };
@@ -24,7 +63,7 @@ export default [
       const scrolls = M.competitiveScrolls;
       if (M.mode !== 'tag3' || JSON.stringify(M.teams) !== JSON.stringify(teams) || M.map !== map || M.bans.length || !scrolls || Object.keys(scrolls[0]).length !== 3 || Object.keys(scrolls[1]).length !== 3) return { pass: false, error: 'quick relay did not start with both teams and recommended scrolls' };
       toMenu(); bpStart('tag3', { level: 'hard' });
-      const full = BP.steps.length === 8 && BP.steps.filter(s => s[1] === 'ban').length === 2 && !bpUndoQuickPick() && !bpSwapQuickPicks();
+      const full = BP.steps.length === 8 && BP.steps.filter(s => s[1] === 'ban').length === 2 && !bpUndoQuickPick() && !bpSwapQuickPicks() && !bpRotateQuickPicks();
       toMenu(); return { pass: full, error: 'full relay draft changed' };
     })()`
   },

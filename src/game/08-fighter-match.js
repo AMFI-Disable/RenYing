@@ -704,15 +704,22 @@ function showEnd(w) {
     if (reviewRecord && reviewRecord.runId) rpRunStore(reviewRecord);
   }
   if (typeof endReviewShow === 'function') endReviewShow(reviewRecord);
+  if (M.mode === 'tag3') { $id('endReview').classList.add('hidden'); $id('endReviewBtn').setAttribute('aria-expanded', 'false'); }
   const stats = M.combatStats && M.combatStats[localIdx()];
   const card = $id('endCombatCard');
   if (card) card.textContent = stats ? `${cvT('总伤害')} ${Math.round(stats.damage)} · ${cvT('最长连击')} ${stats.combo} · ${cvT('破防次数')} ${stats.breaks} · ${cvT('坠崖')} ${stats.falls}` : '';
+  const relayTeams = $id('endRelayTeams');
+  relayTeams.classList.toggle('hidden', M.mode !== 'tag3' || !Array.isArray(M.teams));
+  if (M.mode === 'tag3' && Array.isArray(M.teams)) {
+    relayTeams.textContent = M.teams.map((team, side) => `${cvT(side === 0 ? '我方出战顺序' : '对方出战顺序')}: ${team.map((i, slot) => `${cvT((CHARS[i] || {}).name || '')}${slot < (M.teamIdx[side] || 0) ? cvT('（已击败）') : ''}`).join(' → ')}`).join('  |  ');
+  } else relayTeams.textContent = '';
   taskMatchEnd(w);
   $id('endKicker').textContent = '';
   $id('endRk').innerHTML = ''; $id('endRk').classList.add('hidden');
   $id('netRepickBtn').classList.add('hidden');   // 「换人再战」只给联机局；上一局是联机时别带到肉鸽、剑阁、车轮战的结算里
   $id('againBtn').style.display = (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
   $id('endChangeHeroBtn').classList.toggle('hidden', !['cpu', 'tag3', 'chaos', 'mayhem', 'maps'].includes(M.mode) || !!M.watchAi);
+  $id('endChangeHeroBtn').textContent = cvT(M.mode === 'tag3' ? '更换队伍再战' : '换侠客再战');
   $id('endHistoryBtn').classList.toggle('hidden', !RP.last);
   if (M.stage) {
     const win = w === 0;
@@ -763,7 +770,7 @@ function showEnd(w) {
     $id('endRank').textContent = win ? '已击破敌方全员侠客' : '敌方阵线技高一筹';
     const again = document.getElementById('againBtn');
     if (isAiVsAi() || M.watchAi) { again.style.display = 'none'; }
-    else { again.style.display = ''; again.disabled = false; again.textContent = '再战一场'; }
+    else { again.style.display = ''; again.disabled = false; again.textContent = cvT('原阵容再战'); }
     setTimeout(() => showScreen('end'), 300);
     return;
   }

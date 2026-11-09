@@ -102,6 +102,10 @@ $id('rpBack').addEventListener('click', () => {
 });
 $id('endHistoryBtn').addEventListener('click', () => { replaysFrom = 'end'; openScreen('replays'); });
 $id('endChangeHeroBtn').addEventListener('click', () => {
+  if (M.mode === 'tag3' && !M.watchAi) {
+    tag3Repick();
+    return;
+  }
   if (['cpu', 'tag3', 'chaos', 'mayhem', 'maps'].includes(M.mode)) {
     currentSingleTab = M.mode;
     if (['normal', 'easy', 'hard', 'impossible', 'god'].includes(M.level)) setPickLevel(M.level);

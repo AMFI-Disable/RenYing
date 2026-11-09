@@ -895,7 +895,7 @@ to { opacity: 1; box-shadow: 0 0 12px rgba(255,215,0,.7); }
 .bpact { display: flex; gap: 8px; justify-content: space-between; align-items: center; padding: 6px 0 0; flex: none; }
 .bpact .go { margin: 0; font-size: clamp(15px, 1.3vw, 18px); min-width: min(220px, 36vw); white-space: nowrap; padding: 0 24px; min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
 .bpact .ghost { padding: 0 18px; font-size: clamp(12px, 1vw, 14px); min-height: 36px; display: inline-flex; align-items: center; justify-content: center; }
-.bpact #bpUndo[hidden], .bpact #bpSwap[hidden] { display: none; }
+.bpact #bpUndo[hidden], .bpact #bpSwap[hidden], .bpact #bpRotate[hidden] { display: none; }
 @media (max-width: 768px) {
 .msmall { width: min(94vw, 560px); flex-wrap: wrap; justify-content: center; gap: 6px; bottom: 5%; }
 .msmall button { font-size: 13px; padding: 6px 13px; }
@@ -2368,9 +2368,11 @@ box-sizing: border-box !important;
 #bp.bp-quick .bpbot { height: auto; overflow: visible; }
 #bp.bp-quick .bpdetail, #bp.bp-quick .bpmovedeck { height: auto; }
 #bp.bp-quick .bps .slot2 { min-width: 40px; }
+#bp.bp-quick .bps .slot2 { overflow-wrap: anywhere; }
+#bp.bp-quick .dhitname { white-space: normal; flex-wrap: wrap; }
 #bp.bp-quick .bpact { position: sticky; bottom: 0; z-index: 2; background: rgba(8,10,18,.96); }
 }
-@media (max-width: 600px) {
+@media (max-width: 1000px) {
 #bp.bp-quick .bpact { flex-wrap: wrap; }
 }
 #bp .bpact #bpGo {
@@ -3047,17 +3049,17 @@ body.offline #mMatch { display: none !important; }
 .end-review { margin: 12px 0; padding: 14px; border: 1px solid rgba(233,196,106,.3); border-radius: 8px; background: rgba(10,12,22,.55); text-align: left; }
 .end-review.hidden { display: none; }
 .end-review h3 { margin: 0 0 10px; color: var(--gold); font: 600 17px var(--title); }
-.end-review-context { margin: -4px 0 9px; color: rgba(255,255,255,.58); font-size: 11px; }
+.end-review-context { margin: -4px 0 9px; color: rgba(255,255,255,.58); font-size: 12px; }
 .end-review-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
 .end-review-block { min-width: 0; padding: 10px; border-radius: 6px; background: rgba(255,255,255,.04); }
 .end-review-block h4 { margin: 0 0 6px; color: #e9c46a; font-size: 13px; }
 .end-review-block ul { margin: 0; padding-left: 18px; color: rgba(255,255,255,.82); font-size: 12px; line-height: 1.55; }
 .end-review-stats { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
-.end-review-stats span { padding: 4px 8px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; color: rgba(255,255,255,.8); font-size: 11px; }
+.end-review-stats span { padding: 4px 8px; border: 1px solid rgba(255,255,255,.1); border-radius: 999px; color: rgba(255,255,255,.8); font-size: 12px; }
 .end-review-jump { padding: 0; border: 0; background: none; color: rgba(255,255,255,.82); font: inherit; text-align: left; cursor: pointer; }
 .end-review-jump:hover, .end-review-jump:focus-visible { color: var(--gold); text-decoration: underline; }
 .end-review-moments { grid-column: 1 / -1; }
-.end-review-note { margin: 10px 0 0; color: rgba(255,255,255,.5); font-size: 11px; }
+.end-review-note { margin: 10px 0 0; color: rgba(255,255,255,.5); font-size: 12px; }
 .end-review-actions { margin-top: 9px; justify-content: flex-start; }
 .end-qol-row { justify-content: flex-end; margin: 4px 0 8px; }
 @media (max-width: 680px) { .end-review-grid { grid-template-columns: 1fr; } }
@@ -4137,7 +4139,7 @@ white-space: nowrap;
           </div>
         </div>
       </div>
-      <div class="bpact"><button class="ghost" id="bpQuit">返回菜单</button><button class="ghost" id="bpUndo" type="button" hidden>撤销上一名</button><button class="ghost" id="bpSwap" type="button" hidden>交换先锋与中坚</button><button class="go" id="bpGo" disabled>确认</button></div>
+      <div class="bpact"><button class="ghost" id="bpQuit">返回菜单</button><button class="ghost" id="bpUndo" type="button" hidden>撤销上一名</button><button class="ghost" id="bpSwap" type="button" hidden>交换先锋与中坚</button><button class="ghost" id="bpRotate" type="button" hidden>轮换三人顺序</button><button class="go" id="bpGo" disabled>确认</button></div>
       <div class="bpchat hidden" id="bpChat">
         <div class="chatlog" id="chatLog"></div>
         <div class="chatside">
@@ -4545,7 +4547,7 @@ white-space: nowrap;
   </div>
 
   <div id="end" class="scr">
-    <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p><div class="combat-card" id="endCombatCard"></div><p class="end-arm" id="endArm"></p>
+    <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p><div class="combat-card" id="endCombatCard"></div><div class="combat-card hidden" id="endRelayTeams"></div><p class="end-arm" id="endArm"></p>
       <button class="ghost hidden" id="endReviewBtn" type="button" aria-expanded="false" aria-controls="endReview">AI 复盘</button>
       <section class="end-review hidden" id="endReview" aria-live="polite"></section>
       <div class="row end-qol-row"><button class="ghost hidden" id="endChangeHeroBtn" type="button">换侠客再战</button><button class="ghost" id="endHistoryBtn" type="button">查看战绩</button></div>
@@ -9889,6 +9891,13 @@ Object.assign(UI_COPY_EN, {
 "快速车轮 · 自选三将": "Quick Relay · Choose Three",
 "撤销上一名": "Undo Last Pick",
 "交换先锋与中坚": "Swap First Two",
+"轮换三人顺序": "Rotate Team Order",
+"待确认": "Preview",
+"我方出战顺序": "Your Team Order",
+"对方出战顺序": "Opposing Team Order",
+"更换队伍再战": "Choose a New Team",
+"原阵容再战": "Rematch Same Teams",
+"（已击败）": " (defeated)",
 "快速车轮免禁选，电脑自动选将，双方使用推荐密卷；完整点将保留禁选与密卷选择。": "Quick Relay skips bans, chooses the opposing team automatically, and equips recommended scrolls for both sides. Full draft keeps bans and scroll selection.",
 });
 Object.assign(UI_COPY_EN, {
@@ -15655,15 +15664,22 @@ else { reviewRecord = RP.run.segments.length ? rpRunReplay(RP.run, w) : reviewRe
 if (reviewRecord && reviewRecord.runId) rpRunStore(reviewRecord);
 }
 if (typeof endReviewShow === 'function') endReviewShow(reviewRecord);
+if (M.mode === 'tag3') { $id('endReview').classList.add('hidden'); $id('endReviewBtn').setAttribute('aria-expanded', 'false'); }
 const stats = M.combatStats && M.combatStats[localIdx()];
 const card = $id('endCombatCard');
 if (card) card.textContent = stats ? `${cvT('总伤害')} ${Math.round(stats.damage)} · ${cvT('最长连击')} ${stats.combo} · ${cvT('破防次数')} ${stats.breaks} · ${cvT('坠崖')} ${stats.falls}` : '';
+const relayTeams = $id('endRelayTeams');
+relayTeams.classList.toggle('hidden', M.mode !== 'tag3' || !Array.isArray(M.teams));
+if (M.mode === 'tag3' && Array.isArray(M.teams)) {
+relayTeams.textContent = M.teams.map((team, side) => `${cvT(side === 0 ? '我方出战顺序' : '对方出战顺序')}: ${team.map((i, slot) => `${cvT((CHARS[i] || {}).name || '')}${slot < (M.teamIdx[side] || 0) ? cvT('（已击败）') : ''}`).join(' → ')}`).join('  |  ');
+} else relayTeams.textContent = '';
 taskMatchEnd(w);
 $id('endKicker').textContent = '';
 $id('endRk').innerHTML = ''; $id('endRk').classList.add('hidden');
 $id('netRepickBtn').classList.add('hidden');   // 「换人再战」只给联机局；上一局是联机时别带到肉鸽、剑阁、车轮战的结算里
 $id('againBtn').style.display = (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) ? 'none' : ''; $id('rpWatch').style.display = RP.last ? '' : 'none'; $id('rpWatch').textContent = '看回放';
 $id('endChangeHeroBtn').classList.toggle('hidden', !['cpu', 'tag3', 'chaos', 'mayhem', 'maps'].includes(M.mode) || !!M.watchAi);
+$id('endChangeHeroBtn').textContent = cvT(M.mode === 'tag3' ? '更换队伍再战' : '换侠客再战');
 $id('endHistoryBtn').classList.toggle('hidden', !RP.last);
 if (M.stage) {
 const win = w === 0;
@@ -15714,7 +15730,7 @@ document.getElementById('endSub').textContent = win ? `三阵连克，斩获 60 
 $id('endRank').textContent = win ? '已击破敌方全员侠客' : '敌方阵线技高一筹';
 const again = document.getElementById('againBtn');
 if (isAiVsAi() || M.watchAi) { again.style.display = 'none'; }
-else { again.style.display = ''; again.disabled = false; again.textContent = '再战一场'; }
+else { again.style.display = ''; again.disabled = false; again.textContent = cvT('原阵容再战'); }
 setTimeout(() => showScreen('end'), 300);
 return;
 }
@@ -19126,6 +19142,7 @@ $id('endRank').textContent = '';
 $id('againBtn').style.display = 'none';
 $id('rpWatch').style.display = ''; $id('rpWatch').textContent = '再看一遍';
 $id('endChangeHeroBtn').classList.add('hidden');
+$id('endRelayTeams').classList.add('hidden');
 $id('endHistoryBtn').classList.toggle('hidden', !rpList().length);
 RP.last = REPLAY.m;
 endReviewShow(REPLAY.m);
@@ -24615,6 +24632,10 @@ else backToMenu();
 });
 $id('endHistoryBtn').addEventListener('click', () => { replaysFrom = 'end'; openScreen('replays'); });
 $id('endChangeHeroBtn').addEventListener('click', () => {
+if (M.mode === 'tag3' && !M.watchAi) {
+tag3Repick();
+return;
+}
 if (['cpu', 'tag3', 'chaos', 'mayhem', 'maps'].includes(M.mode)) {
 currentSingleTab = M.mode;
 if (['normal', 'easy', 'hard', 'impossible', 'god'].includes(M.level)) setPickLevel(M.level);
@@ -28362,6 +28383,19 @@ if (p && p.isConnected && (!document.activeElement || document.activeElement ===
 }
 for (const id of UI_DIALOGS) uiDlgWatch($id(id));
 function renderTag3() {}
+function tag3Rematch() {
+if (M.mode !== 'tag3' || M.watchAi || !Array.isArray(M.teams) || M.teams.length !== 2 || M.teams.some(team => !Array.isArray(team) || team.length !== 3)) return false;
+const teams = M.teams.map(team => team.slice());
+teamMutator = M.teamMutator || 'normal';
+startTag3Match(teams[0], teams[1], M.level || pickLevel);
+return true;
+}
+function tag3Repick() {
+if (M.mode !== 'tag3' || M.watchAi) return false;
+initAudio(); paused = false;
+bpStart('tag3', { level: M.level || pickLevel, quickRelay: true });
+return true;
+}
 function startTag3Match(pTeam, eTeam, lv, isWatch = false) {
 if (p2pActive()) netDropWaiting();
 refocusGame();
@@ -29525,7 +29559,7 @@ bpStart('maps', { level: pickLevel, isWatch: false });
 return;
 }
 if (M.mode === 'tag3') {
-bpStart('tag3', { level: pickLevel, isWatch: false });
+tag3Rematch();
 return;
 }
 if (isRaid()) {
@@ -32322,6 +32356,15 @@ if (!Array.isArray(BP.picks[0]) || BP.picks[0][0] < 0 || BP.picks[0][1] < 0) ret
 renderBP();
 return true;
 }
+function bpRotateQuickPicks() {
+if (currentScreen !== 'bp' || !BP || bpMode !== 'tag3' || !bpCustomOpts || !bpCustomOpts.quickRelay || BP.step !== 2 || !isMyTurnBP() || !bpValid(bpSel)) return false;
+const picks = BP.picks[0];
+if (!Array.isArray(picks) || picks[0] < 0 || picks[1] < 0) return false;
+[picks[0], picks[1], bpSel] = [picks[1], bpSel, picks[0]];
+bpHover = -1;
+renderBP();
+return true;
+}
 function bpApply(i) {
 if (!BP || BP.step >= bpSteps().length) return;
 if (!bpValid(i)) {
@@ -32648,7 +32691,7 @@ updateBPDeck(i);
 function renderBP() {
 $id('bp').classList.toggle('bp-quick', bpMode === 'tag3' && !!(bpCustomOpts && bpCustomOpts.quickRelay));
 bpMapBanner();
-if (bpMode === 'watch2v2') { $id('bpUndo').hidden = true; $id('bpSwap').hidden = true; if (watch2v2Bp) renderBPWatch2v2(); return; }
+if (bpMode === 'watch2v2') { $id('bpUndo').hidden = true; $id('bpSwap').hidden = true; $id('bpRotate').hidden = true; if (watch2v2Bp) renderBPWatch2v2(); return; }
 if (!BP) return;
 $id('bpChat').classList.toggle('hidden', bpMode !== 'net');
 const my = bpMySide(), done = BP.step >= bpSteps().length;
@@ -32726,9 +32769,10 @@ el.innerHTML = `<div class="who" style="color:var(--p1)">出战大侠</div>
 } else if (isTag3BP) {
 const picks = BP.picks[sd] || [-1, -1, -1];
 const slotsHtml = [0, 1, 2].map(slotIdx => {
-const idx = picks[slotIdx];
+const preview = sd === 0 && slotIdx === 2 && bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && BP.step === 2 && myTurn && bpValid(bpSel);
+const idx = preview ? bpSel : picks[slotIdx];
 const isActive = !done && side === sd && type === 'pick' && (BP.picks[sd].filter(x => x >= 0).length === slotIdx);
-return `<div class="slot2 pick${isActive ? ' on' : ''}">${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${TAG3_ROLES[slotIdx]} ${CHARS[idx].name}</span>` : TAG3_ROLES[slotIdx]}</div>`;
+return `<div class="slot2 pick${isActive ? ' on' : ''}">${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${TAG3_ROLES[slotIdx]} ${CHARS[idx].name}${preview ? ` · ${cvT('待确认')}` : ''}</span>` : TAG3_ROLES[slotIdx]}</div>`;
 }).join('');
 const sideLabel = bpMode === 'tag3' ? `${escapeHTML(bpSideName(sd))}阵线` : escapeHTML(bpSideName(sd));
 el.innerHTML = `<div class="who" style="color:${sd === 0 ? 'var(--p1)' : 'var(--p2)'}">${sideLabel}</div>
@@ -32776,6 +32820,7 @@ setDetail(show);
 const goB = document.getElementById('bpGo');
 $id('bpUndo').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step > 0 && BP.step < 3);
 $id('bpSwap').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step === 2);
+$id('bpRotate').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step === 2 && bpValid(bpSel));
 if (isWatch) {
 goB.disabled = true;
 goB.textContent = done ? '即将开战 · 演武观战' : 'AI 演武禁选中…';
@@ -32853,6 +32898,7 @@ if (bpAuth()) bpApply(bpSel); else { send({ bp: bpSel }); document.getElementByI
 document.getElementById('bpGo').addEventListener('click', bpConfirm);
 document.getElementById('bpUndo').addEventListener('click', bpUndoQuickPick);
 document.getElementById('bpSwap').addEventListener('click', bpSwapQuickPicks);
+document.getElementById('bpRotate').addEventListener('click', bpRotateQuickPicks);
 document.getElementById('bpQuit').addEventListener('click', () => toMenu());
 function $id(id) { return document.getElementById(id); }
 const ACC = { token: '', name: '', wins: 0, losses: 0 };
