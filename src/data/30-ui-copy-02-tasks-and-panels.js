@@ -68,7 +68,6 @@ Object.assign(UI_COPY_EN, {
   "精准招架成功": "Successful Just Guard",
   "造成破防": "Break an opponent's guard",
   "空中攻击命中": "Aerial attack hits",
-  "闪避后命中": "Hit after a dodge",
   "闪避后 1 秒内首次命中": "First hit within 1 second after dodging",
   "起手更快，收招更长，单次伤害略低。": "Faster startup and longer recovery, with slightly lower damage per hit.",
   "短距攻击更窄更远，蓄力斩后摇增加。": "Short attacks have a narrower, longer hitbox; charged attacks recover more slowly.",

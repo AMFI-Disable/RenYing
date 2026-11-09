@@ -17,7 +17,6 @@
   'use strict';
   const C = window.ArmoryCore;
   if (!C || typeof PROF === 'undefined' || typeof SKINS === 'undefined') return;
-  if (typeof OFFLINE_BUILD !== 'undefined' && OFFLINE_BUILD) return;   // 离线版没有武库（也不把武库皮肤放进图鉴）
   // 开局就记下原生的取时间、取随机数、云端接口，后面有人在控制台换掉也不影响这里
   const NOW = Date.now.bind(Date);
   const GRV = crypto.getRandomValues.bind(crypto);
@@ -225,7 +224,7 @@
   }
   const SALT = 'ry-armory|v1|';
   const sigOf = s => C.hash32(SALT + UID + '|' + JSON.stringify(s)).toString(36) + C.hash32(JSON.stringify(s) + '|' + UID + SALT).toString(36);
-  const user = () => (window.CloudSave && CloudSave.getUser && CloudSave.getUser()) || null;
+  const user = () => OFFLINE_BUILD ? { uid: 'renying-offline', isCloud: false } : (window.CloudSave && CloudSave.getUser && CloudSave.getUser()) || null;
   const cloudOn = () => { const u = user(); return !!(u && u.isCloud && ECON); };
   const live = () => !!ST && (MODE === 'server' || MODE === 'local');   // 现在能不能开箱、买卖
   const OLD_MSG = '服务器还是旧版武库，等更新到新版以后才能用';
@@ -241,8 +240,37 @@
   });
   let LOCAL_V;   // 云端账号存档里带的武库数据：只在服务器还没升级（不认武库）时才用
   if (PRE_ARMORY && typeof PRE_ARMORY === 'object') setTimeout(() => { if (!ST && MODE !== 'server') { loadLocal(PRE_ARMORY); migrateLocal(); } }, 0);
+  function unlockOfflineArmory(s) {
+    s.badgeGift = 1;
+    s.badgeOwned = Object.fromEntries(Object.keys(C.BADGES).map(id => [id, 'purpgold']));
+    s.badgeSigils = Math.max(99, s.badgeSigils || 0);
+    s.heroKOs = Object.fromEntries(C.HERO_IDS.map(id => [id, Math.max(300, s.heroKOs[id] || 0)]));
+    s.stances = Object.fromEntries(C.HERO_IDS.map(id => [id, 1]));
+    const equipped = new Set(Object.values(s.badgeEquip));
+    const freeHeroes = C.HERO_IDS.filter(id => !s.badgeEquip[id]);
+    for (const id of Object.keys(C.BADGES)) {
+      if (equipped.has(id)) continue;
+      const hero = freeHeroes.shift();
+      if (!hero) break;
+      s.badgeEquip[hero] = id;
+      equipped.add(id);
+    }
+    const env = envBase();
+    for (const key of Object.keys(C.ITEM)) {
+      if (!s.inv.some(item => item.k === key)) C.addItem(s, C.mkItem(s, key, 'offline', rnd, { st: -1, t: NOW() }), env);
+    }
+    PROF.skins = Object.keys(SKINS);
+    try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip || {})); } catch (e) {}
+    return s;
+  }
   function loadLocal(v, force) {
     const u = user(); UID = u ? String(u.uid || u.name || '') : '';
+    if (OFFLINE_BUILD) {
+      const data = v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).filter(([key]) => key !== 'sig')) : null;
+      ST = unlockOfflineArmory(C.normalize(data || C.blank(), envBase()));
+      SIG = sigOf(ST); MODE = 'local';
+      return;
+    }
     if (!u || PROF.guest) { ST = null; MODE = 'none'; return; }
     if (cloudOn() && !force && MODE !== 'local') {   // 云端账号先等服务器回话（connect），这期间什么都不能做，免得本机和服务器各记一笔
       LOCAL_V = v;
@@ -259,6 +287,7 @@
     SIG = sigOf(ST);
     MODE = 'local';
   }
+  if (OFFLINE_BUILD) loadLocal(PRE_ARMORY);
   // 以前不进库存的“绑定”皮肤：本机账号直接换成库存里的饰品（普通版），记进 via，之后和开箱得到的一样能卖能熔铸。
   // 要等这个账号的存档整个放好以后再做（applyProfile 之后），不然 PROF.skins 还是上一个账号的
   function migrateLocal() {
