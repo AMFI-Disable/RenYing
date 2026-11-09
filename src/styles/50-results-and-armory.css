@@ -470,6 +470,9 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
   .ar-ophead h3 { margin: 6px 0 0; font-size: 22px; color: #fff; }
   .ar-ophead h3 b { font-family: var(--v-cond); font-size: 32px; color: var(--gold); }
   .ar-ophead h3 small { margin-left: 8px; font-size: 13px; font-weight: 400; color: var(--dim); }
+  .ar-badge-progress { display: grid; grid-template-columns: auto minmax(120px, 1fr); align-items: center; gap: 4px 10px; max-width: 380px; margin-top: 8px; color: var(--dim); font-size: 12px; }
+  .ar-badge-progress progress { width: 100%; height: 8px; accent-color: var(--gold); }
+  .ar-badge-progress small { grid-column: 2; }
   .ar-ophead .ar-note { max-width: 540px; margin: 0; }
   .ar-k { font-family: var(--v-cond); font-size: 12px; letter-spacing: .24em; color: var(--v-red); }
   .ar-ophead .ar-k { color: #5ad19a; }
@@ -487,6 +490,13 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
   .ar-badge-gift h3 { margin: 0; color: #fff; }
   .ar-badge-gift p, .ar-card p { margin: 0; color: var(--dim); font-size: 13px; }
   .ar-badge-gift .ar-card, .ar-loadout { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; }
+  .ar-badge-card { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; }
+  .ar-badge-card > b { color: #fff; }
+  .ar-badge-effect { color: var(--gold); line-height: 1.5; }
+  .ar-badge-req { display: flex; flex-wrap: wrap; gap: 5px; }
+  .ar-badge-req small { padding: 3px 6px; color: var(--dim); background: rgba(236,232,225,.05); border: 1px solid var(--line); }
+  .ar-badge-req small.met { color: #5ad19a; border-color: rgba(90,209,154,.45); }
+  .ar-badge-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: auto; }
   .ar-badge-gift .ar-card > b, .ar-loadout > b { color: #fff; }
   .ar-badge-gift .ar-card > p { min-height: 38px; }
   .ar-loadout small { color: var(--dim); }

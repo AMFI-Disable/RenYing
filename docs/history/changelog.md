@@ -8,6 +8,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **Badge progress and training previews (`src/armory.js`, `src/game/21-buttons-02-training.js`, `src/game/27-combat-loadouts.js`)**: show progress to the next badge shard and each upgrade requirement, list exact Silver/Gold/Purple Gold effect values, and add a Training Ground trial for every badge. Trials temporarily equip the selected badge without changing the account loadout and show a gain callout when its effect triggers.
+
 - **Hero stances and martial badges (`src/game/27-combat-loadouts.js`, `src/armory-core.js`, `src/armory.js`, `cloudflare/worker/`)**: added one unlockable alternate stance per hero, unlocked by 20 credited KOs, and a Silver badge starter choice with account-bound hero assignments, action-triggered effects, and costly Gold/PurpGold upgrades. Stance inputs are part of rollback, netplay, and replay state; opponents can see current loadouts. Badge progression is recorded by the Armory after eligible completed matches. Needs a Worker redeploy.
 
 - **Codex Max HP alignment (`src/game/18-codex.js`)**: the hero Codex now uses the same hero balance and global HP scale as live fighters, and scales the comparison bar to the current roster maximum. Added a roster-wide check that Codex HP values match runtime Max HP.

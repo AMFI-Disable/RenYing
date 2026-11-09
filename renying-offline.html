@@ -1961,6 +1961,9 @@ animation: arSpin 16s linear infinite, arFade .7s ease-out both; }
 .ar-ophead h3 { margin: 6px 0 0; font-size: 22px; color: #fff; }
 .ar-ophead h3 b { font-family: var(--v-cond); font-size: 32px; color: var(--gold); }
 .ar-ophead h3 small { margin-left: 8px; font-size: 13px; font-weight: 400; color: var(--dim); }
+.ar-badge-progress { display: grid; grid-template-columns: auto minmax(120px, 1fr); align-items: center; gap: 4px 10px; max-width: 380px; margin-top: 8px; color: var(--dim); font-size: 12px; }
+.ar-badge-progress progress { width: 100%; height: 8px; accent-color: var(--gold); }
+.ar-badge-progress small { grid-column: 2; }
 .ar-ophead .ar-note { max-width: 540px; margin: 0; }
 .ar-k { font-family: var(--v-cond); font-size: 12px; letter-spacing: .24em; color: var(--v-red); }
 .ar-ophead .ar-k { color: #5ad19a; }
@@ -1978,6 +1981,13 @@ animation: arSpin 16s linear infinite, arFade .7s ease-out both; }
 .ar-badge-gift h3 { margin: 0; color: #fff; }
 .ar-badge-gift p, .ar-card p { margin: 0; color: var(--dim); font-size: 13px; }
 .ar-badge-gift .ar-card, .ar-loadout { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; }
+.ar-badge-card { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; }
+.ar-badge-card > b { color: #fff; }
+.ar-badge-effect { color: var(--gold); line-height: 1.5; }
+.ar-badge-req { display: flex; flex-wrap: wrap; gap: 5px; }
+.ar-badge-req small { padding: 3px 6px; color: var(--dim); background: rgba(236,232,225,.05); border: 1px solid var(--line); }
+.ar-badge-req small.met { color: #5ad19a; border-color: rgba(90,209,154,.45); }
+.ar-badge-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: auto; }
 .ar-badge-gift .ar-card > b, .ar-loadout > b { color: #fff; }
 .ar-badge-gift .ar-card > p { min-height: 38px; }
 .ar-loadout small { color: var(--dim); }
@@ -8486,6 +8496,14 @@ Object.assign(UI_COPY_EN, {
 "徽记碎片": "Badge Shards",
 "累计斩获": "Career KOs",
 "每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。": "Earn one badge shard for every 40 career KOs. Upgrades also require Ink and KO milestones.",
+"距离下一枚徽记碎片": "Progress to next badge shard",
+"斩后获得": "KOs to earn",
+"训练场试招": "Try in Training",
+"升阶": "Upgrade",
+"碎片": "Shards",
+"真气": "Qi",
+"架势": "Posture",
+"徽记试招：": "Badge trial: ",
 "我的徽记": "My Badges",
 "领取一枚银徽后，会在这里查看、升阶和装备。": "Claim a Silver badge to view, upgrade, and equip it here.",
 "侠客架势与装备": "Hero Stances and Loadouts",
@@ -8504,10 +8522,13 @@ Object.assign(UI_COPY_EN, {
 "徽记已升阶": "Badge upgraded",
 "获得银徽「": "Received Silver badge “",
 "连续普攻命中": "Consecutive normal hits",
+"连段第 3 次起普攻命中": "Normal attack hits from combo hit 3 onward",
 "蓄力斩命中": "Charged attack hits",
+"精准招架成功": "Successful Just Guard",
 "造成破防": "Break an opponent's guard",
 "空中攻击命中": "Aerial attack hits",
 "闪避后命中": "Hit after a dodge",
+"闪避后 1 秒内首次命中": "First hit within 1 second after dodging",
 "起手更快，收招更长，单次伤害略低。": "Faster startup and longer recovery, with slightly lower damage per hit.",
 "短距攻击更窄更远，蓄力斩后摇增加。": "Short attacks have a narrower, longer hitbox; charged attacks recover more slowly.",
 "攻击伤害略低，静止调息时架势恢复更快。": "Slightly lower attack damage, with faster posture recovery while standing still.",
@@ -28017,11 +28038,13 @@ if (targetMode === 'cpu') return bpStart(isWatch ? 'cpuWatch' : 'cpu', { level: 
 if (targetMode === 'tag3' || targetMode === 'chaos' || targetMode === 'mayhem') return bpStart(targetMode, { level: 'god', isWatch });
 bpStart('train', { targetMode: 'dummy', isWatch });
 }
-function startTraining(targetMode = 'dummy', isWatch = false) {
+function startTraining(targetMode = 'dummy', isWatch = false, badgePreview = null) {
 if (targetMode !== 'dummy') return startTrainTarget(targetMode, isWatch);
 if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
 trainChar = 0;
 }
+window.BADGE_TRAINING_PREVIEW = badgePreview && COMBAT_BADGES[badgePreview.id]
+? { id: badgePreview.id, tier: badgePreview.tier || 'silver' } : null;
 initAudio(); paused = false;
 M.watchAi = !!isWatch;
 startDummyTraining();
@@ -28029,6 +28052,18 @@ if (isWatch) {
 A.ctrl = new AICtrl('god');
 say('木人试剑 · AI 演示连招', 1.4);
 } else say('木人试剑 · 开始训练', 1.4);
+}
+function startBadgeTrainingPreview(id, tier = 'silver') {
+if (!COMBAT_BADGES[id]) return;
+if (typeof menuHeroPick === 'function') trainChar = menuHeroPick();
+const action = id === 'riposte' ? 'light' : id === 'breaker' ? 'block' : 'stand';
+Object.assign(dummyCfg, { act: action, rep: true, gap: 1, fixed: false, escape: false, infGuard: id !== 'breaker', autoHeal: true });
+renderDummyFeatures();
+singleSec('train');
+showScreen('single');
+xiwuTrainingTab('free');
+startTraining('dummy', false, { id, tier });
+say(`${cvT('徽记试招：')}${cvT(COMBAT_BADGES[id].trigger)}`, 3);
 }
 function openReviewTraining(heroId, focus) {
 const hero = CHARS.findIndex(c => c.id === heroId);
@@ -34163,12 +34198,12 @@ cixian: { name: '双仪式', en: 'Twin Poles', kind: 'power', desc: '重击更�
 qianji: { name: '游线式', en: 'Tether Flow', kind: 'reach', desc: '攻击更远，伤害略低，出招稍慢。' },
 };
 var COMBAT_BADGES = {
-flowing: { n: '连势', en: 'Flow', trigger: '连续普攻命中', effect: '连段普攻命中后获得额外真气。' },
-focus: { n: '凝锋', en: 'Focus', trigger: '蓄力斩命中', effect: '蓄力斩命中后获得额外真气。' },
-riposte: { n: '回锋', en: 'Riposte', trigger: '精准招架', effect: '精准招架后恢复少量架势。' },
-breaker: { n: '破军', en: 'Breaker', trigger: '造成破防', effect: '造成破防后获得额外真气。' },
-ascent: { n: '凌空', en: 'Ascent', trigger: '空中攻击命中', effect: '空中攻击命中后获得额外真气。' },
-pursuit: { n: '追影', en: 'Pursuit', trigger: '闪避后命中', effect: '闪避后一秒内命中可获得额外真气。' },
+flowing: { n: '连势', en: 'Flow', trigger: '连段第 3 次起普攻命中', effect: '连段普攻命中后获得额外真气。', gain: 0.7, resource: '真气' },
+focus: { n: '凝锋', en: 'Focus', trigger: '蓄力斩命中', effect: '蓄力斩命中后获得额外真气。', gain: 1.2, resource: '真气' },
+riposte: { n: '回锋', en: 'Riposte', trigger: '精准招架成功', effect: '精准招架后恢复少量架势。', gain: 2.5, resource: '架势' },
+breaker: { n: '破军', en: 'Breaker', trigger: '造成破防', effect: '造成破防后获得额外真气。', gain: 2, resource: '真气' },
+ascent: { n: '凌空', en: 'Ascent', trigger: '空中攻击命中', effect: '空中攻击命中后获得额外真气。', gain: 1.1, resource: '真气' },
+pursuit: { n: '追影', en: 'Pursuit', trigger: '闪避后 1 秒内首次命中', effect: '闪避后一秒内命中可获得额外真气。', gain: 1.1, resource: '真气' },
 };
 var BADGE_TIER_POWER = { silver: 1, gold: 1.5, purpgold: 2 };
 if (typeof window !== 'undefined') { window.HERO_STANCES = HERO_STANCES; window.COMBAT_BADGES = COMBAT_BADGES; }
@@ -34187,6 +34222,9 @@ profile = Array.isArray(saved) ? (saved[f.idx] || {}) : {};
 const side = ROLL.slots[0].includes(f.idx) ? 0 : ROLL.slots[1].includes(f.idx) ? 1 : -1;
 profile = side >= 0 ? ((maps[side] || {})[f.ch.id] || {}) : {};
 } else if (M.watchAi || (M.mode !== 'pvp' && fighterTeam(f) !== (typeof localTeam === 'function' ? localTeam() : 0))) profile = {};
+const preview = typeof window !== 'undefined' && window.BADGE_TRAINING_PREVIEW;
+if (M.mode === 'train' && f.idx === 0 && preview && COMBAT_BADGES[preview.id])
+profile = { ...profile, badge: preview.id, tier: BADGE_TIER_POWER[preview.tier] ? preview.tier : 'silver' };
 f.stanceUnlocked = !!profile.unlocked;
 f.stance = f.stanceUnlocked && profile.stance === 1 ? 1 : 0;
 f.badgeId = COMBAT_BADGES && COMBAT_BADGES[profile.badge] ? profile.badge : '';
@@ -34223,20 +34261,35 @@ function applyCombatBadgeHit(att, def, move, ev) {
 if (!att || !att.badgeId || !att.badgeTier || !ev || ev.blk || ev.armor || ev.dd <= 0) return;
 const power = BADGE_TIER_POWER[att.badgeTier] || 1, name = att.moveName || move.name || '';
 let gain = 0;
-if (att.badgeId === 'flowing' && /^l[1-5]$/.test(name) && (att.comboHits || 0) >= 2) gain = 0.7 * power;
-else if (att.badgeId === 'focus' && (name === 'cs1' || name === 'cs2')) gain = 1.2 * power;
-else if (att.badgeId === 'ascent' && (att.y < -10 || name === 'a1' || name === 'a2')) gain = 1.1 * power;
-else if (att.badgeId === 'pursuit' && att.badgeDashT > 0) { gain = 1.1 * power; att.badgeDashT = 0; }
-if (gain) att.meter = Math.min(100, att.meter + gain);
+if (att.badgeId === 'flowing' && /^l[1-5]$/.test(name) && (att.comboHits || 0) >= 2) gain = COMBAT_BADGES.flowing.gain * power;
+else if (att.badgeId === 'focus' && (name === 'cs1' || name === 'cs2')) gain = COMBAT_BADGES.focus.gain * power;
+else if (att.badgeId === 'ascent' && (att.y < -10 || name === 'a1' || name === 'a2')) gain = COMBAT_BADGES.ascent.gain * power;
+else if (att.badgeId === 'pursuit' && att.badgeDashT > 0) { gain = COMBAT_BADGES.pursuit.gain * power; att.badgeDashT = 0; }
+if (gain) {
+att.meter = Math.min(100, att.meter + gain);
+showBadgeTrainingGain(att, gain, '真气');
+}
 }
 function applyCombatBadgeGuard(def, ev) {
 if (!def || !def.badgeId || !def.badgeTier || !ev) return;
 const power = BADGE_TIER_POWER[def.badgeTier] || 1;
-if (ev.justGuard && def.badgeId === 'riposte') def.guard = Math.min(def.maxGuard, def.guard + 2.5 * power);
+if (ev.justGuard && def.badgeId === 'riposte') {
+const gain = COMBAT_BADGES.riposte.gain * power;
+def.guard = Math.min(def.maxGuard, def.guard + gain);
+showBadgeTrainingGain(def, gain, '架势');
+}
 }
 function applyCombatBadgeBreak(att, ev) {
-if (att && att.badgeId === 'breaker' && att.badgeTier && ev && ev.guardBreak)
-att.meter = Math.min(100, att.meter + 2 * (BADGE_TIER_POWER[att.badgeTier] || 1));
+if (att && att.badgeId === 'breaker' && att.badgeTier && ev && ev.guardBreak) {
+const gain = COMBAT_BADGES.breaker.gain * (BADGE_TIER_POWER[att.badgeTier] || 1);
+att.meter = Math.min(100, att.meter + gain);
+showBadgeTrainingGain(att, gain, '真气');
+}
+}
+function showBadgeTrainingGain(f, gain, resource) {
+if (M.mode !== 'train' || typeof window === 'undefined' || !window.BADGE_TRAINING_PREVIEW || !f || f.idx !== 0) return;
+const badge = COMBAT_BADGES[f.badgeId];
+if (badge) addP({ type: 'text', text: `${cvT(badge.n)} +${Number(gain.toFixed(2)).toString()} ${cvT(resource)}`, x: f.x, y: f.y - 125, life: 1, max: 1, rgb: f.look.slash || '233,196,106' });
 }
 </script>
 <script>
@@ -37564,8 +37617,23 @@ return `<div class="ar-ophead"><div><span class="ar-k">江湖行动 · 第 ${se.
 }
 function pBadges() {
 const s = blankS(), ids = Object.keys(C.BADGES), owned = Object.entries(s.badgeOwned || {}), totalKOs = Object.values(s.heroKOs || {}).reduce((n, x) => n + x, 0);
-const gift = !s.badgeGift ? `<div class="ar-badge-gift"><div><h3>初入武学 · 银徽赠礼</h3><p>任选一枚银徽体验武学效果。徽记绑定账号，可在不同侠客之间调换。</p></div><div class="ar-grid3">${ids.map(id => { const b = C.BADGES[id]; return `<article class="ar-card"><b>${cvT(b.name)}</b><p>${cvT(b.desc)}</p><button type="button" class="go small" data-badge-gift="${id}" ${live() ? '' : 'disabled'}>领取银徽</button></article>`; }).join('')}</div></div>` : '';
-const stock = owned.length ? `<div class="ar-grid3">${owned.map(([id, tier]) => { const b = C.BADGES[id], up = C.BADGE_UPGRADE[tier]; return `<article class="ar-card"><b>${cvT(b.name)} · ${cvT(tier === 'silver' ? '银徽' : tier === 'gold' ? '金徽' : '紫金徽')}</b><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT((window.COMBAT_BADGES && window.COMBAT_BADGES[id] && window.COMBAT_BADGES[id].trigger) || b.effect)}</small>${up ? `<button type="button" class="go small" data-badge-upgrade="${id}" ${live() && totalKOs >= up.kos && s.badgeSigils >= up.sigils && PROF.ink >= up.ink ? '' : 'disabled'}>升阶 ${cvT(up.to === 'gold' ? '金徽' : '紫金徽')} · ${up.sigils} 碎片 · ${fmt(up.ink)} 墨锭 · ${up.kos} 斩</button>` : '<small>已达最高阶</small>'}</article>`; }).join('')}</div>` : '<p class="ar-note">领取一枚银徽后，会在这里查看、升阶和装备。</p>';
+const tierNames = ['银徽', '金徽', '紫金徽'], tierPowers = [1, 1.5, 2];
+const effectLine = id => {
+const spec = window.COMBAT_BADGES[id], resource = spec.resource, amount = n => Number((spec.gain * n).toFixed(2)).toString();
+return `<small class="ar-badge-effect">${tierNames.map((name, i) => `${cvT(name)} +${amount(tierPowers[i])} ${cvT(resource)}`).join(' · ')}</small>`;
+};
+const previewButton = (id, tier) => `<button type="button" class="ghost small" data-badge-preview="${id}" data-badge-tier="${tier}">${cvT('训练场试招')}</button>`;
+const badgeCard = (id, tier, giftCard = false) => {
+const b = C.BADGES[id], currentName = tierNames[tier === 'gold' ? 1 : tier === 'purpgold' ? 2 : 0];
+const trigger = (window.COMBAT_BADGES && window.COMBAT_BADGES[id] && window.COMBAT_BADGES[id].trigger) || b.effect;
+const up = giftCard ? null : C.BADGE_UPGRADE[tier];
+const ready = up && totalKOs >= up.kos && s.badgeSigils >= up.sigils && PROF.ink >= up.ink;
+const requirements = up ? `<div class="ar-badge-req"><small class="${s.badgeSigils >= up.sigils ? 'met' : ''}">${cvT('碎片')} ${s.badgeSigils}/${up.sigils}</small><small class="${PROF.ink >= up.ink ? 'met' : ''}">${cvT('墨锭')} ${fmt(PROF.ink)}/${fmt(up.ink)}</small><small class="${totalKOs >= up.kos ? 'met' : ''}">${cvT('斩')} ${totalKOs}/${up.kos}</small></div>` : '';
+const upgrade = up ? `${requirements}<button type="button" class="go small" data-badge-upgrade="${id}" ${live() && ready ? '' : 'disabled'}>${cvT('升阶')} ${cvT(up.to === 'gold' ? '金徽' : '紫金徽')}</button>` : giftCard ? '' : `<small>${cvT('已达最高阶')}</small>`;
+return `<article class="ar-card ar-badge-card"><b>${cvT(b.name)}${giftCard ? '' : ` · ${cvT(currentName)}`}</b><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT(trigger)}</small>${effectLine(id)}<div class="ar-badge-actions">${giftCard ? `<button type="button" class="go small" data-badge-gift="${id}" ${live() ? '' : 'disabled'}>${cvT('领取银徽')}</button>` : upgrade}${previewButton(id, tier)}</div></article>`;
+};
+const gift = !s.badgeGift ? `<div class="ar-badge-gift"><div><h3>${cvT('初入武学 · 银徽赠礼')}</h3><p>${cvT('任选一枚银徽体验武学效果。徽记绑定账号，可在不同侠客之间调换。')}</p></div><div class="ar-grid3">${ids.map(id => badgeCard(id, 'silver', true)).join('')}</div></div>` : '';
+const stock = owned.length ? `<div class="ar-grid3">${owned.map(([id, tier]) => badgeCard(id, tier)).join('')}</div>` : `<p class="ar-note">${cvT('领取一枚银徽后，会在这里查看、升阶和装备。')}</p>`;
 const heroes = CHARS.map(ch => {
 const kos = s.heroKOs[ch.id] || 0, unlocked = kos >= 20, stance = s.stances[ch.id] === 1 ? 1 : 0, equipped = s.badgeEquip[ch.id] || '';
 const options = [`<option value="">不装备</option>`, ...owned.map(([id]) => `<option value="${id}" ${equipped === id ? 'selected' : ''}>${cvT(C.BADGES[id].name)} · ${cvT(s.badgeOwned[id] === 'silver' ? '银徽' : s.badgeOwned[id] === 'gold' ? '金徽' : '紫金徽')}</option>`)].join('');
@@ -37573,7 +37641,9 @@ const stanceTitle = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(wind
 const stanceDesc = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(window.HERO_STANCES[ch.id].desc) : '';
 return `<article class="ar-card ar-loadout"><b>${escapeHTML(ch.name)}</b><small>${unlocked ? `${kos} / 20 ${cvT('斩')}` : `${kos} / 20 ${cvT('斩')} · ${cvT('未解锁')}`}</small><p>${stanceDesc}</p><div class="row"><button type="button" class="${stance ? 'ghost' : 'go'} small" data-stance="${ch.id}" data-value="0" ${live() ? '' : 'disabled'}>${cvT('本式')}</button><button type="button" class="${stance ? 'go' : 'ghost'} small" data-stance="${ch.id}" data-value="1" ${live() && unlocked ? '' : 'disabled'}>${stanceTitle}</button></div><div class="row"><select data-badge-choice="${ch.id}" aria-label="${escapeHTML(ch.name)} ${cvT('徽记')}">${options}</select><button type="button" class="go small" data-badge-set="${ch.id}" ${live() ? '' : 'disabled'}>${cvT('装备')}</button></div></article>`;
 }).join('');
-return `<div class="ar-ophead"><div><span class="ar-k">${cvT('武学与徽记')}</span><h3>${cvT('徽记碎片')} <b>${s.badgeSigils || 0}</b> · ${cvT('累计斩获')} <b>${totalKOs}</b></h3></div><p class="ar-note">${cvT('每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。')}</p></div>
+const shardProgress = totalKOs % C.BADGE_SIGIL_KOS;
+const shardBar = `<div class="ar-badge-progress"><label for="arBadgeShardProgress">${cvT('距离下一枚徽记碎片')}</label><progress id="arBadgeShardProgress" max="${C.BADGE_SIGIL_KOS}" value="${shardProgress}"></progress><small>${shardProgress} / ${C.BADGE_SIGIL_KOS} · ${C.BADGE_SIGIL_KOS - shardProgress} ${cvT('斩后获得')}</small></div>`;
+return `<div class="ar-ophead"><div><span class="ar-k">${cvT('武学与徽记')}</span><h3>${cvT('徽记碎片')} <b>${s.badgeSigils || 0}</b> · ${cvT('累计斩获')} <b>${totalKOs}</b></h3>${shardBar}</div><p class="ar-note">${cvT('每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。')}</p></div>
 ${gift}<h4 class="ar-h">${cvT('我的徽记')}</h4>${stock}<h4 class="ar-h">${cvT('侠客架势与装备')}</h4><div class="ar-grid3">${heroes}</div>`;
 }
 function covPick() {
@@ -37608,6 +37678,7 @@ if (pv) { inspect({ i: -1, k: pv.dataset.pv, st: -1, t: 0 }, 'pv'); return; }
 const b = e.target.closest('button'); if (!b || b.disabled) return;
 const d = b.dataset;
 if (d.gotab) { TAB = d.gotab; if (d.mkv) MK.view = d.mkv; render(); return; }
+if (d.badgePreview) { startBadgeTrainingPreview(d.badgePreview, d.badgeTier); return; }
 if (d.badgeGift) { const r = await act('badgeGift', { id: d.badgeGift }); if (r && r.ok) { toast(`获得银徽「${cvT(C.BADGES[r.id].name)}」`); render(); } return; }
 if (d.badgeUpgrade) { const r = await act('badgeUpgrade', { id: d.badgeUpgrade }); if (r && r.ok) { toast(`徽记已升阶：${cvT(C.BADGES[r.id].name)} · ${cvT(r.tier === 'gold' ? '金徽' : '紫金徽')}`); render(); } return; }
 if (d.stance) { const r = await act('stanceSet', { hero: d.stance, stance: +d.value }); if (r && r.ok) { toast('已设置出战架势'); render(); } return; }

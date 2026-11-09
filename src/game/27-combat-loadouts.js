@@ -19,12 +19,12 @@ var HERO_STANCES = {
   qianji: { name: '游线式', en: 'Tether Flow', kind: 'reach', desc: '攻击更远，伤害略低，出招稍慢。' },
 };
 var COMBAT_BADGES = {
-  flowing: { n: '连势', en: 'Flow', trigger: '连续普攻命中', effect: '连段普攻命中后获得额外真气。' },
-  focus: { n: '凝锋', en: 'Focus', trigger: '蓄力斩命中', effect: '蓄力斩命中后获得额外真气。' },
-  riposte: { n: '回锋', en: 'Riposte', trigger: '精准招架', effect: '精准招架后恢复少量架势。' },
-  breaker: { n: '破军', en: 'Breaker', trigger: '造成破防', effect: '造成破防后获得额外真气。' },
-  ascent: { n: '凌空', en: 'Ascent', trigger: '空中攻击命中', effect: '空中攻击命中后获得额外真气。' },
-  pursuit: { n: '追影', en: 'Pursuit', trigger: '闪避后命中', effect: '闪避后一秒内命中可获得额外真气。' },
+  flowing: { n: '连势', en: 'Flow', trigger: '连段第 3 次起普攻命中', effect: '连段普攻命中后获得额外真气。', gain: 0.7, resource: '真气' },
+  focus: { n: '凝锋', en: 'Focus', trigger: '蓄力斩命中', effect: '蓄力斩命中后获得额外真气。', gain: 1.2, resource: '真气' },
+  riposte: { n: '回锋', en: 'Riposte', trigger: '精准招架成功', effect: '精准招架后恢复少量架势。', gain: 2.5, resource: '架势' },
+  breaker: { n: '破军', en: 'Breaker', trigger: '造成破防', effect: '造成破防后获得额外真气。', gain: 2, resource: '真气' },
+  ascent: { n: '凌空', en: 'Ascent', trigger: '空中攻击命中', effect: '空中攻击命中后获得额外真气。', gain: 1.1, resource: '真气' },
+  pursuit: { n: '追影', en: 'Pursuit', trigger: '闪避后 1 秒内首次命中', effect: '闪避后一秒内命中可获得额外真气。', gain: 1.1, resource: '真气' },
 };
 var BADGE_TIER_POWER = { silver: 1, gold: 1.5, purpgold: 2 };
 if (typeof window !== 'undefined') { window.HERO_STANCES = HERO_STANCES; window.COMBAT_BADGES = COMBAT_BADGES; }
@@ -43,6 +43,9 @@ function applyCombatLoadouts() {
       const side = ROLL.slots[0].includes(f.idx) ? 0 : ROLL.slots[1].includes(f.idx) ? 1 : -1;
       profile = side >= 0 ? ((maps[side] || {})[f.ch.id] || {}) : {};
     } else if (M.watchAi || (M.mode !== 'pvp' && fighterTeam(f) !== (typeof localTeam === 'function' ? localTeam() : 0))) profile = {};
+    const preview = typeof window !== 'undefined' && window.BADGE_TRAINING_PREVIEW;
+    if (M.mode === 'train' && f.idx === 0 && preview && COMBAT_BADGES[preview.id])
+      profile = { ...profile, badge: preview.id, tier: BADGE_TIER_POWER[preview.tier] ? preview.tier : 'silver' };
     f.stanceUnlocked = !!profile.unlocked;
     f.stance = f.stanceUnlocked && profile.stance === 1 ? 1 : 0;
     f.badgeId = COMBAT_BADGES && COMBAT_BADGES[profile.badge] ? profile.badge : '';
@@ -79,18 +82,33 @@ function applyCombatBadgeHit(att, def, move, ev) {
   if (!att || !att.badgeId || !att.badgeTier || !ev || ev.blk || ev.armor || ev.dd <= 0) return;
   const power = BADGE_TIER_POWER[att.badgeTier] || 1, name = att.moveName || move.name || '';
   let gain = 0;
-  if (att.badgeId === 'flowing' && /^l[1-5]$/.test(name) && (att.comboHits || 0) >= 2) gain = 0.7 * power;
-  else if (att.badgeId === 'focus' && (name === 'cs1' || name === 'cs2')) gain = 1.2 * power;
-  else if (att.badgeId === 'ascent' && (att.y < -10 || name === 'a1' || name === 'a2')) gain = 1.1 * power;
-  else if (att.badgeId === 'pursuit' && att.badgeDashT > 0) { gain = 1.1 * power; att.badgeDashT = 0; }
-  if (gain) att.meter = Math.min(100, att.meter + gain);
+  if (att.badgeId === 'flowing' && /^l[1-5]$/.test(name) && (att.comboHits || 0) >= 2) gain = COMBAT_BADGES.flowing.gain * power;
+  else if (att.badgeId === 'focus' && (name === 'cs1' || name === 'cs2')) gain = COMBAT_BADGES.focus.gain * power;
+  else if (att.badgeId === 'ascent' && (att.y < -10 || name === 'a1' || name === 'a2')) gain = COMBAT_BADGES.ascent.gain * power;
+  else if (att.badgeId === 'pursuit' && att.badgeDashT > 0) { gain = COMBAT_BADGES.pursuit.gain * power; att.badgeDashT = 0; }
+  if (gain) {
+    att.meter = Math.min(100, att.meter + gain);
+    showBadgeTrainingGain(att, gain, '真气');
+  }
 }
 function applyCombatBadgeGuard(def, ev) {
   if (!def || !def.badgeId || !def.badgeTier || !ev) return;
   const power = BADGE_TIER_POWER[def.badgeTier] || 1;
-  if (ev.justGuard && def.badgeId === 'riposte') def.guard = Math.min(def.maxGuard, def.guard + 2.5 * power);
+  if (ev.justGuard && def.badgeId === 'riposte') {
+    const gain = COMBAT_BADGES.riposte.gain * power;
+    def.guard = Math.min(def.maxGuard, def.guard + gain);
+    showBadgeTrainingGain(def, gain, '架势');
+  }
 }
 function applyCombatBadgeBreak(att, ev) {
-  if (att && att.badgeId === 'breaker' && att.badgeTier && ev && ev.guardBreak)
-    att.meter = Math.min(100, att.meter + 2 * (BADGE_TIER_POWER[att.badgeTier] || 1));
+  if (att && att.badgeId === 'breaker' && att.badgeTier && ev && ev.guardBreak) {
+    const gain = COMBAT_BADGES.breaker.gain * (BADGE_TIER_POWER[att.badgeTier] || 1);
+    att.meter = Math.min(100, att.meter + gain);
+    showBadgeTrainingGain(att, gain, '真气');
+  }
+}
+function showBadgeTrainingGain(f, gain, resource) {
+  if (M.mode !== 'train' || typeof window === 'undefined' || !window.BADGE_TRAINING_PREVIEW || !f || f.idx !== 0) return;
+  const badge = COMBAT_BADGES[f.badgeId];
+  if (badge) addP({ type: 'text', text: `${cvT(badge.n)} +${Number(gain.toFixed(2)).toString()} ${cvT(resource)}`, x: f.x, y: f.y - 125, life: 1, max: 1, rgb: f.look.slash || '233,196,106' });
 }
