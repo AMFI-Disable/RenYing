@@ -152,7 +152,7 @@ function renderBP() {
   $id('bp').classList.toggle('bp-quick', bpMode === 'tag3' && !!(bpCustomOpts && bpCustomOpts.quickRelay));
   // 2v2 专属天道演武禁选走独立状态与独立渲染
   bpMapBanner();
-  if (bpMode === 'watch2v2') { $id('bpUndo').hidden = true; if (watch2v2Bp) renderBPWatch2v2(); return; }
+  if (bpMode === 'watch2v2') { $id('bpUndo').hidden = true; $id('bpSwap').hidden = true; if (watch2v2Bp) renderBPWatch2v2(); return; }
   if (!BP) return;
   $id('bpChat').classList.toggle('hidden', bpMode !== 'net');
   const my = bpMySide(), done = BP.step >= bpSteps().length;
@@ -289,6 +289,7 @@ function renderBP() {
   setDetail(show);
   const goB = document.getElementById('bpGo');
   $id('bpUndo').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step > 0 && BP.step < 3);
+  $id('bpSwap').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step === 2);
   if (isWatch) {
     goB.disabled = true;
     goB.textContent = done ? '即将开战 · 演武观战' : 'AI 演武禁选中…';
@@ -368,4 +369,5 @@ function bpConfirm() {
 }
 document.getElementById('bpGo').addEventListener('click', bpConfirm);
 document.getElementById('bpUndo').addEventListener('click', bpUndoQuickPick);
+document.getElementById('bpSwap').addEventListener('click', bpSwapQuickPicks);
 document.getElementById('bpQuit').addEventListener('click', () => toMenu());

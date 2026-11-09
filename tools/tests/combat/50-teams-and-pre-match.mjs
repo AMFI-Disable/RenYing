@@ -8,12 +8,15 @@ export default [
       toMenu(); bpStart('tag3', { level: 'hard', quickRelay: true });
       if (BP.steps.length !== 6 || BP.steps.some(s => s[1] === 'ban') || BP.steps.slice(0, 3).some(s => s[0] !== 0)) return { pass: false, error: 'quick relay draft order is incorrect' };
       const choices = bpValidList().slice(0, 4);
-      if (bpUndoQuickPick()) return { pass: false, error: 'undo succeeded before any pick' };
+      if (bpUndoQuickPick() || bpSwapQuickPicks()) return { pass: false, error: 'undo or swap succeeded before any pick' };
       bpApply(choices[0]); bpApply(choices[1]);
+      bpSel = choices[2]; BP.t = 12;
+      if (!bpSwapQuickPicks() || BP.picks[0][0] !== choices[1] || BP.picks[0][1] !== choices[0] || BP.step !== 2 || bpSel !== choices[2] || BP.t !== 12) return { pass: false, error: 'swapping changed the draft state or lost the current selection' };
+      if (!bpSwapQuickPicks() || BP.picks[0][0] !== choices[0] || BP.picks[0][1] !== choices[1]) return { pass: false, error: 'swapping back did not restore the order' };
       if (!bpUndoQuickPick() || BP.step !== 1 || BP.picks[0][0] !== choices[0] || BP.picks[0][1] !== -1 || bpSel !== choices[1] || !bpValid(choices[1])) return { pass: false, error: 'undo did not restore the previous pick for editing' };
       if (!bpUndoQuickPick() || BP.step !== 0 || BP.picks[0][0] !== -1 || bpSel !== choices[0] || bpUndoQuickPick()) return { pass: false, error: 'undo did not return cleanly to the first pick' };
       const picks = [choices[0], choices[3], choices[2]];
-      for (const i of picks) bpApply(i);
+      bpApply(picks[1]); bpApply(picks[0]); bpSwapQuickPicks(); bpApply(picks[2]);
       if (BP.step !== 6 || JSON.stringify(BP.picks[0]) !== JSON.stringify(picks) || new Set(BP.picks.flat()).size !== 6) return { pass: false, error: 'quick relay did not retain the chosen team and fill distinct opponents' };
       const teams = BP.picks.map(x => x.slice()), map = BP.mapId;
       const skipDraft = skipInteractiveDraft; skipInteractiveDraft = () => false;
@@ -21,7 +24,7 @@ export default [
       const scrolls = M.competitiveScrolls;
       if (M.mode !== 'tag3' || JSON.stringify(M.teams) !== JSON.stringify(teams) || M.map !== map || M.bans.length || !scrolls || Object.keys(scrolls[0]).length !== 3 || Object.keys(scrolls[1]).length !== 3) return { pass: false, error: 'quick relay did not start with both teams and recommended scrolls' };
       toMenu(); bpStart('tag3', { level: 'hard' });
-      const full = BP.steps.length === 8 && BP.steps.filter(s => s[1] === 'ban').length === 2 && !bpUndoQuickPick();
+      const full = BP.steps.length === 8 && BP.steps.filter(s => s[1] === 'ban').length === 2 && !bpUndoQuickPick() && !bpSwapQuickPicks();
       toMenu(); return { pass: full, error: 'full relay draft changed' };
     })()`
   },

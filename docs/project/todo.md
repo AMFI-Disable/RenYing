@@ -15,6 +15,7 @@ This is an ambitious working draft, not a list of committed designs. Its directi
 - [x] Review the current journey from opening the game to starting a 3v3 relay; remove unnecessary steps while letting players choose their three heroes.
 - [x] Improve hero selection and drafting without making the default flow cumbersome.
 - [ ] Explore improvements to hero order, transitions between fighters, and meaningful team combinations while retaining the relay format.
+  - [x] Let Quick Relay players swap their first two heroes before choosing the third.
 - [ ] Explore maps, match pacing, and comeback opportunities; test that changes preserve short, enjoyable matches.
 - [ ] Improve post-match results and investigate fast rematches and changing teams between matches.
 - [ ] Test the full flow with school players and record where they hesitate or leave.

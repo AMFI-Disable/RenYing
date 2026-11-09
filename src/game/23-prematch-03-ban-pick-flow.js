@@ -80,6 +80,13 @@ function bpUndoQuickPick() {
   if (card && typeof KBN !== 'undefined' && KBN.on) card.focus({ preventScroll: true });
   return true;
 }
+function bpSwapQuickPicks() {
+  if (currentScreen !== 'bp' || !BP || bpMode !== 'tag3' || !bpCustomOpts || !bpCustomOpts.quickRelay || BP.step !== 2 || !isMyTurnBP()) return false;
+  if (!Array.isArray(BP.picks[0]) || BP.picks[0][0] < 0 || BP.picks[0][1] < 0) return false;
+  [BP.picks[0][0], BP.picks[0][1]] = [BP.picks[0][1], BP.picks[0][0]];
+  renderBP();
+  return true;
+}
 function bpApply(i) {
   if (!BP || BP.step >= bpSteps().length) return;
   if (!bpValid(i)) {
