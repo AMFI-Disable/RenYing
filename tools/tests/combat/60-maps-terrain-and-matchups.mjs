@@ -41,8 +41,18 @@ export default [
       const hp = B.hp; strike(A, B, { box: [0, -100, 100, 0], dmg: 10, kb: [0, 0], stun: 0.1, hs: 0 });
       if (B.hp >= hp) { toMenu(); return { pass: false, error: 'the skill hitbox did not gain reach' }; }
       projs.length = 0; A.state = 'skill'; spawnProj(A, { kind: 'test', x: A.x, y: -50, vx: 500, life: 1, w: 10, h: 10, dmg: 1 });
-      if (Math.abs(projs[0].life - 1.15) > 1e-9) { toMenu(); return { pass: false, error: 'skill projectile reach should be 1.15x: ' + projs[0].life }; }
+      const minLifeToEdge = (STAGE_W - WALL - A.x + 10) / 500;
+      if (!projs.length || projs[0].life + 1e-9 < minLifeToEdge) { toMenu(); return { pass: false, error: 'skill projectile should reach the arena edge: ' + (projs[0] && projs[0].life) + ' < ' + minLifeToEdge }; }
       projs.length = 0;
+
+      // Li Ying's clone wave keeps its map-edge range even when it comes from a normal attack on a wider arena.
+      A.ch = CHARS[CHAR_IDX.liying]; A.state = 'attack'; A.x = 300;
+      for (const width of [1800, 2600]) {
+        STAGE_W = width; projs.length = 0; spawnCloneWave(A, A.x, 0, 1, 12);
+        const wave = projs[0], waveEdgeLife = (STAGE_W - WALL - (A.x + 28) + 58) / 980;
+        if (!wave || wave.life + 1e-9 < waveEdgeLife) { toMenu(); return { pass: false, error: 'Li Ying shadow wave fell short on map width ' + width + ': ' + (wave && wave.life) + ' < ' + waveEdgeLife }; }
+      }
+      STAGE_W = 1800; projs.length = 0;
 
       // Removing a clone creates only a visual fade snapshot, never simulation state.
       A.clones = []; plantClone(A, A.x); const clone = A.clones[0], fades = CLONE_FADES.length;

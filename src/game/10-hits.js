@@ -170,6 +170,9 @@ function applyHit(att, def, m, pt) {
   def.drinkT = 0;
   if (isClient()) { predictHit(att, def, m, pt); return; }   // 联机时由房主判定；加入方先播放自己出手的效果
   const fx = m.dir || att.face, sx = m.srcX !== undefined ? m.srcX : att.x;
+  const impactSide = Math.sign(sx - def.x) || -fx || def.face;
+  const backAttack = !!m.backAttack && impactSide !== def.face;
+  if (backAttack) m = { ...m, dmg: m.dmg * 1.35, guardDamage: 0, blockGuardDamage: 0 };
   // 醉翁被动：醉意过半，两成几率闪开近身攻击
   if (def.ch.passive === 'drunk' && (def.drunk || 0) >= 50 && !m.isProj && !m.ult && !m.unblockable && !m.hold && ['idle', 'walk', 'air'].includes(def.state) && grnd() < 0.2) {
     def.invul = Math.max(def.invul, 0.2); def.vx = fx * 320; def.drunk = Math.max(0, def.drunk - 10);
@@ -185,7 +188,8 @@ function applyHit(att, def, m, pt) {
     return;
   }
   const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
-  const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
+  const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround()
+    && (!m.backAttack || !backAttack);
   const isCs2 = !!(m && m.name === 'cs2');   // 只认这一招本身：moveName 收招后不清，之后的技能、暗器、大招不能被当成蓄力斩
   if (wasBlocking && (!m.unblockable || isCs2)) {
     const atkDir = Math.sign(sx - def.x) || -fx || def.face;
@@ -193,6 +197,7 @@ function applyHit(att, def, m, pt) {
   }
   const isBlockedCs2 = isCs2 && wasBlocking;
   const blocking = wasBlocking && !m.unblockable && !isBlockedCs2;
+  if (!blocking && !isBlockedCs2 && att.badgePressureSkill) att.badgePressureSkill = 0;
   const ev = { e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, wb: wasBlocking && !!m.big, blk: blocking || isBlockedCs2, blockedCs2: isBlockedCs2, f: fx };
   const mm = att.ch.meterMul || 1;
 
@@ -205,6 +210,7 @@ function applyHit(att, def, m, pt) {
     // 精准招架（Just Guard / Perfect Parry）：在受击前 0.09s 内按下格挡（特定招式如移形换影不可被精准招架）
     const isJustGuard = !m.isProj && !m.unblockable && !m.noJg && !m.unparryable && (def.blockT !== undefined && def.blockT <= (scOn() ? scJG(def) : 0.09));
     if (isJustGuard) {
+      if (att.badgePressureSkill) { att.badgePressureSkill = 0; att.badgePressureT = 0; }
       if (scOn()) scFire(def, 'blk', att, true, m);
       def.guard = Math.min(def.maxGuard, (def.guard !== undefined ? def.guard : def.maxGuard) + 12);
       def.state = 'blockstun'; def.t = 0; def.stun = 0.05;
@@ -233,6 +239,7 @@ function applyHit(att, def, m, pt) {
     // 消耗架势耐力（Guard Posture）：重体量/高威能打小体量，架势消耗倍增
     const defVuln = (def.defDebuffT > 0 || (m && m.isWave)) ? 1.5 : 1.0;
     let guardLoss = ((m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1)) * defVuln;
+    guardLoss += Math.max(0, m.blockGuardDamage || 0);
     if (chaosNow('guard_stab')) guardLoss *= chaosNow('guard_stab').val;
     if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true)) {
       guardLoss = 0;
@@ -249,6 +256,8 @@ function applyHit(att, def, m, pt) {
       if (scOn()) scFire(att, 'gb', def);
       def.state = 'hitstun'; def.t = 0; def.stun = 0.85; def.rooted = true;
       def.vx = fx * 140;
+      def.ballGuardBreakT = Math.max(def.ballGuardBreakT || 0, 0.85);
+      if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
       shake = 18; flashA = 0.4; flashRGB = '255,100,80';
       ring(def.x, def.y - 60, 160, '255,120,80', 0.45);
       addP({ type: 'text', text: '💥 破防崩势', x: def.x, y: def.y - 110, life: 1.2, max: 1.2, rgb: '255,120,80' });
@@ -272,6 +281,7 @@ function applyHit(att, def, m, pt) {
     }
     const isDefFixed = def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.fixed : def.ctrl.mode === 'fixed');
     def.vx = isDefFixed ? 0 : fx * (180 + Math.abs(m.kb[0]) * 0.35) * Math.sqrt(massRatio);
+    if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
     if (isDefFixed) { def.vy = 0; def.y = 0; }
     if (!m.isProj) att.vx -= att.face * (120 / Math.sqrt(massRatio));
     att.meter = Math.min(100, att.meter + 0.6 * mm); def.meter = Math.min(100, def.meter + 1.5);
@@ -279,6 +289,10 @@ function applyHit(att, def, m, pt) {
     if (scOn()) scFire(def, 'blk', att, false, m);
     hitVisual(ev); netEmit(ev);
     return;
+  }
+  if (m.guardDamage > 0 && def.guard !== undefined && !(def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true))) {
+    def.guard = Math.max(0, def.guard - m.guardDamage);
+    def.sinceBlock = 0;
   }
   // 霸体：普通攻击打不断，减伤 20%（只吃 80% 伤害）
   const rawDefRating = (def.ch && def.ch.stat && def.ch.stat.defRating) || 1;
@@ -431,6 +445,7 @@ function applyHit(att, def, m, pt) {
     def.state = 'knockdown';
     def.t = 0;
     def.vx = fx * 280 * Math.sqrt(massRatio);
+      if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
     def.vy = 0;
     def.y = 0;
     def.rot = 0;

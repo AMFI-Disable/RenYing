@@ -61,6 +61,7 @@ REDIRECT = """<!DOCTYPE html>
 <meta name="robots" content="noindex">
 <meta name="referrer" content="no-referrer">
 <title>刃影 · 已搬到新地址</title>
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <link rel="canonical" href="./">
 <style>
   body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: #0a0b1c; color: #efe8d8; font: 18px/1.7 "Noto Serif SC", "Songti SC", serif; text-align: center; padding: 16px; box-sizing: border-box; }
@@ -258,6 +259,9 @@ def page(offline):
         if html.count(marker) != 1:
             raise SystemExit(f"src/page.html 里应该正好有一个 {marker.strip()}")
         html = html.replace(marker, text)
+    if offline:
+        icon = base64.b64encode(read(ASSETS, "favicon.svg").encode("utf-8")).decode("ascii")
+        html = html.replace('href="assets/favicon.svg"', 'href="data:image/svg+xml;base64,' + icon + '"')
     return html
 
 

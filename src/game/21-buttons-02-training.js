@@ -195,11 +195,13 @@ function startTrainTarget(targetMode = trainTargetMode, isWatch = false) {
   if (targetMode === 'tag3' || targetMode === 'chaos' || targetMode === 'mayhem') return bpStart(targetMode, { level: 'god', isWatch });
   bpStart('train', { targetMode: 'dummy', isWatch });
 }
-function startTraining(targetMode = 'dummy', isWatch = false) {
+function startTraining(targetMode = 'dummy', isWatch = false, badgePreview = null) {
   if (targetMode !== 'dummy') return startTrainTarget(targetMode, isWatch);
   if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
     trainChar = 0;
   }
+  window.BADGE_TRAINING_PREVIEW = badgePreview && COMBAT_BADGES[badgePreview.id]
+    ? { id: badgePreview.id, tier: badgePreview.tier || 'silver' } : null;
   initAudio(); paused = false;
   M.watchAi = !!isWatch;
   startDummyTraining();
@@ -207,6 +209,18 @@ function startTraining(targetMode = 'dummy', isWatch = false) {
     A.ctrl = new AICtrl('god');
     say('木人试剑 · AI 演示连招', 1.4);
   } else say('木人试剑 · 开始训练', 1.4);
+}
+function startBadgeTrainingPreview(id, tier = 'silver') {
+  if (!COMBAT_BADGES[id]) return;
+  if (typeof menuHeroPick === 'function') trainChar = menuHeroPick();
+  const action = id === 'riposte' ? 'light' : id === 'breaker' ? 'block' : 'stand';
+  Object.assign(dummyCfg, { act: action, rep: true, gap: 1, fixed: false, escape: false, infGuard: id !== 'breaker', autoHeal: true });
+  renderDummyFeatures();
+  singleSec('train');
+  showScreen('single');
+  xiwuTrainingTab('free');
+  startTraining('dummy', false, { id, tier });
+  say(`${cvT('徽记试招：')}${cvT(COMBAT_BADGES[id].trigger)}`, 3);
 }
 function openReviewTraining(heroId, focus) {
   const hero = CHARS.findIndex(c => c.id === heroId);

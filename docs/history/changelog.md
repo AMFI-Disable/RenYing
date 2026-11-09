@@ -8,6 +8,10 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **Full-map skill reach and Qianji ball combat (`src/game/09-actions.js`, `src/game/10-hits.js`)**: skill shots and Li Ying’s shadow waves now travel to the arena edge across map sizes. Qianji’s tether ball patrols the full map with faster rebounds; its damage scales with velocity, back hits bypass guard and deal bonus damage, and grounded stance frames remain hittable while guard-break protection stays intact.
+
+- **Badge progress and training previews (`src/armory.js`, `src/game/21-buttons-02-training.js`, `src/game/27-combat-loadouts.js`)**: show progress to the next badge shard and each upgrade requirement, list exact Silver/Gold/Purple Gold effect values, and add a Training Ground trial for every badge. Trials temporarily equip the selected badge without changing the account loadout and show a gain callout when its effect triggers.
+
 - **Hero stances and martial badges (`src/game/27-combat-loadouts.js`, `src/armory-core.js`, `src/armory.js`, `cloudflare/worker/`)**: added one unlockable alternate stance per hero, unlocked by 20 credited KOs, and a Silver badge starter choice with account-bound hero assignments, action-triggered effects, and costly Gold/PurpGold upgrades. Stance inputs are part of rollback, netplay, and replay state; opponents can see current loadouts. Badge progression is recorded by the Armory after eligible completed matches. Needs a Worker redeploy.
 
 - **Codex Max HP alignment (`src/game/18-codex.js`)**: the hero Codex now uses the same hero balance and global HP scale as live fighters, and scales the comparison bar to the current roster maximum. Added a roster-wide check that Codex HP values match runtime Max HP.
@@ -38,6 +42,12 @@ All notable changes, features, and architectural capabilities of this project ar
 - **Qianji Yo-Yo Ball overhaul (`src/game/03-skills.js`, `src/game/04-ults.js`, `src/game/09-actions.js`, `src/ai.js`, `src/models/ai-brain.json`, `docs/ai/frame-data.json`, `docs/ai/frame-data.md`)**: replaced the idle-prone bouncing projectile with a deterministic tether loop with faster, flatter travel, attack redirection and speed boosts, an aim-directed R lash that still breaks hitstun, and an E that makes three arena passes before returning the ball. E damage is capped at 120 per opponent, and the ball resets Q when recalled. Updated Qianji AI, scroll effects and Codex descriptions.
 
 ### Changed
+
+- **千机傀丸 wall and posture behavior (`src/game/03-skills.js`, `src/game/09-actions.js`, `src/game/10-hits.js`)**: fixed tethered wall returns, added strong posture damage on a clean hit and partial posture damage on a block, and prevented ball hits for 0.85 seconds after guard break. The protection timer is included in rollback snapshots.
+
+- **刃影 browser icon (`assets/favicon.svg`, `src/page.html`, `tools/build.py`)**: matched the admin panel's vermilion seal and cream 刃 mark across the main, offline, and legacy pages.
+
+- **Playstyle-focused martial badges (`src/game/27-combat-loadouts.js`, `src/game/09-actions.js`, `src/game/10-hits.js`, `src/armory.js`)**: added distinct combo, pressure, parry, guard-break, aerial, and dodge follow-ups; badge windows show combat cues and synchronize through rollback and replay state. No account migration is needed. Needs a Worker redeploy.
 
 - **Weight-aware combat poses and tether feedback (`src/game/11-anim-loop.js`, `src/game/15-skin-weapons.js`)**: made attack windups and blocks show a firmer stance for heavier fighters, light fighters recoil more visibly, and 醉翁's wine-fueled sway readable before its evasive passive can trigger. 千机's silk tether now straightens and brightens under tension. These are presentation changes only; hit timings, damage and rollback state are unchanged.
 

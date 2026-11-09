@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
 <meta name="author" content="Even, Luffy, Opus 5.5, Gemini 4 Argon">
+<link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
 <title>刃影</title>
 <!-- 刃影主页面的骨架：tools/build.py 把下面几个 @ 占位标记换成样式和脚本，生成根目录的 index.html（每个标记只能有一个）。
      @style 全部样式（src/style.css + src/styles/）；@music 背景音乐（只有离线版内嵌）；@scripts 游戏和各模块的脚本；@qfx 青锋行。
@@ -1961,6 +1962,9 @@ animation: arSpin 16s linear infinite, arFade .7s ease-out both; }
 .ar-ophead h3 { margin: 6px 0 0; font-size: 22px; color: #fff; }
 .ar-ophead h3 b { font-family: var(--v-cond); font-size: 32px; color: var(--gold); }
 .ar-ophead h3 small { margin-left: 8px; font-size: 13px; font-weight: 400; color: var(--dim); }
+.ar-badge-progress { display: grid; grid-template-columns: auto minmax(120px, 1fr); align-items: center; gap: 4px 10px; max-width: 380px; margin-top: 8px; color: var(--dim); font-size: 12px; }
+.ar-badge-progress progress { width: 100%; height: 8px; accent-color: var(--gold); }
+.ar-badge-progress small { grid-column: 2; }
 .ar-ophead .ar-note { max-width: 540px; margin: 0; }
 .ar-k { font-family: var(--v-cond); font-size: 12px; letter-spacing: .24em; color: var(--v-red); }
 .ar-ophead .ar-k { color: #5ad19a; }
@@ -1978,6 +1982,13 @@ animation: arSpin 16s linear infinite, arFade .7s ease-out both; }
 .ar-badge-gift h3 { margin: 0; color: #fff; }
 .ar-badge-gift p, .ar-card p { margin: 0; color: var(--dim); font-size: 13px; }
 .ar-badge-gift .ar-card, .ar-loadout { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; }
+.ar-badge-card { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; }
+.ar-badge-card > b { color: #fff; }
+.ar-badge-effect { display: grid; gap: 3px; color: var(--gold); line-height: 1.5; }
+.ar-badge-req { display: flex; flex-wrap: wrap; gap: 5px; }
+.ar-badge-req small { padding: 3px 6px; color: var(--dim); background: rgba(236,232,225,.05); border: 1px solid var(--line); }
+.ar-badge-req small.met { color: #5ad19a; border-color: rgba(90,209,154,.45); }
+.ar-badge-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: auto; }
 .ar-badge-gift .ar-card > b, .ar-loadout > b { color: #fff; }
 .ar-badge-gift .ar-card > p { min-height: 38px; }
 .ar-loadout small { color: var(--dim); }
@@ -3265,7 +3276,7 @@ white-space: nowrap;
       <button type="button" data-nav="replays">战绩</button>
       <button type="button" data-nav="train" class="tn-offline">木人桩</button>
       <button type="button" data-nav="tutorial" class="tn-offline">新手教学</button>
-      <button type="button" data-nav="armory" class="tn-online tn-arm">武库</button>
+      <button type="button" data-nav="armory" class="tn-arm">武库</button>
       <button type="button" data-nav="tasks" class="tn-online">任务</button>
       <button type="button" data-nav="community" class="tn-online">社区</button>
     </div>
@@ -8455,12 +8466,40 @@ Object.assign(UI_COPY_EN, {
 "回锋": "Riposte",
 "凌空": "Ascent",
 "追影": "Pursuit",
-"连续普攻命中后，获得少量额外真气。": "Gain a small amount of extra Qi when a normal attack lands during a combo.",
-"蓄力斩命中后，获得少量额外真气。": "Gain a small amount of extra Qi when a charged attack hits.",
-"精准招架成功后，恢复少量架势。": "Recover a little posture after a Just Guard.",
-"造成破防后，获得少量额外真气。": "Gain a small amount of extra Qi after breaking an opponent's guard.",
-"空中攻击命中后，获得少量额外真气。": "Gain a small amount of extra Qi when an aerial attack hits.",
-"闪避后首次命中，获得少量额外真气。": "Gain a small amount of extra Qi on the first hit within one second after dodging.",
+"连续普攻第 3 击命中后，可在收招时冲刺追步；紫金阶可改接技能。": "After the third normal hit, dash-cancel recovery into a chase step; Purple Gold can route into a skill.",
+"蓄力斩命中后，下一次格挡交锋会减少击退；紫金阶技能也可承接。": "After a charged hit, your next blocked exchange causes less pushback; Purple Gold can carry the effect into a skill.",
+"精准招架后，限时重击会向前踏进，抓住反击时机。": "After a Just Guard, a heavy started in time steps forward to punish.",
+"破防后立刻重置冲刺冷却，下一次冲刺可更快追击；紫金阶也可选重击踏进。": "Breaking guard resets dash cooldown and boosts your next chase dash; Purple Gold can instead step in with a heavy.",
+"腾空攻击命中后可续一次空中冲刺；紫金阶可接空中技能。": "An aerial hit restores one spent air dash; Purple Gold can cancel aerial recovery into a skill.",
+"闪避后命中，可在收招时冲刺退步；紫金阶退步带短暂无敌。": "After a dodge punish, dash-cancel recovery to retreat; Purple Gold grants brief evasion during the step.",
+"0.65 秒内可用冲刺取消收招。": "Dash-cancel recovery within 0.65 seconds.",
+"窗口延长 15%。": "Window lasts 15% longer.",
+"窗口延长 30%，并可用一次技能取消收招。": "Window lasts 30% longer and allows one skill cancel.",
+"0.8 秒内下一次格挡击退降低 28%。": "The next block within 0.8 seconds causes 28% less pushback.",
+"窗口延长 30%，且技能命中也可消耗压迫效果。": "Window lasts 30% longer; a skill hit can also spend the pressure effect.",
+"0.65 秒内重击向前踏进。": "A heavy started within 0.65 seconds steps forward.",
+"踏进距离略增。": "Step-in distance is slightly longer.",
+"破防后重置冲刺冷却，下一次冲刺距离略增。": "Breaking guard resets dash cooldown; your next dash travels slightly farther.",
+"追击窗口延长 15%。": "Chase window lasts 15% longer.",
+"窗口延长 30%，并可选择重击踏进追击。": "Window lasts 30% longer and lets you choose a heavy step-in chase.",
+"空中冲刺用尽后，命中可恢复一次并在收招时续闪。": "After spending your air dash, an aerial hit restores it once and lets you dash-cancel recovery.",
+"续闪窗口延长 15%。": "Air-dash cancel window lasts 15% longer.",
+"窗口延长 30%，并可用一次技能取消空中收招。": "Window lasts 30% longer and allows one aerial skill cancel.",
+"0.65 秒内可用冲刺取消收招并选择退路。": "Dash-cancel recovery and choose a retreat direction within 0.65 seconds.",
+"窗口延长 30%，退步时获得 0.08 秒无敌。": "Window lasts 30% longer and grants 0.08 seconds of evasion during the retreat.",
+"连势 · 连段追步": "Flow · Chase Step",
+"连势 · 追步窗口": "Flow · Chase Window",
+"凝锋 · 贴身压迫": "Focus · Close Pressure",
+"凝锋 · 压迫窗口": "Focus · Pressure Window",
+"回锋 · 踏进反击": "Riposte · Step-in Punish",
+"回锋 · 反击窗口": "Riposte · Punish Window",
+"破军 · 追击踏进": "Breaker · Chase Step",
+"破军 · 追击冲刺": "Breaker · Chase Dash",
+"破军 · 破防追击": "Breaker · Guard-Break Chase",
+"凌空 · 空中续招": "Ascent · Aerial Follow-up",
+"凌空 · 空中续闪": "Ascent · Air Dash Restored",
+"追影 · 退步闪避": "Pursuit · Evasive Retreat",
+"追影 · 退步窗口": "Pursuit · Retreat Window",
 "回风式": "Returning Gale",
 "潜影式": "Veiled Step",
 "沉山式": "Mountain Brace",
@@ -8485,6 +8524,14 @@ Object.assign(UI_COPY_EN, {
 "徽记碎片": "Badge Shards",
 "累计斩获": "Career KOs",
 "每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。": "Earn one badge shard for every 40 career KOs. Upgrades also require Ink and KO milestones.",
+"距离下一枚徽记碎片": "Progress to next badge shard",
+"斩后获得": "KOs to earn",
+"训练场试招": "Try in Training",
+"升阶": "Upgrade",
+"碎片": "Shards",
+"真气": "Qi",
+"架势": "Posture",
+"徽记试招：": "Badge trial: ",
 "我的徽记": "My Badges",
 "领取一枚银徽后，会在这里查看、升阶和装备。": "Claim a Silver badge to view, upgrade, and equip it here.",
 "侠客架势与装备": "Hero Stances and Loadouts",
@@ -8502,11 +8549,12 @@ Object.assign(UI_COPY_EN, {
 "徽记已升阶：": "Badge upgraded: ",
 "徽记已升阶": "Badge upgraded",
 "获得银徽「": "Received Silver badge “",
-"连续普攻命中": "Consecutive normal hits",
+"连续普攻第 3 击命中": "Third consecutive normal attack hits",
 "蓄力斩命中": "Charged attack hits",
+"精准招架成功": "Successful Just Guard",
 "造成破防": "Break an opponent's guard",
 "空中攻击命中": "Aerial attack hits",
-"闪避后命中": "Hit after a dodge",
+"闪避后 1 秒内首次命中": "First hit within 1 second after dodging",
 "起手更快，收招更长，单次伤害略低。": "Faster startup and longer recovery, with slightly lower damage per hit.",
 "短距攻击更窄更远，蓄力斩后摇增加。": "Short attacks have a narrower, longer hitbox; charged attacks recover more slowly.",
 "攻击伤害略低，静止调息时架势恢复更快。": "Slightly lower attack damage, with faster posture recovery while standing still.",
@@ -13093,7 +13141,7 @@ f.skPh = 1; f.t = 0;
 spawnProj(f, {
 kind: 'ironball', yoyo: true, yoyoPhase: 'loop', yoyoLeg: 'out', yoyoDir: f.face,
 yoyoCycle: 0, yoyoHitAt: {}, x: f.x + f.face * 40, y: f.y - 58, vx: f.face * 1450, vy: 0,
-g: 0, w: 36, h: 36, life: 999999, dmg: 24, kb: [180, -120], stun: 0.24, hs: 0.06,
+g: 0, w: 36, h: 36, life: 999999, dmg: 24, kb: [180, -120], stun: 0.24, hs: 0.06, guardDamage: 34, blockGuardDamage: 12,
 speedTier: 2, resting: false, unbreakable: true, pierce: true, rehit: 0.7
 });
 ring(f.x + f.face * 40, f.y - 58, 60, f.look.slash || '235,165,70', 0.3);
@@ -14105,7 +14153,8 @@ NET.lastResult = '';
 }
 const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits', 'stance', 'stanceUnlocked', 'stanceT', 'badgeId', 'badgeTier', 'badgeDashT',
 'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
-'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'defDebuffT', 'swapFreezeT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir', 'clones', 'cloneN', 'swapId'];
+'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'defDebuffT', 'swapFreezeT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir', 'clones', 'cloneN', 'swapId',
+'badgeLinkT', 'badgePressureT', 'badgePressureSkill', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'badgeAirUsed', 'badgeAirSkillUsed', 'ballGuardBreakT'];
 function snapF(f) { return FK.map(k => f[k] === undefined ? null : r2(f[k])); }
 const VICTIM = ['hitstun', 'launched', 'knockdown', 'getup', 'held', 'blockstun'];
 function applyF(f, arr, exact) {
@@ -14997,6 +15046,8 @@ notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, needleMark
 guard: this.maxGuard, sinceBlock: 0,
 state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
 stance: 0, stanceUnlocked: false, stanceT: 0, badgeId: '', badgeTier: '', badgeDashT: 0,
+badgeLinkT: 0, badgePressureT: 0, badgePressureSkill: 0, badgeRiposteT: 0, badgeBreakT: 0, badgeAirSkillT: 0, badgeExitT: 0, badgeAirUsed: 0, badgeAirSkillUsed: 0,
+ballGuardBreakT: 0,
 juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
 breakCD: 0, beaconT: 0, quickGetup: false, quickGetupPhase: false, plat: -1, dropT: 0 });   // plat：站在山河异境第几个平台上（-1 是地上或空中）；dropT：刚从平台上落下，这段时间穿过平台
 this.scarf = []; this.trail = []; this.ghosts = [];
@@ -15872,6 +15923,14 @@ if (chaosNow('armor')) { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.
 f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
 const foe = foeOf(f), h = f.ctrl && f.ctrl.held, dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0, a = dir || (h && h.aim);
 f.face = f.onGround() ? faceDir(f, foe) : ((a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl))) ? a : f.face);
+const heavy = name === 'hv' || name === 'cs1' || name === 'cs2';
+if (heavy && f.badgeId === 'riposte' && f.badgeRiposteT > 0) {
+f.move = { ...f.move, lunge: (f.move.lunge || 0) + (f.badgeTier === 'purpgold' ? 58 : 48) };
+f.badgeRiposteT = 0; showBadgeCue(f, 'riposte', true);
+} else if (heavy && f.badgeId === 'breaker' && f.badgeTier === 'purpgold' && f.badgeBreakT > 0) {
+f.move = { ...f.move, lunge: (f.move.lunge || 0) + 52 };
+f.badgeBreakT = 0; showBadgeCue(f, 'breaker', true);
+}
 if (scOn()) scFire(f, 'atk', foe, name);
 }
 function doJump(f, dir) {
@@ -15884,11 +15943,21 @@ dust(f.x, 0, 6); SFX.jump();
 if (scOn()) scFire(f, 'jump', foeOf(f));
 }
 function startDash(f, dir) {
-f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * dir; f.vy = 0;
+f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * (f.badgeId === 'breaker' && f.badgeBreakT > 0 ? 1.12 : 1) * dir; f.vy = 0;
+if (f.badgeId === 'breaker' && f.badgeBreakT > 0) { f.badgeBreakT = 0; showBadgeCue(f, 'breakerDash', true); }
 if (f.badgeId === 'pursuit') f.badgeDashT = 1.0;
 f.invul = 0.13; f.dashCD = DODGE_CD;
 if (f.onGround()) dust(f.x - dir * 20, 0, 8);
 SFX.dash();
+if (scOn()) scFire(f, 'dash', foeOf(f));
+}
+function startBadgeDash(f, dir, kind) {
+endEscape(f);
+f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * (kind === 'flow' ? 0.62 : kind === 'air' ? 1 : 0.72) * dir; f.vy = 0;
+f.badgeDashT = 0; f.dashCD = DODGE_CD;
+f.invul = kind === 'exit' && f.badgeTier === 'purpgold' ? 0.08 : 0;
+if (f.onGround()) dust(f.x - dir * 16, 0, 6);
+ring(f.x, f.y - 50, 82, f.look.slash || '233,196,106', 0.24); SFX.dash();
 if (scOn()) scFire(f, 'dash', foeOf(f));
 }
 function startSpecial(f) {
@@ -16032,6 +16101,39 @@ SFX[m.snd]();
 }
 if (t >= act0 && t < act1 && !f.hitDone) tryHit(f, foe, m);
 const free2 = (SKILLS[f.ch.skill2] || {}).free;   // free：只能从自由状态放，不能接在出招后面（离影的换影）
+if (M.phase === 'fight' && t >= act1 && t < act1 + m.rc) {
+if (f.badgeId === 'ascent' && f.badgeAirSkillT > 0 && !f.onGround() && f.airDash > 0 && c.consume('dash')) {
+const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0) || f.face;
+f.airDash--; f.badgeAirSkillT = 0; startBadgeDash(f, dir, 'air'); showBadgeCue(f, 'ascent', true); return;
+}
+if (f.badgeId === 'flowing' && f.badgeLinkT > 0 && c.consume('dash')) {
+const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0) || f.face;
+f.badgeLinkT = 0; startBadgeDash(f, dir, 'flow'); showBadgeCue(f, 'flowing', true); return;
+}
+if (f.badgeId === 'pursuit' && f.badgeExitT > 0 && c.consume('dash')) {
+const inputDir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0), dir = inputDir || -f.face;
+f.badgeExitT = 0; startBadgeDash(f, dir, 'exit'); showBadgeCue(f, 'pursuit', true); return;
+}
+const canBadgeSkill = f.badgeTier === 'purpgold' && f.hitConfirmed && (
+(f.badgeId === 'flowing' && f.badgeLinkT > 0) ||
+(f.badgeId === 'focus' && f.badgePressureT > 0) ||
+(f.badgeId === 'ascent' && f.badgeAirSkillT > 0 && !f.onGround() && !f.badgeAirSkillUsed)
+);
+if (canBadgeSkill) {
+let slot = 0;
+if (f.skillCD <= 0 && c.consume('skill')) slot = 1;
+else if (f.skill2CD <= 0 && !free2 && c.consume('skill2')) slot = 2;
+if (slot) {
+startSkill(f, foe, slot === 2 ? 2 : undefined);
+if (f.state === 'skill') {
+if (f.badgeId === 'flowing') f.badgeLinkT = 0;
+if (f.badgeId === 'focus') { f.badgePressureT = 0; f.badgePressureSkill = 1; }
+if (f.badgeId === 'ascent') { f.badgeAirSkillT = 0; f.badgeAirSkillUsed = 1; }
+showBadgeCue(f, f.badgeId, true); return;
+}
+}
+}
+}
 if (M.phase === 'fight' && cx.skill2FromLight && !free2 && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
 if (M.phase === 'fight' && (t >= act0 + m.ac * cx.chainAt || (f.hitConfirmed && f.moveName === 'dl'))) {
 if (m.next.light && c.consume('light')) return startAttack(f, m.next.light);
@@ -16288,7 +16390,15 @@ if (o.w) o.w = Math.round(o.w * 1.8);
 if (o.h) o.h = Math.round(o.h * 1.8);
 ring(o.x, o.y, 110, f.look.slash || '255,215,80', 0.35);
 }
-if ((f.state === 'skill' || (f.state === 'special' && o.ult)) && !o.noRangeBoost && Number.isFinite(o.vx) && Math.abs(o.vx) > 1 && o.life < 1000) o.life *= 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
+const skillProjectile = f.state === 'skill' || (f.state === 'special' && o.ult);
+if ((skillProjectile || o.isWave) && Number.isFinite(o.vx) && Math.abs(o.vx) > 1 && o.life < 1000) {
+if (skillProjectile && !o.noRangeBoost) o.life *= 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
+if (Number.isFinite(o.x) && Math.abs(o.vy || 0) < Math.abs(o.vx) * 0.45) {
+const edge = o.vx > 0 ? STAGE_W - WALL : WALL;
+const travel = Math.max(0, (edge - o.x) * Math.sign(o.vx));
+o.life = Math.max(o.life, (travel + (o.w || 0)) / Math.abs(o.vx));
+}
+}
 const projectile = Object.assign({ id: ++projSeq, owner: f.idx, vy: 0, life: 1, age: 0, hits: 0, hitCD: 0, delay: 0, isProj: true }, o);
 if (projectile.autoAim) {
 const target = foeOf(f), speed = Math.hypot(projectile.vx || 0, projectile.vy || 0);
@@ -16312,22 +16422,25 @@ dmg: projectile.dmg * 0.75, cloneEcho: true
 }
 }
 function projBox(p) { return [p.x - p.w / 2, p.y - p.h / 2, p.x + p.w / 2, p.y + p.h / 2]; }
+const ironBallInvulnerable = f => f.invul > 0 && !(f.onGround() && ['idle', 'walk', 'block', 'blockstun'].includes(f.state));
 function resolveYoyoBallHits(p, owner, box) {
 if (!owner || !p.dmg) return;
 const foes = isMulti() ? foesOf(owner) : [foeOf(owner)];
 p.yoyoHitAt = p.yoyoHitAt || {};
 p.yoyoUltDealt = p.yoyoUltDealt || {};
 for (const foe of foes) {
-if (!foe || foe.hp <= 0 || foe.invul > 0 || !overlap(box, hurtbox(foe))) continue;
+if (!foe || foe.hp <= 0 || ironBallInvulnerable(foe) || foe.ballGuardBreakT > 0 || !overlap(box, hurtbox(foe))) continue;
 if ((p.yoyoHitAt[foe.idx] || -99) + (p.yoyoPhase === 'loop' ? 0.72 : 0.3) > p.age) continue;
+const speed = Math.abs(p.vx || 0);
+const speedDmg = clamp(0.8 + speed / 5000, 0.9, 1.45);
 if (p.yoyoPhase === 'ult-pass' || p.yoyoPhase === 'ult-return') {
 const remain = 120 - (p.yoyoUltDealt[foe.idx] || 0);
 if (remain <= 0) continue;
-const dmg = Math.min(p.dmg, remain);
-applyHit(owner, foe, { dmg, kb: [260, -300], stun: 0.32, hs: 0.08, launch: true, ult: true, noScale: true, dir: p.yoyoDir || owner.face }, [p.x, p.y]);
+const dmg = Math.min(p.dmg * speedDmg, remain);
+applyHit(owner, foe, { dmg, kb: [260, -300], stun: 0.32, hs: 0.08, launch: true, ult: true, noScale: true, isProj: true, guardDamage: 24, blockGuardDamage: 12, dir: Math.sign(p.vx) || p.yoyoDir || owner.face, srcX: p.x, backAttack: true }, [p.x, p.y]);
 p.yoyoUltDealt[foe.idx] = (p.yoyoUltDealt[foe.idx] || 0) + dmg;
 } else {
-applyHit(owner, foe, { dmg: p.dmg, kb: [180, -120], stun: p.yoyoPhase === 'lash' ? 0.38 : 0.24, hs: 0.06, launch: false, dir: p.yoyoDir || owner.face }, [p.x, p.y]);
+applyHit(owner, foe, { dmg: p.dmg * speedDmg, kb: [180, -120], stun: p.yoyoPhase === 'lash' ? 0.38 : 0.24, hs: 0.06, launch: false, isProj: true, guardDamage: p.yoyoPhase === 'lash' ? 44 : 34, blockGuardDamage: p.yoyoPhase === 'lash' ? 18 : 12, dir: Math.sign(p.vx) || p.yoyoDir || owner.face, srcX: p.x, backAttack: true }, [p.x, p.y]);
 }
 p.yoyoHitAt[foe.idx] = p.age;
 p.hits = (p.hits || 0) + 1;
@@ -16366,10 +16479,10 @@ if (d > 20 && d < 420) p.vy += clamp(dy / d * f.pol * 100 * (1 - d / 420), -100,
 if (p.kind === 'ironball' && p.yoyo) {
 const owner = fighterByIdx(p.owner), phase = p.yoyoPhase || 'loop';
 if (!owner || owner.hp <= 0) { p.dead = true; continue; }
-const ice = !!(mapNow() && mapNow().ice), qRange = Math.min(600, STAGE_W * 0.24);
+const ice = !!(mapNow() && mapNow().ice), qRange = STAGE_W - WALL * 2;
 const arenaMin = WALL + 18, arenaMax = STAGE_W - WALL - 18;
 const gearBoost = p.yoyoBoostT > 0 ? (p.yoyoGearBoost ? 1.4 : 1.25) : 1;
-const loopSpeed = (ice ? 1550 : 1850) * gearBoost;
+const loopSpeed = (ice ? 2050 : 2300) * gearBoost;
 p.yoyoBoostT = Math.max(0, (p.yoyoBoostT || 0) - STEP);
 if (phase === 'loop') {
 if (p.yoyoDmgT > 0) { p.yoyoDmgT = Math.max(0, p.yoyoDmgT - STEP); if (!p.yoyoDmgT) { p.dmg = 24; p.yoyoGearBoost = false; } }
@@ -16377,7 +16490,10 @@ p.yoyoRange = qRange;
 p.yoyoDir = p.yoyoDir || owner.face || 1;
 if (!p.yoyoLeg) p.yoyoLeg = 'out';
 if (p.yoyoLeg === 'return' && Math.abs(p.x - owner.x) < 56) {
-p.yoyoLeg = 'out'; p.yoyoDir = owner.face || p.yoyoDir; p.yoyoCycle = (p.yoyoCycle || 0) + 1;
+p.yoyoLeg = 'out';
+const facing = owner.face || p.yoyoDir;
+p.yoyoDir = (facing < 0 && owner.x - arenaMin < 56) || (facing > 0 && arenaMax - owner.x < 56) ? -facing : facing;
+p.yoyoCycle = (p.yoyoCycle || 0) + 1;
 }
 if (p.yoyoLeg === 'out' && Math.abs(p.x - owner.x) >= qRange - 8) p.yoyoLeg = 'return';
 p.vx = (p.yoyoLeg === 'return' ? Math.sign(owner.x - p.x) || -p.yoyoDir : p.yoyoDir) * loopSpeed;
@@ -16414,9 +16530,9 @@ const terrainMap = mapNow(), ballOwner = fighterByIdx(p.owner), ice = terrainMap
 const minVy = -260;
 if (p.vy > 60 || Math.abs(p.vy) > 80) {
 const eavesBonus = terrainMap === MAPS.pagoda && mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji';
-p.vy = -Math.abs(p.vy) * (eavesBonus ? 0.98 : 0.85);
+p.vy = -Math.abs(p.vy) * (eavesBonus ? 0.99 : 0.92);
 if (p.vy > minVy) p.vy = minVy;
-p.vx *= ice ? (mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji' ? 0.985 : 0.97) : 0.94;
+p.vx *= ice ? (mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji' ? 0.99 : 0.985) : 0.975;
 p.bounceCount = (p.bounceCount || 0) + 1;
 dust(p.x, 0, 7); ring(p.x, 0, 36, '235,165,70', 0.18); SFX.ballHit();
 } else {
@@ -16424,14 +16540,14 @@ p.vy = minVy * 0.6;
 p.vx *= ice ? (mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji' ? 0.99 : 0.985) : 0.96;
 }
 }
-if (p.x <= WALL + 18) {
+if (p.x + p.vx * STEP <= WALL + 18) {
 p.x = WALL + 18;
-p.vx = Math.max(380, Math.abs(p.vx) * 0.88);
+p.vx = Math.max(520, Math.abs(p.vx) * 0.94);
 p.vy = Math.min(p.vy, -160);
 ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
-} else if (p.x >= STAGE_W - WALL - 18) {
+} else if (p.x + p.vx * STEP >= STAGE_W - WALL - 18) {
 p.x = STAGE_W - WALL - 18;
-p.vx = -Math.max(380, Math.abs(p.vx) * 0.88);
+p.vx = -Math.max(520, Math.abs(p.vx) * 0.94);
 p.vy = Math.min(p.vy, -160);
 ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
 }
@@ -16464,8 +16580,17 @@ p.x = clamp(p.x, WALL + 18, STAGE_W - WALL - 18);
 mapWindProj(p);   // 竹海悬岩的风
 if (p.kind === 'ironball' && p.yoyo) {
 const owner = fighterByIdx(p.owner), range = p.yoyoRange || 600;
-if (owner && (p.yoyoPhase === 'loop' || p.yoyoPhase === 'lash')) p.x = clamp(p.x, owner.x - range, owner.x + range);
-else p.x = clamp(p.x, WALL + 18, STAGE_W - WALL - 18);
+const wallL = WALL + 18, wallR = STAGE_W - WALL - 18;
+p.x = clamp(p.x, wallL, wallR);
+if (owner && p.yoyoPhase === 'loop' && ((p.x <= wallL && p.vx < 0) || (p.x >= wallR && p.vx > 0))) {
+p.yoyoLeg = 'return'; p.yoyoDir = Math.sign(owner.x - p.x) || (p.x <= wallL ? 1 : -1);
+ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
+} else if (owner && p.yoyoPhase === 'lash' && ((p.x <= wallL && p.vx < 0) || (p.x >= wallR && p.vx > 0))) {
+p.yoyoPhase = 'loop'; p.yoyoLeg = 'return'; p.yoyoActionT = 0;
+p.yoyoDir = Math.sign(owner.x - p.x) || (p.x <= wallL ? 1 : -1);
+ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
+}
+if (owner && (p.yoyoPhase === 'loop' || p.yoyoPhase === 'lash')) p.x = clamp(p.x, Math.max(wallL, owner.x - range), Math.min(wallR, owner.x + range));
 p.y = clamp(p.y, -560, -24);
 }
 if (p.grow) { p.w += p.grow * STEP; p.h += p.grow * STEP; }
@@ -16484,7 +16609,7 @@ addP({ type: 'text', text: '斩', x: p.x, y: p.y - 30, life: 0.5, max: 0.5, rgb:
 }
 hitClones(box, p.owner, p.dmg);
 if (hitDecoyBox(box, p.owner)) { if (!p.pierce) p.dead = true; continue; }
-if (p.hitCD > 0 || foe.invul > 0 || foe.hp <= 0) continue;
+if (p.hitCD > 0 || (p.kind === 'ironball' ? ironBallInvulnerable(foe) || foe.ballGuardBreakT > 0 : foe.invul > 0) || foe.hp <= 0) continue;
 if ((p.groundOnly || p.kind === 'quake') && (foe.y < -16 || foe.flying)) continue;
 if (!overlap(box, hurtbox(foe))) continue;
 if (p.feast) {   // 与民同乐：砸中就得陪着喝
@@ -17019,6 +17144,7 @@ f.t += STEP;
 f.dashCD = Math.max(0, f.dashCD - STEP);
 f.stanceT = Math.max(0, (f.stanceT || 0) - STEP);
 f.badgeDashT = Math.max(0, (f.badgeDashT || 0) - STEP);
+for (const key of ['badgeLinkT', 'badgePressureT', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'ballGuardBreakT']) f[key] = Math.max(0, (f[key] || 0) - STEP);
 f.breakCD = Math.max(0, f.breakCD - STEP);
 f.skill2CD = Math.max(0, f.skill2CD - STEP);
 if (f.ch.inkShot) f.ink = Math.min(INK_MAX, (f.ink || 0) + INK_REGEN * STEP);
@@ -17258,6 +17384,7 @@ else if (Math.sign(f.vx) === side) f.vx = 0;
 }
 }
 function onLand(f) {
+f.badgeAirUsed = 0; f.badgeAirSkillUsed = 0; f.badgeAirSkillT = 0;
 if (scOn()) scFire(f, 'land', foeOf(f), f.vy);
 f.wallBounced = false;
 if (f.airRecover) {
@@ -17454,6 +17581,9 @@ if (att.ch.passive === 'magnet' && att.state === 'attack' && att.pol && !m.isPro
 def.drinkT = 0;
 if (isClient()) { predictHit(att, def, m, pt); return; }   // 联机时由房主判定；加入方先播放自己出手的效果
 const fx = m.dir || att.face, sx = m.srcX !== undefined ? m.srcX : att.x;
+const impactSide = Math.sign(sx - def.x) || -fx || def.face;
+const backAttack = !!m.backAttack && impactSide !== def.face;
+if (backAttack) m = { ...m, dmg: m.dmg * 1.35, guardDamage: 0, blockGuardDamage: 0 };
 if (def.ch.passive === 'drunk' && (def.drunk || 0) >= 50 && !m.isProj && !m.ult && !m.unblockable && !m.hold && ['idle', 'walk', 'air'].includes(def.state) && grnd() < 0.2) {
 def.invul = Math.max(def.invul, 0.2); def.vx = fx * 320; def.drunk = Math.max(0, def.drunk - 10);
 addP({ type: 'text', text: '醉里乾坤', x: def.x, y: def.y - 110, life: 0.7, max: 0.7, rgb: '255,170,90' });
@@ -17466,7 +17596,8 @@ thunderGuardCounter(def, att, pt);
 return;
 }
 const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
-const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
+const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround()
+&& (!m.backAttack || !backAttack);
 const isCs2 = !!(m && m.name === 'cs2');   // 只认这一招本身：moveName 收招后不清，之后的技能、暗器、大招不能被当成蓄力斩
 if (wasBlocking && (!m.unblockable || isCs2)) {
 const atkDir = Math.sign(sx - def.x) || -fx || def.face;
@@ -17474,6 +17605,7 @@ def.face = atkDir;
 }
 const isBlockedCs2 = isCs2 && wasBlocking;
 const blocking = wasBlocking && !m.unblockable && !isBlockedCs2;
+if (!blocking && !isBlockedCs2 && att.badgePressureSkill) att.badgePressureSkill = 0;
 const ev = { e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, wb: wasBlocking && !!m.big, blk: blocking || isBlockedCs2, blockedCs2: isBlockedCs2, f: fx };
 const mm = att.ch.meterMul || 1;
 const attWeight = (att.ch && att.ch.stat && att.ch.stat.weight) || 1;
@@ -17482,6 +17614,7 @@ const massRatio = clamp(attWeight / defWeight, 0.45, 2.5);
 if (blocking) {
 const isJustGuard = !m.isProj && !m.unblockable && !m.noJg && !m.unparryable && (def.blockT !== undefined && def.blockT <= (scOn() ? scJG(def) : 0.09));
 if (isJustGuard) {
+if (att.badgePressureSkill) { att.badgePressureSkill = 0; att.badgePressureT = 0; }
 if (scOn()) scFire(def, 'blk', att, true, m);
 def.guard = Math.min(def.maxGuard, (def.guard !== undefined ? def.guard : def.maxGuard) + 12);
 def.state = 'blockstun'; def.t = 0; def.stun = 0.05;
@@ -17508,6 +17641,7 @@ def.hp = Math.max(1, def.hp - m.dmg * chipFrac * (bm ? bm.chip : 1));
 ev.dd = hpBeforeChip - def.hp;
 const defVuln = (def.defDebuffT > 0 || (m && m.isWave)) ? 1.5 : 1.0;
 let guardLoss = ((m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1)) * defVuln;
+guardLoss += Math.max(0, m.blockGuardDamage || 0);
 if (chaosNow('guard_stab')) guardLoss *= chaosNow('guard_stab').val;
 if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true)) {
 guardLoss = 0;
@@ -17522,6 +17656,8 @@ def.guard = 0;
 if (scOn()) scFire(att, 'gb', def);
 def.state = 'hitstun'; def.t = 0; def.stun = 0.85; def.rooted = true;
 def.vx = fx * 140;
+def.ballGuardBreakT = Math.max(def.ballGuardBreakT || 0, 0.85);
+if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
 shake = 18; flashA = 0.4; flashRGB = '255,100,80';
 ring(def.x, def.y - 60, 160, '255,120,80', 0.45);
 addP({ type: 'text', text: '💥 破防崩势', x: def.x, y: def.y - 110, life: 1.2, max: 1.2, rgb: '255,120,80' });
@@ -17544,6 +17680,7 @@ def.stun = (0.08 + m.hs * 0.7) * ((def.ch && def.ch.stat && def.ch.stat.poise) |
 }
 const isDefFixed = def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.fixed : def.ctrl.mode === 'fixed');
 def.vx = isDefFixed ? 0 : fx * (180 + Math.abs(m.kb[0]) * 0.35) * Math.sqrt(massRatio);
+if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
 if (isDefFixed) { def.vy = 0; def.y = 0; }
 if (!m.isProj) att.vx -= att.face * (120 / Math.sqrt(massRatio));
 att.meter = Math.min(100, att.meter + 0.6 * mm); def.meter = Math.min(100, def.meter + 1.5);
@@ -17551,6 +17688,10 @@ if (typeof applyCombatBadgeGuard === 'function') applyCombatBadgeGuard(def, ev);
 if (scOn()) scFire(def, 'blk', att, false, m);
 hitVisual(ev); netEmit(ev);
 return;
+}
+if (m.guardDamage > 0 && def.guard !== undefined && !(def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true))) {
+def.guard = Math.max(0, def.guard - m.guardDamage);
+def.sinceBlock = 0;
 }
 const rawDefRating = (def.ch && def.ch.stat && def.ch.stat.defRating) || 1;
 const defRating = def.defDebuffT > 0 ? Math.max(0.65, rawDefRating * 0.75) : rawDefRating;
@@ -17695,6 +17836,7 @@ if (isBlockedCs2 && def.hp > 0) {
 def.state = 'knockdown';
 def.t = 0;
 def.vx = fx * 280 * Math.sqrt(massRatio);
+if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
 def.vy = 0;
 def.y = 0;
 def.rot = 0;
@@ -28065,11 +28207,13 @@ if (targetMode === 'cpu') return bpStart(isWatch ? 'cpuWatch' : 'cpu', { level: 
 if (targetMode === 'tag3' || targetMode === 'chaos' || targetMode === 'mayhem') return bpStart(targetMode, { level: 'god', isWatch });
 bpStart('train', { targetMode: 'dummy', isWatch });
 }
-function startTraining(targetMode = 'dummy', isWatch = false) {
+function startTraining(targetMode = 'dummy', isWatch = false, badgePreview = null) {
 if (targetMode !== 'dummy') return startTrainTarget(targetMode, isWatch);
 if (typeof trainChar !== 'number' || isNaN(trainChar) || trainChar < 0 || trainChar >= CHARS.length) {
 trainChar = 0;
 }
+window.BADGE_TRAINING_PREVIEW = badgePreview && COMBAT_BADGES[badgePreview.id]
+? { id: badgePreview.id, tier: badgePreview.tier || 'silver' } : null;
 initAudio(); paused = false;
 M.watchAi = !!isWatch;
 startDummyTraining();
@@ -28077,6 +28221,18 @@ if (isWatch) {
 A.ctrl = new AICtrl('god');
 say('木人试剑 · AI 演示连招', 1.4);
 } else say('木人试剑 · 开始训练', 1.4);
+}
+function startBadgeTrainingPreview(id, tier = 'silver') {
+if (!COMBAT_BADGES[id]) return;
+if (typeof menuHeroPick === 'function') trainChar = menuHeroPick();
+const action = id === 'riposte' ? 'light' : id === 'breaker' ? 'block' : 'stand';
+Object.assign(dummyCfg, { act: action, rep: true, gap: 1, fixed: false, escape: false, infGuard: id !== 'breaker', autoHeal: true });
+renderDummyFeatures();
+singleSec('train');
+showScreen('single');
+xiwuTrainingTab('free');
+startTraining('dummy', false, { id, tier });
+say(`${cvT('徽记试招：')}${cvT(COMBAT_BADGES[id].trigger)}`, 3);
 }
 function openReviewTraining(heroId, focus) {
 const hero = CHARS.findIndex(c => c.id === heroId);
@@ -34211,14 +34367,15 @@ cixian: { name: '双仪式', en: 'Twin Poles', kind: 'power', desc: '重击更�
 qianji: { name: '游线式', en: 'Tether Flow', kind: 'reach', desc: '攻击更远，伤害略低，出招稍慢。' },
 };
 var COMBAT_BADGES = {
-flowing: { n: '连势', en: 'Flow', trigger: '连续普攻命中', effect: '连段普攻命中后获得额外真气。' },
-focus: { n: '凝锋', en: 'Focus', trigger: '蓄力斩命中', effect: '蓄力斩命中后获得额外真气。' },
-riposte: { n: '回锋', en: 'Riposte', trigger: '精准招架', effect: '精准招架后恢复少量架势。' },
-breaker: { n: '破军', en: 'Breaker', trigger: '造成破防', effect: '造成破防后获得额外真气。' },
-ascent: { n: '凌空', en: 'Ascent', trigger: '空中攻击命中', effect: '空中攻击命中后获得额外真气。' },
-pursuit: { n: '追影', en: 'Pursuit', trigger: '闪避后命中', effect: '闪避后一秒内命中可获得额外真气。' },
+flowing: { n: '连势', en: 'Flow', trigger: '连续普攻第 3 击命中', effect: '打开连段追步窗口；紫金阶可改接技能。', tiers: ['0.65 秒内可用冲刺取消收招。', '窗口延长 15%。', '窗口延长 30%，并可用一次技能取消收招。'] },
+focus: { n: '凝锋', en: 'Focus', trigger: '蓄力斩命中', effect: '下一次格挡交锋减少击退；紫金阶技能也可承接。', tiers: ['0.8 秒内下一次格挡击退降低 28%。', '窗口延长 15%。', '窗口延长 30%，且技能命中也可消耗压迫效果。'] },
+riposte: { n: '回锋', en: 'Riposte', trigger: '精准招架成功', effect: '重击获得短促踏进，抓住招架后的反击时机。', tiers: ['0.65 秒内重击向前踏进。', '窗口延长 15%。', '窗口延长 30%，踏进距离略增。'] },
+breaker: { n: '破军', en: 'Breaker', trigger: '造成破防', effect: '立刻重置冲刺冷却；紫金阶可选重击踏进追击。', tiers: ['破防后重置冲刺冷却，下一次冲刺距离略增。', '追击窗口延长 15%。', '窗口延长 30%，并可选择重击踏进追击。'] },
+ascent: { n: '凌空', en: 'Ascent', trigger: '空中攻击命中', effect: '腾空时最多续一次空中冲刺；紫金阶可接空中技能。', tiers: ['空中冲刺用尽后，命中可恢复一次并在收招时续闪。', '续闪窗口延长 15%。', '窗口延长 30%，并可用一次技能取消空中收招。'] },
+pursuit: { n: '追影', en: 'Pursuit', trigger: '闪避后 1 秒内首次命中', effect: '打开退步窗口；紫金阶退步带短暂无敌。', tiers: ['0.65 秒内可用冲刺取消收招并选择退路。', '窗口延长 15%。', '窗口延长 30%，退步时获得 0.08 秒无敌。'] },
 };
 var BADGE_TIER_POWER = { silver: 1, gold: 1.5, purpgold: 2 };
+var BADGE_WINDOW_SCALE = { silver: 1, gold: 1.15, purpgold: 1.3 };
 if (typeof window !== 'undefined') { window.HERO_STANCES = HERO_STANCES; window.COMBAT_BADGES = COMBAT_BADGES; }
 function combatLoadoutMap() {
 try { return typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}; } catch (e) { return {}; }
@@ -34235,13 +34392,27 @@ profile = Array.isArray(saved) ? (saved[f.idx] || {}) : {};
 const side = ROLL.slots[0].includes(f.idx) ? 0 : ROLL.slots[1].includes(f.idx) ? 1 : -1;
 profile = side >= 0 ? ((maps[side] || {})[f.ch.id] || {}) : {};
 } else if (M.watchAi || (M.mode !== 'pvp' && fighterTeam(f) !== (typeof localTeam === 'function' ? localTeam() : 0))) profile = {};
+const preview = typeof window !== 'undefined' && window.BADGE_TRAINING_PREVIEW;
+if (M.mode === 'train' && f.idx === 0 && preview && COMBAT_BADGES[preview.id])
+profile = { ...profile, badge: preview.id, tier: BADGE_TIER_POWER[preview.tier] ? preview.tier : 'silver' };
 f.stanceUnlocked = !!profile.unlocked;
 f.stance = f.stanceUnlocked && profile.stance === 1 ? 1 : 0;
 f.badgeId = COMBAT_BADGES && COMBAT_BADGES[profile.badge] ? profile.badge : '';
 f.badgeTier = BADGE_TIER_POWER && BADGE_TIER_POWER[profile.tier] ? profile.tier : '';
 f.badgeDashT = 0;
+f.badgeLinkT = f.badgePressureT = f.badgeRiposteT = f.badgeBreakT = f.badgeAirSkillT = f.badgeExitT = 0;
+f.badgePressureSkill = 0; f.badgeAirUsed = f.badgeAirSkillUsed = 0;
 f.stanceT = 0;
 }
+}
+function badgeDuration(f, base) { return base * (BADGE_WINDOW_SCALE[f && f.badgeTier] || 1); }
+function showBadgeCue(f, key, consumed = false) {
+if (!f || RESIM) return;
+const badge = COMBAT_BADGES[f.badgeId]; if (!badge) return;
+const names = { flowing: consumed ? '连势 · 连段追步' : '连势 · 追步窗口', focus: consumed ? '凝锋 · 贴身压迫' : '凝锋 · 压迫窗口', riposte: consumed ? '回锋 · 踏进反击' : '回锋 · 反击窗口', breaker: consumed ? '破军 · 追击踏进' : '破军 · 破防追击', breakerDash: '破军 · 追击冲刺', ascent: consumed ? '凌空 · 空中续招' : '凌空 · 空中续闪', pursuit: consumed ? '追影 · 退步闪避' : '追影 · 退步窗口' };
+const rgb = f.look && f.look.slash || '233,196,106';
+ring(f.x, f.y - 58, consumed ? 78 : 58, rgb, consumed ? 0.28 : 0.18);
+addP({ type: 'text', text: names[key] || badge.n, x: f.x, y: f.y - 112, life: 0.7, max: 0.7, rgb });
 }
 function stanceMove(f, name) {
 const base = f.moves[name];
@@ -34269,22 +34440,36 @@ return true;
 }
 function applyCombatBadgeHit(att, def, move, ev) {
 if (!att || !att.badgeId || !att.badgeTier || !ev || ev.blk || ev.armor || ev.dd <= 0) return;
-const power = BADGE_TIER_POWER[att.badgeTier] || 1, name = att.moveName || move.name || '';
-let gain = 0;
-if (att.badgeId === 'flowing' && /^l[1-5]$/.test(name) && (att.comboHits || 0) >= 2) gain = 0.7 * power;
-else if (att.badgeId === 'focus' && (name === 'cs1' || name === 'cs2')) gain = 1.2 * power;
-else if (att.badgeId === 'ascent' && (att.y < -10 || name === 'a1' || name === 'a2')) gain = 1.1 * power;
-else if (att.badgeId === 'pursuit' && att.badgeDashT > 0) { gain = 1.1 * power; att.badgeDashT = 0; }
-if (gain) att.meter = Math.min(100, att.meter + gain);
+const name = att.moveName || (move && move.name) || '';
+if (att.badgeId === 'flowing' && !(move && (move.isProj || move.skill || move.ult)) && /^l[1-5]$/.test(name) && def.comboHits === 3) {
+att.badgeLinkT = badgeDuration(att, 0.65); showBadgeCue(att, 'flowing');
+} else if (att.badgeId === 'focus' && (name === 'cs1' || name === 'cs2')) {
+att.badgePressureT = badgeDuration(att, 0.8); att.badgePressureSkill = 0; showBadgeCue(att, 'focus');
+} else if (att.badgeId === 'ascent' && (att.y < -10 || name === 'a1' || name === 'a2')) {
+let cue = false;
+if (!att.badgeAirUsed && att.airDash <= 0) { att.airDash = 1; att.badgeAirUsed = 1; cue = true; }
+if (!att.badgeAirSkillUsed) { att.badgeAirSkillT = badgeDuration(att, 0.75); cue = true; }
+if (cue) showBadgeCue(att, 'ascent');
+} else if (att.badgeId === 'pursuit' && att.badgeDashT > 0) {
+att.badgeDashT = 0; att.badgeExitT = badgeDuration(att, 0.65); showBadgeCue(att, 'pursuit');
+}
 }
 function applyCombatBadgeGuard(def, ev) {
-if (!def || !def.badgeId || !def.badgeTier || !ev) return;
-const power = BADGE_TIER_POWER[def.badgeTier] || 1;
-if (ev.justGuard && def.badgeId === 'riposte') def.guard = Math.min(def.maxGuard, def.guard + 2.5 * power);
+if (!def || !def.badgeId || !def.badgeTier || !ev || !ev.justGuard || def.badgeId !== 'riposte') return;
+def.badgeRiposteT = badgeDuration(def, 0.65); showBadgeCue(def, 'riposte');
+}
+function applyCombatBadgeBlock(att, def) {
+if (!att || att.badgeId !== 'focus' || !(att.badgePressureSkill || att.badgePressureT > 0)) return false;
+def.vx *= 0.72;
+att.badgePressureT = 0; att.badgePressureSkill = 0;
+showBadgeCue(att, 'focus', true);
+return true;
 }
 function applyCombatBadgeBreak(att, ev) {
-if (att && att.badgeId === 'breaker' && att.badgeTier && ev && ev.guardBreak)
-att.meter = Math.min(100, att.meter + 2 * (BADGE_TIER_POWER[att.badgeTier] || 1));
+if (!att || att.badgeId !== 'breaker' || !att.badgeTier || !ev || !ev.guardBreak) return;
+att.dashCD = 0;
+att.badgeBreakT = badgeDuration(att, 0.8);
+showBadgeCue(att, 'breaker');
 }
 </script>
 <script>
@@ -35561,12 +35746,12 @@ C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming
 C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem'];
 C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
 C.BADGES = {
-flowing: { name: '连势', desc: '连续普攻命中后，获得少量额外真气。', en: 'Flow', effect: 'normal' },
-focus: { name: '凝锋', desc: '蓄力斩命中后，获得少量额外真气。', en: 'Focus', effect: 'charged' },
-riposte: { name: '回锋', desc: '精准招架成功后，恢复少量架势。', en: 'Riposte', effect: 'parry' },
-breaker: { name: '破军', desc: '造成破防后，获得少量额外真气。', en: 'Breaker', effect: 'break' },
-ascent: { name: '凌空', desc: '空中攻击命中后，获得少量额外真气。', en: 'Ascent', effect: 'air' },
-pursuit: { name: '追影', desc: '闪避后首次命中，获得少量额外真气。', en: 'Pursuit', effect: 'dash' },
+flowing: { name: '连势', desc: '连续普攻第 3 击命中后，可在收招时冲刺追步；紫金阶可改接技能。', en: 'Flow', effect: 'normal' },
+focus: { name: '凝锋', desc: '蓄力斩命中后，下一次格挡交锋会减少击退；紫金阶技能也可承接。', en: 'Focus', effect: 'charged' },
+riposte: { name: '回锋', desc: '精准招架后，限时重击会向前踏进，抓住反击时机。', en: 'Riposte', effect: 'parry' },
+breaker: { name: '破军', desc: '破防后立刻重置冲刺冷却，下一次冲刺可更快追击；紫金阶也可选重击踏进。', en: 'Breaker', effect: 'break' },
+ascent: { name: '凌空', desc: '腾空攻击命中后可续一次空中冲刺；紫金阶可接空中技能。', en: 'Ascent', effect: 'air' },
+pursuit: { name: '追影', desc: '闪避后命中，可在收招时冲刺退步；紫金阶退步带短暂无敌。', en: 'Pursuit', effect: 'dash' },
 };
 C.BADGE_TIER = { silver: 1, gold: 2, purpgold: 3 };
 C.BADGE_UPGRADE = { silver: { to: 'gold', sigils: 3, ink: 2000, kos: 100 }, gold: { to: 'purpgold', sigils: 7, ink: 6000, kos: 300 } };
@@ -36601,7 +36786,6 @@ if (!G.ArmoryCore) Object.defineProperty(G, 'ArmoryCore', { value: C, writable: 
 'use strict';
 const C = window.ArmoryCore;
 if (!C || typeof PROF === 'undefined' || typeof SKINS === 'undefined') return;
-if (typeof OFFLINE_BUILD !== 'undefined' && OFFLINE_BUILD) return;   // 离线版没有武库（也不把武库皮肤放进图鉴）
 const NOW = Date.now.bind(Date);
 const GRV = crypto.getRandomValues.bind(crypto);
 const CS = window.CloudSave || null;
@@ -36801,7 +36985,7 @@ return MKD.busy;
 }
 const SALT = 'ry-armory|v1|';
 const sigOf = s => C.hash32(SALT + UID + '|' + JSON.stringify(s)).toString(36) + C.hash32(JSON.stringify(s) + '|' + UID + SALT).toString(36);
-const user = () => (window.CloudSave && CloudSave.getUser && CloudSave.getUser()) || null;
+const user = () => OFFLINE_BUILD ? { uid: 'renying-offline', isCloud: false } : (window.CloudSave && CloudSave.getUser && CloudSave.getUser()) || null;
 const cloudOn = () => { const u = user(); return !!(u && u.isCloud && ECON); };
 const live = () => !!ST && (MODE === 'server' || MODE === 'local');   // 现在能不能开箱、买卖
 const OLD_MSG = '服务器还是旧版武库，等更新到新版以后才能用';
@@ -36815,8 +36999,37 @@ set(v) { loadLocal(v); },
 });
 let LOCAL_V;   // 云端账号存档里带的武库数据：只在服务器还没升级（不认武库）时才用
 if (PRE_ARMORY && typeof PRE_ARMORY === 'object') setTimeout(() => { if (!ST && MODE !== 'server') { loadLocal(PRE_ARMORY); migrateLocal(); } }, 0);
+function unlockOfflineArmory(s) {
+s.badgeGift = 1;
+s.badgeOwned = Object.fromEntries(Object.keys(C.BADGES).map(id => [id, 'purpgold']));
+s.badgeSigils = Math.max(99, s.badgeSigils || 0);
+s.heroKOs = Object.fromEntries(C.HERO_IDS.map(id => [id, Math.max(300, s.heroKOs[id] || 0)]));
+s.stances = Object.fromEntries(C.HERO_IDS.map(id => [id, 1]));
+const equipped = new Set(Object.values(s.badgeEquip));
+const freeHeroes = C.HERO_IDS.filter(id => !s.badgeEquip[id]);
+for (const id of Object.keys(C.BADGES)) {
+if (equipped.has(id)) continue;
+const hero = freeHeroes.shift();
+if (!hero) break;
+s.badgeEquip[hero] = id;
+equipped.add(id);
+}
+const env = envBase();
+for (const key of Object.keys(C.ITEM)) {
+if (!s.inv.some(item => item.k === key)) C.addItem(s, C.mkItem(s, key, 'offline', rnd, { st: -1, t: NOW() }), env);
+}
+PROF.skins = Object.keys(SKINS);
+try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip || {})); } catch (e) {}
+return s;
+}
 function loadLocal(v, force) {
 const u = user(); UID = u ? String(u.uid || u.name || '') : '';
+if (OFFLINE_BUILD) {
+const data = v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).filter(([key]) => key !== 'sig')) : null;
+ST = unlockOfflineArmory(C.normalize(data || C.blank(), envBase()));
+SIG = sigOf(ST); MODE = 'local';
+return;
+}
 if (!u || PROF.guest) { ST = null; MODE = 'none'; return; }
 if (cloudOn() && !force && MODE !== 'local') {   // 云端账号先等服务器回话（connect），这期间什么都不能做，免得本机和服务器各记一笔
 LOCAL_V = v;
@@ -36833,6 +37046,7 @@ ST = C.normalize(s || C.blank(), envBase());
 SIG = sigOf(ST);
 MODE = 'local';
 }
+if (OFFLINE_BUILD) loadLocal(PRE_ARMORY);
 function migrateLocal() {
 if (MODE !== 'local' || !ST || PROF.guest || cloudOn()) return;
 voidLocal();
@@ -37612,8 +37826,23 @@ return `<div class="ar-ophead"><div><span class="ar-k">江湖行动 · 第 ${se.
 }
 function pBadges() {
 const s = blankS(), ids = Object.keys(C.BADGES), owned = Object.entries(s.badgeOwned || {}), totalKOs = Object.values(s.heroKOs || {}).reduce((n, x) => n + x, 0);
-const gift = !s.badgeGift ? `<div class="ar-badge-gift"><div><h3>初入武学 · 银徽赠礼</h3><p>任选一枚银徽体验武学效果。徽记绑定账号，可在不同侠客之间调换。</p></div><div class="ar-grid3">${ids.map(id => { const b = C.BADGES[id]; return `<article class="ar-card"><b>${cvT(b.name)}</b><p>${cvT(b.desc)}</p><button type="button" class="go small" data-badge-gift="${id}" ${live() ? '' : 'disabled'}>领取银徽</button></article>`; }).join('')}</div></div>` : '';
-const stock = owned.length ? `<div class="ar-grid3">${owned.map(([id, tier]) => { const b = C.BADGES[id], up = C.BADGE_UPGRADE[tier]; return `<article class="ar-card"><b>${cvT(b.name)} · ${cvT(tier === 'silver' ? '银徽' : tier === 'gold' ? '金徽' : '紫金徽')}</b><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT((window.COMBAT_BADGES && window.COMBAT_BADGES[id] && window.COMBAT_BADGES[id].trigger) || b.effect)}</small>${up ? `<button type="button" class="go small" data-badge-upgrade="${id}" ${live() && totalKOs >= up.kos && s.badgeSigils >= up.sigils && PROF.ink >= up.ink ? '' : 'disabled'}>升阶 ${cvT(up.to === 'gold' ? '金徽' : '紫金徽')} · ${up.sigils} 碎片 · ${fmt(up.ink)} 墨锭 · ${up.kos} 斩</button>` : '<small>已达最高阶</small>'}</article>`; }).join('')}</div>` : '<p class="ar-note">领取一枚银徽后，会在这里查看、升阶和装备。</p>';
+const tierNames = ['银徽', '金徽', '紫金徽'];
+const effectLine = id => {
+const spec = window.COMBAT_BADGES[id];
+return `<div class="ar-badge-effect">${tierNames.map((name, i) => `<small>${cvT(name)}：${cvT(spec.tiers[i])}</small>`).join('')}</div>`;
+};
+const previewButton = (id, tier) => `<button type="button" class="ghost small" data-badge-preview="${id}" data-badge-tier="${tier}">${cvT('训练场试招')}</button>`;
+const badgeCard = (id, tier, giftCard = false) => {
+const b = C.BADGES[id], currentName = tierNames[tier === 'gold' ? 1 : tier === 'purpgold' ? 2 : 0];
+const trigger = (window.COMBAT_BADGES && window.COMBAT_BADGES[id] && window.COMBAT_BADGES[id].trigger) || b.effect;
+const up = giftCard ? null : C.BADGE_UPGRADE[tier];
+const ready = up && totalKOs >= up.kos && s.badgeSigils >= up.sigils && PROF.ink >= up.ink;
+const requirements = up ? `<div class="ar-badge-req"><small class="${s.badgeSigils >= up.sigils ? 'met' : ''}">${cvT('碎片')} ${s.badgeSigils}/${up.sigils}</small><small class="${PROF.ink >= up.ink ? 'met' : ''}">${cvT('墨锭')} ${fmt(PROF.ink)}/${fmt(up.ink)}</small><small class="${totalKOs >= up.kos ? 'met' : ''}">${cvT('斩')} ${totalKOs}/${up.kos}</small></div>` : '';
+const upgrade = up ? `${requirements}<button type="button" class="go small" data-badge-upgrade="${id}" ${live() && ready ? '' : 'disabled'}>${cvT('升阶')} ${cvT(up.to === 'gold' ? '金徽' : '紫金徽')}</button>` : giftCard ? '' : `<small>${cvT('已达最高阶')}</small>`;
+return `<article class="ar-card ar-badge-card"><b>${cvT(b.name)}${giftCard ? '' : ` · ${cvT(currentName)}`}</b><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT(trigger)}</small>${effectLine(id)}<div class="ar-badge-actions">${giftCard ? `<button type="button" class="go small" data-badge-gift="${id}" ${live() ? '' : 'disabled'}>${cvT('领取银徽')}</button>` : upgrade}${previewButton(id, tier)}</div></article>`;
+};
+const gift = !s.badgeGift ? `<div class="ar-badge-gift"><div><h3>${cvT('初入武学 · 银徽赠礼')}</h3><p>${cvT('任选一枚银徽体验武学效果。徽记绑定账号，可在不同侠客之间调换。')}</p></div><div class="ar-grid3">${ids.map(id => badgeCard(id, 'silver', true)).join('')}</div></div>` : '';
+const stock = owned.length ? `<div class="ar-grid3">${owned.map(([id, tier]) => badgeCard(id, tier)).join('')}</div>` : `<p class="ar-note">${cvT('领取一枚银徽后，会在这里查看、升阶和装备。')}</p>`;
 const heroes = CHARS.map(ch => {
 const kos = s.heroKOs[ch.id] || 0, unlocked = kos >= 20, stance = s.stances[ch.id] === 1 ? 1 : 0, equipped = s.badgeEquip[ch.id] || '';
 const options = [`<option value="">不装备</option>`, ...owned.map(([id]) => `<option value="${id}" ${equipped === id ? 'selected' : ''}>${cvT(C.BADGES[id].name)} · ${cvT(s.badgeOwned[id] === 'silver' ? '银徽' : s.badgeOwned[id] === 'gold' ? '金徽' : '紫金徽')}</option>`)].join('');
@@ -37621,7 +37850,9 @@ const stanceTitle = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(wind
 const stanceDesc = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(window.HERO_STANCES[ch.id].desc) : '';
 return `<article class="ar-card ar-loadout"><b>${escapeHTML(ch.name)}</b><small>${unlocked ? `${kos} / 20 ${cvT('斩')}` : `${kos} / 20 ${cvT('斩')} · ${cvT('未解锁')}`}</small><p>${stanceDesc}</p><div class="row"><button type="button" class="${stance ? 'ghost' : 'go'} small" data-stance="${ch.id}" data-value="0" ${live() ? '' : 'disabled'}>${cvT('本式')}</button><button type="button" class="${stance ? 'go' : 'ghost'} small" data-stance="${ch.id}" data-value="1" ${live() && unlocked ? '' : 'disabled'}>${stanceTitle}</button></div><div class="row"><select data-badge-choice="${ch.id}" aria-label="${escapeHTML(ch.name)} ${cvT('徽记')}">${options}</select><button type="button" class="go small" data-badge-set="${ch.id}" ${live() ? '' : 'disabled'}>${cvT('装备')}</button></div></article>`;
 }).join('');
-return `<div class="ar-ophead"><div><span class="ar-k">${cvT('武学与徽记')}</span><h3>${cvT('徽记碎片')} <b>${s.badgeSigils || 0}</b> · ${cvT('累计斩获')} <b>${totalKOs}</b></h3></div><p class="ar-note">${cvT('每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。')}</p></div>
+const shardProgress = totalKOs % C.BADGE_SIGIL_KOS;
+const shardBar = `<div class="ar-badge-progress"><label for="arBadgeShardProgress">${cvT('距离下一枚徽记碎片')}</label><progress id="arBadgeShardProgress" max="${C.BADGE_SIGIL_KOS}" value="${shardProgress}"></progress><small>${shardProgress} / ${C.BADGE_SIGIL_KOS} · ${C.BADGE_SIGIL_KOS - shardProgress} ${cvT('斩后获得')}</small></div>`;
+return `<div class="ar-ophead"><div><span class="ar-k">${cvT('武学与徽记')}</span><h3>${cvT('徽记碎片')} <b>${s.badgeSigils || 0}</b> · ${cvT('累计斩获')} <b>${totalKOs}</b></h3>${shardBar}</div><p class="ar-note">${cvT('每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。')}</p></div>
 ${gift}<h4 class="ar-h">${cvT('我的徽记')}</h4>${stock}<h4 class="ar-h">${cvT('侠客架势与装备')}</h4><div class="ar-grid3">${heroes}</div>`;
 }
 function covPick() {
@@ -37656,6 +37887,7 @@ if (pv) { inspect({ i: -1, k: pv.dataset.pv, st: -1, t: 0 }, 'pv'); return; }
 const b = e.target.closest('button'); if (!b || b.disabled) return;
 const d = b.dataset;
 if (d.gotab) { TAB = d.gotab; if (d.mkv) MK.view = d.mkv; render(); return; }
+if (d.badgePreview) { startBadgeTrainingPreview(d.badgePreview, d.badgeTier); return; }
 if (d.badgeGift) { const r = await act('badgeGift', { id: d.badgeGift }); if (r && r.ok) { toast(`获得银徽「${cvT(C.BADGES[r.id].name)}」`); render(); } return; }
 if (d.badgeUpgrade) { const r = await act('badgeUpgrade', { id: d.badgeUpgrade }); if (r && r.ok) { toast(`徽记已升阶：${cvT(C.BADGES[r.id].name)} · ${cvT(r.tier === 'gold' ? '金徽' : '紫金徽')}`); render(); } return; }
 if (d.stance) { const r = await act('stanceSet', { hero: d.stance, stance: +d.value }); if (r && r.ok) { toast('已设置出战架势'); render(); } return; }

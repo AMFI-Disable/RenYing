@@ -841,7 +841,7 @@ const SKILLS = {
         spawnProj(f, {
           kind: 'ironball', yoyo: true, yoyoPhase: 'loop', yoyoLeg: 'out', yoyoDir: f.face,
           yoyoCycle: 0, yoyoHitAt: {}, x: f.x + f.face * 40, y: f.y - 58, vx: f.face * 1450, vy: 0,
-          g: 0, w: 36, h: 36, life: 999999, dmg: 24, kb: [180, -120], stun: 0.24, hs: 0.06,
+          g: 0, w: 36, h: 36, life: 999999, dmg: 24, kb: [180, -120], stun: 0.24, hs: 0.06, guardDamage: 34, blockGuardDamage: 12,
           speedTier: 2, resting: false, unbreakable: true, pierce: true, rehit: 0.7
         });
         ring(f.x + f.face * 40, f.y - 58, 60, f.look.slash || '235,165,70', 0.3);

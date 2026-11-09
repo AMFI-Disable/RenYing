@@ -21,6 +21,14 @@ function startAttack(f, name) {
   f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
   const foe = foeOf(f), h = f.ctrl && f.ctrl.held, dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0, a = dir || (h && h.aim);
   f.face = f.onGround() ? faceDir(f, foe) : ((a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl))) ? a : f.face);
+  const heavy = name === 'hv' || name === 'cs1' || name === 'cs2';
+  if (heavy && f.badgeId === 'riposte' && f.badgeRiposteT > 0) {
+    f.move = { ...f.move, lunge: (f.move.lunge || 0) + (f.badgeTier === 'purpgold' ? 58 : 48) };
+    f.badgeRiposteT = 0; showBadgeCue(f, 'riposte', true);
+  } else if (heavy && f.badgeId === 'breaker' && f.badgeTier === 'purpgold' && f.badgeBreakT > 0) {
+    f.move = { ...f.move, lunge: (f.move.lunge || 0) + 52 };
+    f.badgeBreakT = 0; showBadgeCue(f, 'breaker', true);
+  }
   if (scOn()) scFire(f, 'atk', foe, name);
 }
 function doJump(f, dir) {
@@ -33,11 +41,21 @@ function doJump(f, dir) {
   if (scOn()) scFire(f, 'jump', foeOf(f));
 }
 function startDash(f, dir) {
-  f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * dir; f.vy = 0;
+  f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * (f.badgeId === 'breaker' && f.badgeBreakT > 0 ? 1.12 : 1) * dir; f.vy = 0;
+  if (f.badgeId === 'breaker' && f.badgeBreakT > 0) { f.badgeBreakT = 0; showBadgeCue(f, 'breakerDash', true); }
   if (f.badgeId === 'pursuit') f.badgeDashT = 1.0;
   f.invul = 0.13; f.dashCD = DODGE_CD;
   if (f.onGround()) dust(f.x - dir * 20, 0, 8);
   SFX.dash();
+  if (scOn()) scFire(f, 'dash', foeOf(f));
+}
+function startBadgeDash(f, dir, kind) {
+  endEscape(f);
+  f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * (kind === 'flow' ? 0.62 : kind === 'air' ? 1 : 0.72) * dir; f.vy = 0;
+  f.badgeDashT = 0; f.dashCD = DODGE_CD;
+  f.invul = kind === 'exit' && f.badgeTier === 'purpgold' ? 0.08 : 0;
+  if (f.onGround()) dust(f.x - dir * 16, 0, 6);
+  ring(f.x, f.y - 50, 82, f.look.slash || '233,196,106', 0.24); SFX.dash();
   if (scOn()) scFire(f, 'dash', foeOf(f));
 }
 function startSpecial(f) {
@@ -187,6 +205,39 @@ function attackUpdate(f, foe) {
   }
   if (t >= act0 && t < act1 && !f.hitDone) tryHit(f, foe, m);
   const free2 = (SKILLS[f.ch.skill2] || {}).free;   // free：只能从自由状态放，不能接在出招后面（离影的换影）
+  if (M.phase === 'fight' && t >= act1 && t < act1 + m.rc) {
+    if (f.badgeId === 'ascent' && f.badgeAirSkillT > 0 && !f.onGround() && f.airDash > 0 && c.consume('dash')) {
+      const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0) || f.face;
+      f.airDash--; f.badgeAirSkillT = 0; startBadgeDash(f, dir, 'air'); showBadgeCue(f, 'ascent', true); return;
+    }
+    if (f.badgeId === 'flowing' && f.badgeLinkT > 0 && c.consume('dash')) {
+      const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0) || f.face;
+      f.badgeLinkT = 0; startBadgeDash(f, dir, 'flow'); showBadgeCue(f, 'flowing', true); return;
+    }
+    if (f.badgeId === 'pursuit' && f.badgeExitT > 0 && c.consume('dash')) {
+      const inputDir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0), dir = inputDir || -f.face;
+      f.badgeExitT = 0; startBadgeDash(f, dir, 'exit'); showBadgeCue(f, 'pursuit', true); return;
+    }
+    const canBadgeSkill = f.badgeTier === 'purpgold' && f.hitConfirmed && (
+      (f.badgeId === 'flowing' && f.badgeLinkT > 0) ||
+      (f.badgeId === 'focus' && f.badgePressureT > 0) ||
+      (f.badgeId === 'ascent' && f.badgeAirSkillT > 0 && !f.onGround() && !f.badgeAirSkillUsed)
+    );
+    if (canBadgeSkill) {
+      let slot = 0;
+      if (f.skillCD <= 0 && c.consume('skill')) slot = 1;
+      else if (f.skill2CD <= 0 && !free2 && c.consume('skill2')) slot = 2;
+      if (slot) {
+        startSkill(f, foe, slot === 2 ? 2 : undefined);
+        if (f.state === 'skill') {
+          if (f.badgeId === 'flowing') f.badgeLinkT = 0;
+          if (f.badgeId === 'focus') { f.badgePressureT = 0; f.badgePressureSkill = 1; }
+          if (f.badgeId === 'ascent') { f.badgeAirSkillT = 0; f.badgeAirSkillUsed = 1; }
+          showBadgeCue(f, f.badgeId, true); return;
+        }
+      }
+    }
+  }
   if (M.phase === 'fight' && cx.skill2FromLight && !free2 && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
   if (M.phase === 'fight' && (t >= act0 + m.ac * cx.chainAt || (f.hitConfirmed && f.moveName === 'dl'))) {
     if (m.next.light && c.consume('light')) return startAttack(f, m.next.light);
@@ -452,7 +503,16 @@ function spawnProj(f, o) {
     if (o.h) o.h = Math.round(o.h * 1.8);
     ring(o.x, o.y, 110, f.look.slash || '255,215,80', 0.35);
   }
-  if ((f.state === 'skill' || (f.state === 'special' && o.ult)) && !o.noRangeBoost && Number.isFinite(o.vx) && Math.abs(o.vx) > 1 && o.life < 1000) o.life *= 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
+  const skillProjectile = f.state === 'skill' || (f.state === 'special' && o.ult);
+  if ((skillProjectile || o.isWave) && Number.isFinite(o.vx) && Math.abs(o.vx) > 1 && o.life < 1000) {
+    if (skillProjectile && !o.noRangeBoost) o.life *= 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
+    // Ranged skills and Li Ying's shadow waves travel to the edge on every map, even when that map is wider than their old fixed lifetime.
+    if (Number.isFinite(o.x) && Math.abs(o.vy || 0) < Math.abs(o.vx) * 0.45) {
+      const edge = o.vx > 0 ? STAGE_W - WALL : WALL;
+      const travel = Math.max(0, (edge - o.x) * Math.sign(o.vx));
+      o.life = Math.max(o.life, (travel + (o.w || 0)) / Math.abs(o.vx));
+    }
+  }
   const projectile = Object.assign({ id: ++projSeq, owner: f.idx, vy: 0, life: 1, age: 0, hits: 0, hitCD: 0, delay: 0, isProj: true }, o);
   if (projectile.autoAim) {
     const target = foeOf(f), speed = Math.hypot(projectile.vx || 0, projectile.vy || 0);
@@ -476,22 +536,25 @@ function spawnProj(f, o) {
   }
 }
 function projBox(p) { return [p.x - p.w / 2, p.y - p.h / 2, p.x + p.w / 2, p.y + p.h / 2]; }
+const ironBallInvulnerable = f => f.invul > 0 && !(f.onGround() && ['idle', 'walk', 'block', 'blockstun'].includes(f.state));
 function resolveYoyoBallHits(p, owner, box) {
   if (!owner || !p.dmg) return;
   const foes = isMulti() ? foesOf(owner) : [foeOf(owner)];
   p.yoyoHitAt = p.yoyoHitAt || {};
   p.yoyoUltDealt = p.yoyoUltDealt || {};
   for (const foe of foes) {
-    if (!foe || foe.hp <= 0 || foe.invul > 0 || !overlap(box, hurtbox(foe))) continue;
+    if (!foe || foe.hp <= 0 || ironBallInvulnerable(foe) || foe.ballGuardBreakT > 0 || !overlap(box, hurtbox(foe))) continue;
     if ((p.yoyoHitAt[foe.idx] || -99) + (p.yoyoPhase === 'loop' ? 0.72 : 0.3) > p.age) continue;
+    const speed = Math.abs(p.vx || 0);
+    const speedDmg = clamp(0.8 + speed / 5000, 0.9, 1.45);
     if (p.yoyoPhase === 'ult-pass' || p.yoyoPhase === 'ult-return') {
       const remain = 120 - (p.yoyoUltDealt[foe.idx] || 0);
       if (remain <= 0) continue;
-      const dmg = Math.min(p.dmg, remain);
-      applyHit(owner, foe, { dmg, kb: [260, -300], stun: 0.32, hs: 0.08, launch: true, ult: true, noScale: true, dir: p.yoyoDir || owner.face }, [p.x, p.y]);
+      const dmg = Math.min(p.dmg * speedDmg, remain);
+      applyHit(owner, foe, { dmg, kb: [260, -300], stun: 0.32, hs: 0.08, launch: true, ult: true, noScale: true, isProj: true, guardDamage: 24, blockGuardDamage: 12, dir: Math.sign(p.vx) || p.yoyoDir || owner.face, srcX: p.x, backAttack: true }, [p.x, p.y]);
       p.yoyoUltDealt[foe.idx] = (p.yoyoUltDealt[foe.idx] || 0) + dmg;
     } else {
-      applyHit(owner, foe, { dmg: p.dmg, kb: [180, -120], stun: p.yoyoPhase === 'lash' ? 0.38 : 0.24, hs: 0.06, launch: false, dir: p.yoyoDir || owner.face }, [p.x, p.y]);
+      applyHit(owner, foe, { dmg: p.dmg * speedDmg, kb: [180, -120], stun: p.yoyoPhase === 'lash' ? 0.38 : 0.24, hs: 0.06, launch: false, isProj: true, guardDamage: p.yoyoPhase === 'lash' ? 44 : 34, blockGuardDamage: p.yoyoPhase === 'lash' ? 18 : 12, dir: Math.sign(p.vx) || p.yoyoDir || owner.face, srcX: p.x, backAttack: true }, [p.x, p.y]);
     }
     p.yoyoHitAt[foe.idx] = p.age;
     p.hits = (p.hits || 0) + 1;
@@ -531,10 +594,10 @@ function updateProjs() {
     if (p.kind === 'ironball' && p.yoyo) {
       const owner = fighterByIdx(p.owner), phase = p.yoyoPhase || 'loop';
       if (!owner || owner.hp <= 0) { p.dead = true; continue; }
-      const ice = !!(mapNow() && mapNow().ice), qRange = Math.min(600, STAGE_W * 0.24);
+      const ice = !!(mapNow() && mapNow().ice), qRange = STAGE_W - WALL * 2;
       const arenaMin = WALL + 18, arenaMax = STAGE_W - WALL - 18;
       const gearBoost = p.yoyoBoostT > 0 ? (p.yoyoGearBoost ? 1.4 : 1.25) : 1;
-      const loopSpeed = (ice ? 1550 : 1850) * gearBoost;
+      const loopSpeed = (ice ? 2050 : 2300) * gearBoost;
       p.yoyoBoostT = Math.max(0, (p.yoyoBoostT || 0) - STEP);
       if (phase === 'loop') {
         if (p.yoyoDmgT > 0) { p.yoyoDmgT = Math.max(0, p.yoyoDmgT - STEP); if (!p.yoyoDmgT) { p.dmg = 24; p.yoyoGearBoost = false; } }
@@ -542,7 +605,10 @@ function updateProjs() {
         p.yoyoDir = p.yoyoDir || owner.face || 1;
         if (!p.yoyoLeg) p.yoyoLeg = 'out';
         if (p.yoyoLeg === 'return' && Math.abs(p.x - owner.x) < 56) {
-          p.yoyoLeg = 'out'; p.yoyoDir = owner.face || p.yoyoDir; p.yoyoCycle = (p.yoyoCycle || 0) + 1;
+          p.yoyoLeg = 'out';
+          const facing = owner.face || p.yoyoDir;
+          p.yoyoDir = (facing < 0 && owner.x - arenaMin < 56) || (facing > 0 && arenaMax - owner.x < 56) ? -facing : facing;
+          p.yoyoCycle = (p.yoyoCycle || 0) + 1;
         }
         if (p.yoyoLeg === 'out' && Math.abs(p.x - owner.x) >= qRange - 8) p.yoyoLeg = 'return';
         p.vx = (p.yoyoLeg === 'return' ? Math.sign(owner.x - p.x) || -p.yoyoDir : p.yoyoDir) * loopSpeed;
@@ -582,9 +648,9 @@ function updateProjs() {
           const minVy = -260;
           if (p.vy > 60 || Math.abs(p.vy) > 80) {
             const eavesBonus = terrainMap === MAPS.pagoda && mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji';
-            p.vy = -Math.abs(p.vy) * (eavesBonus ? 0.98 : 0.85);
+            p.vy = -Math.abs(p.vy) * (eavesBonus ? 0.99 : 0.92);
             if (p.vy > minVy) p.vy = minVy;
-            p.vx *= ice ? (mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji' ? 0.985 : 0.97) : 0.94;
+            p.vx *= ice ? (mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji' ? 0.99 : 0.985) : 0.975;
             p.bounceCount = (p.bounceCount || 0) + 1;
             dust(p.x, 0, 7); ring(p.x, 0, 36, '235,165,70', 0.18); SFX.ballHit();
           } else {
@@ -593,15 +659,15 @@ function updateProjs() {
             p.vx *= ice ? (mapFavOn(ballOwner) && ballOwner.ch.id === 'qianji' ? 0.99 : 0.985) : 0.96;
           }
         }
-        // 墙壁弹性高反弹（保留 88% 水平动能并获得轻微上弹）
-        if (p.x <= WALL + 18) {
+        // 墙壁弹性高反弹（保留 94% 水平动能并获得轻微上弹）
+        if (p.x + p.vx * STEP <= WALL + 18) {
           p.x = WALL + 18;
-          p.vx = Math.max(380, Math.abs(p.vx) * 0.88);
+          p.vx = Math.max(520, Math.abs(p.vx) * 0.94);
           p.vy = Math.min(p.vy, -160);
           ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
-        } else if (p.x >= STAGE_W - WALL - 18) {
+        } else if (p.x + p.vx * STEP >= STAGE_W - WALL - 18) {
           p.x = STAGE_W - WALL - 18;
-          p.vx = -Math.max(380, Math.abs(p.vx) * 0.88);
+          p.vx = -Math.max(520, Math.abs(p.vx) * 0.94);
           p.vy = Math.min(p.vy, -160);
           ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
         }
@@ -640,8 +706,17 @@ function updateProjs() {
     mapWindProj(p);   // 竹海悬岩的风
     if (p.kind === 'ironball' && p.yoyo) {
       const owner = fighterByIdx(p.owner), range = p.yoyoRange || 600;
-      if (owner && (p.yoyoPhase === 'loop' || p.yoyoPhase === 'lash')) p.x = clamp(p.x, owner.x - range, owner.x + range);
-      else p.x = clamp(p.x, WALL + 18, STAGE_W - WALL - 18);
+      const wallL = WALL + 18, wallR = STAGE_W - WALL - 18;
+      p.x = clamp(p.x, wallL, wallR);
+      if (owner && p.yoyoPhase === 'loop' && ((p.x <= wallL && p.vx < 0) || (p.x >= wallR && p.vx > 0))) {
+        p.yoyoLeg = 'return'; p.yoyoDir = Math.sign(owner.x - p.x) || (p.x <= wallL ? 1 : -1);
+        ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
+      } else if (owner && p.yoyoPhase === 'lash' && ((p.x <= wallL && p.vx < 0) || (p.x >= wallR && p.vx > 0))) {
+        p.yoyoPhase = 'loop'; p.yoyoLeg = 'return'; p.yoyoActionT = 0;
+        p.yoyoDir = Math.sign(owner.x - p.x) || (p.x <= wallL ? 1 : -1);
+        ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
+      }
+      if (owner && (p.yoyoPhase === 'loop' || p.yoyoPhase === 'lash')) p.x = clamp(p.x, Math.max(wallL, owner.x - range), Math.min(wallR, owner.x + range));
       p.y = clamp(p.y, -560, -24);
     }
     if (p.grow) { p.w += p.grow * STEP; p.h += p.grow * STEP; }
@@ -661,7 +736,7 @@ function updateProjs() {
     }
     hitClones(box, p.owner, p.dmg);
     if (hitDecoyBox(box, p.owner)) { if (!p.pierce) p.dead = true; continue; }
-    if (p.hitCD > 0 || foe.invul > 0 || foe.hp <= 0) continue;
+    if (p.hitCD > 0 || (p.kind === 'ironball' ? ironBallInvulnerable(foe) || foe.ballGuardBreakT > 0 : foe.invul > 0) || foe.hp <= 0) continue;
     if ((p.groundOnly || p.kind === 'quake') && (foe.y < -16 || foe.flying)) continue;
     if (!overlap(box, hurtbox(foe))) continue;
     if (p.feast) {   // 与民同乐：砸中就得陪着喝
@@ -1251,6 +1326,7 @@ function updateFighter(f, foe) {
   f.dashCD = Math.max(0, f.dashCD - STEP);
   f.stanceT = Math.max(0, (f.stanceT || 0) - STEP);
   f.badgeDashT = Math.max(0, (f.badgeDashT || 0) - STEP);
+  for (const key of ['badgeLinkT', 'badgePressureT', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'ballGuardBreakT']) f[key] = Math.max(0, (f[key] || 0) - STEP);
   f.breakCD = Math.max(0, f.breakCD - STEP);
   f.skill2CD = Math.max(0, f.skill2CD - STEP);
   if (f.ch.inkShot) f.ink = Math.min(INK_MAX, (f.ink || 0) + INK_REGEN * STEP);
@@ -1496,6 +1572,7 @@ function physics(f) {
   }
 }
 function onLand(f) {
+  f.badgeAirUsed = 0; f.badgeAirSkillUsed = 0; f.badgeAirSkillT = 0;
   if (scOn()) scFire(f, 'land', foeOf(f), f.vy);
   f.wallBounced = false;
   if (f.airRecover) {

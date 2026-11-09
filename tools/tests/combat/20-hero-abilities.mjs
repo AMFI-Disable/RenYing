@@ -244,7 +244,7 @@ export default [
 
       let maxTether = 0;
       for (let i = 0; i < 300; i++) { step(); maxTether = Math.max(maxTether, Math.abs(ball.x - A.x)); }
-      if ((ball.yoyoCycle || 0) < 1 || maxTether > 620 || Math.abs(ball.vx) < 1700) return { pass: false, error: 'Loop stalled, broke tether or lost speed: cycles=' + ball.yoyoCycle + ', distance=' + maxTether + ', vx=' + ball.vx };
+      if ((ball.yoyoCycle || 0) < 1 || maxTether < STAGE_W * 0.34 || maxTether > STAGE_W || Math.abs(ball.vx) < 2000) return { pass: false, error: 'Loop failed to reach the map edge, return, or keep its faster speed: cycles=' + ball.yoyoCycle + ', distance=' + maxTether + ', vx=' + ball.vx };
 
       toNeutral(A); ball.x = A.x + 48; ball.y = A.y - 58; ball.yoyoPhase = 'staged'; ball.yoyoDir = -1; ball.vx = 0;
       startAttack(A, 'l1');
@@ -272,6 +272,51 @@ export default [
       for (let i = 0; i < 600 && A.state === 'special'; i++) step();
       if (A.state === 'special' || A.skillCD > 0 || projs.some(p => p.kind === 'ironball' && p.owner === A.idx && !p.dead)) return { pass: false, error: 'E could not summon, pass, and return a missing ball' };
       toMenu(); return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Qianji ball reaches map edges, scales damage with speed, strikes backs, drains posture, and respects guard-break protection',
+    fn: `(() => {
+      startMatch('train', 'stand', [CHAR_IDX.qianji, CHAR_IDX.tieshan]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = f.vy = 0; f.invul = 0; f.ballGuardBreakT = 0; f.hp = f.maxHp; f.guard = f.maxGuard; }
+      const left = WALL + 18; A.x = left + 26; A.face = -1; B.x = STAGE_W / 2; projs.length = 0;
+      const ball = { kind: 'ironball', owner: A.idx, yoyo: true, yoyoPhase: 'loop', yoyoLeg: 'out', yoyoDir: -1, yoyoRange: 600, x: left + 4, y: -58, vx: -1800, vy: 0, g: 0, w: 36, h: 36, life: 999, age: 0, dmg: 24, hitCD: 0, yoyoHitAt: {} };
+      projs.push(ball); updateProjs(); const wallReturned = ball.yoyoLeg === 'return' && ball.x === left;
+      updateProjs(); const escapedWall = ball.x > left && ball.vx > 0;
+
+      A.x = STAGE_W / 2 - 180; A.face = 1; B.x = STAGE_W / 2 + 180; B.y = 0; B.plat = -1; B.invul = 0; B.ballGuardBreakT = 0; B.state = 'idle'; B.guard = 100; B.hp = B.maxHp;
+      applyHit(A, B, { dmg: 24, kb: [180, -120], stun: 0.24, hs: 0.06, guardDamage: 34, blockGuardDamage: 12, dir: 1 }, [B.x, B.y - 58]);
+      const hitGuard = B.guard;
+      B.state = 'block'; B.t = 0; B.blockT = 1; B.vx = 0; B.guard = 100; B.hp = B.maxHp; B.invul = 0; B.ballGuardBreakT = 0;
+      applyHit(A, B, { dmg: 24, kb: [180, -120], stun: 0.24, hs: 0.06, guardDamage: 34, blockGuardDamage: 12, dir: 1 }, [B.x, B.y - 58]);
+      const blockedGuard = B.guard;
+      const frontBlockDamage = B.maxHp - B.hp;
+      B.state = 'block'; B.t = 0; B.blockT = 1; B.vx = 0; B.guard = 100; B.hp = B.maxHp; B.invul = 0; B.ballGuardBreakT = 0; B.face = -1;
+      ball.x = B.x + 16; ball.y = B.y - 58; ball.vx = -2300; ball.dmg = 24; ball.yoyoPhase = 'loop'; ball.yoyoHitAt = {}; ball.age = 2;
+      resolveYoyoBallHits(ball, A, hurtbox(B));
+      const backHitDamage = B.maxHp - B.hp, backBlockGuard = B.guard;
+      B.state = 'idle'; B.t = 0; B.blockT = 1; B.vx = 0; B.guard = 100; B.hp = B.maxHp; B.invul = 0; B.ballGuardBreakT = 0;
+      B.invul = 0.1; ball.x = B.x + 16; ball.y = B.y - 58; ball.vx = -1800; ball.dmg = 24; ball.yoyoHitAt = {}; ball.age = 2.5;
+      resolveYoyoBallHits(ball, A, hurtbox(B));
+      const standingInvulDamage = B.maxHp - B.hp;
+      B.hp = B.maxHp; B.invul = 0;
+      ball.x = B.x + 16; ball.y = B.y - 58; ball.vx = -900; ball.dmg = 24; ball.yoyoHitAt = {}; ball.age = 3;
+      resolveYoyoBallHits(ball, A, hurtbox(B));
+      const slowDamage = B.maxHp - B.hp;
+      B.state = 'idle'; B.t = 0; B.blockT = 1; B.vx = 0; B.guard = 100; B.hp = B.maxHp; B.invul = 0; B.ballGuardBreakT = 0;
+      ball.x = B.x + 16; ball.y = B.y - 58; ball.vx = -2500; ball.dmg = 24; ball.yoyoHitAt = {}; ball.age = 4;
+      resolveYoyoBallHits(ball, A, hurtbox(B));
+      const fastDamage = B.maxHp - B.hp;
+      B.state = 'block'; B.t = 0; B.blockT = 1; B.vx = 0; B.guard = 1; B.hp = B.maxHp; B.invul = 0; B.ballGuardBreakT = 0;
+      ball.x = B.x - 16; ball.y = B.y - 58; ball.vx = 2500; ball.yoyoPhase = 'loop'; ball.yoyoDir = 1; ball.yoyoHitAt = {}; ball.age = 2;
+      const box = hurtbox(B); resolveYoyoBallHits(ball, A, box); const broke = B.guard === 0 && B.ballGuardBreakT >= 0.84;
+      const hpAfterBreak = B.hp; resolveYoyoBallHits(ball, A, box); const protected = B.hp === hpAfterBreak;
+      const ballGuardIndex = FK.indexOf('ballGuardBreakT'); A.ballGuardBreakT = 0.37;
+      const rollbackState = ballGuardIndex >= 0 && snapF(A)[ballGuardIndex] === 0.37;
+      toMenu();
+      const ok = wallReturned && escapedWall && hitGuard <= 66 && blockedGuard <= 65 && backHitDamage > frontBlockDamage && backBlockGuard === 100 && standingInvulDamage > 0 && fastDamage > slowDamage && broke && protected && rollbackState;
+      return { pass: ok, error: JSON.stringify({ wallReturned, escapedWall, hitGuard, blockedGuard, frontBlockDamage, backHitDamage, backBlockGuard, standingInvulDamage, slowDamage, fastDamage, broke, protected, rollbackState, guardTimer: B.ballGuardBreakT }) };
     })()`
   }
 ];

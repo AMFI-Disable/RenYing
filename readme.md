@@ -8,7 +8,7 @@
 *Made by Even, Luffy, Opus 5.5 and Gemini 4 Argon. Plain JavaScript on one canvas, peer-to-peer online play, and an optional Cloudflare Worker for accounts.*
 
 [![Play: GitHub Pages](https://img.shields.io/badge/Play-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
-[![Version: 1.0.6](https://img.shields.io/badge/Version-1.0.6-blue.svg?style=flat-square)](docs/history/changelog.md)
+[![Client: 1.0.11](https://img.shields.io/badge/Client-1.0.11-blue.svg?style=flat-square)](docs/history/changelog.md)
 [![Heroes: 16](https://img.shields.io/badge/Heroes-16-red.svg?style=flat-square)](#heroes)
 [![Tech: HTML5 Canvas](https://img.shields.io/badge/Tech-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](#how-it-works)
 [![Online: WebRTC + Rollback](https://img.shields.io/badge/Online-WebRTC%20%2B%20Rollback-blue.svg?style=flat-square)](#how-it-works)
@@ -44,6 +44,33 @@
 The game is made for playing with friends straight away. Open the link, share a four-character room code, and the two browsers connect directly to each other. There is also a single-file offline edition that works with no network at all.
 
 The game is bilingual: Simplified Chinese and English, switchable at any time from the top bar or settings.
+
+---
+
+## Screenshots
+
+These captures show the English interface in combat, hero draft and the Armory. [Browse the full screenshot set](docs/media/screenshots/readme.md).
+
+<p align="center">
+  <a href="docs/media/screenshots/en/01-home.jpg"><img src="docs/media/screenshots/en/01-home.jpg" width="48%" alt="English home screen with Qing Feng under the moon" /></a>
+  <a href="docs/media/screenshots/en/03-combo.jpg"><img src="docs/media/screenshots/en/03-combo.jpg" width="48%" alt="Qing Feng's seven-hit combo with Sword Qi returning" /></a>
+</p>
+
+<p align="center"><strong>Home screen</strong> · <strong>Combo and returning Sword Qi</strong></p>
+
+<p align="center">
+  <a href="docs/media/screenshots/en/04-ultimate.jpg"><img src="docs/media/screenshots/en/04-ultimate.jpg" width="48%" alt="Qing Feng's Crescent Moon ultimate" /></a>
+  <a href="docs/media/screenshots/en/06-2v2.jpg"><img src="docs/media/screenshots/en/06-2v2.jpg" width="48%" alt="A 2v2 fight with lightning strikes" /></a>
+</p>
+
+<p align="center"><strong>Crescent Moon ultimate</strong> · <strong>2v2 battle</strong></p>
+
+<p align="center">
+  <a href="docs/media/screenshots/en/07-hero-draft.jpg"><img src="docs/media/screenshots/en/07-hero-draft.jpg" width="48%" alt="Hero draft with all sixteen heroes" /></a>
+  <a href="docs/media/screenshots/en/08-case-opening.jpg"><img src="docs/media/screenshots/en/08-case-opening.jpg" width="48%" alt="Opening a Zodiac Case in the Armory" /></a>
+</p>
+
+<p align="center"><strong>Hero draft</strong> · <strong>Armory case opening</strong></p>
 
 ---
 
@@ -150,6 +177,7 @@ The armory (武库) is the game's cosmetic collection. Skins and weapon looks ne
 - **Reforge pacts (熔铸契)** turn ten items of one tier into one item of the next tier.
 - **Player market (玩家市场)** lets players list items for Ink; a fee is removed from each sale so Ink does not pile up.
 - **Peddler (货郎)** shows one offer at a time at a fixed price.
+- **Combat loadouts** add an alternate stance for each hero and account-bound martial badges with action-triggered effects. KOs unlock stances and earn badge upgrade materials; these are separate from cosmetic skins.
 
 Every armory action on a cloud account is checked and recorded by the server. Details: [wiki: Armory](https://github.com/AMFI-Disable/RenYing/wiki/Armory-and-Marketplace).
 

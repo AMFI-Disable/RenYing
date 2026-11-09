@@ -17,7 +17,6 @@
   'use strict';
   const C = window.ArmoryCore;
   if (!C || typeof PROF === 'undefined' || typeof SKINS === 'undefined') return;
-  if (typeof OFFLINE_BUILD !== 'undefined' && OFFLINE_BUILD) return;   // 离线版没有武库（也不把武库皮肤放进图鉴）
   // 开局就记下原生的取时间、取随机数、云端接口，后面有人在控制台换掉也不影响这里
   const NOW = Date.now.bind(Date);
   const GRV = crypto.getRandomValues.bind(crypto);
@@ -225,7 +224,7 @@
   }
   const SALT = 'ry-armory|v1|';
   const sigOf = s => C.hash32(SALT + UID + '|' + JSON.stringify(s)).toString(36) + C.hash32(JSON.stringify(s) + '|' + UID + SALT).toString(36);
-  const user = () => (window.CloudSave && CloudSave.getUser && CloudSave.getUser()) || null;
+  const user = () => OFFLINE_BUILD ? { uid: 'renying-offline', isCloud: false } : (window.CloudSave && CloudSave.getUser && CloudSave.getUser()) || null;
   const cloudOn = () => { const u = user(); return !!(u && u.isCloud && ECON); };
   const live = () => !!ST && (MODE === 'server' || MODE === 'local');   // 现在能不能开箱、买卖
   const OLD_MSG = '服务器还是旧版武库，等更新到新版以后才能用';
@@ -241,8 +240,37 @@
   });
   let LOCAL_V;   // 云端账号存档里带的武库数据：只在服务器还没升级（不认武库）时才用
   if (PRE_ARMORY && typeof PRE_ARMORY === 'object') setTimeout(() => { if (!ST && MODE !== 'server') { loadLocal(PRE_ARMORY); migrateLocal(); } }, 0);
+  function unlockOfflineArmory(s) {
+    s.badgeGift = 1;
+    s.badgeOwned = Object.fromEntries(Object.keys(C.BADGES).map(id => [id, 'purpgold']));
+    s.badgeSigils = Math.max(99, s.badgeSigils || 0);
+    s.heroKOs = Object.fromEntries(C.HERO_IDS.map(id => [id, Math.max(300, s.heroKOs[id] || 0)]));
+    s.stances = Object.fromEntries(C.HERO_IDS.map(id => [id, 1]));
+    const equipped = new Set(Object.values(s.badgeEquip));
+    const freeHeroes = C.HERO_IDS.filter(id => !s.badgeEquip[id]);
+    for (const id of Object.keys(C.BADGES)) {
+      if (equipped.has(id)) continue;
+      const hero = freeHeroes.shift();
+      if (!hero) break;
+      s.badgeEquip[hero] = id;
+      equipped.add(id);
+    }
+    const env = envBase();
+    for (const key of Object.keys(C.ITEM)) {
+      if (!s.inv.some(item => item.k === key)) C.addItem(s, C.mkItem(s, key, 'offline', rnd, { st: -1, t: NOW() }), env);
+    }
+    PROF.skins = Object.keys(SKINS);
+    try { localStorage.setItem('renying-equip', JSON.stringify(PROF.equip || {})); } catch (e) {}
+    return s;
+  }
   function loadLocal(v, force) {
     const u = user(); UID = u ? String(u.uid || u.name || '') : '';
+    if (OFFLINE_BUILD) {
+      const data = v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).filter(([key]) => key !== 'sig')) : null;
+      ST = unlockOfflineArmory(C.normalize(data || C.blank(), envBase()));
+      SIG = sigOf(ST); MODE = 'local';
+      return;
+    }
     if (!u || PROF.guest) { ST = null; MODE = 'none'; return; }
     if (cloudOn() && !force && MODE !== 'local') {   // 云端账号先等服务器回话（connect），这期间什么都不能做，免得本机和服务器各记一笔
       LOCAL_V = v;
@@ -259,6 +287,7 @@
     SIG = sigOf(ST);
     MODE = 'local';
   }
+  if (OFFLINE_BUILD) loadLocal(PRE_ARMORY);
   // 以前不进库存的“绑定”皮肤：本机账号直接换成库存里的饰品（普通版），记进 via，之后和开箱得到的一样能卖能熔铸。
   // 要等这个账号的存档整个放好以后再做（applyProfile 之后），不然 PROF.skins 还是上一个账号的
   function migrateLocal() {
@@ -1076,8 +1105,23 @@
   }
   function pBadges() {
     const s = blankS(), ids = Object.keys(C.BADGES), owned = Object.entries(s.badgeOwned || {}), totalKOs = Object.values(s.heroKOs || {}).reduce((n, x) => n + x, 0);
-    const gift = !s.badgeGift ? `<div class="ar-badge-gift"><div><h3>初入武学 · 银徽赠礼</h3><p>任选一枚银徽体验武学效果。徽记绑定账号，可在不同侠客之间调换。</p></div><div class="ar-grid3">${ids.map(id => { const b = C.BADGES[id]; return `<article class="ar-card"><b>${cvT(b.name)}</b><p>${cvT(b.desc)}</p><button type="button" class="go small" data-badge-gift="${id}" ${live() ? '' : 'disabled'}>领取银徽</button></article>`; }).join('')}</div></div>` : '';
-    const stock = owned.length ? `<div class="ar-grid3">${owned.map(([id, tier]) => { const b = C.BADGES[id], up = C.BADGE_UPGRADE[tier]; return `<article class="ar-card"><b>${cvT(b.name)} · ${cvT(tier === 'silver' ? '银徽' : tier === 'gold' ? '金徽' : '紫金徽')}</b><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT((window.COMBAT_BADGES && window.COMBAT_BADGES[id] && window.COMBAT_BADGES[id].trigger) || b.effect)}</small>${up ? `<button type="button" class="go small" data-badge-upgrade="${id}" ${live() && totalKOs >= up.kos && s.badgeSigils >= up.sigils && PROF.ink >= up.ink ? '' : 'disabled'}>升阶 ${cvT(up.to === 'gold' ? '金徽' : '紫金徽')} · ${up.sigils} 碎片 · ${fmt(up.ink)} 墨锭 · ${up.kos} 斩</button>` : '<small>已达最高阶</small>'}</article>`; }).join('')}</div>` : '<p class="ar-note">领取一枚银徽后，会在这里查看、升阶和装备。</p>';
+    const tierNames = ['银徽', '金徽', '紫金徽'];
+    const effectLine = id => {
+      const spec = window.COMBAT_BADGES[id];
+      return `<div class="ar-badge-effect">${tierNames.map((name, i) => `<small>${cvT(name)}：${cvT(spec.tiers[i])}</small>`).join('')}</div>`;
+    };
+    const previewButton = (id, tier) => `<button type="button" class="ghost small" data-badge-preview="${id}" data-badge-tier="${tier}">${cvT('训练场试招')}</button>`;
+    const badgeCard = (id, tier, giftCard = false) => {
+      const b = C.BADGES[id], currentName = tierNames[tier === 'gold' ? 1 : tier === 'purpgold' ? 2 : 0];
+      const trigger = (window.COMBAT_BADGES && window.COMBAT_BADGES[id] && window.COMBAT_BADGES[id].trigger) || b.effect;
+      const up = giftCard ? null : C.BADGE_UPGRADE[tier];
+      const ready = up && totalKOs >= up.kos && s.badgeSigils >= up.sigils && PROF.ink >= up.ink;
+      const requirements = up ? `<div class="ar-badge-req"><small class="${s.badgeSigils >= up.sigils ? 'met' : ''}">${cvT('碎片')} ${s.badgeSigils}/${up.sigils}</small><small class="${PROF.ink >= up.ink ? 'met' : ''}">${cvT('墨锭')} ${fmt(PROF.ink)}/${fmt(up.ink)}</small><small class="${totalKOs >= up.kos ? 'met' : ''}">${cvT('斩')} ${totalKOs}/${up.kos}</small></div>` : '';
+      const upgrade = up ? `${requirements}<button type="button" class="go small" data-badge-upgrade="${id}" ${live() && ready ? '' : 'disabled'}>${cvT('升阶')} ${cvT(up.to === 'gold' ? '金徽' : '紫金徽')}</button>` : giftCard ? '' : `<small>${cvT('已达最高阶')}</small>`;
+      return `<article class="ar-card ar-badge-card"><b>${cvT(b.name)}${giftCard ? '' : ` · ${cvT(currentName)}`}</b><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT(trigger)}</small>${effectLine(id)}<div class="ar-badge-actions">${giftCard ? `<button type="button" class="go small" data-badge-gift="${id}" ${live() ? '' : 'disabled'}>${cvT('领取银徽')}</button>` : upgrade}${previewButton(id, tier)}</div></article>`;
+    };
+    const gift = !s.badgeGift ? `<div class="ar-badge-gift"><div><h3>${cvT('初入武学 · 银徽赠礼')}</h3><p>${cvT('任选一枚银徽体验武学效果。徽记绑定账号，可在不同侠客之间调换。')}</p></div><div class="ar-grid3">${ids.map(id => badgeCard(id, 'silver', true)).join('')}</div></div>` : '';
+    const stock = owned.length ? `<div class="ar-grid3">${owned.map(([id, tier]) => badgeCard(id, tier)).join('')}</div>` : `<p class="ar-note">${cvT('领取一枚银徽后，会在这里查看、升阶和装备。')}</p>`;
     const heroes = CHARS.map(ch => {
       const kos = s.heroKOs[ch.id] || 0, unlocked = kos >= 20, stance = s.stances[ch.id] === 1 ? 1 : 0, equipped = s.badgeEquip[ch.id] || '';
       const options = [`<option value="">不装备</option>`, ...owned.map(([id]) => `<option value="${id}" ${equipped === id ? 'selected' : ''}>${cvT(C.BADGES[id].name)} · ${cvT(s.badgeOwned[id] === 'silver' ? '银徽' : s.badgeOwned[id] === 'gold' ? '金徽' : '紫金徽')}</option>`)].join('');
@@ -1085,7 +1129,9 @@
       const stanceDesc = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(window.HERO_STANCES[ch.id].desc) : '';
       return `<article class="ar-card ar-loadout"><b>${escapeHTML(ch.name)}</b><small>${unlocked ? `${kos} / 20 ${cvT('斩')}` : `${kos} / 20 ${cvT('斩')} · ${cvT('未解锁')}`}</small><p>${stanceDesc}</p><div class="row"><button type="button" class="${stance ? 'ghost' : 'go'} small" data-stance="${ch.id}" data-value="0" ${live() ? '' : 'disabled'}>${cvT('本式')}</button><button type="button" class="${stance ? 'go' : 'ghost'} small" data-stance="${ch.id}" data-value="1" ${live() && unlocked ? '' : 'disabled'}>${stanceTitle}</button></div><div class="row"><select data-badge-choice="${ch.id}" aria-label="${escapeHTML(ch.name)} ${cvT('徽记')}">${options}</select><button type="button" class="go small" data-badge-set="${ch.id}" ${live() ? '' : 'disabled'}>${cvT('装备')}</button></div></article>`;
     }).join('');
-    return `<div class="ar-ophead"><div><span class="ar-k">${cvT('武学与徽记')}</span><h3>${cvT('徽记碎片')} <b>${s.badgeSigils || 0}</b> · ${cvT('累计斩获')} <b>${totalKOs}</b></h3></div><p class="ar-note">${cvT('每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。')}</p></div>
+    const shardProgress = totalKOs % C.BADGE_SIGIL_KOS;
+    const shardBar = `<div class="ar-badge-progress"><label for="arBadgeShardProgress">${cvT('距离下一枚徽记碎片')}</label><progress id="arBadgeShardProgress" max="${C.BADGE_SIGIL_KOS}" value="${shardProgress}"></progress><small>${shardProgress} / ${C.BADGE_SIGIL_KOS} · ${C.BADGE_SIGIL_KOS - shardProgress} ${cvT('斩后获得')}</small></div>`;
+    return `<div class="ar-ophead"><div><span class="ar-k">${cvT('武学与徽记')}</span><h3>${cvT('徽记碎片')} <b>${s.badgeSigils || 0}</b> · ${cvT('累计斩获')} <b>${totalKOs}</b></h3>${shardBar}</div><p class="ar-note">${cvT('每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。')}</p></div>
       ${gift}<h4 class="ar-h">${cvT('我的徽记')}</h4>${stock}<h4 class="ar-h">${cvT('侠客架势与装备')}</h4><div class="ar-grid3">${heroes}</div>`;
   }
   function covPick() {
@@ -1122,6 +1168,7 @@
       const b = e.target.closest('button'); if (!b || b.disabled) return;
       const d = b.dataset;
       if (d.gotab) { TAB = d.gotab; if (d.mkv) MK.view = d.mkv; render(); return; }
+      if (d.badgePreview) { startBadgeTrainingPreview(d.badgePreview, d.badgeTier); return; }
       if (d.badgeGift) { const r = await act('badgeGift', { id: d.badgeGift }); if (r && r.ok) { toast(`获得银徽「${cvT(C.BADGES[r.id].name)}」`); render(); } return; }
       if (d.badgeUpgrade) { const r = await act('badgeUpgrade', { id: d.badgeUpgrade }); if (r && r.ok) { toast(`徽记已升阶：${cvT(C.BADGES[r.id].name)} · ${cvT(r.tier === 'gold' ? '金徽' : '紫金徽')}`); render(); } return; }
       if (d.stance) { const r = await act('stanceSet', { hero: d.stance, stance: +d.value }); if (r && r.ok) { toast('已设置出战架势'); render(); } return; }
