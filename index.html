@@ -10341,7 +10341,7 @@ Object.assign(UI_COPY_EN, {
 "连环": "Chain Fists",
 "六连重拳如惊雷，金刚体魄筋骨强横（885血/1.22体量）；架势耐力深厚且回涌较快（32/秒），金刚雷铠御守引雷反击，防守沉稳转守为攻。": "Six thunderous heavy punches and a vajra body (885 HP / 1.22 build); deep guard that recovers quickly (32/s). Vajra Armor blocks and calls down lightning to counter, turning defense into offense.",
 "身化雷光贴地疾冲。一拳贯穿附带【触电麻痹】（0.38 秒电击瘫痪硬直），起手片刻后化为雷光霸体。": "Become a bolt of lightning and dash along the ground. The punch pierces through and applies [Electrified] (0.38s paralysis stun), gaining lightning super armor shortly after startup.",
-"运转金刚雷体，架起防守雷铠（持续 0.55 秒，受创大减75%并霸体）。期间若遭近战肉搏或暗器飞投，立刻消解攻击并引动九天玄雷直击敌首（50 伤害，高空挑飞），转守为攻。": "Channel the vajra body and raise the lightning armor (0.55s, 75% damage reduction and super armor). Any melee hit or projectile during it is cancelled and calls down a heavenly bolt on the attacker (50 damage, high launch), turning defense into offense.",
+"运转金刚雷体，架起防守雷铠（持续 0.55 秒，受创大减75%并霸体）。期间遭贴身攻击时消解攻击并引雷反击（50 伤害，挑飞后快速起身）；远程攻击和雾身攻击不会引雷。": "Raise Vajra Armor for 0.55s. Close-range attacks trigger a 50-damage lightning counter with a faster recovery after landing; ranged and shadow attacks do not trigger it.",
 "一拳击破长空，引落九天神雷。三道天雷循着对手踪迹直劈而下（每道 48 伤害，破防击飞）。引雷触发【雷帝灌顶】：重置奔雷拳与撼地冷却，自身直接回涌 30% 绝技气量！": "One punch splits the sky and calls down divine thunder. Three bolts follow the enemy and strike down (48 damage each, guard break and launch). The thunder triggers [Thunder Emperor's Blessing]: resets Thunder Fist and Vajra Armor and refunds 30% ultimate meter!",
 "【狂雷六连 · 雷帝灌顶】六连重拳记记沉猛令气量暴涨；大招「雷霆万钧」施展即刻触发雷帝灌顶，直接回涌 30% 气量！": "[Six-Hit Thunder · Thunder Emperor's Blessing] Every heavy punch in the six-hit combo builds meter fast; casting Thunderstruck triggers the blessing right away and refunds 30% meter!",
 "雷闪贴地冲拳命中对手，立时重置金刚雷铠冷却，可瞬间转守为攻。": "When the ground-dash punch of Thunder Fist hits, Vajra Armor's cooldown resets instantly so you can flip from defense to offense.",
@@ -10359,7 +10359,7 @@ Object.assign(UI_COPY_EN, {
 "化身雷光贴地霸体冲拳，触电麻痹瘫痪0.38秒并重置雷铠。": "An armored lightning dash punch along the ground: 0.38s paralysis and resets Vajra Armor.",
 "金刚·雷铠": "Vajra · Lightning Armor",
 "⚡ 引雷反震 50": "⚡ Thunder Counter 50",
-"架起金刚雷铠0.55秒，受击消解攻击并引落九天玄雷反制敌首。": "Raise Vajra Armor for 0.55s; hits are cancelled and a heavenly bolt strikes back at the attacker.",
+"架起金刚雷铠0.55秒，贴身攻击引雷反击，受雷击者快速起身；远程及雾身攻击不触发。": "Raise Vajra Armor for 0.55s. Close-range attacks call down lightning, followed by a faster recovery; ranged and shadow attacks do not trigger it.",
 "雷帝·雷霆万钧": "Thunder Emperor · Thunderstruck",
 "⚡ 雷帝灌顶 +30%": "⚡ Thunder Emperor's Blessing +30%",
 "九天神雷三连追落敌身，重置拳劲并回涌30%大招气量。": "Three divine bolts chase the enemy down; resets fist skills and refunds 30% ultimate meter.",
@@ -12700,7 +12700,7 @@ if (Math.random() < 0.7) addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - ra
 if (f.t >= 0.4) toNeutral(f);
 },
 pose: f => f.skPh === 10 ? ['a2', 50] : ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 420 && Math.sign(o.x - m.x) === m.face },
-stomp: { name: '金刚雷铠', cd: 5.5, breakout: true, desc: '运转金刚雷体，架起防守雷铠（持续 0.55 秒，受创大减75%并霸体）。期间若遭近战肉搏或暗器飞投，立刻消解攻击并引动九天玄雷直击敌首（50 伤害，高空挑飞），转守为攻。',
+stomp: { name: '金刚雷铠', cd: 5.5, breakout: true, desc: '运转金刚雷体，架起防守雷铠（持续 0.55 秒，受创大减75%并霸体）。期间遭贴身攻击时消解攻击并引雷反击（50 伤害，挑飞后快速起身）；远程攻击和雾身攻击不会引雷。',
 start(f) {
 f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0);
 f.thunderGuardT = 0.55; f.skPh = 0; f.armorT = 0.55; f.armorHits = 99;
@@ -14154,7 +14154,7 @@ NET.lastResult = '';
 const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits', 'stance', 'stanceUnlocked', 'stanceT', 'badgeId', 'badgeTier', 'badgeDashT',
 'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
 'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'defDebuffT', 'swapFreezeT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir', 'clones', 'cloneN', 'swapId',
-'badgeLinkT', 'badgePressureT', 'badgePressureSkill', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'badgeAirUsed', 'badgeAirSkillUsed', 'ballGuardBreakT'];
+'badgeLinkT', 'badgePressureT', 'badgePressureSkill', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'badgeAirUsed', 'badgeAirSkillUsed', 'ballGuardBreakT', 'quickGetup', 'quickGetupPhase', 'knockdownDur'];
 function snapF(f) { return FK.map(k => f[k] === undefined ? null : r2(f[k])); }
 const VICTIM = ['hitstun', 'launched', 'knockdown', 'getup', 'held', 'blockstun'];
 function applyF(f, arr, exact) {
@@ -16365,7 +16365,7 @@ SFX.parry(); SFX.thunder(); SFX.thunderHit(1.2);
 addP({ type: 'text', text: '⚡ 金刚雷铠 · 引雷天罚', x: def.x, y: def.y - 120, life: 0.85, max: 0.85, rgb: '255,230,120' });
 addP({ type: 'callout', text: '雷', x: def.x, y: def.y - 70, life: 0.75, max: 0.75, rgb: '255,230,120', scale: 2.2 });
 const strikeX = clamp(target.x, WALL + 20, STAGE_W - WALL - 20);
-spawnProj(def, { kind: 'bolt', x: strikeX, y: -210, vx: 0, w: 90, h: 460, life: 0.42, delay: 0.04, dmg: 50, kb: [0, -720], stun: 0.50, hs: 0.12, launch: true, unbreakable: true, small: true });
+spawnProj(def, { kind: 'bolt', x: strikeX, y: -210, vx: 0, w: 90, h: 460, life: 0.42, delay: 0.04, dmg: 50, kb: [0, -720], stun: 0.50, hs: 0.12, launch: true, quickGetup: true, unbreakable: true, small: true });
 const ev = { e: 'thunder_counter', a: def.idx, x: def.x, y: def.y - 60, tx: strikeX };
 netEmit(ev);
 }
@@ -16429,7 +16429,7 @@ const foes = isMulti() ? foesOf(owner) : [foeOf(owner)];
 p.yoyoHitAt = p.yoyoHitAt || {};
 p.yoyoUltDealt = p.yoyoUltDealt || {};
 for (const foe of foes) {
-if (!foe || foe.hp <= 0 || ironBallInvulnerable(foe) || foe.ballGuardBreakT > 0 || !overlap(box, hurtbox(foe))) continue;
+if (!foe || foe.hp <= 0 || ironBallInvulnerable(foe) || !overlap(box, hurtbox(foe))) continue;
 if ((p.yoyoHitAt[foe.idx] || -99) + (p.yoyoPhase === 'loop' ? 0.72 : 0.3) > p.age) continue;
 const speed = Math.abs(p.vx || 0);
 const speedDmg = clamp(0.8 + speed / 5000, 0.9, 1.45);
@@ -16440,7 +16440,7 @@ const dmg = Math.min(p.dmg * speedDmg, remain);
 applyHit(owner, foe, { dmg, kb: [260, -300], stun: 0.32, hs: 0.08, launch: true, ult: true, noScale: true, isProj: true, guardDamage: 24, blockGuardDamage: 12, dir: Math.sign(p.vx) || p.yoyoDir || owner.face, srcX: p.x, backAttack: true }, [p.x, p.y]);
 p.yoyoUltDealt[foe.idx] = (p.yoyoUltDealt[foe.idx] || 0) + dmg;
 } else {
-applyHit(owner, foe, { dmg: p.dmg * speedDmg, kb: [180, -120], stun: p.yoyoPhase === 'lash' ? 0.38 : 0.24, hs: 0.06, launch: false, isProj: true, guardDamage: p.yoyoPhase === 'lash' ? 44 : 34, blockGuardDamage: p.yoyoPhase === 'lash' ? 18 : 12, dir: Math.sign(p.vx) || p.yoyoDir || owner.face, srcX: p.x, backAttack: true }, [p.x, p.y]);
+applyHit(owner, foe, { dmg: p.dmg * speedDmg, kb: [180, -300], stun: p.yoyoPhase === 'lash' ? 0.38 : 0.24, hs: 0.06, launch: foe.ballGuardBreakT > 0, isProj: true, guardDamage: p.yoyoPhase === 'lash' ? 44 : 34, blockGuardDamage: p.yoyoPhase === 'lash' ? 18 : 12, dir: Math.sign(p.vx) || p.yoyoDir || owner.face, srcX: p.x, backAttack: true }, [p.x, p.y]);
 }
 p.yoyoHitAt[foe.idx] = p.age;
 p.hits = (p.hits || 0) + 1;
@@ -16609,7 +16609,7 @@ addP({ type: 'text', text: '斩', x: p.x, y: p.y - 30, life: 0.5, max: 0.5, rgb:
 }
 hitClones(box, p.owner, p.dmg);
 if (hitDecoyBox(box, p.owner)) { if (!p.pierce) p.dead = true; continue; }
-if (p.hitCD > 0 || (p.kind === 'ironball' ? ironBallInvulnerable(foe) || foe.ballGuardBreakT > 0 : foe.invul > 0) || foe.hp <= 0) continue;
+if (p.hitCD > 0 || (p.kind === 'ironball' ? ironBallInvulnerable(foe) : foe.invul > 0) || foe.hp <= 0) continue;
 if ((p.groundOnly || p.kind === 'quake') && (foe.y < -16 || foe.flying)) continue;
 if (!overlap(box, hurtbox(foe))) continue;
 if (p.feast) {   // 与民同乐：砸中就得陪着喝
@@ -16620,11 +16620,6 @@ foe.state = 'hitstun'; foe.t = 0; foe.stun = 1.0; foe.drinkT = 1.0; foe.vx = 0; 
 }
 SFX.drink(); addP({ type: 'text', text: '与民同乐 · 干！', x: foe.x, y: foe.y - 130, life: 1.0, max: 1.0, rgb: '255,190,90' });
 addP({ type: 'text', text: `+${Math.round(85 * HERO_HP_SCALE)}`, x: foe.x, y: foe.y - 105, life: 0.8, max: 0.8, rgb: '130,230,140' });
-continue;
-}
-if (foe.state === 'skill' && foe.thunderGuardT > 0 && !p.ult) {
-p.dead = true;
-thunderGuardCounter(foe, owner, [p.x, p.y]);
 continue;
 }
 if (foe.reflectT > 0 && !p.ult && !p.groundOnly && !['trap', 'bolt', 'quake', 'dragon', 'tornado', 'net', 'chord', 'pavilion', 'popcorn'].includes(p.kind)) {
@@ -17263,7 +17258,7 @@ f.state = 'block';
 }
 break;
 case 'knockdown': {
-const kdDur = (f.knockdownDur !== undefined) ? f.knockdownDur : (f.quickGetup ? 0.22 : 0.6);
+const kdDur = (f.knockdownDur != null) ? f.knockdownDur : (f.quickGetup ? 0.22 : 0.6);
 if (f.t >= kdDur && f.hp > 0 && M.phase !== 'end') {
 f.state = 'getup'; f.t = 0; f.invul = 0.35; f.comboHits = 0; f.juggle = 0;
 if (f.quickGetup) f.quickGetupPhase = true;
@@ -17591,7 +17586,7 @@ smoke(def.x, def.y - 50, 4); SFX.dash();
 return;
 }
 if (def.state === 'skill' && def.parryT > 0 && !m.isProj && !m.ult) { parry(def, att, pt); def.skill2CD = 0; return; }
-if (def.state === 'skill' && def.thunderGuardT > 0 && !m.ult) {
+if (def.state === 'skill' && def.thunderGuardT > 0 && !m.ult && !m.isProj && !m.cloneEcho && Math.abs(att.x - def.x) <= 150) {
 thunderGuardCounter(def, att, pt);
 return;
 }
@@ -17724,6 +17719,7 @@ hitVisual(ev); netEmit(ev); return;
 }
 def.sinceHit = 0;
 if (!m.noStun || def.hp <= 0) {
+def.quickGetup = !!m.quickGetup;
 def.armorT = 0; def.parryT = 0;
 if (def.state === 'skill') {
 if (def.t < 0.12) { if (def.skill === def.ch.skill2) def.skill2CD = 0; else def.skillCD = 0; }
@@ -25129,7 +25125,7 @@ light: { name: '狂雷六连轰拳', badge: '⚡ 疾电连打', badgeCls: 'badge
 charge: { name: '蓄力奔雷重炮', badge: '💥 破防重击', badgeCls: 'badge-break', dmg: '33.8 / 54.5', desc: '沉腰蓄势轰出电芒重拳，无坚不摧打倒在地。' },
 air: { name: '空落雷拳·踏击', badge: '⚡ 震雷落击', badgeCls: 'badge-buff', dmg: '16.9 / 24.4', desc: '空中重拳下砸，接连一记沉雷踏击。' },
 skill: { name: '电光·雷闪', badge: '⚡ 触电麻痹 0.38s', badgeCls: 'badge-stun', dmg: '40', desc: '化身雷光贴地霸体冲拳，触电麻痹瘫痪0.38秒并重置雷铠。' },
-ranged: { name: '金刚·雷铠', badge: '⚡ 引雷反震 50', badgeCls: 'badge-stun', dmg: '50', desc: '架起金刚雷铠0.55秒，受击消解攻击并引落九天玄雷反制敌首。' },
+ranged: { name: '金刚·雷铠', badge: '⚡ 引雷反震 50', badgeCls: 'badge-stun', dmg: '50', desc: '架起金刚雷铠0.55秒，贴身攻击引雷反击，受雷击者快速起身；远程及雾身攻击不触发。' },
 ult: { name: '雷帝·雷霆万钧', badge: '⚡ 雷帝灌顶 +30%', badgeCls: 'badge-stun', dmg: '48×3', desc: '九天神雷三连追落敌身，重置拳劲并回涌30%大招气量。' },
 esc: { name: '右键·腾空闪', badge: '🛡️ 金刚解控', badgeCls: 'badge-break', dmg: '—', desc: '金刚怒吼震脱受制状态，后退步稳如磐石。' }
 },

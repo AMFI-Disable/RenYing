@@ -363,7 +363,7 @@ const SKILLS = {
     },
     pose: f => f.skPh === 10 ? ['a2', 50] : ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 420 && Math.sign(o.x - m.x) === m.face },
   // ---- 雷鸣 · R（右键）：金刚雷铠（stomp） ----
-  stomp: { name: '金刚雷铠', cd: 5.5, breakout: true, desc: '运转金刚雷体，架起防守雷铠（持续 0.55 秒，受创大减75%并霸体）。期间若遭近战肉搏或暗器飞投，立刻消解攻击并引动九天玄雷直击敌首（50 伤害，高空挑飞），转守为攻。',
+  stomp: { name: '金刚雷铠', cd: 5.5, breakout: true, desc: '运转金刚雷体，架起防守雷铠（持续 0.55 秒，受创大减75%并霸体）。期间遭贴身攻击时消解攻击并引雷反击（50 伤害，挑飞后快速起身）；远程攻击和雾身攻击不会引雷。',
     start(f) {
       f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0);
       f.thunderGuardT = 0.55; f.skPh = 0; f.armorT = 0.55; f.armorHits = 99;

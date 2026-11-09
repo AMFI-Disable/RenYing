@@ -462,7 +462,7 @@ function parryVisual(ev) {
   addP({ type: 'callout', text: '截', x: ev.x, y: ev.y - 70, life: 0.75, max: 0.75, rgb: '255,225,120', scale: 2.2 });
   SFX.block(); metal(1900, 0.8, 0.1);
 }
-// 雷鸣金刚雷铠招架：格挡近战或飞行道具，引落九天玄雷轰击敌首
+// 雷鸣金刚雷铠招架：近身攻击引落天雷
 function thunderGuardCounter(def, att, pt) {
   def.thunderGuardT = 0; def.armorT = 0; def.skPh = 1; def.t = 0; def.invul = 0.35;
   const target = att || foeOf(def);
@@ -476,7 +476,7 @@ function thunderGuardCounter(def, att, pt) {
   addP({ type: 'text', text: '⚡ 金刚雷铠 · 引雷天罚', x: def.x, y: def.y - 120, life: 0.85, max: 0.85, rgb: '255,230,120' });
   addP({ type: 'callout', text: '雷', x: def.x, y: def.y - 70, life: 0.75, max: 0.75, rgb: '255,230,120', scale: 2.2 });
   const strikeX = clamp(target.x, WALL + 20, STAGE_W - WALL - 20);
-  spawnProj(def, { kind: 'bolt', x: strikeX, y: -210, vx: 0, w: 90, h: 460, life: 0.42, delay: 0.04, dmg: 50, kb: [0, -720], stun: 0.50, hs: 0.12, launch: true, unbreakable: true, small: true });
+  spawnProj(def, { kind: 'bolt', x: strikeX, y: -210, vx: 0, w: 90, h: 460, life: 0.42, delay: 0.04, dmg: 50, kb: [0, -720], stun: 0.50, hs: 0.12, launch: true, quickGetup: true, unbreakable: true, small: true });
   const ev = { e: 'thunder_counter', a: def.idx, x: def.x, y: def.y - 60, tx: strikeX };
   netEmit(ev);
 }
@@ -543,7 +543,7 @@ function resolveYoyoBallHits(p, owner, box) {
   p.yoyoHitAt = p.yoyoHitAt || {};
   p.yoyoUltDealt = p.yoyoUltDealt || {};
   for (const foe of foes) {
-    if (!foe || foe.hp <= 0 || ironBallInvulnerable(foe) || foe.ballGuardBreakT > 0 || !overlap(box, hurtbox(foe))) continue;
+    if (!foe || foe.hp <= 0 || ironBallInvulnerable(foe) || !overlap(box, hurtbox(foe))) continue;
     if ((p.yoyoHitAt[foe.idx] || -99) + (p.yoyoPhase === 'loop' ? 0.72 : 0.3) > p.age) continue;
     const speed = Math.abs(p.vx || 0);
     const speedDmg = clamp(0.8 + speed / 5000, 0.9, 1.45);
@@ -554,7 +554,7 @@ function resolveYoyoBallHits(p, owner, box) {
       applyHit(owner, foe, { dmg, kb: [260, -300], stun: 0.32, hs: 0.08, launch: true, ult: true, noScale: true, isProj: true, guardDamage: 24, blockGuardDamage: 12, dir: Math.sign(p.vx) || p.yoyoDir || owner.face, srcX: p.x, backAttack: true }, [p.x, p.y]);
       p.yoyoUltDealt[foe.idx] = (p.yoyoUltDealt[foe.idx] || 0) + dmg;
     } else {
-      applyHit(owner, foe, { dmg: p.dmg * speedDmg, kb: [180, -120], stun: p.yoyoPhase === 'lash' ? 0.38 : 0.24, hs: 0.06, launch: false, isProj: true, guardDamage: p.yoyoPhase === 'lash' ? 44 : 34, blockGuardDamage: p.yoyoPhase === 'lash' ? 18 : 12, dir: Math.sign(p.vx) || p.yoyoDir || owner.face, srcX: p.x, backAttack: true }, [p.x, p.y]);
+      applyHit(owner, foe, { dmg: p.dmg * speedDmg, kb: [180, -300], stun: p.yoyoPhase === 'lash' ? 0.38 : 0.24, hs: 0.06, launch: foe.ballGuardBreakT > 0, isProj: true, guardDamage: p.yoyoPhase === 'lash' ? 44 : 34, blockGuardDamage: p.yoyoPhase === 'lash' ? 18 : 12, dir: Math.sign(p.vx) || p.yoyoDir || owner.face, srcX: p.x, backAttack: true }, [p.x, p.y]);
     }
     p.yoyoHitAt[foe.idx] = p.age;
     p.hits = (p.hits || 0) + 1;
@@ -736,7 +736,7 @@ function updateProjs() {
     }
     hitClones(box, p.owner, p.dmg);
     if (hitDecoyBox(box, p.owner)) { if (!p.pierce) p.dead = true; continue; }
-    if (p.hitCD > 0 || (p.kind === 'ironball' ? ironBallInvulnerable(foe) || foe.ballGuardBreakT > 0 : foe.invul > 0) || foe.hp <= 0) continue;
+    if (p.hitCD > 0 || (p.kind === 'ironball' ? ironBallInvulnerable(foe) : foe.invul > 0) || foe.hp <= 0) continue;
     if ((p.groundOnly || p.kind === 'quake') && (foe.y < -16 || foe.flying)) continue;
     if (!overlap(box, hurtbox(foe))) continue;
     if (p.feast) {   // 与民同乐：砸中就得陪着喝
@@ -747,12 +747,6 @@ function updateProjs() {
       }
       SFX.drink(); addP({ type: 'text', text: '与民同乐 · 干！', x: foe.x, y: foe.y - 130, life: 1.0, max: 1.0, rgb: '255,190,90' });
       addP({ type: 'text', text: `+${Math.round(85 * HERO_HP_SCALE)}`, x: foe.x, y: foe.y - 105, life: 0.8, max: 0.8, rgb: '130,230,140' });
-      continue;
-    }
-    // 雷鸣金刚雷铠：消解飞行道具并降雷轰顶反制
-    if (foe.state === 'skill' && foe.thunderGuardT > 0 && !p.ult) {
-      p.dead = true;
-      thunderGuardCounter(foe, owner, [p.x, p.y]);
       continue;
     }
     // 玉箫回音壁：把飞行道具原路弹回去
@@ -1449,7 +1443,7 @@ function updateFighter(f, foe) {
       }
       break;
     case 'knockdown': {
-      const kdDur = (f.knockdownDur !== undefined) ? f.knockdownDur : (f.quickGetup ? 0.22 : 0.6);
+      const kdDur = (f.knockdownDur != null) ? f.knockdownDur : (f.quickGetup ? 0.22 : 0.6);
       if (f.t >= kdDur && f.hp > 0 && M.phase !== 'end') {
         f.state = 'getup'; f.t = 0; f.invul = 0.35; f.comboHits = 0; f.juggle = 0;
         if (f.quickGetup) f.quickGetupPhase = true;

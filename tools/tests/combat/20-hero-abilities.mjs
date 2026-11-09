@@ -3,6 +3,23 @@
 // 找 bug 提示：测试失败时报的是 name，在本文件里搜这个 name 就能找到它的代码。
 export default [
   {
+    name: 'Vajra Armor counters close melee only and its lightning grants quick recovery',
+    fn: `(() => {
+      startMatch('train', 'stand', [CHAR_IDX.liying, CHAR_IDX.leiming]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      const hit = { dmg: 20, kb: [100, 0], stun: 0.2, hs: 0.05 };
+      const setup = distance => { toNeutral(A); toNeutral(B); A.x = 600; B.x = 600 + distance; A.y = B.y = 0; A.invul = B.invul = 0; B.state = 'skill'; B.skill = 'stomp'; B.thunderGuardT = 0.5; B.armorT = 0.5; B.armorHits = 99; projs.length = 0; };
+      setup(80); applyHit(A, B, { ...hit, cloneEcho: true }, [B.x, -50]); const shadow = B.thunderGuardT > 0 && !projs.some(p => p.kind === 'bolt');
+      setup(300); applyHit(A, B, hit, [B.x, -50]); const distant = B.thunderGuardT > 0 && !projs.some(p => p.kind === 'bolt');
+      setup(80); applyHit(A, B, { ...hit, isProj: true }, [B.x, -50]); const projectile = B.thunderGuardT > 0 && !projs.some(p => p.kind === 'bolt');
+      setup(80); applyHit(A, B, hit, [B.x, -50]); const bolt = projs.find(p => p.kind === 'bolt');
+      A.hp = A.maxHp; A.invul = 0; A.juggle = 0; if (bolt) applyHit(B, A, bolt, [A.x, -50]);
+      const quick = A.state === 'launched' && A.quickGetup && FK.includes('quickGetup');
+      const saved = snapF(A); A.quickGetup = false; applyF(A, saved, true); const restored = A.quickGetup && A.knockdownDur == null;
+      toMenu(); return { pass: shadow && distant && projectile && !!bolt && quick && restored, error: JSON.stringify({ shadow, distant, projectile, bolt: !!bolt, quick, restored }) };
+    })()`
+  },
+  {
     name: 'Selected ranged projectiles aim toward vertical targets and gently follow their movement while horizontal shots remain unchanged',
     fn: `(() => {
       startMatch('train', 'stand', [CHAR_IDX.qingfeng, 0]); showScreen(null); paused = false; M.phase = 'fight';
@@ -275,7 +292,7 @@ export default [
     })()`
   },
   {
-    name: 'Qianji ball reaches map edges, scales damage with speed, strikes backs, drains posture, and respects guard-break protection',
+    name: 'Qianji ball reaches map edges, scales damage, strikes backs, and launches guard-broken opponents',
     fn: `(() => {
       startMatch('train', 'stand', [CHAR_IDX.qianji, CHAR_IDX.tieshan]);
       showScreen(null); paused = false; M.phase = 'fight';
@@ -311,12 +328,13 @@ export default [
       B.state = 'block'; B.t = 0; B.blockT = 1; B.vx = 0; B.guard = 1; B.hp = B.maxHp; B.invul = 0; B.ballGuardBreakT = 0;
       ball.x = B.x - 16; ball.y = B.y - 58; ball.vx = 2500; ball.yoyoPhase = 'loop'; ball.yoyoDir = 1; ball.yoyoHitAt = {}; ball.age = 2;
       const box = hurtbox(B); resolveYoyoBallHits(ball, A, box); const broke = B.guard === 0 && B.ballGuardBreakT >= 0.84;
-      const hpAfterBreak = B.hp; resolveYoyoBallHits(ball, A, box); const protected = B.hp === hpAfterBreak;
+      const hpAfterBreak = B.hp; resolveYoyoBallHits(ball, A, box); const cooldown = B.hp === hpAfterBreak;
+      ball.age += 0.73; resolveYoyoBallHits(ball, A, hurtbox(B)); const followup = B.hp < hpAfterBreak && B.state === 'launched';
       const ballGuardIndex = FK.indexOf('ballGuardBreakT'); A.ballGuardBreakT = 0.37;
       const rollbackState = ballGuardIndex >= 0 && snapF(A)[ballGuardIndex] === 0.37;
       toMenu();
-      const ok = wallReturned && escapedWall && hitGuard <= 66 && blockedGuard <= 65 && backHitDamage > frontBlockDamage && backBlockGuard === 100 && standingInvulDamage > 0 && fastDamage > slowDamage && broke && protected && rollbackState;
-      return { pass: ok, error: JSON.stringify({ wallReturned, escapedWall, hitGuard, blockedGuard, frontBlockDamage, backHitDamage, backBlockGuard, standingInvulDamage, slowDamage, fastDamage, broke, protected, rollbackState, guardTimer: B.ballGuardBreakT }) };
+      const ok = wallReturned && escapedWall && hitGuard <= 66 && blockedGuard <= 65 && backHitDamage > frontBlockDamage && backBlockGuard === 100 && standingInvulDamage > 0 && fastDamage > slowDamage && broke && cooldown && followup && rollbackState;
+      return { pass: ok, error: JSON.stringify({ wallReturned, escapedWall, hitGuard, blockedGuard, frontBlockDamage, backHitDamage, backBlockGuard, standingInvulDamage, slowDamage, fastDamage, broke, cooldown, followup, rollbackState, guardTimer: B.ballGuardBreakT }) };
     })()`
   }
 ];

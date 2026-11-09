@@ -183,7 +183,7 @@ function applyHit(att, def, m, pt) {
   // 月镜：格开近身攻击并反斩（飞行道具和大招无效）
   if (def.state === 'skill' && def.parryT > 0 && !m.isProj && !m.ult) { parry(def, att, pt); def.skill2CD = 0; return; }
   // 雷鸣：金刚雷铠招架反击（吸收近战攻击并引动天雷反制敌首）
-  if (def.state === 'skill' && def.thunderGuardT > 0 && !m.ult) {
+  if (def.state === 'skill' && def.thunderGuardT > 0 && !m.ult && !m.isProj && !m.cloneEcho && Math.abs(att.x - def.x) <= 150) {
     thunderGuardCounter(def, att, pt);
     return;
   }
@@ -326,6 +326,7 @@ function applyHit(att, def, m, pt) {
   }
   def.sinceHit = 0;
   if (!m.noStun || def.hp <= 0) {
+    def.quickGetup = !!m.quickGetup;
     def.armorT = 0; def.parryT = 0;
     if (def.state === 'skill') {
       if (def.t < 0.12) { if (def.skill === def.ch.skill2) def.skill2CD = 0; else def.skillCD = 0; }
