@@ -21,6 +21,14 @@ function startAttack(f, name) {
   f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
   const foe = foeOf(f), h = f.ctrl && f.ctrl.held, dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0, a = dir || (h && h.aim);
   f.face = f.onGround() ? faceDir(f, foe) : ((a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl))) ? a : f.face);
+  const heavy = name === 'hv' || name === 'cs1' || name === 'cs2';
+  if (heavy && f.badgeId === 'riposte' && f.badgeRiposteT > 0) {
+    f.move = { ...f.move, lunge: (f.move.lunge || 0) + (f.badgeTier === 'purpgold' ? 58 : 48) };
+    f.badgeRiposteT = 0; showBadgeCue(f, 'riposte', true);
+  } else if (heavy && f.badgeId === 'breaker' && f.badgeTier === 'purpgold' && f.badgeBreakT > 0) {
+    f.move = { ...f.move, lunge: (f.move.lunge || 0) + 52 };
+    f.badgeBreakT = 0; showBadgeCue(f, 'breaker', true);
+  }
   if (scOn()) scFire(f, 'atk', foe, name);
 }
 function doJump(f, dir) {
@@ -33,11 +41,21 @@ function doJump(f, dir) {
   if (scOn()) scFire(f, 'jump', foeOf(f));
 }
 function startDash(f, dir) {
-  f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * dir; f.vy = 0;
+  f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * (f.badgeId === 'breaker' && f.badgeBreakT > 0 ? 1.12 : 1) * dir; f.vy = 0;
+  if (f.badgeId === 'breaker' && f.badgeBreakT > 0) { f.badgeBreakT = 0; showBadgeCue(f, 'breakerDash', true); }
   if (f.badgeId === 'pursuit') f.badgeDashT = 1.0;
   f.invul = 0.13; f.dashCD = DODGE_CD;
   if (f.onGround()) dust(f.x - dir * 20, 0, 8);
   SFX.dash();
+  if (scOn()) scFire(f, 'dash', foeOf(f));
+}
+function startBadgeDash(f, dir, kind) {
+  endEscape(f);
+  f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * (kind === 'flow' ? 0.62 : kind === 'air' ? 1 : 0.72) * dir; f.vy = 0;
+  f.badgeDashT = 0; f.dashCD = DODGE_CD;
+  f.invul = kind === 'exit' && f.badgeTier === 'purpgold' ? 0.08 : 0;
+  if (f.onGround()) dust(f.x - dir * 16, 0, 6);
+  ring(f.x, f.y - 50, 82, f.look.slash || '233,196,106', 0.24); SFX.dash();
   if (scOn()) scFire(f, 'dash', foeOf(f));
 }
 function startSpecial(f) {
@@ -187,6 +205,39 @@ function attackUpdate(f, foe) {
   }
   if (t >= act0 && t < act1 && !f.hitDone) tryHit(f, foe, m);
   const free2 = (SKILLS[f.ch.skill2] || {}).free;   // free：只能从自由状态放，不能接在出招后面（离影的换影）
+  if (M.phase === 'fight' && t >= act1 && t < act1 + m.rc) {
+    if (f.badgeId === 'ascent' && f.badgeAirSkillT > 0 && !f.onGround() && f.airDash > 0 && c.consume('dash')) {
+      const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0) || f.face;
+      f.airDash--; f.badgeAirSkillT = 0; startBadgeDash(f, dir, 'air'); showBadgeCue(f, 'ascent', true); return;
+    }
+    if (f.badgeId === 'flowing' && f.badgeLinkT > 0 && c.consume('dash')) {
+      const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0) || f.face;
+      f.badgeLinkT = 0; startBadgeDash(f, dir, 'flow'); showBadgeCue(f, 'flowing', true); return;
+    }
+    if (f.badgeId === 'pursuit' && f.badgeExitT > 0 && c.consume('dash')) {
+      const inputDir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0), dir = inputDir || -f.face;
+      f.badgeExitT = 0; startBadgeDash(f, dir, 'exit'); showBadgeCue(f, 'pursuit', true); return;
+    }
+    const canBadgeSkill = f.badgeTier === 'purpgold' && f.hitConfirmed && (
+      (f.badgeId === 'flowing' && f.badgeLinkT > 0) ||
+      (f.badgeId === 'focus' && f.badgePressureT > 0) ||
+      (f.badgeId === 'ascent' && f.badgeAirSkillT > 0 && !f.onGround() && !f.badgeAirSkillUsed)
+    );
+    if (canBadgeSkill) {
+      let slot = 0;
+      if (f.skillCD <= 0 && c.consume('skill')) slot = 1;
+      else if (f.skill2CD <= 0 && !free2 && c.consume('skill2')) slot = 2;
+      if (slot) {
+        startSkill(f, foe, slot === 2 ? 2 : undefined);
+        if (f.state === 'skill') {
+          if (f.badgeId === 'flowing') f.badgeLinkT = 0;
+          if (f.badgeId === 'focus') { f.badgePressureT = 0; f.badgePressureSkill = 1; }
+          if (f.badgeId === 'ascent') { f.badgeAirSkillT = 0; f.badgeAirSkillUsed = 1; }
+          showBadgeCue(f, f.badgeId, true); return;
+        }
+      }
+    }
+  }
   if (M.phase === 'fight' && cx.skill2FromLight && !free2 && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
   if (M.phase === 'fight' && (t >= act0 + m.ac * cx.chainAt || (f.hitConfirmed && f.moveName === 'dl'))) {
     if (m.next.light && c.consume('light')) return startAttack(f, m.next.light);
@@ -1230,6 +1281,7 @@ function updateFighter(f, foe) {
   f.dashCD = Math.max(0, f.dashCD - STEP);
   f.stanceT = Math.max(0, (f.stanceT || 0) - STEP);
   f.badgeDashT = Math.max(0, (f.badgeDashT || 0) - STEP);
+  for (const key of ['badgeLinkT', 'badgePressureT', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT']) f[key] = Math.max(0, (f[key] || 0) - STEP);
   f.breakCD = Math.max(0, f.breakCD - STEP);
   f.skill2CD = Math.max(0, f.skill2CD - STEP);
   if (f.ch.inkShot) f.ink = Math.min(INK_MAX, (f.ink || 0) + INK_REGEN * STEP);
@@ -1475,6 +1527,7 @@ function physics(f) {
   }
 }
 function onLand(f) {
+  f.badgeAirUsed = 0; f.badgeAirSkillUsed = 0; f.badgeAirSkillT = 0;
   if (scOn()) scFire(f, 'land', foeOf(f), f.vy);
   f.wallBounced = false;
   if (f.airRecover) {

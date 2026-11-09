@@ -41,6 +41,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Playstyle-focused martial badges (`src/game/27-combat-loadouts.js`, `src/game/09-actions.js`, `src/game/10-hits.js`, `src/armory.js`)**: added distinct combo, pressure, parry, guard-break, aerial, and dodge follow-ups; badge windows show combat cues and synchronize through rollback and replay state. No account migration is needed. Needs a Worker redeploy.
+
 - **Weight-aware combat poses and tether feedback (`src/game/11-anim-loop.js`, `src/game/15-skin-weapons.js`)**: made attack windups and blocks show a firmer stance for heavier fighters, light fighters recoil more visibly, and 醉翁's wine-fueled sway readable before its evasive passive can trigger. 千机's silk tether now straightens and brightens under tension. These are presentation changes only; hit timings, damage and rollback state are unchanged.
 
 - **Map combat connections and reach (`src/data/12-maps.js`, `src/game/03-skills.js`, `src/game/08-fighter-match.js`, `src/game/09-actions.js`, `src/game/10-hits.js`, `src/game/12-draw-world.js`)**: normalized platform placement for wider team arenas; connected map terrain to matching scroll schools and completed several listed home-ground bonuses; increased Q/R hitbox and projectile reach by 15% consistently across maps; added a dissolving silhouette when mist clones disappear.

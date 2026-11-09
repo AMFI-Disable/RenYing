@@ -492,7 +492,7 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
   .ar-badge-gift .ar-card, .ar-loadout { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; }
   .ar-badge-card { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; }
   .ar-badge-card > b { color: #fff; }
-  .ar-badge-effect { color: var(--gold); line-height: 1.5; }
+  .ar-badge-effect { display: grid; gap: 3px; color: var(--gold); line-height: 1.5; }
   .ar-badge-req { display: flex; flex-wrap: wrap; gap: 5px; }
   .ar-badge-req small { padding: 3px 6px; color: var(--dim); background: rgba(236,232,225,.05); border: 1px solid var(--line); }
   .ar-badge-req small.met { color: #5ad19a; border-color: rgba(90,209,154,.45); }

@@ -1105,10 +1105,10 @@
   }
   function pBadges() {
     const s = blankS(), ids = Object.keys(C.BADGES), owned = Object.entries(s.badgeOwned || {}), totalKOs = Object.values(s.heroKOs || {}).reduce((n, x) => n + x, 0);
-    const tierNames = ['银徽', '金徽', '紫金徽'], tierPowers = [1, 1.5, 2];
+    const tierNames = ['银徽', '金徽', '紫金徽'];
     const effectLine = id => {
-      const spec = window.COMBAT_BADGES[id], resource = spec.resource, amount = n => Number((spec.gain * n).toFixed(2)).toString();
-      return `<small class="ar-badge-effect">${tierNames.map((name, i) => `${cvT(name)} +${amount(tierPowers[i])} ${cvT(resource)}`).join(' · ')}</small>`;
+      const spec = window.COMBAT_BADGES[id];
+      return `<div class="ar-badge-effect">${tierNames.map((name, i) => `<small>${cvT(name)}：${cvT(spec.tiers[i])}</small>`).join('')}</div>`;
     };
     const previewButton = (id, tier) => `<button type="button" class="ghost small" data-badge-preview="${id}" data-badge-tier="${tier}">${cvT('训练场试招')}</button>`;
     const badgeCard = (id, tier, giftCard = false) => {

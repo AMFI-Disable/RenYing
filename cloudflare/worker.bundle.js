@@ -77,12 +77,12 @@
   C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem'];
   C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
   C.BADGES = {
-    flowing: { name: '连势', desc: '连续普攻命中后，获得少量额外真气。', en: 'Flow', effect: 'normal' },
-    focus: { name: '凝锋', desc: '蓄力斩命中后，获得少量额外真气。', en: 'Focus', effect: 'charged' },
-    riposte: { name: '回锋', desc: '精准招架成功后，恢复少量架势。', en: 'Riposte', effect: 'parry' },
-    breaker: { name: '破军', desc: '造成破防后，获得少量额外真气。', en: 'Breaker', effect: 'break' },
-    ascent: { name: '凌空', desc: '空中攻击命中后，获得少量额外真气。', en: 'Ascent', effect: 'air' },
-    pursuit: { name: '追影', desc: '闪避后首次命中，获得少量额外真气。', en: 'Pursuit', effect: 'dash' },
+    flowing: { name: '连势', desc: '连续普攻第 3 击命中后，可在收招时冲刺追步；紫金阶可改接技能。', en: 'Flow', effect: 'normal' },
+    focus: { name: '凝锋', desc: '蓄力斩命中后，下一次格挡交锋会减少击退；紫金阶技能也可承接。', en: 'Focus', effect: 'charged' },
+    riposte: { name: '回锋', desc: '精准招架后，限时重击会向前踏进，抓住反击时机。', en: 'Riposte', effect: 'parry' },
+    breaker: { name: '破军', desc: '破防后立刻重置冲刺冷却，下一次冲刺可更快追击；紫金阶也可选重击踏进。', en: 'Breaker', effect: 'break' },
+    ascent: { name: '凌空', desc: '腾空攻击命中后可续一次空中冲刺；紫金阶可接空中技能。', en: 'Ascent', effect: 'air' },
+    pursuit: { name: '追影', desc: '闪避后命中，可在收招时冲刺退步；紫金阶退步带短暂无敌。', en: 'Pursuit', effect: 'dash' },
   };
   C.BADGE_TIER = { silver: 1, gold: 2, purpgold: 3 };
   C.BADGE_UPGRADE = { silver: { to: 'gold', sigils: 3, ink: 2000, kos: 100 }, gold: { to: 'purpgold', sigils: 7, ink: 6000, kos: 300 } };

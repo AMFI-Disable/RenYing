@@ -19,14 +19,15 @@ var HERO_STANCES = {
   qianji: { name: '游线式', en: 'Tether Flow', kind: 'reach', desc: '攻击更远，伤害略低，出招稍慢。' },
 };
 var COMBAT_BADGES = {
-  flowing: { n: '连势', en: 'Flow', trigger: '连段第 3 次起普攻命中', effect: '连段普攻命中后获得额外真气。', gain: 0.7, resource: '真气' },
-  focus: { n: '凝锋', en: 'Focus', trigger: '蓄力斩命中', effect: '蓄力斩命中后获得额外真气。', gain: 1.2, resource: '真气' },
-  riposte: { n: '回锋', en: 'Riposte', trigger: '精准招架成功', effect: '精准招架后恢复少量架势。', gain: 2.5, resource: '架势' },
-  breaker: { n: '破军', en: 'Breaker', trigger: '造成破防', effect: '造成破防后获得额外真气。', gain: 2, resource: '真气' },
-  ascent: { n: '凌空', en: 'Ascent', trigger: '空中攻击命中', effect: '空中攻击命中后获得额外真气。', gain: 1.1, resource: '真气' },
-  pursuit: { n: '追影', en: 'Pursuit', trigger: '闪避后 1 秒内首次命中', effect: '闪避后一秒内命中可获得额外真气。', gain: 1.1, resource: '真气' },
+  flowing: { n: '连势', en: 'Flow', trigger: '连续普攻第 3 击命中', effect: '打开连段追步窗口；紫金阶可改接技能。', tiers: ['0.65 秒内可用冲刺取消收招。', '窗口延长 15%。', '窗口延长 30%，并可用一次技能取消收招。'] },
+  focus: { n: '凝锋', en: 'Focus', trigger: '蓄力斩命中', effect: '下一次格挡交锋减少击退；紫金阶技能也可承接。', tiers: ['0.8 秒内下一次格挡击退降低 28%。', '窗口延长 15%。', '窗口延长 30%，且技能命中也可消耗压迫效果。'] },
+  riposte: { n: '回锋', en: 'Riposte', trigger: '精准招架成功', effect: '重击获得短促踏进，抓住招架后的反击时机。', tiers: ['0.65 秒内重击向前踏进。', '窗口延长 15%。', '窗口延长 30%，踏进距离略增。'] },
+  breaker: { n: '破军', en: 'Breaker', trigger: '造成破防', effect: '立刻重置冲刺冷却；紫金阶可选重击踏进追击。', tiers: ['破防后重置冲刺冷却，下一次冲刺距离略增。', '追击窗口延长 15%。', '窗口延长 30%，并可选择重击踏进追击。'] },
+  ascent: { n: '凌空', en: 'Ascent', trigger: '空中攻击命中', effect: '腾空时最多续一次空中冲刺；紫金阶可接空中技能。', tiers: ['空中冲刺用尽后，命中可恢复一次并在收招时续闪。', '续闪窗口延长 15%。', '窗口延长 30%，并可用一次技能取消空中收招。'] },
+  pursuit: { n: '追影', en: 'Pursuit', trigger: '闪避后 1 秒内首次命中', effect: '打开退步窗口；紫金阶退步带短暂无敌。', tiers: ['0.65 秒内可用冲刺取消收招并选择退路。', '窗口延长 15%。', '窗口延长 30%，退步时获得 0.08 秒无敌。'] },
 };
 var BADGE_TIER_POWER = { silver: 1, gold: 1.5, purpgold: 2 };
+var BADGE_WINDOW_SCALE = { silver: 1, gold: 1.15, purpgold: 1.3 };
 if (typeof window !== 'undefined') { window.HERO_STANCES = HERO_STANCES; window.COMBAT_BADGES = COMBAT_BADGES; }
 function combatLoadoutMap() {
   try { return typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}; } catch (e) { return {}; }
@@ -51,8 +52,19 @@ function applyCombatLoadouts() {
     f.badgeId = COMBAT_BADGES && COMBAT_BADGES[profile.badge] ? profile.badge : '';
     f.badgeTier = BADGE_TIER_POWER && BADGE_TIER_POWER[profile.tier] ? profile.tier : '';
     f.badgeDashT = 0;
+    f.badgeLinkT = f.badgePressureT = f.badgeRiposteT = f.badgeBreakT = f.badgeAirSkillT = f.badgeExitT = 0;
+    f.badgePressureSkill = 0; f.badgeAirUsed = f.badgeAirSkillUsed = 0;
     f.stanceT = 0;
   }
+}
+function badgeDuration(f, base) { return base * (BADGE_WINDOW_SCALE[f && f.badgeTier] || 1); }
+function showBadgeCue(f, key, consumed = false) {
+  if (!f || RESIM) return;
+  const badge = COMBAT_BADGES[f.badgeId]; if (!badge) return;
+  const names = { flowing: consumed ? '连势 · 连段追步' : '连势 · 追步窗口', focus: consumed ? '凝锋 · 贴身压迫' : '凝锋 · 压迫窗口', riposte: consumed ? '回锋 · 踏进反击' : '回锋 · 反击窗口', breaker: consumed ? '破军 · 追击踏进' : '破军 · 破防追击', breakerDash: '破军 · 追击冲刺', ascent: consumed ? '凌空 · 空中续招' : '凌空 · 空中续闪', pursuit: consumed ? '追影 · 退步闪避' : '追影 · 退步窗口' };
+  const rgb = f.look && f.look.slash || '233,196,106';
+  ring(f.x, f.y - 58, consumed ? 78 : 58, rgb, consumed ? 0.28 : 0.18);
+  addP({ type: 'text', text: names[key] || badge.n, x: f.x, y: f.y - 112, life: 0.7, max: 0.7, rgb });
 }
 function stanceMove(f, name) {
   const base = f.moves[name];
@@ -80,35 +92,34 @@ function trySwitchStance(f) {
 }
 function applyCombatBadgeHit(att, def, move, ev) {
   if (!att || !att.badgeId || !att.badgeTier || !ev || ev.blk || ev.armor || ev.dd <= 0) return;
-  const power = BADGE_TIER_POWER[att.badgeTier] || 1, name = att.moveName || move.name || '';
-  let gain = 0;
-  if (att.badgeId === 'flowing' && /^l[1-5]$/.test(name) && (att.comboHits || 0) >= 2) gain = COMBAT_BADGES.flowing.gain * power;
-  else if (att.badgeId === 'focus' && (name === 'cs1' || name === 'cs2')) gain = COMBAT_BADGES.focus.gain * power;
-  else if (att.badgeId === 'ascent' && (att.y < -10 || name === 'a1' || name === 'a2')) gain = COMBAT_BADGES.ascent.gain * power;
-  else if (att.badgeId === 'pursuit' && att.badgeDashT > 0) { gain = COMBAT_BADGES.pursuit.gain * power; att.badgeDashT = 0; }
-  if (gain) {
-    att.meter = Math.min(100, att.meter + gain);
-    showBadgeTrainingGain(att, gain, '真气');
+  const name = att.moveName || (move && move.name) || '';
+  if (att.badgeId === 'flowing' && !(move && (move.isProj || move.skill || move.ult)) && /^l[1-5]$/.test(name) && def.comboHits === 3) {
+    att.badgeLinkT = badgeDuration(att, 0.65); showBadgeCue(att, 'flowing');
+  } else if (att.badgeId === 'focus' && (name === 'cs1' || name === 'cs2')) {
+    att.badgePressureT = badgeDuration(att, 0.8); att.badgePressureSkill = 0; showBadgeCue(att, 'focus');
+  } else if (att.badgeId === 'ascent' && (att.y < -10 || name === 'a1' || name === 'a2')) {
+    let cue = false;
+    if (!att.badgeAirUsed && att.airDash <= 0) { att.airDash = 1; att.badgeAirUsed = 1; cue = true; }
+    if (!att.badgeAirSkillUsed) { att.badgeAirSkillT = badgeDuration(att, 0.75); cue = true; }
+    if (cue) showBadgeCue(att, 'ascent');
+  } else if (att.badgeId === 'pursuit' && att.badgeDashT > 0) {
+    att.badgeDashT = 0; att.badgeExitT = badgeDuration(att, 0.65); showBadgeCue(att, 'pursuit');
   }
 }
 function applyCombatBadgeGuard(def, ev) {
-  if (!def || !def.badgeId || !def.badgeTier || !ev) return;
-  const power = BADGE_TIER_POWER[def.badgeTier] || 1;
-  if (ev.justGuard && def.badgeId === 'riposte') {
-    const gain = COMBAT_BADGES.riposte.gain * power;
-    def.guard = Math.min(def.maxGuard, def.guard + gain);
-    showBadgeTrainingGain(def, gain, '架势');
-  }
+  if (!def || !def.badgeId || !def.badgeTier || !ev || !ev.justGuard || def.badgeId !== 'riposte') return;
+  def.badgeRiposteT = badgeDuration(def, 0.65); showBadgeCue(def, 'riposte');
+}
+function applyCombatBadgeBlock(att, def) {
+  if (!att || att.badgeId !== 'focus' || !(att.badgePressureSkill || att.badgePressureT > 0)) return false;
+  def.vx *= 0.72;
+  att.badgePressureT = 0; att.badgePressureSkill = 0;
+  showBadgeCue(att, 'focus', true);
+  return true;
 }
 function applyCombatBadgeBreak(att, ev) {
-  if (att && att.badgeId === 'breaker' && att.badgeTier && ev && ev.guardBreak) {
-    const gain = COMBAT_BADGES.breaker.gain * (BADGE_TIER_POWER[att.badgeTier] || 1);
-    att.meter = Math.min(100, att.meter + gain);
-    showBadgeTrainingGain(att, gain, '真气');
-  }
-}
-function showBadgeTrainingGain(f, gain, resource) {
-  if (M.mode !== 'train' || typeof window === 'undefined' || !window.BADGE_TRAINING_PREVIEW || !f || f.idx !== 0) return;
-  const badge = COMBAT_BADGES[f.badgeId];
-  if (badge) addP({ type: 'text', text: `${cvT(badge.n)} +${Number(gain.toFixed(2)).toString()} ${cvT(resource)}`, x: f.x, y: f.y - 125, life: 1, max: 1, rgb: f.look.slash || '233,196,106' });
+  if (!att || att.badgeId !== 'breaker' || !att.badgeTier || !ev || !ev.guardBreak) return;
+  att.dashCD = 0;
+  att.badgeBreakT = badgeDuration(att, 0.8);
+  showBadgeCue(att, 'breaker');
 }

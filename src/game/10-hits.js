@@ -193,6 +193,7 @@ function applyHit(att, def, m, pt) {
   }
   const isBlockedCs2 = isCs2 && wasBlocking;
   const blocking = wasBlocking && !m.unblockable && !isBlockedCs2;
+  if (!blocking && !isBlockedCs2 && att.badgePressureSkill) att.badgePressureSkill = 0;
   const ev = { e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, wb: wasBlocking && !!m.big, blk: blocking || isBlockedCs2, blockedCs2: isBlockedCs2, f: fx };
   const mm = att.ch.meterMul || 1;
 
@@ -205,6 +206,7 @@ function applyHit(att, def, m, pt) {
     // 精准招架（Just Guard / Perfect Parry）：在受击前 0.09s 内按下格挡（特定招式如移形换影不可被精准招架）
     const isJustGuard = !m.isProj && !m.unblockable && !m.noJg && !m.unparryable && (def.blockT !== undefined && def.blockT <= (scOn() ? scJG(def) : 0.09));
     if (isJustGuard) {
+      if (att.badgePressureSkill) { att.badgePressureSkill = 0; att.badgePressureT = 0; }
       if (scOn()) scFire(def, 'blk', att, true, m);
       def.guard = Math.min(def.maxGuard, (def.guard !== undefined ? def.guard : def.maxGuard) + 12);
       def.state = 'blockstun'; def.t = 0; def.stun = 0.05;
@@ -249,6 +251,7 @@ function applyHit(att, def, m, pt) {
       if (scOn()) scFire(att, 'gb', def);
       def.state = 'hitstun'; def.t = 0; def.stun = 0.85; def.rooted = true;
       def.vx = fx * 140;
+    if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
       shake = 18; flashA = 0.4; flashRGB = '255,100,80';
       ring(def.x, def.y - 60, 160, '255,120,80', 0.45);
       addP({ type: 'text', text: '💥 破防崩势', x: def.x, y: def.y - 110, life: 1.2, max: 1.2, rgb: '255,120,80' });
@@ -272,6 +275,7 @@ function applyHit(att, def, m, pt) {
     }
     const isDefFixed = def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.fixed : def.ctrl.mode === 'fixed');
     def.vx = isDefFixed ? 0 : fx * (180 + Math.abs(m.kb[0]) * 0.35) * Math.sqrt(massRatio);
+    if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
     if (isDefFixed) { def.vy = 0; def.y = 0; }
     if (!m.isProj) att.vx -= att.face * (120 / Math.sqrt(massRatio));
     att.meter = Math.min(100, att.meter + 0.6 * mm); def.meter = Math.min(100, def.meter + 1.5);
@@ -431,6 +435,7 @@ function applyHit(att, def, m, pt) {
     def.state = 'knockdown';
     def.t = 0;
     def.vx = fx * 280 * Math.sqrt(massRatio);
+      if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
     def.vy = 0;
     def.y = 0;
     def.rot = 0;

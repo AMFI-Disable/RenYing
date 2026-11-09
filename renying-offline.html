@@ -1983,7 +1983,7 @@ animation: arSpin 16s linear infinite, arFade .7s ease-out both; }
 .ar-badge-gift .ar-card, .ar-loadout { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; }
 .ar-badge-card { display: flex; flex-direction: column; align-items: stretch; justify-content: flex-start; gap: 8px; }
 .ar-badge-card > b { color: #fff; }
-.ar-badge-effect { color: var(--gold); line-height: 1.5; }
+.ar-badge-effect { display: grid; gap: 3px; color: var(--gold); line-height: 1.5; }
 .ar-badge-req { display: flex; flex-wrap: wrap; gap: 5px; }
 .ar-badge-req small { padding: 3px 6px; color: var(--dim); background: rgba(236,232,225,.05); border: 1px solid var(--line); }
 .ar-badge-req small.met { color: #5ad19a; border-color: rgba(90,209,154,.45); }
@@ -8466,12 +8466,40 @@ Object.assign(UI_COPY_EN, {
 "回锋": "Riposte",
 "凌空": "Ascent",
 "追影": "Pursuit",
-"连续普攻命中后，获得少量额外真气。": "Gain a small amount of extra Qi when a normal attack lands during a combo.",
-"蓄力斩命中后，获得少量额外真气。": "Gain a small amount of extra Qi when a charged attack hits.",
-"精准招架成功后，恢复少量架势。": "Recover a little posture after a Just Guard.",
-"造成破防后，获得少量额外真气。": "Gain a small amount of extra Qi after breaking an opponent's guard.",
-"空中攻击命中后，获得少量额外真气。": "Gain a small amount of extra Qi when an aerial attack hits.",
-"闪避后首次命中，获得少量额外真气。": "Gain a small amount of extra Qi on the first hit within one second after dodging.",
+"连续普攻第 3 击命中后，可在收招时冲刺追步；紫金阶可改接技能。": "After the third normal hit, dash-cancel recovery into a chase step; Purple Gold can route into a skill.",
+"蓄力斩命中后，下一次格挡交锋会减少击退；紫金阶技能也可承接。": "After a charged hit, your next blocked exchange causes less pushback; Purple Gold can carry the effect into a skill.",
+"精准招架后，限时重击会向前踏进，抓住反击时机。": "After a Just Guard, a heavy started in time steps forward to punish.",
+"破防后立刻重置冲刺冷却，下一次冲刺可更快追击；紫金阶也可选重击踏进。": "Breaking guard resets dash cooldown and boosts your next chase dash; Purple Gold can instead step in with a heavy.",
+"腾空攻击命中后可续一次空中冲刺；紫金阶可接空中技能。": "An aerial hit restores one spent air dash; Purple Gold can cancel aerial recovery into a skill.",
+"闪避后命中，可在收招时冲刺退步；紫金阶退步带短暂无敌。": "After a dodge punish, dash-cancel recovery to retreat; Purple Gold grants brief evasion during the step.",
+"0.65 秒内可用冲刺取消收招。": "Dash-cancel recovery within 0.65 seconds.",
+"窗口延长 15%。": "Window lasts 15% longer.",
+"窗口延长 30%，并可用一次技能取消收招。": "Window lasts 30% longer and allows one skill cancel.",
+"0.8 秒内下一次格挡击退降低 28%。": "The next block within 0.8 seconds causes 28% less pushback.",
+"窗口延长 30%，且技能命中也可消耗压迫效果。": "Window lasts 30% longer; a skill hit can also spend the pressure effect.",
+"0.65 秒内重击向前踏进。": "A heavy started within 0.65 seconds steps forward.",
+"踏进距离略增。": "Step-in distance is slightly longer.",
+"破防后重置冲刺冷却，下一次冲刺距离略增。": "Breaking guard resets dash cooldown; your next dash travels slightly farther.",
+"追击窗口延长 15%。": "Chase window lasts 15% longer.",
+"窗口延长 30%，并可选择重击踏进追击。": "Window lasts 30% longer and lets you choose a heavy step-in chase.",
+"空中冲刺用尽后，命中可恢复一次并在收招时续闪。": "After spending your air dash, an aerial hit restores it once and lets you dash-cancel recovery.",
+"续闪窗口延长 15%。": "Air-dash cancel window lasts 15% longer.",
+"窗口延长 30%，并可用一次技能取消空中收招。": "Window lasts 30% longer and allows one aerial skill cancel.",
+"0.65 秒内可用冲刺取消收招并选择退路。": "Dash-cancel recovery and choose a retreat direction within 0.65 seconds.",
+"窗口延长 30%，退步时获得 0.08 秒无敌。": "Window lasts 30% longer and grants 0.08 seconds of evasion during the retreat.",
+"连势 · 连段追步": "Flow · Chase Step",
+"连势 · 追步窗口": "Flow · Chase Window",
+"凝锋 · 贴身压迫": "Focus · Close Pressure",
+"凝锋 · 压迫窗口": "Focus · Pressure Window",
+"回锋 · 踏进反击": "Riposte · Step-in Punish",
+"回锋 · 反击窗口": "Riposte · Punish Window",
+"破军 · 追击踏进": "Breaker · Chase Step",
+"破军 · 追击冲刺": "Breaker · Chase Dash",
+"破军 · 破防追击": "Breaker · Guard-Break Chase",
+"凌空 · 空中续招": "Ascent · Aerial Follow-up",
+"凌空 · 空中续闪": "Ascent · Air Dash Restored",
+"追影 · 退步闪避": "Pursuit · Evasive Retreat",
+"追影 · 退步窗口": "Pursuit · Retreat Window",
 "回风式": "Returning Gale",
 "潜影式": "Veiled Step",
 "沉山式": "Mountain Brace",
@@ -8521,8 +8549,7 @@ Object.assign(UI_COPY_EN, {
 "徽记已升阶：": "Badge upgraded: ",
 "徽记已升阶": "Badge upgraded",
 "获得银徽「": "Received Silver badge “",
-"连续普攻命中": "Consecutive normal hits",
-"连段第 3 次起普攻命中": "Normal attack hits from combo hit 3 onward",
+"连续普攻第 3 击命中": "Third consecutive normal attack hits",
 "蓄力斩命中": "Charged attack hits",
 "精准招架成功": "Successful Just Guard",
 "造成破防": "Break an opponent's guard",
@@ -14113,7 +14140,8 @@ NET.lastResult = '';
 }
 const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits', 'stance', 'stanceUnlocked', 'stanceT', 'badgeId', 'badgeTier', 'badgeDashT',
 'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
-'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'defDebuffT', 'swapFreezeT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir', 'clones', 'cloneN', 'swapId'];
+'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'defDebuffT', 'swapFreezeT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir', 'clones', 'cloneN', 'swapId',
+'badgeLinkT', 'badgePressureT', 'badgePressureSkill', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'badgeAirUsed', 'badgeAirSkillUsed'];
 function snapF(f) { return FK.map(k => f[k] === undefined ? null : r2(f[k])); }
 const VICTIM = ['hitstun', 'launched', 'knockdown', 'getup', 'held', 'blockstun'];
 function applyF(f, arr, exact) {
@@ -15005,6 +15033,7 @@ notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, needleMark
 guard: this.maxGuard, sinceBlock: 0,
 state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
 stance: 0, stanceUnlocked: false, stanceT: 0, badgeId: '', badgeTier: '', badgeDashT: 0,
+badgeLinkT: 0, badgePressureT: 0, badgePressureSkill: 0, badgeRiposteT: 0, badgeBreakT: 0, badgeAirSkillT: 0, badgeExitT: 0, badgeAirUsed: 0, badgeAirSkillUsed: 0,
 juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
 breakCD: 0, beaconT: 0, quickGetup: false, quickGetupPhase: false, plat: -1, dropT: 0 });   // plat：站在山河异境第几个平台上（-1 是地上或空中）；dropT：刚从平台上落下，这段时间穿过平台
 this.scarf = []; this.trail = []; this.ghosts = [];
@@ -15880,6 +15909,14 @@ if (chaosNow('armor')) { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.
 f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
 const foe = foeOf(f), h = f.ctrl && f.ctrl.held, dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0, a = dir || (h && h.aim);
 f.face = f.onGround() ? faceDir(f, foe) : ((a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl))) ? a : f.face);
+const heavy = name === 'hv' || name === 'cs1' || name === 'cs2';
+if (heavy && f.badgeId === 'riposte' && f.badgeRiposteT > 0) {
+f.move = { ...f.move, lunge: (f.move.lunge || 0) + (f.badgeTier === 'purpgold' ? 58 : 48) };
+f.badgeRiposteT = 0; showBadgeCue(f, 'riposte', true);
+} else if (heavy && f.badgeId === 'breaker' && f.badgeTier === 'purpgold' && f.badgeBreakT > 0) {
+f.move = { ...f.move, lunge: (f.move.lunge || 0) + 52 };
+f.badgeBreakT = 0; showBadgeCue(f, 'breaker', true);
+}
 if (scOn()) scFire(f, 'atk', foe, name);
 }
 function doJump(f, dir) {
@@ -15892,11 +15929,21 @@ dust(f.x, 0, 6); SFX.jump();
 if (scOn()) scFire(f, 'jump', foeOf(f));
 }
 function startDash(f, dir) {
-f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * dir; f.vy = 0;
+f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * (f.badgeId === 'breaker' && f.badgeBreakT > 0 ? 1.12 : 1) * dir; f.vy = 0;
+if (f.badgeId === 'breaker' && f.badgeBreakT > 0) { f.badgeBreakT = 0; showBadgeCue(f, 'breakerDash', true); }
 if (f.badgeId === 'pursuit') f.badgeDashT = 1.0;
 f.invul = 0.13; f.dashCD = DODGE_CD;
 if (f.onGround()) dust(f.x - dir * 20, 0, 8);
 SFX.dash();
+if (scOn()) scFire(f, 'dash', foeOf(f));
+}
+function startBadgeDash(f, dir, kind) {
+endEscape(f);
+f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * (kind === 'flow' ? 0.62 : kind === 'air' ? 1 : 0.72) * dir; f.vy = 0;
+f.badgeDashT = 0; f.dashCD = DODGE_CD;
+f.invul = kind === 'exit' && f.badgeTier === 'purpgold' ? 0.08 : 0;
+if (f.onGround()) dust(f.x - dir * 16, 0, 6);
+ring(f.x, f.y - 50, 82, f.look.slash || '233,196,106', 0.24); SFX.dash();
 if (scOn()) scFire(f, 'dash', foeOf(f));
 }
 function startSpecial(f) {
@@ -16040,6 +16087,39 @@ SFX[m.snd]();
 }
 if (t >= act0 && t < act1 && !f.hitDone) tryHit(f, foe, m);
 const free2 = (SKILLS[f.ch.skill2] || {}).free;   // free：只能从自由状态放，不能接在出招后面（离影的换影）
+if (M.phase === 'fight' && t >= act1 && t < act1 + m.rc) {
+if (f.badgeId === 'ascent' && f.badgeAirSkillT > 0 && !f.onGround() && f.airDash > 0 && c.consume('dash')) {
+const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0) || f.face;
+f.airDash--; f.badgeAirSkillT = 0; startBadgeDash(f, dir, 'air'); showBadgeCue(f, 'ascent', true); return;
+}
+if (f.badgeId === 'flowing' && f.badgeLinkT > 0 && c.consume('dash')) {
+const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0) || f.face;
+f.badgeLinkT = 0; startBadgeDash(f, dir, 'flow'); showBadgeCue(f, 'flowing', true); return;
+}
+if (f.badgeId === 'pursuit' && f.badgeExitT > 0 && c.consume('dash')) {
+const inputDir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0), dir = inputDir || -f.face;
+f.badgeExitT = 0; startBadgeDash(f, dir, 'exit'); showBadgeCue(f, 'pursuit', true); return;
+}
+const canBadgeSkill = f.badgeTier === 'purpgold' && f.hitConfirmed && (
+(f.badgeId === 'flowing' && f.badgeLinkT > 0) ||
+(f.badgeId === 'focus' && f.badgePressureT > 0) ||
+(f.badgeId === 'ascent' && f.badgeAirSkillT > 0 && !f.onGround() && !f.badgeAirSkillUsed)
+);
+if (canBadgeSkill) {
+let slot = 0;
+if (f.skillCD <= 0 && c.consume('skill')) slot = 1;
+else if (f.skill2CD <= 0 && !free2 && c.consume('skill2')) slot = 2;
+if (slot) {
+startSkill(f, foe, slot === 2 ? 2 : undefined);
+if (f.state === 'skill') {
+if (f.badgeId === 'flowing') f.badgeLinkT = 0;
+if (f.badgeId === 'focus') { f.badgePressureT = 0; f.badgePressureSkill = 1; }
+if (f.badgeId === 'ascent') { f.badgeAirSkillT = 0; f.badgeAirSkillUsed = 1; }
+showBadgeCue(f, f.badgeId, true); return;
+}
+}
+}
+}
 if (M.phase === 'fight' && cx.skill2FromLight && !free2 && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
 if (M.phase === 'fight' && (t >= act0 + m.ac * cx.chainAt || (f.hitConfirmed && f.moveName === 'dl'))) {
 if (m.next.light && c.consume('light')) return startAttack(f, m.next.light);
@@ -17006,6 +17086,7 @@ f.t += STEP;
 f.dashCD = Math.max(0, f.dashCD - STEP);
 f.stanceT = Math.max(0, (f.stanceT || 0) - STEP);
 f.badgeDashT = Math.max(0, (f.badgeDashT || 0) - STEP);
+for (const key of ['badgeLinkT', 'badgePressureT', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT']) f[key] = Math.max(0, (f[key] || 0) - STEP);
 f.breakCD = Math.max(0, f.breakCD - STEP);
 f.skill2CD = Math.max(0, f.skill2CD - STEP);
 if (f.ch.inkShot) f.ink = Math.min(INK_MAX, (f.ink || 0) + INK_REGEN * STEP);
@@ -17245,6 +17326,7 @@ else if (Math.sign(f.vx) === side) f.vx = 0;
 }
 }
 function onLand(f) {
+f.badgeAirUsed = 0; f.badgeAirSkillUsed = 0; f.badgeAirSkillT = 0;
 if (scOn()) scFire(f, 'land', foeOf(f), f.vy);
 f.wallBounced = false;
 if (f.airRecover) {
@@ -17461,6 +17543,7 @@ def.face = atkDir;
 }
 const isBlockedCs2 = isCs2 && wasBlocking;
 const blocking = wasBlocking && !m.unblockable && !isBlockedCs2;
+if (!blocking && !isBlockedCs2 && att.badgePressureSkill) att.badgePressureSkill = 0;
 const ev = { e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, wb: wasBlocking && !!m.big, blk: blocking || isBlockedCs2, blockedCs2: isBlockedCs2, f: fx };
 const mm = att.ch.meterMul || 1;
 const attWeight = (att.ch && att.ch.stat && att.ch.stat.weight) || 1;
@@ -17469,6 +17552,7 @@ const massRatio = clamp(attWeight / defWeight, 0.45, 2.5);
 if (blocking) {
 const isJustGuard = !m.isProj && !m.unblockable && !m.noJg && !m.unparryable && (def.blockT !== undefined && def.blockT <= (scOn() ? scJG(def) : 0.09));
 if (isJustGuard) {
+if (att.badgePressureSkill) { att.badgePressureSkill = 0; att.badgePressureT = 0; }
 if (scOn()) scFire(def, 'blk', att, true, m);
 def.guard = Math.min(def.maxGuard, (def.guard !== undefined ? def.guard : def.maxGuard) + 12);
 def.state = 'blockstun'; def.t = 0; def.stun = 0.05;
@@ -17509,6 +17593,7 @@ def.guard = 0;
 if (scOn()) scFire(att, 'gb', def);
 def.state = 'hitstun'; def.t = 0; def.stun = 0.85; def.rooted = true;
 def.vx = fx * 140;
+if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
 shake = 18; flashA = 0.4; flashRGB = '255,100,80';
 ring(def.x, def.y - 60, 160, '255,120,80', 0.45);
 addP({ type: 'text', text: '💥 破防崩势', x: def.x, y: def.y - 110, life: 1.2, max: 1.2, rgb: '255,120,80' });
@@ -17531,6 +17616,7 @@ def.stun = (0.08 + m.hs * 0.7) * ((def.ch && def.ch.stat && def.ch.stat.poise) |
 }
 const isDefFixed = def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.fixed : def.ctrl.mode === 'fixed');
 def.vx = isDefFixed ? 0 : fx * (180 + Math.abs(m.kb[0]) * 0.35) * Math.sqrt(massRatio);
+if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
 if (isDefFixed) { def.vy = 0; def.y = 0; }
 if (!m.isProj) att.vx -= att.face * (120 / Math.sqrt(massRatio));
 att.meter = Math.min(100, att.meter + 0.6 * mm); def.meter = Math.min(100, def.meter + 1.5);
@@ -17682,6 +17768,7 @@ if (isBlockedCs2 && def.hp > 0) {
 def.state = 'knockdown';
 def.t = 0;
 def.vx = fx * 280 * Math.sqrt(massRatio);
+if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
 def.vy = 0;
 def.y = 0;
 def.rot = 0;
@@ -34197,14 +34284,15 @@ cixian: { name: '双仪式', en: 'Twin Poles', kind: 'power', desc: '重击更�
 qianji: { name: '游线式', en: 'Tether Flow', kind: 'reach', desc: '攻击更远，伤害略低，出招稍慢。' },
 };
 var COMBAT_BADGES = {
-flowing: { n: '连势', en: 'Flow', trigger: '连段第 3 次起普攻命中', effect: '连段普攻命中后获得额外真气。', gain: 0.7, resource: '真气' },
-focus: { n: '凝锋', en: 'Focus', trigger: '蓄力斩命中', effect: '蓄力斩命中后获得额外真气。', gain: 1.2, resource: '真气' },
-riposte: { n: '回锋', en: 'Riposte', trigger: '精准招架成功', effect: '精准招架后恢复少量架势。', gain: 2.5, resource: '架势' },
-breaker: { n: '破军', en: 'Breaker', trigger: '造成破防', effect: '造成破防后获得额外真气。', gain: 2, resource: '真气' },
-ascent: { n: '凌空', en: 'Ascent', trigger: '空中攻击命中', effect: '空中攻击命中后获得额外真气。', gain: 1.1, resource: '真气' },
-pursuit: { n: '追影', en: 'Pursuit', trigger: '闪避后 1 秒内首次命中', effect: '闪避后一秒内命中可获得额外真气。', gain: 1.1, resource: '真气' },
+flowing: { n: '连势', en: 'Flow', trigger: '连续普攻第 3 击命中', effect: '打开连段追步窗口；紫金阶可改接技能。', tiers: ['0.65 秒内可用冲刺取消收招。', '窗口延长 15%。', '窗口延长 30%，并可用一次技能取消收招。'] },
+focus: { n: '凝锋', en: 'Focus', trigger: '蓄力斩命中', effect: '下一次格挡交锋减少击退；紫金阶技能也可承接。', tiers: ['0.8 秒内下一次格挡击退降低 28%。', '窗口延长 15%。', '窗口延长 30%，且技能命中也可消耗压迫效果。'] },
+riposte: { n: '回锋', en: 'Riposte', trigger: '精准招架成功', effect: '重击获得短促踏进，抓住招架后的反击时机。', tiers: ['0.65 秒内重击向前踏进。', '窗口延长 15%。', '窗口延长 30%，踏进距离略增。'] },
+breaker: { n: '破军', en: 'Breaker', trigger: '造成破防', effect: '立刻重置冲刺冷却；紫金阶可选重击踏进追击。', tiers: ['破防后重置冲刺冷却，下一次冲刺距离略增。', '追击窗口延长 15%。', '窗口延长 30%，并可选择重击踏进追击。'] },
+ascent: { n: '凌空', en: 'Ascent', trigger: '空中攻击命中', effect: '腾空时最多续一次空中冲刺；紫金阶可接空中技能。', tiers: ['空中冲刺用尽后，命中可恢复一次并在收招时续闪。', '续闪窗口延长 15%。', '窗口延长 30%，并可用一次技能取消空中收招。'] },
+pursuit: { n: '追影', en: 'Pursuit', trigger: '闪避后 1 秒内首次命中', effect: '打开退步窗口；紫金阶退步带短暂无敌。', tiers: ['0.65 秒内可用冲刺取消收招并选择退路。', '窗口延长 15%。', '窗口延长 30%，退步时获得 0.08 秒无敌。'] },
 };
 var BADGE_TIER_POWER = { silver: 1, gold: 1.5, purpgold: 2 };
+var BADGE_WINDOW_SCALE = { silver: 1, gold: 1.15, purpgold: 1.3 };
 if (typeof window !== 'undefined') { window.HERO_STANCES = HERO_STANCES; window.COMBAT_BADGES = COMBAT_BADGES; }
 function combatLoadoutMap() {
 try { return typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}; } catch (e) { return {}; }
@@ -34229,8 +34317,19 @@ f.stance = f.stanceUnlocked && profile.stance === 1 ? 1 : 0;
 f.badgeId = COMBAT_BADGES && COMBAT_BADGES[profile.badge] ? profile.badge : '';
 f.badgeTier = BADGE_TIER_POWER && BADGE_TIER_POWER[profile.tier] ? profile.tier : '';
 f.badgeDashT = 0;
+f.badgeLinkT = f.badgePressureT = f.badgeRiposteT = f.badgeBreakT = f.badgeAirSkillT = f.badgeExitT = 0;
+f.badgePressureSkill = 0; f.badgeAirUsed = f.badgeAirSkillUsed = 0;
 f.stanceT = 0;
 }
+}
+function badgeDuration(f, base) { return base * (BADGE_WINDOW_SCALE[f && f.badgeTier] || 1); }
+function showBadgeCue(f, key, consumed = false) {
+if (!f || RESIM) return;
+const badge = COMBAT_BADGES[f.badgeId]; if (!badge) return;
+const names = { flowing: consumed ? '连势 · 连段追步' : '连势 · 追步窗口', focus: consumed ? '凝锋 · 贴身压迫' : '凝锋 · 压迫窗口', riposte: consumed ? '回锋 · 踏进反击' : '回锋 · 反击窗口', breaker: consumed ? '破军 · 追击踏进' : '破军 · 破防追击', breakerDash: '破军 · 追击冲刺', ascent: consumed ? '凌空 · 空中续招' : '凌空 · 空中续闪', pursuit: consumed ? '追影 · 退步闪避' : '追影 · 退步窗口' };
+const rgb = f.look && f.look.slash || '233,196,106';
+ring(f.x, f.y - 58, consumed ? 78 : 58, rgb, consumed ? 0.28 : 0.18);
+addP({ type: 'text', text: names[key] || badge.n, x: f.x, y: f.y - 112, life: 0.7, max: 0.7, rgb });
 }
 function stanceMove(f, name) {
 const base = f.moves[name];
@@ -34258,37 +34357,36 @@ return true;
 }
 function applyCombatBadgeHit(att, def, move, ev) {
 if (!att || !att.badgeId || !att.badgeTier || !ev || ev.blk || ev.armor || ev.dd <= 0) return;
-const power = BADGE_TIER_POWER[att.badgeTier] || 1, name = att.moveName || move.name || '';
-let gain = 0;
-if (att.badgeId === 'flowing' && /^l[1-5]$/.test(name) && (att.comboHits || 0) >= 2) gain = COMBAT_BADGES.flowing.gain * power;
-else if (att.badgeId === 'focus' && (name === 'cs1' || name === 'cs2')) gain = COMBAT_BADGES.focus.gain * power;
-else if (att.badgeId === 'ascent' && (att.y < -10 || name === 'a1' || name === 'a2')) gain = COMBAT_BADGES.ascent.gain * power;
-else if (att.badgeId === 'pursuit' && att.badgeDashT > 0) { gain = COMBAT_BADGES.pursuit.gain * power; att.badgeDashT = 0; }
-if (gain) {
-att.meter = Math.min(100, att.meter + gain);
-showBadgeTrainingGain(att, gain, '真气');
+const name = att.moveName || (move && move.name) || '';
+if (att.badgeId === 'flowing' && !(move && (move.isProj || move.skill || move.ult)) && /^l[1-5]$/.test(name) && def.comboHits === 3) {
+att.badgeLinkT = badgeDuration(att, 0.65); showBadgeCue(att, 'flowing');
+} else if (att.badgeId === 'focus' && (name === 'cs1' || name === 'cs2')) {
+att.badgePressureT = badgeDuration(att, 0.8); att.badgePressureSkill = 0; showBadgeCue(att, 'focus');
+} else if (att.badgeId === 'ascent' && (att.y < -10 || name === 'a1' || name === 'a2')) {
+let cue = false;
+if (!att.badgeAirUsed && att.airDash <= 0) { att.airDash = 1; att.badgeAirUsed = 1; cue = true; }
+if (!att.badgeAirSkillUsed) { att.badgeAirSkillT = badgeDuration(att, 0.75); cue = true; }
+if (cue) showBadgeCue(att, 'ascent');
+} else if (att.badgeId === 'pursuit' && att.badgeDashT > 0) {
+att.badgeDashT = 0; att.badgeExitT = badgeDuration(att, 0.65); showBadgeCue(att, 'pursuit');
 }
 }
 function applyCombatBadgeGuard(def, ev) {
-if (!def || !def.badgeId || !def.badgeTier || !ev) return;
-const power = BADGE_TIER_POWER[def.badgeTier] || 1;
-if (ev.justGuard && def.badgeId === 'riposte') {
-const gain = COMBAT_BADGES.riposte.gain * power;
-def.guard = Math.min(def.maxGuard, def.guard + gain);
-showBadgeTrainingGain(def, gain, '架势');
+if (!def || !def.badgeId || !def.badgeTier || !ev || !ev.justGuard || def.badgeId !== 'riposte') return;
+def.badgeRiposteT = badgeDuration(def, 0.65); showBadgeCue(def, 'riposte');
 }
+function applyCombatBadgeBlock(att, def) {
+if (!att || att.badgeId !== 'focus' || !(att.badgePressureSkill || att.badgePressureT > 0)) return false;
+def.vx *= 0.72;
+att.badgePressureT = 0; att.badgePressureSkill = 0;
+showBadgeCue(att, 'focus', true);
+return true;
 }
 function applyCombatBadgeBreak(att, ev) {
-if (att && att.badgeId === 'breaker' && att.badgeTier && ev && ev.guardBreak) {
-const gain = COMBAT_BADGES.breaker.gain * (BADGE_TIER_POWER[att.badgeTier] || 1);
-att.meter = Math.min(100, att.meter + gain);
-showBadgeTrainingGain(att, gain, '真气');
-}
-}
-function showBadgeTrainingGain(f, gain, resource) {
-if (M.mode !== 'train' || typeof window === 'undefined' || !window.BADGE_TRAINING_PREVIEW || !f || f.idx !== 0) return;
-const badge = COMBAT_BADGES[f.badgeId];
-if (badge) addP({ type: 'text', text: `${cvT(badge.n)} +${Number(gain.toFixed(2)).toString()} ${cvT(resource)}`, x: f.x, y: f.y - 125, life: 1, max: 1, rgb: f.look.slash || '233,196,106' });
+if (!att || att.badgeId !== 'breaker' || !att.badgeTier || !ev || !ev.guardBreak) return;
+att.dashCD = 0;
+att.badgeBreakT = badgeDuration(att, 0.8);
+showBadgeCue(att, 'breaker');
 }
 </script>
 <script>
@@ -35565,12 +35663,12 @@ C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming
 C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem'];
 C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
 C.BADGES = {
-flowing: { name: '连势', desc: '连续普攻命中后，获得少量额外真气。', en: 'Flow', effect: 'normal' },
-focus: { name: '凝锋', desc: '蓄力斩命中后，获得少量额外真气。', en: 'Focus', effect: 'charged' },
-riposte: { name: '回锋', desc: '精准招架成功后，恢复少量架势。', en: 'Riposte', effect: 'parry' },
-breaker: { name: '破军', desc: '造成破防后，获得少量额外真气。', en: 'Breaker', effect: 'break' },
-ascent: { name: '凌空', desc: '空中攻击命中后，获得少量额外真气。', en: 'Ascent', effect: 'air' },
-pursuit: { name: '追影', desc: '闪避后首次命中，获得少量额外真气。', en: 'Pursuit', effect: 'dash' },
+flowing: { name: '连势', desc: '连续普攻第 3 击命中后，可在收招时冲刺追步；紫金阶可改接技能。', en: 'Flow', effect: 'normal' },
+focus: { name: '凝锋', desc: '蓄力斩命中后，下一次格挡交锋会减少击退；紫金阶技能也可承接。', en: 'Focus', effect: 'charged' },
+riposte: { name: '回锋', desc: '精准招架后，限时重击会向前踏进，抓住反击时机。', en: 'Riposte', effect: 'parry' },
+breaker: { name: '破军', desc: '破防后立刻重置冲刺冷却，下一次冲刺可更快追击；紫金阶也可选重击踏进。', en: 'Breaker', effect: 'break' },
+ascent: { name: '凌空', desc: '腾空攻击命中后可续一次空中冲刺；紫金阶可接空中技能。', en: 'Ascent', effect: 'air' },
+pursuit: { name: '追影', desc: '闪避后命中，可在收招时冲刺退步；紫金阶退步带短暂无敌。', en: 'Pursuit', effect: 'dash' },
 };
 C.BADGE_TIER = { silver: 1, gold: 2, purpgold: 3 };
 C.BADGE_UPGRADE = { silver: { to: 'gold', sigils: 3, ink: 2000, kos: 100 }, gold: { to: 'purpgold', sigils: 7, ink: 6000, kos: 300 } };
@@ -37645,10 +37743,10 @@ return `<div class="ar-ophead"><div><span class="ar-k">江湖行动 · 第 ${se.
 }
 function pBadges() {
 const s = blankS(), ids = Object.keys(C.BADGES), owned = Object.entries(s.badgeOwned || {}), totalKOs = Object.values(s.heroKOs || {}).reduce((n, x) => n + x, 0);
-const tierNames = ['银徽', '金徽', '紫金徽'], tierPowers = [1, 1.5, 2];
+const tierNames = ['银徽', '金徽', '紫金徽'];
 const effectLine = id => {
-const spec = window.COMBAT_BADGES[id], resource = spec.resource, amount = n => Number((spec.gain * n).toFixed(2)).toString();
-return `<small class="ar-badge-effect">${tierNames.map((name, i) => `${cvT(name)} +${amount(tierPowers[i])} ${cvT(resource)}`).join(' · ')}</small>`;
+const spec = window.COMBAT_BADGES[id];
+return `<div class="ar-badge-effect">${tierNames.map((name, i) => `<small>${cvT(name)}：${cvT(spec.tiers[i])}</small>`).join('')}</div>`;
 };
 const previewButton = (id, tier) => `<button type="button" class="ghost small" data-badge-preview="${id}" data-badge-tier="${tier}">${cvT('训练场试招')}</button>`;
 const badgeCard = (id, tier, giftCard = false) => {
