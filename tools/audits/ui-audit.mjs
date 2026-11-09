@@ -59,6 +59,7 @@ const PANELS = [
   ['community', `openScreen('community')`], ['acc', `showScreen('acc')`], ['lb', `openLeaderboard()`],
   ['welfare', `openWelfare()`], ['replays', `openScreen('replays')`],
   ['tasks', `openScreen('tasks')`], ['bp', `PROF.owned = CHARS.map(c => c.id); bpStart('cpu', { mapBriefed: true }); bpCpuT = 9999; bpApply(3); bpApply(6); bpCpuT = 9999; bpSel = 4; renderBP(); showScreen('bp');`], ['pause', `showScreen('pause')`],
+  ['bpquick', `bpStart('tag3', { quickRelay: true }); bpApply(bpValidList()[0]);`],
   ['end', `__endDemo()`], ['forestEnd', `__forestDemo()`], ['tutask', `showScreen('tutask')`],
   ['tutdone', `__tutdoneDemo()`], ['armory', `openScreen('armory')`],
 ];

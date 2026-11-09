@@ -13,7 +13,7 @@ This is an ambitious working draft, not a list of committed designs. Its directi
 ## 3v3 Relay And Match Features
 
 - [x] Review the current journey from opening the game to starting a 3v3 relay; remove unnecessary steps while letting players choose their three heroes.
-- [ ] Improve hero selection and drafting without making the default flow cumbersome.
+- [x] Improve hero selection and drafting without making the default flow cumbersome.
 - [ ] Explore improvements to hero order, transitions between fighters, and meaningful team combinations while retaining the relay format.
 - [ ] Explore maps, match pacing, and comeback opportunities; test that changes preserve short, enjoyable matches.
 - [ ] Improve post-match results and investigate fast rematches and changing teams between matches.

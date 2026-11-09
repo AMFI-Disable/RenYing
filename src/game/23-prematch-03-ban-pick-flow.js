@@ -68,6 +68,18 @@ function bpValid(i) {
   return true;
 }
 const bpValidList = () => CHARS.map((c, i) => i).filter(bpValid);   // 这一步还能点的角色
+function bpUndoQuickPick() {
+  if (currentScreen !== 'bp' || !BP || bpMode !== 'tag3' || !bpCustomOpts || !bpCustomOpts.quickRelay || BP.step < 1 || BP.step > 2 || !isMyTurnBP()) return false;
+  const slot = BP.step - 1;
+  const previous = BP.picks[0][slot];
+  if (previous < 0) return false;
+  BP.picks[0][slot] = -1;
+  BP.step = slot; BP.t = BP_TIME; bpSel = previous; bpHover = -1;
+  renderBP();
+  const card = document.querySelector(`#bpGrid .bpcard[data-i="${previous}"]`);
+  if (card && typeof KBN !== 'undefined' && KBN.on) card.focus({ preventScroll: true });
+  return true;
+}
 function bpApply(i) {
   if (!BP || BP.step >= bpSteps().length) return;
   if (!bpValid(i)) {
