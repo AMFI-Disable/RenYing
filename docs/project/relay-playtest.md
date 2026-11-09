@@ -12,6 +12,23 @@ All six maps are eligible for local relay: cliff, ice, bamboo, thunder, pagoda a
 
 Automated combat checks cover ordered substitutions, health carryover and its cap, drawn rounds, each map, rematches and repicking. These checks do not establish actual match length, player comprehension, balance or enjoyment.
 
+## AI Exploration
+
+At revision `a5ddef9`, `node tools/ai/relay-study.mjs` ran 24 seeded, headless AI-versus-AI relay matches: four per map, using two fixed pairs of three-hero teams with both starting sides represented. Both sides used normal difficulty and recommended scrolls. The simulation starts matches directly; it does not exercise the Quick Relay interface. The reproducible per-match records are in [relay-ai-study.jsonl](relay-ai-study.jsonl); `frames / 120` is simulated match time from initialization to the end, including simulated introductions and knockout transitions. It excludes selection, rendering overhead, pauses and real players.
+
+All 24 matches finished. Simulated durations ranged from 78.2 to 225.6 seconds, with a median of 158.9 seconds; none exceeded 300 simulated seconds. Seven winners had at some point trailed by one eliminated fighter, and none won after trailing by two. Three matches had three bouts, ten had four, and eleven had five.
+
+| Map | Median Simulated Seconds | Matches |
+| :--- | ---: | ---: |
+| Cliff | 131.6 | 4 |
+| Ice | 183.3 | 4 |
+| Bamboo | 152.8 | 4 |
+| Thunder | 191.0 | 4 |
+| Pagoda | 152.4 | 4 |
+| Wine | 153.3 | 4 |
+
+These are descriptive observations from a small fixed set of AI teams and seeds, not estimates of student match duration, map balance, comeback probability or enjoyment. Seeded side reversals do not eliminate hero, scroll, AI or map interactions. No change to timing, recovery or team bonuses is justified by this sample alone.
+
 ## School Playtest
 
 Run several complete matches with volunteers of different experience levels. Include both languages and the keyboard and touch devices players actually use. Record the game revision, mode, map, difficulty, device and viewport, but do not record names or account details. For each match record:

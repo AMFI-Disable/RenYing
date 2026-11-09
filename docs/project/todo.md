@@ -19,6 +19,7 @@ This is an ambitious working draft, not a list of committed designs. Its directi
   - [x] Preview and rotate all three selected heroes before the final pick.
   - [x] Document existing transition and team mechanics for player evaluation.
 - [ ] Explore maps, match pacing, and comeback opportunities; test that changes preserve short, enjoyable matches.
+  - [x] Run and document a reproducible AI-only study across all six maps; validate the conclusions with players.
 - [x] Improve post-match results and investigate fast rematches and changing teams between matches.
 - [ ] Test the full flow with school players and record where they hesitate or leave.
 
