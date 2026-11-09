@@ -522,16 +522,16 @@ function resolveYoyoBallHits(p, owner, box) {
   p.yoyoHitAt = p.yoyoHitAt || {};
   p.yoyoUltDealt = p.yoyoUltDealt || {};
   for (const foe of foes) {
-    if (!foe || foe.hp <= 0 || foe.invul > 0 || !overlap(box, hurtbox(foe))) continue;
+    if (!foe || foe.hp <= 0 || foe.invul > 0 || foe.ballGuardBreakT > 0 || !overlap(box, hurtbox(foe))) continue;
     if ((p.yoyoHitAt[foe.idx] || -99) + (p.yoyoPhase === 'loop' ? 0.72 : 0.3) > p.age) continue;
     if (p.yoyoPhase === 'ult-pass' || p.yoyoPhase === 'ult-return') {
       const remain = 120 - (p.yoyoUltDealt[foe.idx] || 0);
       if (remain <= 0) continue;
       const dmg = Math.min(p.dmg, remain);
-      applyHit(owner, foe, { dmg, kb: [260, -300], stun: 0.32, hs: 0.08, launch: true, ult: true, noScale: true, dir: p.yoyoDir || owner.face }, [p.x, p.y]);
+      applyHit(owner, foe, { dmg, kb: [260, -300], stun: 0.32, hs: 0.08, launch: true, ult: true, noScale: true, guardDamage: 24, blockGuardDamage: 12, dir: p.yoyoDir || owner.face }, [p.x, p.y]);
       p.yoyoUltDealt[foe.idx] = (p.yoyoUltDealt[foe.idx] || 0) + dmg;
     } else {
-      applyHit(owner, foe, { dmg: p.dmg, kb: [180, -120], stun: p.yoyoPhase === 'lash' ? 0.38 : 0.24, hs: 0.06, launch: false, dir: p.yoyoDir || owner.face }, [p.x, p.y]);
+      applyHit(owner, foe, { dmg: p.dmg, kb: [180, -120], stun: p.yoyoPhase === 'lash' ? 0.38 : 0.24, hs: 0.06, launch: false, guardDamage: p.yoyoPhase === 'lash' ? 44 : 34, blockGuardDamage: p.yoyoPhase === 'lash' ? 18 : 12, dir: p.yoyoDir || owner.face }, [p.x, p.y]);
     }
     p.yoyoHitAt[foe.idx] = p.age;
     p.hits = (p.hits || 0) + 1;
@@ -572,7 +572,10 @@ function updateProjs() {
         p.yoyoDir = p.yoyoDir || owner.face || 1;
         if (!p.yoyoLeg) p.yoyoLeg = 'out';
         if (p.yoyoLeg === 'return' && Math.abs(p.x - owner.x) < 56) {
-          p.yoyoLeg = 'out'; p.yoyoDir = owner.face || p.yoyoDir; p.yoyoCycle = (p.yoyoCycle || 0) + 1;
+          p.yoyoLeg = 'out';
+          const facing = owner.face || p.yoyoDir;
+          p.yoyoDir = (facing < 0 && owner.x - arenaMin < 56) || (facing > 0 && arenaMax - owner.x < 56) ? -facing : facing;
+          p.yoyoCycle = (p.yoyoCycle || 0) + 1;
         }
         if (p.yoyoLeg === 'out' && Math.abs(p.x - owner.x) >= qRange - 8) p.yoyoLeg = 'return';
         p.vx = (p.yoyoLeg === 'return' ? Math.sign(owner.x - p.x) || -p.yoyoDir : p.yoyoDir) * loopSpeed;
@@ -624,12 +627,12 @@ function updateProjs() {
           }
         }
         // 墙壁弹性高反弹（保留 88% 水平动能并获得轻微上弹）
-        if (p.x <= WALL + 18) {
+        if (p.x + p.vx * STEP <= WALL + 18) {
           p.x = WALL + 18;
           p.vx = Math.max(380, Math.abs(p.vx) * 0.88);
           p.vy = Math.min(p.vy, -160);
           ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
-        } else if (p.x >= STAGE_W - WALL - 18) {
+        } else if (p.x + p.vx * STEP >= STAGE_W - WALL - 18) {
           p.x = STAGE_W - WALL - 18;
           p.vx = -Math.max(380, Math.abs(p.vx) * 0.88);
           p.vy = Math.min(p.vy, -160);
@@ -670,8 +673,17 @@ function updateProjs() {
     mapWindProj(p);   // 竹海悬岩的风
     if (p.kind === 'ironball' && p.yoyo) {
       const owner = fighterByIdx(p.owner), range = p.yoyoRange || 600;
-      if (owner && (p.yoyoPhase === 'loop' || p.yoyoPhase === 'lash')) p.x = clamp(p.x, owner.x - range, owner.x + range);
-      else p.x = clamp(p.x, WALL + 18, STAGE_W - WALL - 18);
+      const wallL = WALL + 18, wallR = STAGE_W - WALL - 18;
+      p.x = clamp(p.x, wallL, wallR);
+      if (owner && p.yoyoPhase === 'loop' && ((p.x <= wallL && p.vx < 0) || (p.x >= wallR && p.vx > 0))) {
+        p.yoyoLeg = 'return'; p.yoyoDir = Math.sign(owner.x - p.x) || (p.x <= wallL ? 1 : -1);
+        ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
+      } else if (owner && p.yoyoPhase === 'lash' && ((p.x <= wallL && p.vx < 0) || (p.x >= wallR && p.vx > 0))) {
+        p.yoyoPhase = 'loop'; p.yoyoLeg = 'return'; p.yoyoActionT = 0;
+        p.yoyoDir = Math.sign(owner.x - p.x) || (p.x <= wallL ? 1 : -1);
+        ring(p.x, p.y, 42, '235,165,70', 0.25); SFX.ballHit();
+      }
+      if (owner && (p.yoyoPhase === 'loop' || p.yoyoPhase === 'lash')) p.x = clamp(p.x, Math.max(wallL, owner.x - range), Math.min(wallR, owner.x + range));
       p.y = clamp(p.y, -560, -24);
     }
     if (p.grow) { p.w += p.grow * STEP; p.h += p.grow * STEP; }
@@ -691,7 +703,7 @@ function updateProjs() {
     }
     hitClones(box, p.owner, p.dmg);
     if (hitDecoyBox(box, p.owner)) { if (!p.pierce) p.dead = true; continue; }
-    if (p.hitCD > 0 || foe.invul > 0 || foe.hp <= 0) continue;
+    if (p.hitCD > 0 || foe.invul > 0 || (p.kind === 'ironball' && foe.ballGuardBreakT > 0) || foe.hp <= 0) continue;
     if ((p.groundOnly || p.kind === 'quake') && (foe.y < -16 || foe.flying)) continue;
     if (!overlap(box, hurtbox(foe))) continue;
     if (p.feast) {   // 与民同乐：砸中就得陪着喝
@@ -1281,7 +1293,7 @@ function updateFighter(f, foe) {
   f.dashCD = Math.max(0, f.dashCD - STEP);
   f.stanceT = Math.max(0, (f.stanceT || 0) - STEP);
   f.badgeDashT = Math.max(0, (f.badgeDashT || 0) - STEP);
-  for (const key of ['badgeLinkT', 'badgePressureT', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT']) f[key] = Math.max(0, (f[key] || 0) - STEP);
+  for (const key of ['badgeLinkT', 'badgePressureT', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'ballGuardBreakT']) f[key] = Math.max(0, (f[key] || 0) - STEP);
   f.breakCD = Math.max(0, f.breakCD - STEP);
   f.skill2CD = Math.max(0, f.skill2CD - STEP);
   if (f.ch.inkShot) f.ink = Math.min(INK_MAX, (f.ink || 0) + INK_REGEN * STEP);

@@ -41,6 +41,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **千机傀丸 wall and posture behavior (`src/game/03-skills.js`, `src/game/09-actions.js`, `src/game/10-hits.js`)**: fixed tethered wall returns, added strong posture damage on a clean hit and partial posture damage on a block, and prevented ball hits for 0.85 seconds after guard break. The protection timer is included in rollback snapshots.
+
 - **刃影 browser icon (`assets/favicon.svg`, `src/page.html`, `tools/build.py`)**: matched the admin panel's vermilion seal and cream 刃 mark across the main, offline, and legacy pages.
 
 - **Playstyle-focused martial badges (`src/game/27-combat-loadouts.js`, `src/game/09-actions.js`, `src/game/10-hits.js`, `src/armory.js`)**: added distinct combo, pressure, parry, guard-break, aerial, and dodge follow-ups; badge windows show combat cues and synchronize through rollback and replay state. No account migration is needed. Needs a Worker redeploy.

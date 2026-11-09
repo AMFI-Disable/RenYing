@@ -256,5 +256,33 @@ export default [
       if (A.state === 'special' || A.skillCD > 0 || projs.some(p => p.kind === 'ironball' && p.owner === A.idx && !p.dead)) return { pass: false, error: 'E could not summon, pass, and return a missing ball' };
       toMenu(); return { pass: true, error: null };
     })()`
+  },
+  {
+    name: 'Qianji ball rebounds from arena walls, drains posture on hit and block, and respects guard-break protection',
+    fn: `(() => {
+      startMatch('train', 'stand', [CHAR_IDX.qianji, CHAR_IDX.tieshan]);
+      showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B]) { toNeutral(f); f.y = 0; f.vx = f.vy = 0; f.invul = 0; f.ballGuardBreakT = 0; f.hp = f.maxHp; f.guard = f.maxGuard; }
+      const left = WALL + 18; A.x = left + 26; A.face = -1; B.x = STAGE_W / 2; projs.length = 0;
+      const ball = { kind: 'ironball', owner: A.idx, yoyo: true, yoyoPhase: 'loop', yoyoLeg: 'out', yoyoDir: -1, yoyoRange: 600, x: left + 4, y: -58, vx: -1800, vy: 0, g: 0, w: 36, h: 36, life: 999, age: 0, dmg: 24, hitCD: 0, yoyoHitAt: {} };
+      projs.push(ball); updateProjs(); const wallReturned = ball.yoyoLeg === 'return' && ball.x === left;
+      updateProjs(); const escapedWall = ball.x > left && ball.vx > 0;
+
+      A.x = STAGE_W / 2 - 180; A.face = 1; B.x = STAGE_W / 2 + 180; B.y = 0; B.plat = -1; B.invul = 0; B.ballGuardBreakT = 0; B.state = 'idle'; B.guard = 100; B.hp = B.maxHp;
+      applyHit(A, B, { dmg: 24, kb: [180, -120], stun: 0.24, hs: 0.06, guardDamage: 34, blockGuardDamage: 12, dir: 1 }, [B.x, B.y - 58]);
+      const hitGuard = B.guard;
+      B.state = 'block'; B.t = 0; B.blockT = 1; B.vx = 0; B.guard = 100; B.hp = B.maxHp; B.invul = 0; B.ballGuardBreakT = 0;
+      applyHit(A, B, { dmg: 24, kb: [180, -120], stun: 0.24, hs: 0.06, guardDamage: 34, blockGuardDamage: 12, dir: 1 }, [B.x, B.y - 58]);
+      const blockedGuard = B.guard;
+      B.state = 'block'; B.t = 0; B.blockT = 1; B.vx = 0; B.guard = 1; B.hp = B.maxHp; B.invul = 0; B.ballGuardBreakT = 0;
+      ball.x = B.x; ball.y = B.y - 58; ball.yoyoPhase = 'loop'; ball.yoyoDir = 1; ball.yoyoHitAt = {}; ball.age = 2;
+      const box = hurtbox(B); resolveYoyoBallHits(ball, A, box); const broke = B.guard === 0 && B.ballGuardBreakT >= 0.84;
+      const hpAfterBreak = B.hp; resolveYoyoBallHits(ball, A, box); const protected = B.hp === hpAfterBreak;
+      const ballGuardIndex = FK.indexOf('ballGuardBreakT'); A.ballGuardBreakT = 0.37;
+      const rollbackState = ballGuardIndex >= 0 && snapF(A)[ballGuardIndex] === 0.37;
+      toMenu();
+      const ok = wallReturned && escapedWall && hitGuard <= 66 && blockedGuard <= 65 && broke && protected && rollbackState;
+      return { pass: ok, error: JSON.stringify({ wallReturned, escapedWall, hitGuard, blockedGuard, broke, protected, rollbackState, guardTimer: B.ballGuardBreakT }) };
+    })()`
   }
 ];

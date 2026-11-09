@@ -235,6 +235,7 @@ function applyHit(att, def, m, pt) {
     // 消耗架势耐力（Guard Posture）：重体量/高威能打小体量，架势消耗倍增
     const defVuln = (def.defDebuffT > 0 || (m && m.isWave)) ? 1.5 : 1.0;
     let guardLoss = ((m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1)) * defVuln;
+    guardLoss += Math.max(0, m.blockGuardDamage || 0);
     if (chaosNow('guard_stab')) guardLoss *= chaosNow('guard_stab').val;
     if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true)) {
       guardLoss = 0;
@@ -251,7 +252,8 @@ function applyHit(att, def, m, pt) {
       if (scOn()) scFire(att, 'gb', def);
       def.state = 'hitstun'; def.t = 0; def.stun = 0.85; def.rooted = true;
       def.vx = fx * 140;
-    if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
+      def.ballGuardBreakT = Math.max(def.ballGuardBreakT || 0, 0.85);
+      if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
       shake = 18; flashA = 0.4; flashRGB = '255,100,80';
       ring(def.x, def.y - 60, 160, '255,120,80', 0.45);
       addP({ type: 'text', text: '💥 破防崩势', x: def.x, y: def.y - 110, life: 1.2, max: 1.2, rgb: '255,120,80' });
@@ -283,6 +285,10 @@ function applyHit(att, def, m, pt) {
     if (scOn()) scFire(def, 'blk', att, false, m);
     hitVisual(ev); netEmit(ev);
     return;
+  }
+  if (m.guardDamage > 0 && def.guard !== undefined && !(def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true))) {
+    def.guard = Math.max(0, def.guard - m.guardDamage);
+    def.sinceBlock = 0;
   }
   // 霸体：普通攻击打不断，减伤 20%（只吃 80% 伤害）
   const rawDefRating = (def.ch && def.ch.stat && def.ch.stat.defRating) || 1;

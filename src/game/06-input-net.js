@@ -318,7 +318,7 @@ function netLost() {
 const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits', 'stance', 'stanceUnlocked', 'stanceT', 'badgeId', 'badgeTier', 'badgeDashT',
   'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
   'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'defDebuffT', 'swapFreezeT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir', 'clones', 'cloneN', 'swapId',
-  'badgeLinkT', 'badgePressureT', 'badgePressureSkill', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'badgeAirUsed', 'badgeAirSkillUsed'];
+  'badgeLinkT', 'badgePressureT', 'badgePressureSkill', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'badgeAirUsed', 'badgeAirSkillUsed', 'ballGuardBreakT'];
 // 同步数据用数组而不是对象，体积小一半多
 function snapF(f) { return FK.map(k => f[k] === undefined ? null : r2(f[k])); }
 // 被打的状态：这些一定听房主的
