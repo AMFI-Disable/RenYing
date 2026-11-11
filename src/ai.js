@@ -175,6 +175,24 @@ function aiInRange(F, d, foe, slack = 0) {
   const w = 18 * ((foe && foe.size) || 1) - 18;
   return d >= F.min - slack && d <= F.max + w + slack;
 }
+// 预测 t 秒后这个人在哪：地面挨打 / 被挡时按摩擦减速滑行，空中按抛物线（被挑飞时重力小，和 09-actions.js 的算法一致）
+function aiPredict(f, t) {
+  if (f.onGround()) {
+    const sliding = !['walk', 'idle', 'dash', 'attack', 'charge'].includes(f.state);
+    return { x: clamp(f.x + (sliding ? f.vx * (1 - Math.exp(-8.5 * t)) / 8.5 : f.vx * t), WALL, STAGE_W - WALL), y: f.y };
+  }
+  let g = GRAV;
+  if (f.state === 'launched') g *= LAUNCH_GRAV * (1 + (f.juggle || 0) * 0.12) * Math.min(1.25, Math.max(0.85, Math.pow((f.ch.stat && f.ch.stat.weight) || 1, 0.35)));
+  else if (f.state === 'attack' && f.move && f.move.air) g *= 0.45;
+  else if (f.flying || f.airHover > 0) g = 0;
+  return { x: clamp(f.x + f.vx * t, WALL, STAGE_W - WALL), y: Math.min(0, f.y + f.vy * t + 0.5 * g * t * t) };
+}
+// 空中的人还要多久落地
+function aiLandTime(f) {
+  if (f.onGround()) return 0;
+  for (let t = 0.05; t < 2; t += 0.05) if (aiPredict(f, t).y >= 0) return t;
+  return 2;
+}
 
 // ---------- 5. 对手习惯 ----------
 class FoeModel {
@@ -366,12 +384,17 @@ class AIBrain {
 
     // 往后退快撞墙了：跳过对手头顶
     if (this.dir === -to && ((this.dir < 0 && me.x < WALL + 120) || (this.dir > 0 && me.x > STAGE_W - WALL - 120)) && me.onGround() && AI_FREE.includes(me.state)) {
-      if (this.mode === 'keep' || this.chance(0.5)) { this.dir = to; if (!this.queue.length && this.chance(0.08)) this.plan([['jump', 0], ['jump', 0.22]]); }
+      // 这个决定要保持一小会儿：以前每帧重掷，贴墙时会左右抖
+      if (clock > (this.wallT || 0)) { this.wallT = clock + 0.5; this.wallGo = this.mode === 'keep' || this.chance(0.5); }
+      if (this.wallGo) { this.dir = to; if (!this.queue.length && this.chance(0.08)) this.plan([['jump', 0], ['jump', 0.22]]); }
     }
     // 山河异境的断崖台：贴着崖边还往外走就回头，被逼在崖边就跳过对手（自己走不下崖，坠崖只会是被打下去）
     if (typeof mapNow === 'function' && (mapNow() || {}).cliff && me.onGround() && AI_FREE.includes(me.state)) {
       const edge = Math.min(me.x - WALL, STAGE_W - WALL - me.x), out = me.x < STAGE_W / 2 ? -1 : 1;
-      if (edge < 170 && this.dir === out) this.dir = this.chance(0.5 + 0.5 * this.L.read) ? -out : 0;
+      if (edge < 170 && this.dir === out) {
+        if (clock > (this.cliffT || 0)) { this.cliffT = clock + 0.5; this.cliffGo = this.chance(0.5 + 0.5 * this.L.read); }
+        this.dir = this.cliffGo ? -out : 0;
+      }
       if (edge < 120 && to === -out && d < 240 && !this.queue.length && this.chance(0.06)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
     }
     // 山河异境的平台：对手在下面就 ↓ + 跳落下去（不然走到台边自己会掉）；对手站在平台上、离得近就跳上去（中间的高台要二段跳）
@@ -408,7 +431,16 @@ class AIBrain {
     }
     this.seen = clock - this.evT >= this.evReact;
     this.since = clock - this.evT;
+    // 习惯会淡忘：每秒往回落一点（以前只增不减，打久了每个对手都被当成又爱跳又爱抢攻）
+    if (clock - (this.modelT || 0) >= 1 || clock < (this.modelT || 0)) {
+      this.modelT = clock;
+      const M_ = this.model;
+      M_.ema('jumpRate', 0, 0.05); M_.ema('projRate', 0, 0.04);
+      if (AI_FREE.includes(foe.state)) M_.ema('aggr', 0, 0.07);
+    }
   }
+  // 我对对手习惯的把握：按难度的「见识」打折（入门、寻常不记习惯，一律当普通对手）
+  habit(k, base) { return base + (this.model[k] - base) * this.L.read; }
   // 记对手习惯
   onFoeEvent(me, foe) {
     const M_ = this.model, prev = this.prevEv || '';
@@ -439,9 +471,9 @@ class AIBrain {
       if (this.shouldBreakoutSkill(me, foe)) return true;
       if (me.state === 'launched' && !me.spiked && this.chance(L.tech * 0.25 + (this.techRoll === undefined ? 0 : 0))) this.techRoll = true;
       if (me.state === 'launched') {
-        if (this.techRoll === undefined) this.techRoll = Math.random() < L.tech;
+        if (this.techRoll === undefined) { this.techRoll = Math.random() < L.tech; this.techSide = this.mode === 'keep' || this.chance(0.5) ? -1 : 1; }
         this.jumpHeld = this.techRoll && me.vy > 0 && me.y > -140;
-        this.dir = this.techRoll ? (this.mode === 'keep' || this.chance(0.5) ? -to : to) : 0;
+        this.dir = this.techRoll ? (this.techSide || -1) * to : 0;
       }
       if (me.state === 'knockdown') { if (!this.wasDown) this.downId = (this.downId || 0) + 1; this.planWakeup(me, foe); }
       this.wasDown = me.state === 'knockdown';
@@ -452,10 +484,17 @@ class AIBrain {
     if (me.state === 'held' || me.state === 'special') return true;
 
     // 2. 腾空闪在空中：落地点躲开对手
-    if (me.escInvul && !me.onGround()) { this.dir = foe.state === 'attack' || this.mode === 'keep' ? -to : (this.chance(0.5) ? to : -to); return true; }
+    if (me.escInvul && !me.onGround()) {
+      if (!this.escSide) this.escSide = this.chance(0.5) ? 1 : -1;   // 一次腾空闪只选一次落点方向
+      this.dir = foe.state === 'attack' || this.mode === 'keep' ? -to : this.escSide * to;
+      if (L.read >= 0.3) this.escapeLanding(me, foe, to);   // 劲敌以上：挑落点，别落在对手刀口上
+      return true;
+    }
+    this.escSide = 0;
 
     // 3. 防守：对手出招 / 飞行道具 / 陷阱
     if (this.defend(me, foe, d, to)) return true;
+    if (this.defendOthers(me, foe)) return true;
 
     // 4. 墨羽墨阵：对手踩上就引爆
     if (me.ch.skill === 'inktrap' && me.skillCD <= 0) {
@@ -464,6 +503,20 @@ class AIBrain {
     }
     // 5. 绯影影遁后：1.5 秒内打不中就影归
     return false;
+  }
+
+  // 腾空闪落地有 0.15 秒硬直，落在对手身边就是白送一套。往两边飘各能落到哪、对手追过来还差多远，挑远的那边；
+  // 绝顶 / 天道：实在甩不开，快落地时空中出一刀（出招会结束腾空闪，落地就没有硬直，能马上格挡）
+  escapeLanding(me, foe, to) {
+    const T = aiLandTime(me), span = wk(me) * 1.2 * T * 0.75, chase = wk(foe) * Math.max(0, T - 0.1);
+    const gap = x => Math.max(0, Math.abs(clamp(x, WALL, STAGE_W - WALL) - foe.x) - (AI_FREE.includes(foe.state) ? chase : 0));
+    const gl = gap(me.x - span), gr = gap(me.x + span);
+    if (Math.abs(gl - gr) > 20) this.dir = gr > gl ? 1 : -1; else this.dir = -to;
+    const a1 = me.moves.a1, danger = Math.max(aiFrame(foe, 'l1').max, aiFrame(foe, 'dl').max) + 40;
+    if (this.L.read >= 0.7 && me.escMode !== 'hover' && me.vy > 0 && me.y > -(a1.su + a1.ac) * me.vy - 30 && me.y < -30
+      && Math.max(gl, gr) < danger && Math.abs(foe.x - me.x) < a1.box[2] + 30 && foe.invul <= 0 && foe.onGround()) {
+      this.dir = to; this.press('light', 'escLand');
+    }
   }
 
   // 该不该用腾空闪破连（breaker 越高越会算）
@@ -484,6 +537,8 @@ class AIBrain {
     if (danger && hits >= 1) return true;
     if (me.state === 'knockdown') return foe.state === 'charge' || (foe.meter >= 100 && L.breaker > 0.8 && me.t > 0.4);   // 压起身：对手在蓄不可挡的力或等着放大招
     const at = Math.max(1, Math.floor(g.breakAt)), lost = (this.hpBeforeCombo || me.hp) - me.hp;
+    // 对手满气：腾空闪留给大招（大招起手时还能闪），小连段先吃着；已经掉了三成血或者快死了就别省了
+    if (L.read >= 0.7 && foe.meter >= 100 && lost < me.maxHp * 0.3 && me.hp > me.maxHp * 0.3) return false;
     if (hits >= at && lost >= 30) return me.hp < me.maxHp * 0.5 || hits >= at + 1 || Math.random() < L.breaker * 0.6;
     return false;
   }
@@ -547,7 +602,7 @@ class AIBrain {
       else if (th.kind === 'charge') this.defPlan = this.chooseDefense(me, foe, d, to, th, free);   // 蓄力每帧重算：越蓄越危险
       const p = this.defPlan;
       if (!p) return false;
-      if (!free && p.how !== 'block' && p.how !== 'jg' && p.how !== 'escape' && p.how !== 'ult') return canBlock ? this.runDefense(me, foe, d, to, th, { how: 'block' }, canBlock) : false;
+      if (!free && p.how !== 'block' && p.how !== 'jg' && p.how !== 'escape' && p.how !== 'ult' && p.how !== 'commit') return canBlock ? this.runDefense(me, foe, d, to, th, { how: 'block' }, canBlock) : false;
       return this.runDefense(me, foe, d, to, th, p, canBlock);
     }
     if (this.defKey && !th) this.defKey = '';
@@ -583,6 +638,34 @@ class AIBrain {
       if (Math.random() < L.block + 0.1) { this.dir = me.x >= zone.x ? 1 : -1; if (zone.kind === 'trap' && free && Math.abs(zone.x - me.x) < 70) this.press('jump'); return zone.urgent && canBlock; }
     }
     return false;
+  }
+
+  // 2v2 / 首领战：没盯着的那个敌人出招打过来也要防（以前只看自己的目标，被另一个人从旁边打是白挨）。
+  // 余光看人慢一点（反应时间 ×1.3）；只管近身招、技能和大招，飞行道具本来就是全场一起看的
+  defendOthers(me, foe) {
+    if (typeof isMulti !== 'function' || !isMulti() || typeof foesOf !== 'function') return false;
+    let other = null, od = 1e9;
+    for (const e of foesOf(me)) { if (e === foe || e.hidden || e.hp <= 0) continue; const dd = Math.abs(e.x - me.x); if (dd < od) { od = dd; other = e; } }
+    if (!other || od > 700) { this.ev2 = ''; return false; }
+    const key = other.idx + ':' + other.state + ':' + (other.moveName && other.state === 'attack' ? other.moveName : other.skill || other.sp || '');
+    if (key !== this.ev2) { this.ev2 = key; this.evT2 = clock; this.evReact2 = rand(this.L.react[0], this.L.react[1]) * 1.3; this.skillD02 = od; }
+    // 借用看主目标的那套判断：先换上这个人的观察记录，判断完再换回去
+    const keep = [this.ev, this.since, this.seen, this.skillD0, this.defKey, this.defPlan, this.defRoll];
+    this.ev = 'o:' + key; this.since = clock - this.evT2; this.seen = this.since >= this.evReact2; this.skillD0 = this.skillD02;
+    this.defKey = this.defKey2 || ''; this.defPlan = this.defPlan2 || null; this.defRoll = this.defRoll2 || 0;
+    let done = false;
+    const free = me.onGround() && AI_FREE.includes(me.state);
+    const canBlock = free || (me.onGround() && me.state === 'attack' && me.move && me.t < me.move.su * 0.6 && me.moveName !== 'dl');
+    const to2 = Math.sign(other.x - me.x) || 1, th = this.threat(me, other, od);
+    if (th && this.seen) {
+      if (this.defKey !== this.ev) { this.defKey = this.ev; this.defRoll = Math.random(); this.defPlan = this.chooseDefense(me, other, od, to2, th, free); }
+      else if (th.kind === 'charge') this.defPlan = this.chooseDefense(me, other, od, to2, th, free);
+      const p = this.defPlan;
+      if (p) done = !free && !['block', 'jg', 'escape', 'ult', 'commit'].includes(p.how) ? (canBlock ? this.runDefense(me, other, od, to2, th, { how: 'block' }, canBlock) : false) : this.runDefense(me, other, od, to2, th, p, canBlock);
+    } else if (!th) this.defKey = '';
+    this.defKey2 = this.defKey; this.defPlan2 = this.defPlan; this.defRoll2 = this.defRoll;
+    [this.ev, this.since, this.seen, this.skillD0, this.defKey, this.defPlan, this.defRoll] = keep;
+    return done;
   }
 
   // 对手这一招会不会打到我：返回 { t 距打中的秒数, end 判定结束的秒数, blockable, melee, ult, kind }
@@ -673,13 +756,16 @@ class AIBrain {
       const f1 = aiFrame(me, 'l1'), close = Math.max(0, d - f1.max + 10) / wk(me);
       if (out / wk(me) >= left + 0.12 && close + f1.hit < left - 0.04) return { how: 'approach' };
     }
+    // 后退只有正常走速的 78%。半蓄冲斩（可挡）的范围里别背对着走：先挡着；出了半蓄范围、来得及走出满蓄范围就退
     const wallBehind = to > 0 ? me.x - WALL < out + 20 : STAGE_W - WALL - me.x < out + 20;
-    if (!wallBehind && out / wk(me) < left + 0.12) return { how: 'back' };
-    if (left > 0.06) return { how: 'back' };
+    // 半蓄冲斩松手后 0.1 秒内就到：反应够快（天道）的边退边看，松手了再挡；反应慢的在半蓄范围里先挡着，
+    // 等对手蓄过了一小半（多半是要蓄满）、再不走就走不出去时才转身退
+    const inCs1 = d < aiFrame(foe, 'cs1').max + 30, tOut = out / (wk(me) * 0.78), fast = this.L.react[1] <= 0.06;
+    if (!wallBehind && tOut < left - 0.05 && (!inCs1 || fast || foe.t > 0.25)) return { how: 'back' };
+    if (left > 0.1) return inCs1 && free && !fast && foe.t <= 0.25 ? { how: 'block' } : { how: 'back' };
     if (me.breakCD <= 0 && this.L.breaker > 0.5) return { how: 'escape' };
-    // 闪不了：跳起来会被冲斩挑飞（冲斩打得到半空），只能抢在它出手前打一下
-    const f1 = aiFrame(me, 'l1');
-    return free && aiInRange(f1, d, foe) ? { how: 'interrupt', key: 'l1' } : { how: 'back' };
+    // 闪不了：挡住满蓄只吃 45% 伤害（会被压倒、快速起身），比转身挨一整下再被挑飞强
+    return { how: 'block' };
   }
   runDefense(me, foe, d, to, th, p, free) {
     switch (p.how) {
@@ -690,7 +776,13 @@ class AIBrain {
       case 'approach': this.stopAll(); this.dir = to; this.holdDown = 0; return true;
       case 'escape': if (th.t < 0.12 || th.kind === 'charge') { this.stopAll(); this.press('dash'); } return true;
       case 'ult': if (me.meter >= 100 && th.t < 0.3) { this.stopAll(); this.press('special'); } else if (me.breakCD <= 0 && th.t < 0.1) this.press('dash'); return true;
-      case 'interrupt': if (free) { this.stopAll(); if (p.key === 'dl') { this.holdDown = 0.06; this.press('light'); } else { this.holdDown = 0; this.press('light'); } p.how = 'block'; } return true;
+      case 'interrupt':
+        // 抢先出手要把这一下打完：以前按完下一帧就转格挡，出招前段被格挡收掉，等于从来没抢成
+        if (free && AI_FREE.includes(me.state)) { this.stopAll(); if (p.key === 'dl') { this.holdDown = 0.06; this.press('light'); } else { this.holdDown = 0; this.press('light'); } p.how = 'commit'; p.until = clock + aiFrame(me, p.key).hit + 0.08; return true; }
+        p.how = 'block'; return this.runDefense(me, foe, d, to, th, p, free);
+      case 'commit':
+        if (clock > p.until || (me.state !== 'attack' && clock > p.until - aiFrame(me, p.key).hit + 0.03)) { p.how = 'block'; return this.runDefense(me, foe, d, to, th, p, free); }
+        return me.state !== 'attack';   // 出手了就交给连段逻辑（打中了接着打）
       case 'jg':
         if (!free && me.state !== 'blockstun') return false;
         this.stopAll(); this.dir = 0;
@@ -707,7 +799,7 @@ class AIBrain {
   }
 
   // 朝我飞来的暗器：返回 { p, t 多久到, unblockable, ground }
-  incomingProj(me) {
+  incomingProj(me, horizon = 0.45) {
     let best = null;
     for (const p of projs) {
       const sameTeam = typeof fighterTeam === 'function' ? fighterTeam(fighterByIdx(p.owner)) === fighterTeam(me) : (p.owner % 2) === (me.idx % 2);
@@ -718,7 +810,7 @@ class AIBrain {
       let t;
       if (Math.abs(vx) < 1) { if (Math.abs(dx) > (p.w || 40) / 2 + 30) continue; t = 0; }
       else { if (Math.sign(dx) !== Math.sign(vx)) continue; t = Math.max(0, (Math.abs(dx) - (p.w || 40) / 2 - 18) / Math.abs(vx)); }
-      if (t > 0.45) continue;
+      if (t > horizon) continue;
       const py = p.y + (p.vy || 0) * t + (p.g ? 0.5 * p.g * t * t : 0);
       if (py < me.y - 112 - (p.h || 40) / 2 - 10 || py > me.y + 20 + (p.h || 40) / 2) continue;
       if (!best || t < best.t) best = { p, t, unblockable: !!p.unblockable || !!p.ult, ground: !!p.groundOnly };
@@ -826,6 +918,13 @@ class AIBrain {
     if (!m) return;
     const t = me.t, act0 = m.su, act1 = m.su + m.ac;
     const confirm = me.hitConfirmed;
+    // 记对手挡不挡：每一刀只记一次（连段里的后几刀不算，那是对手已经在挨打）
+    const blockedNow = foe.state === 'blockstun' || (foe.state === 'block' && t >= act1);
+    if ((confirm || blockedNow) && Math.abs((clock - t) - (this.judgedT || -9)) > 0.03) {
+      this.judgedT = clock - t;
+      if (blockedNow) { this.model.ema('blockRate', 1, 0.2); this.attacks++; this.blocked++; }
+      else if ((foe.comboHits || 0) <= 1) this.model.ema('blockRate', 0, 0.2);
+    }
     // 打空/被挡：后段按住格挡收招（被挡后安全一点）
     if (t >= act1 && !confirm && !m.next.light) { if (Math.random() < L.block * 0.5) this.holdDown = 0.15; return; }
     if (t < act0 + m.ac * 0.6) return;
@@ -849,13 +948,14 @@ class AIBrain {
       }
       if (m.next.light && hits < L.combo + (this.err() ? -1 : 0)) { this.press('light'); return; }
       // 挑飞后追击：跳起来空中再打
-      if (m.launch && L.combo >= 5 && foe.juggle < 2 && Math.random() < L.punish) { this.plan([['jump', 0.02], ['light', 0.22], ['light', 0.42]]); return; }
+      if (m.launch && L.combo >= 5 && foe.juggle < 2 && Math.random() < L.punish) { this.jugT = clock + 1.6; return; }   // 追击交给 juggle()：等对手落到够得着的高度再出手
       return;
     }
     // 被挡：连段继续（对手按住格挡时，连段压架势）或停手
     if (foe.state === 'blockstun' || foe.state === 'block') {
-      this.attacks++; this.blocked++;
-      const guardLow = (foe.guard || 100) < 35;
+      // 下一刀就能把架势打崩：一定接着打（崩了有 0.85 秒白打）
+      const nx = m.next.light && me.moves[m.next.light], willBreak = nx && L.punish >= 0.3 && (foe.guard || 100) <= aiGuardLoss(me, foe, nx.dmg, nx.big ? 1.35 : 1) + 2;
+      const guardLow = (foe.guard || 100) < 35 || willBreak;
       if (m.next.light && (guardLow || Math.random() < 0.35 * L.aggr) && hits < 4) this.press('light');
       else if (Math.random() < L.block * 0.7) this.holdDown = 0.2;
     }
@@ -903,10 +1003,42 @@ class AIBrain {
     return hits >= k - 1 && hits >= 1 && Math.random() < L.bait * g.bait * (this.model.escN ? 0.9 : 0.35);
   }
 
+  // ----- 挑飞后追击：走到落点下面，算好对手落进刀口的那一刻再出手（以前按固定节奏跳起来挥两刀，几乎全空） -----
+  juggle(me, foe, d, to) {
+    if (clock > (this.jugT || 0) || foe.state !== 'launched' || foe.invul > 0.02 || foe.hp <= 0 || (foe.juggle || 0) >= 2) return false;
+    const land = aiLandTime(foe);
+    let best = null, bv = 0;
+    const tryKey = (key, v) => {
+      const F = aiFrame(me, key); if (F.max <= 0) return;
+      const T = aiHitTime(F, d), p = aiPredict(foe, T);
+      // 地面招的刀口大约到头顶：对手脚底落到 100 像素以内才够得着；也不能等他落地（倒地有无敌）
+      if (T < land - 0.03 && p.y > -100 && aiInRange(F, Math.abs(p.x - me.x), foe, -6) && v > bv) { bv = v; best = key; }
+    };
+    tryKey('l1', aiFrame(me, 'l1').dmg * 3);
+    for (const slot of ['skill', 'skill2']) {
+      const id = slot === 'skill' ? me.ch.skill : me.ch.skill2, K = AI_KIT[id];
+      if (!K || !K.combo || K.groundOnly || K.role === 'proj' || (slot === 'skill' ? me.skillCD : me.skill2CD) > 0) continue;
+      if ((SKILLS[id].can && !SKILLS[id].can(me)) || (K.use && !K.use(me, foe, d, this))) continue;
+      tryKey(slot, aiFrame(me, slot).dmg);
+    }
+    this.holdDown = 0;
+    if (best) {
+      this.stopAll(); this.dir = 0; this.jugT = 0;
+      if (best === 'l1') this.press('light', 'juggle'); else { this.press(best, 'juggle'); this.afterSkill(me, best); }
+      return true;
+    }
+    // 还够不着：走到落点前面一个刀口的位置等
+    const px = aiPredict(foe, Math.max(0.05, land - aiFrame(me, 'l1').hit)).x, want = Math.max(30, aiFrame(me, 'l1').max - 30);
+    const gap = Math.abs(px - me.x);
+    this.dir = gap > want + 12 ? Math.sign(px - me.x) : gap < want - 40 ? -Math.sign(px - me.x) : 0;
+    return true;
+  }
+
   // ----- 抓破绽 -----
   punish(me, foe, d, to, afterBlock) {
     const L = this.L;
     if (!AI_FREE.includes(me.state) || !me.onGround()) return false;
+    if (this.juggle(me, foe, d, to)) return true;
     if (foe.invul > 0.02 || foe.hp <= 0) return false;
     let window = -1;   // 对手还要多久才能动
     if (afterBlock && foe.state === 'attack' && foe.move) window = foe.move.su + foe.move.ac + foe.move.rc - foe.t;
@@ -940,7 +1072,16 @@ class AIBrain {
   }
   punishOptions(me, foe, d, window) {
     let best = null, bv = 0;
-    const consider = (key, F, v) => { if (aiInRange(F, d, foe, 5) && F.hit < window + 0.02 && v > bv) { bv = v; best = key; } };
+    // 按这个距离上的实际出手时间算，并且看打中那一刻对手滑到 / 飞到哪了（挨打后退、冲刺技能收招时人还在动）
+    const high = !foe.onGround() && foe.y < -100;
+    const consider = (key, F, v) => {
+      const T = aiHitTime(F, d);
+      if (T >= window + 0.02 || !aiInRange(F, d, foe, 5)) return;
+      const p = aiPredict(foe, T);
+      if (!aiInRange(F, Math.abs(p.x - me.x), foe, 5)) return;
+      if ((key === 'l1' || key === 'dl') && (high || p.y < -100)) return;   // 地面普攻够不着半空的人
+      if (v > bv) { bv = v; best = key; }
+    };
     if (me.meter >= 100 && this.ultWouldHit(me, foe, d, false)) consider('special', aiFrame(me, 'special'), aiFrame(me, 'special').dmg * 1.2);
     for (const slot of ['skill', 'skill2']) {
       const id = slot === 'skill' ? me.ch.skill : me.ch.skill2, K = AI_KIT[id];
@@ -1041,8 +1182,11 @@ class AIBrain {
       if (K.role === 'proj' && d > 140 && Math.random() < L.skill * 0.06 * (0.5 + this.g.zone)) { this.press(slot); return; }
     }
     // 空中普攻：落到对手头上时出手
-    const a1 = me.moves.a1;
-    if (Math.abs(foe.x - me.x) < a1.box[2] + 20 && foe.y - me.y < 130 && foe.y - me.y > -40 && Math.random() < L.aggr * 0.5) this.press('light');
+    const a1 = me.moves.a1, T = a1.su + a1.ac * 0.5, pm = aiPredict(me, T), pf = aiPredict(foe, T);
+    const dx = Math.abs(pf.x - pm.x), dy = pf.y - pm.y, reach = a1.box[2] + 18 * (foe.size || 1) - 8;
+    // 低难度出手时机不准（提前或拖后），高难度算好双方落点再挥
+    const slop = (1 - L.skill) * 70;
+    if (dx < reach + slop && dy < 112 + a1.box[3] - 6 + slop && dy > a1.box[1] + 6 - slop && foe.invul <= 0.05 && Math.random() < 0.25 + 0.75 * L.aggr) this.press('light');
     // 燕翎：低空就飞起来
     if (me.ch.fly && me.vy > -100 && me.y > -120 && d > 220 && Math.random() < 0.05) this.flyUntil = clock + rand(0.3, 0.9);
   }
@@ -1138,7 +1282,12 @@ class AIBrain {
   neutral(me, foe, d, to) {
     const L = this.L, g = this.g;
     this.dir = 0;
-    if (this.err()) { this.dir = Math.random() < 0.5 ? to : -to; if (Math.random() < 0.3) this.press('light'); return; }
+    // 失误：像人一样的失误——差一点够不着就急着挥刀、或者犹豫着多走半步；不会隔着半个场地对空气出招
+    if (this.err()) {
+      this.stepDir = Math.random() < 0.5 ? to : -to; this.stepT = clock + rand(0.2, 0.45); this.dir = this.stepDir;
+      if (d < aiFrame(me, 'l1').max * 1.7 + 30 && Math.random() < 0.3) this.press('light');
+      return;
+    }
     if (this.watch2v2(me, foe, d, to)) return;
     // 假动作（绝顶/天道）：贴近半步骗对手出手或乱闪，再退开等它收招
     if (this.feint && clock < this.feint.end) { this.dir = clock < this.feint.turn ? to : -to; return; }
@@ -1152,8 +1301,11 @@ class AIBrain {
     if (me.meter >= 100 && this.ultWouldHit(me, foe, d, false) && Math.random() < Math.min(1, L.ult * (1 - g.ultSave * 0.6) * ultWeight)) { this.press('special'); return; }
     // 低难度：技能乱放
     if (Math.random() > L.skill && Math.random() < 0.12) {
-      const slot = Math.random() < 0.5 ? 'skill' : 'skill2';
-      if ((slot === 'skill' ? me.skillCD : me.skill2CD) <= 0) { this.press(slot); return; }
+      const slot = Math.random() < 0.5 ? 'skill' : 'skill2', F = aiFrame(me, slot);
+      // 乱放也要像样：打人的技能至少离得不太远才会手痒按出来（以前隔着全场也放）
+      const role = (AI_KIT[slot === 'skill' ? me.ch.skill : me.ch.skill2] || {}).role;
+      const plausible = F.max > 0 ? d < F.max * 1.5 + 60 : role === 'counter' ? d < 220 && L.skill < 0.7 : true;   // 架招：新手才会离着老远空架
+      if ((slot === 'skill' ? me.skillCD : me.skill2CD) <= 0 && plausible) { this.press(slot); return; }
     }
     // 自身增益类技能（画符、与民同乐）
     for (const slot of ['skill', 'skill2']) {
@@ -1167,10 +1319,13 @@ class AIBrain {
     const map = this.matchupMap(me, foe), i = Math.max(0, Math.min(45, Math.round((d - 20) / 20)));
     // 选这个距离上最划算的出手
     let bestKey = null, bv = 0;
+    // 暗器已经在路上：出招到一半会被打断的就先不出（劲敌以上才看得这么远）
+    const flying = L.read >= 0.3 ? this.incomingProj(me, 0.8) : null;
     for (const k of AI_ACT_KEYS) {
       if (k === 'special') continue;
       let v = this.actValue(me, foe, k, d);
       if (v <= 0) continue;
+      if (flying && (k === 'cs1' || k === 'cs2' || aiHitTime(aiFrame(me, k), d) > flying.t - 0.03)) continue;
       if (k === 'skill' || k === 'skill2') {
         const id = k === 'skill' ? me.ch.skill : me.ch.skill2, K = AI_KIT[id] || {};
         if ((k === 'skill' ? me.skillCD : me.skill2CD) > 0) continue;
@@ -1180,12 +1335,28 @@ class AIBrain {
         if (K.jail) v *= 2;
         if (K.role === 'proj') v *= 0.5 + g.zone;
         v *= k === 'skill' ? 0.5 + g.qn : 0.5 + g.rn;
-      } else if (k === 'cs1' || k === 'cs2') v *= (0.25 + g.charge) * (k === 'cs2' && this.model.blockRate > 0.55 ? 1.5 : 1);
+      } else if (k === 'cs1' || k === 'cs2') {
+        v *= (0.25 + g.charge) * (k === 'cs2' && this.habit('blockRate', 0.5) > 0.55 ? 1.5 : 1);
+        // 蓄力要先按住 0.3 秒：对手一伸手就打得到的距离上别起手（会被打断，松手还会漏出一记空挥）。越会玩的越讲究
+        const foeReach = Math.max(aiFrame(foe, 'l1').max, aiFrame(foe, 'dl').max) + 18 * (me.size || 1) - 18;
+        if (AI_FREE.includes(foe.state) && d < foeReach + 70) v *= 1 - 0.85 * L.skill;
+        // 蓄力时挡不了：对手手里有现成的暗器就别蓄（会被远远打断）
+        const fq = AI_KIT[foe.ch.skill] || {}, fr = AI_KIT[foe.ch.skill2] || {};
+        if (AI_FREE.includes(foe.state) && (foe.ch.inkShot || (fq.role === 'proj' && foe.skillCD <= 0.6) || (fr.role === 'proj' && foe.skill2CD <= 0.6))) v *= 1 - 0.8 * L.skill;
+        if (this.habit('aggr', 0.5) > 0.65) v *= 0.7;        // 对手爱抢攻：少蓄力
+        if (this.habit('jumpRate', 0.2) > 0.45) v *= 0.7;    // 对手爱跳：蓄力冲斩容易被跳过
+      }
       else if (k === 'air') v *= g.jumpIn;
       else v *= 0.6 + g.poke;
       v *= this.muWeight(me, foe, k, d);
       // 对手在挡：可挡的招打上去只削架势
       const F = aiFrame(me, k);
+      // 风险：被挡后收招慢（对手一刀就能确反）的技能，对爱挡的对手少用；被挡后还占先手的技能，对爱挡的对手多用来压制。越会玩的越讲究
+      if ((k === 'skill' || k === 'skill2') && F.blockable !== false && typeof F.adv === 'number' && AI_FREE.includes(foe.state)) {
+        const pBlock = this.habit('blockRate', 0.5), foeFast = Math.min(aiFrame(foe, 'l1').hit, aiFrame(foe, 'dl').hit || 9);
+        if (F.adv < -(foeFast + 0.03)) v *= 1 - 0.7 * pBlock * L.punish;
+        else if (F.adv > 0.1) v *= 1 + 0.3 * pBlock * L.punish;
+      }
       if (F.blockable !== false && (foe.state === 'block' || foe.state === 'blockstun')) v *= (foe.guard || 100) < 40 ? 0.9 : 0.35;
       // 对手开着架招：近身招别打进去
       if (foe.state === 'skill' && AI_KIT[foe.skill] && AI_KIT[foe.skill].role === 'counter' && k !== 'cs2') v *= 0.05;
@@ -1195,7 +1366,9 @@ class AIBrain {
     // 动态风险收益修正（Risk-Reward & Adaptive Neutral Evaluation）：
     // 若血量劣势，增加险招权重（不可挡蓄力 / 强抓破绽）；若血量领先，打稳抓确反
     const hpRatio = (me.hp / Math.max(1, me.maxHp)) - (foe.hp / Math.max(1, foe.maxHp));
-    const riskMod = hpRatio < -0.2 ? 1.25 : hpRatio > 0.25 ? 0.85 : 1.0;
+    // 时间快到了还落后：必须抢攻（时间到按血量判负）；领先就稳着打
+    const rushing = L.lead > 0 && hpRatio < -0.03 && !M.ot && M.timer < 18;
+    const riskMod = rushing ? 1.6 : hpRatio < -0.2 ? 1.25 : hpRatio > 0.25 ? 0.85 : 1.0;
     const aggr = Math.min(1, L.aggr * (0.45 + g.aggr) * riskMod);
     const foeBusy = foe.state === 'walk' || (foe.state === 'attack' && foe.t > foe.move.su) || foe.state === 'air';
     const go = bestKey && foe.invul <= 0.05 && Math.random() < aggr * (foeBusy ? 1 : 0.7) && bv > 18 * (1.2 - aggr);
@@ -1203,6 +1376,7 @@ class AIBrain {
     // 站位：往理想距离走，偶尔后撤诱招、原地格挡
     const profile = aiHeroTactic(me.ch.id);
     let want = map.want * profile.range;
+    if (rushing) want *= 0.8;
     const arena = typeof mapNow === 'function' ? mapNow() : null, env = M.mapEnv;
     if (arena && arena.ice && typeof mapGrip === 'function' && mapGrip(me) < 1) want *= 1.04;
     if (arena && arena.wind && env && env.wOn > 0 && Math.sign(env.wDir) === to) want += Math.min(45, arena.wind.push * 0.08);
@@ -1211,11 +1385,17 @@ class AIBrain {
       const fog = arena.fog, u = me.x / STAGE_W;
       if (u < fog.from || u > fog.to) { const center = (fog.from + fog.to) * STAGE_W / 2; this.dir = Math.sign(center - me.x); return; }
     }
-    if (d > want + 25) this.dir = to;
-    else if (d < want - 30) this.dir = -to;
-    else if (Math.random() < g.back * 0.4) this.dir = -to;
-    else if (map.theirs[i] > map.mine[i] && Math.random() < L.block * 0.4) this.holdDown = 0.15;
-    else this.dir = Math.random() < 0.35 ? to : Math.random() < 0.5 ? -to : 0;
+    // 站位的小碎步要走完一步再换（0.16~0.45 秒）：以前每次思考都重掷方向，高难度一秒来回抖七八次
+    if (d > want + 25) { this.dir = to; this.stepT = 0; }
+    else if (d < want - 30) { this.dir = -to; this.stepT = 0; }
+    else if (clock < (this.stepT || 0)) this.dir = this.stepDir || 0;
+    else {
+      if (Math.random() < g.back * 0.4) this.stepDir = -to;
+      else if (map.theirs[i] > map.mine[i] && Math.random() < L.block * 0.4) { this.stepDir = 0; this.holdDown = 0.15; }
+      else this.stepDir = Math.random() < 0.35 ? to : Math.random() < 0.5 ? -to : 0;
+      this.stepT = clock + rand(0.16, 0.45);
+      this.dir = this.stepDir;
+    }
     // 假动作：出手一半转格挡，骗对手出招或闪
     if (L.bait > 0.5 && d < aiFrame(me, 'l1').max + 40 && Math.random() < 0.06 * g.bait && this.model.aggr > 0.4) { this.press('light', 'feint'); this.holdDown = 0.08; }
   }
@@ -1308,7 +1488,7 @@ class AIBrain {
     const far = 420;
     if (d < far) this.dir = -to; else this.dir = 0;
     if (d < 200 && foe.state === 'attack') this.holdDown = 0.25;
-    if (this.hasZoning(me) && Math.random() < 0.4) { const ps = this.projSlot(me); if (ps && d > 200) { this.press(ps); return; } if (me.ch.inkShot && (me.ink || 0) > 40 && d > 200) { this.press('light'); return; } }
+    if (this.hasZoning(me) && Math.random() < 0.4) { const ps = this.projSlot(me); if (ps && d > 200 && aiInRange(aiFrame(me, ps), d, foe)) { this.press(ps); return; } if (me.ch.inkShot && (me.ink || 0) > 40 && d > 200) { this.press('light'); return; } }
     // 被逼到墙角：跳过去
     const cornered = (me.x < WALL + 140 && to > 0) || (me.x > STAGE_W - WALL - 140 && to < 0);
     if (cornered && d < 260 && me.onGround()) { this.dir = to; this.plan([['jump', 0], ['jump', 0.24]]); }
