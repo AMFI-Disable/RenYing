@@ -6,6 +6,18 @@ This document describes the shipped combat AI in `src/ai.js`. It records the cur
 
 Each fighter AI makes a decision from the shared fixed-step simulation. It first handles defensive reactions and observed opponent behavior, then continues a queued combo or runs hero-specific routes, punishes, wake-up play and neutral spacing. Move frame data from `src/models/ai-brain.json` is used to estimate reach, startup and recovery. Hero profiles adjust preferences only; they do not override move range, cooldowns, skill requirements or counterplay checks.
 
+## Movement And Execution Rules
+
+- **Committed movement:** Footsie steps last 0.16 to 0.45 seconds. Wall, cliff, tech-roll and escape-landing choices are made once per situation, so the AI does not flicker between directions.
+- **Predicted positions:** `aiPredict` estimates where a fighter will be when a move connects, using ground slide and launch gravity. Air attacks, punishes and launch follow-ups (`juggle`) only swing when the predicted hit lands.
+- **Interrupts:** An interrupt commits to its swing until it is active, then falls back to blocking.
+- **Charge defense:** Inside half-charge reach the AI blocks first, then walks out of full-charge reach. If it cannot leave or escape, it blocks the full charge for reduced damage.
+- **Escapes:** From 劲敌 up, the AI steers an escape toward the landing spot farthest from the opponent. 绝顶 and 天道 can end the escape with an air attack to skip landing lag, and keep the escape for an ultimate when the opponent has full meter.
+- **Charge offense:** Charges are avoided inside the opponent's fastest reach or when the opponent holds a ready projectile, scaled by difficulty.
+- **Opponent habits:** Block, jump, projectile and attack rates decay over time and are scaled by the tier's `read` value. They adjust charge use and the value of skills that are unsafe or advantageous on block.
+- **Team modes:** In 2v2 and raid fights the AI also defends against the nearest opponent it is not targeting, with a slower reaction.
+- **Lower tiers:** Mistakes are near-range mistimed swings and plausible skill misuse instead of random actions at any distance.
+
 ## Hero Tactical Profiles
 
 All 16 heroes have a compact style, preferred spacing and scroll-school affinity. Existing routes remain authoritative for characters with dedicated mechanics, such as 凌雀 marks, 离影 mist doubles, 磁仙 polarities and 千机's iron ball.

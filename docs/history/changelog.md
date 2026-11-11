@@ -43,6 +43,7 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Combat AI decisions and movement (`src/ai.js`, `docs/ai/tiandao-ai-spec.md`)**: footsie steps, wall and cliff choices and escape landings are now held for a short time instead of being re-rolled every frame, which removes left-right jitter. Air attacks, punishes and launch follow-ups use predicted positions; interrupts commit to the swing; charge defense blocks the half charge and retreats from the full one; escapes pick a landing spot away from the opponent and are saved for an ultimate when the opponent has full meter. The AI now tracks how often the opponent blocks, jumps and attacks, avoids skills that are unsafe on block against blockers, presses the attack when behind near time out, and guards against the second opponent in team modes. Lower tiers keep their strength but make more believable mistakes.
 - **千机傀丸 wall and posture behavior (`src/game/03-skills.js`, `src/game/09-actions.js`, `src/game/10-hits.js`)**: fixed tethered wall returns, added strong posture damage on a clean hit and partial posture damage on a block, and prevented ball hits for 0.85 seconds after guard break. The protection timer is included in rollback snapshots.
 
 - **刃影 browser icon (`assets/favicon.svg`, `src/page.html`, `tools/build.py`)**: matched the admin panel's vermilion seal and cream 刃 mark across the main, offline, and legacy pages.
