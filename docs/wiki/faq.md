@@ -39,8 +39,8 @@ No. The game is free and open source, and there is nothing to buy with real mone
 
 不要钱，游戏免费开源，没有任何真钱购买。
 
-## I Found A Bug / 发现了 bug
+## I Found A Bug / 发现了 Bug
 
-Open an [issue](https://github.com/AMFI-Disable/RenYing/issues/new/choose) with the steps, your browser and the game version. For anything that could let someone touch another player's account or items, follow [security.md](https://github.com/AMFI-Disable/RenYing/blob/main/.github/security.md) instead.
+Open an [issue](https://github.com/AMFI-Disable/RenYing/issues/new/choose) with the steps, your browser and the game version. For anything that could let someone touch another player's account or items, follow [security.md](../../security.md) instead.
 
 在 [Issues](https://github.com/AMFI-Disable/RenYing/issues/new/choose) 写清楚步骤、浏览器和游戏版本。涉及别人账号或物品安全的问题请按 security.md 私下报告。
