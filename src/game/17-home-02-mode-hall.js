@@ -153,7 +153,7 @@ function singleSec(sec) {
     el.style.display = secs.includes(active) ? '' : 'none';
   }
   const duel = ['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2'].includes(active);
-  if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps'].includes(active);
+  if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju'].includes(active);
   if ($id('xiwuQuickCard')) $id('xiwuQuickCard').hidden = !duel;
   const mutators = $id('mutatorPills');
   if (mutators && mutators.parentElement) mutators.parentElement.hidden = !duel;
@@ -173,7 +173,8 @@ function singleSec(sec) {
       saga: '每位侠客自己的故事：五节、一个抉择、两个结局',
       train: '在训练场学习招式、自由练习木人桩，或进行专项情景训练',
       mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！',
-      maps: '换一处战场：投票选地图，断崖、冰面都会改变侠客的打法'
+      maps: '换一处战场：投票选地图，断崖、冰面都会改变侠客的打法',
+      cuju: '不比气血比进球：用普攻和技能把墨球打进对方球门，先进三球获胜'
     };
     subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
   }

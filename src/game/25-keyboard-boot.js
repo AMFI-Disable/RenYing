@@ -77,7 +77,7 @@ window.addEventListener('keydown', e => {
         c = human[0];
       }
     } else {
-      c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : (human[p] || human[0]);
+      c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp)) ? human[0] : (human[p] || human[0]);
     }
     if (secretEnabled && c === human[0] && !REPLAY.on) continue;
     if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
@@ -103,7 +103,7 @@ window.addEventListener('keyup', e => {
         c = human[0];
       }
     } else {
-      c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower') ? human[0] : (human[p] || human[0]);
+      c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp)) ? human[0] : (human[p] || human[0]);
     }
     if (secretEnabled && c === human[0] && !REPLAY.on) continue;
     if (act === 'left' || act === 'right' || act === 'down') {

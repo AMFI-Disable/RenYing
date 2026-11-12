@@ -28,6 +28,7 @@ function preMatchSelect(state, side, slot, scrollId) {
 let mapBriefingTimer = null;
 const BP_BRIEFING_MODES = new Set(['cpu', 'cpuWatch', 'chaos', 'mayhem', 'maps', 'tag3', '2v2', 'net']);
 function briefingMapId(mode, opts = {}) {
+  if (mode === 'cuju') return null;   // 墨球蹴鞠在自己的球场上踢，不抽地图
   if (MAPS[opts.mapId]) return opts.mapId;
   if (mode === 'net') {
     const seed = Number.isInteger(opts.matchSeed) ? opts.matchSeed : ((Math.random() * 0x7fffffff) | 0);

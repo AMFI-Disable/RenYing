@@ -8,6 +8,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Added
 
+- **墨球蹴鞠 · Ink Ball mode (`src/game/22-modes-09-cuju.js`, `src/data/10-modes.js`, `src/data/30-ui-copy-17-cuju.js`, `src/page.html`)**: a new Practice mode with a goal at each end of a 2400 px pitch and an ink ball in the middle. Attacks, skills and projectiles knock the ball; blocking saves shots; 勾陈's hammer hooks the ball and 磁仙's poles pull or blast it. First to three goals wins, with a golden goal after 150 seconds. Fighters never lose health in this mode. Playable against the AI (a dedicated ball-chasing AI per difficulty), as local 1P vs 2P, or as AI vs AI. Local only; no rewards or ranking.
+
 - **Full-map skill reach and Qianji ball combat (`src/game/09-actions.js`, `src/game/10-hits.js`)**: skill shots and Li Ying’s shadow waves now travel to the arena edge across map sizes. Qianji’s tether ball patrols the full map with faster rebounds; its damage scales with velocity, back hits bypass guard and deal bonus damage, and grounded stance frames remain hittable while guard-break protection stays intact.
 
 - **Badge progress and training previews (`src/armory.js`, `src/game/21-buttons-02-training.js`, `src/game/27-combat-loadouts.js`)**: show progress to the next badge shard and each upgrade requirement, list exact Silver/Gold/Purple Gold effect values, and add a Training Ground trial for every badge. Trials temporarily equip the selected badge without changing the account loadout and show a gain callout when its effect triggers.

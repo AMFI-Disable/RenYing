@@ -49,7 +49,7 @@ $id('chatIn').addEventListener('keydown', e => { if (e.key === 'Enter') chatSend
 const BP_STEPS = BP_ORDERS.duel;   // 各模式的点将台顺序在 src/data/11-bp-orders.js，哪个模式用哪个在 src/data/10-modes.js
 const bpSteps = () => (BP && BP.steps) || BP_STEPS;
 const isMultiPickBP = () => !!(BP && Array.isArray(BP.picks) && Array.isArray(BP.picks[0]));
-const isLocalBothHumanBP = () => bpMode === '2v2' && !!(bpCustomOpts && bpCustomOpts.subMode === 'pp_pp');
+const isLocalBothHumanBP = () => (bpMode === '2v2' && !!(bpCustomOpts && bpCustomOpts.subMode === 'pp_pp')) || (bpMode === 'cuju' && !!(bpCustomOpts && bpCustomOpts.pvp));   // 墨球蹴鞠本地双人：两边都由人点
 const isMyTurnBP = () => {
   if (!BP || BP.step >= bpSteps().length) return false;
   const isWatch = bpMode === 'cpuWatch' || (bpCustomOpts && bpCustomOpts.isWatch);

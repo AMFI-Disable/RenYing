@@ -16,6 +16,7 @@ const MODES = {
   chaos: { bp: 'open', local: true, foe: '电脑' },
   mayhem: { bp: 'open', local: true, foe: '电脑' },
   maps: { bp: 'open', local: true, foe: '电脑' },   // 山河异境：投票选地图（src/data/12-maps.js）
+  cuju: { bp: 'open', local: true, foe: '电脑' },   // 墨球蹴鞠：把墨球打进对方球门（src/game/22-modes-09-cuju.js）
   tag3: { bp: 'trio', team: true, local: true, foe: '敌方战队' },
   tower: { bp: 'solo', local: true },
   stage: { bp: 'solo', local: true },

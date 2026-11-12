@@ -452,33 +452,35 @@ function drawHUD() {
       else { ctx.moveTo(x, y); ctx.lineTo(x + w - sk, y); ctx.lineTo(x + w, y + h); ctx.lineTo(x + sk, y + h); }
       ctx.closePath(); ctx.fill();
     };
-    ctx.fillStyle = 'rgba(0,0,0,0.55)'; para(x0 - 3, barW + 6, top - 3, bh + 6);
-    const lagW = barW * clamp(f.lagHp / f.maxHp, 0, 1), hpW = barW * clamp(f.hp / f.maxHp, 0, 1);
-    ctx.fillStyle = 'rgba(255,240,220,0.85)';
-    para(i === 0 ? x0 : x0 + barW - lagW, lagW, top, bh);
-    const g = ctx.createLinearGradient(x0, 0, x0 + barW, 0);
-    if (i === 0) { g.addColorStop(0, '#2a8fb0'); g.addColorStop(1, '#8ff0ff'); } else { g.addColorStop(0, '#ff8a70'); g.addColorStop(1, '#c42a45'); }
-    ctx.fillStyle = f.hp < f.maxHp * 0.25 && Math.sin(clock * 12) > 0 ? '#ffd0c0' : g;
-    para(i === 0 ? x0 : x0 + barW - hpW, hpW, top, bh);
+    if (!cujuOn()) {   // 墨球蹴鞠不比气血：这里画比分（drawCujuScore）
+      ctx.fillStyle = 'rgba(0,0,0,0.55)'; para(x0 - 3, barW + 6, top - 3, bh + 6);
+      const lagW = barW * clamp(f.lagHp / f.maxHp, 0, 1), hpW = barW * clamp(f.hp / f.maxHp, 0, 1);
+      ctx.fillStyle = 'rgba(255,240,220,0.85)';
+      para(i === 0 ? x0 : x0 + barW - lagW, lagW, top, bh);
+      const g = ctx.createLinearGradient(x0, 0, x0 + barW, 0);
+      if (i === 0) { g.addColorStop(0, '#2a8fb0'); g.addColorStop(1, '#8ff0ff'); } else { g.addColorStop(0, '#ff8a70'); g.addColorStop(1, '#c42a45'); }
+      ctx.fillStyle = f.hp < f.maxHp * 0.25 && Math.sin(clock * 12) > 0 ? '#ffd0c0' : g;
+      para(i === 0 ? x0 : x0 + barW - hpW, hpW, top, bh);
 
-    // 顶部血量数值显示（Top Bar exact numeric HP right next to health bar）
-    ctx.save();
-    ctx.font = `bold ${Math.max(12, Math.round(bh * 0.95))}px ${BODY_FONT}`;
-    ctx.textBaseline = 'middle';
-    ctx.shadowColor = 'rgba(0,0,0,0.85)';
-    ctx.shadowBlur = 4;
-    const curHpStr = Math.max(0, Math.round(f.hp));
-    const hpStr = `${curHpStr} / ${f.maxHp}`;
-    if (i === 0) {
-      ctx.textAlign = 'right';
-      ctx.fillStyle = f.hp < f.maxHp * 0.25 ? '#ff7a8a' : 'rgba(255,255,255,0.95)';
-      ctx.fillText(hpStr, x0 - 10, top + bh / 2);
-    } else {
-      ctx.textAlign = 'left';
-      ctx.fillStyle = f.hp < f.maxHp * 0.25 ? '#ff7a8a' : 'rgba(255,255,255,0.95)';
-      ctx.fillText(hpStr, x0 + barW + 10, top + bh / 2);
+      // 顶部血量数值显示（Top Bar exact numeric HP right next to health bar）
+      ctx.save();
+      ctx.font = `bold ${Math.max(12, Math.round(bh * 0.95))}px ${BODY_FONT}`;
+      ctx.textBaseline = 'middle';
+      ctx.shadowColor = 'rgba(0,0,0,0.85)';
+      ctx.shadowBlur = 4;
+      const curHpStr = Math.max(0, Math.round(f.hp));
+      const hpStr = `${curHpStr} / ${f.maxHp}`;
+      if (i === 0) {
+        ctx.textAlign = 'right';
+        ctx.fillStyle = f.hp < f.maxHp * 0.25 ? '#ff7a8a' : 'rgba(255,255,255,0.95)';
+        ctx.fillText(hpStr, x0 - 10, top + bh / 2);
+      } else {
+        ctx.textAlign = 'left';
+        ctx.fillStyle = f.hp < f.maxHp * 0.25 ? '#ff7a8a' : 'rgba(255,255,255,0.95)';
+        ctx.fillText(hpStr, x0 + barW + 10, top + bh / 2);
+      }
+      ctx.restore();
     }
-    ctx.restore();
 
     // 格挡架势条（Guard Posture Bar）：紧贴血条下方，显示英雄防御耐力
     const gh = Math.max(4, Math.round(bh * 0.3)), gy = top + bh + 3;
@@ -576,7 +578,7 @@ function drawHUD() {
         }
         ctx.restore();
       }
-    } else if (M.mode !== 'world') {
+    } else if (M.mode !== 'world' && !cujuOn()) {
       for (let r = 0; r < 2; r++) {
         const px = i === 0 ? cx - gap - 12 - r * 20 : cx + gap + 12 + r * 20, py = top + bh + 18;
         ctx.save(); ctx.translate(px, py); ctx.rotate(Math.PI / 4);
@@ -707,7 +709,7 @@ function drawHUD() {
   ctx.font = `700 ${Math.round(bh * 2.3)}px ${BODY_FONT}`;
   ctx.fillStyle = M.timer < 10 ? '#ff8a78' : '#efe8d8';
   if (M.ot && M.mode !== 'train') ctx.fillStyle = '#ff6a5a';
-  ctx.fillText(M.mode === 'train' || M.mode === 'world' ? '∞' : Math.ceil(M.timer), cx, top + bh / 2 + 2);
+  ctx.fillText(M.mode === 'train' || M.mode === 'world' ? '∞' : (cujuOn() && M.cuju && M.cuju.golden) ? '—' : Math.ceil(M.timer), cx, top + bh / 2 + 2);
   if (M.ot && M.mode !== 'train') { ctx.save(); ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText(cvT('加时'), cx, top - bh * 0.75); ctx.restore(); }
   if (M.mode === 'tower') {
     ctx.save();
@@ -725,6 +727,7 @@ function drawHUD() {
     ctx.restore();
   }
   if (M.mode === 'train') drawTrainStats(cx, top, bh);
+  if (cujuOn()) drawCujuScore(cx, top, bh, gap);
 }
 function drawStats() {
   if (M.mode === 'demo') return;
@@ -1039,6 +1042,7 @@ function render() {
     : ((A.state === 'attack' || A.state === 'special') ? [B, A] : [A, B]);
   drawDecoys();
   drawClones();
+  drawCujuField();
   drawProjs();
   if (WORLD.on && !M.worldKey) drawWorldGhosts();   // 关键战是各打各的一场：不画大地图上的同道
   drawIdentityGround(order);
@@ -1050,6 +1054,7 @@ function render() {
       if (!pf.f.hitDone) drawFu(f.x, f.y - 150 + Math.sin(clock * 6) * 4, pf.a, pf.f.spN || 0);
     } else drawFighter(f);
   }
+  drawCujuBall();
   drawParticles();
   drawComboTotals();
   drawIdentityTags(order);

@@ -450,7 +450,7 @@ const TUI = { stick: null, stickUp: false, jumpHeld: false };
 function touchHeldJump() { human[0].held.jump = TUI.stickUp || TUI.jumpHeld; }
 function touchUIUpdate() {
   if (!TOUCH) return;
-  const inFight = ['cpu', 'pvp', 'net', 'train', 'tag3', '2v2', 'watch2v2', 'tower', 'chaos', 'mayhem', 'maps', 'saga', 'raid'].includes(M.mode) && !paused && !document.querySelector('.scr.on');
+  const inFight = ['cpu', 'pvp', 'net', 'train', 'tag3', '2v2', 'watch2v2', 'tower', 'chaos', 'mayhem', 'maps', 'cuju', 'saga', 'raid'].includes(M.mode) && !paused && !document.querySelector('.scr.on');
   document.documentElement.classList.toggle('touch-game-active', inFight);
   document.body.classList.toggle('touch-game-active', inFight);
   $id('touchUI').classList.toggle('hidden', !inFight);

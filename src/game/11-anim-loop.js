@@ -319,7 +319,9 @@ function step() {
   pushApart();
   if (!RESIM) { for (const f of allFighters()) if (!f.hidden) animFighter(f); }
   updateDecoys();
+  cujuAimHook();
   updateProjs();
+  cujuTick();   // 墨球蹴鞠：墨球的物理和进球（不在这个模式就什么都不做）
   trSample();
   if (FOREST.on) forestUpdate();
   if (!RESIM) updateFX(STEP);
@@ -365,7 +367,7 @@ function faceDir(f, foe) {
   const on = a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl));   // 对手的设置由对手那边决定
   if (on) return a;
   if (h && !h.down && human.includes(f.ctrl) && SETTINGS.aim) return f.face;
-  const dx = foe.x - f.x;
+  const dx = (cujuOn() && M.cuju && M.cuju.ball ? M.cuju.ball.x : foe.x) - f.x;   // 墨球蹴鞠：不按方向键时面向墨球
   return Math.abs(dx) > 3 ? (dx > 0 ? 1 : -1) : f.face;
 }
 function simTick(real) {
@@ -1210,7 +1212,7 @@ function frameBody(now) {
       creditT -= real;
       if (creditT <= 0 && creditPending) {
         creditPending = false;
-        const rTxt = isRaid() ? `同袍肉鸽 · 第 ${M.raidWave || 1} 重魔劫！` : (M.mode === 'tag3' ? `第${CN[M.round] || M.round}局 · 开战！` : (M.mode === 'mayhem' ? '通天神决 · 开战！' : (M.mode === 'watch2v2' ? '天道 2v2 · 演武开战！' : `第${CN[M.round] || M.round}回合`)));
+        const rTxt = isRaid() ? `同袍肉鸽 · 第 ${M.raidWave || 1} 重魔劫！` : (M.mode === 'tag3' ? `第${CN[M.round] || M.round}局 · 开战！` : (M.mode === 'mayhem' ? '通天神决 · 开战！' : M.mode === 'cuju' ? '墨球蹴鞠 · 开球' : (M.mode === 'watch2v2' ? '天道 2v2 · 演武开战！' : `第${CN[M.round] || M.round}回合`)));
         say(rTxt, 1.1);
         SFX.gong();
       }
@@ -1238,7 +1240,7 @@ function updateCamera(dt) {
     return;
   }
   const tracked = isMulti() ? [A, B, C, D].filter(f => !f.hidden && f.hp > 0) : [A, B];
-  const pool = tracked.length >= 2 ? tracked : [A, B];
+  const pool = cujuOn() && M.cuju && M.cuju.ball ? [A, B, M.cuju.ball] : (tracked.length >= 2 ? tracked : [A, B]);   // 墨球蹴鞠：镜头也框住墨球
   const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
   const minY = Math.min(...pool.map(f => f.y));
   const mid = (minX + maxX) / 2, d = maxX - minX, base = H / 560;
@@ -1262,7 +1264,7 @@ function updateCamera(dt) {
   }
   const ce = cineEnv();
   if (ce > 0 && cine.owner) { zoomMul *= 1 + 0.4 * ce; focus = lerp(focus, cine.owner.x, 0.6 * ce); }
-  const minZoom = is2v2() ? 0.4 : 0.6;
+  const minZoom = is2v2() ? 0.4 : cujuOn() ? 0.5 : 0.6;
   // 1v1 用原本的曲线；2v2 基准更小（近身也会留出擂台与灯火），并压低上限
   const wantBase = is2v2() ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
   // 2v2 再压一个上限，近身缠斗时也不回到 1.0+ 的贴脸视角（1v1 不设上限，保持原曲线）

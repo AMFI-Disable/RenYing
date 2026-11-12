@@ -8,6 +8,11 @@
 //   6. 雾身（离影）：留影、渡影、碎裂、跟随
 //   7. 蓄力斩、按键缓冲，以及每帧总入口 updateFighter 和物理 physics / 落地 onLand
 // 找 bug 提示：每位侠客每帧都走 updateFighter：先看 f.state 是什么，再看对应的分支。
+// 格挡时面向谁：平时面向对手；墨球蹴鞠里面向墨球（扑救）
+function blockFace(f, foe) {
+  const ref = cujuOn() && M.cuju && M.cuju.ball ? M.cuju.ball : foe;
+  return Math.abs(ref.x - f.x) > 6 ? (ref.x >= f.x ? 1 : -1) : f.face;
+}
 function toNeutral(f) {
   f.move = null; f.sp = null; f.snap = false; f.skill = null; f.armorT = 0; f.parryT = 0; f.thunderGuardT = 0; f.rooted = false;
   f.state = f.onGround() ? 'idle' : 'air';
@@ -104,7 +109,7 @@ function neutral(f, foe) {
       if (c.consume('light')) return startAttack(f, 'dl');
       if (f.skill2CD <= 0 && (SKILLS[f.ch.skill2] || {}).free && c.consume('skill2')) return startSkill(f, foe, 2);   // 离影 ↓+R：换到最早的雾身
       f.blockT = f.state === 'block' ? (f.blockT || 0) + STEP : 0;
-      f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; f.vx = damp(f.vx, dir * wk(f) * 0.3, 20, STEP); return;
+      f.state = 'block'; f.face = blockFace(f, foe); f.vx = damp(f.vx, dir * wk(f) * 0.3, 20, STEP); return;
     } else {
       f.blockT = 0;
     }
@@ -177,7 +182,7 @@ function attackUpdate(f, foe) {
   const m = f.move, c = f.ctrl, t = f.t, cx = f.ch.cancel || CANCEL;   // 取消规则见 src/data/01-moves.js 的 CANCEL
   const act0 = m.su, act1 = m.su + m.ac;
   // 格挡更灵活：出招前段、或打完判定之后的收招，按住 S 都能立刻转成格挡（下蹲试探轻攻击 dl 不自取消）
-  if (c.held.down && f.onGround() && M.phase === 'fight' && f.moveName !== 'dl' && (t < act0 * cx.blockEarly || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; return; }
+  if (c.held.down && f.onGround() && M.phase === 'fight' && f.moveName !== 'dl' && (t < act0 * cx.blockEarly || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = blockFace(f, foe); return; }
   if (t >= act0 && !f.lunged) {
     f.lunged = true;
     if (f.ch.inkShot && /^l[1-5]$/.test(f.moveName) && f.ink >= INK_COST) {   // 墨羽：普攻甩出一团墨，按抛物线甩向身前（要有墨水）
@@ -251,7 +256,7 @@ function attackUpdate(f, foe) {
   }
   if (t >= act1 + m.rc) {
     toNeutral(f);
-    if (c.held.down && f.onGround()) { f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face; }
+    if (c.held.down && f.onGround()) { f.state = 'block'; f.face = blockFace(f, foe); }
   }
 }
 function endSpecial(f) {
@@ -431,6 +436,7 @@ function strike(f, foe, spec) {
     ? spec.box.map((v, i) => i === 0 || i === 2 ? v * rangeScale : v)
     : spec.box;
   const hb = hitbox(f, rangeBox);
+  cujuHit(f, hb, spec);
   hitClones(hb, f.idx, spec.dmg);
   if (hitDecoy(f, hb)) return false;
   echoCloneAttack(f, hb, { ...spec, skill: true }, 'skill');
@@ -1457,7 +1463,7 @@ function updateFighter(f, foe) {
       if (f.t >= getupDur) {
         f.quickGetupPhase = false;
         if (f.ctrl && f.ctrl.held && f.ctrl.held.down) {
-          f.state = 'block'; f.face = Math.abs(foe.x - f.x) > 6 ? (foe.x >= f.x ? 1 : -1) : f.face;
+          f.state = 'block'; f.face = blockFace(f, foe);
         } else {
           toNeutral(f);
         }

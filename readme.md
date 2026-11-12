@@ -123,6 +123,7 @@ Default keyboard and mouse layout for player 1. Every key can be changed in **�
 | **天机乱斗 · Chaos** | A new random mutation hits the arena every 15 seconds. |
 | **通天神决 · Mayhem** | Ten times the meter, no cooldowns and doubled skill power for everyone. |
 | **山河异境 · Terrain Clash** | Six maps with platforms, ice, wind and lightning; the map is chosen by vote. |
+| **墨球蹴鞠 · Ink Ball** | Knock the ink ball into the other goal with attacks and skills; first to three goals wins. No health bars. Against the AI, two players on one computer, or AI against AI. |
 | **3v3 车轮战 · Relay** | Three heroes per side, snake draft; the round winner carries over their remaining health. |
 | **2v2** | Two players against two AIs, or two players against two players, on one computer or online. |
 | **守关挑战 · Stages** | Stage chapters with star ratings and rewards. |

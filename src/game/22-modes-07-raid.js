@@ -318,6 +318,10 @@ document.getElementById('againBtn').addEventListener('click', () => {
     startWatch2v2Draft();
     return;
   }
+  if (M.mode === 'cuju') {   // 再踢一场：同样的对手（电脑或本地 2P），重新选人
+    bpStart('cuju', { level: M.level || pickLevel, pvp: !!M.cujuPvp });
+    return;
+  }
   if (M.mode === 'mayhem') {
     bpStart('mayhem', { level: pickLevel, isWatch: false });
     return;
@@ -401,7 +405,7 @@ function toMenu(returnHome = false) {
   else if (prevMode === 'boss') openGboss();
   else if (prevMode === 'saga') { singleSec('saga'); showScreen('single'); }
   else if (prevMode === 'watch2v2' || prevMode === '2v2') open2v2Hub();
-  else if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem') {
+  else if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem' || prevMode === 'cuju') {
     singleSec(prevMode);
     showScreen('single');
   } else {

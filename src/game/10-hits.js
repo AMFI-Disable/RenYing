@@ -70,6 +70,7 @@ function drawHitboxOverlay(fighters) {
 function tryHit(f, foe, m) {
   const hb = hitbox(f, m.box);
   if (hitBall(f, hb, m)) return;
+  cujuHit(f, hb, m);   // 墨球蹴鞠：顺路把墨球打出去（22-modes-09-cuju.js），同一招还能接着打到人
   hitClones(hb, f.idx, m.dmg);
   if (hitDecoy(f, hb)) return;
   echoCloneAttack(f, hb, m, 'basic');
@@ -160,6 +161,7 @@ function applyHit(att, def, m, pt) {
   if (M.mode === 'net' && !RESIM) NET.matchHits = (NET.matchHits || 0) + 1;   // 回滚重算不能再记一次，不然两边会算成不一样
   if (def.forestProxy) { forestHit(att, m, pt); return; }
   if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 22-world.js
+  if (cujuOn()) def.hp = def.lagHp = def.maxHp;   // 墨球蹴鞠不比气血：挨打照样硬直、倒地，但永远打不倒
   if (M.ot && M.phase === 'fight' && m.dmg) m = { ...m, dmg: m.dmg * OT_DMG };   // 加时赛：伤害翻倍
   if (def.jailT > 0) m = { ...m, launch: false, spike: false, knock: false, kb: [0, 0] };   // 关在醉翁亭里的人打不飞
   if (!m.isProj && !m.ult && mapFavOn(att) && att.ch.id === 'lingshuang' && (mapNow() || {}).cliff
@@ -509,6 +511,7 @@ function applyHit(att, def, m, pt) {
 }
 // 有人被打倒：1v1 直接判这回合；2v2 队友还站着时只是倒下一人，队友进入「孤军奋战」（数值见 01-core.js）
 function fighterDown(def, att, ev) {
+  if (cujuOn()) { def.hp = def.lagHp = def.maxHp; return; }   // 墨球蹴鞠：没有人会被打倒
   if (is2v2()) {
     const mate = def === A ? C : def === C ? A : def === B ? D : B;
     if (mate && !mate.hidden && mate.hp > 0) {

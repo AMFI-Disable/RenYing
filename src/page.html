@@ -194,6 +194,7 @@
               <button data-tab="cpu" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">对战电脑</b><span class="pt-d">一对一，难度自选</span></button>
               <button data-tab="tag3" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">3v3 车轮战</b><span class="pt-d">三人接力，胜者守擂</span></button>
               <button data-tab="watch2v2" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><b class="pt-n">2v2 组队</b><span class="pt-d">两人一队，可带电脑队友</span></button>
+              <button data-tab="cuju" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18M5 7c3 2 11 2 14 0M5 17c3-2 11-2 14 0"/></svg></span><b class="pt-n">墨球蹴鞠</b><span class="pt-d">不比气血，比谁先进三球</span></button>
             </div>
 
 
@@ -457,6 +458,28 @@
           <button class="go" id="chaosStartBtn" type="button">开启天机乱斗</button>
           <button class="go alt" id="chaosWatchBtn" type="button">天机 AI 观战</button>
         </div>
+      </div>
+
+      <!-- 墨球蹴鞠 · 把墨球打进对方球门（src/game/22-modes-09-cuju.js） -->
+      <div data-sec="cuju" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">墨球蹴鞠 · 先进三球</h3>
+          <span class="sub-badge">不比气血 · 不计排位</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">场地两边各有一个球门，中间一颗墨球。普攻和技能打中墨球就能把它打飞，先把墨球打进对方球门三次的一方获胜；时间到比分领先的赢，平分进金球决胜。挨打照样会被打飞，但气血不会掉。</p>
+        <div class="bp-rule-banner">
+          <span class="bp-rule-seal pick-only">踢法</span>
+          <div class="bp-rule-txt">
+            <b>每位侠客都有自己的踢法</b>
+            <span>重击把球挑高，空中下砸把球砸地弹起，按住 ↓ 出招踢贴地球，格挡能扑救飞来的墨球。勾陈的飞锤能把球勾回来，磁仙负极吸球、正极把球弹飞，飞行道具打中墨球也能推着它走。</span>
+          </div>
+        </div>
+        <div class="single-action-row">
+          <button class="go" id="cujuStartBtn" type="button">对战电脑 · 开球</button>
+          <button class="go alt" id="cujuPvpBtn" type="button">本地双人对踢</button>
+          <button class="go alt" id="cujuWatchBtn" type="button">电脑对踢观战</button>
+        </div>
+        <p class="netnote" style="text-align:left">本地双人：1P 用 WASD + X 或鼠标，2P 用方向键 + K 攻击、U 和 O 放技能、I 放大招。</p>
       </div>
 
       <!-- 山河异境 · 投票选地图 -->

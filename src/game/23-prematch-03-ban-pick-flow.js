@@ -202,6 +202,8 @@ function launchBpMatch(mode, opts, picks, bans, mapId, preMatch) {
     startChaos(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
   } else if (mode === 'mayhem') {
     startMayhem(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
+  } else if (mode === 'cuju') {
+    startCuju(picks[0], picks[1], opts.level || pickLevel, opts);
   } else if (mode === 'maps') {
     startMapsMode(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch, mapId);
   } else if (mode === 'tag3') {

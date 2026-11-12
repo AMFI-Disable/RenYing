@@ -426,4 +426,55 @@ export default [
       return { pass: true, error: null };
     })()`
   },
+  {
+    name: 'Ink Ball (cuju): hits move the ball, goals score, health never drops, first to three wins',
+    fn: `(() => {
+      startCuju(0, 14, 'normal');
+      for (let i = 0; i < 700 && M.phase !== 'fight'; i++) step();
+      if (M.phase !== 'fight') return { pass: false, error: 'match never reached fight' };
+      if (STAGE_W !== CUJU.W) return { pass: false, error: 'cuju stage width ' + STAGE_W };
+      const b = M.cuju.ball;
+      if (!b || Math.abs(b.x - STAGE_W / 2) > 1) return { pass: false, error: 'ball not at center' };
+      // 普攻打中墨球：球朝出招方向飞
+      b.x = A.x + 50; b.y = -60; b.vx = 0; b.vy = 0; A.face = 1;
+      if (!cujuHit(A, hitbox(A, A.moves.l1.box), A.moves.l1)) return { pass: false, error: 'l1 did not touch the ball' };
+      if (!(b.vx > 400) || b.last !== 0) return { pass: false, error: 'ball not sent forward: ' + b.vx };
+      if (cujuHit(A, hitbox(A, A.moves.l1.box), A.moves.l1)) return { pass: false, error: 'same swing hit the ball twice' };
+      // 挨打不掉血
+      applyHit(B, A, { dmg: 5000, kb: [100, 0], stun: 0.3, hs: 0.05 }, [A.x, A.y - 60]);
+      for (let i = 0; i < 60; i++) step();
+      if (A.hp !== A.maxHp || M.phase !== 'fight') return { pass: false, error: 'health dropped or match ended after a hit' };
+      // 把球放进右门：A 一边得分，停顿后重新开球
+      b.x = STAGE_W - WALL - 30; b.y = -40; b.vx = 300; b.vy = 0;
+      step();
+      if (M.cuju.score[0] !== 1 || !(M.cuju.pause > 0)) return { pass: false, error: 'goal not counted: ' + M.cuju.score };
+      for (let i = 0; i < 400 && M.cuju.pause > 0; i++) step();
+      if (Math.abs(M.cuju.ball.x - STAGE_W / 2) > 40 || Math.abs(A.x - (STAGE_W / 2 - 300)) > 40) return { pass: false, error: 'no kickoff reset' };
+      // 横梁上面过去不算进球
+      const c = M.cuju.ball; c.x = WALL + CUJU.GD + 60; c.y = -CUJU.GH - 120; c.vx = -500; c.vy = 0;
+      for (let i = 0; i < 30; i++) step();
+      if (M.cuju.score[1] !== 0) return { pass: false, error: 'ball over the crossbar counted as a goal' };
+      // 再进两球：比赛结束，A 赢
+      for (let k = 0; k < 2; k++) {
+        for (let i = 0; i < 400 && M.cuju.pause > 0; i++) step();
+        const d = M.cuju.ball; d.x = STAGE_W - WALL - 30; d.y = -40; d.vx = 300; d.vy = 0; step();
+      }
+      if (M.cuju.score[0] !== 3 || M.phase !== 'ko' || M.koWinner !== 0) return { pass: false, error: 'first to three did not win: ' + M.cuju.score + ' ' + M.phase };
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Ink Ball (cuju): two AI sides finish a match without errors',
+    fn: `(() => {
+      startCuju(11, 14, 'hard', { isWatch: true });
+      let n = 0;
+      while (M.phase !== 'end' && n < 120 * 400) { step(); n++; }
+      if (M.phase !== 'end') return { pass: false, error: 'AI match did not finish: ' + M.cuju.score + ' after ' + Math.round(n / 120) + 's' };
+      const t = M.cuju.touches;
+      if (t[0] + t[1] < 3) return { pass: false, error: 'AI barely touched the ball: ' + t };
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
 ];

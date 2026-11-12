@@ -12,6 +12,7 @@
 | **天机乱斗 · Chaos** | A new random mutation hits the arena every 15 seconds. | — |
 | **通天神决 · Mayhem** | Ten times the meter, no cooldowns, doubled skill power for both sides. | — |
 | **山河异境 · Terrain Clash** | Six maps: 断崖台, 寒潭冰面, 竹海悬岩 (gale), 雷泽石坛 (lightning altar), 皇城飞檐 (three tiers of eaves), 醉翁墨阁 (wine mist restores guard). The map is drawn by vote; each map gives two home-ground heroes a small bonus. | — |
+| **墨球蹴鞠 · Ink Ball** | A goal at each end and an ink ball in the middle. Attacks and skills knock the ball; first to three goals wins, and a tie at 150 seconds goes to a golden goal. Hits still knock heroes around but nobody loses health. Blocking saves a shot, holding ↓ while attacking keeps the ball low, 勾陈's hammer hooks the ball back and 磁仙 pulls it in on the negative pole. Play the AI, two players on one computer (1P keyboard and mouse, 2P arrow keys + K), or watch two AIs. 场地两边各一个球门，用普攻和技能把墨球打进对方球门，先进三球获胜，不比气血。 | — |
 | **3v3 车轮战 · Relay** | Three heroes a side (先锋, 中坚, 大将), snake draft. The loser of a round swaps in the next hero; the winner keeps their remaining health plus a small heal. | — |
 | **2v2** | Two players against two AIs or against two players. **即刻开战 / Fight Now** starts at once with random heroes. If your partner falls you get 孤军奋战 (Last Stand): full meter, a short power-up and some health back. | Online variants: server |
 
