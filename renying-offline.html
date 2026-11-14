@@ -3710,11 +3710,22 @@ white-space: nowrap;
           <span class="bp-rule-seal pick-only">踢法</span>
           <div class="bp-rule-txt">
             <b>每位侠客都有自己的踢法</b>
-            <span>重击把球挑高，空中下砸把球砸地弹起，按住 ↓ 出招踢贴地球，格挡能扑救飞来的墨球。勾陈的飞锤能把球勾回来，磁仙负极吸球、正极把球弹飞，飞行道具打中墨球也能推着它走。</span>
+            <span>重击、↑ 挑射、↓ 贴地抽射、空中头槌砸球，移动带球过人，格挡扑救（精准格挡可触发神扑）。勾陈飞锤勾球、磁仙正负磁极吸弹、千机傀儡与离影分身皆可截球或协同踢法。</span>
           </div>
+        </div>
+        <div class="single-opt-row" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0 10px">
+          <div class="lobby-modes-seg" id="cujuTargetSeg" role="group" aria-label="制胜球数">
+            <button class="ghost small sel" data-target="3" type="button">先3球</button>
+            <button class="ghost small" data-target="5" type="button">先5球</button>
+            <button class="ghost small" data-target="7" type="button">先7球</button>
+          </div>
+          <label class="ghost small" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+            <input id="cujuChaosChk" type="checkbox"> 异象球场
+          </label>
         </div>
         <div class="single-action-row">
           <button class="go" id="cujuStartBtn" type="button">对战电脑 · 开球</button>
+          <button class="go alt" id="cuju2v2Btn" type="button">2v2 组队对踢</button>
           <button class="go alt" id="cujuPvpBtn" type="button">本地双人对踢</button>
           <button class="go alt" id="cujuWatchBtn" type="button">电脑对踢观战</button>
         </div>
@@ -3847,6 +3858,7 @@ white-space: nowrap;
                   <button class="ghost small" data-mode="raid" type="button">联机打魔首</button>
                   <button class="ghost small" data-mode="chaos" type="button">天机乱斗</button>
                   <button class="ghost small" data-mode="mayhem" type="button">通天神决</button>
+                  <button class="ghost small" data-mode="cuju" type="button">墨球蹴鞠</button>
                 </div>
                 <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。2v2 的全服匹配和同一台电脑对战在「开始演武」的 2v2 组队里。</p>
               </details>
@@ -7827,7 +7839,8 @@ cpuWatch: { bp: 'duel', local: true, sides: ['苍龙 (AI)', '赤凤 (AI)'] },
 chaos: { bp: 'open', local: true, foe: '电脑' },
 mayhem: { bp: 'open', local: true, foe: '电脑' },
 maps: { bp: 'open', local: true, foe: '电脑' },   // 山河异境：投票选地图（src/data/12-maps.js）
-cuju: { bp: 'open', local: true, foe: '电脑' },   // 墨球蹴鞠：把墨球打进对方球门（src/game/22-modes-09-cuju.js）
+cuju: { bp: 'open', local: true, foe: '电脑' },   // 墨球蹴鞠：把墨球打进对方球门（src/game/04-modes/22-modes-09-cuju.js）
+cuju2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 墨球蹴鞠
 tag3: { bp: 'trio', team: true, local: true, foe: '敌方战队' },
 tower: { bp: 'solo', local: true },
 stage: { bp: 'solo', local: true },
@@ -7842,6 +7855,7 @@ normal: { bp: 'trioSnake', team: true, slots: [[0], [1]] },
 chaos: { bp: 'open', slots: [[0], [1]], rule: 'chaos' },
 mayhem: { bp: 'open', slots: [[0], [1]], rule: 'mayhem' },
 maps: { bp: 'open', slots: [[0], [1]], rule: 'maps' },   // 山河异境：两边各投一票选地图
+cuju: { bp: 'open', slots: [[0], [1]], rule: 'cuju' },   // 墨球蹴鞠：好友房联机踢球
 pp_cc: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true },
 pp_pp: { bp: 'duo', team: true, us: '我方战队', slots: [[0, 2], [1, 3]], four: true },
 raid: { bp: 'squadNet', team: true, us: '我方战队', slots: [[0], [2]], raid: true },   // 房主 A、好友 C、电脑同袍 D 一起打魔首 B
@@ -10388,21 +10402,39 @@ Object.assign(UI_COPY_EN, {
 "场地两边各有一个球门，中间一颗墨球。普攻和技能打中墨球就能把它打飞，先把墨球打进对方球门三次的一方获胜；时间到比分领先的赢，平分进金球决胜。挨打照样会被打飞，但气血不会掉。": "There is a goal at each end and an ink ball in the middle. Hit the ball with attacks and skills to send it flying; the first side to put it in the other goal three times wins. When time runs out the side ahead wins, and a tie goes to a golden goal. Hits still knock heroes around, but nobody loses health.",
 "踢法": "Kicks",
 "每位侠客都有自己的踢法": "Every hero kicks the ball their own way",
-"重击把球挑高，空中下砸把球砸地弹起，按住 ↓ 出招踢贴地球，格挡能扑救飞来的墨球。勾陈的飞锤能把球勾回来，磁仙负极吸球、正极把球弹飞，飞行道具打中墨球也能推着它走。": "Heavy hits lob the ball, air slams bounce it off the ground, holding ↓ while attacking keeps it low, and blocking saves a shot. Gou Chen's hammer hooks the ball back, Ci Xian pulls it in on the negative pole and blasts it away on the positive pole, and projectiles push it along.",
+"重击、↑ 挑射、↓ 贴地抽射、空中头槌砸球，移动带球过人，格挡扑救（精准格挡可触发神扑）。勾陈飞锤勾球、磁仙正负磁极吸弹、千机傀儡与离影分身皆可截球或协同踢法。": "Heavy hits, ↑ lobs, ↓ low drives, and aerial headers; dribble while moving, and block to save (Just Guard triggers a Super Save). Gou Chen hooks the ball, Ci Xian pulls/repels with poles, and Qian Ji's puppets & Li Ying's clones can deflect or shoot.",
+"先3球": "First to 3",
+"先5球": "First to 5",
+"先7球": "First to 7",
+"异象球场": "Chaos Pitch",
+"2v2 组队对踢": "2v2 Team Match",
 "对战电脑 · 开球": "vs AI · Kick Off",
 "本地双人对踢": "Local 2-Player",
 "电脑对踢观战": "Watch AI vs AI",
 "本地双人：1P 用 WASD + X 或鼠标，2P 用方向键 + K 攻击、U 和 O 放技能、I 放大招。": "Local 2-Player: 1P uses WASD + X or the mouse; 2P uses the arrow keys, K to attack, U and O for skills and I for the ultimate.",
 "不比气血比进球：用普攻和技能把墨球打进对方球门，先进三球获胜": "Goals, not health: knock the ink ball into the other goal with attacks and skills. First to three wins",
 "墨球蹴鞠 · 开球": "Ink Ball · Kick Off",
-"先进三球获胜": "First to three goals wins",
+"2v2 墨球蹴鞠": "2v2 Ink Ball",
+"巨型墨球": "Giant Ball",
+"轻功低重": "Low Gravity",
+"烈焰疾球": "Blazing Ball",
+"双倍蓄气": "Double Meter",
 "劲射": "Power Shot",
 "勾球": "Hooked",
+"傀儡轰球": "Puppet Blast",
+"傀儡截球": "Puppet Intercept",
+"影截": "Shadow Intercept",
 "扑救": "Save",
+"神扑": "Super Save",
+"横梁!": "Crossbar!",
 "进球": "GOAL",
 "乌龙球": "Own Goal",
 "时间到": "Time Up",
 "金球决胜": "Golden Goal",
+"触球": "Touches",
+"破门": "Goals",
+"最快球速": "Top Speed",
+"好友联机蹴鞠": "Friend Room Ink Ball",
 "电脑对踢": "AI vs AI",
 "一脚定乾坤": "One kick decided it",
 "再练练脚法": "Keep working on your footwork",
@@ -15289,7 +15321,7 @@ C.hidden = true; D.hidden = true;
 const roomDef = () => ROOM_MODES[netRoomMode] || ROOM_MODES.normal;   // 联机房间的规则（src/data/10-modes.js）
 const netRoom = () => (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net' && REPLAY.m) ? (ROOM_MODES[REPLAY.m.room || REPLAY.m.sub || 'normal'] || null) : M.mode === 'net' ? roomDef() : null;
 const netSim = () => (ROLL.on && M.mode === 'net') || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net');
-const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four));
+const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'cuju' && !!M.cujuFour) || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four));
 const isRaid = () => M.mode === 'raid' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.raid)) || !!(netRoom() && netRoom().raid);
 const isMulti = () => is2v2() || isRaid();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
@@ -15712,7 +15744,7 @@ if (typeof statMatch === 'function') statMatch();   // 匿名统计：一局的�
 announce = null;
 announceQueue.length = 0;
 secretRound();
-STAGE_W = M.mode === 'world' ? WORLD_W : M.mode === 'cuju' ? CUJU.W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
+STAGE_W = M.mode === 'world' ? WORLD_W : cujuOn() ? CUJU.W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
 const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
 M.mapEnv = mp ? { wT: mp.wind ? mp.wind.every : 0, wOn: 0, wDir: 1, wN: 0, tT: mp.thunder ? mp.thunder.every : 0, tWarn: 0 } : null;   // 风、天雷的计时：每回合从头算
 if (typeof applySkins === 'function') applySkins();
@@ -15883,16 +15915,25 @@ $id('againBtn').style.display = (isAiVsAi() || M.watchAi || (M.mode === 'watch2v
 $id('endChangeHeroBtn').classList.toggle('hidden', !['cpu', 'tag3', 'chaos', 'mayhem', 'maps'].includes(M.mode) || !!M.watchAi);
 $id('endChangeHeroBtn').textContent = cvT(M.mode === 'tag3' ? '更换队伍再战' : '换侠客再战');
 $id('endHistoryBtn').classList.toggle('hidden', !RP.last);
-if (M.mode === 'cuju') {   // 墨球蹴鞠：只看比分，不发墨锭
-const cj = M.cuju || { score: [0, 0] }, watch = !!M.watchAi, pvp = !!M.cujuPvp, iWon = w === 0;
-if (card) card.textContent = '';   // 伤害、连击这些数在这个模式里没意义
+if (cujuOn()) {   // 墨球蹴鞠：只看比分与球场数据，不发墨锭
+const cj = M.cuju || { score: [0, 0] }, watch = !!M.watchAi, pvp = !!M.cujuPvp, net = M.mode === 'net';
+const mySide = net && NET.role === 'client' ? 1 : 0, iWon = w === mySide;
+if (card) {
+const touches = cj.touches || [0, 0, 0, 0], shots = cj.shots || [0, 0], saves = cj.saves || [0, 0];
+const t0 = (touches[0] || 0) + (touches[2] || 0), t1 = (touches[1] || 0) + (touches[3] || 0);
+card.innerHTML = `<div class="end-stat-grid"><span>${cvT('触球')} ${t0} : ${t1}</span><span>${cvT('破门')} ${shots[0] || 0} : ${shots[1] || 0}</span><span>${cvT('扑救')} ${saves[0] || 0} : ${saves[1] || 0}</span><span>${cvT('最快球速')} ${Math.round(cj.topSpeed || 0)}</span></div>`;
+}
 playSting(watch || pvp || iWon ? 'victory' : 'defeat');
-inkTitle(([A, B][w] || A).look.name, !(watch || pvp) && !iWon);
-$id('endKicker').textContent = '墨球蹴鞠';
+const winLabel = is2v2()
+? (w === 0 ? `${A.look.name} · ${C.look.name}` : `${B.look.name} · ${D.look.name}`)
+: ([A, B][w] || A).look.name;
+inkTitle(winLabel, !(watch || pvp) && !iWon);
+$id('endKicker').textContent = is2v2() ? '2v2 墨球蹴鞠' : '墨球蹴鞠';
 $id('endSub').textContent = `比分 ${cj.score[0]} : ${cj.score[1]}`;
-$id('endRank').textContent = cj.golden ? '金球决胜' : watch ? '电脑对踢' : pvp ? '本地双人' : iWon ? '一脚定乾坤' : '再练练脚法';
+$id('endRank').textContent = cj.golden ? '金球决胜' : net ? '好友联机蹴鞠' : watch ? '电脑对踢' : pvp ? '本地双人' : iWon ? '一脚定乾坤' : '再练练脚法';
 const again = $id('againBtn');
 again.style.display = watch ? 'none' : ''; again.disabled = false; again.textContent = '再踢一场';
+if (net && NET.open) $id('netRepickBtn').classList.remove('hidden');
 setTimeout(() => showScreen('end'), 300);
 return;
 }
@@ -16053,7 +16094,7 @@ if (REC.on && (M.mode === 'tag3' || M.mode === 'saga' || (M.mode === 'tower' && 
 if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
 if (M.worldKey && M.worldKey.kind === 'boss') { worldKeyRound(w); return; }   // 全服肉鸽的天道 Boss：结果和奖励都以服务器为准，这里不加墨锭（车轮战照常换人，打完在 showEnd 里交出去）
 if (M.mode === 'saga') { sagaEnd(w); return; }
-if (M.mode === 'cuju') { M.phase = 'end'; showEnd(w); return; }   // 墨球蹴鞠只有一局
+if (cujuOn()) { M.phase = 'end'; showEnd(w); return; }   // 墨球蹴鞠只有一局
 if (isRaid()) {
 if (w === 0) {
 for (const f of sideFighters(0)) scFire(f, 'clear');
@@ -19498,7 +19539,7 @@ cam.y = damp(cam.y, Math.min(0, A.y * 0.4), 6, dt);
 return;
 }
 const tracked = isMulti() ? [A, B, C, D].filter(f => !f.hidden && f.hp > 0) : [A, B];
-const pool = cujuOn() && M.cuju && M.cuju.ball ? [A, B, M.cuju.ball] : (tracked.length >= 2 ? tracked : [A, B]);   // 墨球蹴鞠：镜头也框住墨球
+const pool = cujuOn() && M.cuju && M.cuju.ball ? [...allFighters(), M.cuju.ball] : (tracked.length >= 2 ? tracked : [A, B]);   // 墨球蹴鞠：镜头也框住墨球
 const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
 const minY = Math.min(...pool.map(f => f.y));
 const mid = (minX + maxX) / 2, d = maxX - minX, base = H / 560;
@@ -28655,7 +28696,7 @@ else startWatch2v2Draft();
 toMenuScreen: () => open2v2Hub(),
 },
 cuju: {
-rematch: () => bpStart('cuju', { level: M.level || pickLevel, pvp: !!M.cujuPvp }),   // 再踢一场：同样的对手（电脑或本地 2P），重新选人
+rematch: () => bpStart(M.cujuFour ? 'cuju2v2' : 'cuju', { level: M.level || pickLevel, pvp: !!M.cujuPvp, four: !!M.cujuFour, target: M.cujuTarget || 3, chaos: !!M.cujuChaos }),   // 再踢一场：同样的对手和规则，重新选人
 toMenuScreen: () => { singleSec('cuju'); showScreen('single'); },
 },
 mayhem: {
@@ -29963,12 +30004,12 @@ let BP = null, bpMode = 'cpu', bpSel = -1, bpHover = -1, bpCpuT = 0, bpCustomOpt
 const PORTRAITS = [];
 const CUJU = {
 W: 2400,          // 球场宽度（含两边的墙）
-R: 24,            // 墨球半径
+R: 24,            // 墨球默认半径
 G: 1500,          // 墨球的重力，比侠客轻一些，飘得更久
 GD: 110,          // 球门进深：墙到门柱的距离
 GH: 190,          // 球门高度（横梁下沿），比侠客高一截，跳起来够得着
 BAR: 14,          // 横梁厚度
-target: 3,        // 先进几球获胜
+target: 3,        // 默认先进几球获胜
 time: 150,        // 一局多少秒
 pause: 2.2,       // 进球后停多久再开球
 floorE: 0.55,     // 落地弹性
@@ -29977,26 +30018,63 @@ maxV: 2300,       // 墨球最快速度
 roll: 1.6,        // 地上滚动的阻力：越大停得越快（轻击一脚大约滚四五百）
 ceil: -1150,      // 天顶
 };
-const cujuOn = () => M.mode === 'cuju';
+const CUJU_CHAOS_LIST = [
+{ id: 'big', name: '巨型墨球' },
+{ id: 'lowg', name: '轻功低重' },
+{ id: 'fire', name: '烈焰疾球' },
+{ id: 'fastmeter', name: '双倍蓄气' },
+];
+const cujuOn = () => M.mode === 'cuju' || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'cuju');
 const cujuBall = () => (M.cuju && M.cuju.ball) || null;
-const cujuSide = f => (f && f.idx % 2) || 0;               // 0 是 A 一边（守左门、攻右门），1 是 B 一边
+const cujuTarget = () => (M.cuju && M.cuju.target) || M.cujuTarget || CUJU.target;
+const cujuBallR = () => (M.cuju && M.cuju.chaos === 'big' ? 36 : CUJU.R);
+const cujuSide = f => (f && f.idx % 2) || 0;               // 0 是 A/C 一边（守左门、攻右门），1 是 B/D 一边
 const cujuAttackDir = f => cujuSide(f) === 0 ? 1 : -1;
+const cujuFighters = () => (typeof allFighters === 'function' ? allFighters() : [A, B]);
 const CUJU_TRAIL = [];   // 墨球的拖影：只是画面，不进存档
 function cujuNewBall() {
-return { x: STAGE_W / 2, y: -320, vx: 0, vy: 0, spin: 0, last: -1, cd: [0, 0, 0, 0], held: 0 };
+return { x: STAGE_W / 2, y: -320, vx: 0, vy: 0, spin: 0, spinV: 0, iced: 0, last: -1, cd: [0, 0, 0, 0], held: 0 };
+}
+function cujuPickChaos() {
+if (!M.cuju || !M.cujuChaos) return;
+const idx = (Math.abs((M.cuju.score[0] + M.cuju.score[1] + Math.round(M.timer || 0)) * 7 + (M.cuju.touches[0] || 0)) % CUJU_CHAOS_LIST.length);
+const chosen = CUJU_CHAOS_LIST[idx];
+M.cuju.chaos = chosen.id;
+M.cuju.chaosT = 25;
+if (!RESIM) say(`球场异象 · ${chosen.name}`, 1.4, 'big');
 }
 function cujuRoundInit() {
-if (!M.cuju) M.cuju = { score: [0, 0], pause: 0, golden: false, touches: [0, 0, 0, 0], shots: [0, 0], lastGoal: -1, kick: 0 };
+const target = M.cujuTarget || CUJU.target;
+if (!M.cuju) {
+M.cuju = {
+score: [0, 0], pause: 0, golden: false, target,
+touches: [0, 0, 0, 0], shots: [0, 0], saves: [0, 0],
+topSpeed: 0, lastGoalSpeed: 0, netRipple: [0, 0],
+lastGoal: -1, kick: 0, chaos: null, chaosT: 0,
+};
+}
 M.cuju.ball = cujuNewBall();
 M.cuju.pause = 0;
+if (is2v2()) {
+A.x = STAGE_W / 2 - 420; A.face = 1;
+C.x = STAGE_W / 2 - 220; C.face = 1;
+B.x = STAGE_W / 2 + 220; B.face = -1;
+D.x = STAGE_W / 2 + 420; D.face = -1;
+} else {
 A.x = STAGE_W / 2 - 300; A.face = 1;
 B.x = STAGE_W / 2 + 300; B.face = -1;
+}
 M.timer = M.cuju.golden ? 0 : CUJU.time;
 CUJU_TRAIL.length = 0;
+if (M.cujuChaos) cujuPickChaos();
 }
 function cujuKickoff() {
 const cj = M.cuju;
-for (const [f, x, face] of [[A, STAGE_W / 2 - 300, 1], [B, STAGE_W / 2 + 300, -1]]) {
+const spots = is2v2()
+? [[A, STAGE_W / 2 - 420, 1], [C, STAGE_W / 2 - 220, 1], [B, STAGE_W / 2 + 220, -1], [D, STAGE_W / 2 + 420, -1]]
+: [[A, STAGE_W / 2 - 300, 1], [B, STAGE_W / 2 + 300, -1]];
+for (const [f, x, face] of spots) {
+if (!f || f.hidden) continue;
 const keep = { meter: f.meter, pol: f.pol, skillCD: f.skillCD, skill2CD: f.skill2CD, breakCD: f.breakCD, drunk: f.drunk, ink: f.ink, fu: f.fu, notes: f.notes };
 f.reset(x); Object.assign(f, keep); f.face = face;
 if (f.ctrl && f.ctrl.clear) f.ctrl.clear();
@@ -30009,19 +30087,48 @@ if (!RESIM) { ring(STAGE_W / 2, -320, 80, '233,196,106', 0.4); SFX.gong(); }
 }
 function cujuHit(f, hb, m) {
 if (!cujuOn() || !M.cuju || M.cuju.pause > 0 || M.phase !== 'fight') return false;
-const b = M.cuju.ball, R = CUJU.R;
+const b = M.cuju.ball, R = cujuBallR();
 if (!b || b.cd[f.idx] > 0 || !overlap(hb, [b.x - R, b.y - R, b.x + R, b.y + R])) return false;
 const dir = m.dir || f.face || 1;
 const kb = m.kb || [0, 0], dmg = m.dmg || 10;
-let power = 330 + Math.abs(kb[0]) * 0.85 + dmg * 10;   // 轻击一脚六百上下，满蓄力斩一千五
+const fireMul = M.cuju.chaos === 'fire' ? 1.18 : 1;
+let power = (330 + Math.abs(kb[0]) * 0.85 + dmg * 10) * fireMul;   // 轻击一脚六百上下，满蓄力斩一千五
 if (m.ult) power *= 1.25;
-power = Math.min(power, CUJU.maxV);
 let vy = kb[1] > 0 ? kb[1] * 0.9 : kb[1] * 0.85 - 220;            // 下砸的招把球往地上砸，其余的都带点弧线
-if (f.ctrl && f.ctrl.held && f.ctrl.held.down && f.onGround()) vy = -90;   // 按住 ↓ 出招：贴地球
+let spinV = dir * 6;
+const held = f.ctrl && f.ctrl.held;
+if (!f.onGround()) {
+if (held && held.down) { vy = Math.max(vy, 420); spinV = dir * 12; }
+else { power *= 1.12; vy = Math.min(vy, -180); spinV = dir * 10; }
+} else if (held && held.up) {
+power *= 0.86;
+vy = Math.min(vy, -760) - 160;
+spinV = -dir * 8;
+} else if (held && held.down) {
+power *= 1.08;
+vy = -70;
+spinV = dir * 10;
+}
+const hid = f.ch && f.ch.id;
+if (hid === 'tieshan' && (kb[1] > 100 || f.state === 'skill')) {
+vy = Math.min(vy, -680);   // 铁山震地挑球，方便接空中抽射
+} else if (hid === 'lingshuang' && (f.state === 'skill' || f.state === 'special')) {
+b.iced = 2.2;              // 凌霜寒气附着：球在地上滑行更远
+} else if (hid === 'yuxiao' && (f.state === 'skill' || f.state === 'special')) {
+const goalY = -CUJU.GH * 0.5;
+vy = lerp(vy, (goalY - b.y) * 1.4, 0.35);
+}
+const maxV = M.cuju.chaos === 'fire' ? 2700 : CUJU.maxV;
+power = Math.min(power, maxV);
+if (power > 1200) spinV = dir * 14;
 b.vx = dir * power; b.vy = clamp(vy, -1500, 1500);
+b.spinV = spinV;
 b.last = f.idx; b.cd[f.idx] = 0.14; b.held = 0;
 M.cuju.touches[f.idx] = (M.cuju.touches[f.idx] || 0) + 1;
-f.meter = Math.min(100, f.meter + 3);   // 踢球也聚气，不打人也能放大招
+const meterGain = M.cuju.chaos === 'fastmeter' ? 6 : 3;
+f.meter = Math.min(100, f.meter + meterGain);   // 踢球也聚气，不打人也能放大招
+const sp = Math.hypot(b.vx, b.vy);
+M.cuju.topSpeed = Math.max(M.cuju.topSpeed || 0, Math.round(sp));
 hitstop = Math.max(hitstop, power > 1300 ? 0.06 : 0.03);
 if (!RESIM) {
 const rgb = f.look.slash || '233,196,106';
@@ -30033,7 +30140,7 @@ if (power > 1300) { shake = Math.max(shake, 9); addP({ type: 'text', text: '劲�
 return true;
 }
 function cujuProjHits(b) {
-const R = CUJU.R, box = [b.x - R, b.y - R, b.x + R, b.y + R];
+const R = cujuBallR(), box = [b.x - R, b.y - R, b.x + R, b.y + R];
 for (const p of projs) {
 if (p.dead || p.delay > 0 || p.cujuHit || !(p.dmg > 0) || !p.w || !p.h) continue;
 if (!overlap(projBox(p), box)) continue;
@@ -30041,19 +30148,51 @@ const owner = fighterByIdx(p.owner);
 p.cujuHit = true;
 if (p.kind === 'hook' && owner) {
 const dir = Math.sign(owner.x - b.x) || -owner.face;
-b.vx = dir * 980; b.vy = -460; p.dead = true;
+b.vx = dir * 980; b.vy = -460; b.spinV = -dir * 6; p.dead = true;
 if (!RESIM) addP({ type: 'text', text: '勾球', x: b.x, y: b.y - 50, life: 0.6, max: 0.6, rgb: owner.look.slash });
+} else if (p.kind === 'ironball' && owner) {
+const dir = cujuAttackDir(owner);
+b.vx = dir * 1300; b.vy = -440; b.spinV = dir * 12;
+if (!RESIM) addP({ type: 'text', text: '傀儡轰球', x: b.x, y: b.y - 50, life: 0.6, max: 0.6, rgb: owner.look.slash });
 } else {
 const dir = Math.sign(p.vx || 0) || (owner ? owner.face : 1);
-const power = Math.min(p.kind === 'ironball' ? 1150 : 900, 420 + p.dmg * 10);   // 暗器只能推一下，打不出远射
-b.vx = dir * power; b.vy = Math.min(b.vy, -320);
+const power = Math.min(920, 420 + p.dmg * 10);
+b.vx = dir * power; b.vy = Math.min(b.vy, -320); b.spinV = dir * 5;
 }
 b.last = p.owner; b.held = 0;
+M.cuju.topSpeed = Math.max(M.cuju.topSpeed || 0, Math.round(Math.hypot(b.vx, b.vy)));
 if (!RESIM) { ring(b.x, b.y, 60, owner ? owner.look.slash : '255,255,255', 0.25); SFX.ballHit(); }
 }
 }
+function cujuDeflectors(b) {
+const R = cujuBallR(), box = [b.x - R, b.y - R, b.x + R, b.y + R];
+const sp = Math.hypot(b.vx, b.vy);
+if (sp > 1050) return;
+for (const d of decoys) {
+if (!d || d.life <= 0) continue;
+const owner = fighterByIdx(d.owner);
+if (!owner || b.cd[owner.idx] > 0) continue;
+if (overlap([d.x - 24, (d.y || 0) - 90, d.x + 24, (d.y || 0) + 4], box)) {
+const dir = cujuAttackDir(owner);
+b.vx = dir * Math.max(760, sp * 0.9); b.vy = -360; b.last = owner.idx; b.cd[owner.idx] = 0.25;
+if (!RESIM) { ring(b.x, b.y, 65, owner.look.slash || '233,196,106', 0.25); addP({ type: 'text', text: '傀儡截球', x: b.x, y: b.y - 50, life: 0.5, max: 0.5, rgb: owner.look.slash }); SFX.ballHit(); }
+return;
+}
+}
+for (const f of cujuFighters()) {
+if (!f.clones || !f.clones.length || b.cd[f.idx] > 0) continue;
+for (const c of f.clones) {
+if (overlap(cloneBox(c), box)) {
+const dir = cujuAttackDir(f);
+b.vx = dir * Math.max(740, sp * 0.85); b.vy = -330; b.last = f.idx; b.cd[f.idx] = 0.25;
+if (!RESIM) { ring(b.x, b.y, 65, f.look.slash || '140,200,255', 0.25); addP({ type: 'text', text: '影截', x: b.x, y: b.y - 50, life: 0.5, max: 0.5, rgb: f.look.slash }); SFX.ballHit(); }
+return;
+}
+}
+}
+}
 function cujuMagnet(b) {
-for (const f of [A, B]) {
+for (const f of cujuFighters()) {
 if (!f.ch || f.ch.passive !== 'magnet') continue;
 const dx = f.x + f.face * 46 - b.x, dy = f.y - 40 - b.y, d = Math.hypot(dx, dy);
 if (f.state === 'skill' && f.skill === 'magfield' && f.skPh === 1) {
@@ -30078,8 +30217,8 @@ b.vx += dx / d * 520 * STEP; b.vy += dy / d * 320 * STEP;
 }
 }
 function cujuBodies(b) {
-const R = CUJU.R;
-for (const f of [A, B]) {
+const R = cujuBallR();
+for (const f of cujuFighters()) {
 if (f.hidden || b.cd[f.idx] > 0) continue;
 const hu = hurtbox(f);
 const cx = clamp(b.x, hu[0], hu[2]), cy = clamp(b.y, hu[1], hu[3]);
@@ -30092,10 +30231,26 @@ if (d < 0.01) { nx = Math.sign(b.x - f.x) || -f.face; ny = 0; d = 1; }
 nx /= d; ny /= d;
 b.x = cx + nx * R; b.y = Math.min(cy + ny * R, -R);
 if (saving) {
+const justParry = f.blockT <= 0.16 && speed > 800;
+if (justParry) {
+b.vx = f.face * Math.max(880, speed * 0.72); b.vy = -420;
+b.cd[f.idx] = 0.2; b.last = f.idx;
+f.meter = Math.min(100, f.meter + 15);
+M.cuju.saves[cujuSide(f)] = (M.cuju.saves[cujuSide(f)] || 0) + 1;
+if (!RESIM) { ring(b.x, b.y, 110, '140,220,255', 0.35); SFX.parry(); addP({ type: 'text', text: '神扑', x: b.x, y: b.y - 55, life: 0.85, max: 0.85, rgb: '140,240,255' }); }
+} else {
 b.vx = f.face * Math.max(320, Math.abs(b.vx) * 0.45); b.vy = -Math.max(240, Math.abs(b.vy) * 0.3);
 b.cd[f.idx] = 0.2; b.last = f.idx;
 f.guard = Math.max(0, (f.guard || 0) - (speed > 900 ? 14 : 6));
+if (speed > 650) M.cuju.saves[cujuSide(f)] = (M.cuju.saves[cujuSide(f)] || 0) + 1;
 if (!RESIM) { blockFX(b.x, b.y, f.face); SFX.block(); if (speed > 900) addP({ type: 'text', text: '扑救', x: b.x, y: b.y - 50, life: 0.7, max: 0.7, rgb: '140,220,255' }); }
+}
+continue;
+}
+if (f.onGround() && Math.abs(f.vx) > 40 && speed < 520 && -b.y < 85 && Math.sign(b.x - f.x) === f.face) {
+b.vx = damp(b.vx, f.vx * 1.08, 12, STEP);
+b.vy = Math.min(b.vy, -40);
+b.last = f.idx;
 continue;
 }
 const fvx = clamp(f.vx, -400, 400), fvy = clamp(f.vy, -400, 400);   // 冲刺、位移技能撞到球也只当是走路带了一下
@@ -30109,7 +30264,7 @@ if (Math.abs(ny) < 0.5 && b.y > -R - 2) b.vy = Math.min(b.vy, -70);   // 贴地�
 }
 }
 function cujuRect(b, r, e) {
-const R = CUJU.R, cx = clamp(b.x, r[0], r[2]), cy = clamp(b.y, r[1], r[3]);
+const R = cujuBallR(), cx = clamp(b.x, r[0], r[2]), cy = clamp(b.y, r[1], r[3]);
 let nx = b.x - cx, ny = b.y - cy; const d = Math.hypot(nx, ny);
 if (d >= R || d < 0.001) return false;
 nx /= d; ny /= d;
@@ -30120,37 +30275,54 @@ return true;
 }
 const cujuBars = () => [[WALL, -CUJU.GH - CUJU.BAR, WALL + CUJU.GD, -CUJU.GH], [STAGE_W - WALL - CUJU.GD, -CUJU.GH - CUJU.BAR, STAGE_W - WALL, -CUJU.GH]];
 function cujuBallStep(b) {
-const R = CUJU.R;
+const R = cujuBallR();
+const grav = M.cuju && M.cuju.chaos === 'lowg' ? 950 : CUJU.G;
+const maxV = M.cuju && M.cuju.chaos === 'fire' ? 2700 : CUJU.maxV;
 for (let i = 0; i < b.cd.length; i++) if (b.cd[i] > 0) b.cd[i] -= STEP;
-b.vy += CUJU.G * STEP;
+if (b.iced > 0) b.iced = Math.max(0, b.iced - STEP);
+b.vy += grav * STEP;
+b.vy += (b.spinV || 0) * b.vx * 0.00018 * STEP;   // 马格努斯旋球升力/下坠
+b.spinV = (b.spinV || 0) * (1 - 0.6 * STEP);
 b.vx *= 1 - 0.3 * STEP;   // 空气阻力
 const sp = Math.hypot(b.vx, b.vy);
-if (sp > CUJU.maxV) { b.vx *= CUJU.maxV / sp; b.vy *= CUJU.maxV / sp; }
+if (sp > maxV) { b.vx *= maxV / sp; b.vy *= maxV / sp; }
 b.x += b.vx * STEP; b.y += b.vy * STEP;
 if (b.y > -R) {
 b.y = -R;
 if (b.vy > 150) { b.vy = -b.vy * CUJU.floorE; if (!RESIM && b.vy < -260) { dust(b.x, 0, 4); SFX.thud(); } }
 else b.vy = 0;
-b.vx = damp(b.vx, 0, CUJU.roll, STEP);   // 地上滚：慢慢停下
+const rollF = b.iced > 0 ? CUJU.roll * 0.35 : CUJU.roll;
+b.vx = damp(b.vx, 0, rollF, STEP);   // 地上滚：慢慢停下
 }
 if (b.y < CUJU.ceil) { b.y = CUJU.ceil; b.vy = Math.abs(b.vy) * 0.5; }
 if (b.x < WALL + R) { b.x = WALL + R; b.vx = Math.abs(b.vx) * CUJU.wallE; }
 if (b.x > STAGE_W - WALL - R) { b.x = STAGE_W - WALL - R; b.vx = -Math.abs(b.vx) * CUJU.wallE; }
-for (const bar of cujuBars()) if (cujuRect(b, bar, 0.6) && !RESIM && sp > 400) { SFX.wood(); ring(b.x, b.y, 50, '255,230,180', 0.25); }
+for (const bar of cujuBars()) {
+if (cujuRect(b, bar, 0.6) && !RESIM && sp > 400) {
+SFX.wood(); ring(b.x, b.y, 50, '255,230,180', 0.25);
+if (sp > 900) addP({ type: 'text', text: '横梁!', x: b.x, y: b.y - 40, life: 0.6, max: 0.6, rgb: '255,230,150' });
+}
+}
 b.spin += b.vx * STEP / R;
 }
 function cujuGoalCheck(b) {
-if (b.y < -CUJU.GH + CUJU.R * 0.2) return -1;
-if (b.x < WALL + CUJU.GD - CUJU.R) return 1;              // 左门（A 守）：B 一边得分
-if (b.x > STAGE_W - WALL - CUJU.GD + CUJU.R) return 0;    // 右门（B 守）：A 一边得分
+const R = cujuBallR();
+if (b.y < -CUJU.GH + R * 0.2) return -1;
+if (b.x < WALL + CUJU.GD - R) return 1;              // 左门（A/C 守）：B/D 一边得分
+if (b.x > STAGE_W - WALL - CUJU.GD + R) return 0;    // 右门（B/D 守）：A/C 一边得分
 return -1;
 }
 function cujuGoal(side) {
 const cj = M.cuju, b = cj.ball, scorer = b.last >= 0 ? fighterByIdx(b.last) : null;
+const sp = Math.round(Math.hypot(b.vx, b.vy));
 cj.score[side]++; cj.lastGoal = side; cj.pause = CUJU.pause;
+cj.lastGoalSpeed = sp;
+cj.topSpeed = Math.max(cj.topSpeed || 0, sp);
+cj.netRipple[1 - side] = 1;
 if (b.last >= 0 && cujuSide(scorer) === side) cj.shots[side]++;
 b.vx *= 0.25; b.vy *= 0.25;
 const own = scorer && cujuSide(scorer) !== side;
+hitstop = Math.max(hitstop, 0.12);
 if (!RESIM) {
 const gx = side === 0 ? STAGE_W - WALL - CUJU.GD / 2 : WALL + CUJU.GD / 2, rgb = side === 0 ? '143,240,255' : '255,138,112';
 shake = Math.max(shake, 16); flashA = Math.max(flashA, 0.35); flashRGB = rgb;
@@ -30158,8 +30330,9 @@ ring(gx, -CUJU.GH / 2, 200, rgb, 0.6);
 for (let i = 0; i < 26; i++) { const a = rand(-Math.PI, 0), v = rand(200, 700); addP({ type: 'ink', x: gx, y: -CUJU.GH / 2, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 1200, life: 0.9, max: 0.9, r: rand(3, 6), rgb: '18,18,24' }); }
 SFX.gong(); SFX.heavy();
 }
-const win = cj.score[side] >= CUJU.target || cj.golden;
-say(own ? '乌龙球' : '进球', 1.6, 'big', scorer ? scorer.look.name : '');
+const win = cj.score[side] >= cujuTarget() || cj.golden;
+const sub = scorer ? `${scorer.look.name} · ${sp} 速` : `${sp} 速`;
+say(own ? '乌龙球' : '进球', 1.8, 'big', sub);
 if (win) cujuFinish(side);
 }
 function cujuFinish(w) {
@@ -30169,10 +30342,18 @@ M.phase = 'ko'; M.t = 0; M.koWinner = w;
 }
 function cujuMatch() {
 const cj = M.cuju; if (!cj) return;
+if (cj.netRipple) {
+cj.netRipple[0] = Math.max(0, cj.netRipple[0] - STEP * 1.4);
+cj.netRipple[1] = Math.max(0, cj.netRipple[1] - STEP * 1.4);
+}
 if (cj.pause > 0) {
 cj.pause -= STEP;
 if (cj.pause <= 0 && M.phase === 'fight') cujuKickoff();
 return;
+}
+if (M.cujuChaos) {
+cj.chaosT = (cj.chaosT || 0) - STEP;
+if (cj.chaosT <= 0) cujuPickChaos();
 }
 if (cj.kick > 0) cj.kick -= STEP;
 if (cj.golden) return;
@@ -30184,25 +30365,26 @@ else { cj.golden = true; sayNet('金球决胜', 1.6, 'big', 'gong'); }
 }
 function cujuTick() {
 if (!cujuOn() || !M.cuju || !M.cuju.ball) return;
-for (const f of [A, B]) { f.hp = f.lagHp = f.maxHp; }
+for (const f of cujuFighters()) { f.hp = f.lagHp = f.maxHp; }
 if (M.phase === 'intro') return;
-const cj = M.cuju, b = cj.ball;
+const cj = M.cuju, b = cj.ball, R = cujuBallR();
 if (cj.pause > 0) {   // 进球以后：球留在网里慢慢停下
-b.vy += CUJU.G * STEP; b.x += b.vx * STEP; b.y = Math.min(-CUJU.R, b.y + b.vy * STEP); if (b.y >= -CUJU.R) b.vy = 0; b.vx = damp(b.vx, 0, 3, STEP);
-b.x = clamp(b.x, WALL + CUJU.R, STAGE_W - WALL - CUJU.R);
+b.vy += CUJU.G * STEP; b.x += b.vx * STEP; b.y = Math.min(-R, b.y + b.vy * STEP); if (b.y >= -R) b.vy = 0; b.vx = damp(b.vx, 0, 3, STEP);
+b.x = clamp(b.x, WALL + R, STAGE_W - WALL - R);
 return;
 }
 if (M.phase !== 'fight') return;
-if (cj.kick > 0 && b.y < -CUJU.R) { b.vy = Math.min(b.vy, 260); }   // 开球：墨球缓缓落下
+if (cj.kick > 0 && b.y < -R) { b.vy = Math.min(b.vy, 260); }   // 开球：墨球缓缓落下
 cujuMagnet(b);
 cujuProjHits(b);
+cujuDeflectors(b);
 cujuBallStep(b);
 cujuBodies(b);
 const g = cujuGoalCheck(b);
 if (g >= 0) cujuGoal(g);
 if (!RESIM) {
 const sp = Math.hypot(b.vx, b.vy);
-if (sp > 700) { CUJU_TRAIL.push({ x: b.x, y: b.y, life: 0.22, max: 0.22 }); if (CUJU_TRAIL.length > 40) CUJU_TRAIL.shift(); }
+if (sp > 700) { CUJU_TRAIL.push({ x: b.x, y: b.y, life: 0.22, max: 0.22, iced: b.iced > 0 }); if (CUJU_TRAIL.length > 40) CUJU_TRAIL.shift(); }
 for (const t of CUJU_TRAIL) t.life -= STEP;
 while (CUJU_TRAIL.length && CUJU_TRAIL[0].life <= 0) CUJU_TRAIL.shift();
 }
@@ -30233,33 +30415,50 @@ if (!cj || !cj.ball || cj.pause > 0 || M.phase !== 'fight') { this.clear(); retu
 this.wait -= STEP;
 if (this.wait > 0) return;   // 反应间隔里保持上一次的按键
 this.wait = L.react * (0.7 + Math.random() * 0.6);
-const b = cj.ball, d = cujuAttackDir(me), R = CUJU.R;
+const b = cj.ball, d = cujuAttackDir(me), R = cujuBallR();
 const t = L.look, px = clamp(b.x + b.vx * t, WALL + 40, STAGE_W - WALL - 40);
 const py = Math.min(-R, b.y + b.vy * t + 0.5 * CUJU.G * t * t);
 const rel = (px - me.x) * d;          // 墨球在我进攻方向的前面（正）还是身后（负）
 const ownGoalX = d > 0 ? WALL + CUJU.GD : STAGE_W - WALL - CUJU.GD;
 const hgt = -py, near = Math.abs(b.x - me.x);
-h.left = h.right = h.down = h.atk = false;
+h.left = h.right = h.down = h.up = h.atk = false;
 let move = 0, face = d;
-const incoming = (b.x - me.x) * d > 0 && b.vx * d < -450 && -b.y < 150;
-if (incoming && Math.abs(b.x - me.x) < 240 && Math.abs(me.x - ownGoalX) < 700 && me.onGround() && Math.random() < L.save) {
-h.down = true; h.aim = d; return;
+const incoming = (b.x - me.x) * d > 0 && b.vx * d < -380;
+if (incoming && Math.abs(b.x - me.x) < 260 && Math.abs(me.x - ownGoalX) < 760 && Math.random() < L.save) {
+if (hgt < 150 && me.onGround()) { h.down = true; h.aim = d; return; }
+if (hgt >= 130 && hgt < 245 && me.onGround()) { this.press('jump'); h.aim = d; return; }
 }
 let tx = px - d * L.behind;
+if (is2v2() && typeof sideFighters === 'function') {
+const mates = sideFighters(cujuSide(me)).filter(m => m !== me && !m.hidden);
+if (mates.length && Math.abs(mates[0].x - b.x) + 60 < near) {
+tx = clamp(ownGoalX + d * 360, WALL + 160, STAGE_W - WALL - 160);
+}
+}
 let rush = L.dash;
-if (rel < -10) {   // 球在身后：绕过去。慢球离得近就跳过去，免得身体把球顶回自家门口
-tx = px - d * (L.behind + 40);
-if (near < 130 && me.onGround() && hgt < 120 && Math.abs(b.vx) < 400) this.press('jump');
-if (b.vx * d < -200) rush = L.dash * 3;   // 球往自家门口跑：赶紧冲回去
+if (rel < -10) {   // 球在身后：绕过去。靠近自家门线或慢球贴地就跳过，免得乌龙
+tx = clamp(px - d * (L.behind + 40), WALL + 55, STAGE_W - WALL - 55);
+if (near < 130 && me.onGround() && hgt < 120 && Math.abs(b.vx) < 420) this.press('jump');
+if (b.vx * d < -200 || (b.x - ownGoalX) * d < 200) rush = L.dash * 3;
 }
 const dx = tx - me.x;
 if (Math.abs(dx) > 16) move = Math.sign(dx);
 if (move) face = move;
 if (Math.abs(dx) > 300 && me.dashCD <= 0 && Math.random() < rush) this.press('dash');
 const ballFront = (b.x - me.x) * d, ready = ballFront > -14 && ballFront < L.reach;
-if (ready && hgt < 150 && Math.random() < L.atkP) { move = 0; face = d; this.press('light'); }
-else if (ready && hgt >= 150 && hgt < 340 && me.onGround() && near < 120) { this.press('jump'); face = d; }
-else if (!me.onGround() && near < 110 && Math.abs(b.y - (me.y - 60)) < 90 && Math.random() < L.atkP) { face = d; this.press('light'); }
+if (ready && hgt < 150 && Math.random() < L.atkP) {
+move = 0; face = d;
+if ((this.level === 'hard' || this.level === 'impossible' || this.level === 'god') && Math.abs(foe.x - me.x) > 320 && Math.abs(b.vx) < 300 && Math.random() < 0.22) {
+h.atk = true;   // 蓄力打一脚劲射
+} else {
+if (Math.abs(me.x - ownGoalX) < 380) h.up = true;   // 门前解围踢高球
+this.press('light');
+}
+} else if (ready && hgt >= 140 && hgt < 340 && me.onGround() && near < 120) {
+this.press('jump'); face = d;
+} else if (!me.onGround() && near < 115 && Math.abs(b.y - (me.y - 60)) < 95 && Math.random() < L.atkP) {
+face = d; this.press('light');
+}
 const foeFront = (foe.x - me.x) * face;
 if (foeFront > 0 && foeFront < 95 && Math.abs(foe.x - b.x) < Math.abs(me.x - b.x) && Math.random() < L.tackle) this.press('light');
 this.useSkills(me, b, d, ballFront, hgt);
@@ -30286,28 +30485,59 @@ if (ballFront > 0 && ballFront < 170 && hgt < 170 && Math.random() < L.skillP) t
 function startCuju(p1, p2, lv, opts = {}) {
 initAudio();
 paused = false;
+const four = !!opts.four || (Array.isArray(p1) && Array.isArray(p2));
 const pvp = !!opts.pvp, watch = !!opts.isWatch && !pvp;
 M.mode = 'cuju';
 M.level = lv || pickLevel || 'normal';
 M.round = 1; M.wins = [0, 0]; M.carry = null; M.stage = null; M.duo = null; M.map = null; M.quick = false;
-M.watchAi = watch; M.cujuPvp = pvp; M.teamMutator = 'normal';
+M.watchAi = watch; M.cujuPvp = pvp; M.cujuFour = four;
+M.cujuTarget = [3, 5, 7].includes(Number(opts.target)) ? Number(opts.target) : cujuPickTarget;
+M.cujuChaos = opts.chaos !== undefined ? !!opts.chaos : cujuChaosOpt;
+M.teamMutator = 'normal';
 M.cuju = null;
+if (four) {
+const t0 = Array.isArray(p1) ? p1 : [p1, (p1 + 1) % CHARS.length];
+const t1 = Array.isArray(p2) ? p2 : [p2, (p2 + 1) % CHARS.length];
+setChars(t0[0], t1[0], t0[1], t1[1]);
+A.ctrl = watch ? new CujuAICtrl(M.level === 'easy' ? 'normal' : M.level) : human[0];
+C.ctrl = new CujuAICtrl(M.level === 'easy' ? 'normal' : M.level);
+B.ctrl = pvp ? human[1] : new CujuAICtrl(M.level);
+D.ctrl = new CujuAICtrl(M.level);
+A.meter = B.meter = C.meter = D.meter = 0;
+} else {
 setChars(p1, p2);
 A.ctrl = watch ? new CujuAICtrl(M.level === 'easy' ? 'normal' : M.level) : human[0];
 B.ctrl = pvp ? human[1] : new CujuAICtrl(M.level);
 A.meter = B.meter = 0;
+}
 human[0].clear(); human[1].clear();
 showScreen(null);
 REC.on = false;
 startRound();
-say('墨球蹴鞠', 1.4, 'big', '先进三球获胜');
+say(four ? '2v2 墨球蹴鞠' : '墨球蹴鞠', 1.4, 'big', `先进${cujuTarget()}球获胜`);
 }
+let cujuPickTarget = CUJU.target;
+let cujuChaosOpt = false;
+const cujuTargetSeg = document.getElementById('cujuTargetSeg');
+if (cujuTargetSeg) {
+cujuTargetSeg.addEventListener('click', e => {
+const b = e.target.closest('button[data-target]');
+if (!b) return;
+cujuPickTarget = Number(b.dataset.target) || 3;
+cujuTargetSeg.querySelectorAll('button[data-target]').forEach(btn => btn.classList.toggle('sel', Number(btn.dataset.target) === cujuPickTarget));
+});
+}
+const cujuChaosChk = document.getElementById('cujuChaosChk');
+if (cujuChaosChk) cujuChaosChk.addEventListener('change', () => { cujuChaosOpt = !!cujuChaosChk.checked; });
+const cujuOptsNow = (extra = {}) => ({ level: pickLevel, target: cujuPickTarget, chaos: cujuChaosOpt, ...extra });
 const cujuStartBtn = document.getElementById('cujuStartBtn');
-if (cujuStartBtn) cujuStartBtn.addEventListener('click', () => bpStart('cuju', { level: pickLevel }));
+if (cujuStartBtn) cujuStartBtn.addEventListener('click', () => bpStart('cuju', cujuOptsNow()));
+const cuju2v2Btn = document.getElementById('cuju2v2Btn');
+if (cuju2v2Btn) cuju2v2Btn.addEventListener('click', () => bpStart('cuju2v2', cujuOptsNow({ four: true })));
 const cujuPvpBtn = document.getElementById('cujuPvpBtn');
-if (cujuPvpBtn) cujuPvpBtn.addEventListener('click', () => bpStart('cuju', { level: pickLevel, pvp: true }));
+if (cujuPvpBtn) cujuPvpBtn.addEventListener('click', () => bpStart('cuju', cujuOptsNow({ pvp: true })));
 const cujuWatchBtn = document.getElementById('cujuWatchBtn');
-if (cujuWatchBtn) cujuWatchBtn.addEventListener('click', () => bpStart('cuju', { level: pickLevel || 'god', isWatch: true }));
+if (cujuWatchBtn) cujuWatchBtn.addEventListener('click', () => bpStart('cuju', cujuOptsNow({ level: pickLevel || 'god', isWatch: true })));
 function drawCujuField() {
 if (!cujuOn() || !M.cuju) return;
 const GD = CUJU.GD, GH = CUJU.GH;
@@ -30318,12 +30548,19 @@ ctx.beginPath(); ctx.ellipse(STAGE_W / 2, 0, 150, 14, 0, 0, Math.PI * 2); ctx.st
 for (const side of [0, 1]) {
 const x0 = side === 0 ? WALL : STAGE_W - WALL - GD, x1 = x0 + GD, post = side === 0 ? x1 : x0, back = side === 0 ? x0 : x1;
 const rgb = side === 0 ? '143,240,255' : '255,138,112';
+const ripple = (M.cuju.netRipple && M.cuju.netRipple[side]) || 0;
 const flash = M.cuju.pause > 0 && M.cuju.lastGoal === 1 - side ? 0.25 + 0.2 * Math.sin(clock * 18) : 0;
 ctx.fillStyle = `rgba(${rgb},${0.07 + flash})`; ctx.fillRect(x0, -GH, GD, GH);
-ctx.strokeStyle = 'rgba(239,232,216,0.22)'; ctx.lineWidth = 1;
+ctx.strokeStyle = `rgba(239,232,216,${0.22 + ripple * 0.3})`; ctx.lineWidth = 1 + ripple * 0.8;
 ctx.beginPath();
-for (let yy = -GH + 26; yy < 0; yy += 26) { ctx.moveTo(x0, yy); ctx.lineTo(x1, yy); }
-for (let xx = x0 + 24; xx < x1; xx += 24) { ctx.moveTo(xx, -GH); ctx.lineTo(xx, 0); }
+for (let yy = -GH + 26; yy < 0; yy += 26) {
+const wave = ripple ? Math.sin(clock * 28 + yy * 0.08) * 10 * ripple : 0;
+ctx.moveTo(x0, yy); ctx.lineTo(x1, yy + wave);
+}
+for (let xx = x0 + 24; xx < x1; xx += 24) {
+const wave = ripple ? Math.cos(clock * 24 + xx * 0.08) * 8 * ripple : 0;
+ctx.moveTo(xx + wave, -GH); ctx.lineTo(xx, 0);
+}
 ctx.stroke();
 ctx.fillStyle = '#3a1712'; ctx.fillRect(post - 6, -GH - CUJU.BAR, 12, GH + CUJU.BAR);
 ctx.fillStyle = '#b8321e'; ctx.fillRect(post - 4, -GH - CUJU.BAR + 2, 8, GH + CUJU.BAR - 2);
@@ -30338,20 +30575,21 @@ ctx.restore();
 }
 function drawCujuBall() {
 if (!cujuOn() || !M.cuju || !M.cuju.ball) return;
-const b = M.cuju.ball, R = CUJU.R;
+const b = M.cuju.ball, R = cujuBallR();
 ctx.save();
 const hk = clamp(1 - (-b.y - R) / 600, 0.25, 1);
 ctx.fillStyle = `rgba(0,0,0,${0.35 * hk})`;
 ctx.beginPath(); ctx.ellipse(b.x, 2, R * 1.1 * hk + 4, 6 * hk + 1, 0, 0, Math.PI * 2); ctx.fill();
 for (const t of CUJU_TRAIL) {
 const a = clamp(t.life / t.max, 0, 1);
-ctx.fillStyle = `rgba(18,18,24,${0.3 * a})`;
+ctx.fillStyle = t.iced ? `rgba(140,220,255,${0.35 * a})` : `rgba(18,18,24,${0.3 * a})`;
 ctx.beginPath(); ctx.arc(t.x, t.y, R * (0.5 + 0.5 * a), 0, Math.PI * 2); ctx.fill();
 }
 const g = ctx.createRadialGradient(b.x - R * 0.35, b.y - R * 0.4, 2, b.x, b.y, R);
-g.addColorStop(0, '#5a5560'); g.addColorStop(0.55, '#1b1a22'); g.addColorStop(1, '#07070b');
+g.addColorStop(0, b.iced > 0 ? '#7ad7f0' : '#5a5560'); g.addColorStop(0.55, '#1b1a22'); g.addColorStop(1, '#07070b');
 ctx.fillStyle = g; ctx.beginPath(); ctx.arc(b.x, b.y, R, 0, Math.PI * 2); ctx.fill();
-ctx.strokeStyle = 'rgba(233,196,106,0.85)'; ctx.lineWidth = 2; ctx.stroke();
+ctx.strokeStyle = b.iced > 0 ? 'rgba(140,230,255,0.9)' : (M.cuju.chaos === 'fire' ? 'rgba(255,120,80,0.9)' : 'rgba(233,196,106,0.85)');
+ctx.lineWidth = 2; ctx.stroke();
 ctx.translate(b.x, b.y); ctx.rotate(b.spin);
 ctx.strokeStyle = 'rgba(239,232,216,0.55)'; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
 for (let k = 0; k < 3; k++) {
@@ -30362,6 +30600,7 @@ ctx.restore();
 }
 function drawCujuScore(cx, top, bh, gap) {
 const cj = M.cuju; if (!cj) return;
+const target = cujuTarget();
 ctx.save();
 ctx.textBaseline = 'middle';
 for (const side of [0, 1]) {
@@ -30373,9 +30612,9 @@ ctx.shadowColor = 'rgba(0,0,0,0.8)'; ctx.shadowBlur = 6;
 const nx = cx + out * (gap + 4);
 ctx.fillText(String(cj.score[side]), nx, top + bh / 2 + 2);
 ctx.shadowBlur = 0;
-const r = Math.max(7, bh * 0.62), start = gap + 4 + bh * 1.8 + 14;
-for (let k = 0; k < CUJU.target; k++) {
-const px = cx + out * (start + r + k * (r * 2 + 10)), py = top + bh / 2;
+const r = Math.max(6, bh * 0.56), start = gap + 4 + bh * 1.8 + 14;
+for (let k = 0; k < target; k++) {
+const px = cx + out * (start + r + k * (r * 2 + 8)), py = top + bh / 2;
 ctx.beginPath(); ctx.arc(px, py, r, 0, Math.PI * 2);
 ctx.fillStyle = k < cj.score[side] ? `rgb(${rgb})` : 'rgba(0,0,0,0.45)'; ctx.fill();
 ctx.lineWidth = 1.5; ctx.strokeStyle = `rgba(${rgb},0.8)`; ctx.stroke();
@@ -30384,6 +30623,12 @@ ctx.lineWidth = 1.5; ctx.strokeStyle = `rgba(${rgb},0.8)`; ctx.stroke();
 if (cj.golden) {
 ctx.font = `${Math.max(12, Math.round(bh * 0.9))}px ${TITLE_FONT}`; ctx.textAlign = 'center'; ctx.fillStyle = '#e9c46a';
 ctx.fillText(cvT('金球决胜'), cx, top + bh * 2.2);
+} else if (cj.chaos) {
+const cDef = CUJU_CHAOS_LIST.find(x => x.id === cj.chaos);
+if (cDef) {
+ctx.font = `${Math.max(11, Math.round(bh * 0.78))}px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.fillStyle = 'rgba(233,196,106,0.9)';
+ctx.fillText(cvT(`异象 · ${cDef.name}`), cx, top + bh * 2.2);
+}
 }
 const b = cj.ball;
 if (b) {
@@ -32655,7 +32900,7 @@ const bpSideName = side => {
 const md = bpModeDef();
 if (md.sides) return md.sides[side];
 if (bpCustomOpts && bpCustomOpts.isWatch) return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
-if (bpMode === 'cuju' && bpCustomOpts && bpCustomOpts.pvp) return side === 0 ? '1P' : '2P';
+if ((bpMode === 'cuju' || bpMode === 'cuju2v2') && bpCustomOpts && bpCustomOpts.pvp) return side === 0 ? '1P' : '2P';
 if (isLocalBothHumanBP()) return side === 0 ? '苍龙队 (1P/2P)' : '赤凤队 (3P/4P)';
 if (side === bpMySide()) return md.us || '你';
 if (md.foe) return md.foe;
@@ -33163,8 +33408,8 @@ rollStart(flatCh, seed, duo, mv, mapId, mut, competitiveScrolls, loadouts);
 startChaos(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
 } else if (mode === 'mayhem') {
 startMayhem(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
-} else if (mode === 'cuju') {
-startCuju(picks[0], picks[1], opts.level || pickLevel, opts);
+} else if (mode === 'cuju' || mode === 'cuju2v2') {
+startCuju(picks[0], picks[1], opts.level || pickLevel, { ...opts, four: mode === 'cuju2v2' || !!opts.four });
 } else if (mode === 'maps') {
 startMapsMode(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch, mapId);
 } else if (mode === 'tag3') {
@@ -33401,7 +33646,7 @@ else if (bpMode === 'net' && roomDef().four) modePrefix = '联机2v2 · ';
 else if (bpMode === 'cpu' || bpMode === 'cpuWatch') modePrefix = '论剑点将 · ';
 else if (bpMode === 'chaos') modePrefix = '天机乱斗 · ';
 else if (bpMode === 'maps') modePrefix = '山河异境 · ';
-else if (bpMode === 'cuju') modePrefix = '墨球蹴鞠 · ';
+else if (bpMode === 'cuju' || bpMode === 'cuju2v2') modePrefix = bpMode === 'cuju2v2' ? '2v2 墨球蹴鞠 · ' : '墨球蹴鞠 · ';
 else if (bpMode === 'mayhem') modePrefix = '通天神决 · ';
 else if (bpMode === 'tag3') modePrefix = '3v3车轮 · ';
 else if (bpMode === 'tower') modePrefix = '问剑密卷 · ';
@@ -34294,7 +34539,7 @@ window.updateNetLobby = updateNetLobby;
 function roomWrapShow() { const w = $id('roomWrap'); if (w) w.classList.remove('hidden'); }
 const netTeamMutator = () => !NET.isRanked && ['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode) && ['chaos', 'mayhem'].includes(teamMutator) ? teamMutator : 'normal';
 let netRoomMode = 'normal';   // 好友房的规则，见 src/data/10-modes.js 的 ROOM_MODES；快速匹配和排位固定 normal（3v3 车轮战）
-const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '天机乱斗', mayhem: '通天神决', maps: '山河异境' };
+const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '天机乱斗', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠' };
 const lobbyModesSegEl = $id('lobbyModesSeg');
 if (lobbyModesSegEl) {
 lobbyModesSegEl.addEventListener('click', e => {

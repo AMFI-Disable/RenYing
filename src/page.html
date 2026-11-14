@@ -471,11 +471,22 @@
           <span class="bp-rule-seal pick-only">踢法</span>
           <div class="bp-rule-txt">
             <b>每位侠客都有自己的踢法</b>
-            <span>重击把球挑高，空中下砸把球砸地弹起，按住 ↓ 出招踢贴地球，格挡能扑救飞来的墨球。勾陈的飞锤能把球勾回来，磁仙负极吸球、正极把球弹飞，飞行道具打中墨球也能推着它走。</span>
+            <span>重击、↑ 挑射、↓ 贴地抽射、空中头槌砸球，移动带球过人，格挡扑救（精准格挡可触发神扑）。勾陈飞锤勾球、磁仙正负磁极吸弹、千机傀儡与离影分身皆可截球或协同踢法。</span>
           </div>
+        </div>
+        <div class="single-opt-row" style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:8px 0 10px">
+          <div class="lobby-modes-seg" id="cujuTargetSeg" role="group" aria-label="制胜球数">
+            <button class="ghost small sel" data-target="3" type="button">先3球</button>
+            <button class="ghost small" data-target="5" type="button">先5球</button>
+            <button class="ghost small" data-target="7" type="button">先7球</button>
+          </div>
+          <label class="ghost small" style="display:inline-flex;align-items:center;gap:6px;cursor:pointer">
+            <input id="cujuChaosChk" type="checkbox"> 异象球场
+          </label>
         </div>
         <div class="single-action-row">
           <button class="go" id="cujuStartBtn" type="button">对战电脑 · 开球</button>
+          <button class="go alt" id="cuju2v2Btn" type="button">2v2 组队对踢</button>
           <button class="go alt" id="cujuPvpBtn" type="button">本地双人对踢</button>
           <button class="go alt" id="cujuWatchBtn" type="button">电脑对踢观战</button>
         </div>
@@ -608,6 +619,7 @@
                   <button class="ghost small" data-mode="raid" type="button">联机打魔首</button>
                   <button class="ghost small" data-mode="chaos" type="button">天机乱斗</button>
                   <button class="ghost small" data-mode="mayhem" type="button">通天神决</button>
+                  <button class="ghost small" data-mode="cuju" type="button">墨球蹴鞠</button>
                 </div>
                 <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。2v2 的全服匹配和同一台电脑对战在「开始演武」的 2v2 组队里。</p>
               </details>

@@ -89,7 +89,7 @@ const roomDef = () => ROOM_MODES[netRoomMode] || ROOM_MODES.normal;   // 联机�
 const netRoom = () => (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net' && REPLAY.m) ? (ROOM_MODES[REPLAY.m.room || REPLAY.m.sub || 'normal'] || null) : M.mode === 'net' ? roomDef() : null;
 // 对局要在别的机器上算得一模一样的时候（联机回滚、放联机录像）：电脑想招、抽秘卷都用对局随机数
 const netSim = () => (ROLL.on && M.mode === 'net') || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net');
-const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four));
+const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'cuju' && !!M.cujuFour) || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four));
 const isRaid = () => M.mode === 'raid' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.raid)) || !!(netRoom() && netRoom().raid);
 const isMulti = () => is2v2() || isRaid();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
@@ -550,7 +550,7 @@ function startRound() {
   announce = null;
   announceQueue.length = 0;
   secretRound();
-  STAGE_W = M.mode === 'world' ? WORLD_W : M.mode === 'cuju' ? CUJU.W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
+  STAGE_W = M.mode === 'world' ? WORLD_W : cujuOn() ? CUJU.W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
   const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
   M.mapEnv = mp ? { wT: mp.wind ? mp.wind.every : 0, wOn: 0, wDir: 1, wN: 0, tT: mp.thunder ? mp.thunder.every : 0, tWarn: 0 } : null;   // 风、天雷的计时：每回合从头算
   if (typeof applySkins === 'function') applySkins();
@@ -723,16 +723,25 @@ function showEnd(w) {
   $id('endChangeHeroBtn').classList.toggle('hidden', !['cpu', 'tag3', 'chaos', 'mayhem', 'maps'].includes(M.mode) || !!M.watchAi);
   $id('endChangeHeroBtn').textContent = cvT(M.mode === 'tag3' ? '更换队伍再战' : '换侠客再战');
   $id('endHistoryBtn').classList.toggle('hidden', !RP.last);
-  if (M.mode === 'cuju') {   // 墨球蹴鞠：只看比分，不发墨锭
-    const cj = M.cuju || { score: [0, 0] }, watch = !!M.watchAi, pvp = !!M.cujuPvp, iWon = w === 0;
-    if (card) card.textContent = '';   // 伤害、连击这些数在这个模式里没意义
+  if (cujuOn()) {   // 墨球蹴鞠：只看比分与球场数据，不发墨锭
+    const cj = M.cuju || { score: [0, 0] }, watch = !!M.watchAi, pvp = !!M.cujuPvp, net = M.mode === 'net';
+    const mySide = net && NET.role === 'client' ? 1 : 0, iWon = w === mySide;
+    if (card) {
+      const touches = cj.touches || [0, 0, 0, 0], shots = cj.shots || [0, 0], saves = cj.saves || [0, 0];
+      const t0 = (touches[0] || 0) + (touches[2] || 0), t1 = (touches[1] || 0) + (touches[3] || 0);
+      card.innerHTML = `<div class="end-stat-grid"><span>${cvT('触球')} ${t0} : ${t1}</span><span>${cvT('破门')} ${shots[0] || 0} : ${shots[1] || 0}</span><span>${cvT('扑救')} ${saves[0] || 0} : ${saves[1] || 0}</span><span>${cvT('最快球速')} ${Math.round(cj.topSpeed || 0)}</span></div>`;
+    }
     playSting(watch || pvp || iWon ? 'victory' : 'defeat');
-    inkTitle(([A, B][w] || A).look.name, !(watch || pvp) && !iWon);
-    $id('endKicker').textContent = '墨球蹴鞠';
+    const winLabel = is2v2()
+      ? (w === 0 ? `${A.look.name} · ${C.look.name}` : `${B.look.name} · ${D.look.name}`)
+      : ([A, B][w] || A).look.name;
+    inkTitle(winLabel, !(watch || pvp) && !iWon);
+    $id('endKicker').textContent = is2v2() ? '2v2 墨球蹴鞠' : '墨球蹴鞠';
     $id('endSub').textContent = `比分 ${cj.score[0]} : ${cj.score[1]}`;
-    $id('endRank').textContent = cj.golden ? '金球决胜' : watch ? '电脑对踢' : pvp ? '本地双人' : iWon ? '一脚定乾坤' : '再练练脚法';
+    $id('endRank').textContent = cj.golden ? '金球决胜' : net ? '好友联机蹴鞠' : watch ? '电脑对踢' : pvp ? '本地双人' : iWon ? '一脚定乾坤' : '再练练脚法';
     const again = $id('againBtn');
     again.style.display = watch ? 'none' : ''; again.disabled = false; again.textContent = '再踢一场';
+    if (net && NET.open) $id('netRepickBtn').classList.remove('hidden');
     setTimeout(() => showScreen('end'), 300);
     return;
   }
@@ -893,7 +902,7 @@ function endRound() {
   if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
   if (M.worldKey && M.worldKey.kind === 'boss') { worldKeyRound(w); return; }   // 全服肉鸽的天道 Boss：结果和奖励都以服务器为准，这里不加墨锭（车轮战照常换人，打完在 showEnd 里交出去）
   if (M.mode === 'saga') { sagaEnd(w); return; }
-  if (M.mode === 'cuju') { M.phase = 'end'; showEnd(w); return; }   // 墨球蹴鞠只有一局
+  if (cujuOn()) { M.phase = 'end'; showEnd(w); return; }   // 墨球蹴鞠只有一局
   if (isRaid()) {
     if (w === 0) {
       for (const f of sideFighters(0)) scFire(f, 'clear');

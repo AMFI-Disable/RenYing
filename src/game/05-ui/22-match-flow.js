@@ -40,7 +40,7 @@ const MODE_HANDLERS = {
     toMenuScreen: () => open2v2Hub(),
   },
   cuju: {
-    rematch: () => bpStart('cuju', { level: M.level || pickLevel, pvp: !!M.cujuPvp }),   // 再踢一场：同样的对手（电脑或本地 2P），重新选人
+    rematch: () => bpStart(M.cujuFour ? 'cuju2v2' : 'cuju', { level: M.level || pickLevel, pvp: !!M.cujuPvp, four: !!M.cujuFour, target: M.cujuTarget || 3, chaos: !!M.cujuChaos }),   // 再踢一场：同样的对手和规则，重新选人
     toMenuScreen: () => { singleSec('cuju'); showScreen('single'); },
   },
   mayhem: {

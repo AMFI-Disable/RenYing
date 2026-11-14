@@ -1240,7 +1240,7 @@ function updateCamera(dt) {
     return;
   }
   const tracked = isMulti() ? [A, B, C, D].filter(f => !f.hidden && f.hp > 0) : [A, B];
-  const pool = cujuOn() && M.cuju && M.cuju.ball ? [A, B, M.cuju.ball] : (tracked.length >= 2 ? tracked : [A, B]);   // 墨球蹴鞠：镜头也框住墨球
+  const pool = cujuOn() && M.cuju && M.cuju.ball ? [...allFighters(), M.cuju.ball] : (tracked.length >= 2 ? tracked : [A, B]);   // 墨球蹴鞠：镜头也框住墨球
   const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
   const minY = Math.min(...pool.map(f => f.y));
   const mid = (minX + maxX) / 2, d = maxX - minX, base = H / 560;

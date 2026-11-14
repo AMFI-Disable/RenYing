@@ -258,7 +258,7 @@ function checkModes(env) {
     if (!shape(w, md, { ...MODE, slots: 'arr', 'four?': 'bool', 'raid?': 'bool', 'rule?': 'str' })) continue;
     order(w, md);
     if (md.local) err(w, '联机房间不能写 local');
-    if (md.rule && !['chaos', 'mayhem', 'maps'].includes(md.rule)) err(w, `rule 只能是 chaos、mayhem 或 maps，现在是 ${md.rule}`);
+    if (md.rule && !['chaos', 'mayhem', 'maps', 'cuju'].includes(md.rule)) err(w, `rule 只能是 chaos、mayhem、maps 或 cuju，现在是 ${md.rule}`);
     const ok = md.slots.length === 2 && md.slots.every(s => Array.isArray(s) && s.length && s.every(i => [0, 1, 2, 3].includes(i)));
     if (!ok) { err(w, 'slots 要写成 [[房主控制的编号…], [加入的人控制的编号…]]，编号 0~3'); continue; }
     unique(w + ' slots', md.slots.flat(), '侠客编号');

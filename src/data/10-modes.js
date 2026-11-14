@@ -16,7 +16,8 @@ const MODES = {
   chaos: { bp: 'open', local: true, foe: '电脑' },
   mayhem: { bp: 'open', local: true, foe: '电脑' },
   maps: { bp: 'open', local: true, foe: '电脑' },   // 山河异境：投票选地图（src/data/12-maps.js）
-  cuju: { bp: 'open', local: true, foe: '电脑' },   // 墨球蹴鞠：把墨球打进对方球门（src/game/22-modes-09-cuju.js）
+  cuju: { bp: 'open', local: true, foe: '电脑' },   // 墨球蹴鞠：把墨球打进对方球门（src/game/04-modes/22-modes-09-cuju.js）
+  cuju2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 墨球蹴鞠
   tag3: { bp: 'trio', team: true, local: true, foe: '敌方战队' },
   tower: { bp: 'solo', local: true },
   stage: { bp: 'solo', local: true },
@@ -32,6 +33,7 @@ const ROOM_MODES = {
   chaos: { bp: 'open', slots: [[0], [1]], rule: 'chaos' },
   mayhem: { bp: 'open', slots: [[0], [1]], rule: 'mayhem' },
   maps: { bp: 'open', slots: [[0], [1]], rule: 'maps' },   // 山河异境：两边各投一票选地图
+  cuju: { bp: 'open', slots: [[0], [1]], rule: 'cuju' },   // 墨球蹴鞠：好友房联机踢球
   pp_cc: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true },
   pp_pp: { bp: 'duo', team: true, us: '我方战队', slots: [[0, 2], [1, 3]], four: true },
   raid: { bp: 'squadNet', team: true, us: '我方战队', slots: [[0], [2]], raid: true },   // 房主 A、好友 C、电脑同袍 D 一起打魔首 B
