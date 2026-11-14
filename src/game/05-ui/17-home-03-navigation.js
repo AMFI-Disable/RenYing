@@ -13,7 +13,7 @@ function updateXiwuSummary() {
 function openScreen(name, reveal = true) {
   if (OFFLINE_BUILD && name === 'netp') name = 'stage';
   if (name === 'watch2v2' || name === '2v2') return open2v2Hub(null, reveal);   // 2v2 只有一个入口：组队弹窗
-  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem' || name === 'maps' || name === 'cuju') {
+  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem' || name === 'maps' || name === 'cuju' || name === 'koth' || name === 'party') {
     singleSec(name);
     if (reveal) showScreen('single');
     return 'single';

@@ -95,7 +95,7 @@ const mapsOn = () => {
   }
   return M.mode === 'maps' || (!!M.map && (M.mode === 'net' || M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2'));
 };
-const mapNow = () => (mapsOn() && M.map && MAPS[M.map]) || null;
+const mapNow = () => (typeof kothOn === 'function' && kothOn()) ? KOTH_MAP : (typeof partyOn === 'function' && partyOn() && M.party && M.party.kind === 'sumo') ? PARTY_SUMO_MAP : ((mapsOn() && M.map && MAPS[M.map]) || null);
 // 按票数选图：votes 是每位玩家投的地图 id（没投是 null），r 是 0~1 的随机数。没人投票时每张图一样
 function mapOdds(votes) {
   const n = MAP_POOL.map(id => (votes || []).filter(v => v === id).length), sum = n.reduce((a, b) => a + b, 0);

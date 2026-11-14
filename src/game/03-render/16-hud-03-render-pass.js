@@ -312,6 +312,8 @@ function render() {
   drawDecoys();
   drawClones();
   drawCujuField();
+  if (typeof drawKothField === 'function') drawKothField();
+  if (typeof drawRaidMechanics === 'function') drawRaidMechanics();
   drawProjs();
   if (WORLD.on && !M.worldKey) drawWorldGhosts();   // 关键战是各打各的一场：不画大地图上的同道
   drawIdentityGround(order);
@@ -324,6 +326,7 @@ function render() {
     } else drawFighter(f);
   }
   drawCujuBall();
+  if (typeof drawPartyField === 'function') drawPartyField();
   drawParticles();
   drawComboTotals();
   drawIdentityTags(order);

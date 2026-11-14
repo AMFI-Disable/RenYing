@@ -74,6 +74,120 @@ function updateRaidBoss(dt) {
     B.bossSkillCursor = ((B.bossSkillCursor || 0) + 2) % 6;
   }
   raidBossSkills();
+  updateRaidMechanics(dt);
+}
+function updateRaidMechanics(dt) {
+  if (!isRaid() || M.phase !== 'fight') return;
+  M.raidRevive = M.raidRevive || [0, 0, 0, 0];
+  M.raidStagger = M.raidStagger || 0;
+  M.raidStaggerBreak = M.raidStaggerBreak || 0;
+  M.raidPillars = M.raidPillars || [];
+  M.raidPillarT = M.raidPillarT === undefined ? 9 : M.raidPillarT - dt;
+  // 1. 破防虚弱状态
+  if (M.raidStaggerBreak > 0) {
+    M.raidStaggerBreak = Math.max(0, M.raidStaggerBreak - dt);
+    if (B.hp > 0 && B.state !== 'launched' && B.state !== 'knockdown') {
+      B.state = 'hitstun';
+      B.stunT = Math.max(B.stunT || 0, 0.25);
+    }
+  }
+  // 2. 同袍阵亡留印，队友靠近站立 1.5 秒可救起
+  const allies = sideFighters(0);
+  const alive = allies.filter(f => f.hp > 0 && !f.hidden);
+  for (const f of allies) {
+    if (f.hp > 0) { M.raidRevive[f.idx] = 0; continue; }
+    const helper = alive.find(a => Math.abs(a.x - f.x) < 95 && Math.abs(a.y) < 90);
+    if (helper) {
+      M.raidRevive[f.idx] += dt;
+      if (M.raidRevive[f.idx] >= 1.5) {
+        M.raidRevive[f.idx] = 0;
+        f.hp = f.lagHp = Math.round(f.maxHp * 0.45);
+        f.y = 0; f.vy = 0; f.vx = 0; f.state = 'idle'; f.invul = 1.4;
+        if (!RESIM) {
+          ring(f.x, -50, 120, '143,240,255', 0.5);
+          addP({ type: 'text', text: '救起同袍', x: f.x, y: -110, life: 0.9, max: 0.9, rgb: '143,240,255' });
+          SFX.gong();
+        }
+      }
+    } else {
+      M.raidRevive[f.idx] = Math.max(0, M.raidRevive[f.idx] - dt * 0.5);
+    }
+  }
+  // 3. 魔首天罚墨柱：地面红线预警 1.15 秒后爆发
+  if (M.raidPillarT <= 0 && alive.length && B.hp > 0) {
+    M.raidPillarT = 11;
+    for (let i = 0; i < Math.min(2, alive.length); i++) {
+      const tg = alive[i];
+      M.raidPillars.push({ x: clamp(tg.x, WALL + 80, STAGE_W - WALL - 80), t: 1.15, fired: false });
+    }
+  }
+  for (let i = M.raidPillars.length - 1; i >= 0; i--) {
+    const p = M.raidPillars[i];
+    p.t -= dt;
+    if (p.t <= 0 && !p.fired) {
+      p.fired = true;
+      if (!RESIM) {
+        ring(p.x, -40, 110, '255,90,90', 0.4);
+        shake = Math.max(shake, 10);
+        SFX.thunder();
+      }
+      for (const f of alive) {
+        if (f.invul <= 0 && Math.abs(f.x - p.x) < 58 && f.y > -220) {
+          applyHit(B, f, { dmg: 28, kb: [160, -480], stun: 0.4, hs: 0.06, launch: true, dir: f.x >= p.x ? 1 : -1 }, [f.x, f.y - 50]);
+        }
+      }
+    }
+    if (p.t <= -0.35) M.raidPillars.splice(i, 1);
+  }
+}
+function drawRaidMechanics() {
+  if (!isRaid()) return;
+  ctx.save();
+  // 同袍救治灵印
+  if (M.raidRevive) {
+    for (const f of sideFighters(0)) {
+      if (f.hp > 0) continue;
+      const prog = clamp((M.raidRevive[f.idx] || 0) / 1.5, 0, 1);
+      ctx.strokeStyle = 'rgba(143,240,255,0.85)';
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.arc(f.x, -45, 34, 0, Math.PI * 2); ctx.stroke();
+      if (prog > 0) {
+        ctx.strokeStyle = '#e9c46a';
+        ctx.lineWidth = 5;
+        ctx.beginPath(); ctx.arc(f.x, -45, 34, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * prog); ctx.stroke();
+      }
+      ctx.font = `700 12px ${BODY_FONT}`;
+      ctx.textAlign = 'center';
+      ctx.fillStyle = '#8ff0ff';
+      ctx.fillText(cvT('靠近救起'), f.x, -88);
+    }
+  }
+  // 魔首破防条
+  if (B.hp > 0) {
+    const bw = 90, bx = B.x - bw / 2, by = B.y - 148;
+    const pct = M.raidStaggerBreak > 0 ? M.raidStaggerBreak / 2.5 : clamp((M.raidStagger || 0) / 100, 0, 1);
+    ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(bx, by, bw, 6);
+    ctx.fillStyle = M.raidStaggerBreak > 0 ? '#ff6446' : '#e9c46a';
+    ctx.fillRect(bx, by, bw * pct, 6);
+  }
+  // 天罚墨柱预警与爆发
+  for (const p of (M.raidPillars || [])) {
+    if (p.t > 0) {
+      const a = 0.35 + 0.35 * Math.sin(clock * 24);
+      ctx.fillStyle = `rgba(255,70,70,${a})`;
+      ctx.fillRect(p.x - 45, -10, 90, 10);
+      ctx.strokeStyle = 'rgba(255,110,90,0.6)';
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(p.x, 0); ctx.lineTo(p.x, -420); ctx.stroke();
+    } else {
+      ctx.fillStyle = 'rgba(30,15,25,0.85)';
+      ctx.fillRect(p.x - 45, -520, 90, 520);
+      ctx.strokeStyle = 'rgba(255,90,70,0.9)';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(p.x - 45, -520, 90, 520);
+    }
+  }
+  ctx.restore();
 }
 // 魔首当前用哪两招、哪个大招：B.ch 不进回滚存档，所以每帧（和回滚恢复后）都按存档里的游标重新对上
 function raidBossSkills() {

@@ -3434,6 +3434,8 @@ white-space: nowrap;
               <button data-tab="tag3" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">3v3 车轮战</b><span class="pt-d">三人接力，胜者守擂</span></button>
               <button data-tab="watch2v2" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><b class="pt-n">2v2 组队</b><span class="pt-d">两人一队，可带电脑队友</span></button>
               <button data-tab="cuju" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18M5 7c3 2 11 2 14 0M5 17c3-2 11-2 14 0"/></svg></span><b class="pt-n">墨球蹴鞠</b><span class="pt-d">不比气血，比谁先进三球</span></button>
+              <button data-tab="koth" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.4 1.1 6L12 17.5 6.4 20.4l1.1-6L3 10l6-1z"/></svg></span><b class="pt-n">灵坛争锋</b><span class="pt-d">占领灵坛，无限复活抢分</span></button>
+              <button data-tab="party" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="4"/><circle cx="16" cy="9" r="3"/><path d="M4 20c1.5-3 8.5-3 10 0"/></svg></span><b class="pt-n">江湖百戏</b><span class="pt-d">传火折、断崖推手、飞球乱舞</span></button>
             </div>
 
 
@@ -3732,6 +3734,33 @@ white-space: nowrap;
         <p class="netnote" style="text-align:left">本地双人：1P 用 WASD + X 或鼠标，2P 用方向键 + K 攻击、U 和 O 放技能、I 放大招。</p>
       </div>
 
+      <!-- 灵坛争锋 · 占领灵坛 + 无限复活 -->
+      <div data-sec="koth" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">灵坛争锋 · 占领灵坛</h3>
+          <span class="sub-badge">无限复活 · 不计排位</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">三层断崖高台上轮流浮现灵坛。站入无人争抢的灵坛即可累积占领进度，先达 100% 一方获胜！阵亡或落崖后 2.5 秒重返战场。</p>
+        <div class="single-action-row">
+          <button class="go" id="kothStartBtn" type="button">对战电脑 · 抢坛</button>
+          <button class="go alt" id="koth2v2Btn" type="button">2v2 灵坛争锋</button>
+          <button class="go alt" id="kothPvpBtn" type="button">本地双人抢坛</button>
+        </div>
+      </div>
+
+      <!-- 江湖百戏 · 趣味小游戏轮换 -->
+      <div data-sec="party" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">江湖百戏 · 五局三胜</h3>
+          <span class="sub-badge">趣味轮换 · 不计排位</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">每回合轮换不同规则：传火折（击中对手把定时火折传出去）、断崖推手（无伤 2.6 倍击退把人推下悬崖）、飞球乱舞（格挡弹开飞球，砸中即出局）。</p>
+        <div class="single-action-row">
+          <button class="go" id="partyStartBtn" type="button">对战电脑 · 百戏</button>
+          <button class="go alt" id="partyPvpBtn" type="button">本地双人百戏</button>
+        </div>
+      </div>
+
       <!-- 山河异境 · 投票选地图 -->
       <div data-sec="maps" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
@@ -3859,6 +3888,8 @@ white-space: nowrap;
                   <button class="ghost small" data-mode="chaos" type="button">天机乱斗</button>
                   <button class="ghost small" data-mode="mayhem" type="button">通天神决</button>
                   <button class="ghost small" data-mode="cuju" type="button">墨球蹴鞠</button>
+                  <button class="ghost small" data-mode="koth" type="button">灵坛争锋</button>
+                  <button class="ghost small" data-mode="party" type="button">江湖百戏</button>
                 </div>
                 <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。2v2 的全服匹配和同一台电脑对战在「开始演武」的 2v2 组队里。</p>
               </details>
@@ -7841,6 +7872,9 @@ mayhem: { bp: 'open', local: true, foe: '电脑' },
 maps: { bp: 'open', local: true, foe: '电脑' },   // 山河异境：投票选地图（src/data/12-maps.js）
 cuju: { bp: 'open', local: true, foe: '电脑' },   // 墨球蹴鞠：把墨球打进对方球门（src/game/04-modes/22-modes-09-cuju.js）
 cuju2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 墨球蹴鞠
+koth: { bp: 'open', local: true, foe: '电脑' },   // 灵坛争锋：占领灵坛 + 无限复活
+koth2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 灵坛争锋
+party: { bp: 'open', local: true, foe: '电脑' },   // 江湖百戏：轮换趣味小游戏
 tag3: { bp: 'trio', team: true, local: true, foe: '敌方战队' },
 tower: { bp: 'solo', local: true },
 stage: { bp: 'solo', local: true },
@@ -7856,6 +7890,8 @@ chaos: { bp: 'open', slots: [[0], [1]], rule: 'chaos' },
 mayhem: { bp: 'open', slots: [[0], [1]], rule: 'mayhem' },
 maps: { bp: 'open', slots: [[0], [1]], rule: 'maps' },   // 山河异境：两边各投一票选地图
 cuju: { bp: 'open', slots: [[0], [1]], rule: 'cuju' },   // 墨球蹴鞠：好友房联机踢球
+koth: { bp: 'open', slots: [[0], [1]], rule: 'koth' },   // 灵坛争锋：好友房抢坛
+party: { bp: 'open', slots: [[0], [1]], rule: 'party' },   // 江湖百戏：好友房趣味百戏
 pp_cc: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true },
 pp_pp: { bp: 'duo', team: true, us: '我方战队', slots: [[0, 2], [1, 3]], four: true },
 raid: { bp: 'squadNet', team: true, us: '我方战队', slots: [[0], [2]], raid: true },   // 房主 A、好友 C、电脑同袍 D 一起打魔首 B
@@ -10439,6 +10475,48 @@ Object.assign(UI_COPY_EN, {
 "一脚定乾坤": "One kick decided it",
 "再练练脚法": "Keep working on your footwork",
 "再踢一场": "Play Again",
+});
+Object.assign(UI_COPY_EN, {
+"灵坛争锋": "Altar Control",
+"占领灵坛，无限复活抢分": "Capture rotating altars with infinite respawns",
+"灵坛争锋 · 占领灵坛": "Altar Control · King of the Hill",
+"无限复活 · 不计排位": "Infinite Respawn · Unranked",
+"三层断崖高台上轮流浮现灵坛。站入无人争抢的灵坛即可累积占领进度，先达 100% 一方获胜！阵亡或落崖后 2.5 秒重返战场。": "An altar rotates across three cliff platforms. Stand inside uncontested to build capture progress to 100%. Ring-outs and KOs respawn in 2.5s.",
+"对战电脑 · 抢坛": "vs AI · Altar",
+"2v2 灵坛争锋": "2v2 Altar Control",
+"本地双人抢坛": "Local 2P Altar",
+"占领灵坛先达 100% 获胜，阵亡或落崖 2.5 秒无限复活！": "First team to 100% altar capture wins, with 2.5s respawns!",
+"占领灵坛先达 100% 获胜": "First to 100% capture wins",
+"阵亡 · 待复活": "KO · Respawning",
+"中庭灵坛": "Center Altar",
+"左台灵坛": "Left Platform Altar",
+"凌霄高坛": "High Peak Altar",
+"右台灵坛": "Right Platform Altar",
+"争夺中": "Contested",
+"灵坛已定": "Altar Secured",
+"好友联机抢坛": "Friend Room Altar Control",
+"灵坛镇岳": "Altar Dominated",
+"再接再厉": "Try Again",
+"再来一局": "Play Again",
+"江湖百戏": "Wacky Trials",
+"传火折、断崖推手、飞球乱舞": "Hot Potato, Cliff Sumo & Ink Dodgeball",
+"江湖百戏 · 五局三胜": "Wacky Trials · Best of 5",
+"趣味轮换 · 不计排位": "Rotating Minigames · Unranked",
+"每回合轮换不同规则：传火折（击中对手把定时火折传出去）、断崖推手（无伤 2.6 倍击退把人推下悬崖）、飞球乱舞（格挡弹开飞球，砸中即出局）。": "Each round rotates rules: Hot Potato (hit to pass the ticking bomb), Cliff Sumo (0 damage, 2.6x knockback), and Ink Dodgeball (block to deflect, hit = KO).",
+"对战电脑 · 百戏": "vs AI · Trials",
+"本地双人百戏": "Local 2P Trials",
+"五局三胜趣味百戏：传火折、断崖推手、飞球乱舞轮换上阵": "Best of 5 rotating party minigames: Hot Potato, Cliff Sumo & Dodgeball",
+"传火折": "Hot Potato",
+"挨打接火折，倒计时归零即炸！": "Hit to pass the ticking bomb before it blows!",
+"断崖推手": "Cliff Sumo",
+"无伤 2.6 倍击退，把对手推下悬崖！": "0 damage, 2.6x knockback — ring out your opponent!",
+"飞球乱舞": "Ink Dodgeball",
+"格挡弹飞墨球，被砸中直接出局！": "Block to deflect the balls, or get knocked out!",
+"传火!": "Passed!",
+"火折爆裂!": "BOOM!",
+"救起同袍": "Ally Revived",
+"靠近救起": "Stand to Revive",
+"破防虚弱!": "Staggered!",
 });
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
@@ -15471,7 +15549,7 @@ C.hidden = true; D.hidden = true;
 const roomDef = () => ROOM_MODES[netRoomMode] || ROOM_MODES.normal;   // 联机房间的规则（src/data/10-modes.js）
 const netRoom = () => (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net' && REPLAY.m) ? (ROOM_MODES[REPLAY.m.room || REPLAY.m.sub || 'normal'] || null) : M.mode === 'net' ? roomDef() : null;
 const netSim = () => (ROLL.on && M.mode === 'net') || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net');
-const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'cuju' && !!M.cujuFour) || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four));
+const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'cuju' && !!M.cujuFour) || (M.mode === 'koth' && !!M.kothFour) || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four));
 const isRaid = () => M.mode === 'raid' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.raid)) || !!(netRoom() && netRoom().raid);
 const isMulti = () => is2v2() || isRaid();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
@@ -15630,7 +15708,7 @@ return !!M.map && (typeof m.mapActive === 'boolean' ? m.mapActive : m.mode === '
 }
 return M.mode === 'maps' || (!!M.map && (M.mode === 'net' || M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2'));
 };
-const mapNow = () => (mapsOn() && M.map && MAPS[M.map]) || null;
+const mapNow = () => (typeof kothOn === 'function' && kothOn()) ? KOTH_MAP : (typeof partyOn === 'function' && partyOn() && M.party && M.party.kind === 'sumo') ? PARTY_SUMO_MAP : ((mapsOn() && M.map && MAPS[M.map]) || null);
 function mapOdds(votes) {
 const n = MAP_POOL.map(id => (votes || []).filter(v => v === id).length), sum = n.reduce((a, b) => a + b, 0);
 return MAP_POOL.map((id, i) => sum ? n[i] / sum : 1 / MAP_POOL.length);
@@ -15894,7 +15972,7 @@ if (typeof statMatch === 'function') statMatch();   // 匿名统计：一局的�
 announce = null;
 announceQueue.length = 0;
 secretRound();
-STAGE_W = M.mode === 'world' ? WORLD_W : cujuOn() ? CUJU.W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
+STAGE_W = M.mode === 'world' ? WORLD_W : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
 const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
 M.mapEnv = mp ? { wT: mp.wind ? mp.wind.every : 0, wOn: 0, wDir: 1, wN: 0, tT: mp.thunder ? mp.thunder.every : 0, tWarn: 0 } : null;   // 风、天雷的计时：每回合从头算
 if (typeof applySkins === 'function') applySkins();
@@ -15943,6 +16021,8 @@ if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null
 M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
 M.phase = 'intro'; M.t = 0; M.timer = isRaid() ? 120 : (is2v2() ? ROUND_TIME_2V2 : ROUND_TIME); M.koWinner = -1; M.flags = {};
 if (cujuOn()) cujuRoundInit();   // 墨球蹴鞠：摆好两人和墨球，换成这个模式的比赛时长
+if (typeof kothOn === 'function' && kothOn()) kothRoundInit();
+if (typeof partyOn === 'function' && partyOn()) partyRoundInit();
 hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
 for (const cu of comboUI) cu.t = 0;
 if (M.mode !== 'demo' && M.mode !== 'train') {
@@ -15977,7 +16057,8 @@ if (M.t > go && !M.flags.go) { M.flags.go = true; if (M.mode !== 'demo' && M.mod
 if (M.t > go + 0.35) { M.phase = 'fight'; M.t = 0; }
 } else if (M.phase === 'fight') {
 if (FOREST.on) return;   // 斩妖波次由 forestUpdate 独立推进，清完群妖再衔接六技魔首或结算
-if (cujuOn()) { cujuMatch(); return; }   // 墨球蹴鞠：按进球判胜负（22-modes-09-cuju.js）
+if (cujuOn()) { cujuMatch(); return; }   // 墨球蹴鞠：按进球判胜负（22-modes-09-cuju/）
+if (typeof kothOn === 'function' && kothOn()) { kothMatch(); return; }
 if (M.mode === 'boss') gbossStep();   // 天魔倒下会再站起来，见 22-tianmo.js
 if (isRaid() && typeof updateRaidBoss === 'function') updateRaidBoss(STEP);
 const team0Out = isRaid() ? sideFighters(0).every(f => f.hp <= 0) : (is2v2() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0));
@@ -16083,6 +16164,22 @@ $id('endSub').textContent = `比分 ${cj.score[0]} : ${cj.score[1]}`;
 $id('endRank').textContent = cj.golden ? '金球决胜' : net ? '好友联机蹴鞠' : watch ? '电脑对踢' : pvp ? '本地双人' : iWon ? '一脚定乾坤' : '再练练脚法';
 const again = $id('againBtn');
 again.style.display = watch ? 'none' : ''; again.disabled = false; again.textContent = '再踢一场';
+if (net && NET.open) $id('netRepickBtn').classList.remove('hidden');
+setTimeout(() => showScreen('end'), 300);
+return;
+}
+if (typeof kothOn === 'function' && kothOn()) {
+const k = M.koth || { score: [0, 0] }, watch = !!M.watchAi, pvp = !!M.kothPvp, net = M.mode === 'net';
+const mySide = net && NET.role === 'client' ? 1 : 0, iWon = w === mySide;
+if (card) card.textContent = '';
+playSting(watch || pvp || iWon ? 'victory' : 'defeat');
+const winLabel = w < 0 ? '平局' : is2v2() ? (w === 0 ? `${A.look.name} · ${C.look.name}` : `${B.look.name} · ${D.look.name}`) : ([A, B][w] || A).look.name;
+inkTitle(winLabel, !(watch || pvp) && !iWon && w >= 0);
+$id('endKicker').textContent = is2v2() ? '2v2 灵坛争锋' : '灵坛争锋';
+$id('endSub').textContent = `占领进度 ${Math.floor(k.score[0])}% : ${Math.floor(k.score[1])}%`;
+$id('endRank').textContent = net ? '好友联机抢坛' : pvp ? '本地双人' : iWon ? '灵坛镇岳' : '再接再厉';
+const again = $id('againBtn');
+again.style.display = watch ? 'none' : ''; again.disabled = false; again.textContent = '再来一局';
 if (net && NET.open) $id('netRepickBtn').classList.remove('hidden');
 setTimeout(() => showScreen('end'), 300);
 return;
@@ -16244,7 +16341,7 @@ if (REC.on && (M.mode === 'tag3' || M.mode === 'saga' || (M.mode === 'tower' && 
 if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
 if (M.worldKey && M.worldKey.kind === 'boss') { worldKeyRound(w); return; }   // 全服肉鸽的天道 Boss：结果和奖励都以服务器为准，这里不加墨锭（车轮战照常换人，打完在 showEnd 里交出去）
 if (M.mode === 'saga') { sagaEnd(w); return; }
-if (cujuOn()) { M.phase = 'end'; showEnd(w); return; }   // 墨球蹴鞠只有一局
+if (cujuOn() || (typeof kothOn === 'function' && kothOn())) { M.phase = 'end'; showEnd(w); return; }   // 蹴鞠与灵坛争锋只有一局
 if (isRaid()) {
 if (w === 0) {
 for (const f of sideFighters(0)) scFire(f, 'clear');
@@ -18015,6 +18112,21 @@ if (M.mode === 'net' && !RESIM) NET.matchHits = (NET.matchHits || 0) + 1;   // �
 if (def.forestProxy) { forestHit(att, m, pt); return; }
 if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 22-world.js
 if (cujuOn()) def.hp = def.lagHp = def.maxHp;   // 墨球蹴鞠不比气血：挨打照样硬直、倒地，但永远打不倒
+if (typeof partyOn === 'function' && partyOn() && M.party) {
+if (M.party.kind === 'potato') partyTransferBomb(def.idx);
+if (M.party.kind === 'sumo' && m.kb) m = { ...m, dmg: 0, kb: [m.kb[0] * 2.6, Math.min(m.kb[1] - 120, -240)] };
+else m = { ...m, dmg: 0 };
+}
+if (isRaid() && def === B && m.dmg) {
+if (M.raidStaggerBreak > 0) m = { ...m, dmg: Math.round(m.dmg * 1.5) };
+else {
+M.raidStagger = (M.raidStagger || 0) + Math.min(20, m.dmg * 0.45);
+if (M.raidStagger >= 100) {
+M.raidStagger = 0; M.raidStaggerBreak = 2.5;
+if (!RESIM) { ring(B.x, B.y - 60, 140, '233,196,106', 0.45); addP({ type: 'text', text: '破防虚弱!', x: B.x, y: B.y - 120, life: 1.0, max: 1.0, rgb: '255,210,80' }); SFX.heavy(); }
+}
+}
+}
 if (M.ot && M.phase === 'fight' && m.dmg) m = { ...m, dmg: m.dmg * OT_DMG };   // 加时赛：伤害翻倍
 if (def.jailT > 0) m = { ...m, launch: false, spike: false, knock: false, kb: [0, 0] };   // 关在醉翁亭里的人打不飞
 if (!m.isProj && !m.ult && mapFavOn(att) && att.ch.id === 'lingshuang' && (mapNow() || {}).cliff
@@ -18343,6 +18455,7 @@ hitVisual(ev); netEmit(ev);
 }
 function fighterDown(def, att, ev) {
 if (cujuOn()) { def.hp = def.lagHp = def.maxHp; return; }   // 墨球蹴鞠：没有人会被打倒
+if (typeof kothOn === 'function' && kothOn()) { def.hp = 0; def.hidden = true; return; }   // 灵坛争锋：进入复活倒计时
 if (is2v2()) {
 const mate = def === A ? C : def === C ? A : def === B ? D : B;
 if (mate && !mate.hidden && mate.hp > 0) {
@@ -18804,6 +18917,7 @@ updateDecoys();
 cujuAimHook();
 updateProjs();
 cujuTick();   // 墨球蹴鞠：墨球的物理和进球（不在这个模式就什么都不做）
+if (typeof partyTick === 'function') partyTick();
 trSample();
 if (FOREST.on) forestUpdate();
 if (!RESIM) updateFX(STEP);
@@ -24253,6 +24367,7 @@ ctx.restore();
 }
 if (M.mode === 'train') drawTrainStats(cx, top, bh);
 if (cujuOn()) drawCujuScore(cx, top, bh, gap);
+if (typeof kothOn === 'function' && kothOn()) drawKothScore(cx, top, bh, gap);
 }
 function drawStats() {
 if (M.mode === 'demo') return;
@@ -24542,6 +24657,8 @@ const order = isMulti()
 drawDecoys();
 drawClones();
 drawCujuField();
+if (typeof drawKothField === 'function') drawKothField();
+if (typeof drawRaidMechanics === 'function') drawRaidMechanics();
 drawProjs();
 if (WORLD.on && !M.worldKey) drawWorldGhosts();   // 关键战是各打各的一场：不画大地图上的同道
 drawIdentityGround(order);
@@ -24554,6 +24671,7 @@ if (!pf.f.hitDone) drawFu(f.x, f.y - 150 + Math.sin(clock * 6) * 4, pf.a, pf.f.s
 } else drawFighter(f);
 }
 drawCujuBall();
+if (typeof drawPartyField === 'function') drawPartyField();
 drawParticles();
 drawComboTotals();
 drawIdentityTags(order);
@@ -24921,7 +25039,7 @@ const secs = el.dataset.sec.split(' ');
 el.style.display = secs.includes(active) ? '' : 'none';
 }
 const duel = ['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2'].includes(active);
-if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju'].includes(active);
+if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju', 'koth', 'party'].includes(active);
 if ($id('xiwuQuickCard')) $id('xiwuQuickCard').hidden = !duel;
 const mutators = $id('mutatorPills');
 if (mutators && mutators.parentElement) mutators.parentElement.hidden = !duel;
@@ -24942,7 +25060,9 @@ saga: '每位侠客自己的故事：五节、一个抉择、两个结局',
 train: '在训练场学习招式、自由练习木人桩，或进行专项情景训练',
 mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！',
 maps: '换一处战场：投票选地图，断崖、冰面都会改变侠客的打法',
-cuju: '不比气血比进球：用普攻和技能把墨球打进对方球门，先进三球获胜'
+cuju: '不比气血比进球：用普攻和技能把墨球打进对方球门，先进三球获胜',
+koth: '占领灵坛先达 100% 获胜，阵亡或落崖 2.5 秒无限复活！',
+party: '五局三胜趣味百戏：传火折、断崖推手、飞球乱舞轮换上阵'
 };
 subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
 }
@@ -24969,7 +25089,7 @@ info.textContent = pieces.map(x => typeof cvT === 'function' ? cvT(x) : x).join(
 function openScreen(name, reveal = true) {
 if (OFFLINE_BUILD && name === 'netp') name = 'stage';
 if (name === 'watch2v2' || name === '2v2') return open2v2Hub(null, reveal);   // 2v2 只有一个入口：组队弹窗
-if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem' || name === 'maps' || name === 'cuju') {
+if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem' || name === 'maps' || name === 'cuju' || name === 'koth' || name === 'party') {
 singleSec(name);
 if (reveal) showScreen('single');
 return 'single';
@@ -28849,6 +28969,14 @@ cuju: {
 rematch: () => bpStart(M.cujuFour ? 'cuju2v2' : 'cuju', { level: M.level || pickLevel, pvp: !!M.cujuPvp, four: !!M.cujuFour, target: M.cujuTarget || 3, chaos: !!M.cujuChaos }),   // 再踢一场：同样的对手和规则，重新选人
 toMenuScreen: () => { singleSec('cuju'); showScreen('single'); },
 },
+koth: {
+rematch: () => bpStart(M.kothFour ? 'koth2v2' : 'koth', { level: M.level || pickLevel, pvp: !!M.kothPvp, four: !!M.kothFour }),
+toMenuScreen: () => { singleSec('koth'); showScreen('single'); },
+},
+party: {
+rematch: () => bpStart('party', { level: M.level || pickLevel, pvp: !!M.partyPvp }),
+toMenuScreen: () => { singleSec('party'); showScreen('single'); },
+},
 mayhem: {
 rematch: () => bpStart('mayhem', { level: pickLevel, isWatch: false }),
 toMenuScreen: () => { singleSec('mayhem'); showScreen('single'); },
@@ -29888,6 +30016,114 @@ B.bossRotTimer = 2.6;
 B.bossSkillCursor = ((B.bossSkillCursor || 0) + 2) % 6;
 }
 raidBossSkills();
+updateRaidMechanics(dt);
+}
+function updateRaidMechanics(dt) {
+if (!isRaid() || M.phase !== 'fight') return;
+M.raidRevive = M.raidRevive || [0, 0, 0, 0];
+M.raidStagger = M.raidStagger || 0;
+M.raidStaggerBreak = M.raidStaggerBreak || 0;
+M.raidPillars = M.raidPillars || [];
+M.raidPillarT = M.raidPillarT === undefined ? 9 : M.raidPillarT - dt;
+if (M.raidStaggerBreak > 0) {
+M.raidStaggerBreak = Math.max(0, M.raidStaggerBreak - dt);
+if (B.hp > 0 && B.state !== 'launched' && B.state !== 'knockdown') {
+B.state = 'hitstun';
+B.stunT = Math.max(B.stunT || 0, 0.25);
+}
+}
+const allies = sideFighters(0);
+const alive = allies.filter(f => f.hp > 0 && !f.hidden);
+for (const f of allies) {
+if (f.hp > 0) { M.raidRevive[f.idx] = 0; continue; }
+const helper = alive.find(a => Math.abs(a.x - f.x) < 95 && Math.abs(a.y) < 90);
+if (helper) {
+M.raidRevive[f.idx] += dt;
+if (M.raidRevive[f.idx] >= 1.5) {
+M.raidRevive[f.idx] = 0;
+f.hp = f.lagHp = Math.round(f.maxHp * 0.45);
+f.y = 0; f.vy = 0; f.vx = 0; f.state = 'idle'; f.invul = 1.4;
+if (!RESIM) {
+ring(f.x, -50, 120, '143,240,255', 0.5);
+addP({ type: 'text', text: '救起同袍', x: f.x, y: -110, life: 0.9, max: 0.9, rgb: '143,240,255' });
+SFX.gong();
+}
+}
+} else {
+M.raidRevive[f.idx] = Math.max(0, M.raidRevive[f.idx] - dt * 0.5);
+}
+}
+if (M.raidPillarT <= 0 && alive.length && B.hp > 0) {
+M.raidPillarT = 11;
+for (let i = 0; i < Math.min(2, alive.length); i++) {
+const tg = alive[i];
+M.raidPillars.push({ x: clamp(tg.x, WALL + 80, STAGE_W - WALL - 80), t: 1.15, fired: false });
+}
+}
+for (let i = M.raidPillars.length - 1; i >= 0; i--) {
+const p = M.raidPillars[i];
+p.t -= dt;
+if (p.t <= 0 && !p.fired) {
+p.fired = true;
+if (!RESIM) {
+ring(p.x, -40, 110, '255,90,90', 0.4);
+shake = Math.max(shake, 10);
+SFX.thunder();
+}
+for (const f of alive) {
+if (f.invul <= 0 && Math.abs(f.x - p.x) < 58 && f.y > -220) {
+applyHit(B, f, { dmg: 28, kb: [160, -480], stun: 0.4, hs: 0.06, launch: true, dir: f.x >= p.x ? 1 : -1 }, [f.x, f.y - 50]);
+}
+}
+}
+if (p.t <= -0.35) M.raidPillars.splice(i, 1);
+}
+}
+function drawRaidMechanics() {
+if (!isRaid()) return;
+ctx.save();
+if (M.raidRevive) {
+for (const f of sideFighters(0)) {
+if (f.hp > 0) continue;
+const prog = clamp((M.raidRevive[f.idx] || 0) / 1.5, 0, 1);
+ctx.strokeStyle = 'rgba(143,240,255,0.85)';
+ctx.lineWidth = 3;
+ctx.beginPath(); ctx.arc(f.x, -45, 34, 0, Math.PI * 2); ctx.stroke();
+if (prog > 0) {
+ctx.strokeStyle = '#e9c46a';
+ctx.lineWidth = 5;
+ctx.beginPath(); ctx.arc(f.x, -45, 34, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * prog); ctx.stroke();
+}
+ctx.font = `700 12px ${BODY_FONT}`;
+ctx.textAlign = 'center';
+ctx.fillStyle = '#8ff0ff';
+ctx.fillText(cvT('靠近救起'), f.x, -88);
+}
+}
+if (B.hp > 0) {
+const bw = 90, bx = B.x - bw / 2, by = B.y - 148;
+const pct = M.raidStaggerBreak > 0 ? M.raidStaggerBreak / 2.5 : clamp((M.raidStagger || 0) / 100, 0, 1);
+ctx.fillStyle = 'rgba(0,0,0,0.55)'; ctx.fillRect(bx, by, bw, 6);
+ctx.fillStyle = M.raidStaggerBreak > 0 ? '#ff6446' : '#e9c46a';
+ctx.fillRect(bx, by, bw * pct, 6);
+}
+for (const p of (M.raidPillars || [])) {
+if (p.t > 0) {
+const a = 0.35 + 0.35 * Math.sin(clock * 24);
+ctx.fillStyle = `rgba(255,70,70,${a})`;
+ctx.fillRect(p.x - 45, -10, 90, 10);
+ctx.strokeStyle = 'rgba(255,110,90,0.6)';
+ctx.lineWidth = 2;
+ctx.beginPath(); ctx.moveTo(p.x, 0); ctx.lineTo(p.x, -420); ctx.stroke();
+} else {
+ctx.fillStyle = 'rgba(30,15,25,0.85)';
+ctx.fillRect(p.x - 45, -520, 90, 520);
+ctx.strokeStyle = 'rgba(255,90,70,0.9)';
+ctx.lineWidth = 3;
+ctx.strokeRect(p.x - 45, -520, 90, 520);
+}
+}
+ctx.restore();
 }
 function raidBossSkills() {
 if (!B.bossSkills || B.bossSkills.length < 6 || !B.ch) return;
@@ -30782,6 +31018,355 @@ ctx.beginPath(); ctx.moveTo(sx, top + bh * 3.4); ctx.lineTo(sx - 9, top + bh * 3
 }
 ctx.restore();
 }
+const KOTH = {
+W: 2200,
+cliff: [WALL + 140, 2200 - WALL - 140],
+zoneR: 135,
+rotateEvery: 18,
+target: 100,
+time: 120,
+respawnTime: 2.5,
+plats: [
+{ x: 520, y: -155, w: 300 },
+{ x: 1100, y: -230, w: 340 },
+{ x: 1680, y: -155, w: 300 },
+],
+zones: [
+{ x: 1100, y: 0, label: '中庭灵坛' },
+{ x: 520, y: -155, label: '左台灵坛' },
+{ x: 1100, y: -230, label: '凌霄高坛' },
+{ x: 1680, y: -155, label: '右台灵坛' },
+],
+};
+const KOTH_MAP = { id: 'koth', name: '灵坛崖', w: KOTH.W, cliff: KOTH.cliff, plats: KOTH.plats, bg: 'cliff' };
+const kothOn = () => M.mode === 'koth' || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'koth');
+function kothRoundInit() {
+M.koth = {
+score: [0, 0],
+zoneIdx: 0,
+zoneT: KOTH.rotateEvery,
+respawn: [0, 0, 0, 0],
+contested: false,
+holder: -1,
+};
+M.timer = KOTH.time;
+if (is2v2()) {
+A.x = 560; A.face = 1;
+C.x = 760; C.face = 1;
+B.x = 1440; B.face = -1;
+D.x = 1640; D.face = -1;
+} else {
+A.x = 680; A.face = 1;
+B.x = 1520; B.face = -1;
+}
+}
+function kothRespawnFighter(f) {
+const side = fighterTeam(f);
+const rx = STAGE_W / 2 + (side === 0 ? -160 : 160);
+f.reset(rx);
+f.y = -280;
+f.vy = 0;
+f.invul = 1.4;
+f.hidden = false;
+if (!RESIM) {
+ring(rx, -280, 90, side === 0 ? '143,240,255' : '255,138,112', 0.4);
+SFX.poof();
+}
+}
+function kothMatch() {
+const k = M.koth; if (!k) return;
+const fs = allFighters();
+for (const f of fs) {
+if (k.respawn[f.idx] > 0) {
+k.respawn[f.idx] = Math.max(0, k.respawn[f.idx] - STEP);
+f.hidden = true;
+f.hp = f.maxHp;
+if (k.respawn[f.idx] <= 0) kothRespawnFighter(f);
+continue;
+}
+if (f.hp <= 0) {
+k.respawn[f.idx] = KOTH.respawnTime;
+f.hidden = true;
+if (!RESIM) {
+addP({ type: 'text', text: '阵亡 · 待复活', x: clamp(f.x, WALL + 80, STAGE_W - WALL - 80), y: Math.min(-60, f.y - 60), life: 0.9, max: 0.9, rgb: '233,196,106' });
+}
+}
+}
+k.zoneT -= STEP;
+if (k.zoneT <= 0) {
+k.zoneT = KOTH.rotateEvery;
+k.zoneIdx = (k.zoneIdx + 1) % KOTH.zones.length;
+if (!RESIM) {
+const z = KOTH.zones[k.zoneIdx];
+say(`灵坛转移 · ${z.label}`, 1.3, 'big');
+ring(z.x, z.y, 140, '233,196,106', 0.5);
+SFX.gong();
+}
+}
+const z = KOTH.zones[k.zoneIdx];
+const inZone = [0, 0];
+for (const f of fs) {
+if (f.hidden || f.hp <= 0) continue;
+const dx = Math.abs(f.x - z.x), dy = Math.abs(f.y - z.y);
+if (dx <= KOTH.zoneR && dy <= 95) inZone[fighterTeam(f)]++;
+}
+k.contested = inZone[0] > 0 && inZone[1] > 0;
+k.holder = inZone[0] > 0 && inZone[1] === 0 ? 0 : (inZone[1] > 0 && inZone[0] === 0 ? 1 : -1);
+if (k.holder >= 0) {
+const rate = inZone[k.holder] >= 2 ? 12.5 : 9.0;
+k.score[k.holder] = Math.min(KOTH.target, k.score[k.holder] + rate * STEP);
+if (k.score[k.holder] >= KOTH.target) {
+M.koWinner = k.holder;
+M.phase = 'ko';
+M.t = 0;
+say('灵坛已定', 1.4, 'big');
+return;
+}
+}
+M.timer = Math.max(0, M.timer - STEP);
+if (M.timer <= 0) {
+const w = k.score[0] > k.score[1] ? 0 : (k.score[1] > k.score[0] ? 1 : -1);
+M.koWinner = w;
+M.phase = 'ko';
+M.t = 0;
+say('时间到', 1.2);
+}
+}
+function drawKothField() {
+if (!kothOn() || !M.koth) return;
+const k = M.koth, z = KOTH.zones[k.zoneIdx], R = KOTH.zoneR;
+const rgb = k.contested ? '233,196,106' : k.holder === 0 ? '143,240,255' : k.holder === 1 ? '255,138,112' : '220,215,200';
+ctx.save();
+const pulse = 0.75 + 0.25 * Math.sin(clock * 6);
+const grad = ctx.createLinearGradient(z.x, z.y - 180, z.x, z.y);
+grad.addColorStop(0, `rgba(${rgb},0)`);
+grad.addColorStop(1, `rgba(${rgb},${0.26 * pulse})`);
+ctx.fillStyle = grad;
+ctx.fillRect(z.x - R, z.y - 180, R * 2, 180);
+ctx.strokeStyle = `rgba(${rgb},${0.85 * pulse})`;
+ctx.lineWidth = 3;
+ctx.beginPath();
+ctx.moveTo(z.x - R, z.y - 2);
+ctx.lineTo(z.x + R, z.y - 2);
+ctx.stroke();
+ctx.font = `700 13px ${BODY_FONT}`;
+ctx.textAlign = 'center';
+ctx.fillStyle = `rgb(${rgb})`;
+ctx.fillText(cvT(k.contested ? '争夺中' : z.label), z.x, z.y - 190);
+ctx.restore();
+}
+function drawKothScore(cx, top, bh, gap) {
+const k = M.koth; if (!k) return;
+ctx.save();
+ctx.textBaseline = 'middle';
+for (const side of [0, 1]) {
+const rgb = side === 0 ? '143,240,255' : '255,138,112', out = side === 0 ? -1 : 1;
+const pct = Math.floor(k.score[side]);
+ctx.font = `700 ${Math.round(bh * 1.9)}px ${BODY_FONT}`;
+ctx.textAlign = side === 0 ? 'right' : 'left';
+ctx.fillStyle = `rgb(${rgb})`;
+ctx.fillText(`${pct}%`, cx + out * (gap + 8), top + bh / 2 + 2);
+}
+ctx.font = `600 ${Math.max(11, Math.round(bh * 0.78))}px ${BODY_FONT}`;
+ctx.textAlign = 'center';
+ctx.fillStyle = '#e9c46a';
+const nextS = Math.ceil(k.zoneT);
+ctx.fillText(`${cvT(k.contested ? '争夺中' : '灵坛争锋')} · ${nextS}s`, cx, top + bh * 2.1);
+ctx.restore();
+}
+function startKoth(p1, p2, lv, opts = {}) {
+initAudio();
+paused = false;
+const four = !!opts.four || (Array.isArray(p1) && Array.isArray(p2));
+const pvp = !!opts.pvp, watch = !!opts.isWatch && !pvp;
+M.mode = 'koth';
+M.level = lv || pickLevel || 'normal';
+M.round = 1; M.wins = [0, 0]; M.carry = null; M.stage = null; M.duo = null; M.map = null; M.quick = false;
+M.watchAi = watch; M.kothPvp = pvp; M.kothFour = four;
+M.teamMutator = 'normal';
+if (four) {
+const t0 = Array.isArray(p1) ? p1 : [p1, (p1 + 1) % CHARS.length];
+const t1 = Array.isArray(p2) ? p2 : [p2, (p2 + 1) % CHARS.length];
+setChars(t0[0], t1[0], t0[1], t1[1]);
+A.ctrl = watch ? new AICtrl(M.level) : human[0];
+C.ctrl = new AICtrl(M.level);
+B.ctrl = pvp ? human[1] : new AICtrl(M.level);
+D.ctrl = new AICtrl(M.level);
+} else {
+setChars(p1, p2);
+A.ctrl = watch ? new AICtrl(M.level) : human[0];
+B.ctrl = pvp ? human[1] : new AICtrl(M.level);
+}
+human[0].clear(); human[1].clear();
+showScreen(null);
+REC.on = false;
+startRound();
+say(four ? '2v2 灵坛争锋' : '灵坛争锋', 1.4, 'big', '占领灵坛先达 100% 获胜');
+}
+const kothStartBtn = document.getElementById('kothStartBtn');
+if (kothStartBtn) kothStartBtn.addEventListener('click', () => bpStart('koth', { level: pickLevel }));
+const koth2v2Btn = document.getElementById('koth2v2Btn');
+if (koth2v2Btn) koth2v2Btn.addEventListener('click', () => bpStart('koth2v2', { level: pickLevel, four: true }));
+const kothPvpBtn = document.getElementById('kothPvpBtn');
+if (kothPvpBtn) kothPvpBtn.addEventListener('click', () => bpStart('koth', { level: pickLevel, pvp: true }));
+const PARTY_KINDS = [
+{ id: 'potato', name: '传火折', sub: '挨打接火折，倒计时归零即炸！' },
+{ id: 'sumo', name: '断崖推手', sub: '无伤 2.6 倍击退，把对手推下悬崖！' },
+{ id: 'dodge', name: '飞球乱舞', sub: '格挡弹飞墨球，被砸中直接出局！' },
+];
+const PARTY_SUMO_MAP = { id: 'party_sumo', name: '断崖擂台', w: 1800, cliff: [480, 1320], plats: [], bg: 'cliff' };
+const partyOn = () => M.mode === 'party' || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'party');
+function partyRoundInit() {
+const idx = ((M.round || 1) - 1) % PARTY_KINDS.length;
+const kind = PARTY_KINDS[idx].id;
+M.party = {
+kind,
+bombHolder: (M.round || 1) % 2 === 1 ? 0 : 1,
+bombT: 9.0,
+balls: [],
+};
+M.timer = 45;
+if (kind === 'sumo') {
+A.x = STAGE_W / 2 - 180; A.face = 1;
+B.x = STAGE_W / 2 + 180; B.face = -1;
+} else {
+A.x = STAGE_W / 2 - 260; A.face = 1;
+B.x = STAGE_W / 2 + 260; B.face = -1;
+}
+if (kind === 'dodge') {
+M.party.balls = [
+{ x: STAGE_W / 2, y: -340, vx: 640, vy: -120, r: 24 },
+{ x: STAGE_W / 2, y: -520, vx: -680, vy: 80, r: 24 },
+];
+}
+}
+function partyTransferBomb(newHolderIdx) {
+if (!partyOn() || !M.party || M.party.kind !== 'potato') return;
+if (M.party.bombHolder === newHolderIdx) return;
+M.party.bombHolder = newHolderIdx;
+M.party.bombT = Math.min(9.0, M.party.bombT + 1.2);
+const f = fighterByIdx(newHolderIdx);
+if (f && !RESIM) {
+ring(f.x, f.y - 60, 85, '255,140,60', 0.35);
+addP({ type: 'text', text: '传火!', x: f.x, y: f.y - 110, life: 0.7, max: 0.7, rgb: '255,150,70' });
+SFX.poof();
+}
+}
+function partyTick() {
+if (!partyOn() || !M.party || M.phase !== 'fight') return;
+const P = M.party;
+if (P.kind === 'potato' || P.kind === 'dodge') {
+A.hp = A.lagHp = A.maxHp;
+B.hp = B.lagHp = B.maxHp;
+} else if (P.kind === 'sumo') {
+if (A.hp > 0) A.hp = A.lagHp = A.maxHp;
+if (B.hp > 0) B.hp = B.lagHp = B.maxHp;
+}
+if (P.kind === 'potato') {
+P.bombT = Math.max(0, P.bombT - STEP);
+if (P.bombT <= 0) {
+const loser = fighterByIdx(P.bombHolder) || A;
+const w = loser === A ? 1 : 0;
+loser.hp = 0;
+if (!RESIM) {
+ring(loser.x, loser.y - 50, 180, '255,100,50', 0.6);
+shake = Math.max(shake, 16);
+SFX.heavy();
+say('火折爆裂!', 1.2, 'big');
+}
+M.koWinner = w;
+M.phase = 'ko';
+M.t = 0;
+}
+} else if (P.kind === 'dodge') {
+for (let i = 0; i < P.balls.length; i++) {
+const b = P.balls[i];
+b.vy += 1200 * STEP;
+b.x += b.vx * STEP;
+b.y += b.vy * STEP;
+if (b.y > -b.r) { b.y = -b.r; b.vy = -Math.max(460, Math.abs(b.vy) * 0.92); }
+if (b.y < -900) { b.y = -900; b.vy = Math.abs(b.vy) * 0.85; }
+if (b.x < WALL + b.r) { b.x = WALL + b.r; b.vx = Math.abs(b.vx) * 1.03; }
+if (b.x > STAGE_W - WALL - b.r) { b.x = STAGE_W - WALL - b.r; b.vx = -Math.abs(b.vx) * 1.03; }
+const sp = Math.hypot(b.vx, b.vy);
+if (sp > 1550) { b.vx *= 1550 / sp; b.vy *= 1550 / sp; }
+for (const f of [A, B]) {
+if (f.hp <= 0 || f.invul > 0) continue;
+const hu = hurtbox(f);
+const cx = clamp(b.x, hu[0], hu[2]), cy = clamp(b.y, hu[1], hu[3]);
+if (Math.hypot(b.x - cx, b.y - cy) < b.r) {
+if ((f.state === 'block' || f.state === 'blockstun') && f.onGround()) {
+b.vx = f.face * Math.max(760, Math.abs(b.vx) * 1.05);
+b.vy = -420;
+if (!RESIM) { blockFX(b.x, b.y, f.face); SFX.block(); }
+} else {
+f.hp = 0;
+M.koWinner = f === A ? 1 : 0;
+M.phase = 'ko';
+M.t = 0;
+if (!RESIM) { ring(f.x, f.y - 50, 120, '255,100,100', 0.45); SFX.heavy(); }
+return;
+}
+}
+}
+}
+}
+}
+function drawPartyField() {
+if (!partyOn() || !M.party) return;
+const P = M.party;
+ctx.save();
+if (P.kind === 'potato') {
+const holder = fighterByIdx(P.bombHolder);
+if (holder && holder.hp > 0) {
+const pulse = 0.7 + 0.3 * Math.sin(clock * (P.bombT < 3 ? 22 : 10));
+ctx.strokeStyle = `rgba(255,120,50,${pulse})`;
+ctx.lineWidth = 3;
+ctx.beginPath();
+ctx.arc(holder.x, holder.y - 125, 16, 0, Math.PI * 2);
+ctx.stroke();
+ctx.fillStyle = P.bombT < 3 ? '#ff6446' : '#ffd070';
+ctx.font = `700 15px ${BODY_FONT}`;
+ctx.textAlign = 'center';
+ctx.fillText(`🔥 ${P.bombT.toFixed(1)}s`, holder.x, holder.y - 148);
+}
+} else if (P.kind === 'dodge') {
+for (const b of P.balls) {
+ctx.fillStyle = '#181822';
+ctx.beginPath(); ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2); ctx.fill();
+ctx.strokeStyle = '#ff7b54'; ctx.lineWidth = 2.5; ctx.stroke();
+}
+}
+const def = PARTY_KINDS.find(k => k.id === P.kind) || PARTY_KINDS[0];
+ctx.font = `700 13px ${BODY_FONT}`;
+ctx.textAlign = 'center';
+ctx.fillStyle = 'rgba(233,196,106,0.9)';
+ctx.fillText(cvT(def.name), STAGE_W / 2, -260);
+ctx.restore();
+}
+function startParty(p1, p2, lv, opts = {}) {
+initAudio();
+paused = false;
+const pvp = !!opts.pvp, watch = !!opts.isWatch && !pvp;
+M.mode = 'party';
+M.level = lv || pickLevel || 'normal';
+M.round = 1; M.wins = [0, 0]; M.carry = null; M.stage = null; M.duo = null; M.map = null; M.quick = false;
+M.watchAi = watch; M.partyPvp = pvp;
+M.teamMutator = 'normal';
+setChars(p1, p2);
+A.ctrl = watch ? new AICtrl(M.level) : human[0];
+B.ctrl = pvp ? human[1] : new AICtrl(M.level);
+human[0].clear(); human[1].clear();
+showScreen(null);
+REC.on = false;
+startRound();
+const k = PARTY_KINDS[0];
+say(`江湖百戏 · ${k.name}`, 1.5, 'big', k.sub);
+}
+const partyStartBtn = document.getElementById('partyStartBtn');
+if (partyStartBtn) partyStartBtn.addEventListener('click', () => bpStart('party', { level: pickLevel }));
+const partyPvpBtn = document.getElementById('partyPvpBtn');
+if (partyPvpBtn) partyPvpBtn.addEventListener('click', () => bpStart('party', { level: pickLevel, pvp: true }));
 const SAGA = Object.fromEntries(HEROES.map(x => [x.id, x.saga]));
 const SAGA_INK = { node: 40, end: 150 };
 const SAGA_GOAL = { ko: '击败对手', survive: '撑过 {t} 秒', fast: '{t} 秒内击败对手' };
@@ -33041,7 +33626,7 @@ const bpSideName = side => {
 const md = bpModeDef();
 if (md.sides) return md.sides[side];
 if (bpCustomOpts && bpCustomOpts.isWatch) return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
-if ((bpMode === 'cuju' || bpMode === 'cuju2v2') && bpCustomOpts && bpCustomOpts.pvp) return side === 0 ? '1P' : '2P';
+if ((bpMode === 'cuju' || bpMode === 'cuju2v2' || bpMode === 'koth' || bpMode === 'koth2v2' || bpMode === 'party') && bpCustomOpts && bpCustomOpts.pvp) return side === 0 ? '1P' : '2P';
 if (isLocalBothHumanBP()) return side === 0 ? '苍龙队 (1P/2P)' : '赤凤队 (3P/4P)';
 if (side === bpMySide()) return md.us || '你';
 if (md.foe) return md.foe;
@@ -33551,6 +34136,10 @@ startChaos(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
 startMayhem(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
 } else if (mode === 'cuju' || mode === 'cuju2v2') {
 startCuju(picks[0], picks[1], opts.level || pickLevel, { ...opts, four: mode === 'cuju2v2' || !!opts.four });
+} else if (mode === 'koth' || mode === 'koth2v2') {
+startKoth(picks[0], picks[1], opts.level || pickLevel, { ...opts, four: mode === 'koth2v2' || !!opts.four });
+} else if (mode === 'party') {
+startParty(picks[0], picks[1], opts.level || pickLevel, opts);
 } else if (mode === 'maps') {
 startMapsMode(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch, mapId);
 } else if (mode === 'tag3') {
@@ -33788,6 +34377,8 @@ else if (bpMode === 'cpu' || bpMode === 'cpuWatch') modePrefix = '论剑点将 �
 else if (bpMode === 'chaos') modePrefix = '天机乱斗 · ';
 else if (bpMode === 'maps') modePrefix = '山河异境 · ';
 else if (bpMode === 'cuju' || bpMode === 'cuju2v2') modePrefix = bpMode === 'cuju2v2' ? '2v2 墨球蹴鞠 · ' : '墨球蹴鞠 · ';
+else if (bpMode === 'koth' || bpMode === 'koth2v2') modePrefix = bpMode === 'koth2v2' ? '2v2 灵坛争锋 · ' : '灵坛争锋 · ';
+else if (bpMode === 'party') modePrefix = '江湖百戏 · ';
 else if (bpMode === 'mayhem') modePrefix = '通天神决 · ';
 else if (bpMode === 'tag3') modePrefix = '3v3车轮 · ';
 else if (bpMode === 'tower') modePrefix = '问剑密卷 · ';
@@ -34680,7 +35271,7 @@ window.updateNetLobby = updateNetLobby;
 function roomWrapShow() { const w = $id('roomWrap'); if (w) w.classList.remove('hidden'); }
 const netTeamMutator = () => !NET.isRanked && ['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode) && ['chaos', 'mayhem'].includes(teamMutator) ? teamMutator : 'normal';
 let netRoomMode = 'normal';   // 好友房的规则，见 src/data/10-modes.js 的 ROOM_MODES；快速匹配和排位固定 normal（3v3 车轮战）
-const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '天机乱斗', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠' };
+const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '天机乱斗', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏' };
 const lobbyModesSegEl = $id('lobbyModesSeg');
 if (lobbyModesSegEl) {
 lobbyModesSegEl.addEventListener('click', e => {
@@ -35159,7 +35750,7 @@ c = human[p] || human[0];
 c = human[0];
 }
 } else {
-c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp)) ? human[0] : (human[p] || human[0]);
+c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp)) ? human[0] : (human[p] || human[0]);
 }
 if (secretEnabled && c === human[0] && !REPLAY.on) continue;
 if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
@@ -35185,7 +35776,7 @@ c = human[p] || human[0];
 c = human[0];
 }
 } else {
-c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp)) ? human[0] : (human[p] || human[0]);
+c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp)) ? human[0] : (human[p] || human[0]);
 }
 if (secretEnabled && c === human[0] && !REPLAY.on) continue;
 if (act === 'left' || act === 'right' || act === 'down') {

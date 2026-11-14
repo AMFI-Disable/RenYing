@@ -51,6 +51,22 @@ function showEnd(w) {
     setTimeout(() => showScreen('end'), 300);
     return;
   }
+  if (typeof kothOn === 'function' && kothOn()) {
+    const k = M.koth || { score: [0, 0] }, watch = !!M.watchAi, pvp = !!M.kothPvp, net = M.mode === 'net';
+    const mySide = net && NET.role === 'client' ? 1 : 0, iWon = w === mySide;
+    if (card) card.textContent = '';
+    playSting(watch || pvp || iWon ? 'victory' : 'defeat');
+    const winLabel = w < 0 ? '平局' : is2v2() ? (w === 0 ? `${A.look.name} · ${C.look.name}` : `${B.look.name} · ${D.look.name}`) : ([A, B][w] || A).look.name;
+    inkTitle(winLabel, !(watch || pvp) && !iWon && w >= 0);
+    $id('endKicker').textContent = is2v2() ? '2v2 灵坛争锋' : '灵坛争锋';
+    $id('endSub').textContent = `占领进度 ${Math.floor(k.score[0])}% : ${Math.floor(k.score[1])}%`;
+    $id('endRank').textContent = net ? '好友联机抢坛' : pvp ? '本地双人' : iWon ? '灵坛镇岳' : '再接再厉';
+    const again = $id('againBtn');
+    again.style.display = watch ? 'none' : ''; again.disabled = false; again.textContent = '再来一局';
+    if (net && NET.open) $id('netRepickBtn').classList.remove('hidden');
+    setTimeout(() => showScreen('end'), 300);
+    return;
+  }
   if (M.stage) {
     const win = w === 0;
     M.stage = null;
@@ -208,7 +224,7 @@ function endRound() {
   if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
   if (M.worldKey && M.worldKey.kind === 'boss') { worldKeyRound(w); return; }   // 全服肉鸽的天道 Boss：结果和奖励都以服务器为准，这里不加墨锭（车轮战照常换人，打完在 showEnd 里交出去）
   if (M.mode === 'saga') { sagaEnd(w); return; }
-  if (cujuOn()) { M.phase = 'end'; showEnd(w); return; }   // 墨球蹴鞠只有一局
+  if (cujuOn() || (typeof kothOn === 'function' && kothOn())) { M.phase = 'end'; showEnd(w); return; }   // 蹴鞠与灵坛争锋只有一局
   if (isRaid()) {
     if (w === 0) {
       for (const f of sideFighters(0)) scFire(f, 'clear');

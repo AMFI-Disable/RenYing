@@ -195,6 +195,8 @@
               <button data-tab="tag3" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">3v3 车轮战</b><span class="pt-d">三人接力，胜者守擂</span></button>
               <button data-tab="watch2v2" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><b class="pt-n">2v2 组队</b><span class="pt-d">两人一队，可带电脑队友</span></button>
               <button data-tab="cuju" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18M5 7c3 2 11 2 14 0M5 17c3-2 11-2 14 0"/></svg></span><b class="pt-n">墨球蹴鞠</b><span class="pt-d">不比气血，比谁先进三球</span></button>
+              <button data-tab="koth" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.4 1.1 6L12 17.5 6.4 20.4l1.1-6L3 10l6-1z"/></svg></span><b class="pt-n">灵坛争锋</b><span class="pt-d">占领灵坛，无限复活抢分</span></button>
+              <button data-tab="party" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="4"/><circle cx="16" cy="9" r="3"/><path d="M4 20c1.5-3 8.5-3 10 0"/></svg></span><b class="pt-n">江湖百戏</b><span class="pt-d">传火折、断崖推手、飞球乱舞</span></button>
             </div>
 
 
@@ -493,6 +495,33 @@
         <p class="netnote" style="text-align:left">本地双人：1P 用 WASD + X 或鼠标，2P 用方向键 + K 攻击、U 和 O 放技能、I 放大招。</p>
       </div>
 
+      <!-- 灵坛争锋 · 占领灵坛 + 无限复活 -->
+      <div data-sec="koth" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">灵坛争锋 · 占领灵坛</h3>
+          <span class="sub-badge">无限复活 · 不计排位</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">三层断崖高台上轮流浮现灵坛。站入无人争抢的灵坛即可累积占领进度，先达 100% 一方获胜！阵亡或落崖后 2.5 秒重返战场。</p>
+        <div class="single-action-row">
+          <button class="go" id="kothStartBtn" type="button">对战电脑 · 抢坛</button>
+          <button class="go alt" id="koth2v2Btn" type="button">2v2 灵坛争锋</button>
+          <button class="go alt" id="kothPvpBtn" type="button">本地双人抢坛</button>
+        </div>
+      </div>
+
+      <!-- 江湖百戏 · 趣味小游戏轮换 -->
+      <div data-sec="party" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">江湖百戏 · 五局三胜</h3>
+          <span class="sub-badge">趣味轮换 · 不计排位</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">每回合轮换不同规则：传火折（击中对手把定时火折传出去）、断崖推手（无伤 2.6 倍击退把人推下悬崖）、飞球乱舞（格挡弹开飞球，砸中即出局）。</p>
+        <div class="single-action-row">
+          <button class="go" id="partyStartBtn" type="button">对战电脑 · 百戏</button>
+          <button class="go alt" id="partyPvpBtn" type="button">本地双人百戏</button>
+        </div>
+      </div>
+
       <!-- 山河异境 · 投票选地图 -->
       <div data-sec="maps" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
@@ -620,6 +649,8 @@
                   <button class="ghost small" data-mode="chaos" type="button">天机乱斗</button>
                   <button class="ghost small" data-mode="mayhem" type="button">通天神决</button>
                   <button class="ghost small" data-mode="cuju" type="button">墨球蹴鞠</button>
+                  <button class="ghost small" data-mode="koth" type="button">灵坛争锋</button>
+                  <button class="ghost small" data-mode="party" type="button">江湖百戏</button>
                 </div>
                 <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。2v2 的全服匹配和同一台电脑对战在「开始演武」的 2v2 组队里。</p>
               </details>

@@ -3,6 +3,21 @@ function applyHit(att, def, m, pt) {
   if (def.forestProxy) { forestHit(att, m, pt); return; }
   if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 22-world.js
   if (cujuOn()) def.hp = def.lagHp = def.maxHp;   // 墨球蹴鞠不比气血：挨打照样硬直、倒地，但永远打不倒
+  if (typeof partyOn === 'function' && partyOn() && M.party) {
+    if (M.party.kind === 'potato') partyTransferBomb(def.idx);
+    if (M.party.kind === 'sumo' && m.kb) m = { ...m, dmg: 0, kb: [m.kb[0] * 2.6, Math.min(m.kb[1] - 120, -240)] };
+    else m = { ...m, dmg: 0 };
+  }
+  if (isRaid() && def === B && m.dmg) {
+    if (M.raidStaggerBreak > 0) m = { ...m, dmg: Math.round(m.dmg * 1.5) };
+    else {
+      M.raidStagger = (M.raidStagger || 0) + Math.min(20, m.dmg * 0.45);
+      if (M.raidStagger >= 100) {
+        M.raidStagger = 0; M.raidStaggerBreak = 2.5;
+        if (!RESIM) { ring(B.x, B.y - 60, 140, '233,196,106', 0.45); addP({ type: 'text', text: '破防虚弱!', x: B.x, y: B.y - 120, life: 1.0, max: 1.0, rgb: '255,210,80' }); SFX.heavy(); }
+      }
+    }
+  }
   if (M.ot && M.phase === 'fight' && m.dmg) m = { ...m, dmg: m.dmg * OT_DMG };   // 加时赛：伤害翻倍
   if (def.jailT > 0) m = { ...m, launch: false, spike: false, knock: false, kb: [0, 0] };   // 关在醉翁亭里的人打不飞
   if (!m.isProj && !m.ult && mapFavOn(att) && att.ch.id === 'lingshuang' && (mapNow() || {}).cliff
@@ -353,6 +368,7 @@ function applyHit(att, def, m, pt) {
 // 有人被打倒：1v1 直接判这回合；2v2 队友还站着时只是倒下一人，队友进入「孤军奋战」（数值见 01-core.js）
 function fighterDown(def, att, ev) {
   if (cujuOn()) { def.hp = def.lagHp = def.maxHp; return; }   // 墨球蹴鞠：没有人会被打倒
+  if (typeof kothOn === 'function' && kothOn()) { def.hp = 0; def.hidden = true; return; }   // 灵坛争锋：进入复活倒计时
   if (is2v2()) {
     const mate = def === A ? C : def === C ? A : def === B ? D : B;
     if (mate && !mate.hidden && mate.hp > 0) {

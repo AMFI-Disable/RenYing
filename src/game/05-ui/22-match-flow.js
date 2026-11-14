@@ -43,6 +43,14 @@ const MODE_HANDLERS = {
     rematch: () => bpStart(M.cujuFour ? 'cuju2v2' : 'cuju', { level: M.level || pickLevel, pvp: !!M.cujuPvp, four: !!M.cujuFour, target: M.cujuTarget || 3, chaos: !!M.cujuChaos }),   // 再踢一场：同样的对手和规则，重新选人
     toMenuScreen: () => { singleSec('cuju'); showScreen('single'); },
   },
+  koth: {
+    rematch: () => bpStart(M.kothFour ? 'koth2v2' : 'koth', { level: M.level || pickLevel, pvp: !!M.kothPvp, four: !!M.kothFour }),
+    toMenuScreen: () => { singleSec('koth'); showScreen('single'); },
+  },
+  party: {
+    rematch: () => bpStart('party', { level: M.level || pickLevel, pvp: !!M.partyPvp }),
+    toMenuScreen: () => { singleSec('party'); showScreen('single'); },
+  },
   mayhem: {
     rematch: () => bpStart('mayhem', { level: pickLevel, isWatch: false }),
     toMenuScreen: () => { singleSec('mayhem'); showScreen('single'); },

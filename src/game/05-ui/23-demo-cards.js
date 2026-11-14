@@ -529,7 +529,7 @@ const bpSideName = side => {
   const md = bpModeDef();
   if (md.sides) return md.sides[side];
   if (bpCustomOpts && bpCustomOpts.isWatch) return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
-  if ((bpMode === 'cuju' || bpMode === 'cuju2v2') && bpCustomOpts && bpCustomOpts.pvp) return side === 0 ? '1P' : '2P';
+  if ((bpMode === 'cuju' || bpMode === 'cuju2v2' || bpMode === 'koth' || bpMode === 'koth2v2' || bpMode === 'party') && bpCustomOpts && bpCustomOpts.pvp) return side === 0 ? '1P' : '2P';
   if (isLocalBothHumanBP()) return side === 0 ? '苍龙队 (1P/2P)' : '赤凤队 (3P/4P)';
   if (side === bpMySide()) return md.us || '你';
   if (md.foe) return md.foe;

@@ -204,6 +204,10 @@ function launchBpMatch(mode, opts, picks, bans, mapId, preMatch) {
     startMayhem(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
   } else if (mode === 'cuju' || mode === 'cuju2v2') {
     startCuju(picks[0], picks[1], opts.level || pickLevel, { ...opts, four: mode === 'cuju2v2' || !!opts.four });
+  } else if (mode === 'koth' || mode === 'koth2v2') {
+    startKoth(picks[0], picks[1], opts.level || pickLevel, { ...opts, four: mode === 'koth2v2' || !!opts.four });
+  } else if (mode === 'party') {
+    startParty(picks[0], picks[1], opts.level || pickLevel, opts);
   } else if (mode === 'maps') {
     startMapsMode(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch, mapId);
   } else if (mode === 'tag3') {

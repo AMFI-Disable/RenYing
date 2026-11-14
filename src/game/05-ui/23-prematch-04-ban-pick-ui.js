@@ -169,6 +169,8 @@ function renderBP() {
   else if (bpMode === 'chaos') modePrefix = '天机乱斗 · ';
   else if (bpMode === 'maps') modePrefix = '山河异境 · ';
   else if (bpMode === 'cuju' || bpMode === 'cuju2v2') modePrefix = bpMode === 'cuju2v2' ? '2v2 墨球蹴鞠 · ' : '墨球蹴鞠 · ';
+  else if (bpMode === 'koth' || bpMode === 'koth2v2') modePrefix = bpMode === 'koth2v2' ? '2v2 灵坛争锋 · ' : '灵坛争锋 · ';
+  else if (bpMode === 'party') modePrefix = '江湖百戏 · ';
   else if (bpMode === 'mayhem') modePrefix = '通天神决 · ';
   else if (bpMode === 'tag3') modePrefix = '3v3车轮 · ';
   else if (bpMode === 'tower') modePrefix = '问剑密卷 · ';
