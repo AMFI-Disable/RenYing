@@ -14,9 +14,19 @@ export function dataFiles() {
   return [...numbered('src/data'), ...subs.flatMap(d => numbered('src/data/' + d))];
 }
 
-// 游戏主体：先是 src/data/ 的数据表，再是 src/game/ 下按文件名的编号顺序拼起来的原来整个 game.js
+// 游戏主体：先是 src/data/ 的数据表，再是 src/game/（含各分层子目录）下按文件名的编号顺序拼起来的原来整个 game.js
+export function gameFiles() {
+  const subs = readdirSync(ROOT + 'src/game').filter(d => isDir('src/game/' + d)).sort();
+  const items = [
+    ...numbered('src/game').map(p => ({ name: p.split('/').pop(), path: p })),
+    ...subs.flatMap(d => numbered('src/game/' + d).map(p => ({ name: p.split('/').pop(), path: p }))),
+  ];
+  items.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  return items.map(x => x.path);
+}
+
 export function gameJs() {
-  return [...dataFiles(), ...numbered('src/game')].map(p => readFileSync(ROOT + p, 'utf8')).join('');
+  return [...dataFiles(), ...gameFiles()].map(p => readFileSync(ROOT + p, 'utf8')).join('');
 }
 
 // 只读侠客数据表（不跑游戏）：返回 HEROES，每项是 { id, skin, en, bal, char, forest, saga }

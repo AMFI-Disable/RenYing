@@ -16161,479 +16161,6 @@ return loser === localIdx()
 }
 return `${loser === localIdx() ? '' : '对方 '}${CHARS[next].name} 接力出战！`;
 }
-function blockFace(f, foe) {
-const ref = cujuOn() && M.cuju && M.cuju.ball ? M.cuju.ball : foe;
-return Math.abs(ref.x - f.x) > 6 ? (ref.x >= f.x ? 1 : -1) : f.face;
-}
-function toNeutral(f) {
-f.move = null; f.sp = null; f.snap = false; f.skill = null; f.armorT = 0; f.parryT = 0; f.thunderGuardT = 0; f.rooted = false;
-f.state = f.onGround() ? 'idle' : 'air';
-if (f.onGround()) { f.juggle = 0; f.huiMaHits = 0; }
-}
-function startAttack(f, name) {
-endEscape(f);
-f.state = 'attack'; f.move = typeof stanceMove === 'function' ? stanceMove(f, name) : f.moves[name]; f.moveName = name; f.t = 0;
-if (f.ch.passive === 'armor' && HEAVY_MOVES.includes(name)) { f.armorT = f.move.su + f.move.ac; f.armorHits = 1; }
-if (chaosNow('armor')) { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.move.ac || 0.15)); f.armorHits = Math.max(f.armorHits, 1); }
-f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
-const foe = foeOf(f), h = f.ctrl && f.ctrl.held, dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0, a = dir || (h && h.aim);
-f.face = f.onGround() ? faceDir(f, foe) : ((a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl))) ? a : f.face);
-const heavy = name === 'hv' || name === 'cs1' || name === 'cs2';
-if (heavy && f.badgeId === 'riposte' && f.badgeRiposteT > 0) {
-f.move = { ...f.move, lunge: (f.move.lunge || 0) + (f.badgeTier === 'purpgold' ? 58 : 48) };
-f.badgeRiposteT = 0; showBadgeCue(f, 'riposte', true);
-} else if (heavy && f.badgeId === 'breaker' && f.badgeTier === 'purpgold' && f.badgeBreakT > 0) {
-f.move = { ...f.move, lunge: (f.move.lunge || 0) + 52 };
-f.badgeBreakT = 0; showBadgeCue(f, 'breaker', true);
-}
-if (scOn()) scFire(f, 'atk', foe, name);
-}
-function doJump(f, dir) {
-const jumpBonus = (chaosNow('jump') || { val: 1 }).val;
-f.vy = (f.jumps === 0 ? -JUMP_V : -DJUMP_V) * (f.ch.stat.jump || 1) * jumpBonus; f.jumps++;
-f.vx = dir ? dir * wk(f) * 1.15 : f.vx * 0.5;
-f.state = 'air'; f.y = Math.min(f.y, -1);
-if (f.jumps >= 2) ring(f.x, f.y - 20, 36, f.look.slash, 0.35);
-dust(f.x, 0, 6); SFX.jump();
-if (scOn()) scFire(f, 'jump', foeOf(f));
-}
-function startDash(f, dir) {
-f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * (f.badgeId === 'breaker' && f.badgeBreakT > 0 ? 1.12 : 1) * dir; f.vy = 0;
-if (f.badgeId === 'breaker' && f.badgeBreakT > 0) { f.badgeBreakT = 0; showBadgeCue(f, 'breakerDash', true); }
-if (f.badgeId === 'pursuit') f.badgeDashT = 1.0;
-f.invul = 0.13; f.dashCD = DODGE_CD;
-if (f.onGround()) dust(f.x - dir * 20, 0, 8);
-SFX.dash();
-if (scOn()) scFire(f, 'dash', foeOf(f));
-}
-function startBadgeDash(f, dir, kind) {
-endEscape(f);
-f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * (kind === 'flow' ? 0.62 : kind === 'air' ? 1 : 0.72) * dir; f.vy = 0;
-f.badgeDashT = 0; f.dashCD = DODGE_CD;
-f.invul = kind === 'exit' && f.badgeTier === 'purpgold' ? 0.08 : 0;
-if (f.onGround()) dust(f.x - dir * 16, 0, 6);
-ring(f.x, f.y - 50, 82, f.look.slash || '233,196,106', 0.24); SFX.dash();
-if (scOn()) scFire(f, 'dash', foeOf(f));
-}
-function startSpecial(f) {
-endEscape(f);
-if (f.ch.passive === 'drunk') f.drunk = Math.min(100, (f.drunk || 0) + 30);
-f.face = faceDir(f, foeOf(f));
-f.meter = 0; f.state = 'special'; f.sp = 'charge'; f.t = 0; f.invul = 99; f.vx = 0; f.spFace = f.face;
-superFreeze = 0.5; superOwner = f; dimA = 1;
-flashA = 0.35; flashRGB = f.look.slash;
-const ultName = skinUltName(f) || ULTS[f.ch.ult].name;
-say(ultName, 0.9, 'super'); SFX.superOn();
-const ultPitch = f.ch.stat && f.ch.stat.weight > 1.1 ? 0.8 : 1.15;
-SFX.voiceUlt(ultPitch);
-if (CHAR_RARITY[f.ch.id] === 'legend') { ring(f.x, f.y - 60, 210, '233,196,106', 0.6); ring(f.x, f.y - 60, 150, f.look.slash, 0.5); flashRGB = '233,196,106'; }
-ring(f.x, f.y - 60, 120, f.look.slash, 0.5);
-if (scOn()) { scFire(f, 'ult', foeOf(f)); scFire(foeOf(f), 'foeUlt', f); }
-if (mayhemOn()) {
-shake = Math.max(shake, 32);
-flashA = 0.65;
-flashRGB = '255,225,120';
-ring(f.x, f.y - 60, 320, '255,215,80', 0.7);
-ring(f.x, f.y - 60, 480, f.look.slash, 0.65);
-slashLine(f.x, f.y - 60, 0, f.look.slash);
-slashLine(f.x, f.y - 60, Math.PI / 2, '255,240,180');
-slashLine(f.x, f.y - 60, rand(-0.7, 0.7), f.look.slash);
-for (let i = 0; i < 30; i++) {
-const a = rand(0, 6.28), v = rand(240, 720);
-addP({ type: 'spark', x: f.x, y: f.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.7, max: 0.7, rgb: i % 2 === 0 ? '255,220,100' : f.look.slash, w: 3.2, drag: 2.5 });
-}
-}
-}
-function neutral(f, foe) {
-const c = f.ctrl, onG = f.onGround();
-if (typeof trySwitchStance === 'function' && onG && trySwitchStance(f)) return;
-if (onG && f.state !== 'victory') f.face = faceDir(f, foe);
-if (M.phase !== 'fight') {
-if (onG && f.state !== 'victory') { f.state = 'idle'; }
-f.vx = damp(f.vx, 0, 10, STEP);
-return;
-}
-const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
-if (onG) {
-if (f.meter >= 100 && c.consume('special')) return startSpecial(f);
-if (f.plat >= 0 && (c.consume('drop') || (c.held.down && c.consume('jump')))) return mapDrop(f);   // 站在平台上：↓ + 跳落下去
-if (c.held.down) {
-if (c.consume('light')) return startAttack(f, 'dl');
-if (f.skill2CD <= 0 && (SKILLS[f.ch.skill2] || {}).free && c.consume('skill2')) return startSkill(f, foe, 2);   // 离影 ↓+R：换到最早的雾身
-f.blockT = f.state === 'block' ? (f.blockT || 0) + STEP : 0;
-f.state = 'block'; f.face = blockFace(f, foe); f.vx = damp(f.vx, dir * wk(f) * 0.3, 20, STEP); return;
-} else {
-f.blockT = 0;
-}
-if (c.held.atk) {
-c.buf.light = clock;
-if (clock - c.atkT >= CHARGE_START) {
-delete c.buf.light;
-f.state = 'charge'; f.t = 0; f.chargeFull = false; SFX.charge(); return;
-}
-} else {
-if (c.consume('light')) return startAttack(f, 'l1');
-}
-if (c.consume('heavy')) return startAttack(f, 'hv');
-if (c.consume('jump')) return doJump(f, dir);
-if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
-if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
-const sp = (dir === f.face ? wk(f) : wk(f) * 0.78) * mapWalk(f);
-f.vx = damp(f.vx, dir * sp, 16 * mapGrip(f), STEP);   // 冰面上起步、停下都慢
-f.state = Math.abs(f.vx) > 25 ? 'walk' : 'idle';
-} else {
-f.state = 'air';
-if (f.airHover > 0) {
-if (c.consume('light') || c.consume('heavy') || c.consume('down')) {
-f.airHover = 0; endEscape(f);
-f.invul = 0.25;
-startAttack(f, 'cs2');
-f.vy = 960;
-f.vx = f.face * 140;
-addP({ type: 'text', text: '⚡ 千钧下坠', x: f.x, y: f.y - 80, life: 0.6, max: 0.6, rgb: '255,220,120' });
-SFX.heavy();
-return;
-}
-if ((c.held.left || c.held.right) && c.consume('dash')) {
-f.airHover = 0; endEscape(f);
-f.state = 'dash'; f.t = 0;
-f.vx = (c.held.right ? 1 : -1) * 750;
-f.vy = 0;
-f.invul = 0.32;
-ring(f.x, f.y - 50, 110, f.look.slash, 0.3);
-dust(f.x, f.y, 8);
-SFX.dash();
-return;
-}
-if (f.skillCD <= 0 && c.consume('skill')) { f.airHover = 0; endEscape(f); return startSkill(f, foe); }
-if (f.skill2CD <= 0 && !(SKILLS[f.ch.skill2] || {}).free && c.consume('skill2')) { f.airHover = 0; endEscape(f); return startSkill(f, foe, 2); }
-return;
-}
-if (c.consume('light')) return startAttack(f, 'a1');
-if (c.consume('heavy')) return startAttack(f, 'a2');
-const jumpLimit = (f.ch.jumps || 2) + (mapFavOn(f) && f.ch.id === 'liuyun' && M.map === 'cliff' ? 1 : 0);
-if (f.jumps < jumpLimit && c.consume('jump')) return doJump(f, dir);
-if (f.ch.fly && c.held.jump && f.flyT > 0 && f.vy > -120 && M.phase === 'fight') {
-f.flying = true; f.flyT -= STEP;
-f.vy = damp(f.vy, f.y < -230 ? 90 : -70, 8, STEP);
-f.vx = clamp(f.vx + dir * 2400 * STEP, -wk(f) * 1.4, wk(f) * 1.4);
-if (Math.random() < 0.3) addP({ type: 'spark', x: f.x - f.face * 18, y: f.y - 70, vx: -f.face * 60, vy: rand(20, 80), life: 0.3, max: 0.3, rgb: f.look.slash, w: 1.2 });
-return;
-}
-if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
-if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
-f.vx = clamp(f.vx + dir * 1700 * STEP, -wk(f) * 1.2, wk(f) * 1.2);
-}
-}
-function attackUpdate(f, foe) {
-const m = f.move, c = f.ctrl, t = f.t, cx = f.ch.cancel || CANCEL;   // 取消规则见 src/data/01-moves.js 的 CANCEL
-const act0 = m.su, act1 = m.su + m.ac;
-if (c.held.down && f.onGround() && M.phase === 'fight' && f.moveName !== 'dl' && (t < act0 * cx.blockEarly || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = blockFace(f, foe); return; }
-if (t >= act0 && !f.lunged) {
-f.lunged = true;
-if (f.ch.inkShot && /^l[1-5]$/.test(f.moveName) && f.ink >= INK_COST) {   // 墨羽：普攻甩出一团墨，按抛物线甩向身前（要有墨水）
-f.ink -= INK_COST;
-const T = 0.42, G = 1500, sx = f.x + f.face * 40, sy = f.y - 90;
-const tx = f.x + f.face * 220, ty = -60;   // 固定落在身前约 220 像素，不自动追着对手飞（远处要自己找角度）
-spawnProj(f, { kind: 'inkblob', x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * G * T * T) / T, g: G, lob: true, w: 30, h: 30, life: 1.2, dmg: INK_DMG, kb: [80, 0], stun: 0.3, hs: 0.04, noScale: true });
-}
-if (f.ch.id === 'liuyun' && (f.moveName === 'cs1' || f.moveName === 'cs2')) {
-const n = f.moveName === 'cs2' ? 2 : 1, towardFoe = Math.sign(foe.x - f.x) === f.face;
-const dx = towardFoe ? (foe.x - f.x) : f.face * 300, dy = towardFoe ? ((foe.y - 60) - (f.y - 62)) : 0, a0 = Math.atan2(dy, dx);
-for (let k = 0; k < n; k++) {
-const a = a0 + (n === 2 ? (k ? 0.1 : -0.1) : 0);
-spawnProj(f, { kind: 'wind', x: f.x + Math.cos(a) * 40, y: f.y - 62, vx: Math.cos(a) * 1150, vy: Math.sin(a) * 1150, w: 56, h: 52, life: 1.2, dmg: 28, kb: [420, 0], stun: 0.5, hs: 0.08, knock: true, unbreakable: f.moveName === 'cs2' });
-}
-}
-if (m.track) {
-f.face = foe.x >= f.x ? 1 : -1;
-f.vx = f.face * clamp((Math.abs(foe.x - f.x) - 40) / 0.12, 150, 1300);
-} else if (!m.air) {
-const close = Math.abs(foe.x - f.x) < 70 && Math.sign(foe.x - f.x) === f.face;
-f.vx = (m.lunge || 0) * f.face * (close ? 0.35 : 1);
-}
-SFX[m.snd]();
-}
-if (t >= act0 && t < act1 && !f.hitDone) tryHit(f, foe, m);
-const free2 = (SKILLS[f.ch.skill2] || {}).free;   // free：只能从自由状态放，不能接在出招后面（离影的换影）
-if (M.phase === 'fight' && t >= act1 && t < act1 + m.rc) {
-if (f.badgeId === 'ascent' && f.badgeAirSkillT > 0 && !f.onGround() && f.airDash > 0 && c.consume('dash')) {
-const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0) || f.face;
-f.airDash--; f.badgeAirSkillT = 0; startBadgeDash(f, dir, 'air'); showBadgeCue(f, 'ascent', true); return;
-}
-if (f.badgeId === 'flowing' && f.badgeLinkT > 0 && c.consume('dash')) {
-const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0) || f.face;
-f.badgeLinkT = 0; startBadgeDash(f, dir, 'flow'); showBadgeCue(f, 'flowing', true); return;
-}
-if (f.badgeId === 'pursuit' && f.badgeExitT > 0 && c.consume('dash')) {
-const inputDir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0), dir = inputDir || -f.face;
-f.badgeExitT = 0; startBadgeDash(f, dir, 'exit'); showBadgeCue(f, 'pursuit', true); return;
-}
-const canBadgeSkill = f.badgeTier === 'purpgold' && f.hitConfirmed && (
-(f.badgeId === 'flowing' && f.badgeLinkT > 0) ||
-(f.badgeId === 'focus' && f.badgePressureT > 0) ||
-(f.badgeId === 'ascent' && f.badgeAirSkillT > 0 && !f.onGround() && !f.badgeAirSkillUsed)
-);
-if (canBadgeSkill) {
-let slot = 0;
-if (f.skillCD <= 0 && c.consume('skill')) slot = 1;
-else if (f.skill2CD <= 0 && !free2 && c.consume('skill2')) slot = 2;
-if (slot) {
-startSkill(f, foe, slot === 2 ? 2 : undefined);
-if (f.state === 'skill') {
-if (f.badgeId === 'flowing') f.badgeLinkT = 0;
-if (f.badgeId === 'focus') { f.badgePressureT = 0; f.badgePressureSkill = 1; }
-if (f.badgeId === 'ascent') { f.badgeAirSkillT = 0; f.badgeAirSkillUsed = 1; }
-showBadgeCue(f, f.badgeId, true); return;
-}
-}
-}
-}
-if (M.phase === 'fight' && cx.skill2FromLight && !free2 && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
-if (M.phase === 'fight' && (t >= act0 + m.ac * cx.chainAt || (f.hitConfirmed && f.moveName === 'dl'))) {
-if (m.next.light && c.consume('light')) return startAttack(f, m.next.light);
-if (f.hitConfirmed && m.hitNext && m.hitNext.light && c.consume('light')) return startAttack(f, m.hitNext.light);
-if (m.next.heavy && c.consume('heavy')) return startAttack(f, m.next.heavy);
-if (f.hitConfirmed) {
-if (cx.skillOnHit && f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
-if (cx.skillOnHit && !free2 && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
-if (m.jumpCancel && c.consume('jump')) { f.jumps = 0; f.face = faceDir(f, foe); return doJump(f, f.face); }
-}
-}
-if (t >= act1 + m.rc) {
-toNeutral(f);
-if (c.held.down && f.onGround()) { f.state = 'block'; f.face = blockFace(f, foe); }
-}
-}
-function endSpecial(f) {
-if (f.flurryVictim && f.flurryVictim.state === 'held') toNeutral(f.flurryVictim);
-f.flurryVictim = null;
-f.invul = 0;
-toNeutral(f);
-}
-const EIGHT_IMM = ['汉钟离', '吕洞宾', '张果老', '曹国舅', '铁拐李', '韩湘子', '何仙姑', '蓝采和'];
-function specialUpdate(f, foe) {
-const t = f.t, U = ULTS[f.ch.ult];
-if (f.sp === 'charge') {
-if (t >= 0.42) {
-f.t = 0;
-if (U.flurry) {
-f.sp = 'dash';
-const spd = U.dashSpd || (f.ch && (f.ch.id === 'qingfeng' || f.ch.id === 'feiying') ? 1750 : 1400);
-f.vx = spd * f.face;
-f.vy = 0;
-if (f.ch.ult === 'shadows' || U.airTrack) {
-const inAir = !foe.onGround() || airH(foe) > 15 || foe.y < -15;
-const maxDist = spd * (U.dashT || 0.28);
-const dx = foe.x - f.x, dy = (foe.y - 35) - f.y;
-const dist = Math.hypot(dx, dy);
-if (inAir && dist <= maxDist) {
-f.face = dx >= 0 ? 1 : -1;
-f.vx = (dx / Math.max(1, dist)) * spd;
-f.vy = (dy / Math.max(1, dist)) * spd;
-}
-}
-SFX.dash();
-}
-else U.begin(f, foe);
-}
-return;
-}
-if (!U.flurry) { U.update(f, foe); return; }
-const victim = (f.flurryVictim && !f.flurryVictim.hidden && f.flurryVictim.hp > 0) ? f.flurryVictim : foe;
-const spd = U.dashSpd || (f.ch && (f.ch.id === 'qingfeng' || f.ch.id === 'feiying') ? 1750 : 1400);
-const dashT = U.dashT || 0.28;
-const maxDist = spd * dashT;
-if (f.sp === 'dash') {
-const inAir = !foe.onGround() || airH(foe) > 15 || foe.y < -15;
-if (f.ch.ult === 'shadows' || U.airTrack) {
-const dx = foe.x - f.x, dy = (foe.y - 35) - f.y;
-const dist = Math.hypot(dx, dy);
-if (inAir && dist <= maxDist) {
-f.face = dx >= 0 ? 1 : -1;
-f.vx = damp(f.vx, (dx / Math.max(1, dist)) * spd, 14, STEP);
-f.vy = damp(f.vy, (dy / Math.max(1, dist)) * spd, 14, STEP);
-if (Math.random() < 0.4) smoke(f.x, f.y - 30, 4);
-} else {
-if (Math.abs(foe.x - f.x) > 20) f.vx = damp(f.vx, (foe.x >= f.x ? 1 : -1) * spd, 10, STEP);
-f.vy = damp(f.vy, 0, 10, STEP);
-}
-} else {
-if (Math.abs(foe.x - f.x) > 20) f.vx = damp(f.vx, (foe.x >= f.x ? 1 : -1) * spd, 10, STEP);
-}
-const hitAir = (f.ch.ult === 'shadows' || U.airTrack) && inAir && Math.hypot(foe.x - f.x, (foe.y - 35) - f.y) <= 120;
-const hit = overlap(hitbox(f, [-10, -135, 100, 0]), hurtbox(foe)) || hitAir;
-if (!isClient() && foe.hp > 0 && foe.invul <= 0 && hit) {
-f.sp = 'flurry'; f.t = 0; f.slashN = 0; f.vx = 0; f.vy = 0; f.flurryVictim = foe;
-foe.state = 'held'; foe.t = 0; foe.vx = 0; foe.vy = 0; foe.move = null; foe.skill = null; foe.sp = null; foe.y = Math.min(foe.y, -50);
-const ev = { e: 'hit', a: f.idx, d: foe.idx, x: foe.x, y: foe.y - 60, dmg: 9, hs: 0.12, nc: true };
-hitVisual(ev); netEmit(ev);
-} else if (t >= dashT) { f.sp = 'miss'; f.t = 0; f.vx *= 0.25; f.vy = 0; }
-} else if (f.sp === 'miss') {
-if (f.y < 0) { f.vy += GRAV * STEP; if (f.y + f.vy * STEP >= 0) { f.y = 0; f.vy = 0; } }
-if (t >= 0.42) { f.invul = 0; toNeutral(f); }
-} else if (f.sp === 'flurry') {
-const n = Math.floor(t / U.iv);
-if (n > f.slashN - 1 && f.slashN < U.n) {
-const side = f.slashN % 2 ? 1 : -1;
-f.x = clamp(victim.x + side * grand(60, 90), WALL, STAGE_W - WALL);
-f.y = Math.min(0, victim.y + grand(-30, 30));
-f.face = victim.x >= f.x ? 1 : -1;
-f.snap = true; f.trail.length = 0;
-const ang = rand(0, Math.PI);
-slashLine(victim.x, victim.y - 55, ang, f.look.slash);
-if (f.ch.ult === 'shadows') {
-decoys.push({ owner: f.idx, sk: f.sk, x0: f.x, y0: f.y, x: f.x, y: f.y, vx: side * 30, vy: (f.slashN % 3 - 1) * 20, rot: 0, vr: 0, life: 0.35, landed: true, age: 0 });
-smoke(f.x, f.y - 50, 6);
-} else if (f.ch.ult === 'crescent') {
-ring(victim.x, victim.y - 55, 75, '120,230,255', 0.22);
-} else if (f.ch.ult === 'eightimm') {
-addP({ type: 'text', text: EIGHT_IMM[f.slashN % 8], x: victim.x + (f.slashN % 2 ? 40 : -40), y: victim.y - 120 - (f.slashN % 3) * 14, life: 0.45, max: 0.45, rgb: '255,190,110' });
-}
-applyHit(f, victim, { ...SP_SLASH, dmg: U.slash }, [victim.x, victim.y - 55]);
-SFX.slice(); f.slashN++;
-}
-if (t >= U.iv * U.n + 0.06) {
-f.sp = 'final'; f.t = 0; f.snap = true; f.trail.length = 0;
-f.x = clamp(victim.x - f.spFace * 80, WALL, STAGE_W - WALL); f.face = f.spFace; f.y = Math.min(0, victim.y + 40);
-}
-} else if (f.sp === 'final') {
-if (t >= 0.07 && !f.finalDone) {
-f.finalDone = true; f.snap = false;
-if (U.land) { f.y = 0; f.vy = 0; applyHit(f, victim, { ...FINAL, dmg: U.fin, kb: [260, 0], knock: true }, [victim.x, victim.y - 60]); }
-else applyHit(f, victim, { ...FINAL, dmg: U.fin }, [victim.x, victim.y - 60]);
-flashA = 0.6; flashRGB = f.ch.ult === 'shadows' ? '255,95,115' : '255,255,255'; shake = 22;
-for (let i = 0; i < (f.ch.ult === 'shadows' ? 4 : 3); i++) slashLine(victim.x, victim.y - 55, rand(-0.4, 0.4), f.look.slash);
-if (f.ch.ult === 'crescent') {
-f.skillCD = 0; f.skill2CD = 0; f.dashCD = 0;
-f.meter = Math.min(100, f.meter + 20);
-addP({ type: 'text', text: '🌙 剑气归元 · 瞬步重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '120,230,255' });
-SFX.chargeFull();
-} else if (f.ch.ult === 'shadows') {
-f.skillCD = 0; f.skill2CD = 0; f.dashCD = 0;
-for (let k = 0; k < 2; k++) {
-decoys.push({ owner: f.idx, sk: f.sk, x0: f.x + (k === 0 ? -40 : 40), y0: f.y, x: f.x + (k === 0 ? -40 : 40), y: f.y, vx: k === 0 ? -35 : 35, vy: -15, rot: 0, vr: 0, life: 1.8, landed: true, age: 0 });
-smoke(f.x + (k === 0 ? -40 : 40), f.y - 40, 8);
-}
-addP({ type: 'text', text: '🗡️ 影遁无形 · 苦无重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,95,115' });
-SFX.chargeFull();
-} else if (f.ch.ult === 'eightimm') {
-f.drunk = 100;
-addP({ type: 'text', text: '八仙醉 · 醉意满盈', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,170,90' });
-SFX.chargeFull();
-}
-}
-if (t >= 0.5) { f.finalDone = false; endSpecial(f); }
-}
-}
-function startSkill(f, foe, slot) {
-const id = slot === 2 ? f.ch.skill2 : f.ch.skill, S = SKILLS[id];
-if (!S) return;
-if (S.can && !S.can(f)) { if (f.idx === localIdx()) addP({ type: 'text', text: S.lack ? S.lack(f) : '还不能用', x: f.x, y: f.y - 120, life: 0.6, max: 0.6, rgb: '255,190,90' }); return; }
-endEscape(f);
-if (f.ch.passive === 'drunk' && !S.can) f.drunk = Math.min(100, (f.drunk || 0) + 30);   // 醉翁：放技能添酒
-f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.move = null; f.skAir = !f.onGround();
-const cd = S.cd * (balOf(f).cd || 1);
-if (slot === 2) f.skill2CD = cd; else f.skillCD = cd;
-if (scOn()) scFire(f, 'skill', foe, slot || 1);
-f.face = faceDir(f, foe);   // 技能朝角色面向的方向放（电脑没有方向键，自动面向对手）
-const customNm = skinSkillName(f, slot);
-if (customNm && f.hp > 0 && M.phase === 'fight') {
-addP({ type: 'callout', text: customNm, x: f.x, y: f.y - 75, life: 0.65, max: 0.65, rgb: f.look.slash, scale: 1.5 });
-}
-if (mayhemOn()) {
-shake = Math.max(shake, 18);
-flashA = Math.max(flashA, 0.38);
-flashRGB = f.look.slash || '255,215,80';
-ring(f.x, f.y - 60, 160, f.look.slash || '255,215,80', 0.45);
-ring(f.x, f.y - 60, 260, '255,240,160', 0.5);
-slashLine(f.x, f.y - 60, rand(-0.8, 0.8), f.look.slash);
-for (let i = 0; i < 18; i++) {
-const a = rand(0, 6.28), v = rand(220, 580);
-addP({ type: 'spark', x: f.x, y: f.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.55, max: 0.55, rgb: i % 2 === 0 ? '255,215,80' : f.look.slash, w: 2.8, drag: 2.8 });
-}
-}
-S.start(f, foe);
-}
-function windDive(f, foe) {
-if (f.skPh === 10) {
-f.vx = f.face * 820; f.vy = Math.max(f.vy, 1750);
-for (let k = 0; k < 2; k++) addP({ type: 'spark', x: f.x - f.face * rand(10, 40), y: f.y - rand(10, 90), vx: -f.face * rand(120, 260), vy: -rand(300, 520), life: 0.3, max: 0.3, rgb: k ? f.look.slash : '255,255,255', w: 1.8, drag: 3 });
-if (f.y + f.vy * STEP >= 0 || f.t >= 0.7) {   // 下一帧就着地：在这帧炸开，免得落地判定先把技能收掉
-f.skPh = 11; f.t = 0; f.y = 0; f.vx = 0; f.vy = 0; f.hitDone = false; f.jumps = 0; f.airDash = 1;
-strike(f, foe, { box: [-130, -120, 130, 6], dmg: 24, kb: [240, -640], stun: 0.45, hs: 0.1, launch: true });
-for (let k = 0; k < 5; k++) spawnProj(f, { kind: 'popcorn', x: clamp(f.x + (k - 2) * 62, WALL, STAGE_W - WALL), y: -12, vx: 0, delay: 0.32 + k * 0.05, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: (clock * 5.1 + k * 1.7) % 6 });
-shake = Math.max(shake, 14); flashA = Math.max(flashA, 0.22); flashRGB = f.look.slash;
-ring(f.x, -10, 150, f.look.slash, 0.4); ring(f.x, -10, 95, '255,255,255', 0.3); dust(f.x, 0, 22);
-for (let k = 0; k < 22; k++) { const a = Math.PI + (k / 21) * Math.PI, v = rand(260, 620); addP({ type: 'spark', x: f.x, y: -8, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.8, life: 0.45, max: 0.45, rgb: k % 3 ? f.look.slash : '255,245,210', w: 2.6, drag: 2.4 }); }
-SFX.thud(); SFX.poof();
-}
-} else if (f.t >= 0.24) toNeutral(f);
-}
-function strike(f, foe, spec) {
-if (f.hitDone) return false;
-const rangeScale = 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
-const rangeBox = (f.state === 'skill' || spec.ult) && !spec.noRangeBoost
-? spec.box.map((v, i) => i === 0 || i === 2 ? v * rangeScale : v)
-: spec.box;
-const hb = hitbox(f, rangeBox);
-cujuHit(f, hb, spec);
-hitClones(hb, f.idx, spec.dmg);
-if (hitDecoy(f, hb)) return false;
-echoCloneAttack(f, hb, { ...spec, skill: true }, 'skill');
-const targets = is2v2() ? foesOf(f) : [foe];
-for (const tf of targets) {
-if (tf.invul > 0 || tf.hp <= 0 || !overlap(hb, hurtbox(tf))) continue;
-f.hitDone = true;
-const hu = hurtbox(tf);
-applyHit(f, tf, spec, [(Math.max(hb[0], hu[0]) + Math.min(hb[2], hu[2])) / 2, (Math.max(hb[1], hu[1]) + Math.min(hb[3], hu[3])) / 2]);
-return true;
-}
-return false;
-}
-function parry(def, att, pt) {
-if (scOn()) scFire(def, 'parry', att);
-def.parryT = 0; def.skPh = 2; def.t = 0; def.hitDone = false; def.invul = 0.35; def.face = att.x >= def.x ? 1 : -1;
-att.move = null; att.state = 'hitstun'; att.t = 0; att.stun = 0.55; att.vx = def.face * 120; att.skill = null;
-att.breakCD = Math.max(att.breakCD, 0.4);
-const ev = { e: 'parry', a: def.idx, x: pt[0], y: pt[1] };
-parryVisual(ev); netEmit(ev);
-}
-function parryVisual(ev) {
-const d = fighterByIdx(ev.a);
-ring(ev.x, ev.y, 110, '255,255,255', 0.35); ring(ev.x, ev.y, 60, d.look.slash, 0.3);
-slashLine(ev.x, ev.y, -0.6, d.look.slash); flashA = Math.max(flashA, 0.35); flashRGB = '255,255,255';
-hitstop = Math.max(hitstop, 0.14); shake = Math.max(shake, 10);
-camImpact(ev.x, ev.y, 0.26, 0.45);
-addP({ type: 'callout', text: '截', x: ev.x, y: ev.y - 70, life: 0.75, max: 0.75, rgb: '255,225,120', scale: 2.2 });
-SFX.block(); metal(1900, 0.8, 0.1);
-}
-function thunderGuardCounter(def, att, pt) {
-def.thunderGuardT = 0; def.armorT = 0; def.skPh = 1; def.t = 0; def.invul = 0.35;
-const target = att || foeOf(def);
-def.face = target.x >= def.x ? 1 : -1;
-shake = Math.max(shake, 14); flashA = Math.max(flashA, 0.28); flashRGB = '255,240,150';
-ring(def.x, def.y - 60, 130, '255,230,120', 0.4);
-ring(def.x, def.y - 60, 65, '255,255,255', 0.3);
-dust(def.x, 0, 16);
-camImpact(def.x, def.y - 60, 0.32, 0.50);
-SFX.parry(); SFX.thunder(); SFX.thunderHit(1.2);
-addP({ type: 'text', text: '⚡ 金刚雷铠 · 引雷天罚', x: def.x, y: def.y - 120, life: 0.85, max: 0.85, rgb: '255,230,120' });
-addP({ type: 'callout', text: '雷', x: def.x, y: def.y - 70, life: 0.75, max: 0.75, rgb: '255,230,120', scale: 2.2 });
-const strikeX = clamp(target.x, WALL + 20, STAGE_W - WALL - 20);
-spawnProj(def, { kind: 'bolt', x: strikeX, y: -210, vx: 0, w: 90, h: 460, life: 0.42, delay: 0.04, dmg: 50, kb: [0, -720], stun: 0.50, hs: 0.12, launch: true, quickGetup: true, unbreakable: true, small: true });
-const ev = { e: 'thunder_counter', a: def.idx, x: def.x, y: def.y - 60, tx: strikeX };
-netEmit(ev);
-}
-function thunderCounterVisual(ev) {
-ring(ev.x, ev.y, 130, '255,230,120', 0.4);
-ring(ev.x, ev.y, 65, '255,255,255', 0.3);
-flashA = Math.max(flashA, 0.28); flashRGB = '255,240,150';
-shake = Math.max(shake, 14);
-camImpact(ev.x, ev.y, 0.32, 0.50);
-addP({ type: 'callout', text: '雷', x: ev.x, y: ev.y - 70, life: 0.75, max: 0.75, rgb: '255,230,120', scale: 2.2 });
-SFX.thunder(); SFX.thunderHit(1.2);
-}
 const projs = [];
 let projSeq = 0;
 function spawnProj(f, o) {
@@ -17362,6 +16889,479 @@ return primaryClones[idx] || primaryClones[0];
 }
 function smoke(x, y, n) {
 for (let i = 0; i < n; i++) addP({ type: 'smoke', x: x + rand(-18, 18), y: y + rand(-30, 30), vx: rand(-90, 90), vy: rand(-90, 20), drag: 3, life: rand(0.4, 0.7), max: 0.7, r: rand(10, 22) });
+}
+function blockFace(f, foe) {
+const ref = cujuOn() && M.cuju && M.cuju.ball ? M.cuju.ball : foe;
+return Math.abs(ref.x - f.x) > 6 ? (ref.x >= f.x ? 1 : -1) : f.face;
+}
+function toNeutral(f) {
+f.move = null; f.sp = null; f.snap = false; f.skill = null; f.armorT = 0; f.parryT = 0; f.thunderGuardT = 0; f.rooted = false;
+f.state = f.onGround() ? 'idle' : 'air';
+if (f.onGround()) { f.juggle = 0; f.huiMaHits = 0; }
+}
+function startAttack(f, name) {
+endEscape(f);
+f.state = 'attack'; f.move = typeof stanceMove === 'function' ? stanceMove(f, name) : f.moves[name]; f.moveName = name; f.t = 0;
+if (f.ch.passive === 'armor' && HEAVY_MOVES.includes(name)) { f.armorT = f.move.su + f.move.ac; f.armorHits = 1; }
+if (chaosNow('armor')) { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.move.ac || 0.15)); f.armorHits = Math.max(f.armorHits, 1); }
+f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
+const foe = foeOf(f), h = f.ctrl && f.ctrl.held, dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0, a = dir || (h && h.aim);
+f.face = f.onGround() ? faceDir(f, foe) : ((a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl))) ? a : f.face);
+const heavy = name === 'hv' || name === 'cs1' || name === 'cs2';
+if (heavy && f.badgeId === 'riposte' && f.badgeRiposteT > 0) {
+f.move = { ...f.move, lunge: (f.move.lunge || 0) + (f.badgeTier === 'purpgold' ? 58 : 48) };
+f.badgeRiposteT = 0; showBadgeCue(f, 'riposte', true);
+} else if (heavy && f.badgeId === 'breaker' && f.badgeTier === 'purpgold' && f.badgeBreakT > 0) {
+f.move = { ...f.move, lunge: (f.move.lunge || 0) + 52 };
+f.badgeBreakT = 0; showBadgeCue(f, 'breaker', true);
+}
+if (scOn()) scFire(f, 'atk', foe, name);
+}
+function doJump(f, dir) {
+const jumpBonus = (chaosNow('jump') || { val: 1 }).val;
+f.vy = (f.jumps === 0 ? -JUMP_V : -DJUMP_V) * (f.ch.stat.jump || 1) * jumpBonus; f.jumps++;
+f.vx = dir ? dir * wk(f) * 1.15 : f.vx * 0.5;
+f.state = 'air'; f.y = Math.min(f.y, -1);
+if (f.jumps >= 2) ring(f.x, f.y - 20, 36, f.look.slash, 0.35);
+dust(f.x, 0, 6); SFX.jump();
+if (scOn()) scFire(f, 'jump', foeOf(f));
+}
+function startDash(f, dir) {
+f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * (f.badgeId === 'breaker' && f.badgeBreakT > 0 ? 1.12 : 1) * dir; f.vy = 0;
+if (f.badgeId === 'breaker' && f.badgeBreakT > 0) { f.badgeBreakT = 0; showBadgeCue(f, 'breakerDash', true); }
+if (f.badgeId === 'pursuit') f.badgeDashT = 1.0;
+f.invul = 0.13; f.dashCD = DODGE_CD;
+if (f.onGround()) dust(f.x - dir * 20, 0, 8);
+SFX.dash();
+if (scOn()) scFire(f, 'dash', foeOf(f));
+}
+function startBadgeDash(f, dir, kind) {
+endEscape(f);
+f.state = 'dash'; f.t = 0; f.dashDir = dir; f.vx = DASH_V * (kind === 'flow' ? 0.62 : kind === 'air' ? 1 : 0.72) * dir; f.vy = 0;
+f.badgeDashT = 0; f.dashCD = DODGE_CD;
+f.invul = kind === 'exit' && f.badgeTier === 'purpgold' ? 0.08 : 0;
+if (f.onGround()) dust(f.x - dir * 16, 0, 6);
+ring(f.x, f.y - 50, 82, f.look.slash || '233,196,106', 0.24); SFX.dash();
+if (scOn()) scFire(f, 'dash', foeOf(f));
+}
+function startSpecial(f) {
+endEscape(f);
+if (f.ch.passive === 'drunk') f.drunk = Math.min(100, (f.drunk || 0) + 30);
+f.face = faceDir(f, foeOf(f));
+f.meter = 0; f.state = 'special'; f.sp = 'charge'; f.t = 0; f.invul = 99; f.vx = 0; f.spFace = f.face;
+superFreeze = 0.5; superOwner = f; dimA = 1;
+flashA = 0.35; flashRGB = f.look.slash;
+const ultName = skinUltName(f) || ULTS[f.ch.ult].name;
+say(ultName, 0.9, 'super'); SFX.superOn();
+const ultPitch = f.ch.stat && f.ch.stat.weight > 1.1 ? 0.8 : 1.15;
+SFX.voiceUlt(ultPitch);
+if (CHAR_RARITY[f.ch.id] === 'legend') { ring(f.x, f.y - 60, 210, '233,196,106', 0.6); ring(f.x, f.y - 60, 150, f.look.slash, 0.5); flashRGB = '233,196,106'; }
+ring(f.x, f.y - 60, 120, f.look.slash, 0.5);
+if (scOn()) { scFire(f, 'ult', foeOf(f)); scFire(foeOf(f), 'foeUlt', f); }
+if (mayhemOn()) {
+shake = Math.max(shake, 32);
+flashA = 0.65;
+flashRGB = '255,225,120';
+ring(f.x, f.y - 60, 320, '255,215,80', 0.7);
+ring(f.x, f.y - 60, 480, f.look.slash, 0.65);
+slashLine(f.x, f.y - 60, 0, f.look.slash);
+slashLine(f.x, f.y - 60, Math.PI / 2, '255,240,180');
+slashLine(f.x, f.y - 60, rand(-0.7, 0.7), f.look.slash);
+for (let i = 0; i < 30; i++) {
+const a = rand(0, 6.28), v = rand(240, 720);
+addP({ type: 'spark', x: f.x, y: f.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.7, max: 0.7, rgb: i % 2 === 0 ? '255,220,100' : f.look.slash, w: 3.2, drag: 2.5 });
+}
+}
+}
+function neutral(f, foe) {
+const c = f.ctrl, onG = f.onGround();
+if (typeof trySwitchStance === 'function' && onG && trySwitchStance(f)) return;
+if (onG && f.state !== 'victory') f.face = faceDir(f, foe);
+if (M.phase !== 'fight') {
+if (onG && f.state !== 'victory') { f.state = 'idle'; }
+f.vx = damp(f.vx, 0, 10, STEP);
+return;
+}
+const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
+if (onG) {
+if (f.meter >= 100 && c.consume('special')) return startSpecial(f);
+if (f.plat >= 0 && (c.consume('drop') || (c.held.down && c.consume('jump')))) return mapDrop(f);   // 站在平台上：↓ + 跳落下去
+if (c.held.down) {
+if (c.consume('light')) return startAttack(f, 'dl');
+if (f.skill2CD <= 0 && (SKILLS[f.ch.skill2] || {}).free && c.consume('skill2')) return startSkill(f, foe, 2);   // 离影 ↓+R：换到最早的雾身
+f.blockT = f.state === 'block' ? (f.blockT || 0) + STEP : 0;
+f.state = 'block'; f.face = blockFace(f, foe); f.vx = damp(f.vx, dir * wk(f) * 0.3, 20, STEP); return;
+} else {
+f.blockT = 0;
+}
+if (c.held.atk) {
+c.buf.light = clock;
+if (clock - c.atkT >= CHARGE_START) {
+delete c.buf.light;
+f.state = 'charge'; f.t = 0; f.chargeFull = false; SFX.charge(); return;
+}
+} else {
+if (c.consume('light')) return startAttack(f, 'l1');
+}
+if (c.consume('heavy')) return startAttack(f, 'hv');
+if (c.consume('jump')) return doJump(f, dir);
+if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
+if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
+const sp = (dir === f.face ? wk(f) : wk(f) * 0.78) * mapWalk(f);
+f.vx = damp(f.vx, dir * sp, 16 * mapGrip(f), STEP);   // 冰面上起步、停下都慢
+f.state = Math.abs(f.vx) > 25 ? 'walk' : 'idle';
+} else {
+f.state = 'air';
+if (f.airHover > 0) {
+if (c.consume('light') || c.consume('heavy') || c.consume('down')) {
+f.airHover = 0; endEscape(f);
+f.invul = 0.25;
+startAttack(f, 'cs2');
+f.vy = 960;
+f.vx = f.face * 140;
+addP({ type: 'text', text: '⚡ 千钧下坠', x: f.x, y: f.y - 80, life: 0.6, max: 0.6, rgb: '255,220,120' });
+SFX.heavy();
+return;
+}
+if ((c.held.left || c.held.right) && c.consume('dash')) {
+f.airHover = 0; endEscape(f);
+f.state = 'dash'; f.t = 0;
+f.vx = (c.held.right ? 1 : -1) * 750;
+f.vy = 0;
+f.invul = 0.32;
+ring(f.x, f.y - 50, 110, f.look.slash, 0.3);
+dust(f.x, f.y, 8);
+SFX.dash();
+return;
+}
+if (f.skillCD <= 0 && c.consume('skill')) { f.airHover = 0; endEscape(f); return startSkill(f, foe); }
+if (f.skill2CD <= 0 && !(SKILLS[f.ch.skill2] || {}).free && c.consume('skill2')) { f.airHover = 0; endEscape(f); return startSkill(f, foe, 2); }
+return;
+}
+if (c.consume('light')) return startAttack(f, 'a1');
+if (c.consume('heavy')) return startAttack(f, 'a2');
+const jumpLimit = (f.ch.jumps || 2) + (mapFavOn(f) && f.ch.id === 'liuyun' && M.map === 'cliff' ? 1 : 0);
+if (f.jumps < jumpLimit && c.consume('jump')) return doJump(f, dir);
+if (f.ch.fly && c.held.jump && f.flyT > 0 && f.vy > -120 && M.phase === 'fight') {
+f.flying = true; f.flyT -= STEP;
+f.vy = damp(f.vy, f.y < -230 ? 90 : -70, 8, STEP);
+f.vx = clamp(f.vx + dir * 2400 * STEP, -wk(f) * 1.4, wk(f) * 1.4);
+if (Math.random() < 0.3) addP({ type: 'spark', x: f.x - f.face * 18, y: f.y - 70, vx: -f.face * 60, vy: rand(20, 80), life: 0.3, max: 0.3, rgb: f.look.slash, w: 1.2 });
+return;
+}
+if (f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
+if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
+f.vx = clamp(f.vx + dir * 1700 * STEP, -wk(f) * 1.2, wk(f) * 1.2);
+}
+}
+function attackUpdate(f, foe) {
+const m = f.move, c = f.ctrl, t = f.t, cx = f.ch.cancel || CANCEL;   // 取消规则见 src/data/01-moves.js 的 CANCEL
+const act0 = m.su, act1 = m.su + m.ac;
+if (c.held.down && f.onGround() && M.phase === 'fight' && f.moveName !== 'dl' && (t < act0 * cx.blockEarly || (t >= act1 && !f.hitConfirmed))) { toNeutral(f); f.state = 'block'; f.face = blockFace(f, foe); return; }
+if (t >= act0 && !f.lunged) {
+f.lunged = true;
+if (f.ch.inkShot && /^l[1-5]$/.test(f.moveName) && f.ink >= INK_COST) {   // 墨羽：普攻甩出一团墨，按抛物线甩向身前（要有墨水）
+f.ink -= INK_COST;
+const T = 0.42, G = 1500, sx = f.x + f.face * 40, sy = f.y - 90;
+const tx = f.x + f.face * 220, ty = -60;   // 固定落在身前约 220 像素，不自动追着对手飞（远处要自己找角度）
+spawnProj(f, { kind: 'inkblob', x: sx, y: sy, vx: (tx - sx) / T, vy: (ty - sy - 0.5 * G * T * T) / T, g: G, lob: true, w: 30, h: 30, life: 1.2, dmg: INK_DMG, kb: [80, 0], stun: 0.3, hs: 0.04, noScale: true });
+}
+if (f.ch.id === 'liuyun' && (f.moveName === 'cs1' || f.moveName === 'cs2')) {
+const n = f.moveName === 'cs2' ? 2 : 1, towardFoe = Math.sign(foe.x - f.x) === f.face;
+const dx = towardFoe ? (foe.x - f.x) : f.face * 300, dy = towardFoe ? ((foe.y - 60) - (f.y - 62)) : 0, a0 = Math.atan2(dy, dx);
+for (let k = 0; k < n; k++) {
+const a = a0 + (n === 2 ? (k ? 0.1 : -0.1) : 0);
+spawnProj(f, { kind: 'wind', x: f.x + Math.cos(a) * 40, y: f.y - 62, vx: Math.cos(a) * 1150, vy: Math.sin(a) * 1150, w: 56, h: 52, life: 1.2, dmg: 28, kb: [420, 0], stun: 0.5, hs: 0.08, knock: true, unbreakable: f.moveName === 'cs2' });
+}
+}
+if (m.track) {
+f.face = foe.x >= f.x ? 1 : -1;
+f.vx = f.face * clamp((Math.abs(foe.x - f.x) - 40) / 0.12, 150, 1300);
+} else if (!m.air) {
+const close = Math.abs(foe.x - f.x) < 70 && Math.sign(foe.x - f.x) === f.face;
+f.vx = (m.lunge || 0) * f.face * (close ? 0.35 : 1);
+}
+SFX[m.snd]();
+}
+if (t >= act0 && t < act1 && !f.hitDone) tryHit(f, foe, m);
+const free2 = (SKILLS[f.ch.skill2] || {}).free;   // free：只能从自由状态放，不能接在出招后面（离影的换影）
+if (M.phase === 'fight' && t >= act1 && t < act1 + m.rc) {
+if (f.badgeId === 'ascent' && f.badgeAirSkillT > 0 && !f.onGround() && f.airDash > 0 && c.consume('dash')) {
+const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0) || f.face;
+f.airDash--; f.badgeAirSkillT = 0; startBadgeDash(f, dir, 'air'); showBadgeCue(f, 'ascent', true); return;
+}
+if (f.badgeId === 'flowing' && f.badgeLinkT > 0 && c.consume('dash')) {
+const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0) || f.face;
+f.badgeLinkT = 0; startBadgeDash(f, dir, 'flow'); showBadgeCue(f, 'flowing', true); return;
+}
+if (f.badgeId === 'pursuit' && f.badgeExitT > 0 && c.consume('dash')) {
+const inputDir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0), dir = inputDir || -f.face;
+f.badgeExitT = 0; startBadgeDash(f, dir, 'exit'); showBadgeCue(f, 'pursuit', true); return;
+}
+const canBadgeSkill = f.badgeTier === 'purpgold' && f.hitConfirmed && (
+(f.badgeId === 'flowing' && f.badgeLinkT > 0) ||
+(f.badgeId === 'focus' && f.badgePressureT > 0) ||
+(f.badgeId === 'ascent' && f.badgeAirSkillT > 0 && !f.onGround() && !f.badgeAirSkillUsed)
+);
+if (canBadgeSkill) {
+let slot = 0;
+if (f.skillCD <= 0 && c.consume('skill')) slot = 1;
+else if (f.skill2CD <= 0 && !free2 && c.consume('skill2')) slot = 2;
+if (slot) {
+startSkill(f, foe, slot === 2 ? 2 : undefined);
+if (f.state === 'skill') {
+if (f.badgeId === 'flowing') f.badgeLinkT = 0;
+if (f.badgeId === 'focus') { f.badgePressureT = 0; f.badgePressureSkill = 1; }
+if (f.badgeId === 'ascent') { f.badgeAirSkillT = 0; f.badgeAirSkillUsed = 1; }
+showBadgeCue(f, f.badgeId, true); return;
+}
+}
+}
+}
+if (M.phase === 'fight' && cx.skill2FromLight && !free2 && /^l\d/.test(f.moveName) && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
+if (M.phase === 'fight' && (t >= act0 + m.ac * cx.chainAt || (f.hitConfirmed && f.moveName === 'dl'))) {
+if (m.next.light && c.consume('light')) return startAttack(f, m.next.light);
+if (f.hitConfirmed && m.hitNext && m.hitNext.light && c.consume('light')) return startAttack(f, m.hitNext.light);
+if (m.next.heavy && c.consume('heavy')) return startAttack(f, m.next.heavy);
+if (f.hitConfirmed) {
+if (cx.skillOnHit && f.skillCD <= 0 && c.consume('skill')) return startSkill(f, foe);
+if (cx.skillOnHit && !free2 && f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
+if (m.jumpCancel && c.consume('jump')) { f.jumps = 0; f.face = faceDir(f, foe); return doJump(f, f.face); }
+}
+}
+if (t >= act1 + m.rc) {
+toNeutral(f);
+if (c.held.down && f.onGround()) { f.state = 'block'; f.face = blockFace(f, foe); }
+}
+}
+function endSpecial(f) {
+if (f.flurryVictim && f.flurryVictim.state === 'held') toNeutral(f.flurryVictim);
+f.flurryVictim = null;
+f.invul = 0;
+toNeutral(f);
+}
+const EIGHT_IMM = ['汉钟离', '吕洞宾', '张果老', '曹国舅', '铁拐李', '韩湘子', '何仙姑', '蓝采和'];
+function specialUpdate(f, foe) {
+const t = f.t, U = ULTS[f.ch.ult];
+if (f.sp === 'charge') {
+if (t >= 0.42) {
+f.t = 0;
+if (U.flurry) {
+f.sp = 'dash';
+const spd = U.dashSpd || (f.ch && (f.ch.id === 'qingfeng' || f.ch.id === 'feiying') ? 1750 : 1400);
+f.vx = spd * f.face;
+f.vy = 0;
+if (f.ch.ult === 'shadows' || U.airTrack) {
+const inAir = !foe.onGround() || airH(foe) > 15 || foe.y < -15;
+const maxDist = spd * (U.dashT || 0.28);
+const dx = foe.x - f.x, dy = (foe.y - 35) - f.y;
+const dist = Math.hypot(dx, dy);
+if (inAir && dist <= maxDist) {
+f.face = dx >= 0 ? 1 : -1;
+f.vx = (dx / Math.max(1, dist)) * spd;
+f.vy = (dy / Math.max(1, dist)) * spd;
+}
+}
+SFX.dash();
+}
+else U.begin(f, foe);
+}
+return;
+}
+if (!U.flurry) { U.update(f, foe); return; }
+const victim = (f.flurryVictim && !f.flurryVictim.hidden && f.flurryVictim.hp > 0) ? f.flurryVictim : foe;
+const spd = U.dashSpd || (f.ch && (f.ch.id === 'qingfeng' || f.ch.id === 'feiying') ? 1750 : 1400);
+const dashT = U.dashT || 0.28;
+const maxDist = spd * dashT;
+if (f.sp === 'dash') {
+const inAir = !foe.onGround() || airH(foe) > 15 || foe.y < -15;
+if (f.ch.ult === 'shadows' || U.airTrack) {
+const dx = foe.x - f.x, dy = (foe.y - 35) - f.y;
+const dist = Math.hypot(dx, dy);
+if (inAir && dist <= maxDist) {
+f.face = dx >= 0 ? 1 : -1;
+f.vx = damp(f.vx, (dx / Math.max(1, dist)) * spd, 14, STEP);
+f.vy = damp(f.vy, (dy / Math.max(1, dist)) * spd, 14, STEP);
+if (Math.random() < 0.4) smoke(f.x, f.y - 30, 4);
+} else {
+if (Math.abs(foe.x - f.x) > 20) f.vx = damp(f.vx, (foe.x >= f.x ? 1 : -1) * spd, 10, STEP);
+f.vy = damp(f.vy, 0, 10, STEP);
+}
+} else {
+if (Math.abs(foe.x - f.x) > 20) f.vx = damp(f.vx, (foe.x >= f.x ? 1 : -1) * spd, 10, STEP);
+}
+const hitAir = (f.ch.ult === 'shadows' || U.airTrack) && inAir && Math.hypot(foe.x - f.x, (foe.y - 35) - f.y) <= 120;
+const hit = overlap(hitbox(f, [-10, -135, 100, 0]), hurtbox(foe)) || hitAir;
+if (!isClient() && foe.hp > 0 && foe.invul <= 0 && hit) {
+f.sp = 'flurry'; f.t = 0; f.slashN = 0; f.vx = 0; f.vy = 0; f.flurryVictim = foe;
+foe.state = 'held'; foe.t = 0; foe.vx = 0; foe.vy = 0; foe.move = null; foe.skill = null; foe.sp = null; foe.y = Math.min(foe.y, -50);
+const ev = { e: 'hit', a: f.idx, d: foe.idx, x: foe.x, y: foe.y - 60, dmg: 9, hs: 0.12, nc: true };
+hitVisual(ev); netEmit(ev);
+} else if (t >= dashT) { f.sp = 'miss'; f.t = 0; f.vx *= 0.25; f.vy = 0; }
+} else if (f.sp === 'miss') {
+if (f.y < 0) { f.vy += GRAV * STEP; if (f.y + f.vy * STEP >= 0) { f.y = 0; f.vy = 0; } }
+if (t >= 0.42) { f.invul = 0; toNeutral(f); }
+} else if (f.sp === 'flurry') {
+const n = Math.floor(t / U.iv);
+if (n > f.slashN - 1 && f.slashN < U.n) {
+const side = f.slashN % 2 ? 1 : -1;
+f.x = clamp(victim.x + side * grand(60, 90), WALL, STAGE_W - WALL);
+f.y = Math.min(0, victim.y + grand(-30, 30));
+f.face = victim.x >= f.x ? 1 : -1;
+f.snap = true; f.trail.length = 0;
+const ang = rand(0, Math.PI);
+slashLine(victim.x, victim.y - 55, ang, f.look.slash);
+if (f.ch.ult === 'shadows') {
+decoys.push({ owner: f.idx, sk: f.sk, x0: f.x, y0: f.y, x: f.x, y: f.y, vx: side * 30, vy: (f.slashN % 3 - 1) * 20, rot: 0, vr: 0, life: 0.35, landed: true, age: 0 });
+smoke(f.x, f.y - 50, 6);
+} else if (f.ch.ult === 'crescent') {
+ring(victim.x, victim.y - 55, 75, '120,230,255', 0.22);
+} else if (f.ch.ult === 'eightimm') {
+addP({ type: 'text', text: EIGHT_IMM[f.slashN % 8], x: victim.x + (f.slashN % 2 ? 40 : -40), y: victim.y - 120 - (f.slashN % 3) * 14, life: 0.45, max: 0.45, rgb: '255,190,110' });
+}
+applyHit(f, victim, { ...SP_SLASH, dmg: U.slash }, [victim.x, victim.y - 55]);
+SFX.slice(); f.slashN++;
+}
+if (t >= U.iv * U.n + 0.06) {
+f.sp = 'final'; f.t = 0; f.snap = true; f.trail.length = 0;
+f.x = clamp(victim.x - f.spFace * 80, WALL, STAGE_W - WALL); f.face = f.spFace; f.y = Math.min(0, victim.y + 40);
+}
+} else if (f.sp === 'final') {
+if (t >= 0.07 && !f.finalDone) {
+f.finalDone = true; f.snap = false;
+if (U.land) { f.y = 0; f.vy = 0; applyHit(f, victim, { ...FINAL, dmg: U.fin, kb: [260, 0], knock: true }, [victim.x, victim.y - 60]); }
+else applyHit(f, victim, { ...FINAL, dmg: U.fin }, [victim.x, victim.y - 60]);
+flashA = 0.6; flashRGB = f.ch.ult === 'shadows' ? '255,95,115' : '255,255,255'; shake = 22;
+for (let i = 0; i < (f.ch.ult === 'shadows' ? 4 : 3); i++) slashLine(victim.x, victim.y - 55, rand(-0.4, 0.4), f.look.slash);
+if (f.ch.ult === 'crescent') {
+f.skillCD = 0; f.skill2CD = 0; f.dashCD = 0;
+f.meter = Math.min(100, f.meter + 20);
+addP({ type: 'text', text: '🌙 剑气归元 · 瞬步重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '120,230,255' });
+SFX.chargeFull();
+} else if (f.ch.ult === 'shadows') {
+f.skillCD = 0; f.skill2CD = 0; f.dashCD = 0;
+for (let k = 0; k < 2; k++) {
+decoys.push({ owner: f.idx, sk: f.sk, x0: f.x + (k === 0 ? -40 : 40), y0: f.y, x: f.x + (k === 0 ? -40 : 40), y: f.y, vx: k === 0 ? -35 : 35, vy: -15, rot: 0, vr: 0, life: 1.8, landed: true, age: 0 });
+smoke(f.x + (k === 0 ? -40 : 40), f.y - 40, 8);
+}
+addP({ type: 'text', text: '🗡️ 影遁无形 · 苦无重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,95,115' });
+SFX.chargeFull();
+} else if (f.ch.ult === 'eightimm') {
+f.drunk = 100;
+addP({ type: 'text', text: '八仙醉 · 醉意满盈', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,170,90' });
+SFX.chargeFull();
+}
+}
+if (t >= 0.5) { f.finalDone = false; endSpecial(f); }
+}
+}
+function startSkill(f, foe, slot) {
+const id = slot === 2 ? f.ch.skill2 : f.ch.skill, S = SKILLS[id];
+if (!S) return;
+if (S.can && !S.can(f)) { if (f.idx === localIdx()) addP({ type: 'text', text: S.lack ? S.lack(f) : '还不能用', x: f.x, y: f.y - 120, life: 0.6, max: 0.6, rgb: '255,190,90' }); return; }
+endEscape(f);
+if (f.ch.passive === 'drunk' && !S.can) f.drunk = Math.min(100, (f.drunk || 0) + 30);   // 醉翁：放技能添酒
+f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.move = null; f.skAir = !f.onGround();
+const cd = S.cd * (balOf(f).cd || 1);
+if (slot === 2) f.skill2CD = cd; else f.skillCD = cd;
+if (scOn()) scFire(f, 'skill', foe, slot || 1);
+f.face = faceDir(f, foe);   // 技能朝角色面向的方向放（电脑没有方向键，自动面向对手）
+const customNm = skinSkillName(f, slot);
+if (customNm && f.hp > 0 && M.phase === 'fight') {
+addP({ type: 'callout', text: customNm, x: f.x, y: f.y - 75, life: 0.65, max: 0.65, rgb: f.look.slash, scale: 1.5 });
+}
+if (mayhemOn()) {
+shake = Math.max(shake, 18);
+flashA = Math.max(flashA, 0.38);
+flashRGB = f.look.slash || '255,215,80';
+ring(f.x, f.y - 60, 160, f.look.slash || '255,215,80', 0.45);
+ring(f.x, f.y - 60, 260, '255,240,160', 0.5);
+slashLine(f.x, f.y - 60, rand(-0.8, 0.8), f.look.slash);
+for (let i = 0; i < 18; i++) {
+const a = rand(0, 6.28), v = rand(220, 580);
+addP({ type: 'spark', x: f.x, y: f.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.55, max: 0.55, rgb: i % 2 === 0 ? '255,215,80' : f.look.slash, w: 2.8, drag: 2.8 });
+}
+}
+S.start(f, foe);
+}
+function windDive(f, foe) {
+if (f.skPh === 10) {
+f.vx = f.face * 820; f.vy = Math.max(f.vy, 1750);
+for (let k = 0; k < 2; k++) addP({ type: 'spark', x: f.x - f.face * rand(10, 40), y: f.y - rand(10, 90), vx: -f.face * rand(120, 260), vy: -rand(300, 520), life: 0.3, max: 0.3, rgb: k ? f.look.slash : '255,255,255', w: 1.8, drag: 3 });
+if (f.y + f.vy * STEP >= 0 || f.t >= 0.7) {   // 下一帧就着地：在这帧炸开，免得落地判定先把技能收掉
+f.skPh = 11; f.t = 0; f.y = 0; f.vx = 0; f.vy = 0; f.hitDone = false; f.jumps = 0; f.airDash = 1;
+strike(f, foe, { box: [-130, -120, 130, 6], dmg: 24, kb: [240, -640], stun: 0.45, hs: 0.1, launch: true });
+for (let k = 0; k < 5; k++) spawnProj(f, { kind: 'popcorn', x: clamp(f.x + (k - 2) * 62, WALL, STAGE_W - WALL), y: -12, vx: 0, delay: 0.32 + k * 0.05, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: (clock * 5.1 + k * 1.7) % 6 });
+shake = Math.max(shake, 14); flashA = Math.max(flashA, 0.22); flashRGB = f.look.slash;
+ring(f.x, -10, 150, f.look.slash, 0.4); ring(f.x, -10, 95, '255,255,255', 0.3); dust(f.x, 0, 22);
+for (let k = 0; k < 22; k++) { const a = Math.PI + (k / 21) * Math.PI, v = rand(260, 620); addP({ type: 'spark', x: f.x, y: -8, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.8, life: 0.45, max: 0.45, rgb: k % 3 ? f.look.slash : '255,245,210', w: 2.6, drag: 2.4 }); }
+SFX.thud(); SFX.poof();
+}
+} else if (f.t >= 0.24) toNeutral(f);
+}
+function strike(f, foe, spec) {
+if (f.hitDone) return false;
+const rangeScale = 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
+const rangeBox = (f.state === 'skill' || spec.ult) && !spec.noRangeBoost
+? spec.box.map((v, i) => i === 0 || i === 2 ? v * rangeScale : v)
+: spec.box;
+const hb = hitbox(f, rangeBox);
+cujuHit(f, hb, spec);
+hitClones(hb, f.idx, spec.dmg);
+if (hitDecoy(f, hb)) return false;
+echoCloneAttack(f, hb, { ...spec, skill: true }, 'skill');
+const targets = is2v2() ? foesOf(f) : [foe];
+for (const tf of targets) {
+if (tf.invul > 0 || tf.hp <= 0 || !overlap(hb, hurtbox(tf))) continue;
+f.hitDone = true;
+const hu = hurtbox(tf);
+applyHit(f, tf, spec, [(Math.max(hb[0], hu[0]) + Math.min(hb[2], hu[2])) / 2, (Math.max(hb[1], hu[1]) + Math.min(hb[3], hu[3])) / 2]);
+return true;
+}
+return false;
+}
+function parry(def, att, pt) {
+if (scOn()) scFire(def, 'parry', att);
+def.parryT = 0; def.skPh = 2; def.t = 0; def.hitDone = false; def.invul = 0.35; def.face = att.x >= def.x ? 1 : -1;
+att.move = null; att.state = 'hitstun'; att.t = 0; att.stun = 0.55; att.vx = def.face * 120; att.skill = null;
+att.breakCD = Math.max(att.breakCD, 0.4);
+const ev = { e: 'parry', a: def.idx, x: pt[0], y: pt[1] };
+parryVisual(ev); netEmit(ev);
+}
+function parryVisual(ev) {
+const d = fighterByIdx(ev.a);
+ring(ev.x, ev.y, 110, '255,255,255', 0.35); ring(ev.x, ev.y, 60, d.look.slash, 0.3);
+slashLine(ev.x, ev.y, -0.6, d.look.slash); flashA = Math.max(flashA, 0.35); flashRGB = '255,255,255';
+hitstop = Math.max(hitstop, 0.14); shake = Math.max(shake, 10);
+camImpact(ev.x, ev.y, 0.26, 0.45);
+addP({ type: 'callout', text: '截', x: ev.x, y: ev.y - 70, life: 0.75, max: 0.75, rgb: '255,225,120', scale: 2.2 });
+SFX.block(); metal(1900, 0.8, 0.1);
+}
+function thunderGuardCounter(def, att, pt) {
+def.thunderGuardT = 0; def.armorT = 0; def.skPh = 1; def.t = 0; def.invul = 0.35;
+const target = att || foeOf(def);
+def.face = target.x >= def.x ? 1 : -1;
+shake = Math.max(shake, 14); flashA = Math.max(flashA, 0.28); flashRGB = '255,240,150';
+ring(def.x, def.y - 60, 130, '255,230,120', 0.4);
+ring(def.x, def.y - 60, 65, '255,255,255', 0.3);
+dust(def.x, 0, 16);
+camImpact(def.x, def.y - 60, 0.32, 0.50);
+SFX.parry(); SFX.thunder(); SFX.thunderHit(1.2);
+addP({ type: 'text', text: '⚡ 金刚雷铠 · 引雷天罚', x: def.x, y: def.y - 120, life: 0.85, max: 0.85, rgb: '255,230,120' });
+addP({ type: 'callout', text: '雷', x: def.x, y: def.y - 70, life: 0.75, max: 0.75, rgb: '255,230,120', scale: 2.2 });
+const strikeX = clamp(target.x, WALL + 20, STAGE_W - WALL - 20);
+spawnProj(def, { kind: 'bolt', x: strikeX, y: -210, vx: 0, w: 90, h: 460, life: 0.42, delay: 0.04, dmg: 50, kb: [0, -720], stun: 0.50, hs: 0.12, launch: true, quickGetup: true, unbreakable: true, small: true });
+const ev = { e: 'thunder_counter', a: def.idx, x: def.x, y: def.y - 60, tx: strikeX };
+netEmit(ev);
+}
+function thunderCounterVisual(ev) {
+ring(ev.x, ev.y, 130, '255,230,120', 0.4);
+ring(ev.x, ev.y, 65, '255,255,255', 0.3);
+flashA = Math.max(flashA, 0.28); flashRGB = '255,240,150';
+shake = Math.max(shake, 14);
+camImpact(ev.x, ev.y, 0.32, 0.50);
+addP({ type: 'callout', text: '雷', x: ev.x, y: ev.y - 70, life: 0.75, max: 0.75, rgb: '255,230,120', scale: 2.2 });
+SFX.thunder(); SFX.thunderHit(1.2);
 }
 function chargeUpdate(f, foe) {
 const c = f.ctrl;
@@ -27666,171 +27666,6 @@ setTimeout(() => rkReveal(r), 2600);
 if (window.CloudSave) CloudSave.saveProfile(PROF);
 applyProfile(PROF);
 }
-let TUT = null;
-function stunA() { A.state = 'hitstun'; A.t = 0; A.stun = 3; A.vx = 0; A.flash = 0.1; A.comboHits = 3; }
-const TUT_STEPS = [
-{ t: '移动身法', d: '按 A、D 左右走动，熟悉侠客的立回步法。', ok: () => Math.abs(A.x - TUT.x0) > 260 },
-{ t: '起跳与滞空', d: '按 W 或空格起跳，身在半空再按一次，便是二段跳。', ok: () => A.jumps >= 2 },
-{ t: '地面五段连段', d: '贴近稻草人连续点按左键打满五段（L1~L5）；末段强力挑飞击退对手。', ok: () => TUT.hit.l5 },
-{ t: '破势蓄力斩', d: '按住左键蓄力，待寒芒一闪、剑鸣铮铮时松手。蓄满的一斩为霸体不可挡，能强行破防！', ok: () => TUT.hit.cs2 },
-{ t: '挑飞追空打击', d: '将对手打飞或跃起后，在空中点左键（空斩 A1），再点一下下砸（A2），实现空中追打追击。', ok: () => A.state === 'attack' && /^a[12]$/.test(A.moveName) },
-{ t: '远程暗器 / 剑气', d: '按住左键再点右键（或直接按 R）。各派武学各异，青锋可挥出疾速剑气。', ok: () => A.skill2CD > 0 },
-{ t: '核心门派技能', d: '按 Q 施展专属门派武学。青锋的「疾风斩」附带位移穿透与破防。', ok: () => A.skillCD > 0 },
-{ t: '严密格挡', d: '稻草人会朝你连发风刃，按住 S 挡下两次！记得面朝来袭方向。', ok: () => TUT.blocks >= 2, setup: () => { TUT.shotT = 0.5; } },
-{ t: '精准弹刀 (招架)', d: '在近身来袭瞬间（受击前 0.09 秒内）轻按 S，即可触发「精准招架」，完全不掉架势且反震硬直！', ok: () => (TUT.justGuards || 0) >= 1, setup: () => { TUT.parryShotT = 0.6; } },
-{ t: '绝境腾空闪', d: '受到硬直连击陷入绝境时，按右键（或左 Shift）引爆真气触发「腾空闪」逃脱并获短暂无敌！', ok: () => A.escInvul, setup: () => { A.breakCD = 0; stunA(); } },
-{ t: '真元爆发 · 绝招', d: '怒气已为你灌满！按 E 释放震撼全场的天地绝技！', ok: () => A.state === 'special', setup: () => { A.meter = 100; } },
-];
-const TUT_QUICK = [0, 2, 6, 9, 10];
-const tutCur = () => TUT ? TUT.list[TUT.step] : -1;
-function tutSkillName(slot) {
-const ch = CHARS[trainChar] || CHARS[0], key = slot === 2 ? ch.skill2 : ch.skill;
-return (SKILLS[key] && SKILLS[key].name) || (slot === 2 ? '远程招式' : '门派技能');
-}
-function tutDescription(i) {
-const en = window.I18N && I18N.getLang() === 'en';
-if (i === 5) return en ? `Hold attack and tap R (or press R directly) to use ${cvT(tutSkillName(2))}.` : `按住左键再点右键（或直接按 R），施展「${tutSkillName(2)}」。`;
-if (i === 6) return en ? `Press Q to use ${cvT(tutSkillName(1))}, then learn its timing and purpose.` : `按 Q 施展「${tutSkillName(1)}」，熟悉它的时机与用途。`;
-return TUT_STEPS[i].d;
-}
-function tutTouchDescription(i) {
-const en = window.I18N && I18N.getLang() === 'en';
-if (i === 5) return en ? `Tap R to use ${cvT(tutSkillName(2))}.` : `点击「远程」施展「${tutSkillName(2)}」。`;
-if (i === 6) return en ? `Tap Skill to use ${cvT(tutSkillName(1))}.` : `点击「技能」施展「${tutSkillName(1)}」。`;
-return TUT_TOUCH[i];
-}
-function startTutorial(full) {
-try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
-trainChar = typeof menuHeroPick === 'function' ? menuHeroPick() : 0;
-if (typeof setMenuHero === 'function') setMenuHero(trainChar);
-dummyCfg.act = 'stand';   // 教学里稻草人只按教学的安排出手
-if (typeof STATQ !== 'undefined') STATQ.skip = true;   // 教学用的木人桩局不算一局
-startTraining('dummy');
-if (typeof STATQ !== 'undefined') STATQ.skip = false;
-B.x = STAGE_W / 2 + 220; A.x = STAGE_W / 2 - 220;
-TUT = { list: full === true ? TUT_STEPS.map((_, i) => i) : TUT_QUICK, full: full === true, step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, justGuards: 0, prev: '', shotT: 0, parryShotT: 0 };
-tutNext();
-$id('tutBox').classList.remove('hidden');
-if (typeof statEv === 'function') statEv('tut_start');
-}
-const TUT_TOUCH = [
-'拨动左摇杆，左右走动熟悉身法。',
-'向上推摇杆或点「跳」；在半空中再点一次触发二段跳。',
-'贴近稻草人，连点「攻击」打满五段连击。',
-'按住「攻击」蓄力，待寒芒闪耀与剑鸣时松手，劈出霸体破防斩！',
-'起跳后在空中点「攻击」，随后再点下砸完成追空！',
-'点击「远程」放出远程武学，青锋施展远程剑气。',
-'点击「技能」施展专属门派武学，穿透对手。',
-'稻草人放风刃袭来，摇杆下推防御挡下两次。',
-'在受到攻击瞬间快速下拉摇杆，触发「精准招架」反震对手！',
-'受到攻击陷入僵直时，点「闪」腾空闪逃脱危局！',
-'真元已蓄满，点击发光的「大招」释放天地绝技！'
-];
-function tutNext() {
-TUT.step++; TUT.wait = 0; TUT.hit = {}; TUT.x0 = A.x;
-const st = TUT_STEPS[tutCur()];
-if (!st) return tutFinish();
-$id('tutBox').classList.remove('ok');
-$id('tutN').textContent = `${TUT.full ? '完整教学' : '快速上手'} ${TUT.step + 1} / ${TUT.list.length}`;
-$id('tutT').textContent = cvT(st.t); $id('tutD').textContent = TOUCH ? tutTouchDescription(tutCur()) : tutDescription(tutCur());
-if (st.setup) st.setup();
-}
-function tutTick(dt) {
-const cur = tutCur(), st = TUT_STEPS[cur]; if (!st) return;
-A.hp = A.maxHp; A.breakCD = cur === 9 ? 0 : A.breakCD;
-if (A.state === 'attack' && A.hitConfirmed) TUT.hit[A.moveName] = true;
-if (A.state === 'blockstun' && TUT.prev !== 'blockstun') TUT.blocks++;
-TUT.prev = A.state;
-if (cur === 7 && !TUT.wait) {
-TUT.shotT -= dt;
-if (TUT.shotT <= 0) {
-TUT.shotT = 1.6; const dir = A.x >= B.x ? 1 : -1;
-spawnProj(B, { kind: 'wind', x: B.x + dir * 40, y: B.y - 62, vx: dir * 620, w: 56, h: 52, life: 2.4, dmg: 2, kb: [160, 0], stun: 0.3, hs: 0.04 });
-}
-}
-if (cur === 8 && !TUT.wait) {
-TUT.parryShotT = (TUT.parryShotT || 0) - dt;
-if (TUT.parryShotT <= 0 && B.state === 'idle') {
-TUT.parryShotT = 2.0;
-B.x = A.x + (A.face === 1 ? 75 : -75);
-B.face = -A.face;
-startAttack(B, 'l1');
-}
-}
-if (cur === 9 && !TUT.wait && !A.escInvul && A.onGround() && A.state !== 'hitstun' && A.state !== 'getup') stunA();
-if (TUT.wait) { TUT.wait -= dt; if (TUT.wait <= 0) tutNext(); return; }
-if (st.ok()) { TUT.wait = 1; $id('tutBox').classList.add('ok'); SFX.chargeFull(); }
-}
-function updateTutBtn() {
-let done = false; try { done = !!localStorage.getItem('renying-tut-done'); } catch (e) {}
-if (!PROF.guest && PROF.tutorial) done = true;
-const b = document.querySelector('#menu [data-go="tutorial"]'); if (b) b.style.display = done ? 'none' : '';
-}
-async function tutFinish() {
-if (typeof statEv === 'function') statEv('tut_done');
-try { localStorage.setItem('renying-tut-done', '1'); } catch (e) {}
-updateTutBtn();
-$id('tutBox').classList.add('hidden');
-const wasFull = TUT && TUT.full;
-let msg = wasFull ? '该会的都会了。去找电脑或是同学，过几招吧。' : '基本招式会了。格挡和精准招架这些进阶操作，在「帮助」里的完整教学能学到。';
-if (!PROF.guest) {
-if (!PROF.tutorial && typeof rwServer === 'function' && rwServer()) {   // 云端账号：找服务器领，每个号只给一次（本机标记不算数）
-PROF.tutorial = 1; saveFlag('tutorial', 1);
-const g = await rwClaim('tut', null, true);
-if (g > 0) msg += `<br>奖励 <b style="color:#e9c46a">${g} 墨锭</b>，去武库买个武器箱试试手气吧！`;
-else if (g === -2) msg += '<br>这个号已经领过教学奖励了。';
-} else if (!PROF.tutorial) {
-PROF.tutorial = 1; saveFlag('tutorial', 1);
-PROF.ink = (PROF.ink || 0) + 300;
-if (window.CloudSave) CloudSave.saveProfile(PROF);
-applyProfile(PROF);
-msg += '<br>奖励 <b style="color:#e9c46a">300 墨锭</b>，去武库买个武器箱试试手气吧！';
-}
-} else {
-msg += '<br>登录之后再走一遍教学，可领 300 墨锭。';
-}
-$id('tutReward').innerHTML = msg;
-TUT = null; paused = true; showScreen('tutdone'); SFX.gong();
-}
-function endTutorial() { TUT = null; $id('tutBox').classList.add('hidden'); }
-$id('tutMenu').addEventListener('click', () => { paused = false; toMenu(); });
-$id('tutStay').addEventListener('click', () => { paused = false; showScreen(null); });
-if ($id('tutCpu')) $id('tutCpu').addEventListener('click', () => { paused = false; toMenu(); openScreen('cpu'); });
-if ($id('tutNet')) $id('tutNet').addEventListener('click', () => { paused = false; toMenu(); openScreen('netp'); });
-$id('tutYes').addEventListener('click', () => startTutorial());
-$id('tutNo').addEventListener('click', () => { if (typeof statEv === 'function') statEv('tut_skip'); try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {} backToMenu(); });
-let langPromptDone = false;
-try {
-langPromptDone = !!localStorage.getItem('renying-lang-chosen');
-} catch (e) {}
-function chooseLang(l) {
-try { localStorage.setItem('renying-lang-chosen', '1'); } catch (e) {}
-langPromptDone = true;
-SETTINGS.lang = l;
-saveSettings();
-if (window.I18N) window.I18N.setLang(l);
-backToMenu();
-let seen = false; try { seen = !!localStorage.getItem('renying-tut-seen'); } catch (err) {}
-if (!seen && $id('menu').classList.contains('on')) showScreen('tutask');
-}
-if ($id('lpPickZh')) $id('lpPickZh').addEventListener('click', () => chooseLang('zh'));
-if ($id('lpPickEn')) $id('lpPickEn').addEventListener('click', () => chooseLang('en'));
-if ($id('tnLangBtn')) $id('tnLangBtn').addEventListener('click', () => {
-const next = (window.I18N && window.I18N.getLang() === 'en') ? 'zh' : 'en';
-SETTINGS.lang = next;
-saveSettings();
-if (window.I18N) window.I18N.setLang(next);
-toast(next === 'en' ? 'Switched to English mode' : '已切换至中文模式');
-});
-setTimeout(() => { if ($id('menu').classList.contains('on')) showScreen('menu'); }, 0);   // 一打开就和点返回回来的首页一个样子（顶栏在、底栏不变）
-setTimeout(() => {
-if (!langPromptDone && $id('menu').classList.contains('on')) {
-showScreen('langPrompt');
-return;
-}
-let seen = false; try { seen = !!localStorage.getItem('renying-tut-seen'); } catch (e) {}
-if (!seen && $id('menu').classList.contains('on')) showScreen('tutask');
-}, 1000);
 const ROLL = { on: false, F: 0, D: 3, N: 240, MAXP: 40, snaps: [], loc: [], rem: [], used: [], remChg: {}, remLast: -1,
 lastRemH: 0, lastSentH: 0, locMax: -1, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: false,
 rollbacks: 0, rbFrames: 0, desyncs: 0, ctrls: null };
@@ -28142,6 +27977,171 @@ $id('tPause').addEventListener('click', () => { if (M.mode !== 'net' && M.phase 
 $id('tDummy').addEventListener('click', () => dummyBarShow(true));   // 打开对手行为栏（21-buttons-02-training.js）
 document.addEventListener('touchstart', () => initAudio(), { passive: true });
 }
+let TUT = null;
+function stunA() { A.state = 'hitstun'; A.t = 0; A.stun = 3; A.vx = 0; A.flash = 0.1; A.comboHits = 3; }
+const TUT_STEPS = [
+{ t: '移动身法', d: '按 A、D 左右走动，熟悉侠客的立回步法。', ok: () => Math.abs(A.x - TUT.x0) > 260 },
+{ t: '起跳与滞空', d: '按 W 或空格起跳，身在半空再按一次，便是二段跳。', ok: () => A.jumps >= 2 },
+{ t: '地面五段连段', d: '贴近稻草人连续点按左键打满五段（L1~L5）；末段强力挑飞击退对手。', ok: () => TUT.hit.l5 },
+{ t: '破势蓄力斩', d: '按住左键蓄力，待寒芒一闪、剑鸣铮铮时松手。蓄满的一斩为霸体不可挡，能强行破防！', ok: () => TUT.hit.cs2 },
+{ t: '挑飞追空打击', d: '将对手打飞或跃起后，在空中点左键（空斩 A1），再点一下下砸（A2），实现空中追打追击。', ok: () => A.state === 'attack' && /^a[12]$/.test(A.moveName) },
+{ t: '远程暗器 / 剑气', d: '按住左键再点右键（或直接按 R）。各派武学各异，青锋可挥出疾速剑气。', ok: () => A.skill2CD > 0 },
+{ t: '核心门派技能', d: '按 Q 施展专属门派武学。青锋的「疾风斩」附带位移穿透与破防。', ok: () => A.skillCD > 0 },
+{ t: '严密格挡', d: '稻草人会朝你连发风刃，按住 S 挡下两次！记得面朝来袭方向。', ok: () => TUT.blocks >= 2, setup: () => { TUT.shotT = 0.5; } },
+{ t: '精准弹刀 (招架)', d: '在近身来袭瞬间（受击前 0.09 秒内）轻按 S，即可触发「精准招架」，完全不掉架势且反震硬直！', ok: () => (TUT.justGuards || 0) >= 1, setup: () => { TUT.parryShotT = 0.6; } },
+{ t: '绝境腾空闪', d: '受到硬直连击陷入绝境时，按右键（或左 Shift）引爆真气触发「腾空闪」逃脱并获短暂无敌！', ok: () => A.escInvul, setup: () => { A.breakCD = 0; stunA(); } },
+{ t: '真元爆发 · 绝招', d: '怒气已为你灌满！按 E 释放震撼全场的天地绝技！', ok: () => A.state === 'special', setup: () => { A.meter = 100; } },
+];
+const TUT_QUICK = [0, 2, 6, 9, 10];
+const tutCur = () => TUT ? TUT.list[TUT.step] : -1;
+function tutSkillName(slot) {
+const ch = CHARS[trainChar] || CHARS[0], key = slot === 2 ? ch.skill2 : ch.skill;
+return (SKILLS[key] && SKILLS[key].name) || (slot === 2 ? '远程招式' : '门派技能');
+}
+function tutDescription(i) {
+const en = window.I18N && I18N.getLang() === 'en';
+if (i === 5) return en ? `Hold attack and tap R (or press R directly) to use ${cvT(tutSkillName(2))}.` : `按住左键再点右键（或直接按 R），施展「${tutSkillName(2)}」。`;
+if (i === 6) return en ? `Press Q to use ${cvT(tutSkillName(1))}, then learn its timing and purpose.` : `按 Q 施展「${tutSkillName(1)}」，熟悉它的时机与用途。`;
+return TUT_STEPS[i].d;
+}
+function tutTouchDescription(i) {
+const en = window.I18N && I18N.getLang() === 'en';
+if (i === 5) return en ? `Tap R to use ${cvT(tutSkillName(2))}.` : `点击「远程」施展「${tutSkillName(2)}」。`;
+if (i === 6) return en ? `Tap Skill to use ${cvT(tutSkillName(1))}.` : `点击「技能」施展「${tutSkillName(1)}」。`;
+return TUT_TOUCH[i];
+}
+function startTutorial(full) {
+try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
+trainChar = typeof menuHeroPick === 'function' ? menuHeroPick() : 0;
+if (typeof setMenuHero === 'function') setMenuHero(trainChar);
+dummyCfg.act = 'stand';   // 教学里稻草人只按教学的安排出手
+if (typeof STATQ !== 'undefined') STATQ.skip = true;   // 教学用的木人桩局不算一局
+startTraining('dummy');
+if (typeof STATQ !== 'undefined') STATQ.skip = false;
+B.x = STAGE_W / 2 + 220; A.x = STAGE_W / 2 - 220;
+TUT = { list: full === true ? TUT_STEPS.map((_, i) => i) : TUT_QUICK, full: full === true, step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, justGuards: 0, prev: '', shotT: 0, parryShotT: 0 };
+tutNext();
+$id('tutBox').classList.remove('hidden');
+if (typeof statEv === 'function') statEv('tut_start');
+}
+const TUT_TOUCH = [
+'拨动左摇杆，左右走动熟悉身法。',
+'向上推摇杆或点「跳」；在半空中再点一次触发二段跳。',
+'贴近稻草人，连点「攻击」打满五段连击。',
+'按住「攻击」蓄力，待寒芒闪耀与剑鸣时松手，劈出霸体破防斩！',
+'起跳后在空中点「攻击」，随后再点下砸完成追空！',
+'点击「远程」放出远程武学，青锋施展远程剑气。',
+'点击「技能」施展专属门派武学，穿透对手。',
+'稻草人放风刃袭来，摇杆下推防御挡下两次。',
+'在受到攻击瞬间快速下拉摇杆，触发「精准招架」反震对手！',
+'受到攻击陷入僵直时，点「闪」腾空闪逃脱危局！',
+'真元已蓄满，点击发光的「大招」释放天地绝技！'
+];
+function tutNext() {
+TUT.step++; TUT.wait = 0; TUT.hit = {}; TUT.x0 = A.x;
+const st = TUT_STEPS[tutCur()];
+if (!st) return tutFinish();
+$id('tutBox').classList.remove('ok');
+$id('tutN').textContent = `${TUT.full ? '完整教学' : '快速上手'} ${TUT.step + 1} / ${TUT.list.length}`;
+$id('tutT').textContent = cvT(st.t); $id('tutD').textContent = TOUCH ? tutTouchDescription(tutCur()) : tutDescription(tutCur());
+if (st.setup) st.setup();
+}
+function tutTick(dt) {
+const cur = tutCur(), st = TUT_STEPS[cur]; if (!st) return;
+A.hp = A.maxHp; A.breakCD = cur === 9 ? 0 : A.breakCD;
+if (A.state === 'attack' && A.hitConfirmed) TUT.hit[A.moveName] = true;
+if (A.state === 'blockstun' && TUT.prev !== 'blockstun') TUT.blocks++;
+TUT.prev = A.state;
+if (cur === 7 && !TUT.wait) {
+TUT.shotT -= dt;
+if (TUT.shotT <= 0) {
+TUT.shotT = 1.6; const dir = A.x >= B.x ? 1 : -1;
+spawnProj(B, { kind: 'wind', x: B.x + dir * 40, y: B.y - 62, vx: dir * 620, w: 56, h: 52, life: 2.4, dmg: 2, kb: [160, 0], stun: 0.3, hs: 0.04 });
+}
+}
+if (cur === 8 && !TUT.wait) {
+TUT.parryShotT = (TUT.parryShotT || 0) - dt;
+if (TUT.parryShotT <= 0 && B.state === 'idle') {
+TUT.parryShotT = 2.0;
+B.x = A.x + (A.face === 1 ? 75 : -75);
+B.face = -A.face;
+startAttack(B, 'l1');
+}
+}
+if (cur === 9 && !TUT.wait && !A.escInvul && A.onGround() && A.state !== 'hitstun' && A.state !== 'getup') stunA();
+if (TUT.wait) { TUT.wait -= dt; if (TUT.wait <= 0) tutNext(); return; }
+if (st.ok()) { TUT.wait = 1; $id('tutBox').classList.add('ok'); SFX.chargeFull(); }
+}
+function updateTutBtn() {
+let done = false; try { done = !!localStorage.getItem('renying-tut-done'); } catch (e) {}
+if (!PROF.guest && PROF.tutorial) done = true;
+const b = document.querySelector('#menu [data-go="tutorial"]'); if (b) b.style.display = done ? 'none' : '';
+}
+async function tutFinish() {
+if (typeof statEv === 'function') statEv('tut_done');
+try { localStorage.setItem('renying-tut-done', '1'); } catch (e) {}
+updateTutBtn();
+$id('tutBox').classList.add('hidden');
+const wasFull = TUT && TUT.full;
+let msg = wasFull ? '该会的都会了。去找电脑或是同学，过几招吧。' : '基本招式会了。格挡和精准招架这些进阶操作，在「帮助」里的完整教学能学到。';
+if (!PROF.guest) {
+if (!PROF.tutorial && typeof rwServer === 'function' && rwServer()) {   // 云端账号：找服务器领，每个号只给一次（本机标记不算数）
+PROF.tutorial = 1; saveFlag('tutorial', 1);
+const g = await rwClaim('tut', null, true);
+if (g > 0) msg += `<br>奖励 <b style="color:#e9c46a">${g} 墨锭</b>，去武库买个武器箱试试手气吧！`;
+else if (g === -2) msg += '<br>这个号已经领过教学奖励了。';
+} else if (!PROF.tutorial) {
+PROF.tutorial = 1; saveFlag('tutorial', 1);
+PROF.ink = (PROF.ink || 0) + 300;
+if (window.CloudSave) CloudSave.saveProfile(PROF);
+applyProfile(PROF);
+msg += '<br>奖励 <b style="color:#e9c46a">300 墨锭</b>，去武库买个武器箱试试手气吧！';
+}
+} else {
+msg += '<br>登录之后再走一遍教学，可领 300 墨锭。';
+}
+$id('tutReward').innerHTML = msg;
+TUT = null; paused = true; showScreen('tutdone'); SFX.gong();
+}
+function endTutorial() { TUT = null; $id('tutBox').classList.add('hidden'); }
+$id('tutMenu').addEventListener('click', () => { paused = false; toMenu(); });
+$id('tutStay').addEventListener('click', () => { paused = false; showScreen(null); });
+if ($id('tutCpu')) $id('tutCpu').addEventListener('click', () => { paused = false; toMenu(); openScreen('cpu'); });
+if ($id('tutNet')) $id('tutNet').addEventListener('click', () => { paused = false; toMenu(); openScreen('netp'); });
+$id('tutYes').addEventListener('click', () => startTutorial());
+$id('tutNo').addEventListener('click', () => { if (typeof statEv === 'function') statEv('tut_skip'); try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {} backToMenu(); });
+let langPromptDone = false;
+try {
+langPromptDone = !!localStorage.getItem('renying-lang-chosen');
+} catch (e) {}
+function chooseLang(l) {
+try { localStorage.setItem('renying-lang-chosen', '1'); } catch (e) {}
+langPromptDone = true;
+SETTINGS.lang = l;
+saveSettings();
+if (window.I18N) window.I18N.setLang(l);
+backToMenu();
+let seen = false; try { seen = !!localStorage.getItem('renying-tut-seen'); } catch (err) {}
+if (!seen && $id('menu').classList.contains('on')) showScreen('tutask');
+}
+if ($id('lpPickZh')) $id('lpPickZh').addEventListener('click', () => chooseLang('zh'));
+if ($id('lpPickEn')) $id('lpPickEn').addEventListener('click', () => chooseLang('en'));
+if ($id('tnLangBtn')) $id('tnLangBtn').addEventListener('click', () => {
+const next = (window.I18N && window.I18N.getLang() === 'en') ? 'zh' : 'en';
+SETTINGS.lang = next;
+saveSettings();
+if (window.I18N) window.I18N.setLang(next);
+toast(next === 'en' ? 'Switched to English mode' : '已切换至中文模式');
+});
+setTimeout(() => { if ($id('menu').classList.contains('on')) showScreen('menu'); }, 0);   // 一打开就和点返回回来的首页一个样子（顶栏在、底栏不变）
+setTimeout(() => {
+if (!langPromptDone && $id('menu').classList.contains('on')) {
+showScreen('langPrompt');
+return;
+}
+let seen = false; try { seen = !!localStorage.getItem('renying-tut-seen'); } catch (e) {}
+if (!seen && $id('menu').classList.contains('on')) showScreen('tutask');
+}, 1000);
 let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 劲敌 绝顶 天道（宿敌只留给万仞剑阁内部用）
 function showScreen(id) {
 if (!menuTransitionCompleting && currentScreen === 'menu' && id !== 'menu' && document.body.classList.contains('menu-handoff')) {
@@ -28614,6 +28614,158 @@ if (p && p.isConnected && (!document.activeElement || document.activeElement ===
 }).observe(el, { attributes: true, attributeFilter: ['class', 'hidden'] });
 }
 for (const id of UI_DIALOGS) uiDlgWatch($id(id));
+const MODE_HANDLERS = {
+boss: {
+rematch: () => { M.mode = 'demo'; openGboss(); startMatch('demo'); },   // 天魔讨伐：回讨伐页看结果
+onLeave: () => gbossQuit(),   // 打到一半退出：已经打出的伤害照样交
+toMenuScreen: () => openGboss(),
+},
+net: {
+rematch: () => {
+if (!NET.open) {
+toast('网络已断开');
+return;
+}
+if (NET.role === 'host') {
+const duo = M.duo ? JSON.parse(JSON.stringify(M.duo)) : null;   // 各选 2 人的对局：同阵容再战，从各自第一人打起
+const picks = roomDef().four ? [A.chIdx, B.chIdx, C.chIdx, D.chIdx] : duo ? [duo[0][0], duo[1][0]] : [A.chIdx, B.chIdx];
+const seed = (Math.random() * 2147483647) | 0;
+const mv = netMapVotes();
+send({ sys: 'rematch', action: 'start' });
+const mut = netTeamMutator();
+const competitiveScrolls = M.hasBuffs && M.competitiveScrolls ? JSON.parse(JSON.stringify(M.competitiveScrolls)) : null;
+const loadouts = [typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}, NET.peerLoadout || {}];
+send({ rstart: duo ? { ch: picks, seed, duo, mv, mut, competitiveScrolls, loadouts } : { ch: picks, seed, mv, mut, competitiveScrolls, loadouts } });
+rollStart(picks, seed, duo, mv, undefined, mut, competitiveScrolls, loadouts);
+} else {
+send({ sys: 'rematch', action: 'ask' });
+toast('已向房主发送再战请求');
+}
+},
+},
+'2v2': {
+rematch: () => bpStart('2v2', { subMode: M.subMode || 'pp_cc', level: M.level || 'normal' }),
+toMenuScreen: () => open2v2Hub(),
+},
+watch2v2: {
+rematch: () => {
+if (!M.watchAi) bpStart('2v2', { subMode: M.subMode || 'pp_cc', level: M.level || 'normal' });
+else startWatch2v2Draft();
+},
+toMenuScreen: () => open2v2Hub(),
+},
+cuju: {
+rematch: () => bpStart('cuju', { level: M.level || pickLevel, pvp: !!M.cujuPvp }),   // 再踢一场：同样的对手（电脑或本地 2P），重新选人
+toMenuScreen: () => { singleSec('cuju'); showScreen('single'); },
+},
+mayhem: {
+rematch: () => bpStart('mayhem', { level: pickLevel, isWatch: false }),
+toMenuScreen: () => { singleSec('mayhem'); showScreen('single'); },
+},
+maps: {
+rematch: () => bpStart('maps', { level: pickLevel, isWatch: false }),   // 再来一局：按现在的票重新选图
+},
+tag3: {
+rematch: () => tag3Rematch(),
+toMenuScreen: () => { singleSec('tag3'); showScreen('single'); },
+},
+tower: {
+rematch: () => bpStart('tower', { isWatch: false }),
+onLeave: () => saveTowerRun(),
+toMenuScreen: () => { singleSec('tower'); showScreen('single'); },
+},
+chaos: {
+rematch: () => bpStart('chaos', { level: pickLevel, isWatch: false }),
+toMenuScreen: () => { singleSec('chaos'); showScreen('single'); },
+},
+saga: {
+toMenuScreen: () => { singleSec('saga'); showScreen('single'); },
+},
+cpu: {
+rematch: () => {
+if (M.quick) {   // 从首页直接开打的：同一个角色、同一个难度，换个随机对手再来
+menuLock = false;
+heroQuickFight(M.level);
+return;
+}
+bpStart('cpu');
+},
+},
+};
+function registerModeHandler(mode, handler) {
+MODE_HANDLERS[mode] = Object.assign(MODE_HANDLERS[mode] || {}, handler);
+}
+const cpuTutBtn = document.getElementById('cpuTutBtn');
+if (cpuTutBtn) cpuTutBtn.addEventListener('click', () => { initAudio(); startTutorial(); });
+document.getElementById('againBtn').addEventListener('click', () => {
+if (M.mode === 'boss') { MODE_HANDLERS.boss.rematch(); return; }
+if (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) return;
+if (M.mode === 'net' && NET.isRanked) return;   // 排位赛没有再来一场
+if (isRaid()) {
+if (M.koWinner === 0) {
+M.phase = 'perk';
+paused = true;
+showTowerPerkModal();
+} else {
+bpStart('raid', { squadSize: M.raidSquadSize || rougeSquadSize || 3 });
+}
+return;
+}
+const handler = MODE_HANDLERS[M.mode];
+if (handler && handler.rematch) {
+handler.rematch();
+return;
+}
+bpStart('cpu');
+});
+const netRepickBtnEl = document.getElementById('netRepickBtn');
+if (netRepickBtnEl) {
+netRepickBtnEl.addEventListener('click', () => {
+if (M.mode !== 'net' || !NET.open) return;
+if (NET.role === 'host') {
+send({ sys: 'rematch', action: 'repick' });
+bpStart('net');
+} else {
+send({ sys: 'rematch', action: 'repick' });
+toast('已请求重新选人');
+}
+});
+}
+document.getElementById('resumeBtn').addEventListener('click', () => { paused = false; showScreen(null); refocusGame(); });
+document.getElementById('pause').addEventListener('click', e => {
+if (e.target === document.getElementById('pause')) {
+paused = false;
+showScreen(null);
+refocusGame();
+}
+});
+function toMenu(returnHome = false) {
+if (typeof competitiveDraftStopTimer === 'function') competitiveDraftStopTimer();
+if (typeof mapBriefingTimer !== 'undefined' && mapBriefingTimer) { clearInterval(mapBriefingTimer); mapBriefingTimer = null; }
+if (typeof competitiveDraft !== 'undefined') competitiveDraft = null;
+if (typeof onlineCompetitiveDraft !== 'undefined') onlineCompetitiveDraft = null;
+ROLL.on = false; REC.on = false;
+if (REPLAY.on) { REPLAY.on = false; $id('rpBar').classList.add('hidden'); }
+if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
+if (WORLD.on) worldLeave();
+M.worldKey = null;
+M.hasBuffs = false; M.competitiveScrolls = null;
+M.stage = null;
+if (TUT) endTutorial();
+const keepRoom = !!(NET.keepRoom && !NET.open && typeof P2P !== 'undefined' && P2P.friend && P2P.peer);
+paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (!keepRoom && (M.mode === 'net' || bpMode === 'net')) netLeave(); bpMode = 'cpu';
+const prevMode = M.mode;
+const handler = MODE_HANDLERS[prevMode];
+if (handler && handler.onLeave) handler.onLeave();
+M.mode = 'demo';
+if (returnHome) showScreen('menu');
+else if (handler && handler.toMenuScreen) handler.toMenuScreen();
+else showScreen('menu');
+if (prevMode !== 'demo') startMatch('demo');   // 首页背景那场比武本来就还在打，别重新摆一次
+if (keepRoom && !returnHome) selectMode('net');
+}
+document.getElementById('quitBtn').addEventListener('click', toMenu);
+document.getElementById('menuBtn').addEventListener('click', () => { if (typeof statMatchQuit === 'function') statMatchQuit(); toMenu(true); });
 function renderTag3() {}
 function tag3Rematch() {
 if (M.mode !== 'tag3' || M.watchAi || !Array.isArray(M.teams) || M.teams.length !== 2 || M.teams.some(team => !Array.isArray(team) || team.length !== 3)) return false;
@@ -29746,138 +29898,6 @@ if (mapVote) bpStart('maps', { level: pickLevel, isWatch: false });
 else bpStart('cpu');
 }
 document.getElementById('goBtn').addEventListener('click', go);
-const cpuTutBtn = document.getElementById('cpuTutBtn');
-if (cpuTutBtn) cpuTutBtn.addEventListener('click', () => { initAudio(); startTutorial(); });
-document.getElementById('againBtn').addEventListener('click', () => {
-if (M.mode === 'boss') { M.mode = 'demo'; openGboss(); startMatch('demo'); return; }   // 天魔讨伐：回讨伐页看结果
-if (isAiVsAi() || M.watchAi || (M.mode === 'watch2v2' && M.watchAi)) return;
-if (M.mode === 'net' && NET.isRanked) return;   // 排位赛没有再来一场
-if (M.mode === 'net') {
-if (!NET.open) {
-toast('网络已断开');
-return;
-}
-if (NET.role === 'host') {
-const duo = M.duo ? JSON.parse(JSON.stringify(M.duo)) : null;   // 各选 2 人的对局：同阵容再战，从各自第一人打起
-const picks = roomDef().four ? [A.chIdx, B.chIdx, C.chIdx, D.chIdx] : duo ? [duo[0][0], duo[1][0]] : [A.chIdx, B.chIdx];
-const seed = (Math.random() * 2147483647) | 0;
-const mv = netMapVotes();
-send({ sys: 'rematch', action: 'start' });
-const mut = netTeamMutator();
-const competitiveScrolls = M.hasBuffs && M.competitiveScrolls ? JSON.parse(JSON.stringify(M.competitiveScrolls)) : null;
-const loadouts = [typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}, NET.peerLoadout || {}];
-send({ rstart: duo ? { ch: picks, seed, duo, mv, mut, competitiveScrolls, loadouts } : { ch: picks, seed, mv, mut, competitiveScrolls, loadouts } });
-rollStart(picks, seed, duo, mv, undefined, mut, competitiveScrolls, loadouts);
-} else {
-send({ sys: 'rematch', action: 'ask' });
-toast('已向房主发送再战请求');
-}
-return;
-}
-if (M.mode === '2v2' || (M.mode === 'watch2v2' && !M.watchAi)) {
-bpStart('2v2', { subMode: M.subMode || 'pp_cc', level: M.level || 'normal' });
-return;
-}
-if (M.mode === 'watch2v2') {
-startWatch2v2Draft();
-return;
-}
-if (M.mode === 'cuju') {   // 再踢一场：同样的对手（电脑或本地 2P），重新选人
-bpStart('cuju', { level: M.level || pickLevel, pvp: !!M.cujuPvp });
-return;
-}
-if (M.mode === 'mayhem') {
-bpStart('mayhem', { level: pickLevel, isWatch: false });
-return;
-}
-if (M.mode === 'maps') {   // 再来一局：按现在的票重新选图
-bpStart('maps', { level: pickLevel, isWatch: false });
-return;
-}
-if (M.mode === 'tag3') {
-tag3Rematch();
-return;
-}
-if (isRaid()) {
-if (M.koWinner === 0) {
-M.phase = 'perk';
-paused = true;
-showTowerPerkModal();
-} else {
-bpStart('raid', { squadSize: M.raidSquadSize || rougeSquadSize || 3 });
-}
-return;
-}
-if (M.mode === 'tower') {
-bpStart('tower', { isWatch: false });
-return;
-}
-if (M.mode === 'chaos') {
-bpStart('chaos', { level: pickLevel, isWatch: false });
-return;
-}
-if (M.mode === 'cpu' && M.quick) {   // 从首页直接开打的：同一个角色、同一个难度，换个随机对手再来
-menuLock = false;
-heroQuickFight(M.level);
-return;
-}
-bpStart('cpu');
-});
-const netRepickBtnEl = document.getElementById('netRepickBtn');
-if (netRepickBtnEl) {
-netRepickBtnEl.addEventListener('click', () => {
-if (M.mode !== 'net' || !NET.open) return;
-if (NET.role === 'host') {
-send({ sys: 'rematch', action: 'repick' });
-bpStart('net');
-} else {
-send({ sys: 'rematch', action: 'repick' });
-toast('已请求重新选人');
-}
-});
-}
-document.getElementById('resumeBtn').addEventListener('click', () => { paused = false; showScreen(null); refocusGame(); });
-document.getElementById('pause').addEventListener('click', e => {
-if (e.target === document.getElementById('pause')) {
-paused = false;
-showScreen(null);
-refocusGame();
-}
-});
-function toMenu(returnHome = false) {
-if (typeof competitiveDraftStopTimer === 'function') competitiveDraftStopTimer();
-if (typeof mapBriefingTimer !== 'undefined' && mapBriefingTimer) { clearInterval(mapBriefingTimer); mapBriefingTimer = null; }
-if (typeof competitiveDraft !== 'undefined') competitiveDraft = null;
-if (typeof onlineCompetitiveDraft !== 'undefined') onlineCompetitiveDraft = null;
-ROLL.on = false; REC.on = false;
-if (REPLAY.on) { REPLAY.on = false; $id('rpBar').classList.add('hidden'); }
-if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
-if (WORLD.on) worldLeave();
-M.worldKey = null;
-M.hasBuffs = false; M.competitiveScrolls = null;
-M.stage = null;
-if (TUT) endTutorial();
-const keepRoom = !!(NET.keepRoom && !NET.open && typeof P2P !== 'undefined' && P2P.friend && P2P.peer);
-paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (!keepRoom && (M.mode === 'net' || bpMode === 'net')) netLeave(); bpMode = 'cpu';
-const prevMode = M.mode;
-if (prevMode === 'tower') saveTowerRun();
-if (prevMode === 'boss') gbossQuit();   // 打到一半退出：已经打出的伤害照样交
-M.mode = 'demo';
-if (returnHome) showScreen('menu');
-else if (prevMode === 'boss') openGboss();
-else if (prevMode === 'saga') { singleSec('saga'); showScreen('single'); }
-else if (prevMode === 'watch2v2' || prevMode === '2v2') open2v2Hub();
-else if (prevMode === 'tag3' || prevMode === 'tower' || prevMode === 'chaos' || prevMode === 'mayhem' || prevMode === 'cuju') {
-singleSec(prevMode);
-showScreen('single');
-} else {
-showScreen('menu');
-}
-if (prevMode !== 'demo') startMatch('demo');   // 首页背景那场比武本来就还在打，别重新摆一次
-if (keepRoom && !returnHome) selectMode('net');
-}
-document.getElementById('quitBtn').addEventListener('click', toMenu);
-document.getElementById('menuBtn').addEventListener('click', () => { if (typeof statMatchQuit === 'function') statMatchQuit(); toMenu(true); });
 const FACE = (inner, fill = '#f4ead5') => `<svg viewBox="0 0 48 48"><circle cx="24" cy="25" r="19" fill="${fill}" stroke="#1a1426" stroke-width="2.6"/>${inner}</svg>`;
 const SEAL = (a, b) => `<svg viewBox="0 0 48 48"><rect x="5" y="5" width="38" height="38" rx="4" fill="#b8392e" transform="rotate(-4 24 24)"/><rect x="9" y="9" width="30" height="30" rx="2" fill="none" stroke="rgba(255,240,225,.6)" stroke-width="1.4" transform="rotate(-4 24 24)"/><text x="24" y="23" font-family="Ma Shan Zheng, STKaiti, KaiTi, serif" font-size="15" fill="#fbeee0" text-anchor="middle">${a}</text><text x="24" y="38" font-family="Ma Shan Zheng, STKaiti, KaiTi, serif" font-size="15" fill="#fbeee0" text-anchor="middle">${b}</text></svg>`;
 const K = 'stroke="#1a1426" stroke-width="2.4" fill="none" stroke-linecap="round"';

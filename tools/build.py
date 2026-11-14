@@ -139,8 +139,15 @@ def data_parts():
 
 
 def game_parts():
-    """先是 src/data/ 的数据表，再是 src/game/ 下按编号排好的文件，拼起来就是整个游戏主体（原来的 src/game.js）"""
-    return data_parts() + [("game", n) for n in numbered("game")]
+    """先是 src/data/ 的数据表，再是 src/game/ 下（含各分层子目录）按文件名编号排好的文件，拼起来就是整个游戏主体（原来的 src/game.js）"""
+    base = os.path.join(SRC, "game")
+    subs = sorted(d for d in os.listdir(base) if os.path.isdir(os.path.join(base, d)))
+    items = [(n, ("game", n)) for n in numbered("game")]
+    for d in subs:
+        for n in numbered("game", d):
+            items.append((n, ("game", d, n)))
+    items.sort(key=lambda x: x[0])
+    return data_parts() + [p for _, p in items]
 
 
 def game_source():

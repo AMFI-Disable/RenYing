@@ -46,11 +46,11 @@ def main():
         "ai": any(matches(path, ("tools/ai/", "src/models/"), (
             "src/ai.js", "tools/tests/test-ai.mjs",
         )) for path in paths),
-        "cloud": any(matches(path, ("cloudflare/", "src/game/24-account", "src/game/19-progress-02-"), (
+        "cloud": any(matches(path, ("cloudflare/", "src/game/05-ui/24-account", "src/game/05-ui/19-progress-02-", "src/game/24-account", "src/game/19-progress-02-"), (
             "src/cloud.js", "tools/tests/cloud-test.mjs", "tools/tests/sync-test.mjs",
             "tools/tests/world-test.mjs", "tools/tests/test.mjs",
         )) for path in paths),
-        "economy": any(matches(path, ("src/armory", "cloudflare/", "src/game/19-progress-03-"), (
+        "economy": any(matches(path, ("src/armory", "cloudflare/", "src/game/05-ui/19-progress-03-", "src/game/19-progress-03-"), (
             "src/anticheat.js", "src/cloud.js", "tools/tests/econ-test.mjs", "tools/tests/test.mjs",
         )) for path in paths),
         "worker": any(matches(path, ("cloudflare/",), (

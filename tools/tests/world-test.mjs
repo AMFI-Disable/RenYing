@@ -143,7 +143,7 @@ const st = (dobj, s, x, extra = {}) => dobj.webSocketMessage(s, JSON.stringify({
 
 // ---------- 全服肉鸽：秘卷编号都是游戏里真有的 ----------
 {
-  const src = fs.readFileSync(path.join(root, 'src', 'game', '22-scrolls.js'), 'utf8');
+  const src = fs.readFileSync(path.join(root, 'src', 'game', '04-modes', '22-scrolls.js'), 'utf8');
   const ids = new Set([...src.matchAll(/\{ id: '([a-z0-9_]+)', n: /g)].map(m => m[1]));
   ok(RG.PERKS.length >= 30 && RG.PERKS.every(id => ids.has(id)), `服务器秘卷池 ${RG.PERKS.length} 卷都在 22-scrolls.js 里`);
   ok(new Set(RG.PERKS).size === RG.PERKS.length, '秘卷池没有重复');
