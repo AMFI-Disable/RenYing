@@ -12697,29 +12697,63 @@ if (f.sw && f.state !== 'special') magRelease(f);   // 大招被打断（回合�
 if (f.polT > 0) f.polT = Math.max(0, f.polT - STEP);
 if (f.mChain > 0) { f.mT = (f.mT || 0) + STEP; if (f.mT >= MAG.demagRest) { f.mChain = 0; f.mT = 0; } }
 }
-const SKILLS = {
-gale: { name: '疾风斩', cd: 6, pass: true, nofric: true, desc: '一步居合，身随刀走，直穿敌身；锋刃掠过处施加【居合斩穴】强定身（0.65 秒），并立即重置瞬步冲刺冷却。途中若遇墨阵，一刀两断。',
-start(f) { f.vx = 0; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.08) { f.skPh = 1; f.t = 0; f.vx = 1500 * f.face; f.invul = 0.12; f.hitDone = false; SFX.dash(); }
-if (f.skPh === 1) {
-for (const p of projs) {
-if (p.kind === 'trap' && p.owner === foe.idx && Math.abs(p.x - f.x) < 80) {
-p.dead = true; smoke(p.x, -10, 8); SFX.slice();
-addP({ type: 'text', text: '破阵', x: p.x, y: -45, life: 0.6, max: 0.6, rgb: '120,230,255' });
-}
-}
-if (strike(f, foe, { box: [-10, -112, 92, 0], dmg: 55, kb: [180, 0], stun: 0.65, hs: 0.12 })) {
-f.dashCD = 0;
-f.skill2CD = 0;
-addP({ type: 'text', text: '居合斩穴 · 剑气重置', x: f.x, y: f.y - 110, life: 0.8, max: 0.8, rgb: '120,230,255' });
-}
-if (f.t >= 0.18) { f.skPh = 2; f.t = 0; f.vx *= 0.2; }
-}
-if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
+const SKILLS = {};
+const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, big: true, unblockable: true, noScale: true };
+Object.assign(SKILLS, {
+polarswap: { name: '极性反转', cd: 6, instant: true, desc: '正极和负极互换，不花出招时间，空中也能用；身上亮起一个大大的红色 ⊕ 或蓝色 ⊖，换完立刻清零「磁极」（R）的冷却。负极普攻消磁了，换一下极性就恢复。',
+start(f) {
+f.pol = f.pol > 0 ? -1 : 1; f.polT = 0.6; f.skill2CD = 0; f.mChain = 0; f.mT = 0;   // 换极性也顺便恢复消磁
+ring(f.x, f.y - 60, 90, magRGB(f.pol), 0.3); SFX.parry();
+addP({ type: 'text', text: magName(f.pol), x: f.x, y: f.y - 125, life: 0.7, max: 0.7, rgb: magRGB(f.pol) });
+toNeutral(f);
 },
-pose: f => f.skPh === 0 ? ['qf_charge', 26] : f.skPh === 1 ? ['qf_thrust', 60] : ['idle', 14],
-ai: (me, foe, d) => d > 140 && d < 330 },
+update(f) { toNeutral(f); },
+pose: () => ['idle', 14],
+ai: () => false },
+magfield: { name: '磁极', cd: 6, desc: `正极：身边生出一圈磁石，把周围的敌人用力弹走，离得越近弹得越远（${MAG.rPlusDmg} 伤害）。负极：把中距离的对手吸过来，越近吸得越快，吸到身前定住 ${MAG.rMinusStun} 秒，不会倒地（${MAG.rMinusDmg} 伤害，挡不住）。`,
+start(f) { f.vx = 0; f.magN = f.pol; f.magTg = -1; },   // 按起手那一刻的极性放
+update(f, foe) {
+const plus = f.magN > 0;
+if (f.skPh === 0 && f.t >= (plus ? 0.14 : 0.16)) {
+f.skPh = 1; f.t = 0; f.hitDone = false;
+const tg = sdTarget(f, foe) || foe, rgb = magRGB(f.magN), plusRange = mapMagRange(f, MAG.rPlusR), minusRange = mapMagRange(f, MAG.rMinusRange);
+if (plus) {
+for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; addP({ type: 'mag', pol: 1, x: f.x + Math.cos(a) * 40, y: f.y - 60 + Math.sin(a) * 30, vx: Math.cos(a) * 520, vy: Math.sin(a) * 300, rot: a, r: 11, life: 0.32, max: 0.32, drag: 3 }); }
+ring(f.x, f.y - 60, plusRange, rgb, 0.35); shake = Math.max(shake, 10); SFX.heavy();
+const d = Math.hypot(tg.x - f.x, tg.y - f.y), near = clamp(1 - d / plusRange, 0, 1);   // 越近越大
+const dir = (Math.sign(tg.x - f.x) || f.face) * MAG.rPlusDir;
+strike(f, tg, { box: [-plusRange, -150, plusRange, 20], dmg: MAG.rPlusDmg, kb: [MAG.rPlusKb[0] + MAG.rPlusKb[1] * near, -360 - 260 * near], stun: 0.5, hs: 0.1, launch: true, big: true, dir });
+} else {
+ring(f.x, f.y - 60, 70, rgb, 0.3); SFX.dash();
+addP({ type: 'mag', pol: -1, x: f.x + f.face * 34, y: f.y - 62, vx: 0, vy: 0, rot: 0, r: 13, life: 0.45, max: 0.45 });
+const dx = tg.x - f.x;
+if (!isClient() && tg.hp > 0 && tg.invul <= 0 && Math.abs(dx) <= minusRange && Math.abs(tg.y - f.y) < 310) {
+f.face = Math.sign(dx) || f.face; f.magTg = tg.idx; f.hitDone = true;
+tg.state = 'held'; tg.t = 0; tg.vx = 0; tg.vy = 0; tg.move = null; tg.skill = null; tg.sp = null;
+}
+}
+}
+if (f.skPh === 1 && f.magTg >= 0) {   // 负极：一帧一帧吸过来，越近越快
+const tg = fighterByIdx(f.magTg), dx = f.x + f.face * 72 - tg.x, d = Math.abs(tg.x - f.x);
+if (tg.state !== 'held' || tg.hp <= 0) f.magTg = -1;
+else {
+const v = magForce(MAG.rMinusK, d, MAG.rMinusV[0], MAG.rMinusV[1]), stepX = Math.sign(dx) * Math.min(Math.abs(dx), v * STEP);
+magMove(tg, tg.x + stepX); tg.y = damp(tg.y, gndY(f), 18, STEP);   // 吸到磁仙脚下那一层
+if (!RESIM && Math.random() < 0.7) addP({ type: 'spark', x: tg.x, y: tg.y - 60 + rand(-20, 20), vx: Math.sign(dx) * rand(300, 600), vy: rand(-30, 30), rgb: magRGB(-1), life: 0.2, max: 0.2, w: 2 });
+if (Math.abs(dx) < 2 || f.t >= MAG.rMinusTime) {
+f.magTg = -1; mapPutOn(tg, f.plat);
+applyHit(f, tg, { dmg: MAG.rMinusDmg, kb: [0, 0], stun: MAG.rMinusStun, hs: 0.08, root: true, unblockable: true, dir: f.face }, [tg.x, tg.y - 60]);
+if (tg.state === 'held') toNeutral(tg);
+ring(tg.x, tg.y - 60, 60, magRGB(-1), 0.25); SFX.thud();
+}
+}
+}
+if (f.skPh === 1 && f.magTg < 0 && f.t >= 0.24) toNeutral(f);
+},
+pose: f => f.skPh === 0 ? ['lm_boxer', 26] : [f.magN > 0 ? 'hva' : 'yx_push', 56],
+ai: (me, foe, d) => me.pol > 0 ? d < MAG.rPlusR + 10 : d > 120 && d < MAG.rMinusRange - 40 },
+});
+Object.assign(SKILLS, {
 blink: { name: '影遁', cd: 11, pass: true, desc: '结印 0.3 秒后入影（结印时站着不动），影子 0.15 秒掠到对手背后施展十字绞杀（只伤血，不让对手僵直）。此后 1.5 秒内，下一击威力暴涨 50%。',
 start() {},
 update(f, foe) {
@@ -12748,119 +12782,6 @@ if (f.skPh === 1 && f.t >= 0.12) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['fy_seal', 36] : f.skPh === 2 ? ['dash', 60] : ['fy_xslash', 40],
 ai: (me, foe, d) => d > 120 },
-quake: { name: '震地', cd: 8, breakout: true, desc: '双手擎刀，怒砸大地，地裂冲击波范围大增（扩大35%）。起手带霸体（抵挡1次攻击），砸地直击施加【撼地重震】（0.45 秒脑震荡），把人掀上云霄。唯腾空者不受地裂所侵。',
-start(f) { f.armorT = 0.28; f.armorHits = 1; f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0); },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.24) {
-f.skPh = 1; f.t = 0; f.hitDone = false;
-shake = Math.max(shake, 14); dust(f.x, 0, 24); ring(f.x, 0, 140, '255,200,120', 0.35); SFX.thud(); SFX.heavy();
-for (const sd of [-1, 1]) spawnProj(f, { kind: 'quake', x: f.x + sd * 30, y: -22, vx: sd * 680, w: 84, h: 48, life: 0.8, dmg: 40, kb: [200, -740], stun: 0.40, hs: 0.08, launch: true, groundOnly: true, unbreakable: true });
-if (strike(f, foe, { box: [-40, -80, 100, 4], dmg: 45, kb: [220, -800], stun: 0.45, hs: 0.12, launch: true })) {
-f.guard = Math.min(f.maxGuard, (f.guard || f.maxGuard) + 30);
-f.skill2CD = Math.max(0, f.skill2CD - 2.5);
-addP({ type: 'text', text: '💥 撼地重震 · 固若金汤', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,200,120' });
-}
-}
-if (f.skPh === 1 && f.t >= 0.40) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['ts_lift', 20] : ['ts_slam', 60],
-ai: (me, foe, d) => d < 420 && foe.onGround() },
-backthrust: { name: '回马枪', cd: 6, desc: '先退一步让开身位，再回身一枪极远距离直取咽喉（判定延伸至 235 像素）。枪尖极远端挑中触发【枪尖穿心】（同一目标最多连挑 3 次，第 4 记强力震飞脱离）；枪旋余劲立时回转。',
-start(f) { f.vx = -f.face * 540; f.vy = -420; f.y = Math.min(f.y, -1); },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.24) { f.skPh = 1; f.t = 0; f.vx = f.face * 180; f.hitDone = false; SFX.heavy(); }
-if (f.skPh === 1) {
-if (f.t < 0.12) {
-const curHits = foe.huiMaHits || 0;
-if (curHits >= 3) {
-if (strike(f, foe, { box: [20, -104, 235, -44], dmg: 45, kb: [680, -320], stun: 0.4, hs: 0.16, launch: true, big: true })) {
-foe.huiMaHits = 0;
-foe.invul = 0.65;
-foe.airRecover = true;
-f.skill2CD *= 0.5;
-shake = Math.max(shake, 14);
-ring(foe.x, foe.y - 60, 160, '170,220,255', 0.45);
-addP({ type: 'text', text: '💨 枪劲震退 · 浮空脱离', x: foe.x, y: foe.y - 110, life: 1.0, max: 1.0, rgb: '170,220,255' });
-SFX.heavy();
-}
-} else {
-if (strike(f, foe, { box: [20, -104, 235, -44], dmg: 60, kb: [340, -800], stun: 0.48, hs: 0.12, launch: true })) {
-foe.huiMaHits = curHits + 1;
-f.skill2CD *= 0.5;
-addP({ type: 'text', text: '枪尖穿心 (' + foe.huiMaHits + '/3)', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '170,220,255' });
-}
-}
-}
-if (f.t >= 0.34) toNeutral(f);
-}
-},
-pose: f => f.skPh === 0 ? ['ls_stance', 24] : ['ls_thrust', 60],
-ai: (me, foe, d) => d < 120 },
-windblade: { name: '风刃', cd: 4.0, air: true, desc: '挥扇生风，一次扇出上下两道风刃（每道 28 伤害）。此招【无长硬直】，附带风暴推力（360 像素击退）；连飞羽轻镖也一并吹散。',
-start() {},
-update(f) {
-if (f.skPh === 0 && f.t >= 0.04) {
-f.skPh = 1; SFX.swing();
-for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1100, vy, autoAim: true, w: 70, h: 58, life: 1.1, dmg: 28, kb: [360, -80], stun: 0.18, hs: 0.03 });
-}
-if (f.skPh === 1 && f.t >= 0.11) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['ly_fanswipe', 32] : ['idle', 20],
-ai: () => true },
-thunderfist: { name: '雷闪', cd: 5, nofric: true, pass: true, desc: '身化雷光贴地疾冲。一拳贯穿附带【触电麻痹】（0.38 秒电击瘫痪硬直），起手片刻后化为雷光霸体。',
-start(f) { f.armorT = 0; f.armorHits = 0; f.vx = 0; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; f.t = 0; f.vx = f.face * 1350; f.armorT = 0.28; f.armorHits = 1; f.hitDone = false; SFX.dash(); SFX.thunder(); }
-if (f.skPh === 1) {
-if (strike(f, foe, { box: [-20, -110, 75, -10], dmg: 40, kb: [80, 0], stun: 0.38, hs: 0.08 })) {
-f.skill2CD = 0;
-addP({ type: 'text', text: '⚡ 触电麻痹 · 雷铠重置', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,240,120' });
-}
-if (Math.random() < 0.6) addP({ type: 'spark', x: f.x - f.face * 10, y: f.y - rand(20, 110), vx: -f.face * rand(100, 300), vy: rand(-100, 100), life: 0.2, max: 0.2, rgb: '255,240,150', w: 2 });
-const through = f.hitDone && foe && (f.x - foe.x) * f.face > 45;   // 一拳贯穿、穿过对手身后就收住，不再继续往前冲
-if (f.t >= 0.26 || through) { f.skPh = 2; f.t = 0; f.vx *= 0.15; f.armorT = 0; }
-}
-if (f.skPh === 2 && f.t >= 0.25) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['lm_boxer', 28] : f.skPh === 1 ? ['lm_jab', 60] : ['idle', 14],
-ai: (me, foe, d) => d > 110 && d < 360 },
-inktrap: { name: '墨阵', cd: 5.2, desc: '提笔画出一池宽 115 像素的墨阵。踏入者陷入【深墨禁锢】（0.48 秒定身 + 2.8 秒迟缓）；再按 Q 可随时引爆。',
-start(f) { f.vx = 0; },
-update(f) {
-if (f.skPh === 0 && f.t >= 0.16) {
-f.skPh = 1; SFX.poof();
-for (const p of projs) if (p.kind === 'trap' && p.owner === f.idx) p.dead = true;
-spawnProj(f, { kind: 'trap', x: clamp(f.x + f.face * clamp(Math.abs(foeOf(f).x - f.x), 80, 260), WALL, STAGE_W - WALL), y: -6, vx: 0, w: 115, h: 28, life: 5.0, delay: 0.22, dmg: 35, kb: [0, 0], stun: 0.48, hs: 0.07, root: true, groundOnly: true });
-}
-if (f.skPh === 1 && f.t >= 0.22) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['my_stroke', 24] : ['my_paint', 40],
-ai: (me, foe, d) => d > 80 && d < 340 && !projs.some(p => p.kind === 'trap' && p.owner === me.idx) },
-dive: { name: '俯冲', cd: 4.5, air: true, desc: '猎鹰收翼斜下俯冲。命中施加【鹰击钉地】（0.40 秒压制硬直）；自空中出手可借力回升并刷新技能。',
-start(f) { f.diveAir = !f.onGround(); if (f.onGround()) { f.vy = -700; f.vx = f.face * 200; f.y = -1; } else f.skPh = 1; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.2) { f.skPh = 1; f.t = 0; }
-if (f.skPh === 1) {
-if (f.t < 0.02) { f.hitDone = false; SFX.dash(); }
-f.vx = f.face * 840; f.vy = 780;
-if (strike(f, foe, { box: [-16, -90, 88, 20], dmg: 46, kb: [220, 0], stun: 0.40, hs: 0.09 })) {
-addP({ type: 'text', text: '鹰击钉地', x: foe.x, y: foe.y - 80, life: 0.8, max: 0.8, rgb: '140,200,255' });
-f.vx *= 0.2; f.vy = -380;
-if (f.diveAir && !f.diveChained) { f.skillCD = 0; f.diveChained = true; }
-}
-if ((f.onGround() && f.t > 0.04) || f.t > 0.4) { f.skPh = 2; f.t = 0; f.vx *= 0.2; dust(f.x, 0, 10); }
-}
-if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['jump', 20] : f.skPh === 1 ? ['yl_dive', 50] : ['getup', 16],
-ai: (me, foe, d) => d > 110 && d < 360 },
-swordqi: { name: '剑气', cd: 5, desc: '沉步拔刀，横扫出一道宏大弧月剑气。中距离直接【掀天挑空】（无地面硬直，直接送上半空），暗器更不在话下。',
-start(f) { f.vx = 0; },
-update(f) {
-if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'qi', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 880, autoAim: true, w: 92, h: 96, life: 0.46, dmg: 52, kb: [180, -700], stun: 0.3, hs: 0.08, launch: true }); }
-if (f.skPh === 1 && f.t >= 0.32) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['qf_charge', 30] : ['qf_thrust', 60], ai: (m, o, d) => d > 120 && d < 380 },
 kunai: { name: '飞镖', cd: 5, air: true, desc: '侧身一甩，四枚黑铁手里剑呈扇形激射。【无硬直击飞】，纯粹以极速密雨截断对手起手，穿透轻型投掷物。',
 start() {},
 update(f) {
@@ -12871,223 +12792,8 @@ for (const a of [-0.18, -0.06, 0.06, 0.18]) spawnProj(f, { kind: 'kunai', x: f.x
 if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['fy_seal', 28] : ['fy_crouch', 50], ai: (m, o, d) => d > 140 },
-ironwall: { name: '铁壁冲', cd: 6, nofric: true, desc: '狂暴冲锋掀起通天巨浪（通天判定，彻底封锁空中跳跃与腾空位移）。携千钧重势巨浪拍岸，对空中敌人强行下砸截落，双倍瓦解一切格挡！',
-start(f) { f.armorT = 0.38; f.armorHits = 1; f.vx = 0; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.16) {
-f.skPh = 1; f.t = 0; f.vx = f.face * 720; f.hitDone = false; SFX.dash(); SFX.thud();
-shake = Math.max(shake, 12);
-}
-if (f.skPh === 1) {
-const attWeight = (f.ch.stat && f.ch.stat.weight) || 1.50;
-const defWeight = (foe.ch.stat && foe.ch.stat.weight) || 1.0;
-const wRatio = attWeight / defWeight;
-const foeInAir = !foe.onGround() || airH(foe) > 2;
-const isCrimson = f.skinKey === 'ts_crimson';
-const waveRGB = isCrimson ? '255,60,70' : '255,200,100';
-if (!RESIM) {
-const wx = f.x + f.face * 55;
-for (let h = 0; h < 6; h++) {
-const wy = -h * 170 - rand(10, 60);
-ring(wx + rand(-20, 20), wy, 60 + h * 16, waveRGB, 0.25);
-if (Math.random() < 0.5) {
-addP({ type: 'spark', x: wx, y: wy, vx: f.face * rand(140, 360), vy: rand(-180, 180), rgb: waveRGB, w: 3, life: 0.2, max: 0.2 });
-}
-}
-dust(f.x + f.face * 35, 0, 4);
-}
-if (strike(f, foe, {
-box: [-10, -2200, 135, 0],
-dmg: 56,
-kb: foeInAir ? [Math.round(260 * wRatio), Math.round(520 * wRatio)] : [Math.round(420 * wRatio), -180],
-stun: 0.45,
-hs: 0.12,
-spike: foeInAir,
-launch: true,
-big: true,
-guardBreakMul: 1.5
-})) {
-shake = Math.max(shake, 18);
-SFX.heavy(); SFX.thud();
-for (let h = 0; h < 7; h++) {
-ring(f.x + f.face * 65, -h * 180 - 40, 90 + h * 18, waveRGB, 0.4);
-}
-const waveTxt = foeInAir ? '🌊 巨浪翻江 · 撼坠' : '🌊 巨浪裂空 · 崩山';
-addP({ type: 'text', text: waveTxt, x: f.x + f.face * 60, y: f.y - 140, life: 1.0, max: 1.0, rgb: waveRGB });
-f.vx *= 0.2;
-}
-if (f.t >= 0.25) { f.skPh = 2; f.t = 0; f.vx *= 0.2; f.armorT = 0; }
-}
-if (f.skPh === 2 && f.t >= 0.28) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['ts_shoulder', 26] : ['ts_shoulder', 40], ai: (m, o, d) => d < 260 },
-spin: { name: '枪旋', cd: 6, nofric: true, desc: '长枪急旋如风车，弹开半径扩大至 125 像素。旋转前段【无强控硬直】，末了第 8 记以乾坤大横扫（48 伤害）扫飞贴身之敌（对地面敌人仅平推硬直，仅浮空敌人会被击落地面）！',
-start(f) { f.vx = 0; f.spinN = 0; },
-update(f, foe) {
-const c = f.ctrl, dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
-f.vx = damp(f.vx, dir * wk(f) * 0.6, 10, STEP);
-if (dir !== 0) f.face = dir;
-for (const p of projs) {
-if (p.owner === foe.idx && !p.dead && !p.unbreakable) {
-if (Math.abs(p.x - f.x) < 125 && Math.abs(p.y - (f.y - 65)) < 85) {
-p.dead = true; blockFX(p.x, p.y, f.face); SFX.block();
-addP({ type: 'text', text: '破', x: p.x, y: p.y - 25, life: 0.45, max: 0.45, rgb: '170,220,255' });
-}
-}
-}
-const n = Math.floor(f.t / 0.25);
-if (n >= f.spinN && f.spinN < 8) {
-f.spinN++; f.hitDone = false; SFX.swing();
-const last = f.spinN === 8;
-const foeInAir = !foe.onGround() || airH(foe) > 2;
-strike(f, foe, last ? { box: [10, -135, 175, -10], dmg: 48, kb: foeInAir ? [420, -640] : [440, 0], stun: 0.50, hs: 0.12, launch: foeInAir, big: true }
-: { box: [20, -126, 142, -14], dmg: 15, kb: [40, 0], stun: 0.18, hs: 0.03, launch: false, noScale: true });
-}
-if (f.t >= 2) toNeutral(f);
-},
-pose: () => ['ls_stance', 20], ai: (m, o, d) => d < 150 },
-windstep: { name: '开扇', cd: 4, air: true, nofric: true, desc: '唰地张开折扇，朝面前方向疾冲过去，一路撒下 5 颗爆米花。爆米花落下半秒后噼啪炸开（每颗 8 伤害，轻微击退）。在空中开扇会斜着俯冲下去，落地炸开一圈风爆（24 伤害，挑起），再崩出 5 颗爆米花。',
-start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); if (airH(f) > 40) { f.skPh = 10; f.vy = Math.max(f.vy, 600); } },
-update(f, foe) {
-if (f.skPh >= 10) { windDive(f, foe); return; }
-if (f.skPh < 5 && f.t >= f.skPh * 0.07) {   // 冲的路上每隔一小段撒一颗
-f.skPh++;
-spawnProj(f, { kind: 'popcorn', x: f.x, y: -12, vx: 0, delay: 0.5, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: (clock * 7.3 + f.x * 0.013) % 6 });   // 只管画面的花样，但存进回滚存档里，两边要一样
-}
-f.vx = f.face * 1450 * Math.max(0, 1 - f.t / 0.38);
-if (Math.random() < 0.7) addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - rand(20, 100), vx: -f.face * 200, vy: rand(-40, 40), life: 0.25, max: 0.25, rgb: f.look.slash, w: 1.4 });
-if (f.t >= 0.4) toNeutral(f);
-},
-pose: f => f.skPh === 10 ? ['a2', 50] : ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 420 && Math.sign(o.x - m.x) === m.face },
-stomp: { name: '金刚雷铠', cd: 5.5, breakout: true, desc: '运转金刚雷体，架起防守雷铠（持续 0.55 秒，受创大减75%并霸体）。期间遭贴身攻击时消解攻击并引雷反击（50 伤害，挑飞后快速起身）；远程攻击和雾身攻击不会引雷。',
-start(f) {
-f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0);
-f.thunderGuardT = 0.55; f.skPh = 0; f.armorT = 0.55; f.armorHits = 99;
-dust(f.x, 0, 10); SFX.block();
-ring(f.x, f.y - 60, 75, '255,230,120', 0.35);
-},
-update(f, foe) {
-if (f.skPh === 0) {
-f.vx = 0;
-if (Math.random() < 0.4) addP({ type: 'spark', x: f.x + rand(-25, 25), y: f.y - rand(20, 90), vx: rand(-40, 40), vy: rand(-50, 20), life: 0.22, max: 0.22, rgb: '255,230,120', w: 1.6 });
-if (f.t >= 0.55) {
-f.thunderGuardT = 0; f.armorT = 0; f.skPh = 2; f.t = 0;
-}
-} else if (f.skPh === 1) {
-if (f.t >= 0.24) toNeutral(f);
-} else if (f.skPh === 2) {
-if (f.t >= 0.20) toNeutral(f);
-}
-},
-pose: f => f.skPh === 0 ? ['lm_boxer', 26] : f.skPh === 1 ? ['ts_slam', 48] : ['idle', 18],
-ai: (m, o, d) => projs.some(p => p.owner !== m.idx && p.dmg > 0 && Math.abs(p.x - m.x) < 260) || (d < 150 && Math.random() < 0.75) },
-inksplash: { name: '画符', cd: 2.5, can: f => (f.ink || 0) >= INK_COST * FU_INK && (f.fu || 0) < FU_MAX, lack: f => (f.fu || 0) >= FU_MAX ? '符已画满' : '墨不够', desc: `提笔画一张符，花 ${FU_INK} 格墨水，符条 +1（最多 ${FU_MAX} 张）。符攒着给大招用，攒得越多大招越痛。`,
-start(f) { f.vx = 0; },
-update(f) {
-if (f.skPh === 0 && f.t >= 0.2) {
-f.skPh = 1; f.ink -= INK_COST * FU_INK; f.fu = Math.min(FU_MAX, (f.fu || 0) + 1); SFX.swing();
-ring(f.x + f.face * 30, f.y - 120, 40, '235,200,90', 0.35);
-addP({ type: 'text', text: `画符 · ${f.fu}/${FU_MAX}`, x: f.x, y: f.y - 140, life: 0.8, max: 0.8, rgb: '235,200,90' });
-}
-if (f.skPh === 1 && f.t >= 0.4) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 260 && (m.fu || 0) < FU_MAX && (m.ink || 0) >= INK_COST * (FU_INK + 1) },   // 电脑留一格墨甩墨团，墨不够就不去画
-moonring: { name: '月轮', cd: 4.5, desc: '双月刃体积增大，脱手去程仅为快速轻削（无挑空）；自背后折返的一记附带【背袭破防】（0.78 秒强力击飞与晕眩），专破死守前方的架势。',
-start(f) { f.vx = 0; },
-update(f) {
-if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'moonring', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 740, w: 56, h: 56, life: 1.8, dmg: 28, kb: [100, 0], stun: 0.25, launch: false, hs: 0.04, pierce: true, rehit: 0.3, maxHits: 2, boomer: true, turn: 0.38 }); }
-if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['yh_mirror', 28] : ['l2a', 50], ai: (m, o, d) => d > 120 && d < 400 },
-darts: { name: '翎羽', cd: 2.5, air: true, desc: '振翅激射三道极速破甲翎羽，贯穿全场。此技【不击飞、无长硬直】，专精于全屏连续穿刺牵制与打断，破尽突进节奏。',
-start() {},
-update(f) {
-if (f.skPh === 0 && f.t >= 0.08) {
-f.skPh = 1; SFX.slice();
-const air = airH(f) > 30;
-for (const k of [-1, 0, 1]) spawnProj(f, { kind: 'feather', x: f.x + f.face * 30, y: f.y - 70 + k * 14, vx: f.face * (air ? 880 : 1100), vy: air ? 580 + k * 90 : k * 45, autoAim: true, w: 24, h: 36, life: 3, dmg: 22, kb: [100, 0], stun: 0.20, hs: 0.03, launch: false });
-}
-if (f.skPh === 1 && f.t >= 0.24) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['yl_wings', 30] : ['a1a', 60], ai: (m, o, d) => d > 120 },
-mirror: { name: '月镜', cd: 7, nofric: true, desc: '举月轮如镜护胸，凝立 0.45 秒。近身来犯者被格开，随之而来的反斩施加【太阴绝罚】（95 伤害、1.05 秒超长硬直）与【禁身锁定】，无从闪避！',
-start(f) { f.parryT = 0.45; },
-update(f, foe) {
-if (f.skPh === 0) { const c = f.ctrl, dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0); f.vx = damp(f.vx, dir * wk(f), 14, STEP); } else f.vx = damp(f.vx, 0, 10, STEP);
-if (f.skPh === 0 && f.t >= 0.45) { f.skPh = 1; f.t = 0; f.parryT = 0; }
-if (f.skPh === 1 && f.t >= 0.35) toNeutral(f);
-if (f.skPh === 2) {
-if (f.t >= 0.06 && !f.hitDone) {
-f.hitDone = true;
-applyHit(f, foe, COUNTER, [foe.x, foe.y - 60]);
-foe.breakCD = Math.max(foe.breakCD, 0.75);
-addP({ type: 'text', text: '🌙 太阴绝罚 · 禁身锁定', x: foe.x, y: foe.y - 110, life: 1.1, max: 1.1, rgb: '220,190,255' });
-}
-if (f.t >= 0.42) toNeutral(f);
-}
-},
-pose: f => f.skPh === 0 ? ['yh_mirror', 40] : f.skPh === 2 ? ['hva', 60] : ['idle', 10],
-ai: () => false },
-soundwave: { name: '清音', cd: 3.2, air: true, desc: '横箫一吹，放出一道音波。普攻攒下的音律会一次吹尽：每枚音律让音波更大、更快、伤害 +20；三律齐鸣时音波穿透、挑空、不可斩散，并让对手陷入【绕梁 · 失律】（2.2 秒迟缓）。',
-start(f) { f.vx *= 0.3; },
-update(f) {
-if (f.skPh === 0 && f.t >= 0.12) {
-f.skPh = 1; const n = Math.min(3, f.notes || 0); f.notes = 0;
-SFX.note(n);
-spawnProj(f, { kind: 'note', x: f.x + f.face * 40, y: f.y - 70, vx: f.face * (620 + 60 * n), autoAim: true, w: 54 + 16 * n, h: 54 + 16 * n, grow: 40 + 14 * n, life: 0.95,
-dmg: 22 + 20 * n, kb: [200 + 40 * n, n >= 3 ? -420 : 0], stun: 0.3 + 0.06 * n, hs: 0.05 + 0.015 * n, launch: n >= 3, unbreakable: n >= 3, maxHits: 1, notes: n });
-if (n >= 3) addP({ type: 'text', text: '三律齐鸣', x: f.x, y: f.y - 120, life: 0.8, max: 0.8, rgb: '150,240,200' });
-}
-if (f.skPh === 1 && f.t >= 0.2) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['yx_play', 30] : ['yx_push', 50],
-ai: (me, foe, d) => d > 110 && d < 700 && ((me.notes || 0) >= 2 || d > 240) },
-echowall: { name: '回音壁', cd: 6, breakout: true, desc: '以箫声筑起一道回音壁（0.6 秒）：贴身之敌被音浪推开（身上每枚音律 +8 伤害）；期间飞来的暗器、剑气、风刃会原路弹回，归玉箫所有，每弹回一次再得一枚音律。起手自带一次霸体。大招与地面陷阱无法弹回。',
-start(f) { f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0); f.reflectT = 0.6; f.armorT = 0.6; f.armorHits = 1; ring(f.x, f.y - 60, 90, f.look.slash, 0.3); SFX.note(1); },
-update(f, foe) {
-f.vx = damp(f.vx, 0, 12, STEP);
-if (f.skPh === 0 && f.t >= 0.08) {
-f.skPh = 1; f.hitDone = false;
-if (strike(f, foe, { box: [-10, -130, 110, 0], dmg: 18 + 8 * (f.notes || 0), kb: [520, -120], stun: 0.35, hs: 0.06 })) {
-f.notes = Math.min(3, (f.notes || 0) + 1);
-addP({ type: 'text', text: '音浪', x: foe.x, y: foe.y - 100, life: 0.6, max: 0.6, rgb: '150,240,200' });
-}
-}
-if (f.t >= 0.45) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['yx_play', 40] : ['yx_play', 20],
-ai: (me, foe, d) => d < 120 || projs.some(p => p.owner === foe.idx && !p.ult && Math.abs(p.x - me.x) < 260) },
-pavilion: { name: '亭中留客', cd: 16, desc: '把对手当作客人留下：一座醉翁亭从对手头顶砸落（出手约 0.5 秒落地，射程约 720），罩住了就把人禁锢在亭中 1.5 秒，期间无法移动，但可以用腾空闪脱困；也可以随便打（被打不会飞出亭子）。落地前走开就罩不住。霸体能硬扛。',
-start(f) { f.vx = 0; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.05) {
-f.skPh = 1; SFX.swing();
-const towardFoe = Math.sign(foe.x - f.x) === f.face;
-const tx = clamp(towardFoe ? foe.x : f.x + f.face * 260, WALL + 40, STAGE_W - WALL - 40);
-if (Math.abs(tx - f.x) <= 720) spawnProj(f, { kind: 'pavilion', vx: 0, x: tx, y: -260, delay: 0.45, w: 150, h: 560, life: 0.95, dmg: 20, kb: [0, 0], stun: 0.3, hs: 0.08, jail: true, unblockable: true, unbreakable: true });
-else addP({ type: 'text', text: '客在远方', x: f.x, y: f.y - 120, life: 0.7, max: 0.7, rgb: '255,190,90' });
-}
-if (f.t >= 0.27) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['zx_sway', 30] : ['gc_wind', 40],
-ai: (me, foe, d) => d < 650 },
-feast: { name: '与民同乐', cd: 16, can: f => (f.drunk || 0) >= 50, lack: () => '酒不够', desc: '至少半壶酒才能用，一次把酒全部倒光：先朝对手丢去一瓶酒，砸中就得陪他喝——对手回 115 血，捧着酒瓶僵直 1 秒；醉翁自己也灌一口回 182 血，僵直 0.7 秒。自己先喝完，中间这一小段空当可以过去揍他。',
-start(f) { f.vx = 0; f.drunk = 0; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.18) {
-f.skPh = 1; SFX.swing();
-spawnProj(f, { kind: 'bottle', x: f.x + f.face * 40, y: f.y - 92, vx: f.face * 950, vy: -60, g: 260, w: 40, h: 46, life: 0.9, dmg: 1, kb: [0, 0], stun: 0, hs: 0, feast: true, unblockable: true, unbreakable: true });
-}
-if (f.skPh === 1 && f.t >= 0.35) {
-f.skPh = 2; f.hp = Math.min(f.maxHp, f.hp + Math.round(135 * HERO_HP_SCALE)); SFX.drink();
-addP({ type: 'text', text: `+${Math.round(135 * HERO_HP_SCALE)}`, x: f.x, y: f.y - 120, life: 0.8, max: 0.8, rgb: '130,230,140' });
-}
-if (f.t >= 1.05) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['gc_wind', 30] : f.skPh === 1 ? ['gc_throw', 60] : ['zx_drink', 24],
-ai: (me, foe, d) => (me.drunk || 0) >= 50 && d > 120 && d < 800 && me.hp < me.maxHp * 0.85 },
-drink: { name: '豪饮', cd: 2.6, desc: '仰头灌一大口酒，醉意 +50。', start(f){ f.vx = 0; }, update(f){ if (f.t >= 0.3) toNeutral(f); }, pose: () => ['zx_drink', 24], ai: () => false },
-drunkstep: { name: '醉步', cd: 4.5, desc: '东倒西歪一个滚翻。', start(f){ f.vx = 0; }, update(f){ if (f.t >= 0.36) toNeutral(f); }, pose: () => ['zx_roll', 40], ai: () => false },
+});
+Object.assign(SKILLS, {
 hook: { name: '飞锤', cd: 4, air: true, desc: '把链锤朝对手甩出去（射程约 495），锤头砸中就扯链把对手拽到身前，并施加【震魄】：1.2 秒内对手受到的伤害提高 25%。被格挡或被霸体吃掉时带不动。',
 start(f) { f.vx *= 0.2; },
 update(f) {
@@ -13117,6 +12823,53 @@ if (f.t >= 1.2) toNeutral(f);
 },
 pose: f => f.spN >= 5 ? ['gc_throw', 50] : ['gc_spin', 30],
 ai: (me, foe, d) => d < 170 },
+});
+Object.assign(SKILLS, {
+drink: { name: '豪饮', cd: 2.6, desc: '仰头灌一大口酒，醉意 +50。', start(f){ f.vx = 0; }, update(f){ if (f.t >= 0.3) toNeutral(f); }, pose: () => ['zx_drink', 24], ai: () => false },
+drunkstep: { name: '醉步', cd: 4.5, desc: '东倒西歪一个滚翻。', start(f){ f.vx = 0; }, update(f){ if (f.t >= 0.36) toNeutral(f); }, pose: () => ['zx_roll', 40], ai: () => false },
+});
+Object.assign(SKILLS, {
+thunderfist: { name: '雷闪', cd: 5, nofric: true, pass: true, desc: '身化雷光贴地疾冲。一拳贯穿附带【触电麻痹】（0.38 秒电击瘫痪硬直），起手片刻后化为雷光霸体。',
+start(f) { f.armorT = 0; f.armorHits = 0; f.vx = 0; },
+update(f, foe) {
+if (f.skPh === 0 && f.t >= 0.12) { f.skPh = 1; f.t = 0; f.vx = f.face * 1350; f.armorT = 0.28; f.armorHits = 1; f.hitDone = false; SFX.dash(); SFX.thunder(); }
+if (f.skPh === 1) {
+if (strike(f, foe, { box: [-20, -110, 75, -10], dmg: 40, kb: [80, 0], stun: 0.38, hs: 0.08 })) {
+f.skill2CD = 0;
+addP({ type: 'text', text: '⚡ 触电麻痹 · 雷铠重置', x: foe.x, y: foe.y - 100, life: 1.0, max: 1.0, rgb: '255,240,120' });
+}
+if (Math.random() < 0.6) addP({ type: 'spark', x: f.x - f.face * 10, y: f.y - rand(20, 110), vx: -f.face * rand(100, 300), vy: rand(-100, 100), life: 0.2, max: 0.2, rgb: '255,240,150', w: 2 });
+const through = f.hitDone && foe && (f.x - foe.x) * f.face > 45;   // 一拳贯穿、穿过对手身后就收住，不再继续往前冲
+if (f.t >= 0.26 || through) { f.skPh = 2; f.t = 0; f.vx *= 0.15; f.armorT = 0; }
+}
+if (f.skPh === 2 && f.t >= 0.25) toNeutral(f);
+},
+pose: f => f.skPh === 0 ? ['lm_boxer', 28] : f.skPh === 1 ? ['lm_jab', 60] : ['idle', 14],
+ai: (me, foe, d) => d > 110 && d < 360 },
+stomp: { name: '金刚雷铠', cd: 5.5, breakout: true, desc: '运转金刚雷体，架起防守雷铠（持续 0.55 秒，受创大减75%并霸体）。期间遭贴身攻击时消解攻击并引雷反击（50 伤害，挑飞后快速起身）；远程攻击和雾身攻击不会引雷。',
+start(f) {
+f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0);
+f.thunderGuardT = 0.55; f.skPh = 0; f.armorT = 0.55; f.armorHits = 99;
+dust(f.x, 0, 10); SFX.block();
+ring(f.x, f.y - 60, 75, '255,230,120', 0.35);
+},
+update(f, foe) {
+if (f.skPh === 0) {
+f.vx = 0;
+if (Math.random() < 0.4) addP({ type: 'spark', x: f.x + rand(-25, 25), y: f.y - rand(20, 90), vx: rand(-40, 40), vy: rand(-50, 20), life: 0.22, max: 0.22, rgb: '255,230,120', w: 1.6 });
+if (f.t >= 0.55) {
+f.thunderGuardT = 0; f.armorT = 0; f.skPh = 2; f.t = 0;
+}
+} else if (f.skPh === 1) {
+if (f.t >= 0.24) toNeutral(f);
+} else if (f.skPh === 2) {
+if (f.t >= 0.20) toNeutral(f);
+}
+},
+pose: f => f.skPh === 0 ? ['lm_boxer', 26] : f.skPh === 1 ? ['ts_slam', 48] : ['idle', 18],
+ai: (m, o, d) => projs.some(p => p.owner !== m.idx && p.dmg > 0 && Math.abs(p.x - m.x) < 260) || (d < 150 && Math.random() < 0.75) },
+});
+Object.assign(SKILLS, {
 spindle: { name: '穿叶飞梭', cd: 5, nofric: true, desc: '凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 5 秒【雀芒】印记（最多 5 层）并造成 30 伤害。',
 start(f) { f.vx = 0; },
 update(f, foe) {
@@ -13274,6 +13027,92 @@ if (f.t >= 0.16) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['du_l1s', 24] : f.skPh === 1 ? (f.sdDrifting ? ['du_l1s', 30] : ['dash', 60]) : ['idle', 14],
 ai: (me, foe, d) => foe.invul <= 0 && ((foe.needleMark > 0 && d < 700) || (d > 100 && d < 520)) },
+});
+Object.assign(SKILLS, {
+backthrust: { name: '回马枪', cd: 6, desc: '先退一步让开身位，再回身一枪极远距离直取咽喉（判定延伸至 235 像素）。枪尖极远端挑中触发【枪尖穿心】（同一目标最多连挑 3 次，第 4 记强力震飞脱离）；枪旋余劲立时回转。',
+start(f) { f.vx = -f.face * 540; f.vy = -420; f.y = Math.min(f.y, -1); },
+update(f, foe) {
+if (f.skPh === 0 && f.t >= 0.24) { f.skPh = 1; f.t = 0; f.vx = f.face * 180; f.hitDone = false; SFX.heavy(); }
+if (f.skPh === 1) {
+if (f.t < 0.12) {
+const curHits = foe.huiMaHits || 0;
+if (curHits >= 3) {
+if (strike(f, foe, { box: [20, -104, 235, -44], dmg: 45, kb: [680, -320], stun: 0.4, hs: 0.16, launch: true, big: true })) {
+foe.huiMaHits = 0;
+foe.invul = 0.65;
+foe.airRecover = true;
+f.skill2CD *= 0.5;
+shake = Math.max(shake, 14);
+ring(foe.x, foe.y - 60, 160, '170,220,255', 0.45);
+addP({ type: 'text', text: '💨 枪劲震退 · 浮空脱离', x: foe.x, y: foe.y - 110, life: 1.0, max: 1.0, rgb: '170,220,255' });
+SFX.heavy();
+}
+} else {
+if (strike(f, foe, { box: [20, -104, 235, -44], dmg: 60, kb: [340, -800], stun: 0.48, hs: 0.12, launch: true })) {
+foe.huiMaHits = curHits + 1;
+f.skill2CD *= 0.5;
+addP({ type: 'text', text: '枪尖穿心 (' + foe.huiMaHits + '/3)', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '170,220,255' });
+}
+}
+}
+if (f.t >= 0.34) toNeutral(f);
+}
+},
+pose: f => f.skPh === 0 ? ['ls_stance', 24] : ['ls_thrust', 60],
+ai: (me, foe, d) => d < 120 },
+spin: { name: '枪旋', cd: 6, nofric: true, desc: '长枪急旋如风车，弹开半径扩大至 125 像素。旋转前段【无强控硬直】，末了第 8 记以乾坤大横扫（48 伤害）扫飞贴身之敌（对地面敌人仅平推硬直，仅浮空敌人会被击落地面）！',
+start(f) { f.vx = 0; f.spinN = 0; },
+update(f, foe) {
+const c = f.ctrl, dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
+f.vx = damp(f.vx, dir * wk(f) * 0.6, 10, STEP);
+if (dir !== 0) f.face = dir;
+for (const p of projs) {
+if (p.owner === foe.idx && !p.dead && !p.unbreakable) {
+if (Math.abs(p.x - f.x) < 125 && Math.abs(p.y - (f.y - 65)) < 85) {
+p.dead = true; blockFX(p.x, p.y, f.face); SFX.block();
+addP({ type: 'text', text: '破', x: p.x, y: p.y - 25, life: 0.45, max: 0.45, rgb: '170,220,255' });
+}
+}
+}
+const n = Math.floor(f.t / 0.25);
+if (n >= f.spinN && f.spinN < 8) {
+f.spinN++; f.hitDone = false; SFX.swing();
+const last = f.spinN === 8;
+const foeInAir = !foe.onGround() || airH(foe) > 2;
+strike(f, foe, last ? { box: [10, -135, 175, -10], dmg: 48, kb: foeInAir ? [420, -640] : [440, 0], stun: 0.50, hs: 0.12, launch: foeInAir, big: true }
+: { box: [20, -126, 142, -14], dmg: 15, kb: [40, 0], stun: 0.18, hs: 0.03, launch: false, noScale: true });
+}
+if (f.t >= 2) toNeutral(f);
+},
+pose: () => ['ls_stance', 20], ai: (m, o, d) => d < 150 },
+});
+Object.assign(SKILLS, {
+windblade: { name: '风刃', cd: 4.0, air: true, desc: '挥扇生风，一次扇出上下两道风刃（每道 28 伤害）。此招【无长硬直】，附带风暴推力（360 像素击退）；连飞羽轻镖也一并吹散。',
+start() {},
+update(f) {
+if (f.skPh === 0 && f.t >= 0.04) {
+f.skPh = 1; SFX.swing();
+for (const vy of [-110, 110]) spawnProj(f, { kind: 'wind', x: f.x + f.face * 40, y: f.y - 62, vx: f.face * 1100, vy, autoAim: true, w: 70, h: 58, life: 1.1, dmg: 28, kb: [360, -80], stun: 0.18, hs: 0.03 });
+}
+if (f.skPh === 1 && f.t >= 0.11) toNeutral(f);
+},
+pose: f => f.skPh === 0 ? ['ly_fanswipe', 32] : ['idle', 20],
+ai: () => true },
+windstep: { name: '开扇', cd: 4, air: true, nofric: true, desc: '唰地张开折扇，朝面前方向疾冲过去，一路撒下 5 颗爆米花。爆米花落下半秒后噼啪炸开（每颗 8 伤害，轻微击退）。在空中开扇会斜着俯冲下去，落地炸开一圈风爆（24 伤害，挑起），再崩出 5 颗爆米花。',
+start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); if (airH(f) > 40) { f.skPh = 10; f.vy = Math.max(f.vy, 600); } },
+update(f, foe) {
+if (f.skPh >= 10) { windDive(f, foe); return; }
+if (f.skPh < 5 && f.t >= f.skPh * 0.07) {   // 冲的路上每隔一小段撒一颗
+f.skPh++;
+spawnProj(f, { kind: 'popcorn', x: f.x, y: -12, vx: 0, delay: 0.5, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: (clock * 7.3 + f.x * 0.013) % 6 });   // 只管画面的花样，但存进回滚存档里，两边要一样
+}
+f.vx = f.face * 1450 * Math.max(0, 1 - f.t / 0.38);
+if (Math.random() < 0.7) addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - rand(20, 100), vx: -f.face * 200, vy: rand(-40, 40), life: 0.25, max: 0.25, rgb: f.look.slash, w: 1.4 });
+if (f.t >= 0.4) toNeutral(f);
+},
+pose: f => f.skPh === 10 ? ['a2', 50] : ['ly_fanswipe', 40], ai: (m, o, d) => d > 90 && d < 420 && Math.sign(o.x - m.x) === m.face },
+});
+Object.assign(SKILLS, {
 mistmark: { name: '留影', cd: 3.5, nofric: true, can: f => f.onGround(), lack: () => '要站在地上才能留影', desc: '在脚下留一个雾身，同时向前踏出一大步斩出一刀（40 伤害）。若场上已有雾身，它们会同步复制出刀并在身后化出较弱子影。场上最多 10 个雾身（含本体与子影所生）。雾身具备高额生命且可被攻击打散，被击碎时发生碎影自爆并短暂弱化对手。雾身随本体出招释放内功波动飞刃，虽伤害偏低但直透防御、加剧对手架势耐力流失。',
 start(f) { f.vx = 0; plantClone(f, f.x); },
 update(f, foe) {
@@ -13338,58 +13177,33 @@ if (f.t >= (C.swapLand || 0.08)) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['fy_seal', 50] : ['idle', 20],
 ai: () => false },
-polarswap: { name: '极性反转', cd: 6, instant: true, desc: '正极和负极互换，不花出招时间，空中也能用；身上亮起一个大大的红色 ⊕ 或蓝色 ⊖，换完立刻清零「磁极」（R）的冷却。负极普攻消磁了，换一下极性就恢复。',
-start(f) {
-f.pol = f.pol > 0 ? -1 : 1; f.polT = 0.6; f.skill2CD = 0; f.mChain = 0; f.mT = 0;   // 换极性也顺便恢复消磁
-ring(f.x, f.y - 60, 90, magRGB(f.pol), 0.3); SFX.parry();
-addP({ type: 'text', text: magName(f.pol), x: f.x, y: f.y - 125, life: 0.7, max: 0.7, rgb: magRGB(f.pol) });
-toNeutral(f);
+});
+Object.assign(SKILLS, {
+inktrap: { name: '墨阵', cd: 5.2, desc: '提笔画出一池宽 115 像素的墨阵。踏入者陷入【深墨禁锢】（0.48 秒定身 + 2.8 秒迟缓）；再按 Q 可随时引爆。',
+start(f) { f.vx = 0; },
+update(f) {
+if (f.skPh === 0 && f.t >= 0.16) {
+f.skPh = 1; SFX.poof();
+for (const p of projs) if (p.kind === 'trap' && p.owner === f.idx) p.dead = true;
+spawnProj(f, { kind: 'trap', x: clamp(f.x + f.face * clamp(Math.abs(foeOf(f).x - f.x), 80, 260), WALL, STAGE_W - WALL), y: -6, vx: 0, w: 115, h: 28, life: 5.0, delay: 0.22, dmg: 35, kb: [0, 0], stun: 0.48, hs: 0.07, root: true, groundOnly: true });
+}
+if (f.skPh === 1 && f.t >= 0.22) toNeutral(f);
 },
-update(f) { toNeutral(f); },
-pose: () => ['idle', 14],
-ai: () => false },
-magfield: { name: '磁极', cd: 6, desc: `正极：身边生出一圈磁石，把周围的敌人用力弹走，离得越近弹得越远（${MAG.rPlusDmg} 伤害）。负极：把中距离的对手吸过来，越近吸得越快，吸到身前定住 ${MAG.rMinusStun} 秒，不会倒地（${MAG.rMinusDmg} 伤害，挡不住）。`,
-start(f) { f.vx = 0; f.magN = f.pol; f.magTg = -1; },   // 按起手那一刻的极性放
-update(f, foe) {
-const plus = f.magN > 0;
-if (f.skPh === 0 && f.t >= (plus ? 0.14 : 0.16)) {
-f.skPh = 1; f.t = 0; f.hitDone = false;
-const tg = sdTarget(f, foe) || foe, rgb = magRGB(f.magN), plusRange = mapMagRange(f, MAG.rPlusR), minusRange = mapMagRange(f, MAG.rMinusRange);
-if (plus) {
-for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; addP({ type: 'mag', pol: 1, x: f.x + Math.cos(a) * 40, y: f.y - 60 + Math.sin(a) * 30, vx: Math.cos(a) * 520, vy: Math.sin(a) * 300, rot: a, r: 11, life: 0.32, max: 0.32, drag: 3 }); }
-ring(f.x, f.y - 60, plusRange, rgb, 0.35); shake = Math.max(shake, 10); SFX.heavy();
-const d = Math.hypot(tg.x - f.x, tg.y - f.y), near = clamp(1 - d / plusRange, 0, 1);   // 越近越大
-const dir = (Math.sign(tg.x - f.x) || f.face) * MAG.rPlusDir;
-strike(f, tg, { box: [-plusRange, -150, plusRange, 20], dmg: MAG.rPlusDmg, kb: [MAG.rPlusKb[0] + MAG.rPlusKb[1] * near, -360 - 260 * near], stun: 0.5, hs: 0.1, launch: true, big: true, dir });
-} else {
-ring(f.x, f.y - 60, 70, rgb, 0.3); SFX.dash();
-addP({ type: 'mag', pol: -1, x: f.x + f.face * 34, y: f.y - 62, vx: 0, vy: 0, rot: 0, r: 13, life: 0.45, max: 0.45 });
-const dx = tg.x - f.x;
-if (!isClient() && tg.hp > 0 && tg.invul <= 0 && Math.abs(dx) <= minusRange && Math.abs(tg.y - f.y) < 310) {
-f.face = Math.sign(dx) || f.face; f.magTg = tg.idx; f.hitDone = true;
-tg.state = 'held'; tg.t = 0; tg.vx = 0; tg.vy = 0; tg.move = null; tg.skill = null; tg.sp = null;
+pose: f => f.skPh === 0 ? ['my_stroke', 24] : ['my_paint', 40],
+ai: (me, foe, d) => d > 80 && d < 340 && !projs.some(p => p.kind === 'trap' && p.owner === me.idx) },
+inksplash: { name: '画符', cd: 2.5, can: f => (f.ink || 0) >= INK_COST * FU_INK && (f.fu || 0) < FU_MAX, lack: f => (f.fu || 0) >= FU_MAX ? '符已画满' : '墨不够', desc: `提笔画一张符，花 ${FU_INK} 格墨水，符条 +1（最多 ${FU_MAX} 张）。符攒着给大招用，攒得越多大招越痛。`,
+start(f) { f.vx = 0; },
+update(f) {
+if (f.skPh === 0 && f.t >= 0.2) {
+f.skPh = 1; f.ink -= INK_COST * FU_INK; f.fu = Math.min(FU_MAX, (f.fu || 0) + 1); SFX.swing();
+ring(f.x + f.face * 30, f.y - 120, 40, '235,200,90', 0.35);
+addP({ type: 'text', text: `画符 · ${f.fu}/${FU_MAX}`, x: f.x, y: f.y - 140, life: 0.8, max: 0.8, rgb: '235,200,90' });
 }
-}
-}
-if (f.skPh === 1 && f.magTg >= 0) {   // 负极：一帧一帧吸过来，越近越快
-const tg = fighterByIdx(f.magTg), dx = f.x + f.face * 72 - tg.x, d = Math.abs(tg.x - f.x);
-if (tg.state !== 'held' || tg.hp <= 0) f.magTg = -1;
-else {
-const v = magForce(MAG.rMinusK, d, MAG.rMinusV[0], MAG.rMinusV[1]), stepX = Math.sign(dx) * Math.min(Math.abs(dx), v * STEP);
-magMove(tg, tg.x + stepX); tg.y = damp(tg.y, gndY(f), 18, STEP);   // 吸到磁仙脚下那一层
-if (!RESIM && Math.random() < 0.7) addP({ type: 'spark', x: tg.x, y: tg.y - 60 + rand(-20, 20), vx: Math.sign(dx) * rand(300, 600), vy: rand(-30, 30), rgb: magRGB(-1), life: 0.2, max: 0.2, w: 2 });
-if (Math.abs(dx) < 2 || f.t >= MAG.rMinusTime) {
-f.magTg = -1; mapPutOn(tg, f.plat);
-applyHit(f, tg, { dmg: MAG.rMinusDmg, kb: [0, 0], stun: MAG.rMinusStun, hs: 0.08, root: true, unblockable: true, dir: f.face }, [tg.x, tg.y - 60]);
-if (tg.state === 'held') toNeutral(tg);
-ring(tg.x, tg.y - 60, 60, magRGB(-1), 0.25); SFX.thud();
-}
-}
-}
-if (f.skPh === 1 && f.magTg < 0 && f.t >= 0.24) toNeutral(f);
+if (f.skPh === 1 && f.t >= 0.4) toNeutral(f);
 },
-pose: f => f.skPh === 0 ? ['lm_boxer', 26] : [f.magN > 0 ? 'hva' : 'yx_push', 56],
-ai: (me, foe, d) => me.pol > 0 ? d < MAG.rPlusR + 10 : d > 120 && d < MAG.rMinusRange - 40 },
+pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 260 && (m.fu || 0) < FU_MAX && (m.ink || 0) >= INK_COST * (FU_INK + 1) },   // 电脑留一格墨甩墨团，墨不够就不去画
+});
+Object.assign(SKILLS, {
 throwball: { name: '金丝回环', cd: 0, desc: '沿当前朝向放出傀丸。金丝让它在有限距离内持续往返；普攻与蓄力攻击可以击打傀丸，改变方向并加速。傀丸回到身边后会再次出发。',
 can: f => !projs.some(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead),
 lack: () => '傀丸已在阵中',
@@ -13428,11 +13242,498 @@ ai: (me, foe) => {
 const ball = projs.find(p => p.kind === 'ironball' && p.owner === me.idx && !p.dead);
 return ball && Math.sign(foe.x - ball.x) === (me.face || 1) && Math.abs(foe.y - (ball.y + 58)) < 110 && Math.abs(foe.x - ball.x) < 560;
 } },
-};
-const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, big: true, unblockable: true, noScale: true };
-const ULTS = {
-crescent: { name: '残月', flurry: true, n: 6, iv: 0.1, slash: 14, fin: 85, land: true, dashSpd: 1750, dashT: 0.28, desc: '纳刀起手，一记居合突刺撕开战局（突进距离提升至 1.25 倍）；既已斩中，六道残月剑气接踵绞杀，最后自空中劈落就地了断（终结斩85伤害）。终结斩落触发【剑意通明】：重置全技能与冲刺冷却，并回涌 20% 绝技气量。若突刺落空，门户大开。' },
+});
+Object.assign(SKILLS, {
+gale: { name: '疾风斩', cd: 6, pass: true, nofric: true, desc: '一步居合，身随刀走，直穿敌身；锋刃掠过处施加【居合斩穴】强定身（0.65 秒），并立即重置瞬步冲刺冷却。途中若遇墨阵，一刀两断。',
+start(f) { f.vx = 0; },
+update(f, foe) {
+if (f.skPh === 0 && f.t >= 0.08) { f.skPh = 1; f.t = 0; f.vx = 1500 * f.face; f.invul = 0.12; f.hitDone = false; SFX.dash(); }
+if (f.skPh === 1) {
+for (const p of projs) {
+if (p.kind === 'trap' && p.owner === foe.idx && Math.abs(p.x - f.x) < 80) {
+p.dead = true; smoke(p.x, -10, 8); SFX.slice();
+addP({ type: 'text', text: '破阵', x: p.x, y: -45, life: 0.6, max: 0.6, rgb: '120,230,255' });
+}
+}
+if (strike(f, foe, { box: [-10, -112, 92, 0], dmg: 55, kb: [180, 0], stun: 0.65, hs: 0.12 })) {
+f.dashCD = 0;
+f.skill2CD = 0;
+addP({ type: 'text', text: '居合斩穴 · 剑气重置', x: f.x, y: f.y - 110, life: 0.8, max: 0.8, rgb: '120,230,255' });
+}
+if (f.t >= 0.18) { f.skPh = 2; f.t = 0; f.vx *= 0.2; }
+}
+if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
+},
+pose: f => f.skPh === 0 ? ['qf_charge', 26] : f.skPh === 1 ? ['qf_thrust', 60] : ['idle', 14],
+ai: (me, foe, d) => d > 140 && d < 330 },
+swordqi: { name: '剑气', cd: 5, desc: '沉步拔刀，横扫出一道宏大弧月剑气。中距离直接【掀天挑空】（无地面硬直，直接送上半空），暗器更不在话下。',
+start(f) { f.vx = 0; },
+update(f) {
+if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'qi', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 880, autoAim: true, w: 92, h: 96, life: 0.46, dmg: 52, kb: [180, -700], stun: 0.3, hs: 0.08, launch: true }); }
+if (f.skPh === 1 && f.t >= 0.32) toNeutral(f);
+},
+pose: f => f.skPh === 0 ? ['qf_charge', 30] : ['qf_thrust', 60], ai: (m, o, d) => d > 120 && d < 380 },
+});
+Object.assign(SKILLS, {
+quake: { name: '震地', cd: 8, breakout: true, desc: '双手擎刀，怒砸大地，地裂冲击波范围大增（扩大35%）。起手带霸体（抵挡1次攻击），砸地直击施加【撼地重震】（0.45 秒脑震荡），把人掀上云霄。唯腾空者不受地裂所侵。',
+start(f) { f.armorT = 0.28; f.armorHits = 1; f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0); },
+update(f, foe) {
+if (f.skPh === 0 && f.t >= 0.24) {
+f.skPh = 1; f.t = 0; f.hitDone = false;
+shake = Math.max(shake, 14); dust(f.x, 0, 24); ring(f.x, 0, 140, '255,200,120', 0.35); SFX.thud(); SFX.heavy();
+for (const sd of [-1, 1]) spawnProj(f, { kind: 'quake', x: f.x + sd * 30, y: -22, vx: sd * 680, w: 84, h: 48, life: 0.8, dmg: 40, kb: [200, -740], stun: 0.40, hs: 0.08, launch: true, groundOnly: true, unbreakable: true });
+if (strike(f, foe, { box: [-40, -80, 100, 4], dmg: 45, kb: [220, -800], stun: 0.45, hs: 0.12, launch: true })) {
+f.guard = Math.min(f.maxGuard, (f.guard || f.maxGuard) + 30);
+f.skill2CD = Math.max(0, f.skill2CD - 2.5);
+addP({ type: 'text', text: '💥 撼地重震 · 固若金汤', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,200,120' });
+}
+}
+if (f.skPh === 1 && f.t >= 0.40) toNeutral(f);
+},
+pose: f => f.skPh === 0 ? ['ts_lift', 20] : ['ts_slam', 60],
+ai: (me, foe, d) => d < 420 && foe.onGround() },
+ironwall: { name: '铁壁冲', cd: 6, nofric: true, desc: '狂暴冲锋掀起通天巨浪（通天判定，彻底封锁空中跳跃与腾空位移）。携千钧重势巨浪拍岸，对空中敌人强行下砸截落，双倍瓦解一切格挡！',
+start(f) { f.armorT = 0.38; f.armorHits = 1; f.vx = 0; },
+update(f, foe) {
+if (f.skPh === 0 && f.t >= 0.16) {
+f.skPh = 1; f.t = 0; f.vx = f.face * 720; f.hitDone = false; SFX.dash(); SFX.thud();
+shake = Math.max(shake, 12);
+}
+if (f.skPh === 1) {
+const attWeight = (f.ch.stat && f.ch.stat.weight) || 1.50;
+const defWeight = (foe.ch.stat && foe.ch.stat.weight) || 1.0;
+const wRatio = attWeight / defWeight;
+const foeInAir = !foe.onGround() || airH(foe) > 2;
+const isCrimson = f.skinKey === 'ts_crimson';
+const waveRGB = isCrimson ? '255,60,70' : '255,200,100';
+if (!RESIM) {
+const wx = f.x + f.face * 55;
+for (let h = 0; h < 6; h++) {
+const wy = -h * 170 - rand(10, 60);
+ring(wx + rand(-20, 20), wy, 60 + h * 16, waveRGB, 0.25);
+if (Math.random() < 0.5) {
+addP({ type: 'spark', x: wx, y: wy, vx: f.face * rand(140, 360), vy: rand(-180, 180), rgb: waveRGB, w: 3, life: 0.2, max: 0.2 });
+}
+}
+dust(f.x + f.face * 35, 0, 4);
+}
+if (strike(f, foe, {
+box: [-10, -2200, 135, 0],
+dmg: 56,
+kb: foeInAir ? [Math.round(260 * wRatio), Math.round(520 * wRatio)] : [Math.round(420 * wRatio), -180],
+stun: 0.45,
+hs: 0.12,
+spike: foeInAir,
+launch: true,
+big: true,
+guardBreakMul: 1.5
+})) {
+shake = Math.max(shake, 18);
+SFX.heavy(); SFX.thud();
+for (let h = 0; h < 7; h++) {
+ring(f.x + f.face * 65, -h * 180 - 40, 90 + h * 18, waveRGB, 0.4);
+}
+const waveTxt = foeInAir ? '🌊 巨浪翻江 · 撼坠' : '🌊 巨浪裂空 · 崩山';
+addP({ type: 'text', text: waveTxt, x: f.x + f.face * 60, y: f.y - 140, life: 1.0, max: 1.0, rgb: waveRGB });
+f.vx *= 0.2;
+}
+if (f.t >= 0.25) { f.skPh = 2; f.t = 0; f.vx *= 0.2; f.armorT = 0; }
+}
+if (f.skPh === 2 && f.t >= 0.28) toNeutral(f);
+},
+pose: f => f.skPh === 0 ? ['ts_shoulder', 26] : ['ts_shoulder', 40], ai: (m, o, d) => d < 260 },
+});
+Object.assign(SKILLS, {
+dive: { name: '俯冲', cd: 4.5, air: true, desc: '猎鹰收翼斜下俯冲。命中施加【鹰击钉地】（0.40 秒压制硬直）；自空中出手可借力回升并刷新技能。',
+start(f) { f.diveAir = !f.onGround(); if (f.onGround()) { f.vy = -700; f.vx = f.face * 200; f.y = -1; } else f.skPh = 1; },
+update(f, foe) {
+if (f.skPh === 0 && f.t >= 0.2) { f.skPh = 1; f.t = 0; }
+if (f.skPh === 1) {
+if (f.t < 0.02) { f.hitDone = false; SFX.dash(); }
+f.vx = f.face * 840; f.vy = 780;
+if (strike(f, foe, { box: [-16, -90, 88, 20], dmg: 46, kb: [220, 0], stun: 0.40, hs: 0.09 })) {
+addP({ type: 'text', text: '鹰击钉地', x: foe.x, y: foe.y - 80, life: 0.8, max: 0.8, rgb: '140,200,255' });
+f.vx *= 0.2; f.vy = -380;
+if (f.diveAir && !f.diveChained) { f.skillCD = 0; f.diveChained = true; }
+}
+if ((f.onGround() && f.t > 0.04) || f.t > 0.4) { f.skPh = 2; f.t = 0; f.vx *= 0.2; dust(f.x, 0, 10); }
+}
+if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
+},
+pose: f => f.skPh === 0 ? ['jump', 20] : f.skPh === 1 ? ['yl_dive', 50] : ['getup', 16],
+ai: (me, foe, d) => d > 110 && d < 360 },
+darts: { name: '翎羽', cd: 2.5, air: true, desc: '振翅激射三道极速破甲翎羽，贯穿全场。此技【不击飞、无长硬直】，专精于全屏连续穿刺牵制与打断，破尽突进节奏。',
+start() {},
+update(f) {
+if (f.skPh === 0 && f.t >= 0.08) {
+f.skPh = 1; SFX.slice();
+const air = airH(f) > 30;
+for (const k of [-1, 0, 1]) spawnProj(f, { kind: 'feather', x: f.x + f.face * 30, y: f.y - 70 + k * 14, vx: f.face * (air ? 880 : 1100), vy: air ? 580 + k * 90 : k * 45, autoAim: true, w: 24, h: 36, life: 3, dmg: 22, kb: [100, 0], stun: 0.20, hs: 0.03, launch: false });
+}
+if (f.skPh === 1 && f.t >= 0.24) toNeutral(f);
+},
+pose: f => f.skPh === 0 ? ['yl_wings', 30] : ['a1a', 60], ai: (m, o, d) => d > 120 },
+});
+Object.assign(SKILLS, {
+moonring: { name: '月轮', cd: 4.5, desc: '双月刃体积增大，脱手去程仅为快速轻削（无挑空）；自背后折返的一记附带【背袭破防】（0.78 秒强力击飞与晕眩），专破死守前方的架势。',
+start(f) { f.vx = 0; },
+update(f) {
+if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; SFX.swing(); spawnProj(f, { kind: 'moonring', x: f.x + f.face * 40, y: f.y - 65, vx: f.face * 740, w: 56, h: 56, life: 1.8, dmg: 28, kb: [100, 0], stun: 0.25, launch: false, hs: 0.04, pierce: true, rehit: 0.3, maxHits: 2, boomer: true, turn: 0.38 }); }
+if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
+},
+pose: f => f.skPh === 0 ? ['yh_mirror', 28] : ['l2a', 50], ai: (m, o, d) => d > 120 && d < 400 },
+mirror: { name: '月镜', cd: 7, nofric: true, desc: '举月轮如镜护胸，凝立 0.45 秒。近身来犯者被格开，随之而来的反斩施加【太阴绝罚】（95 伤害、1.05 秒超长硬直）与【禁身锁定】，无从闪避！',
+start(f) { f.parryT = 0.45; },
+update(f, foe) {
+if (f.skPh === 0) { const c = f.ctrl, dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0); f.vx = damp(f.vx, dir * wk(f), 14, STEP); } else f.vx = damp(f.vx, 0, 10, STEP);
+if (f.skPh === 0 && f.t >= 0.45) { f.skPh = 1; f.t = 0; f.parryT = 0; }
+if (f.skPh === 1 && f.t >= 0.35) toNeutral(f);
+if (f.skPh === 2) {
+if (f.t >= 0.06 && !f.hitDone) {
+f.hitDone = true;
+applyHit(f, foe, COUNTER, [foe.x, foe.y - 60]);
+foe.breakCD = Math.max(foe.breakCD, 0.75);
+addP({ type: 'text', text: '🌙 太阴绝罚 · 禁身锁定', x: foe.x, y: foe.y - 110, life: 1.1, max: 1.1, rgb: '220,190,255' });
+}
+if (f.t >= 0.42) toNeutral(f);
+}
+},
+pose: f => f.skPh === 0 ? ['yh_mirror', 40] : f.skPh === 2 ? ['hva', 60] : ['idle', 10],
+ai: () => false },
+});
+Object.assign(SKILLS, {
+soundwave: { name: '清音', cd: 3.2, air: true, desc: '横箫一吹，放出一道音波。普攻攒下的音律会一次吹尽：每枚音律让音波更大、更快、伤害 +20；三律齐鸣时音波穿透、挑空、不可斩散，并让对手陷入【绕梁 · 失律】（2.2 秒迟缓）。',
+start(f) { f.vx *= 0.3; },
+update(f) {
+if (f.skPh === 0 && f.t >= 0.12) {
+f.skPh = 1; const n = Math.min(3, f.notes || 0); f.notes = 0;
+SFX.note(n);
+spawnProj(f, { kind: 'note', x: f.x + f.face * 40, y: f.y - 70, vx: f.face * (620 + 60 * n), autoAim: true, w: 54 + 16 * n, h: 54 + 16 * n, grow: 40 + 14 * n, life: 0.95,
+dmg: 22 + 20 * n, kb: [200 + 40 * n, n >= 3 ? -420 : 0], stun: 0.3 + 0.06 * n, hs: 0.05 + 0.015 * n, launch: n >= 3, unbreakable: n >= 3, maxHits: 1, notes: n });
+if (n >= 3) addP({ type: 'text', text: '三律齐鸣', x: f.x, y: f.y - 120, life: 0.8, max: 0.8, rgb: '150,240,200' });
+}
+if (f.skPh === 1 && f.t >= 0.2) toNeutral(f);
+},
+pose: f => f.skPh === 0 ? ['yx_play', 30] : ['yx_push', 50],
+ai: (me, foe, d) => d > 110 && d < 700 && ((me.notes || 0) >= 2 || d > 240) },
+echowall: { name: '回音壁', cd: 6, breakout: true, desc: '以箫声筑起一道回音壁（0.6 秒）：贴身之敌被音浪推开（身上每枚音律 +8 伤害）；期间飞来的暗器、剑气、风刃会原路弹回，归玉箫所有，每弹回一次再得一枚音律。起手自带一次霸体。大招与地面陷阱无法弹回。',
+start(f) { f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0); f.reflectT = 0.6; f.armorT = 0.6; f.armorHits = 1; ring(f.x, f.y - 60, 90, f.look.slash, 0.3); SFX.note(1); },
+update(f, foe) {
+f.vx = damp(f.vx, 0, 12, STEP);
+if (f.skPh === 0 && f.t >= 0.08) {
+f.skPh = 1; f.hitDone = false;
+if (strike(f, foe, { box: [-10, -130, 110, 0], dmg: 18 + 8 * (f.notes || 0), kb: [520, -120], stun: 0.35, hs: 0.06 })) {
+f.notes = Math.min(3, (f.notes || 0) + 1);
+addP({ type: 'text', text: '音浪', x: foe.x, y: foe.y - 100, life: 0.6, max: 0.6, rgb: '150,240,200' });
+}
+}
+if (f.t >= 0.45) toNeutral(f);
+},
+pose: f => f.skPh === 0 ? ['yx_play', 40] : ['yx_play', 20],
+ai: (me, foe, d) => d < 120 || projs.some(p => p.owner === foe.idx && !p.ult && Math.abs(p.x - me.x) < 260) },
+});
+Object.assign(SKILLS, {
+pavilion: { name: '亭中留客', cd: 16, desc: '把对手当作客人留下：一座醉翁亭从对手头顶砸落（出手约 0.5 秒落地，射程约 720），罩住了就把人禁锢在亭中 1.5 秒，期间无法移动，但可以用腾空闪脱困；也可以随便打（被打不会飞出亭子）。落地前走开就罩不住。霸体能硬扛。',
+start(f) { f.vx = 0; },
+update(f, foe) {
+if (f.skPh === 0 && f.t >= 0.05) {
+f.skPh = 1; SFX.swing();
+const towardFoe = Math.sign(foe.x - f.x) === f.face;
+const tx = clamp(towardFoe ? foe.x : f.x + f.face * 260, WALL + 40, STAGE_W - WALL - 40);
+if (Math.abs(tx - f.x) <= 720) spawnProj(f, { kind: 'pavilion', vx: 0, x: tx, y: -260, delay: 0.45, w: 150, h: 560, life: 0.95, dmg: 20, kb: [0, 0], stun: 0.3, hs: 0.08, jail: true, unblockable: true, unbreakable: true });
+else addP({ type: 'text', text: '客在远方', x: f.x, y: f.y - 120, life: 0.7, max: 0.7, rgb: '255,190,90' });
+}
+if (f.t >= 0.27) toNeutral(f);
+},
+pose: f => f.skPh === 0 ? ['zx_sway', 30] : ['gc_wind', 40],
+ai: (me, foe, d) => d < 650 },
+feast: { name: '与民同乐', cd: 16, can: f => (f.drunk || 0) >= 50, lack: () => '酒不够', desc: '至少半壶酒才能用，一次把酒全部倒光：先朝对手丢去一瓶酒，砸中就得陪他喝——对手回 115 血，捧着酒瓶僵直 1 秒；醉翁自己也灌一口回 182 血，僵直 0.7 秒。自己先喝完，中间这一小段空当可以过去揍他。',
+start(f) { f.vx = 0; f.drunk = 0; },
+update(f, foe) {
+if (f.skPh === 0 && f.t >= 0.18) {
+f.skPh = 1; SFX.swing();
+spawnProj(f, { kind: 'bottle', x: f.x + f.face * 40, y: f.y - 92, vx: f.face * 950, vy: -60, g: 260, w: 40, h: 46, life: 0.9, dmg: 1, kb: [0, 0], stun: 0, hs: 0, feast: true, unblockable: true, unbreakable: true });
+}
+if (f.skPh === 1 && f.t >= 0.35) {
+f.skPh = 2; f.hp = Math.min(f.maxHp, f.hp + Math.round(135 * HERO_HP_SCALE)); SFX.drink();
+addP({ type: 'text', text: `+${Math.round(135 * HERO_HP_SCALE)}`, x: f.x, y: f.y - 120, life: 0.8, max: 0.8, rgb: '130,230,140' });
+}
+if (f.t >= 1.05) toNeutral(f);
+},
+pose: f => f.skPh === 0 ? ['gc_wind', 30] : f.skPh === 1 ? ['gc_throw', 60] : ['zx_drink', 24],
+ai: (me, foe, d) => (me.drunk || 0) >= 50 && d > 120 && d < 800 && me.hp < me.maxHp * 0.85 },
+});
+const ULTS = {};
+Object.assign(ULTS, {
+sandwich: { name: '天地磁合', desc: '对手脚下浮出一块负极磁石、头顶压下一块正极磁石，两块磁石异极相吸，把对手牢牢吸住、越合越快，最后合拢夹成肉饼（125 伤害，不可格挡），被夹扁的人定住 1 秒。放的时候对手正在腾空闪这类无敌里，就只吸得住磁石，夹不到人。',
+begin(f, foe) {
+f.sp = 'cast'; f.spN = 0; f.spPose = 'lm_boxer'; f.invul = 0.75; f.vx = 0; f.hitDone = false;   // 合拢之前不会被打断
+f.sw = { x: clamp(foe.x, WALL, STAGE_W - WALL), top: -640, hit: 0, v: foe.idx, t: 0 };   // v：夹的是谁（存序号，回滚存档存得下）
+SFX.superOn(); ring(f.sw.x, -10, 120, magRGB(-1), 0.4);
+},
+update(f, foe) {
+const S = f.sw; if (!S) { endSpecial(f); return; }
+foe = fighterByIdx(S.v);   // 2v2 里一直夹放招时选中的那个人
+S.t = f.t;
+if (f.spN === 0 && foe.hp > 0) S.x = clamp(damp(S.x, foe.x, 12, STEP), WALL, STAGE_W - WALL);   // 吸住之前磁石跟着对手
+if (f.spN === 0 && f.t >= 0.12) {   // 吸住：对手被两块磁石定在中间
+f.spN = 1; f.spPose = 'victory';
+if (!isClient() && foe.hp > 0 && foe.invul <= 0) {
+S.hit = 1;
+foe.state = 'held'; foe.t = 0; foe.vx = 0; foe.vy = 0; foe.move = null; foe.skill = null; foe.sp = null;
+}
+SFX.charge();
+}
+if (f.spN === 1) {
+const u = clamp((f.t - 0.12) / 0.5, 0, 1);
+S.top = -640 + (640 - 120) * u * u * u;   // 越合越快
+if (S.hit && foe.state === 'held') { magMove(foe, damp(foe.x, S.x, 14, STEP)); foe.y = damp(foe.y, 0, 14, STEP); }
+if (!RESIM && Math.random() < 0.5) addP({ type: 'spark', x: S.x + rand(-60, 60), y: S.top + 20, vx: 0, vy: rand(300, 600), rgb: magRGB(1), life: 0.2, max: 0.2, w: 1.6 });
+if (u >= 1) {
+f.spN = 2; S.top = -120;
+shake = Math.max(shake, 20); flashA = Math.max(flashA, 0.3); flashRGB = '255,255,255'; SFX.heavy(); SFX.thud();
+dust(S.x, 0, 18); ring(S.x, -60, 150, magRGB(1), 0.4); ring(S.x, -60, 110, magRGB(-1), 0.4);
+const caught = S.hit ? foe.state === 'held' : (foe.hp > 0 && foe.invul <= 0 && Math.abs(foe.x - S.x) < 90 && foe.y > -170);
+if (caught && !isClient()) {
+magMove(foe, S.x); foe.y = 0;
+applyHit(f, foe, { dmg: 125, kb: [0, 0], stun: 1.0, hs: 0.22, root: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 60]);
+if (foe.state === 'held') toNeutral(foe);
+foe.squashT = 1.0;
+addP({ type: 'text', text: '天地磁合 · 夹成肉饼', x: S.x, y: -200, life: 1.1, max: 1.1, rgb: '255,220,200' });
+}
+}
+}
+if (f.t >= 1.15) { magRelease(f); endSpecial(f); }
+} },
+});
+Object.assign(ULTS, {
+phoenix: { name: '百鸟朝凤', desc: '原地凝枪，向前连刺八道枪影，一枪远过一枪，末枪一挑把人送上半空（终结75伤害）。此招可挡。',
+begin(f) { f.sp = 'thrusts'; f.spN = 0; f.spPose = 'ls_stance'; f.invul = 0.2; },
+update(f, foe) {
+const n = Math.floor(f.t / 0.09);
+if (n >= f.spN && f.spN < 8) {
+const last = f.spN === 7; f.spN++;
+f.spPose = last ? 'ls_plant' : (f.spN % 2 ? 'ls_thrust' : 'ls_stance'); f.snap = true;
+slashLine(f.x + f.face * 130, f.y - 68 + rand(-18, 18), 0, f.look.slash); SFX.slice();
+if (foe.invul <= 0 && foe.hp > 0 && overlap(hitbox(f, [20, -112, 240, -28]), hurtbox(foe)))
+applyHit(f, foe, last ? { dmg: 75, kb: [520, -640], stun: 0.6, hs: 0.18, launch: true, big: true, ult: true, noScale: true }
+: { dmg: 16, kb: [50, 0], stun: 0.36, hs: 0.03, ult: true, noScale: true }, [foe.x - f.face * 10, foe.y - 68]);
+}
+if (f.t >= 0.95) endSpecial(f);
+} },
+eightimm: { name: '八仙过海', flurry: true, n: 8, iv: 0.085, slash: 12, fin: 76, desc: '醉眼一睁，滚身扑入；一扑得手，八仙醉拳轮番上身。打完醉意直接灌满。' },
+});
+Object.assign(ULTS, {
 shadows: { name: '千影', flurry: true, n: 9, iv: 0.068, slash: 11, fin: 80, dashSpd: 1750, dashT: 0.28, airTrack: true, desc: '结印潜入暗影，贴地瞬步欺身而入（突进距离提升至 1.25 倍；若对手身处空中且在突进射程内，化为暗影腾空追猎）；一击得手，九道猩红残像接连绝杀，收于双刃十字（终结斩80伤害）。绝杀达成触发【暗影绝杀】：重置影瞬与手里剑冷却，并幻化多道迷惑分身隐匿遁形。一旦扑空，任人宰割。' },
+});
+Object.assign(ULTS, {
+skynet: { name: '开天一锤', desc: '把链锤甩上天，锤头越飞越大，变成一柄巨锤从对手头顶砸落（40 伤害，不可格挡），被砸中的人震晕定身 0.9 秒；随后扯链回锤把人拽到身前再抡一记（80 伤害，挑空），并重置飞锤冷却、附加【震魄】。巨锤落空就只砸出一个坑。',
+begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'gc_wind'; f.invul = 0.3; f.hitDone = false; SFX.superOn(); },
+update(f, foe) {
+if (f.spN === 0 && f.t >= 0.15) {
+f.spN = 1; f.spPose = 'gc_wind'; SFX.swing();
+spawnProj(f, { kind: 'net', vx: 0, x: foe.x, y: Math.min(0, foe.y) - 80, delay: 0.25, track: 6, trackEnd: 0.08, w: 320, h: 200, life: 0.55, dmg: 40, kb: [0, 0], stun: 0.9, hs: 0.1, root: true, pierce: true, maxHits: 2, unblockable: true, ult: true, noScale: true, unbreakable: true });
+}
+if (f.spN === 1 && f.t >= 0.95) {
+f.spN = 2;
+if (foe.rooted && foe.state === 'hitstun' && foe.hp > 0 && foe.invul <= 0) {
+f.face = foe.x >= f.x ? 1 : -1; f.spPose = 'gc_pull'; f.snap = true;
+foe.x = clamp(f.x + f.face * 70, WALL, STAGE_W - WALL); foe.y = 0;
+applyHit(f, foe, { dmg: 80, kb: [420, -820], stun: 0.6, hs: 0.2, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 60]);
+foe.hookedT = 1.2; f.skillCD = 0;
+shake = Math.max(shake, 14); SFX.heavy();
+addP({ type: 'text', text: '回锤 · 飞锤重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '235,205,130' });
+} else f.spPose = 'idle';
+}
+if (f.t >= 1.3) endSpecial(f);
+} },
+});
+Object.assign(ULTS, {
+thunder: { name: '雷霆万钧', desc: '一拳击破长空，引落九天神雷。三道天雷循着对手踪迹直劈而下（每道 48 伤害，破防击飞）。引雷触发【雷帝灌顶】：重置奔雷拳与撼地冷却，自身直接回涌 30% 绝技气量！',
+begin(f) {
+f.sp = 'cast'; f.spN = 0; f.spPose = 'lm_kick'; f.invul = 0.2;
+f.skillCD = 0; f.skill2CD = 0; f.meter = Math.min(100, f.meter + 30);
+addP({ type: 'text', text: '⚡ 雷帝灌顶 · 拳劲重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,230,120' });
+SFX.superOn();
+},
+update(f, foe) {
+const times = [0.02, 0.38, 0.74];
+if (f.spN < 3 && f.t >= times[f.spN]) {
+f.spN++;
+f.spPose = f.spN % 2 ? 'lm_boxer' : 'lm_kick';
+spawnProj(f, { kind: 'bolt', x: clamp(foe.x + foe.vx * 0.2, WALL, STAGE_W - WALL), y: -360, vx: 0, w: 76, h: 720, life: 0.62, delay: 0.46, track: 5, trackEnd: 0.18, dmg: 48, kb: [0, -620], stun: 0.5, hs: 0.1, launch: true, unblockable: true, ult: true, unbreakable: true, noScale: true });
+}
+if (f.t >= 1.2) endSpecial(f);
+} },
+});
+Object.assign(ULTS, {
+needlestorm: { name: '万线归宗', desc: '凌雀跃至半空织就漫天悬丝罗网，子母梭如疾风暴雨全屏交错绞杀敌人（7 段 12 伤害 + 终结 56 伤害），附加【雀芒】印记并重置换影冷却。',
+begin(f, foe) {
+f.sp = 'cast'; f.spN = 0; f.spPose = 'du_l1s'; f.invul = 0.40; f.vx = 0; f.vy = -360; f.y = -1; SFX.superOn();
+},
+update(f, foe) {
+f.vx = 0; f.vy = damp(f.vy, 0, 8, STEP);
+if (f.spN < 7 && f.t >= 0.15 + f.spN * 0.08) {
+f.spN++;
+SFX.slice();
+const sd = (f.spN % 2 === 0) ? 1 : -1;
+const ang = (f.spN * 0.6) % 3.14;
+slashLine(foe.x + rand(-40, 40), foe.y - 50 + rand(-30, 30), ang, '235,110,210');
+ring(foe.x, foe.y - 50, 70 + f.spN * 10, '235,110,210', 0.25);
+if (foe.hp > 0 && foe.invul <= 0) {
+applyHit(f, foe, { dmg: 12, exact: true, kb: [60, -40], stun: 0.26, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [foe.x, foe.y - 50]);
+addNeedleMark(foe, 1);
+}
+}
+if (f.spN === 7 && f.t >= 0.78) {
+f.spN = 8;
+f.y = 0; f.vy = 0;
+shake = Math.max(shake, 16); SFX.heavy(); SFX.slice();
+ring(foe.x, foe.y - 50, 150, '255,140,225', 0.45);
+if (foe.hp > 0 && foe.invul <= 0) {
+applyHit(f, foe, { dmg: 56, kb: [300, -700], stun: 0.55, hs: 0.16, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 50]);   // kb 只写大小，方向由 dir 带
+addNeedleMark(foe, 1);
+f.skill2CD = 0;
+addP({ type: 'text', text: '✦ 雀芒入魂 · 悬丝归宗 ✦', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,140,225' });
+}
+}
+if (f.t >= 1.15) endSpecial(f);
+} },
+});
+Object.assign(ULTS, {
+timestop: { name: '刹那', desc: '长枪拄地，凝神入定，天地为之一滞。漫天枪影泼洒开来，终归于一线寒芒，极速贯穿（140 到 185 伤害）。贯穿得手触发【寒霜贯日】：重置回马枪与枪旋冷却，并令对手陷入 4 秒冰冻迟缓（移速减慢 40%）。',
+begin(f, foe) { f.sp = 'stop'; f.spPose = 'ls_stance'; f.invul = 99; superFreeze = 0.9; superOwner = f; f.spX = f.x; f.hitDone = false; SFX.superOn(); },
+update(f, foe) {
+if (f.sp === 'stop' && f.t >= 0.45) {
+f.sp = 'sweep'; f.spPose = 'ls_thrust'; f.snap = true;
+for (let k = 0; k < 8; k++) slashLine(f.x, f.y - 60, k * Math.PI / 8, f.look.slash);
+ring(f.x, f.y - 60, 160, f.look.slash, 0.4); ring(f.x, f.y - 60, 90, '255,255,255', 0.3); SFX.slice(); metal(1800, 0.8, 0.1);
+}
+if (f.sp === 'sweep' && f.t >= 0.8) { f.sp = 'rush'; f.t = 0; f.spPose = 'ls_thrust'; f.face = faceDir(f, foe); f.spX = f.x; SFX.dash(); }
+if (f.sp === 'rush') {
+f.vx = f.face * 1700;
+if (!f.hitDone && foe.hp > 0 && overlap(hitbox(f, [0, -150, 105, 4]), hurtbox(foe))) {
+f.hitDone = true; f.vx = 0;
+const dmg = clamp(140 + Math.abs(f.x - f.spX) / 10, 140, 185);
+applyHit(f, foe, { dmg: Math.round(dmg), kb: [480, -700], stun: 0.6, hs: 0.2, launch: true, unblockable: true, big: true, ult: true, noScale: true }, [foe.x, foe.y - 60]);
+f.skillCD = 0; f.skill2CD = 0;
+foe.slowT = 4.0;
+ring(foe.x, foe.y - 60, 160, '170,220,255', 0.5);
+addP({ type: 'text', text: '❄️ 寒芒贯日 · 回马枪重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '170,220,255' });
+addP({ type: 'text', text: '❄️ 冰冻减速', x: foe.x, y: foe.y - 100, life: 1.2, max: 1.2, rgb: '140,200,255' });
+f.sp = 'done'; f.t = 0; f.spPose = 'ls_plant';
+SFX.chargeFull();
+} else if (f.t > 0.8 || f.x <= WALL || f.x >= STAGE_W - WALL) { f.sp = 'done'; f.t = 0; f.vx *= 0.2; f.spPose = 'ls_plant'; }
+}
+if (f.sp === 'done' && f.t >= 0.3) endSpecial(f);
+} },
+});
+Object.assign(ULTS, {
+tornado: { name: '龙卷', desc: '舒袖展扇，乘风而起，放出两道接天龙卷横扫全场（每下 16 伤害）。施法激活【扶摇万里】：重置风刃与开扇冷却，空中跳跃次数全额回满，乘风浮空。',
+begin(f) {
+f.sp = 'cast'; f.spPose = 'ly_fanswipe'; f.invul = 0.2; f.spN = 0;
+f.skillCD = 0; f.skill2CD = 0; f.jumps = 0;
+addP({ type: 'text', text: '🌪️ 扶摇万里 · 开扇重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '150,255,200' });
+SFX.superOn();
+},
+update(f) {
+if (f.spN < 2 && f.t >= f.spN * 0.45) {
+const second = f.spN === 1; f.spN++;
+f.spPose = second ? 'ly_hover' : 'ly_fanswipe';
+spawnProj(f, { kind: 'tornado', x: f.x + f.face * 70, y: -110, vx: f.face * 360, w: 120, h: 230, life: 2.4, dmg: 16, kb: [40, -220], stun: 0.4, hs: 0.03, pierce: true, rehit: 0.12, maxHits: 8, launch: true, ult: true, unbreakable: true, noScale: true, lastBig: second, stick: 0.55 });
+SFX.swing();
+}
+if (f.t >= 0.85) endSpecial(f);
+} },
+});
+Object.assign(ULTS, {
+mistarray: { name: '万影归一', desc: '场上每个雾身同时朝对手斩出一道刀光（每道 30 伤害，按雾身复制攻击的 75% 计算），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空也追得上。雾身越多刀越多，最多四刀。没有雾身时只有本体那一刀。刀光和补刀都不能格挡，但全程没有无敌：出手前被打中、对手闪开都会落空。补刀砍中后留影冷却清零。',
+begin(f, foe) {
+f.sp = 'cast'; f.spPose = 'fy_seal'; f.invul = 0; f.spN = 0; f.vx = 0;
+for (const c of (f.clones || []).slice()) {
+const d = foe.x >= c.x ? 1 : -1;
+spawnProj(f, { kind: 'wind', x: c.x + d * 30, y: (c.y || 0) - 62, vx: d * 1700, vy: 0, w: 70, h: 90, life: 0.45, dmg: 30, kb: [160, 0], stun: 0.6, hs: 0.08, ult: true, unblockable: true, noScale: true, unbreakable: true });   // 雾身以 75% 伤害出刀，本体后到
+if (!RESIM) slashLine(c.x, (c.y || 0) - 60, d > 0 ? 0 : Math.PI, f.look.slash);
+}
+clearClones(f);
+SFX.swing();
+},
+update(f, foe) {
+if (f.spN === 0 && f.t >= 0.3) {
+f.spN = 1;
+const side = foe.x >= f.x ? 1 : -1;
+if (!RESIM) smoke(f.x, f.y - 50, 10);
+f.x = clamp(foe.x - side * 80, WALL, STAGE_W - WALL); f.vy = 0; f.face = side;
+if (foe.onGround()) mapPutOn(f, foe.plat); else { f.y = foe.y; f.plat = -1; }   // 对手站在平台上就落到那个平台；跳起来了就追到半空，砍完自己落下
+f.snap = true; f.trail.length = 0; f.scarf = [];
+f.spPose = 'l2a'; f.hitDone = false;
+if (strike(f, foe, { box: [0, -118, 110, 0], dmg: 60, kb: [240, -720], stun: 0.5, hs: 0.12, launch: true, ult: true, unblockable: true, noScale: true })) f.skillCD = 0;   // 补刀砍中：留影冷却清零，马上能再留雾身
+SFX.slice();
+}
+if (f.t >= 0.8) endSpecial(f);
+} },
+});
+Object.assign(ULTS, {
+inkdragon: { name: '符阵', desc: `把攒下的符全部烧掉：整张图化作一张宣纸，全场一览无余，对手被朱砂染红，头顶的符轰然炸开。全图命中、不可格挡，伤害 = ${FU_BASE} + 每张符 ${FU_PER}（最多 ${FU_BASE + FU_PER * FU_MAX}）。`,
+begin(f) {
+f.sp = 'cast'; f.spPose = 'my_stroke'; f.invul = 0.2; SFX.superOn();
+f.spN = f.fu || 0; f.fu = 0;   // 符全部烧掉，记下这次烧了几张
+},
+update(f, foe) {
+if (f.t >= 0.25) f.spPose = 'my_paint';
+const foes = foesOf(f).filter(e => e && e.hp > 0);   // 全图命中：2v2 里两个对手都会炸
+const wait = foes.some(e => e.invul > 0) && f.t < 2.4;   // 对手正无敌（比如也在放大招）就等它结束再炸，最多多等一秒多
+if (f.t >= 0.95 && !f.hitDone && !wait) {
+f.hitDone = true; f.fuT = f.t;
+const n = f.spN || 0;
+if (foes.length) { shake = Math.max(shake, 14 + n * 3); flashA = Math.max(flashA, 0.35); flashRGB = '230,70,50'; SFX.ko(); }
+for (const e of foes) {
+const x = e.x, y = e.y - 150;
+ring(x, y, 90 + n * 18, '230,70,50', 0.5); ring(x, y, 50, '255,230,150', 0.4);
+for (let k = 0; k < 18 + n * 4; k++) { const a = rand(0, 6.28), v = rand(120, 420); addP({ type: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.6, max: 0.6, rgb: k % 2 ? '235,200,90' : '230,70,50', w: 2.4, drag: 2 }); }
+if (e.invul <= 0) applyHit(f, e, { dmg: FU_BASE + FU_PER * n, kb: [0, -520], stun: 0.6, hs: 0.2, launch: true, unblockable: true, big: true, ult: true, noScale: true, dir: e.face * -1 }, [e.x, e.y - 80]);
+addP({ type: 'text', text: n ? `符爆 ×${n}` : '空符一张', x: e.x, y: e.y - 200, life: 1.1, max: 1.1, rgb: '230,70,50' });
+}
+}
+if (f.hitDone && f.t >= (f.fuT || 0.95) + 0.5) endSpecial(f);
+} },
+});
+Object.assign(ULTS, {
+recallball: { name: '机轮三穿', desc: '傀丸沿战场往返疾驰三次，再顺着金丝回到千机手中。每名敌人在本次大招中最多受到 120 点伤害；回手后傀丸收起并刷新 Q。若傀丸不在场，则先召出再发动。',
+begin(f) {
+f.sp = 'cast'; f.spN = 0; f.spPose = 'fy_seal'; f.invul = 0.8; f.vx = 0; f.hitDone = false;
+let ball = projs.find(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead);
+if (!ball) {
+spawnProj(f, { kind: 'ironball', yoyo: true, x: f.x + f.face * 42, y: f.y - 58, vx: f.face * 2700, vy: 0,
+g: 0, w: 36, h: 36, life: 999999, dmg: 40, kb: [260, -300], stun: 0.32, hs: 0.08,
+speedTier: 3, unbreakable: true, pierce: true, yoyoPhase: 'ult-pass', yoyoDir: f.face, yoyoPasses: 0, yoyoHitAt: {}, yoyoUltDealt: {} });
+ball = projs.find(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead);
+}
+if (ball) {
+ball.yoyo = true; ball.yoyoPhase = 'ult-pass'; ball.yoyoDir = f.face || 1; ball.yoyoPasses = 0;
+ball.yoyoArrived = false; ball.yoyoHitAt = {}; ball.yoyoUltDealt = {}; ball.yoyoRange = STAGE_W;
+ball.dmg = 40; ball.kb = [260, -300]; ball.stun = 0.32; ball.hs = 0.08;
+ball.vx = ball.yoyoDir * 2700; ball.vy = 0; ball.g = 0; ball.unbreakable = true;
+ring(ball.x, ball.y, 100, f.look.slash || '235,165,70', 0.4);
+}
+ring(f.x, f.y - 50, 130, '255,225,120', 0.35); SFX.superOn(); SFX.gear();
+},
+update(f) {
+const ball = projs.find(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead);
+if (!ball) { f.skillCD = 0; endSpecial(f); return; }
+if (ball.yoyoPhase === 'ult-return') ball.yoyoArrived = Math.abs(ball.x - f.x) < 52;
+if (ball.yoyoArrived) {
+ball.dead = true; f.skillCD = 0;
+ring(f.x, f.y - 50, 90, f.look.slash || '235,165,70', 0.35);
+addP({ type: 'text', text: '三穿归一 · 傀丸回手', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,225,120' });
+SFX.block(); SFX.dash(); endSpecial(f);
+}
+} },
+});
+Object.assign(ULTS, {
+crescent: { name: '残月', flurry: true, n: 6, iv: 0.1, slash: 14, fin: 85, land: true, dashSpd: 1750, dashT: 0.28, desc: '纳刀起手，一记居合突刺撕开战局（突进距离提升至 1.25 倍）；既已斩中，六道残月剑气接踵绞杀，最后自空中劈落就地了断（终结斩85伤害）。终结斩落触发【剑意通明】：重置全技能与冲刺冷却，并回涌 20% 绝技气量。若突刺落空，门户大开。' },
+});
+Object.assign(ULTS, {
 avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可按方向键自由操控落点（亦可按 S 加速下砸），泰山压顶砸落（185 伤害，不可格挡），地裂石飞。不仅贯穿常规格挡，更可强行轰碎地面绝技霸体！正中命中触发【怒意回涌】：强制震荡晕眩对手（0.9 秒），气量直接回满、可以立刻再放一次山崩，并重置震地与铁壁冲冷却！连放的第二次、只砸到边缘（落点 92 像素外）或砸中倒地的对手，只回 50% 气量。',
 begin(f, foe) {
 f.sp = 'leap'; f.vy = -1050; f.y = -1;
@@ -13493,101 +13794,8 @@ spawnProj(f, { kind: 'rock', x: f.x + sd * (30 + k * 14), y: -30, vx: sd * (320 
 }
 } else if (f.sp === 'slam' && f.t >= 0.5) endSpecial(f);
 } },
-phoenix: { name: '百鸟朝凤', desc: '原地凝枪，向前连刺八道枪影，一枪远过一枪，末枪一挑把人送上半空（终结75伤害）。此招可挡。',
-begin(f) { f.sp = 'thrusts'; f.spN = 0; f.spPose = 'ls_stance'; f.invul = 0.2; },
-update(f, foe) {
-const n = Math.floor(f.t / 0.09);
-if (n >= f.spN && f.spN < 8) {
-const last = f.spN === 7; f.spN++;
-f.spPose = last ? 'ls_plant' : (f.spN % 2 ? 'ls_thrust' : 'ls_stance'); f.snap = true;
-slashLine(f.x + f.face * 130, f.y - 68 + rand(-18, 18), 0, f.look.slash); SFX.slice();
-if (foe.invul <= 0 && foe.hp > 0 && overlap(hitbox(f, [20, -112, 240, -28]), hurtbox(foe)))
-applyHit(f, foe, last ? { dmg: 75, kb: [520, -640], stun: 0.6, hs: 0.18, launch: true, big: true, ult: true, noScale: true }
-: { dmg: 16, kb: [50, 0], stun: 0.36, hs: 0.03, ult: true, noScale: true }, [foe.x - f.face * 10, foe.y - 68]);
-}
-if (f.t >= 0.95) endSpecial(f);
-} },
-timestop: { name: '刹那', desc: '长枪拄地，凝神入定，天地为之一滞。漫天枪影泼洒开来，终归于一线寒芒，极速贯穿（140 到 185 伤害）。贯穿得手触发【寒霜贯日】：重置回马枪与枪旋冷却，并令对手陷入 4 秒冰冻迟缓（移速减慢 40%）。',
-begin(f, foe) { f.sp = 'stop'; f.spPose = 'ls_stance'; f.invul = 99; superFreeze = 0.9; superOwner = f; f.spX = f.x; f.hitDone = false; SFX.superOn(); },
-update(f, foe) {
-if (f.sp === 'stop' && f.t >= 0.45) {
-f.sp = 'sweep'; f.spPose = 'ls_thrust'; f.snap = true;
-for (let k = 0; k < 8; k++) slashLine(f.x, f.y - 60, k * Math.PI / 8, f.look.slash);
-ring(f.x, f.y - 60, 160, f.look.slash, 0.4); ring(f.x, f.y - 60, 90, '255,255,255', 0.3); SFX.slice(); metal(1800, 0.8, 0.1);
-}
-if (f.sp === 'sweep' && f.t >= 0.8) { f.sp = 'rush'; f.t = 0; f.spPose = 'ls_thrust'; f.face = faceDir(f, foe); f.spX = f.x; SFX.dash(); }
-if (f.sp === 'rush') {
-f.vx = f.face * 1700;
-if (!f.hitDone && foe.hp > 0 && overlap(hitbox(f, [0, -150, 105, 4]), hurtbox(foe))) {
-f.hitDone = true; f.vx = 0;
-const dmg = clamp(140 + Math.abs(f.x - f.spX) / 10, 140, 185);
-applyHit(f, foe, { dmg: Math.round(dmg), kb: [480, -700], stun: 0.6, hs: 0.2, launch: true, unblockable: true, big: true, ult: true, noScale: true }, [foe.x, foe.y - 60]);
-f.skillCD = 0; f.skill2CD = 0;
-foe.slowT = 4.0;
-ring(foe.x, foe.y - 60, 160, '170,220,255', 0.5);
-addP({ type: 'text', text: '❄️ 寒芒贯日 · 回马枪重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '170,220,255' });
-addP({ type: 'text', text: '❄️ 冰冻减速', x: foe.x, y: foe.y - 100, life: 1.2, max: 1.2, rgb: '140,200,255' });
-f.sp = 'done'; f.t = 0; f.spPose = 'ls_plant';
-SFX.chargeFull();
-} else if (f.t > 0.8 || f.x <= WALL || f.x >= STAGE_W - WALL) { f.sp = 'done'; f.t = 0; f.vx *= 0.2; f.spPose = 'ls_plant'; }
-}
-if (f.sp === 'done' && f.t >= 0.3) endSpecial(f);
-} },
-tornado: { name: '龙卷', desc: '舒袖展扇，乘风而起，放出两道接天龙卷横扫全场（每下 16 伤害）。施法激活【扶摇万里】：重置风刃与开扇冷却，空中跳跃次数全额回满，乘风浮空。',
-begin(f) {
-f.sp = 'cast'; f.spPose = 'ly_fanswipe'; f.invul = 0.2; f.spN = 0;
-f.skillCD = 0; f.skill2CD = 0; f.jumps = 0;
-addP({ type: 'text', text: '🌪️ 扶摇万里 · 开扇重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '150,255,200' });
-SFX.superOn();
-},
-update(f) {
-if (f.spN < 2 && f.t >= f.spN * 0.45) {
-const second = f.spN === 1; f.spN++;
-f.spPose = second ? 'ly_hover' : 'ly_fanswipe';
-spawnProj(f, { kind: 'tornado', x: f.x + f.face * 70, y: -110, vx: f.face * 360, w: 120, h: 230, life: 2.4, dmg: 16, kb: [40, -220], stun: 0.4, hs: 0.03, pierce: true, rehit: 0.12, maxHits: 8, launch: true, ult: true, unbreakable: true, noScale: true, lastBig: second, stick: 0.55 });
-SFX.swing();
-}
-if (f.t >= 0.85) endSpecial(f);
-} },
-thunder: { name: '雷霆万钧', desc: '一拳击破长空，引落九天神雷。三道天雷循着对手踪迹直劈而下（每道 48 伤害，破防击飞）。引雷触发【雷帝灌顶】：重置奔雷拳与撼地冷却，自身直接回涌 30% 绝技气量！',
-begin(f) {
-f.sp = 'cast'; f.spN = 0; f.spPose = 'lm_kick'; f.invul = 0.2;
-f.skillCD = 0; f.skill2CD = 0; f.meter = Math.min(100, f.meter + 30);
-addP({ type: 'text', text: '⚡ 雷帝灌顶 · 拳劲重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,230,120' });
-SFX.superOn();
-},
-update(f, foe) {
-const times = [0.02, 0.38, 0.74];
-if (f.spN < 3 && f.t >= times[f.spN]) {
-f.spN++;
-f.spPose = f.spN % 2 ? 'lm_boxer' : 'lm_kick';
-spawnProj(f, { kind: 'bolt', x: clamp(foe.x + foe.vx * 0.2, WALL, STAGE_W - WALL), y: -360, vx: 0, w: 76, h: 720, life: 0.62, delay: 0.46, track: 5, trackEnd: 0.18, dmg: 48, kb: [0, -620], stun: 0.5, hs: 0.1, launch: true, unblockable: true, ult: true, unbreakable: true, noScale: true });
-}
-if (f.t >= 1.2) endSpecial(f);
-} },
-inkdragon: { name: '符阵', desc: `把攒下的符全部烧掉：整张图化作一张宣纸，全场一览无余，对手被朱砂染红，头顶的符轰然炸开。全图命中、不可格挡，伤害 = ${FU_BASE} + 每张符 ${FU_PER}（最多 ${FU_BASE + FU_PER * FU_MAX}）。`,
-begin(f) {
-f.sp = 'cast'; f.spPose = 'my_stroke'; f.invul = 0.2; SFX.superOn();
-f.spN = f.fu || 0; f.fu = 0;   // 符全部烧掉，记下这次烧了几张
-},
-update(f, foe) {
-if (f.t >= 0.25) f.spPose = 'my_paint';
-const foes = foesOf(f).filter(e => e && e.hp > 0);   // 全图命中：2v2 里两个对手都会炸
-const wait = foes.some(e => e.invul > 0) && f.t < 2.4;   // 对手正无敌（比如也在放大招）就等它结束再炸，最多多等一秒多
-if (f.t >= 0.95 && !f.hitDone && !wait) {
-f.hitDone = true; f.fuT = f.t;
-const n = f.spN || 0;
-if (foes.length) { shake = Math.max(shake, 14 + n * 3); flashA = Math.max(flashA, 0.35); flashRGB = '230,70,50'; SFX.ko(); }
-for (const e of foes) {
-const x = e.x, y = e.y - 150;
-ring(x, y, 90 + n * 18, '230,70,50', 0.5); ring(x, y, 50, '255,230,150', 0.4);
-for (let k = 0; k < 18 + n * 4; k++) { const a = rand(0, 6.28), v = rand(120, 420); addP({ type: 'spark', x, y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.6, max: 0.6, rgb: k % 2 ? '235,200,90' : '230,70,50', w: 2.4, drag: 2 }); }
-if (e.invul <= 0) applyHit(f, e, { dmg: FU_BASE + FU_PER * n, kb: [0, -520], stun: 0.6, hs: 0.2, launch: true, unblockable: true, big: true, ult: true, noScale: true, dir: e.face * -1 }, [e.x, e.y - 80]);
-addP({ type: 'text', text: n ? `符爆 ×${n}` : '空符一张', x: e.x, y: e.y - 200, life: 1.1, max: 1.1, rgb: '230,70,50' });
-}
-}
-if (f.hitDone && f.t >= (f.fuT || 0.95) + 0.5) endSpecial(f);
-} },
+});
+Object.assign(ULTS, {
 featherstorm: { name: '万羽', desc: '展翼直上九霄，唤来漫天破甲翎羽如暴雨倾泻（14 枚，每枚 14 伤害）。齐射触发【凌霄破虚】：重置俯冲突袭与翎羽射击冷却，御空飞行耐力全额回满。',
 begin(f) {
 f.sp = 'cast'; f.spN = 0; f.spPose = 'yl_wings'; f.invul = 0.2;
@@ -13604,6 +13812,8 @@ spawnProj(f, { kind: 'feather', x: clamp(foe.x + foe.vx * 0.4 + grand(-110, 110)
 }
 if (f.t >= 1.1) endSpecial(f);
 } },
+});
+Object.assign(ULTS, {
 moonflow: { name: '月华如水', desc: '双手结月印，盘坐入定。月华凝露，回复 135 点生命；月芒震退贴身之敌（75 伤害）。绽放触发【太阴化生】：重置月镜架招与月轮回旋冷却，并获得 4 秒月魄霸体护盾（格挡硬直减伤）。',
 begin(f) {
 f.sp = 'wave'; f.spPose = 'yh_lotus'; f.invul = 0.5; f.hp = Math.min(f.maxHp, f.hp + Math.round(100 * HERO_HP_SCALE)); f.hitDone = false;
@@ -13621,6 +13831,8 @@ applyHit(f, foe, { dmg: 75, kb: [460, -640], stun: 0.6, hs: 0.15, launch: true, 
 }
 if (f.t >= 0.55) endSpecial(f);
 } },
+});
+Object.assign(ULTS, {
 guangling: { name: '广陵散', desc: '奏一曲广陵散：六道音刃从左右两侧轮番穿过对手（每道 14 伤害），曲终一记【绝响】从对手脚下炸开（60 伤害，身上每枚音律再 +15，不可格挡，挑空）。曲罢音律回满，清音冷却清零。',
 begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'yx_play'; f.invul = 0.3; SFX.superOn(); },
 update(f, foe) {
@@ -13638,6 +13850,8 @@ addP({ type: 'text', text: '曲终绝响 · 音律回满', x: f.x, y: f.y - 120,
 }
 if (f.t >= 1.35) endSpecial(f);
 } },
+});
+Object.assign(ULTS, {
 shanshui: { name: '山水之间', desc: '醉翁之意不在酒，在乎山水之间也。展开一幅满屏山水，从天上一路压下来，压下去的过程中对手共受 120 伤害（8 下，每下 15，不可格挡，躲在哪都逃不掉，只有腾空闪的无敌能躲开几下）。画卷落下后对手困在蓬莱境里 2 秒：对手的屏幕被画挡住，看不见自己和醉翁在哪，只有醉翁一方看得见。',
 begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'zx_drink'; f.invul = 0.3; SFX.superOn(); },
 update(f, foe) {
@@ -13648,155 +13862,7 @@ shake = Math.max(shake, 4 + f.spN); SFX.thud();
 }
 if (f.t >= 1.95) { if (foe.hp > 0) foe.veilT = PENGLAI_T; endSpecial(f); }
 } },
-eightimm: { name: '八仙过海', flurry: true, n: 8, iv: 0.085, slash: 12, fin: 76, desc: '醉眼一睁，滚身扑入；一扑得手，八仙醉拳轮番上身。打完醉意直接灌满。' },
-skynet: { name: '开天一锤', desc: '把链锤甩上天，锤头越飞越大，变成一柄巨锤从对手头顶砸落（40 伤害，不可格挡），被砸中的人震晕定身 0.9 秒；随后扯链回锤把人拽到身前再抡一记（80 伤害，挑空），并重置飞锤冷却、附加【震魄】。巨锤落空就只砸出一个坑。',
-begin(f) { f.sp = 'cast'; f.spN = 0; f.spPose = 'gc_wind'; f.invul = 0.3; f.hitDone = false; SFX.superOn(); },
-update(f, foe) {
-if (f.spN === 0 && f.t >= 0.15) {
-f.spN = 1; f.spPose = 'gc_wind'; SFX.swing();
-spawnProj(f, { kind: 'net', vx: 0, x: foe.x, y: Math.min(0, foe.y) - 80, delay: 0.25, track: 6, trackEnd: 0.08, w: 320, h: 200, life: 0.55, dmg: 40, kb: [0, 0], stun: 0.9, hs: 0.1, root: true, pierce: true, maxHits: 2, unblockable: true, ult: true, noScale: true, unbreakable: true });
-}
-if (f.spN === 1 && f.t >= 0.95) {
-f.spN = 2;
-if (foe.rooted && foe.state === 'hitstun' && foe.hp > 0 && foe.invul <= 0) {
-f.face = foe.x >= f.x ? 1 : -1; f.spPose = 'gc_pull'; f.snap = true;
-foe.x = clamp(f.x + f.face * 70, WALL, STAGE_W - WALL); foe.y = 0;
-applyHit(f, foe, { dmg: 80, kb: [420, -820], stun: 0.6, hs: 0.2, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 60]);
-foe.hookedT = 1.2; f.skillCD = 0;
-shake = Math.max(shake, 14); SFX.heavy();
-addP({ type: 'text', text: '回锤 · 飞锤重置', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '235,205,130' });
-} else f.spPose = 'idle';
-}
-if (f.t >= 1.3) endSpecial(f);
-} },
-needlestorm: { name: '万线归宗', desc: '凌雀跃至半空织就漫天悬丝罗网，子母梭如疾风暴雨全屏交错绞杀敌人（7 段 12 伤害 + 终结 56 伤害），附加【雀芒】印记并重置换影冷却。',
-begin(f, foe) {
-f.sp = 'cast'; f.spN = 0; f.spPose = 'du_l1s'; f.invul = 0.40; f.vx = 0; f.vy = -360; f.y = -1; SFX.superOn();
-},
-update(f, foe) {
-f.vx = 0; f.vy = damp(f.vy, 0, 8, STEP);
-if (f.spN < 7 && f.t >= 0.15 + f.spN * 0.08) {
-f.spN++;
-SFX.slice();
-const sd = (f.spN % 2 === 0) ? 1 : -1;
-const ang = (f.spN * 0.6) % 3.14;
-slashLine(foe.x + rand(-40, 40), foe.y - 50 + rand(-30, 30), ang, '235,110,210');
-ring(foe.x, foe.y - 50, 70 + f.spN * 10, '235,110,210', 0.25);
-if (foe.hp > 0 && foe.invul <= 0) {
-applyHit(f, foe, { dmg: 12, exact: true, kb: [60, -40], stun: 0.26, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [foe.x, foe.y - 50]);
-addNeedleMark(foe, 1);
-}
-}
-if (f.spN === 7 && f.t >= 0.78) {
-f.spN = 8;
-f.y = 0; f.vy = 0;
-shake = Math.max(shake, 16); SFX.heavy(); SFX.slice();
-ring(foe.x, foe.y - 50, 150, '255,140,225', 0.45);
-if (foe.hp > 0 && foe.invul <= 0) {
-applyHit(f, foe, { dmg: 56, kb: [300, -700], stun: 0.55, hs: 0.16, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 50]);   // kb 只写大小，方向由 dir 带
-addNeedleMark(foe, 1);
-f.skill2CD = 0;
-addP({ type: 'text', text: '✦ 雀芒入魂 · 悬丝归宗 ✦', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,140,225' });
-}
-}
-if (f.t >= 1.15) endSpecial(f);
-} },
-mistarray: { name: '万影归一', desc: '场上每个雾身同时朝对手斩出一道刀光（每道 30 伤害，按雾身复制攻击的 75% 计算），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空也追得上。雾身越多刀越多，最多四刀。没有雾身时只有本体那一刀。刀光和补刀都不能格挡，但全程没有无敌：出手前被打中、对手闪开都会落空。补刀砍中后留影冷却清零。',
-begin(f, foe) {
-f.sp = 'cast'; f.spPose = 'fy_seal'; f.invul = 0; f.spN = 0; f.vx = 0;
-for (const c of (f.clones || []).slice()) {
-const d = foe.x >= c.x ? 1 : -1;
-spawnProj(f, { kind: 'wind', x: c.x + d * 30, y: (c.y || 0) - 62, vx: d * 1700, vy: 0, w: 70, h: 90, life: 0.45, dmg: 30, kb: [160, 0], stun: 0.6, hs: 0.08, ult: true, unblockable: true, noScale: true, unbreakable: true });   // 雾身以 75% 伤害出刀，本体后到
-if (!RESIM) slashLine(c.x, (c.y || 0) - 60, d > 0 ? 0 : Math.PI, f.look.slash);
-}
-clearClones(f);
-SFX.swing();
-},
-update(f, foe) {
-if (f.spN === 0 && f.t >= 0.3) {
-f.spN = 1;
-const side = foe.x >= f.x ? 1 : -1;
-if (!RESIM) smoke(f.x, f.y - 50, 10);
-f.x = clamp(foe.x - side * 80, WALL, STAGE_W - WALL); f.vy = 0; f.face = side;
-if (foe.onGround()) mapPutOn(f, foe.plat); else { f.y = foe.y; f.plat = -1; }   // 对手站在平台上就落到那个平台；跳起来了就追到半空，砍完自己落下
-f.snap = true; f.trail.length = 0; f.scarf = [];
-f.spPose = 'l2a'; f.hitDone = false;
-if (strike(f, foe, { box: [0, -118, 110, 0], dmg: 60, kb: [240, -720], stun: 0.5, hs: 0.12, launch: true, ult: true, unblockable: true, noScale: true })) f.skillCD = 0;   // 补刀砍中：留影冷却清零，马上能再留雾身
-SFX.slice();
-}
-if (f.t >= 0.8) endSpecial(f);
-} },
-sandwich: { name: '天地磁合', desc: '对手脚下浮出一块负极磁石、头顶压下一块正极磁石，两块磁石异极相吸，把对手牢牢吸住、越合越快，最后合拢夹成肉饼（125 伤害，不可格挡），被夹扁的人定住 1 秒。放的时候对手正在腾空闪这类无敌里，就只吸得住磁石，夹不到人。',
-begin(f, foe) {
-f.sp = 'cast'; f.spN = 0; f.spPose = 'lm_boxer'; f.invul = 0.75; f.vx = 0; f.hitDone = false;   // 合拢之前不会被打断
-f.sw = { x: clamp(foe.x, WALL, STAGE_W - WALL), top: -640, hit: 0, v: foe.idx, t: 0 };   // v：夹的是谁（存序号，回滚存档存得下）
-SFX.superOn(); ring(f.sw.x, -10, 120, magRGB(-1), 0.4);
-},
-update(f, foe) {
-const S = f.sw; if (!S) { endSpecial(f); return; }
-foe = fighterByIdx(S.v);   // 2v2 里一直夹放招时选中的那个人
-S.t = f.t;
-if (f.spN === 0 && foe.hp > 0) S.x = clamp(damp(S.x, foe.x, 12, STEP), WALL, STAGE_W - WALL);   // 吸住之前磁石跟着对手
-if (f.spN === 0 && f.t >= 0.12) {   // 吸住：对手被两块磁石定在中间
-f.spN = 1; f.spPose = 'victory';
-if (!isClient() && foe.hp > 0 && foe.invul <= 0) {
-S.hit = 1;
-foe.state = 'held'; foe.t = 0; foe.vx = 0; foe.vy = 0; foe.move = null; foe.skill = null; foe.sp = null;
-}
-SFX.charge();
-}
-if (f.spN === 1) {
-const u = clamp((f.t - 0.12) / 0.5, 0, 1);
-S.top = -640 + (640 - 120) * u * u * u;   // 越合越快
-if (S.hit && foe.state === 'held') { magMove(foe, damp(foe.x, S.x, 14, STEP)); foe.y = damp(foe.y, 0, 14, STEP); }
-if (!RESIM && Math.random() < 0.5) addP({ type: 'spark', x: S.x + rand(-60, 60), y: S.top + 20, vx: 0, vy: rand(300, 600), rgb: magRGB(1), life: 0.2, max: 0.2, w: 1.6 });
-if (u >= 1) {
-f.spN = 2; S.top = -120;
-shake = Math.max(shake, 20); flashA = Math.max(flashA, 0.3); flashRGB = '255,255,255'; SFX.heavy(); SFX.thud();
-dust(S.x, 0, 18); ring(S.x, -60, 150, magRGB(1), 0.4); ring(S.x, -60, 110, magRGB(-1), 0.4);
-const caught = S.hit ? foe.state === 'held' : (foe.hp > 0 && foe.invul <= 0 && Math.abs(foe.x - S.x) < 90 && foe.y > -170);
-if (caught && !isClient()) {
-magMove(foe, S.x); foe.y = 0;
-applyHit(f, foe, { dmg: 125, kb: [0, 0], stun: 1.0, hs: 0.22, root: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 60]);
-if (foe.state === 'held') toNeutral(foe);
-foe.squashT = 1.0;
-addP({ type: 'text', text: '天地磁合 · 夹成肉饼', x: S.x, y: -200, life: 1.1, max: 1.1, rgb: '255,220,200' });
-}
-}
-}
-if (f.t >= 1.15) { magRelease(f); endSpecial(f); }
-} },
-recallball: { name: '机轮三穿', desc: '傀丸沿战场往返疾驰三次，再顺着金丝回到千机手中。每名敌人在本次大招中最多受到 120 点伤害；回手后傀丸收起并刷新 Q。若傀丸不在场，则先召出再发动。',
-begin(f) {
-f.sp = 'cast'; f.spN = 0; f.spPose = 'fy_seal'; f.invul = 0.8; f.vx = 0; f.hitDone = false;
-let ball = projs.find(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead);
-if (!ball) {
-spawnProj(f, { kind: 'ironball', yoyo: true, x: f.x + f.face * 42, y: f.y - 58, vx: f.face * 2700, vy: 0,
-g: 0, w: 36, h: 36, life: 999999, dmg: 40, kb: [260, -300], stun: 0.32, hs: 0.08,
-speedTier: 3, unbreakable: true, pierce: true, yoyoPhase: 'ult-pass', yoyoDir: f.face, yoyoPasses: 0, yoyoHitAt: {}, yoyoUltDealt: {} });
-ball = projs.find(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead);
-}
-if (ball) {
-ball.yoyo = true; ball.yoyoPhase = 'ult-pass'; ball.yoyoDir = f.face || 1; ball.yoyoPasses = 0;
-ball.yoyoArrived = false; ball.yoyoHitAt = {}; ball.yoyoUltDealt = {}; ball.yoyoRange = STAGE_W;
-ball.dmg = 40; ball.kb = [260, -300]; ball.stun = 0.32; ball.hs = 0.08;
-ball.vx = ball.yoyoDir * 2700; ball.vy = 0; ball.g = 0; ball.unbreakable = true;
-ring(ball.x, ball.y, 100, f.look.slash || '235,165,70', 0.4);
-}
-ring(f.x, f.y - 50, 130, '255,225,120', 0.35); SFX.superOn(); SFX.gear();
-},
-update(f) {
-const ball = projs.find(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead);
-if (!ball) { f.skillCD = 0; endSpecial(f); return; }
-if (ball.yoyoPhase === 'ult-return') ball.yoyoArrived = Math.abs(ball.x - f.x) < 52;
-if (ball.yoyoArrived) {
-ball.dead = true; f.skillCD = 0;
-ring(f.x, f.y - 50, 90, f.look.slash || '235,165,70', 0.35);
-addP({ type: 'text', text: '三穿归一 · 傀丸回手', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,225,120' });
-SFX.block(); SFX.dash(); endSpecial(f);
-}
-} },
-};
+});
 let AC = null, master = null, noiseBuf = null, muted = false;
 function initAudio() {
 if (AC) { if (AC.state === 'suspended') AC.resume(); return; }
@@ -14633,6 +14699,199 @@ smoke(f.x, f.y - 50, 10); f.x = f.bbX; f.bbT = 0; f.trail.length = 0; f.scarf = 
 }
 return false;
 }
+let dummyCfg = { act: 'stand', rep: true, gap: 1, fixed: false, escape: false, infGuard: true, autoHeal: true };
+const DUMMY_BY = Object.fromEntries(DUMMY_ACTS.map(a => [a.id, a]));
+const DUMMY_RANDOM = DUMMY_ACTS.filter(a => a.k === 'do' && a.id !== 'random').map(a => a.id);   // 「随机」从这些里抽
+const dummyActName = c => { const a = DUMMY_BY[c.act] || DUMMY_BY.stand; return a.k === 'do' && !c.rep ? `${a.n}（只做一次）` : a.n; };
+function dummyNorm(o) {
+const c = { ...dummyCfg, ...(o && typeof o === 'object' ? o : {}) };
+if (typeof o === 'string') { if (o === 'fixed') c.fixed = true; else if (o === 'escape') c.escape = true; c.act = o === 'block' ? 'block' : 'stand'; }
+if (o && typeof o === 'object' && !o.act) c.act = o.counter ? 'counter' : o.block ? 'block' : 'stand';
+if (!DUMMY_BY[c.act]) c.act = 'stand';
+c.rep = c.rep !== false; c.gap = DUMMY_GAPS.includes(+c.gap) ? +c.gap : 1;
+delete c.block; delete c.counter;
+return c;
+}
+const dj = {
+near: r => (c, me, foe, J) => {   // 走到对手身边（钉在原地就原地出手）
+const dx = foe.x - me.x;
+if (c.cfg.fixed || Math.abs(dx) <= r || J.t > 1.6) return true;
+c.held[dx > 0 ? 'right' : 'left'] = true; return false;
+},
+press: (a, prep) => (c, me, foe) => { if (prep) prep(me, foe); c.press(a); return true; },
+wait: d => (c, me, foe, J) => J.t >= d,
+idle: (c, me, foe, J) => J.t > 0.08 && (me.onGround() && ['idle', 'walk', 'block'].includes(me.state)) || J.t > 3,
+shoot: (c, me, foe) => {
+const proj = slot => { const id = slot === 2 ? me.ch.skill2 : me.ch.skill; return typeof AI_KIT !== 'undefined' && AI_KIT[id] && AI_KIT[id].role === 'proj'; };
+const slot = proj(1) ? 1 : proj(2) ? 2 : 0;
+if (slot === 1) { me.skillCD = 0; c.press('skill'); }
+else if (slot === 2) { me.skill2CD = 0; c.press('skill2'); }
+else { const dir = foe.x >= me.x ? 1 : -1; spawnProj(me, { kind: 'wind', x: me.x + dir * 40, y: me.y - 62, vx: dir * 620, w: 56, h: 52, life: 2.4, dmg: 4, kb: [160, 0], stun: 0.3, hs: 0.04 }); }
+return true;
+},
+};
+const DUMMY_JOBS = {
+light: [dj.near(110), dj.press('light'), dj.idle],
+ranged: [dj.shoot, dj.idle],
+jump: [dj.press('jump'), dj.idle],
+djump: [dj.press('jump'), dj.wait(0.24), dj.press('jump'), dj.idle],
+dash: [dj.press('dash', me => { me.breakCD = 0; }), dj.idle],
+skill: [dj.press('skill', me => { me.skillCD = 0; }), dj.idle],
+skill2: [dj.press('skill2', me => { me.skill2CD = 0; }), dj.idle],
+ult: [dj.press('special', me => { me.meter = 100; }), dj.idle],
+combo: [dj.near(100), dj.press('light'), dj.wait(0.14), dj.press('light'), dj.wait(0.14), dj.press('light'), dj.wait(0.14), dj.press('light'), dj.wait(0.14), dj.press('light'),
+dj.wait(0.2), dj.press('skill', me => { me.skillCD = 0; }), dj.idle],
+};
+class DummyCtrl extends Ctrl {
+constructor(modeOrCfg) {
+super();
+this.cfg = dummyNorm(modeOrCfg);
+this.mode = typeof modeOrCfg === 'string' ? modeOrCfg : 'custom';
+this.restart();
+}
+restart() { this.job = null; this.step = 0; this.J = { t: 0 }; this.wait = 0.6; this.done = false; this.prev = ''; this.soon = false; this.walkT = 0; this.walkDir = 1; }
+setCfg(o) { this.cfg = dummyNorm(o); this.restart(); }
+think(me, foe) {
+const c = this.cfg, a = DUMMY_BY[c.act] || DUMMY_BY.stand, h = this.held;
+h.left = h.right = false; h.down = c.act === 'block';
+if (c.escape && me.breakCD <= 0 && (me.state === 'launched' || (me.state === 'hitstun' && me.comboHits >= 4)) && me.t > 0.08) this.press('dash');
+if (c.act === 'walk') {   // 来回走：每 1.2 秒掉头，走到场边也掉头
+this.walkT += STEP;
+if (this.walkT > 1.2 || (this.walkDir < 0 && me.x < WALL + 120) || (this.walkDir > 0 && me.x > STAGE_W - WALL - 120)) { this.walkT = 0; this.walkDir = -this.walkDir; }
+h[this.walkDir > 0 ? 'right' : 'left'] = true;
+}
+if (a.k === 'react') this.react(me, foe, c);
+else if (a.k === 'do') this.doJob(me, foe, c);
+this.prev = me.state;
+}
+react(me, foe, c) {
+if (this.done) return;
+let did = false;
+if (c.act === 'parry') {   // 对手的招快打到了（出招点前 0.06 秒到招式结束）才按住格挡，招一过就松开：每一下都是精准招架
+const m = foe.state === 'attack' && foe.move;
+const soon = m && Math.abs(foe.x - me.x) < 260 && foe.t >= m.su - 0.06 && foe.t < m.su + m.ac;
+this.held.down = !!soon;
+did = this.soon && !soon; this.soon = !!soon;   // 一招过去了算招架过一次
+} else if (c.act === 'counter') {   // 挨打、被格挡的硬直一结束就还手
+if ((this.prev === 'hitstun' || this.prev === 'blockstun') && me.state !== this.prev && me.hp > 0) { this.press('light'); did = true; }
+} else if (c.act === 'wakeup') {   // 起身那一下出刀（一直按着，起来的第一刻就出）
+if (me.state === 'getup') this.press('light');
+if (this.prev === 'getup' && me.state !== 'getup') did = true;
+}
+if (did && !c.rep) this.done = true;
+}
+doJob(me, foe, c) {
+if (!this.job) {
+if (this.done) return;
+const free = me.onGround() && ['idle', 'walk', 'block'].includes(me.state);
+if (free) this.wait -= STEP;
+if (this.wait > 0 || !free) return;
+const id = c.act === 'random' ? DUMMY_RANDOM[Math.floor(grnd() * DUMMY_RANDOM.length)] : c.act;
+this.job = DUMMY_JOBS[id]; this.jobId = id; this.step = 0; this.J = { t: 0 };
+}
+const J = this.J;
+while (this.job && this.step < this.job.length) {
+if (!this.job[this.step](this, me, foe, J)) { J.t += STEP; return; }
+this.step++; J.t = 0;
+}
+this.job = null; this.wait = c.gap;
+if (!c.rep) this.done = true;
+}
+}
+const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0, inspectHz: 120, inspectAcc: 0, inspectPaused: false };
+const HERO_AI_REGISTRY = {};
+function registerHeroAI(heroId, mode = '*', variant = '*', spec = {}) {
+HERO_AI_REGISTRY[`${heroId}:${mode}:${variant}`] = spec;
+}
+function resolveHeroAI(heroId, mode = '*', variant = '*') {
+return HERO_AI_REGISTRY[`${heroId}:${mode}:${variant}`]
+|| HERO_AI_REGISTRY[`${heroId}:${mode}:*`]
+|| HERO_AI_REGISTRY[`${heroId}:*:${variant}`]
+|| HERO_AI_REGISTRY[`${heroId}:*:*`]
+|| null;
+}
+function aiVariantNow() {
+if (typeof is2v2 === 'function' && is2v2()) return '2v2';
+if ((typeof chaosOn === 'function' && chaosOn()) || (typeof M !== 'undefined' && M.cujuChaos)) return 'chaos';
+if (typeof mayhemOn === 'function' && mayhemOn()) return 'mayhem';
+return '1v1';
+}
+class AICtrl extends Ctrl {
+constructor(level) { super(); this.level = level; this.brain = new AIBrain(this, level); this.L = this.brain.L; }
+updateTactic() { this.brain.newRound(); }
+think(me, foe) {
+const run = () => {
+const ov = me && me.ch ? resolveHeroAI(me.ch.id, typeof M !== 'undefined' ? M.mode : '*', aiVariantNow()) : null;
+if (ov && typeof ov.onThink === 'function' && ov.onThink(this, me, foe)) return;
+this.brain.think(me, foe);
+};
+if (!netSim()) return run();
+const r0 = Math.random; Math.random = grnd;
+try { run(); } finally { Math.random = r0; }
+}
+}
+registerHeroAI('cixian', 'cuju', '*', {
+useSkills(ctrl, me, b, d, ballFront) {
+const dist = Math.hypot(b.x - me.x, b.y - (me.y - 50));
+if (me.pol < 0 && me.skill2CD <= 0 && dist > 160 && dist < 560 && Math.random() < ctrl.L.skillP * 2) {
+ctrl.press('skill2');
+return true;
+}
+if (me.pol > 0 && me.skill2CD <= 0 && ballFront > 0 && ballFront < 150 && Math.random() < ctrl.L.skillP * 2) {
+ctrl.held.aim = d;
+ctrl.press('skill2');
+return true;
+}
+if (me.pol > 0 && dist > 300 && me.skillCD <= 0 && Math.random() < ctrl.L.skillP) {
+ctrl.press('skill');
+return true;
+}
+return false;
+},
+});
+registerHeroAI('gouchen', 'cuju', '*', {
+useSkills(ctrl, me, b, d, ballFront, hgt) {
+const dist = Math.hypot(b.x - me.x, b.y - (me.y - 50));
+const toBall = Math.sign(b.x - me.x) || d;
+if (me.skillCD <= 0 && dist > 220 && dist < 540 && Math.random() < ctrl.L.skillP * 2.2) {
+ctrl.held.aim = toBall;
+ctrl.held.left = toBall < 0;
+ctrl.held.right = toBall > 0;
+ctrl.press('skill');
+return true;
+}
+return false;
+},
+});
+registerHeroAI('liying', 'cuju', '2v2', {
+useSkills(ctrl, me, b, d, ballFront) {
+if (me.skillCD <= 0 && (!me.clones || me.clones.length < 3) && Math.random() < ctrl.L.skillP * 1.5) {
+ctrl.press('skill');
+return true;
+}
+if (me.skill2CD <= 0 && me.clones && me.clones.length > 0 && ballFront < -80 && Math.random() < ctrl.L.skillP) {
+ctrl.press('skill2');
+return true;
+}
+return false;
+},
+});
+registerHeroAI('qianji', 'cuju', '2v2', {
+useSkills(ctrl, me, b, d, ballFront) {
+const dist = Math.hypot(b.x - me.x, b.y - (me.y - 50));
+if (me.skillCD <= 0 && dist > 180 && dist < 520 && Math.random() < ctrl.L.skillP * 1.8) {
+ctrl.held.aim = d;
+ctrl.press('skill');
+return true;
+}
+if (me.skill2CD <= 0 && ballFront > 0 && ballFront < 240 && Math.random() < ctrl.L.skillP * 1.6) {
+ctrl.held.aim = d;
+ctrl.press('skill2');
+return true;
+}
+return false;
+},
+});
 const FOREST = { on: false, mons: [], shots: [], spawnT: 0, kills: {}, total: 0, t: 0, hurtT: 0, storyTitle: '', storyLine: '', raidStory: false };
 const MON_TYPES = {
 blade: { name: '刀鬼', kind: '近身', hp: 30, spd: 150, w: 24, h: 104, eye: '255,70,60' },
@@ -15131,115 +15390,6 @@ openScreen('stage');
 $id('feNext').addEventListener('click', () => { const nx = nextStage(STAGE); if (!nx) return; paused = false; showScreen(null); startStage(nx[0], nx[1]); });
 $id('feAgain').addEventListener('click', () => { paused = false; showScreen(null); startStage(STAGE.c, STAGE.l); });
 $id('feMenu').addEventListener('click', () => { paused = false; backToStages(); });
-let dummyCfg = { act: 'stand', rep: true, gap: 1, fixed: false, escape: false, infGuard: true, autoHeal: true };
-const DUMMY_BY = Object.fromEntries(DUMMY_ACTS.map(a => [a.id, a]));
-const DUMMY_RANDOM = DUMMY_ACTS.filter(a => a.k === 'do' && a.id !== 'random').map(a => a.id);   // 「随机」从这些里抽
-const dummyActName = c => { const a = DUMMY_BY[c.act] || DUMMY_BY.stand; return a.k === 'do' && !c.rep ? `${a.n}（只做一次）` : a.n; };
-function dummyNorm(o) {
-const c = { ...dummyCfg, ...(o && typeof o === 'object' ? o : {}) };
-if (typeof o === 'string') { if (o === 'fixed') c.fixed = true; else if (o === 'escape') c.escape = true; c.act = o === 'block' ? 'block' : 'stand'; }
-if (o && typeof o === 'object' && !o.act) c.act = o.counter ? 'counter' : o.block ? 'block' : 'stand';
-if (!DUMMY_BY[c.act]) c.act = 'stand';
-c.rep = c.rep !== false; c.gap = DUMMY_GAPS.includes(+c.gap) ? +c.gap : 1;
-delete c.block; delete c.counter;
-return c;
-}
-const dj = {
-near: r => (c, me, foe, J) => {   // 走到对手身边（钉在原地就原地出手）
-const dx = foe.x - me.x;
-if (c.cfg.fixed || Math.abs(dx) <= r || J.t > 1.6) return true;
-c.held[dx > 0 ? 'right' : 'left'] = true; return false;
-},
-press: (a, prep) => (c, me, foe) => { if (prep) prep(me, foe); c.press(a); return true; },
-wait: d => (c, me, foe, J) => J.t >= d,
-idle: (c, me, foe, J) => J.t > 0.08 && (me.onGround() && ['idle', 'walk', 'block'].includes(me.state)) || J.t > 3,
-shoot: (c, me, foe) => {
-const proj = slot => { const id = slot === 2 ? me.ch.skill2 : me.ch.skill; return typeof AI_KIT !== 'undefined' && AI_KIT[id] && AI_KIT[id].role === 'proj'; };
-const slot = proj(1) ? 1 : proj(2) ? 2 : 0;
-if (slot === 1) { me.skillCD = 0; c.press('skill'); }
-else if (slot === 2) { me.skill2CD = 0; c.press('skill2'); }
-else { const dir = foe.x >= me.x ? 1 : -1; spawnProj(me, { kind: 'wind', x: me.x + dir * 40, y: me.y - 62, vx: dir * 620, w: 56, h: 52, life: 2.4, dmg: 4, kb: [160, 0], stun: 0.3, hs: 0.04 }); }
-return true;
-},
-};
-const DUMMY_JOBS = {
-light: [dj.near(110), dj.press('light'), dj.idle],
-ranged: [dj.shoot, dj.idle],
-jump: [dj.press('jump'), dj.idle],
-djump: [dj.press('jump'), dj.wait(0.24), dj.press('jump'), dj.idle],
-dash: [dj.press('dash', me => { me.breakCD = 0; }), dj.idle],
-skill: [dj.press('skill', me => { me.skillCD = 0; }), dj.idle],
-skill2: [dj.press('skill2', me => { me.skill2CD = 0; }), dj.idle],
-ult: [dj.press('special', me => { me.meter = 100; }), dj.idle],
-combo: [dj.near(100), dj.press('light'), dj.wait(0.14), dj.press('light'), dj.wait(0.14), dj.press('light'), dj.wait(0.14), dj.press('light'), dj.wait(0.14), dj.press('light'),
-dj.wait(0.2), dj.press('skill', me => { me.skillCD = 0; }), dj.idle],
-};
-class DummyCtrl extends Ctrl {
-constructor(modeOrCfg) {
-super();
-this.cfg = dummyNorm(modeOrCfg);
-this.mode = typeof modeOrCfg === 'string' ? modeOrCfg : 'custom';
-this.restart();
-}
-restart() { this.job = null; this.step = 0; this.J = { t: 0 }; this.wait = 0.6; this.done = false; this.prev = ''; this.soon = false; this.walkT = 0; this.walkDir = 1; }
-setCfg(o) { this.cfg = dummyNorm(o); this.restart(); }
-think(me, foe) {
-const c = this.cfg, a = DUMMY_BY[c.act] || DUMMY_BY.stand, h = this.held;
-h.left = h.right = false; h.down = c.act === 'block';
-if (c.escape && me.breakCD <= 0 && (me.state === 'launched' || (me.state === 'hitstun' && me.comboHits >= 4)) && me.t > 0.08) this.press('dash');
-if (c.act === 'walk') {   // 来回走：每 1.2 秒掉头，走到场边也掉头
-this.walkT += STEP;
-if (this.walkT > 1.2 || (this.walkDir < 0 && me.x < WALL + 120) || (this.walkDir > 0 && me.x > STAGE_W - WALL - 120)) { this.walkT = 0; this.walkDir = -this.walkDir; }
-h[this.walkDir > 0 ? 'right' : 'left'] = true;
-}
-if (a.k === 'react') this.react(me, foe, c);
-else if (a.k === 'do') this.doJob(me, foe, c);
-this.prev = me.state;
-}
-react(me, foe, c) {
-if (this.done) return;
-let did = false;
-if (c.act === 'parry') {   // 对手的招快打到了（出招点前 0.06 秒到招式结束）才按住格挡，招一过就松开：每一下都是精准招架
-const m = foe.state === 'attack' && foe.move;
-const soon = m && Math.abs(foe.x - me.x) < 260 && foe.t >= m.su - 0.06 && foe.t < m.su + m.ac;
-this.held.down = !!soon;
-did = this.soon && !soon; this.soon = !!soon;   // 一招过去了算招架过一次
-} else if (c.act === 'counter') {   // 挨打、被格挡的硬直一结束就还手
-if ((this.prev === 'hitstun' || this.prev === 'blockstun') && me.state !== this.prev && me.hp > 0) { this.press('light'); did = true; }
-} else if (c.act === 'wakeup') {   // 起身那一下出刀（一直按着，起来的第一刻就出）
-if (me.state === 'getup') this.press('light');
-if (this.prev === 'getup' && me.state !== 'getup') did = true;
-}
-if (did && !c.rep) this.done = true;
-}
-doJob(me, foe, c) {
-if (!this.job) {
-if (this.done) return;
-const free = me.onGround() && ['idle', 'walk', 'block'].includes(me.state);
-if (free) this.wait -= STEP;
-if (this.wait > 0 || !free) return;
-const id = c.act === 'random' ? DUMMY_RANDOM[Math.floor(grnd() * DUMMY_RANDOM.length)] : c.act;
-this.job = DUMMY_JOBS[id]; this.jobId = id; this.step = 0; this.J = { t: 0 };
-}
-const J = this.J;
-while (this.job && this.step < this.job.length) {
-if (!this.job[this.step](this, me, foe, J)) { J.t += STEP; return; }
-this.step++; J.t = 0;
-}
-this.job = null; this.wait = c.gap;
-if (!c.rep) this.done = true;
-}
-}
-const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0, inspectHz: 120, inspectAcc: 0, inspectPaused: false };
-class AICtrl extends Ctrl {
-constructor(level) { super(); this.level = level; this.brain = new AIBrain(this, level); this.L = this.brain.L; }
-updateTactic() { this.brain.newRound(); }
-think(me, foe) {
-if (!netSim()) return this.brain.think(me, foe);
-const r0 = Math.random; Math.random = grnd;
-try { this.brain.think(me, foe); } finally { Math.random = r0; }
-}
-}
 const CLONE_SK = {};   // 离影雾身的样子（留下那一刻的骨架，键是「侠客序号:雾身编号」）：只是画面，不进存档
 const CLONE_FADES = []; // 雾身消散残影：纯视觉效果，不进回滚状态
 class Fighter {
@@ -30465,19 +30615,10 @@ if (move > 0) h.right = true; else if (move < 0) h.left = true;
 h.aim = face;
 }
 useSkills(me, b, d, ballFront, hgt) {
-const L = this.L, dist = Math.hypot(b.x - me.x, b.y - (me.y - 50)), id = me.ch.id;
-const toBall = Math.sign(b.x - me.x) || d;
+const L = this.L;
 if (me.meter >= 100 && ballFront > 0 && ballFront < 200 && hgt < 200 && Math.random() < L.ultP * 0.3) { this.held.aim = d; this.press('special'); return; }
-if (id === 'gouchen') {   // 飞锤：球离得远、往前甩就够得着时，把球勾回身前
-if (me.skillCD <= 0 && dist > 230 && dist < 520 && Math.random() < L.skillP * 2) { this.held.aim = toBall; this.held.left = toBall < 0; this.held.right = toBall > 0; this.press('skill'); }
-return;
-}
-if (id === 'cixian') {   // 负极把球吸过来，正极贴身把球弹出去
-if (me.pol < 0 && me.skill2CD <= 0 && dist > 160 && dist < 560 && Math.random() < L.skillP * 2) this.press('skill2');
-else if (me.pol > 0 && me.skill2CD <= 0 && ballFront > 0 && ballFront < 150 && Math.random() < L.skillP * 2) { this.held.aim = d; this.press('skill2'); }
-else if (me.pol > 0 && dist > 300 && me.skillCD <= 0 && Math.random() < L.skillP) this.press('skill');
-return;
-}
+const ov = typeof resolveHeroAI === 'function' ? resolveHeroAI(me.ch.id, 'cuju', is2v2() ? '2v2' : '1v1') : null;
+if (ov && typeof ov.useSkills === 'function' && ov.useSkills(this, me, b, d, ballFront, hgt)) return;
 if (ballFront > 0 && ballFront < 170 && hgt < 170 && Math.random() < L.skillP) this.press(Math.random() < 0.5 || me.skill2CD > 0 ? (me.skillCD <= 0 ? 'skill' : 'skill2') : 'skill2');
 }
 }

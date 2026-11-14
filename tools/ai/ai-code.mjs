@@ -14,14 +14,27 @@ export function dataFiles() {
   return [...numbered('src/data'), ...subs.flatMap(d => numbered('src/data/' + d))];
 }
 
-// 游戏主体：先是 src/data/ 的数据表，再是 src/game/（含各分层子目录）下按文件名的编号顺序拼起来的原来整个 game.js
+function walkGameJs(dir, relPrefix = []) {
+  const out = [];
+  for (const name of readdirSync(ROOT + dir).sort()) {
+    const full = dir + '/' + name;
+    if (isDir(full)) {
+      out.push(...walkGameJs(full, [...relPrefix, name]));
+    } else if (/^[a-z0-9-]+\.js$/.test(name)) {
+      const parts = [...relPrefix, name];
+      const key = parts.length >= 2 && /^(01-engine|02-combat|03-render|04-modes|05-ui)$/.test(parts[0])
+        ? parts.slice(1).join('/')
+        : parts.join('/');
+      out.push({ key, path: full });
+    }
+  }
+  return out;
+}
+
+// 游戏主体：先是 src/data/ 的数据表，再是 src/game/（含多层子目录）按编号路径排好的文件
 export function gameFiles() {
-  const subs = readdirSync(ROOT + 'src/game').filter(d => isDir('src/game/' + d)).sort();
-  const items = [
-    ...numbered('src/game').map(p => ({ name: p.split('/').pop(), path: p })),
-    ...subs.flatMap(d => numbered('src/game/' + d).map(p => ({ name: p.split('/').pop(), path: p }))),
-  ];
-  items.sort((a, b) => (a.name < b.name ? -1 : a.name > b.name ? 1 : 0));
+  const items = walkGameJs('src/game');
+  items.sort((a, b) => (a.key < b.key ? -1 : a.key > b.key ? 1 : 0));
   return items.map(x => x.path);
 }
 

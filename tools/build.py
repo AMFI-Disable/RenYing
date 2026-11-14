@@ -138,14 +138,25 @@ def data_parts():
     return [("data", n) for n in numbered("data")] + [("data", d, n) for d in subs for n in numbered("data", d)]
 
 
+def _game_sort_key(rel_parts):
+    """按分层目录内第一段编号路径排序，使 03-skills/qingfeng.js 落在 03- 位置"""
+    if len(rel_parts) >= 2 and re.match(r"^(01-engine|02-combat|03-render|04-modes|05-ui)$", rel_parts[0]):
+        return "/".join(rel_parts[1:])
+    return "/".join(rel_parts)
+
+
 def game_parts():
-    """先是 src/data/ 的数据表，再是 src/game/ 下（含各分层子目录）按文件名编号排好的文件，拼起来就是整个游戏主体（原来的 src/game.js）"""
+    """先是 src/data/ 的数据表，再是 src/game/ 下（含多层子目录）按编号路径排好的文件，拼起来就是整个游戏主体"""
     base = os.path.join(SRC, "game")
-    subs = sorted(d for d in os.listdir(base) if os.path.isdir(os.path.join(base, d)))
-    items = [(n, ("game", n)) for n in numbered("game")]
-    for d in subs:
-        for n in numbered("game", d):
-            items.append((n, ("game", d, n)))
+    items = []
+    for root, dirs, files in os.walk(base):
+        dirs.sort()
+        for n in sorted(files):
+            if not re.match(r"^[a-z0-9-]+\.js$", n):
+                continue
+            rel = os.path.relpath(os.path.join(root, n), base)
+            rel_parts = tuple(rel.split(os.sep))
+            items.append((_game_sort_key(rel_parts), ("game",) + rel_parts))
     items.sort(key=lambda x: x[0])
     return data_parts() + [p for _, p in items]
 
