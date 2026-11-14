@@ -269,26 +269,35 @@ body.offline #mMatch { display: none !important; }
 .end-qol-row { justify-content: flex-end; margin: 4px 0 8px; }
 @media (max-width: 680px) { .end-review-grid { grid-template-columns: 1fr; } }
 
-#single .xiwu-quick-card .go { margin:0; padding:5px 18px; font-size:20px; }
+#single .xiwu-quick-card .go { margin:0; padding:6px 46px 6px 18px; font-size:17px; }
 
 /* XiWu studio: modes on the left, the selected practice on the right. */
 #single .singlep { max-width: min(1180px, 96vw); }
 #single .mode-title-wrap { text-align: left; max-width: 1080px; margin: 0 auto 18px; }
 #single .mode-title-wrap h2 { margin-bottom: 2px; }
-.xiwu-studio { display: grid; grid-template-columns: minmax(190px, 240px) minmax(0, 1fr); gap: 20px; width: min(1080px, 100%); margin: auto; align-items: start; }
+.xiwu-studio { display: grid; grid-template-columns: minmax(290px, 350px) minmax(0, 1fr); gap: 18px; width: min(1120px, 100%); margin: auto; align-items: start; }
 #single .single-nav-deck.play-deck { width: 100%; padding: 0; margin: 0; }
-#single .xiwu-category-tabs { grid-template-columns: 1fr; gap: 6px; margin-bottom: 16px; }
+#single .xiwu-category-tabs { grid-template-columns: 1fr; gap: 6px; margin-bottom: 12px; }
 #single .xiwu-cat-btn { padding: 10px 12px; border-radius: 6px; box-shadow: none; }
-#single .xiwu-cards-row { grid-template-columns: 1fr; gap: 4px; }
-#single .xiwu-cards-row button { min-height: 52px; border-radius: 5px; background: rgba(15,16,29,.42); border: 1px solid transparent; }
+#single .xiwu-cards-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+#single .xiwu-cards-row button { position: relative; min-height: 54px; padding: 8px 28px 8px 10px; border-radius: 6px; background: rgba(15,16,29,.42); border: 1px solid rgba(255,255,255,.06); }
 #single .xiwu-cards-row button.sel { background: rgba(233,196,106,.1); border-color: rgba(233,196,106,.45); }
+.mode-info-btn { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(233,196,106,.42); background: rgba(15,16,29,.78); color: rgba(233,196,106,.9); font: 700 12px/18px var(--body); text-align: center; cursor: pointer; z-index: 2; transition: background .15s, color .15s, border-color .15s; }
+.mode-info-btn:hover, .mode-info-btn:focus-visible { background: rgba(233,196,106,.24); border-color: #e9c46a; color: #fff; }
+.xiwu-info-card { margin: 0 0 14px; padding: 12px 14px; border: 1px solid rgba(233,196,106,.42); border-radius: 7px; background: rgba(233,196,106,.08); text-align: left; }
+.xiwu-info-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.xiwu-info-head b { color: var(--gold); font: 600 15px var(--title); letter-spacing: .04em; }
+.xiwu-info-head button { min-height: 24px; padding: 0 8px; font-size: 14px; line-height: 1; }
+.xiwu-info-body { margin: 0; color: rgba(255,255,255,.86); font-size: 13px; line-height: 1.55; }
 .xiwu-config { min-width: 0; padding: 20px; border: 1px solid rgba(233,196,106,.22); border-radius: 8px; background: linear-gradient(145deg, rgba(35,31,42,.82), rgba(13,15,25,.9)); box-shadow: 0 16px 40px rgba(0,0,0,.18); }
 #single #aiLvHome { width: 100%; margin: 0 0 16px; }
 #single .xiwu-quick-card { margin: 0 0 16px; padding: 12px 16px; background: rgba(233,196,106,.08); border-radius: 5px; }
 #single .xiwu-quick-card p { line-height: 1.5; }
 #single .xiwu-mutator-row { margin: 0 0 14px; }
 #single .xiwu-mode-content { padding-top: 14px; border-top: 1px solid rgba(233,196,106,.16); }
-#single .single-action-row { justify-content: flex-start; }
+#single .single-action-row { justify-content: flex-start; gap: 10px; }
+#single .single-action-row .go, #single .single-action-row .go.alt { font-size: 16px !important; letter-spacing: .08em !important; padding: 0 42px 0 18px !important; min-height: 42px !important; height: 42px !important; }
+#single .single-action-row .ghost { font-size: 14px !important; padding: 0 16px !important; min-height: 42px !important; height: 42px !important; }
 #single .xiwu-training-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0 0 12px; }
 #single .xiwu-training-tabs button { min-width: 0; min-height: 38px; padding: 6px 8px; border: 1px solid rgba(233,196,106,.18); border-radius: 5px; background: rgba(15,16,29,.45); color: rgba(255,255,255,.76); font: 600 12px var(--body); cursor: pointer; }
 #single .xiwu-training-tabs button.sel, #single .xiwu-training-tabs button[aria-selected="true"] { border-color: rgba(233,196,106,.55); background: rgba(233,196,106,.12); color: #f4d987; }

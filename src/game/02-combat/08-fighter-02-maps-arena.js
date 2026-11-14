@@ -132,7 +132,7 @@ function mapEdge(f, cl) {
   const side = f.x < WALL ? -1 : 1;
   const fav = mapFavOn(f);
   // 燕翎（地利）：羽行御风，坠崖伤害减半；勾陈/磁仙/凌霜对手更容易受制，流云空中不易失足
-  let pushThresh = cl.push;
+  let pushThresh = cl.push || 320;
   const flung = f.state === 'launched' || ((f.state === 'hitstun' || f.state === 'knockdown') && Math.abs(f.vx) > pushThresh);
   f.x = side < 0 ? WALL : STAGE_W - WALL;
   if (!flung || f.hp <= 0) {
@@ -141,11 +141,22 @@ function mapEdge(f, cl) {
     else if (Math.sign(f.vx) === side) f.vx = 0;
     return;
   }
+  if (cl.ko) {
+    f.hp = 0;
+    f.state = 'launched'; f.t = 0; f.vy = cl.vy || -520; f.vx = side * 120; f.invul = 99;
+    f.mapFalls = (f.mapFalls || 0) + 1;
+    if (M.combatStats && M.combatStats[f.idx]) M.combatStats[f.idx].falls++;
+    if (RESIM) return;
+    shake = Math.max(shake, 10); SFX.thud(); SFX.cliffFall();
+    ring(f.x, f.y - 40, 90, '255,140,120', 0.45);
+    addP({ type: 'text', text: '坠崖出局', x: f.x - side * 40, y: f.y - 110, life: 0.9, max: 0.9, rgb: '255,150,120' });
+    return;
+  }
   const dmgMul = (fav && f.ch.id === 'yanling') ? 0.5 : 1;
-  const dmg = Math.round(f.maxHp * cl.dmg * dmgMul);
+  const dmg = Math.round(f.maxHp * (cl.dmg || 0.06) * dmgMul);
   f.hp = Math.max(1, f.hp - dmg);
-  f.x -= side * cl.back; f.y = Math.min(f.y, -40); f.vy = cl.vy; f.vx = -side * 120;
-  f.state = 'launched'; f.t = 0; f.invul = Math.max(f.invul || 0, cl.invul);
+  f.x -= side * (cl.back || 30); f.y = Math.min(f.y, -40); f.vy = cl.vy || -820; f.vx = -side * 120;
+  f.state = 'launched'; f.t = 0; f.invul = Math.max(f.invul || 0, cl.invul || 0.9);
   f.comboHits = 0; f.juggle = 0; f.spiked = false; f.bounced = false; f.wallBounced = true;
   f.mapFalls = (f.mapFalls || 0) + 1;
   if (M.combatStats && M.combatStats[f.idx]) M.combatStats[f.idx].falls++;

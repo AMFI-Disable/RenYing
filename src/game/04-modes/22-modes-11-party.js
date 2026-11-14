@@ -5,12 +5,13 @@ const PARTY_KINDS = [
   { id: 'sumo', name: '断崖推手', sub: '无伤 2.6 倍击退，把对手推下悬崖！' },
   { id: 'dodge', name: '飞球乱舞', sub: '格挡弹飞墨球，被砸中直接出局！' },
 ];
-const PARTY_SUMO_MAP = { id: 'party_sumo', name: '断崖擂台', w: 1800, cliff: [480, 1320], plats: [], bg: 'cliff' };
+const PARTY_SUMO_MAP = { id: 'party_sumo', name: '断崖擂台', w: 1200, cliff: { dmg: 1, push: 240, back: 30, vy: -520, invul: 0.9, ko: true }, plats: [], bg: 'cliff' };
 const partyOn = () => M.mode === 'party' || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'party');
 
 function partyRoundInit() {
   const idx = ((M.round || 1) - 1) % PARTY_KINDS.length;
   const kind = PARTY_KINDS[idx].id;
+  STAGE_W = kind === 'sumo' ? PARTY_SUMO_MAP.w : 1800;
   M.party = {
     kind,
     bombHolder: (M.round || 1) % 2 === 1 ? 0 : 1,

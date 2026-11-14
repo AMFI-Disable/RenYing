@@ -3063,24 +3063,33 @@ body.offline #mMatch { display: none !important; }
 .end-review-actions { margin-top: 9px; justify-content: flex-start; }
 .end-qol-row { justify-content: flex-end; margin: 4px 0 8px; }
 @media (max-width: 680px) { .end-review-grid { grid-template-columns: 1fr; } }
-#single .xiwu-quick-card .go { margin:0; padding:5px 18px; font-size:20px; }
+#single .xiwu-quick-card .go { margin:0; padding:6px 46px 6px 18px; font-size:17px; }
 #single .singlep { max-width: min(1180px, 96vw); }
 #single .mode-title-wrap { text-align: left; max-width: 1080px; margin: 0 auto 18px; }
 #single .mode-title-wrap h2 { margin-bottom: 2px; }
-.xiwu-studio { display: grid; grid-template-columns: minmax(190px, 240px) minmax(0, 1fr); gap: 20px; width: min(1080px, 100%); margin: auto; align-items: start; }
+.xiwu-studio { display: grid; grid-template-columns: minmax(290px, 350px) minmax(0, 1fr); gap: 18px; width: min(1120px, 100%); margin: auto; align-items: start; }
 #single .single-nav-deck.play-deck { width: 100%; padding: 0; margin: 0; }
-#single .xiwu-category-tabs { grid-template-columns: 1fr; gap: 6px; margin-bottom: 16px; }
+#single .xiwu-category-tabs { grid-template-columns: 1fr; gap: 6px; margin-bottom: 12px; }
 #single .xiwu-cat-btn { padding: 10px 12px; border-radius: 6px; box-shadow: none; }
-#single .xiwu-cards-row { grid-template-columns: 1fr; gap: 4px; }
-#single .xiwu-cards-row button { min-height: 52px; border-radius: 5px; background: rgba(15,16,29,.42); border: 1px solid transparent; }
+#single .xiwu-cards-row { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+#single .xiwu-cards-row button { position: relative; min-height: 54px; padding: 8px 28px 8px 10px; border-radius: 6px; background: rgba(15,16,29,.42); border: 1px solid rgba(255,255,255,.06); }
 #single .xiwu-cards-row button.sel { background: rgba(233,196,106,.1); border-color: rgba(233,196,106,.45); }
+.mode-info-btn { position: absolute; top: 6px; right: 6px; width: 20px; height: 20px; border-radius: 50%; border: 1px solid rgba(233,196,106,.42); background: rgba(15,16,29,.78); color: rgba(233,196,106,.9); font: 700 12px/18px var(--body); text-align: center; cursor: pointer; z-index: 2; transition: background .15s, color .15s, border-color .15s; }
+.mode-info-btn:hover, .mode-info-btn:focus-visible { background: rgba(233,196,106,.24); border-color: #e9c46a; color: #fff; }
+.xiwu-info-card { margin: 0 0 14px; padding: 12px 14px; border: 1px solid rgba(233,196,106,.42); border-radius: 7px; background: rgba(233,196,106,.08); text-align: left; }
+.xiwu-info-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 6px; }
+.xiwu-info-head b { color: var(--gold); font: 600 15px var(--title); letter-spacing: .04em; }
+.xiwu-info-head button { min-height: 24px; padding: 0 8px; font-size: 14px; line-height: 1; }
+.xiwu-info-body { margin: 0; color: rgba(255,255,255,.86); font-size: 13px; line-height: 1.55; }
 .xiwu-config { min-width: 0; padding: 20px; border: 1px solid rgba(233,196,106,.22); border-radius: 8px; background: linear-gradient(145deg, rgba(35,31,42,.82), rgba(13,15,25,.9)); box-shadow: 0 16px 40px rgba(0,0,0,.18); }
 #single #aiLvHome { width: 100%; margin: 0 0 16px; }
 #single .xiwu-quick-card { margin: 0 0 16px; padding: 12px 16px; background: rgba(233,196,106,.08); border-radius: 5px; }
 #single .xiwu-quick-card p { line-height: 1.5; }
 #single .xiwu-mutator-row { margin: 0 0 14px; }
 #single .xiwu-mode-content { padding-top: 14px; border-top: 1px solid rgba(233,196,106,.16); }
-#single .single-action-row { justify-content: flex-start; }
+#single .single-action-row { justify-content: flex-start; gap: 10px; }
+#single .single-action-row .go, #single .single-action-row .go.alt { font-size: 16px !important; letter-spacing: .08em !important; padding: 0 42px 0 18px !important; min-height: 42px !important; height: 42px !important; }
+#single .single-action-row .ghost { font-size: 14px !important; padding: 0 16px !important; min-height: 42px !important; height: 42px !important; }
 #single .xiwu-training-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0 0 12px; }
 #single .xiwu-training-tabs button { min-width: 0; min-height: 38px; padding: 6px 8px; border: 1px solid rgba(233,196,106,.18); border-radius: 5px; background: rgba(15,16,29,.45); color: rgba(255,255,255,.76); font: 600 12px var(--body); cursor: pointer; }
 #single .xiwu-training-tabs button.sel, #single .xiwu-training-tabs button[aria-selected="true"] { border-color: rgba(233,196,106,.55); background: rgba(233,196,106,.12); color: #f4d987; }
@@ -3430,12 +3439,12 @@ white-space: nowrap;
           <!-- 实战切磋分区模式 (4 张主卡) -->
           <div class="xiwu-cat-group" data-cat-group="combat">
             <div class="xiwu-cards-row">
-              <button data-tab="cpu" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">对战电脑</b><span class="pt-d">一对一，难度自选</span></button>
-              <button data-tab="tag3" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">3v3 车轮战</b><span class="pt-d">三人接力，胜者守擂</span></button>
-              <button data-tab="watch2v2" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><b class="pt-n">2v2 组队</b><span class="pt-d">两人一队，可带电脑队友</span></button>
-              <button data-tab="cuju" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18M5 7c3 2 11 2 14 0M5 17c3-2 11-2 14 0"/></svg></span><b class="pt-n">墨球蹴鞠</b><span class="pt-d">不比气血，比谁先进三球</span></button>
-              <button data-tab="koth" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.4 1.1 6L12 17.5 6.4 20.4l1.1-6L3 10l6-1z"/></svg></span><b class="pt-n">灵坛争锋</b><span class="pt-d">占领灵坛，无限复活抢分</span></button>
-              <button data-tab="party" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="4"/><circle cx="16" cy="9" r="3"/><path d="M4 20c1.5-3 8.5-3 10 0"/></svg></span><b class="pt-n">江湖百戏</b><span class="pt-d">传火折、断崖推手、飞球乱舞</span></button>
+              <button data-tab="cpu" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">对战电脑</b><span class="pt-d">一对一，难度自选</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="cpu" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="tag3" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">3v3 车轮战</b><span class="pt-d">三人接力，胜者守擂</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="tag3" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="watch2v2" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><b class="pt-n">2v2 组队</b><span class="pt-d">两人一队，可带电脑队友</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="watch2v2" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="cuju" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18M5 7c3 2 11 2 14 0M5 17c3-2 11-2 14 0"/></svg></span><b class="pt-n">墨球蹴鞠</b><span class="pt-d">不比气血，比谁先进三球</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="cuju" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="koth" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.4 1.1 6L12 17.5 6.4 20.4l1.1-6L3 10l6-1z"/></svg></span><b class="pt-n">灵坛争锋</b><span class="pt-d">占领灵坛，无限复活抢分</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="koth" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="party" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="4"/><circle cx="16" cy="9" r="3"/><path d="M4 20c1.5-3 8.5-3 10 0"/></svg></span><b class="pt-n">江湖百戏</b><span class="pt-d">传火折、断崖推手、飞球乱舞</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="party" title="玩法说明" aria-label="玩法说明">i</span></button>
             </div>
 
 
@@ -3443,16 +3452,16 @@ white-space: nowrap;
 
           <div class="xiwu-cat-group" data-cat-group="training" style="display:none">
             <div class="xiwu-cards-row">
-              <button data-tab="train" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span><b class="pt-n">训练场</b><span class="pt-d">招式教学、木人自由练习与情景训练</span></button>
+              <button data-tab="train" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span><b class="pt-n">训练场</b><span class="pt-d">招式教学、木人自由练习与情景训练</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="train" title="玩法说明" aria-label="玩法说明">i</span></button>
             </div>
           </div>
 
           <!-- 江湖历练分区模式 (3 张主卡) -->
           <div class="xiwu-cat-group" data-cat-group="story" style="display:none">
             <div class="xiwu-cards-row">
-              <button data-tab="stage" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span><b class="pt-n">守关挑战</b><span class="pt-d">六章三十关</span></button>
-              <button data-tab="saga" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span><b class="pt-n">侠客列传</b><span class="pt-d">每位侠客自己的故事</span></button>
-              <button data-tab="tower" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">问剑密卷</b><span class="pt-d">一层层爬塔抽秘卷</span></button>
+              <button data-tab="stage" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pine"/></svg></span><b class="pt-n">守关挑战</b><span class="pt-d">六章三十关</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="stage" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="saga" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-scroll"/></svg></span><b class="pt-n">侠客列传</b><span class="pt-d">每位侠客自己的故事</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="saga" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="tower" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">问剑密卷</b><span class="pt-d">一层层爬塔抽秘卷</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="tower" title="玩法说明" aria-label="玩法说明">i</span></button>
             </div>
           </div>
 
@@ -3463,6 +3472,13 @@ white-space: nowrap;
       </div>
 
       <div class="xiwu-config">
+      <div class="xiwu-info-card" id="xiwuInfoCard" hidden>
+        <div class="xiwu-info-head">
+          <b id="xiwuInfoTitle">玩法说明</b>
+          <button class="ghost small" id="xiwuInfoClose" type="button" aria-label="关闭说明">×</button>
+        </div>
+        <p class="xiwu-info-body" id="xiwuInfoBody"></p>
+      </div>
       <!-- 电脑境界：大厅最上面，对电脑的各模式（论剑、3v3、2v2、天机、山河异境、神决）共用这一条，选了会记住。见 src/game/21-buttons-01-screen-controls.js 的 setPickLevel -->
       <div id="aiLvHome">
         <div class="ai-lv-bar" id="aiLvBar">
@@ -10517,6 +10533,29 @@ Object.assign(UI_COPY_EN, {
 "救起同袍": "Ally Revived",
 "靠近救起": "Stand to Revive",
 "破防虚弱!": "Staggered!",
+"坠崖出局": "Ring Out!",
+"玩法说明": "Mode Guide",
+"关闭说明": "Close Guide",
+"对战电脑 · 玩法说明": "vs AI · Mode Guide",
+"标准三局两胜（BO3）1v1 对决。先在上方选好电脑境界与战场异变，点击「进入选人」或「即刻开战」即可开打；也可观战 AI 对决或开启新手教学。": "Best-of-3 1v1 duel. Pick AI level and battlefield mutators above, then click Draft or Quick Start—or watch AI vs AI / open the Tutorial.",
+"3v3 车轮战 · 玩法说明": "3v3 Relay · Mode Guide",
+"双方各选三名侠客并排定先锋、中坚、大将顺序。每局胜者保留残血小幅调息迎战下一位对手，先把对方三将全数击破的一方获胜。": "Each side drafts 3 heroes in Vanguard / Anchor order. Round winners carry remaining HP into the next opponent until one squad falls.",
+"2v2 组队 · 玩法说明": "2v2 Team · Mode Guide",
+"四人同屏大场地混战（2600px 宽）。支持「你 + 电脑队友」、本地双人打两电脑、本地四人互打，以及全 AI 天道演武观战。": "4-fighter brawl on a wide 2600px stage. Supports You + AI, Local 2P vs 2 AI, 4-Player local, or full AI Watch.",
+"墨球蹴鞠 · 玩法说明": "Ink Ball · Mode Guide",
+"双方不扣气血，比谁先把墨球打进对方球门（默认先 3 球，可选 5/7 球）。普攻与技能可抽射/挑射墨球，格挡可扑救，精准格挡触发神扑！": "No HP loss—score goals by hitting the Ink Ball into the rival net (first to 3/5/7). Block to save; Just Guard triggers a Super Save!",
+"灵坛争锋 · 玩法说明": "Altar Control · Mode Guide",
+"三层断崖高台上每 18 秒轮流激活灵坛。站入无人争抢的灵坛即可累积占领进度，先达 100% 获胜；阵亡或被打落悬崖后 2.5 秒重返战场。": "An altar activates across 3 cliff platforms every 18s. Stand inside uncontested to reach 100%. KOs and cliff ring-outs respawn in 2.5s.",
+"江湖百戏 · 玩法说明": "Wacky Trials · Mode Guide",
+"五局三胜趣味小游戏轮换：第一局「传火折」（击中对手把 9 秒火折传出去，归零即炸）、第二局「断崖推手」（0 伤害但 2.6 倍击退，推落悬崖即胜）、第三局「飞球乱舞」（格挡弹反飞球，砸中即出局）。": "Best-of-5 rotating minigames: Hot Potato (hit to pass the 9s bomb), Cliff Sumo (0 dmg, 2.6x knockback ring-out), and Ink Dodgeball (block to deflect, unblocked hit = KO).",
+"训练场 · 玩法说明": "Training · Mode Guide",
+"包含招式教学、木人桩自由练习（可看判定框、帧数差与回放）、以及防反/连段等专项情景训练。": "Includes guided Move Tutorials, Free Practice with hitboxes & frame advantage, and focused situational drills.",
+"守关挑战 · 玩法说明": "Campaign · Mode Guide",
+"十三侠客专属六章三十关斩妖除魔路线。每关击败首领积累星级与墨锭，最终章迎战六技融魂魔首。": "6-chapter, 30-stage demon-slaying campaign for every hero, ending in a co-op showdown with the 6-skill Boss.",
+"侠客列传 · 玩法说明": "Hero Sagas · Mode Guide",
+"每位侠客独立的五节剧情篇章，在关键节点做出抉择可解锁不同结局与专属秘闻。": "A 5-act story for each hero with branching choices and dual endings.",
+"问剑密卷 · 玩法说明": "Endless Tower · Mode Guide",
+"无尽爬塔肉鸽试炼：每层获胜后三选一武林秘卷叠加词条，守关 AI 境界随层数递进。": "Endless roguelike climb: pick 1 of 3 scrolls after each floor as AI challengers grow smarter.",
 });
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
@@ -15739,7 +15778,7 @@ function mapEdge(f, cl) {
 if (f.x >= WALL && f.x <= STAGE_W - WALL) return;
 const side = f.x < WALL ? -1 : 1;
 const fav = mapFavOn(f);
-let pushThresh = cl.push;
+let pushThresh = cl.push || 320;
 const flung = f.state === 'launched' || ((f.state === 'hitstun' || f.state === 'knockdown') && Math.abs(f.vx) > pushThresh);
 f.x = side < 0 ? WALL : STAGE_W - WALL;
 if (!flung || f.hp <= 0) {
@@ -15747,11 +15786,22 @@ if (f.state === 'skill' && f.skill === 'shadowdash' && f.hp > 0) { f.vx = -side 
 else if (Math.sign(f.vx) === side) f.vx = 0;
 return;
 }
+if (cl.ko) {
+f.hp = 0;
+f.state = 'launched'; f.t = 0; f.vy = cl.vy || -520; f.vx = side * 120; f.invul = 99;
+f.mapFalls = (f.mapFalls || 0) + 1;
+if (M.combatStats && M.combatStats[f.idx]) M.combatStats[f.idx].falls++;
+if (RESIM) return;
+shake = Math.max(shake, 10); SFX.thud(); SFX.cliffFall();
+ring(f.x, f.y - 40, 90, '255,140,120', 0.45);
+addP({ type: 'text', text: '坠崖出局', x: f.x - side * 40, y: f.y - 110, life: 0.9, max: 0.9, rgb: '255,150,120' });
+return;
+}
 const dmgMul = (fav && f.ch.id === 'yanling') ? 0.5 : 1;
-const dmg = Math.round(f.maxHp * cl.dmg * dmgMul);
+const dmg = Math.round(f.maxHp * (cl.dmg || 0.06) * dmgMul);
 f.hp = Math.max(1, f.hp - dmg);
-f.x -= side * cl.back; f.y = Math.min(f.y, -40); f.vy = cl.vy; f.vx = -side * 120;
-f.state = 'launched'; f.t = 0; f.invul = Math.max(f.invul || 0, cl.invul);
+f.x -= side * (cl.back || 30); f.y = Math.min(f.y, -40); f.vy = cl.vy || -820; f.vx = -side * 120;
+f.state = 'launched'; f.t = 0; f.invul = Math.max(f.invul || 0, cl.invul || 0.9);
 f.comboHits = 0; f.juggle = 0; f.spiked = false; f.bounced = false; f.wallBounced = true;
 f.mapFalls = (f.mapFalls || 0) + 1;
 if (M.combatStats && M.combatStats[f.idx]) M.combatStats[f.idx].falls++;
@@ -25077,6 +25127,39 @@ else if (active === 'mayhem') renderMayhem();
 else if (active === 'maps') renderMaps();
 else if (active === 'cpu') updateAIBrief();
 }
+const XIWU_MODE_INFO = {
+cpu: { title: '对战电脑 · 玩法说明', body: '标准三局两胜（BO3）1v1 对决。先在上方选好电脑境界与战场异变，点击「进入选人」或「即刻开战」即可开打；也可观战 AI 对决或开启新手教学。' },
+tag3: { title: '3v3 车轮战 · 玩法说明', body: '双方各选三名侠客并排定先锋、中坚、大将顺序。每局胜者保留残血小幅调息迎战下一位对手，先把对方三将全数击破的一方获胜。' },
+watch2v2: { title: '2v2 组队 · 玩法说明', body: '四人同屏大场地混战（2600px 宽）。支持「你 + 电脑队友」、本地双人打两电脑、本地四人互打，以及全 AI 天道演武观战。' },
+cuju: { title: '墨球蹴鞠 · 玩法说明', body: '双方不扣气血，比谁先把墨球打进对方球门（默认先 3 球，可选 5/7 球）。普攻与技能可抽射/挑射墨球，格挡可扑救，精准格挡触发神扑！' },
+koth: { title: '灵坛争锋 · 玩法说明', body: '三层断崖高台上每 18 秒轮流激活灵坛。站入无人争抢的灵坛即可累积占领进度，先达 100% 获胜；阵亡或被打落悬崖后 2.5 秒重返战场。' },
+party: { title: '江湖百戏 · 玩法说明', body: '五局三胜趣味小游戏轮换：第一局「传火折」（击中对手把 9 秒火折传出去，归零即炸）、第二局「断崖推手」（0 伤害但 2.6 倍击退，推落悬崖即胜）、第三局「飞球乱舞」（格挡弹反飞球，砸中即出局）。' },
+train: { title: '训练场 · 玩法说明', body: '包含招式教学、木人桩自由练习（可看判定框、帧数差与回放）、以及防反/连段等专项情景训练。' },
+stage: { title: '守关挑战 · 玩法说明', body: '十三侠客专属六章三十关斩妖除魔路线。每关击败首领积累星级与墨锭，最终章迎战六技融魂魔首。' },
+saga: { title: '侠客列传 · 玩法说明', body: '每位侠客独立的五节剧情篇章，在关键节点做出抉择可解锁不同结局与专属秘闻。' },
+tower: { title: '问剑密卷 · 玩法说明', body: '无尽爬塔肉鸽试炼：每层获胜后三选一武林秘卷叠加词条，守关 AI 境界随层数递进。' },
+};
+let xiwuInfoKey = '';
+function showXiwuModeInfo(key) {
+const card = $id('xiwuInfoCard'), t = $id('xiwuInfoTitle'), b = $id('xiwuInfoBody');
+const info = XIWU_MODE_INFO[key];
+if (!card || !t || !b || !info) return;
+if (!card.hidden && xiwuInfoKey === key) { card.hidden = true; xiwuInfoKey = ''; return; }
+xiwuInfoKey = key;
+t.textContent = info.title;
+b.textContent = info.body;
+card.hidden = false;
+}
+if ($id('xiwuInfoClose')) $id('xiwuInfoClose').addEventListener('click', () => { $id('xiwuInfoCard').hidden = true; xiwuInfoKey = ''; });
+for (const btn of document.querySelectorAll('.mode-info-btn[data-mode-info]')) {
+const trigger = e => {
+e.stopPropagation();
+e.preventDefault();
+showXiwuModeInfo(btn.dataset.modeInfo);
+};
+btn.addEventListener('click', trigger);
+btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') trigger(e); });
+}
 function updateXiwuSummary() {
 const info = $id('xiwuQuickInfo'); if (!info) return;
 const active = currentSingleTab;
@@ -31020,7 +31103,7 @@ ctx.restore();
 }
 const KOTH = {
 W: 2200,
-cliff: [WALL + 140, 2200 - WALL - 140],
+cliff: { dmg: 0.16, push: 280, back: 40, vy: -820, invul: 0.9, ko: true },
 zoneR: 135,
 rotateEvery: 18,
 target: 100,
@@ -31214,11 +31297,12 @@ const PARTY_KINDS = [
 { id: 'sumo', name: '断崖推手', sub: '无伤 2.6 倍击退，把对手推下悬崖！' },
 { id: 'dodge', name: '飞球乱舞', sub: '格挡弹飞墨球，被砸中直接出局！' },
 ];
-const PARTY_SUMO_MAP = { id: 'party_sumo', name: '断崖擂台', w: 1800, cliff: [480, 1320], plats: [], bg: 'cliff' };
+const PARTY_SUMO_MAP = { id: 'party_sumo', name: '断崖擂台', w: 1200, cliff: { dmg: 1, push: 240, back: 30, vy: -520, invul: 0.9, ko: true }, plats: [], bg: 'cliff' };
 const partyOn = () => M.mode === 'party' || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'party');
 function partyRoundInit() {
 const idx = ((M.round || 1) - 1) % PARTY_KINDS.length;
 const kind = PARTY_KINDS[idx].id;
+STAGE_W = kind === 'sumo' ? PARTY_SUMO_MAP.w : 1800;
 M.party = {
 kind,
 bombHolder: (M.round || 1) % 2 === 1 ? 0 : 1,

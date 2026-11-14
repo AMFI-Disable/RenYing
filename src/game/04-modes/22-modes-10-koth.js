@@ -2,7 +2,7 @@
 // 本文件：灵坛争锋（King of the Hill）规则、灵坛轮转、复活计时、电脑抢坛思路、画面绘制与按钮。
 const KOTH = {
   W: 2200,
-  cliff: [WALL + 140, 2200 - WALL - 140],
+  cliff: { dmg: 0.16, push: 280, back: 40, vy: -820, invul: 0.9, ko: true },
   zoneR: 135,
   rotateEvery: 18,
   target: 100,

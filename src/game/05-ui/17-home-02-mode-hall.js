@@ -191,3 +191,37 @@ function singleSec(sec) {
   else if (active === 'maps') renderMaps();
   else if (active === 'cpu') updateAIBrief();
 }
+
+const XIWU_MODE_INFO = {
+  cpu: { title: '对战电脑 · 玩法说明', body: '标准三局两胜（BO3）1v1 对决。先在上方选好电脑境界与战场异变，点击「进入选人」或「即刻开战」即可开打；也可观战 AI 对决或开启新手教学。' },
+  tag3: { title: '3v3 车轮战 · 玩法说明', body: '双方各选三名侠客并排定先锋、中坚、大将顺序。每局胜者保留残血小幅调息迎战下一位对手，先把对方三将全数击破的一方获胜。' },
+  watch2v2: { title: '2v2 组队 · 玩法说明', body: '四人同屏大场地混战（2600px 宽）。支持「你 + 电脑队友」、本地双人打两电脑、本地四人互打，以及全 AI 天道演武观战。' },
+  cuju: { title: '墨球蹴鞠 · 玩法说明', body: '双方不扣气血，比谁先把墨球打进对方球门（默认先 3 球，可选 5/7 球）。普攻与技能可抽射/挑射墨球，格挡可扑救，精准格挡触发神扑！' },
+  koth: { title: '灵坛争锋 · 玩法说明', body: '三层断崖高台上每 18 秒轮流激活灵坛。站入无人争抢的灵坛即可累积占领进度，先达 100% 获胜；阵亡或被打落悬崖后 2.5 秒重返战场。' },
+  party: { title: '江湖百戏 · 玩法说明', body: '五局三胜趣味小游戏轮换：第一局「传火折」（击中对手把 9 秒火折传出去，归零即炸）、第二局「断崖推手」（0 伤害但 2.6 倍击退，推落悬崖即胜）、第三局「飞球乱舞」（格挡弹反飞球，砸中即出局）。' },
+  train: { title: '训练场 · 玩法说明', body: '包含招式教学、木人桩自由练习（可看判定框、帧数差与回放）、以及防反/连段等专项情景训练。' },
+  stage: { title: '守关挑战 · 玩法说明', body: '十三侠客专属六章三十关斩妖除魔路线。每关击败首领积累星级与墨锭，最终章迎战六技融魂魔首。' },
+  saga: { title: '侠客列传 · 玩法说明', body: '每位侠客独立的五节剧情篇章，在关键节点做出抉择可解锁不同结局与专属秘闻。' },
+  tower: { title: '问剑密卷 · 玩法说明', body: '无尽爬塔肉鸽试炼：每层获胜后三选一武林秘卷叠加词条，守关 AI 境界随层数递进。' },
+};
+let xiwuInfoKey = '';
+function showXiwuModeInfo(key) {
+  const card = $id('xiwuInfoCard'), t = $id('xiwuInfoTitle'), b = $id('xiwuInfoBody');
+  const info = XIWU_MODE_INFO[key];
+  if (!card || !t || !b || !info) return;
+  if (!card.hidden && xiwuInfoKey === key) { card.hidden = true; xiwuInfoKey = ''; return; }
+  xiwuInfoKey = key;
+  t.textContent = info.title;
+  b.textContent = info.body;
+  card.hidden = false;
+}
+if ($id('xiwuInfoClose')) $id('xiwuInfoClose').addEventListener('click', () => { $id('xiwuInfoCard').hidden = true; xiwuInfoKey = ''; });
+for (const btn of document.querySelectorAll('.mode-info-btn[data-mode-info]')) {
+  const trigger = e => {
+    e.stopPropagation();
+    e.preventDefault();
+    showXiwuModeInfo(btn.dataset.modeInfo);
+  };
+  btn.addEventListener('click', trigger);
+  btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') trigger(e); });
+}
