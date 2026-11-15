@@ -545,6 +545,28 @@ export default [
       bastionMatch();
       if (p.merit !== mBefore + 180 || M.bastion.space !== 'citadel') return { pass: false, error: 'siege reward failed' };
 
+      openBastion();
+      if (!bastion2dActive() || B2D.enemies.length === 0) return { pass: false, error: 'flat 2D openBastion failed' };
+      const e0 = B2D.enemies[0];
+      const eHp0 = e0.hp;
+      B2D.player.x = e0.x - 45; B2D.player.y = e0.y;
+      B2D.player.aim = 0; B2D.player.atkCd = 0;
+      b2dPlayerAttack();
+      b2dPlayerDash();
+      b2dPlayerSkill();
+      bastion2dStep(0.05);
+      if (!(e0.hp < eHp0)) return { pass: false, error: 'flat 2D player attack did not hit enemy' };
+      M.bastion.tpCd = 0; M.bastion.sosCd = 0;
+      B2D.player.x = 500; B2D.player.y = 500;
+      B2D.ally.x = 2400; B2D.ally.y = 1800;
+      if (!bastionTpToAlly() || Math.hypot(B2D.player.x - 2400, B2D.player.y - 1800) > 80) {
+        return { pass: false, error: 'flat 2D ally TP failed' };
+      }
+      if (bastionTpToAlly()) return { pass: false, error: 'flat 2D TP bypassed cooldown' };
+      if (!bastionFireSos() || !bastionTpToAlly()) return { pass: false, error: 'flat 2D SOS zero-CD TP failed' };
+      closeBastion();
+      if (bastion2dActive()) return { pass: false, error: 'flat 2D closeBastion failed' };
+
       M.bastion = null;
       bastionSyncHUD();
       toMenu();

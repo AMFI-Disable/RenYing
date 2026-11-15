@@ -1,8 +1,43 @@
-// ======================= 天枢城 · 守境：多人守城 + 肉鸽远征 + 同袍传音 + 灵侍 + 流派衣冠 =======================
-// 本文件：天枢守境完整核心玩法（玩家互传与穿云箭、6 位基础灵侍、24 种材谱、6 部位 × 8 流派穿戴套装、
-//         城防设施众筹与炮台、驿站寄存撤离、守城战、以及局内整备面板）。
+// ======================= 天枢城 · 守境（独立 2D 俯视角多人守城 + 肉鸽远征） =======================
+// 本文件：
+//   1. 24 种材谱 / 6 部位 × 8 流派穿戴套装 / 6 位基础灵侍 / 城防设施 / 宗门科技持久化档案；
+//   2. 顶栏直达的独立平面 2D 俯视角大世界（3200 × 2400，WASD 移动 + 鼠标准心攻击/冲刺/技能 + 雷达小地图）；
+//   3. 随时加入的同屏/同房联机（BroadcastChannel 同屋互传，点击同袍或按 [T] 传音降临 + 穿云箭 [V]）；
+//   4. 兼顾战斗回放沙盒测试接口（startBastion / bastionTick / bastionMatch）。
+
 const BASTION_KEY_PFX = 'ry_bastion_v1_';
-const bastionOn = () => M.mode === 'bastion' || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'bastion');
+const B2D_W = 3200, B2D_H = 2400;
+const B2D_CITADEL = { x: 1600, y: 1200, r: 340 };
+const B2D_WAYSTATIONS = [
+  { id: 'ws_n', name: '北溟驿站', x: 1600, y: 520, r: 72 },
+  { id: 'ws_s', name: '南离驿站', x: 1600, y: 1880, r: 72 },
+  { id: 'ws_w', name: '西岭驿站', x: 760, y: 1200, r: 72 },
+  { id: 'ws_e', name: '东海驿站', x: 2440, y: 1200, r: 72 },
+];
+const B2D_BUILD_SPOTS = [
+  { id: 'array', tab: 'city', x: 1600, y: 1020 },
+  { id: 'forge', tab: 'forge', x: 1390, y: 1110 },
+  { id: 'sanctuary', tab: 'comp', x: 1810, y: 1110 },
+  { id: 'apothecary', tab: 'mats', x: 1390, y: 1300 },
+  { id: 'library', tab: 'forge', x: 1810, y: 1300 },
+  { id: 'walls', tab: 'city', x: 1600, y: 1380 },
+  { id: 'guild', tab: 'city', x: 1600, y: 1200 },
+];
+const B2D_TURRETS = [
+  { x: 1365, y: 965, cd: 0 },
+  { x: 1835, y: 965, cd: 0 },
+  { x: 1365, y: 1435, cd: 0 },
+  { x: 1835, y: 1435, cd: 0 },
+];
+const B2D_BIOMES = [
+  { name: '竹影迷踪', tier: 1, x0: 0, y0: 0, x1: 1600, y1: 1200, bg: '#0e1d16', grid: 'rgba(65,135,95,0.16)', rgb: '125,215,155' },
+  { name: '霜松寒狱', tier: 2, x0: 1600, y0: 0, x1: 3200, y1: 1200, bg: '#0e1828', grid: 'rgba(95,155,220,0.16)', rgb: '130,195,255' },
+  { name: '雷煞古坛', tier: 3, x0: 0, y0: 1200, x1: 1600, y1: 2400, bg: '#161128', grid: 'rgba(155,115,235,0.16)', rgb: '185,145,255' },
+  { name: '炎狱魔窟', tier: 4, x0: 1600, y0: 1200, x1: 3200, y1: 2400, bg: '#221012', grid: 'rgba(225,105,85,0.16)', rgb: '245,120,90' },
+];
+
+const bastionOn = () => M.mode === 'bastion' || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'bastion') || B2D.open;
+const bastion2dActive = () => !!B2D.open;
 const bastionAcctId = () => {
   try {
     if (typeof currentAccount === 'function' && currentAccount()) return String(currentAccount());
@@ -33,100 +68,104 @@ function bastionDefaultProfile() {
     presets: [null, null, null],
     nextItemId: 1,
     comp: {
+      unlocked: ['c_blade', 'c_turtle', 'c_fox'],
+      bonds: { c_blade: 1, c_turtle: 1, c_fox: 1, c_kite: 1, c_cub: 1, c_spark: 1 },
       active: 'c_blade',
       sub: 'c_fox',
       stance: 'aggressive',
-      unlocked: ['c_blade', 'c_turtle', 'c_fox'],
-      bonds: { c_blade: 1, c_turtle: 1, c_fox: 1, c_kite: 1, c_cub: 1, c_spark: 1 },
-      core: null,
+    },
+    guild: {
+      name: '天枢义盟',
+      lv: 1,
+      treasury: 120,
+      contrib: 120,
+      research: { drop: 1, revive: 0, dmg: 0, tpCd: 0 },
     },
     buildings,
-    guild: { name: '天枢义盟', lv: 1, treasury: 320, contrib: 120, research: { drop: 1, revive: 0, dmg: 0 } },
-    stats: { runs: 0, clears: 0, sieges: 0, revives: 0, tps: 0 },
+    stats: { runs: 0, clears: 0, sieges: 0, tps: 0 },
   };
 }
 
 function bastionProfile() {
-  const key = BASTION_KEY_PFX + bastionAcctId();
-  if (BASTION_PROF && BASTION_PROF._key === key) return BASTION_PROF;
-  let data = null;
-  try { data = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
-  const def = bastionDefaultProfile();
-  if (!data || typeof data !== 'object') data = def;
-  else {
-    data = { ...def, ...data };
-    data.mats = { ...def.mats, ...(data.mats || {}) };
-    data.equipped = { ...def.equipped, ...(data.equipped || {}) };
-    data.buildings = { ...def.buildings, ...(data.buildings || {}) };
-    data.comp = { ...def.comp, ...(data.comp || {}), bonds: { ...def.comp.bonds, ...((data.comp && data.comp.bonds) || {}) } };
-    data.guild = { ...def.guild, ...(data.guild || {}) };
-    if (!Array.isArray(data.bag)) data.bag = def.bag.slice();
-    if (!Array.isArray(data.presets)) data.presets = [null, null, null];
+  if (!BASTION_PROF) {
+    let raw = null;
+    try { raw = localStorage.getItem(BASTION_KEY_PFX + bastionAcctId()); } catch (e) {}
+    if (raw) {
+      try {
+        const p = JSON.parse(raw);
+        if (p && p.mats && p.equipped) BASTION_PROF = p;
+      } catch (e) {}
+    }
+    if (!BASTION_PROF) BASTION_PROF = bastionDefaultProfile();
   }
-  data._key = key;
-  BASTION_PROF = data;
-  return data;
+  const d = bastionDefaultProfile();
+  BASTION_PROF.mats = Object.assign({}, d.mats, BASTION_PROF.mats || {});
+  BASTION_PROF.equipped = Object.assign({}, d.equipped, BASTION_PROF.equipped || {});
+  BASTION_PROF.buildings = Object.assign({}, d.buildings, BASTION_PROF.buildings || {});
+  BASTION_PROF.guild = Object.assign({}, d.guild, BASTION_PROF.guild || {});
+  BASTION_PROF.guild.research = Object.assign({}, d.guild.research, BASTION_PROF.guild.research || {});
+  BASTION_PROF.comp = Object.assign({}, d.comp, BASTION_PROF.comp || {});
+  BASTION_PROF.stats = Object.assign({}, d.stats, BASTION_PROF.stats || {});
+  if (!Array.isArray(BASTION_PROF.bag)) BASTION_PROF.bag = d.bag;
+  return BASTION_PROF;
 }
 
 function bastionSave() {
-  const p = bastionProfile();
-  const clean = { ...p };
-  delete clean._key;
-  try { localStorage.setItem(p._key, JSON.stringify(clean)); } catch (e) {}
+  try {
+    if (BASTION_PROF) localStorage.setItem(BASTION_KEY_PFX + bastionAcctId(), JSON.stringify(BASTION_PROF));
+  } catch (e) {}
 }
 
 function bastionEquippedItems() {
   const p = bastionProfile();
-  const out = {};
+  const res = {};
   for (const s of BASTION_SLOTS) {
-    const iid = p.equipped[s.id];
-    out[s.id] = iid ? (p.bag.find(it => it.id === iid) || null) : null;
+    const id = p.equipped[s.id];
+    res[s.id] = id ? p.bag.find(it => it.id === id) || null : null;
   }
-  return out;
+  return res;
 }
 
 function bastionGenreCounts() {
   const eq = bastionEquippedItems();
-  const counts = {};
-  for (const g of BASTION_GENRES) counts[g.id] = 0;
+  const c = {};
+  for (const g of BASTION_GENRES) c[g.id] = 0;
   for (const s of BASTION_SLOTS) {
     const it = eq[s.id];
-    if (!it || !(it.genre in counts)) continue;
-    counts[it.genre] += it.mythic ? 2 : 1;
+    if (it && c[it.genre] !== undefined) c[it.genre]++;
   }
-  return counts;
+  return c;
 }
 
 function bastionStats() {
-  const p = bastionProfile();
-  const eq = bastionEquippedItems();
-  const gc = bastionGenreCounts();
-  let atkMul = 1.0, hpMul = 1.0, dr = 0, hpFlat = 0, speedMul = 1.0;
-  let tpCdRed = Math.min(10, Math.max(0, (p.buildings.array || 1) - 1) * 1.5);
-  let reviveMul = 1.0 + (p.guild.research && p.guild.research.revive ? 0.1 : 0);
-  let dropMul = 1.0 + (p.guild.research && p.guild.research.drop ? 0.08 : 0);
-  let staggerMul = 1.0;
+  const p = bastionProfile(), eq = bastionEquippedItems(), gc = bastionGenreCounts();
+  let atkMul = 1 + ((p.guild.research.dmg || 0) * 0.04) + ((p.buildings.library || 1) - 1) * 0.02;
+  let hpMul = 1;
+  let hpFlat = ((p.buildings.walls || 1) - 1) * 30;
+  let dr = 0;
+  let speedMul = 1;
+  let tpCd = Math.max(8, 22 - (p.guild.research.tpCd || 0) * 2 - ((p.buildings.array || 1) - 1));
+  let reviveMul = 1 + (p.guild.research.revive || 0) * 0.15;
+  let dropMul = 1 + (p.guild.research.drop || 0) * 0.08;
+  let staggerMul = 1;
   for (const s of BASTION_SLOTS) {
     const it = eq[s.id];
     if (!it) continue;
     atkMul += it.atkPct || 0;
     hpFlat += it.hpFlat || 0;
   }
-  if (p.guild.research && p.guild.research.dmg) atkMul += 0.05;
-  if (gc.berserker >= 2) atkMul += 0.15;
-  if (gc.juggernaut >= 2) { hpMul += 0.25; dr += 0.15; }
-  if (gc.assassin >= 2) { speedMul += 0.18; tpCdRed += 11; }
-  if (gc.siege >= 2) staggerMul += 0.30;
-  if (gc.medic >= 2) reviveMul += 0.50;
-  if (gc.ranger >= 2) dropMul += 0.25;
-  const activeComp = BASTION_COMP_BY[p.comp.active];
-  if (activeComp) {
-    if (activeComp.id === 'c_turtle') hpMul += 0.15;
-    if (activeComp.id === 'c_fox') reviveMul += 0.25;
-    if (activeComp.id === 'c_cub') dropMul += 0.10;
-    if (activeComp.id === 'c_spark') staggerMul += 0.15;
-  }
-  const tpCd = gc.assassin >= 6 ? 15 : Math.max(15, Math.round(45 - tpCdRed));
+  if (gc.berserker >= 2) atkMul += 0.14;
+  if (gc.juggernaut >= 2) { hpMul += 0.22; dr += 0.08; }
+  if (gc.juggernaut >= 4) dr += 0.12;
+  if (gc.juggernaut >= 6) staggerMul += 0.35;
+  if (gc.assassin >= 2) { speedMul += 0.16; tpCd = Math.max(5, Math.round(tpCd * 0.72)); }
+  if (gc.assassin >= 4) atkMul += 0.18;
+  if (gc.elemental >= 2) atkMul += 0.15;
+  if (gc.elemental >= 4) speedMul += 0.10;
+  if (gc.medic >= 2) { reviveMul += 0.4; hpMul += 0.12; }
+  if (gc.siege >= 2) { staggerMul += 0.28; atkMul += 0.10; }
+  if (gc.siege >= 4) dr += 0.08;
+  if (gc.ranger >= 2) { dropMul += 0.25; speedMul += 0.08; }
   return { gc, atkMul, hpMul, hpFlat, dr: Math.min(0.65, dr), speedMul, tpCd, reviveMul, dropMul, staggerMul, eq };
 }
 
@@ -137,14 +176,14 @@ function bastionForgeItem(slotId, genreId, tier = 1, useCatalyst = false) {
   const t = clamp(tier | 0, 1, 4);
   const forgeReq = [1, 1, 2, 4, 7][t] || 1;
   if ((p.buildings.forge || 1) < forgeReq) {
-    if (!RESIM) toast(`需兵器坊达 L${forgeReq} 方可锻造 T${t} 装备`);
+    bastionMsg(`需兵器坊达 L${forgeReq} 方可锻造 T${t} 装备`);
     return null;
   }
   const catA = BASTION_MATS.find(m => m.cat === g.cats[0] && m.tier === t);
   const catB = BASTION_MATS.find(m => m.cat === g.cats[1] && m.tier === t);
   const needA = 2 + t, needB = 2 + t, meritCost = 40 * t;
   if (!catA || !catB || (p.mats[catA.id] || 0) < needA || (p.mats[catB.id] || 0) < needB || p.merit < meritCost) {
-    if (!RESIM) toast(`材料或功勋不足（需 ${needA}×${catA ? catA.name : ''} + ${needB}×${catB ? catB.name : ''} + ${meritCost} 功勋）`);
+    bastionMsg(`材料或功勋不足（需 ${needA}×${catA ? catA.name : ''} + ${needB}×${catB ? catB.name : ''} + ${meritCost} 功勋）`);
     return null;
   }
   let mythic = false, catId = null;
@@ -170,6 +209,7 @@ function bastionForgeItem(slotId, genreId, tier = 1, useCatalyst = false) {
   p.equipped[slotId] = item.id;
   bastionSave();
   if (typeof A === 'object' && A && bastionOn()) bastionApplyPlayerStats(A);
+  bastionSync2dPlayerStats();
   return item;
 }
 
@@ -180,6 +220,7 @@ function bastionEquipItem(itemId) {
   p.equipped[it.slot] = it.id;
   bastionSave();
   if (typeof A === 'object' && A && bastionOn()) bastionApplyPlayerStats(A);
+  bastionSync2dPlayerStats();
   return true;
 }
 
@@ -199,6 +240,7 @@ function bastionSalvageItem(itemId) {
   if (p.equipped[it.slot] === it.id) p.equipped[it.slot] = null;
   p.bag.splice(idx, 1);
   bastionSave();
+  bastionSync2dPlayerStats();
   return true;
 }
 
@@ -232,6 +274,7 @@ function bastionLoadPreset(idx) {
   if (pr.sub) p.comp.sub = pr.sub;
   bastionSave();
   if (typeof A === 'object' && A && bastionOn()) bastionApplyPlayerStats(A);
+  bastionSync2dPlayerStats();
   return true;
 }
 
@@ -241,28 +284,20 @@ function bastionUnlockOrBondCompanion(compId) {
   if (!p.comp.unlocked.includes(compId)) {
     const req = { c_kite: ['m_bamboo1', 4, 'sanctuary', 2], c_cub: ['m_bone1', 4, 'sanctuary', 3], c_spark: ['m_sand2', 3, 'sanctuary', 4] }[compId];
     if (req) {
-      if ((p.buildings[req[2]] || 1) < req[3]) {
-        if (!RESIM) toast(`需灵兽园 L${req[3]} 方可契约此灵侍`);
-        return false;
-      }
-      if ((p.mats[req[0]] || 0) < req[1]) {
-        if (!RESIM) toast(`需要 ${req[1]}×${BASTION_MAT_BY[req[0]].name}`);
-        return false;
-      }
+      if ((p.buildings[req[2]] || 1) < req[3]) { bastionMsg(`需灵兽园 L${req[3]} 方可契约此灵侍`); return false; }
+      if ((p.mats[req[0]] || 0) < req[1]) { bastionMsg(`需要 ${req[1]}×${BASTION_MAT_BY[req[0]].name}`); return false; }
       p.mats[req[0]] -= req[1];
     }
     p.comp.unlocked.push(compId);
     p.comp.active = compId;
     bastionSave();
+    bastionInitCompanions();
     return true;
   }
   const lv = p.comp.bonds[compId] || 1;
   if (lv >= 10) return false;
   const herb = p.mats.m_herb1 >= 2 ? 'm_herb1' : (p.mats.m_berry2 >= 1 ? 'm_berry2' : null);
-  if (!herb) {
-    if (!RESIM) toast('需要月见草 ×2 或赤阳朱果 ×1 喂养灵侍');
-    return false;
-  }
+  if (!herb) { bastionMsg('需要月见草 ×2 或赤阳朱果 ×1 喂养灵侍'); return false; }
   p.mats[herb] -= herb === 'm_herb1' ? 2 : 1;
   p.comp.bonds[compId] = lv + 1;
   bastionSave();
@@ -274,10 +309,7 @@ function bastionDonateBuilding(bId, units = 3) {
   const lv = p.buildings[bId] || 1;
   if (lv >= 10) return false;
   const matPool = ['m_iron1', 'm_bamboo1', 'm_paper1', 'm_herb1', 'm_bone1'].find(id => (p.mats[id] || 0) >= units);
-  if (!matPool) {
-    if (!RESIM) toast(`至少需 ${units} 份基础材料方可捐献`);
-    return false;
-  }
+  if (!matPool) { bastionMsg(`至少需 ${units} 份基础材料方可捐献`); return false; }
   p.mats[matPool] -= units;
   p.merit += Math.round(units * 12);
   p.ley = Math.min(10000, p.ley + units * 8);
@@ -287,21 +319,24 @@ function bastionDonateBuilding(bId, units = 3) {
   if (p[key] >= need) {
     p[key] -= need;
     p.buildings[bId] = lv + 1;
-    if (!RESIM) { say(`${BASTION_BUILDINGS.find(b => b.id === bId).name} 升至 L${lv + 1}！`, 1.5, 'big'); SFX.gong(); }
+    bastionMsg(`${BASTION_BUILDINGS.find(b => b.id === bId).name} 升至 L${lv + 1}！`);
   }
   bastionSave();
+  bastionSync2dPlayerStats();
+  bastionCoopSend({ t: 'city', buildings: p.buildings, guild: p.guild });
   return true;
 }
 
 function bastionDonateGuild(units = 3) {
   const p = bastionProfile();
   const matId = ['m_iron1', 'm_bamboo1', 'm_paper1', 'm_bone1', 'm_herb1'].find(id => (p.mats[id] || 0) >= units);
-  if (!matId) { if (!RESIM) toast(`至少需 ${units} 份材料方可捐献宗门`); return false; }
+  if (!matId) { bastionMsg(`至少需 ${units} 份材料方可捐献宗门`); return false; }
   p.mats[matId] -= units;
   p.guild.treasury += units * 25;
   p.guild.contrib += units * 25;
   if (p.guild.treasury >= p.guild.lv * 400 && p.guild.lv < 10) p.guild.lv++;
   bastionSave();
+  bastionCoopSend({ t: 'city', buildings: p.buildings, guild: p.guild });
   return true;
 }
 
@@ -314,48 +349,65 @@ function bastionUpgradeGuildResearch(key) {
   p.guild.research[key] = lv + 1;
   bastionSave();
   if (typeof A === 'object' && A && bastionOn()) bastionApplyPlayerStats(A);
+  bastionSync2dPlayerStats();
+  bastionCoopSend({ t: 'city', buildings: p.buildings, guild: p.guild });
   return true;
 }
 
 function bastionApplyPlayerStats(f) {
-  if (!f || !f.ch || !f.ch.stat) return;
+  if (!f || !bastionOn()) return;
   const st = bastionStats();
-  const baseHp = f.ch.stat.hp || 1000;
-  const ratio = f.maxHp > 0 ? clamp(f.hp / f.maxHp, 0, 1) : 1;
-  f.maxHp = Math.round(baseHp * st.hpMul + st.hpFlat);
-  f.hp = f.hp > 0 ? Math.max(1, Math.round(f.maxHp * ratio)) : 0;
-  f.lagHp = Math.max(f.lagHp, f.hp);
-  f.bastionSpeedMul = st.speedMul;
+  const baseHp = (f.ch && f.ch.hp) || 1000;
+  const maxHp = Math.round(baseHp * st.hpMul + st.hpFlat);
+  const ratio = f.maxHp ? f.hp / f.maxHp : 1;
+  f.maxHp = maxHp;
+  f.hp = f.lagHp = Math.min(maxHp, Math.max(1, Math.round(maxHp * ratio)));
+}
+
+function bastionMsg(text) {
+  if (typeof RESIM !== 'undefined' && RESIM) return;
+  if (B2D.open) {
+    B2D.toasts.push({ text, t: 2.2 });
+    if (B2D.toasts.length > 4) B2D.toasts.shift();
+  } else if (typeof toast === 'function') {
+    toast(text);
+  }
+}
+
+function bastionEnsureState() {
+  const p = bastionProfile();
+  if (!M.bastion) {
+    M.bastion = {
+      space: 'citadel',
+      realmTier: 1,
+      room: 1,
+      maxRooms: 5,
+      unbankedSilver: 0,
+      bankedSilver: 0,
+      unbankedMats: {},
+      bankedMats: {},
+      tpCd: 0,
+      sosCd: 0,
+      sosActiveT: 0,
+      gateHp: 2000 + (p.buildings.walls || 1) * 400,
+      gateMaxHp: 2000 + (p.buildings.walls || 1) * 400,
+      turretCd: 0,
+      barricadeHp: 350,
+      drops: [],
+      comps: [],
+      reviveT: [0, 0],
+      bleedT: [0, 0],
+      cheatDeathCd: 0,
+      downed: [false, false],
+      armoryOpen: false,
+    };
+  }
+  return M.bastion;
 }
 
 function bastionRoundInit() {
-  const p = bastionProfile();
+  const B0 = bastionEnsureState();
   M.timer = 180;
-  M.bastion = M.bastion || {
-    space: 'expedition',
-    realmTier: 1,
-    room: 1,
-    maxRooms: 5,
-    unbankedSilver: 0,
-    bankedSilver: 0,
-    unbankedMats: {},
-    bankedMats: {},
-    tpCd: 0,
-    sosCd: 0,
-    sosActiveT: 0,
-    gateHp: 2000 + (p.buildings.walls || 1) * 400,
-    gateMaxHp: 2000 + (p.buildings.walls || 1) * 400,
-    turretCd: 0,
-    barricadeHp: 350,
-    drops: [],
-    comps: [],
-    reviveT: [0, 0],
-    bleedT: [0, 0],
-    cheatDeathCd: 0,
-    downed: [false, false],
-    armoryOpen: false,
-  };
-  const B0 = M.bastion;
   B0.tpCd = 0; B0.sosCd = 0; B0.sosActiveT = 0; B0.drops = []; B0.reviveT = [0, 0]; B0.bleedT = [0, 0]; B0.downed = [false, false];
   bastionApplyPlayerStats(A);
   bastionApplyPlayerStats(C);
@@ -364,185 +416,276 @@ function bastionRoundInit() {
 }
 
 function bastionInitCompanions() {
-  const B0 = M.bastion; if (!B0) return;
+  const B0 = bastionEnsureState();
   const p = bastionProfile(), st = bastionStats();
   const soloOrDual = !M.bastionPvp || (st.gc.summoner >= 4);
-  const list = [{ id: p.comp.active || 'c_blade', x: A.x - 80, y: 0, cd: 0, tickT: 2, slot: 0 }];
+  const px = B2D.open ? B2D.player.x : (typeof A === 'object' && A ? A.x : 1600);
+  const py = B2D.open ? B2D.player.y : 0;
+  const list = [{ id: p.comp.active || 'c_blade', x: px - 56, y: py + 24, cd: 0, tickT: 2, slot: 0 }];
   if (soloOrDual && p.comp.sub && BASTION_COMP_BY[p.comp.sub]) {
-    list.push({ id: p.comp.sub, x: A.x - 140, y: 0, cd: 0, tickT: 3, slot: 1 });
+    list.push({ id: p.comp.sub, x: px + 56, y: py + 24, cd: 0, tickT: 3, slot: 1 });
   }
   B0.comps = list;
 }
 
 function bastionSpawnSpaceWave() {
-  const B0 = M.bastion; if (!B0) return;
+  const B0 = bastionEnsureState();
   const realm = BASTION_REALMS[(B0.realmTier || 1) - 1] || BASTION_REALMS[0];
   const mul = realm.enemyMul * (1 + (B0.room - 1) * 0.14);
-  if (B0.space === 'citadel') {
-    STAGE_W = 2400;
-    A.x = 640; A.face = 1;
-    C.x = 840; C.face = 1;
-    B.x = 1860; B.face = -1; D.x = 2040; D.face = -1;
-    B.hidden = false; D.hidden = false; B.state = 'idle'; D.state = 'idle';
-    B.maxHp = B.hp = B.lagHp = Math.round(900 * mul);
-    D.maxHp = D.hp = D.lagHp = Math.round(900 * mul);
+  if (typeof A === 'object' && A && typeof B === 'object' && B && typeof C === 'object' && C && typeof D === 'object' && D && !B2D.open) {
+    if (B0.space === 'citadel') {
+      STAGE_W = 2400;
+      A.x = 640; A.face = 1; C.x = 840; C.face = 1;
+      B.x = 1860; B.face = -1; D.x = 2040; D.face = -1;
+      B.hidden = false; D.hidden = false; B.state = 'idle'; D.state = 'idle';
+      B.maxHp = B.hp = B.lagHp = Math.round(900 * mul);
+      D.maxHp = D.hp = D.lagHp = Math.round(900 * mul);
+      return;
+    }
+    STAGE_W = 2200;
+    A.x = 460; A.face = 1; C.x = 620; C.face = 1;
+    if (B0.space === 'siege') {
+      B.x = 1660; B.face = -1; D.x = 1840; D.face = -1;
+      B.hidden = false; D.hidden = false; B.state = 'idle'; D.state = 'idle';
+      B.maxHp = B.hp = B.lagHp = Math.round(1450 * mul);
+      D.maxHp = D.hp = D.lagHp = Math.round(1150 * mul);
+      B0.gateHp = B0.gateMaxHp = 2000 + (bastionProfile().buildings.walls || 1) * 400;
+      return;
+    }
+    const isBossRoom = B0.room >= B0.maxRooms;
+    const isWaystation = B0.room === 3;
+    B.x = 1620; B.face = -1; D.x = 1820; D.face = -1;
+    if (isWaystation) {
+      B.hidden = false; B.state = 'idle';
+      B.maxHp = B.hp = B.lagHp = Math.round(700 * mul);
+      D.hp = 0; D.hidden = true;
+    } else {
+      B.hidden = false; D.hidden = false; B.state = 'idle'; D.state = 'idle';
+      B.maxHp = B.hp = B.lagHp = Math.round((isBossRoom ? 1850 : 950) * mul);
+      D.maxHp = D.hp = D.lagHp = Math.round((isBossRoom ? 1200 : 800) * mul);
+    }
     return;
   }
-  STAGE_W = 2200;
-  A.x = 460; A.face = 1;
-  C.x = 620; C.face = 1;
-  if (B0.space === 'siege') {
-    B.x = 1660; B.face = -1; D.x = 1840; D.face = -1;
-    B.hidden = false; D.hidden = false; B.state = 'idle'; D.state = 'idle';
-    B.maxHp = B.hp = B.lagHp = Math.round(1450 * mul);
-    D.maxHp = D.hp = D.lagHp = Math.round(1150 * mul);
-    B0.gateHp = B0.gateMaxHp = 2000 + (bastionProfile().buildings.walls || 1) * 400;
-    if (!RESIM) say('天枢守城战 · 守住城门与核心！', 1.5, 'big');
-    return;
-  }
-  const isBossRoom = B0.room >= B0.maxRooms;
-  const isWaystation = B0.room === 3;
-  B.x = 1620; B.face = -1; D.x = 1820; D.face = -1;
-  if (isWaystation) {
-    B.hidden = false; B.state = 'idle';
-    B.maxHp = B.hp = B.lagHp = Math.round(700 * mul);
-    D.hp = 0; D.hidden = true;
-    if (!RESIM) say('⛩ 驿站补给区 · 可整备、寄存战利品或撤离！', 1.6, 'big');
-  } else {
-    B.hidden = false; D.hidden = false; B.state = 'idle'; D.state = 'idle';
-    B.maxHp = B.hp = B.lagHp = Math.round((isBossRoom ? 1850 : 950) * mul);
-    D.maxHp = D.hp = D.lagHp = Math.round((isBossRoom ? 1200 : 800) * mul);
-    if (!RESIM) say(`${realm.name} · 第 ${B0.room}/${B0.maxRooms} 室`, 1.3, isBossRoom ? 'big' : '');
+  if (B2D.open) {
+    if (B0.space === 'siege') {
+      B0.gateHp = B0.gateMaxHp = 2000 + (bastionProfile().buildings.walls || 1) * 400;
+      b2dSpawnSiegeWave(B0.realmTier || 1);
+      bastionMsg('天枢守城战开启！四面敌潮来袭，守住天枢核心！');
+    } else if (B0.space === 'expedition') {
+      const targetBiome = B2D_BIOMES[clamp((B0.realmTier || 1) - 1, 0, B2D_BIOMES.length - 1)];
+      B2D.player.x = targetBiome.tier === 1 ? 1050 : targetBiome.tier === 2 ? 2150 : targetBiome.tier === 3 ? 1050 : 2150;
+      B2D.player.y = targetBiome.tier <= 2 ? 780 : 1620;
+      b2dSpawnPack(B2D.player.x + 260, B2D.player.y - 60, targetBiome.tier, true);
+      bastionMsg(`传送至 ${realm.name}（2D 平面荒野）`);
+    } else {
+      B2D.player.x = B2D_CITADEL.x;
+      B2D.player.y = B2D_CITADEL.y + 85;
+      bastionMsg('已返回天枢主城广场');
+    }
   }
 }
 
-function bastionDropLoot(x, isBoss) {
-  const B0 = M.bastion; if (!B0) return;
+function bastionDropLoot(x, isBoss, y = 0) {
+  const B0 = bastionEnsureState();
   const realm = BASTION_REALMS[(B0.realmTier || 1) - 1] || BASTION_REALMS[0];
   const st = bastionStats();
   const silver = Math.round((isBoss ? 120 : 45) * st.dropMul * (1 + (B0.realmTier - 1) * 0.35));
   const matPool = isBoss ? [realm.catDrop, ...realm.drops] : realm.drops;
-  const pick = matPool[Math.floor(grnd() * matPool.length)];
+  const pick = matPool[Math.floor((typeof grnd === 'function' ? grnd() : Math.random()) * matPool.length)];
   const qty = isBoss ? 2 : 1;
-  B0.drops.push({ x: clamp(x, WALL + 80, STAGE_W - WALL - 80), y: -18, kind: 'silver', val: silver, life: 30 });
-  if (pick) B0.drops.push({ x: clamp(x + 36, WALL + 80, STAGE_W - WALL - 80), y: -18, kind: 'mat', id: pick, val: qty, life: 30 });
+  const dx = B2D.open ? clamp(x, 60, B2D_W - 60) : clamp(x, WALL + 80, STAGE_W - WALL - 80);
+  const dy = B2D.open ? clamp(y, 60, B2D_H - 60) : -18;
+  B0.drops.push({ x: dx, y: dy, kind: 'silver', val: silver, life: 36 });
+  if (pick) B0.drops.push({ x: dx + 26, y: dy + (B2D.open ? 18 : 0), kind: 'mat', id: pick, val: qty, life: 36 });
 }
 
 function bastionCollectDrop(d) {
-  const B0 = M.bastion; if (!B0 || !d) return;
+  const B0 = bastionEnsureState(); if (!d) return;
   if (d.kind === 'silver') {
     B0.unbankedSilver += d.val;
-    if (!RESIM) addP({ type: 'text', text: `+${d.val} 碎银`, x: d.x, y: -70, life: 0.8, max: 0.8, rgb: '245,215,110' });
+    b2dFloatText(`+${d.val} 碎银`, d.x, d.y - 16, '245,215,110');
   } else if (d.kind === 'mat' && BASTION_MAT_BY[d.id]) {
     B0.unbankedMats[d.id] = (B0.unbankedMats[d.id] || 0) + d.val;
     const m = BASTION_MAT_BY[d.id];
-    if (!RESIM) addP({ type: 'text', text: `+${d.val} ${m.name}`, x: d.x, y: -90, life: 0.9, max: 0.9, rgb: m.rgb });
+    b2dFloatText(`+${d.val} ${m.name}`, d.x, d.y - 24, m.rgb);
   }
 }
 
-function bastionTpToAlly() {
-  const B0 = M.bastion; if (!B0) return false;
-  const ally = !C.hidden && C.hp > 0 ? C : (!C.hidden ? C : null);
+function bastionPickAllyTarget(allyId) {
+  if (B2D.open) {
+    const candidates = [];
+    const now = Date.now();
+    for (const peer of B2D.peers.values()) {
+      if (now - peer.ts < 8000) candidates.push(peer);
+    }
+    candidates.push(B2D.ally);
+    if (allyId) return candidates.find(a => a.id === allyId) || candidates[0];
+    return candidates.find(a => a.sosT > 0) || candidates[0];
+  }
+  return (!C.hidden && C.hp > 0) ? C : (!C.hidden ? C : null);
+}
+
+function bastionTpToAlly(allyId) {
+  const B0 = bastionEnsureState();
+  const ally = bastionPickAllyTarget(allyId);
   if (!ally) return false;
-  const freeSos = B0.sosActiveT > 0;
+  const freeSos = B0.sosActiveT > 0 || (ally.sosT || 0) > 0;
   if (B0.tpCd > 0 && !freeSos) {
-    if (!RESIM) toast(`同袍传音冷却中：${Math.ceil(B0.tpCd)}s`);
+    bastionMsg(`同袍传音冷却中：${Math.ceil(B0.tpCd)}s`);
     return false;
   }
   const st = bastionStats();
-  const destX = clamp(ally.x - ally.face * 70, WALL + 60, STAGE_W - WALL - 60);
-  A.x = destX; A.y = ally.y; A.vy = 0; A.vx = 0;
-  A.invul = Math.max(A.invul || 0, 1.5);
-  ally.invul = Math.max(ally.invul || 0, 1.5);
-  B0.tpCd = freeSos ? 0 : (B0.space === 'citadel' ? 15 : st.tpCd);
-  if (freeSos) B0.sosActiveT = 0;
+  if (B2D.open) {
+    const ang = (B2D.player.aim || 0) + Math.PI;
+    B2D.player.x = clamp(ally.x + Math.cos(ang) * 48, 40, B2D_W - 40);
+    B2D.player.y = clamp(ally.y + Math.sin(ang) * 48, 40, B2D_H - 40);
+    B2D.player.invul = Math.max(B2D.player.invul, 1.5);
+    B2D.player.shield = Math.max(B2D.player.shield, 180);
+    B2D.player.downed = false;
+    ally.invul = Math.max(ally.invul || 0, 1.5);
+    if (typeof A === 'object' && A) { A.x = B2D.player.x; A.y = B2D.player.y; A.invul = B2D.player.invul; }
+    B0.tpCd = freeSos ? 0 : st.tpCd;
+    if (freeSos) B0.sosActiveT = 0;
+    const shockMul = st.gc.assassin >= 6 ? 3.0 : 1.0;
+    B2D.rings.push({ x: B2D.player.x, y: B2D.player.y, r: 24, maxR: 210, life: 0.45, max: 0.45, rgb: '95,225,215' });
+    b2dFloatText('同袍传音降临!', B2D.player.x, B2D.player.y - 32, '95,225,215');
+    b2dDamageCircle(B2D.player.x, B2D.player.y, 195, Math.round(75 * shockMul * st.atkMul), '95,225,215', 220);
+  } else {
+    const destX = clamp(ally.x - ally.face * 70, WALL + 60, STAGE_W - WALL - 60);
+    A.x = destX; A.y = ally.y; A.vy = 0; A.vx = 0;
+    A.invul = Math.max(A.invul || 0, 1.5);
+    ally.invul = Math.max(ally.invul || 0, 1.5);
+    B0.tpCd = freeSos ? 0 : (B0.space === 'citadel' ? 15 : st.tpCd);
+    if (freeSos) B0.sosActiveT = 0;
+    const shockMul = st.gc.assassin >= 6 ? 3.0 : 1.0;
+    for (const foe of [B, D]) {
+      if (!foe.hidden && foe.hp > 0 && Math.abs(foe.x - A.x) < 190) {
+        applyHit(A, foe, { dmg: Math.round(65 * shockMul), kb: [(foe.x >= A.x ? 1 : -1) * 420, -320], stun: 0.45, hs: 0.05, launch: true, dir: foe.x >= A.x ? 1 : -1 }, [foe.x, foe.y - 50]);
+      }
+    }
+    if (!RESIM) {
+      ring(A.x, A.y - 50, 180, '95,225,215', 0.55);
+      addP({ type: 'text', text: '同袍降临阵!', x: A.x, y: A.y - 125, life: 1.0, max: 1.0, rgb: '95,225,215' });
+      SFX.gong();
+    }
+  }
   const p = bastionProfile();
   p.stats.tps++;
   bastionSave();
-  const shockMul = st.gc.assassin >= 6 ? 3.0 : 1.0;
-  for (const foe of [B, D]) {
-    if (!foe.hidden && foe.hp > 0 && Math.abs(foe.x - A.x) < 190) {
-      applyHit(A, foe, { dmg: Math.round(65 * shockMul), kb: [(foe.x >= A.x ? 1 : -1) * 420, -320], stun: 0.45, hs: 0.05, launch: true, dir: foe.x >= A.x ? 1 : -1 }, [foe.x, foe.y - 50]);
-    }
-  }
-  if (!RESIM) {
-    ring(A.x, A.y - 50, 180, '95,225,215', 0.55);
-    addP({ type: 'text', text: '同袍降临阵!', x: A.x, y: A.y - 125, life: 1.0, max: 1.0, rgb: '95,225,215' });
-    SFX.gong();
-  }
   bastionSyncHUD();
   return true;
 }
 
 function bastionFireSos() {
-  const B0 = M.bastion; if (!B0) return false;
-  const st = bastionStats();
-  if (B0.sosCd > 0) { if (!RESIM) toast(`穿云箭冷却中：${Math.ceil(B0.sosCd)}s`); return false; }
+  const B0 = bastionEnsureState(), st = bastionStats();
+  if (B0.sosCd > 0) { bastionMsg(`穿云箭冷却中：${Math.ceil(B0.sosCd)}s`); return false; }
   B0.sosCd = st.gc.medic >= 6 ? 25 : 60;
   B0.sosActiveT = 15;
   B0.tpCd = 0;
-  if (st.gc.medic >= 6) {
-    for (let idx = 0; idx < 2; idx++) {
-      const f = idx === 0 ? A : C;
-      if (f && f.hp <= 0 && Math.abs(f.x - A.x) < 240) {
-        f.hp = f.lagHp = Math.round(f.maxHp * 0.75);
-        f.invul = 2.0; B0.downed[idx] = false;
+  if (B2D.open) {
+    B2D.sosBeacons.push({ x: B2D.player.x, y: B2D.player.y, life: 15, name: curName() || '侠士' });
+    B2D.rings.push({ x: B2D.player.x, y: B2D.player.y, r: 20, maxR: 250, life: 0.6, max: 0.6, rgb: '255,165,85' });
+    b2dFloatText('穿云求援! 零冷却传音', B2D.player.x, B2D.player.y - 36, '255,190,95');
+    bastionCoopSend({ t: 'sos', x: B2D.player.x, y: B2D.player.y, name: curName() || '侠士' });
+    if (st.gc.medic >= 6) {
+      B2D.player.hp = Math.min(B2D.player.maxHp, B2D.player.hp + Math.round(B2D.player.maxHp * 0.4));
+      B2D.ally.hp = Math.min(B2D.ally.maxHp, B2D.ally.hp + Math.round(B2D.ally.maxHp * 0.5));
+    }
+  } else {
+    if (st.gc.medic >= 6) {
+      for (let idx = 0; idx < 2; idx++) {
+        const f = idx === 0 ? A : C;
+        if (f && f.hp <= 0 && Math.abs(f.x - A.x) < 240) {
+          f.hp = f.lagHp = Math.round(f.maxHp * 0.75);
+          f.invul = 2.0; B0.downed[idx] = false;
+        }
       }
     }
-  }
-  if (!RESIM) {
-    ring(A.x, A.y - 60, 210, '255,140,80', 0.6);
-    addP({ type: 'text', text: '求援穿云箭! 传音无冷却', x: A.x, y: A.y - 140, life: 1.2, max: 1.2, rgb: '255,180,90' });
-    SFX.gong();
+    if (!RESIM) {
+      ring(A.x, A.y - 60, 210, '255,140,80', 0.6);
+      addP({ type: 'text', text: '求援穿云箭! 传音无冷却', x: A.x, y: A.y - 140, life: 1.2, max: 1.2, rgb: '255,180,90' });
+      SFX.gong();
+    }
   }
   bastionSyncHUD();
   return true;
 }
 
 function bastionCastCompanionSkill() {
-  const B0 = M.bastion; if (!B0 || !B0.comps || !B0.comps.length) return false;
-  const st = bastionStats();
-  let fired = false;
-  for (const cp of B0.comps) {
-    if (cp.cd > 0) continue;
-    const def = BASTION_COMP_BY[cp.id]; if (!def) continue;
-    const cdScale = st.gc.summoner >= 2 ? 0.75 : 1.0;
-    cp.cd = def.cd * cdScale;
-    fired = true;
-    const tx = foeOf(A) ? foeOf(A).x : A.x + A.face * 180;
-    if (cp.id === 'c_blade' || cp.id === 'c_spark') {
-      for (const f of [B, D]) {
-        if (!f.hidden && f.hp > 0 && Math.abs(f.x - cp.x) < 340) {
-          applyHit(A, f, { dmg: cp.id === 'c_spark' ? 95 : 85, kb: [(tx >= f.x ? 1 : -1) * 180, -260], stun: 0.4, hs: 0.04, dir: A.face }, [f.x, f.y - 50]);
-          if (cp.id === 'c_spark' && typeof M.raidStagger === 'number') M.raidStagger = Math.min(100, (M.raidStagger || 0) + 18);
-        }
-      }
-    } else if (cp.id === 'c_turtle') {
-      A.invul = Math.max(A.invul || 0, 1.5);
-      A.guard = Math.min(A.maxGuard || 100, (A.guard || 0) + 40);
-    } else if (cp.id === 'c_fox') {
-      for (const f of [A, C]) if (!f.hidden && f.hp > 0) f.hp = Math.min(f.maxHp, f.hp + Math.round(f.maxHp * 0.15));
-    } else if (cp.id === 'c_kite') {
-      for (const f of [B, D]) if (!f.hidden && f.hp > 0) applyHit(A, f, { dmg: 70, kb: [120 * A.face, -180], stun: 0.25, hs: 0.03, dir: A.face }, [f.x, f.y - 60]);
-    } else if (cp.id === 'c_cub') {
-      B0.unbankedSilver += 35;
+  const B0 = bastionEnsureState(); if (!B0.comps || !B0.comps.length) bastionInitCompanions();
+  const cp = B0.comps[0]; if (!cp) return false;
+  if (cp.cd > 0) { bastionMsg(`灵侍技能冷却：${Math.ceil(cp.cd)}s`); return false; }
+  const p = bastionProfile(), st = bastionStats(), def = BASTION_COMP_BY[cp.id];
+  const bondMul = 1 + ((p.comp.bonds[cp.id] || 1) - 1) * 0.1 + (st.gc.summoner >= 2 ? 0.35 : 0);
+  cp.cd = st.gc.summoner >= 6 ? 5 : 9;
+  const px = B2D.open ? B2D.player.x : A.x, py = B2D.open ? B2D.player.y : A.y;
+  if (cp.id === 'c_blade') {
+    if (B2D.open) b2dDamageCircle(px, py, 220, Math.round(95 * bondMul * st.atkMul), def.rgb, 200);
+    else for (const f of [B, D]) if (!f.hidden && f.hp > 0 && Math.abs(f.x - A.x) < 260) applyHit(A, f, { dmg: Math.round(80 * bondMul), kb: [260 * A.face, -200], stun: 0.35, hs: 0.04, dir: A.face }, [f.x, f.y - 50]);
+  } else if (cp.id === 'c_turtle') {
+    if (B2D.open) { B2D.player.shield += Math.round(220 * bondMul); B2D.player.invul = Math.max(B2D.player.invul, 2.2); }
+    else { A.invul = Math.max(A.invul || 0, 2.2); A.hp = Math.min(A.maxHp, A.hp + Math.round(120 * bondMul)); }
+  } else if (cp.id === 'c_fox') {
+    if (B2D.open) {
+      B2D.player.hp = Math.min(B2D.player.maxHp, B2D.player.hp + Math.round(B2D.player.maxHp * 0.25 * bondMul));
+      B2D.ally.hp = Math.min(B2D.ally.maxHp, B2D.ally.hp + Math.round(B2D.ally.maxHp * 0.25 * bondMul));
+    } else {
+      for (const f of [A, C]) if (!f.hidden) { f.hp = Math.min(f.maxHp, (f.hp > 0 ? f.hp : 0) + Math.round(f.maxHp * 0.22 * bondMul)); f.lagHp = Math.max(f.lagHp, f.hp); }
     }
-    if (!RESIM) {
-      ring(cp.x, cp.y - 50, 120, def.rgb, 0.45);
-      addP({ type: 'text', text: def.skill, x: cp.x, y: cp.y - 95, life: 0.85, max: 0.85, rgb: def.rgb });
-    }
-    if (st.gc.summoner < 6) break;
+  } else if (cp.id === 'c_kite') {
+    if (B2D.open) b2dDamageCircle(px, py, 320, Math.round(70 * bondMul * st.atkMul), def.rgb, 140);
+    else for (const f of [B, D]) if (!f.hidden && f.hp > 0 && Math.abs(f.x - A.x) < 420) applyHit(A, f, { dmg: Math.round(58 * bondMul), kb: [160 * A.face, -140], stun: 0.25, hs: 0.02, dir: A.face }, [f.x, f.y - 60]);
+  } else if (cp.id === 'c_cub') {
+    for (let i = B0.drops.length - 1; i >= 0; i--) bastionCollectDrop(B0.drops.splice(i, 1)[0]);
+  } else if (cp.id === 'c_spark') {
+    if (B2D.open) b2dDamageCircle(px, py, 270, Math.round(115 * bondMul * st.atkMul), def.rgb, 180);
+    else for (const f of [B, D]) if (!f.hidden && f.hp > 0 && Math.abs(f.x - A.x) < 340) applyHit(A, f, { dmg: Math.round(105 * bondMul), kb: [120 * A.face, -240], stun: 0.55, hs: 0.06, dir: A.face }, [f.x, f.y - 55]);
   }
-  return fired;
+  if (B2D.open && def) {
+    B2D.rings.push({ x: px, y: py, r: 16, maxR: 220, life: 0.45, max: 0.45, rgb: def.rgb });
+    b2dFloatText(`${def.name} · 绝技!`, px, py - 30, def.rgb);
+  } else if (!RESIM && def) {
+    addP({ type: 'text', text: `${def.name} · 绝技!`, x: A.x, y: -120, life: 1.0, max: 1.0, rgb: def.rgb });
+    SFX.gong();
+  }
+  return true;
 }
 
 function bastionStepCompanions(dt) {
   const B0 = M.bastion; if (!B0 || !B0.comps) return;
   const p = bastionProfile(), st = bastionStats(), stance = p.comp.stance || 'aggressive';
+  const px = B2D.open ? B2D.player.x : A.x, py = B2D.open ? B2D.player.y : A.y;
   for (const cp of B0.comps) {
     cp.cd = Math.max(0, cp.cd - dt);
     cp.tickT = (cp.tickT || 0) - dt;
-    const def = BASTION_COMP_BY[cp.id];
+    if (B2D.open) {
+      const target = B2D.enemies[0];
+      let tx = px + Math.cos(B2D.clock * 1.9 + cp.slot * 2.2) * 52;
+      let ty = py + Math.sin(B2D.clock * 1.9 + cp.slot * 2.2) * 52;
+      if (cp.id === 'c_cub' && B0.drops.length) { tx = B0.drops[0].x; ty = B0.drops[0].y; }
+      else if (stance === 'aggressive' && target && Math.hypot(target.x - px, target.y - py) < 340) {
+        tx = target.x - 42; ty = target.y;
+      }
+      const dx = tx - cp.x, dy = ty - cp.y, dist = Math.hypot(dx, dy);
+      if (dist > 6) {
+        const move = Math.min(dist, (cp.id === 'c_cub' ? 380 : 280) * dt);
+        cp.x += (dx / dist) * move; cp.y += (dy / dist) * move;
+      }
+      if (cp.id === 'c_cub') {
+        for (let i = B0.drops.length - 1; i >= 0; i--) {
+          if (Math.hypot(B0.drops[i].x - cp.x, B0.drops[i].y - cp.y) < 160) bastionCollectDrop(B0.drops.splice(i, 1)[0]);
+        }
+      }
+      if (cp.tickT <= 0) {
+        cp.tickT = 2.4;
+        if (cp.id === 'c_fox' && B2D.player.hp < B2D.player.maxHp) {
+          B2D.player.hp = Math.min(B2D.player.maxHp, B2D.player.hp + Math.round(B2D.player.maxHp * 0.05));
+        } else if (target && Math.hypot(target.x - cp.x, target.y - cp.y) < 280 && stance !== 'passive') {
+          b2dDamageEnemy(target, Math.round(24 * st.atkMul), cp.x, cp.y, BASTION_COMP_BY[cp.id].rgb, 70);
+        }
+      }
+      continue;
+    }
     const targetFoe = [B, D].find(f => !f.hidden && f.hp > 0);
     const desiredX = cp.id === 'c_cub' && B0.drops.length
       ? B0.drops[0].x
@@ -598,7 +741,7 @@ function bastionModifyHit(att, def, m) {
 function bastionFighterDown(def, att) {
   const B0 = M.bastion; if (!B0) return false;
   if (fighterTeam(def) === 1) {
-    bastionDropLoot(def.x, B0.room >= B0.maxRooms || B0.space === 'siege');
+    bastionDropLoot(def.x, B0.room >= B0.maxRooms || B0.space === 'siege', def.y || 0);
     return true;
   }
   const st = bastionStats();
@@ -619,24 +762,21 @@ function bastionFighterDown(def, att) {
 }
 
 function bastionWaystationBank() {
-  const B0 = M.bastion; if (!B0) return false;
-  const st = bastionStats();
+  const B0 = bastionEnsureState(), st = bastionStats();
   const fee = st.gc.ranger >= 4 ? 0 : 0.15;
   const bankedS = Math.floor(B0.unbankedSilver * (1 - fee));
   B0.bankedSilver += bankedS;
   B0.unbankedSilver = 0;
-  for (const [id, v] of Object.entries(B0.unbankedMats)) B0.bankedMats[id] = (B0.bankedMats[id] || 0) + v;
+  for (const [k, v] of Object.entries(B0.unbankedMats)) {
+    B0.bankedMats[k] = (B0.bankedMats[k] || 0) + v;
+  }
   B0.unbankedMats = {};
-  if (A.hp > 0) A.hp = A.lagHp = A.maxHp;
-  if (!C.hidden && C.hp > 0) C.hp = C.lagHp = C.maxHp;
-  if (!RESIM) toast(`已安全寄存 ${bankedS} 碎银及全部材料！（手续费 ${Math.round(fee * 100)}%）`);
-  bastionSyncHUD();
+  bastionMsg(`驿站已寄存 ${bankedS} 碎银及全部材料`);
   return true;
 }
 
 function bastionExtract() {
-  const B0 = M.bastion; if (!B0) return false;
-  const p = bastionProfile(), st = bastionStats();
+  const B0 = bastionEnsureState(), p = bastionProfile(), st = bastionStats();
   const totSilver = B0.unbankedSilver + B0.bankedSilver;
   const meritGain = Math.max(20, Math.round(totSilver / 10) + B0.room * 25);
   p.merit += meritGain;
@@ -652,17 +792,16 @@ function bastionExtract() {
   B0.space = 'citadel';
   B0.room = 1;
   bastionSpawnSpaceWave();
-  if (!RESIM) { say(`凯旋撤离 · +${meritGain} 功勋 / +${matTotal} 材料`, 1.6, 'big'); SFX.gong(); }
+  bastionMsg(`凯旋撤离 · +${meritGain} 功勋 / +${matTotal} 材料`);
   bastionSyncHUD();
   return true;
 }
 
 function bastionSwitchSpace(space, tier = 1) {
-  const B0 = M.bastion; if (!B0) return false;
-  const p = bastionProfile();
+  const B0 = bastionEnsureState(), p = bastionProfile();
   const realm = BASTION_REALMS[(tier || 1) - 1] || BASTION_REALMS[0];
   if (space === 'expedition' && (p.buildings.array || 1) < realm.reqArray) {
-    if (!RESIM) toast(`需传送阵达 L${realm.reqArray} 方可进入 ${realm.name}`);
+    bastionMsg(`需传送阵达 L${realm.reqArray} 方可进入 ${realm.name}`);
     return false;
   }
   B0.space = space;
@@ -674,14 +813,15 @@ function bastionSwitchSpace(space, tier = 1) {
 }
 
 function bastionTick() {
-  if (!bastionOn() || !M.bastion || M.phase !== 'fight') return;
+  if (!bastionOn() || !M.bastion) return;
+  if (!B2D.open && M.phase !== 'fight') return;
   const B0 = M.bastion, st = bastionStats();
   B0.tpCd = Math.max(0, B0.tpCd - STEP);
   B0.sosCd = Math.max(0, B0.sosCd - STEP);
   B0.sosActiveT = Math.max(0, B0.sosActiveT - STEP);
   B0.cheatDeathCd = Math.max(0, B0.cheatDeathCd - STEP);
   bastionStepCompanions(STEP);
-  // 掉落物自动拾取
+  if (B2D.open) return;
   const pickR = st.gc.ranger >= 2 ? 230 : 80;
   for (let i = B0.drops.length - 1; i >= 0; i--) {
     const d = B0.drops[i];
@@ -692,7 +832,6 @@ function bastionTick() {
       B0.drops.splice(i, 1);
     }
   }
-  // 队友互救与失血判定
   for (const slot of [0, 1]) {
     const f = slot === 0 ? A : C, helper = slot === 0 ? C : A;
     if (!f || f.hidden || f.hp > 0) { B0.downed[slot] = false; B0.reviveT[slot] = 0; continue; }
@@ -709,11 +848,9 @@ function bastionTick() {
       B0.unbankedSilver = Math.floor(B0.unbankedSilver * (st.gc.ranger >= 4 ? 0.75 : 0.5));
       f.hp = f.lagHp = f.maxHp; f.invul = 2.0; B0.downed[slot] = false;
       B0.space = 'citadel'; B0.room = 1; bastionSpawnSpaceWave();
-      if (!RESIM) toast('重伤撤回天枢城，未寄存碎银折损！');
       break;
     }
   }
-  // 守城弩炮自动掩护
   if (B0.space === 'siege') {
     B0.turretCd = Math.max(0, B0.turretCd - STEP);
     if (B0.turretCd <= 0) {
@@ -729,6 +866,7 @@ function bastionTick() {
 
 function bastionMatch() {
   const B0 = M.bastion; if (!B0) return;
+  if (B2D.open) return;
   if (B0.space === 'citadel') {
     for (const e of [B, D]) if (e.hp <= 0) { e.hp = e.lagHp = e.maxHp; e.x = 1900; }
     return;
@@ -756,67 +894,812 @@ function bastionMatch() {
   bastionSyncHUD();
 }
 
-function drawBastionField() {
-  if (!bastionOn() || !M.bastion) return;
-  const B0 = M.bastion, st = bastionStats();
-  ctx.save();
-  // 背旗与流派光环绘制
-  const cloakIt = st.eq.cloak;
-  if (cloakIt && BASTION_GENRE_BY[cloakIt.genre] && A.hp > 0) {
-    const rgb = BASTION_GENRE_BY[cloakIt.genre].rgb;
-    ctx.strokeStyle = `rgba(${rgb},0.65)`;
-    ctx.lineWidth = 3;
-    const fx = A.x - A.face * 18;
-    ctx.beginPath(); ctx.moveTo(fx, A.y - 25); ctx.lineTo(fx, A.y - 125); ctx.lineTo(fx - A.face * 26, A.y - 102); ctx.closePath();
-    ctx.fillStyle = `rgba(${rgb},0.35)`; ctx.fill(); ctx.stroke();
+function drawBastionField() {}
+function drawBastionScore() {}
+
+// ======================= 平面 2D 俯视角核心引擎 (B2D) =======================
+const B2D = {
+  open: false,
+  raf: 0,
+  lastTs: 0,
+  clock: 0,
+  camX: 1600,
+  camY: 1200,
+  keys: new Set(),
+  mouse: { x: 0, y: 0, wx: 1600, wy: 1200, down: false },
+  player: { x: 1600, y: 1280, vx: 0, vy: 0, r: 16, hp: 1000, maxHp: 1000, shield: 0, aim: 0, atkCd: 0, dashCd: 0, dashT: 0, skillCd: 0, invul: 0, downed: false, bleedT: 12, reviveT: 0 },
+  ally: { id: 'ally_ai', name: '同袍·墨影', x: 1710, y: 1250, vx: 0, vy: 0, r: 15, hp: 900, maxHp: 900, shield: 0, aim: 0, atkCd: 0, invul: 0, sosT: 0, rgb: '95,225,215' },
+  enemies: [],
+  projs: [],
+  slashes: [],
+  rings: [],
+  texts: [],
+  toasts: [],
+  sosBeacons: [],
+  peers: new Map(),
+  bc: null,
+  roomCode: 'TIANSHU',
+  myId: 'p_' + Math.random().toString(36).slice(2, 7),
+  syncT: 0,
+  spawnT: 0,
+  siegeLeft: 0,
+  nearInteract: null,
+  boundDom: false,
+};
+
+function bastionSync2dPlayerStats() {
+  if (!B2D.open) return;
+  const st = bastionStats();
+  const prevRatio = B2D.player.maxHp ? B2D.player.hp / B2D.player.maxHp : 1;
+  B2D.player.maxHp = Math.round(1000 * st.hpMul + st.hpFlat);
+  B2D.player.hp = Math.min(B2D.player.maxHp, Math.max(1, Math.round(B2D.player.maxHp * prevRatio)));
+}
+
+function b2dFloatText(text, x, y, rgb = '245,235,205') {
+  if (typeof RESIM !== 'undefined' && RESIM) return;
+  if (B2D.open) {
+    B2D.texts.push({ text, x, y, vy: -32, life: 0.9, max: 0.9, rgb });
+    if (B2D.texts.length > 40) B2D.texts.shift();
+  } else if (typeof addP === 'function') {
+    addP({ type: 'text', text, x, y, life: 0.9, max: 0.9, rgb });
   }
-  // 灵侍绘制
-  for (const cp of B0.comps) {
-    const def = BASTION_COMP_BY[cp.id]; if (!def) continue;
-    ctx.fillStyle = `rgba(${def.rgb},0.3)`;
-    ctx.strokeStyle = `rgb(${def.rgb})`;
-    ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.arc(cp.x, cp.y - 38, 16, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
-    ctx.font = `700 12px ${BODY_FONT}`;
-    ctx.textAlign = 'center';
-    ctx.fillStyle = `rgb(${def.rgb})`;
-    ctx.fillText(cvT(def.name), cp.x, cp.y - 62);
+}
+
+function b2dBiomeAt(x, y) {
+  if (Math.hypot(x - B2D_CITADEL.x, y - B2D_CITADEL.y) <= B2D_CITADEL.r) return { name: '天枢主城', tier: 1, rgb: '233,196,106' };
+  return B2D_BIOMES.find(b => x >= b.x0 && x <= b.x1 && y >= b.y0 && y <= b.y1) || B2D_BIOMES[0];
+}
+
+function b2dSpawnPack(cx, cy, tier, hasBoss = false) {
+  const realm = BASTION_REALMS[clamp(tier - 1, 0, BASTION_REALMS.length - 1)] || BASTION_REALMS[0];
+  const count = hasBoss ? 4 : 3;
+  for (let i = 0; i < count; i++) {
+    const isBoss = hasBoss && i === 0;
+    const isRanger = !isBoss && i % 2 === 1;
+    const ang = (i / count) * Math.PI * 2;
+    const x = clamp(cx + Math.cos(ang) * 70, 50, B2D_W - 50);
+    const y = clamp(cy + Math.sin(ang) * 70, 50, B2D_H - 50);
+    const baseHp = isBoss ? 880 : (isRanger ? 190 : 260);
+    const hp = Math.round(baseHp * realm.enemyMul);
+    B2D.enemies.push({
+      x, y, vx: 0, vy: 0,
+      r: isBoss ? 24 : 15,
+      hp, maxHp: hp,
+      spd: isBoss ? 115 : (isRanger ? 125 : 155),
+      dmg: Math.round((isBoss ? 68 : 34) * realm.enemyMul),
+      cd: 1.0 + i * 0.25,
+      tier,
+      isBoss,
+      isRanger,
+      siege: false,
+      rgb: isBoss ? '255,95,95' : (isRanger ? '185,130,255' : '235,145,105'),
+      name: isBoss ? `${realm.name}·魔首` : (isRanger ? '咒煞弓妖' : '玄甲魔卒'),
+    });
   }
-  // 掉落物绘制
+}
+
+function b2dSpawnSiegeWave(tier = 1) {
+  B2D.siegeLeft = 10 + tier * 2;
+  const dirs = [[1600, 120], [1600, B2D_H - 120], [120, 1200], [B2D_W - 120, 1200]];
+  for (let i = 0; i < dirs.length; i++) {
+    const [sx, sy] = dirs[i];
+    const realm = BASTION_REALMS[clamp(tier - 1, 0, 4)];
+    const hp = Math.round(360 * realm.enemyMul);
+    B2D.enemies.push({
+      x: sx, y: sy, vx: 0, vy: 0, r: 17, hp, maxHp: hp,
+      spd: 145, dmg: Math.round(45 * realm.enemyMul), cd: 1.1,
+      tier, isBoss: i === 0, isRanger: i === 2, siege: true,
+      rgb: '255,105,90', name: i === 0 ? '攻城魔将' : '破城魔兵',
+    });
+  }
+}
+
+function b2dDamageEnemy(e, dmg, srcX, srcY, rgb = '255,210,120', knock = 110) {
+  if (!e || e.hp <= 0) return;
+  const actual = Math.max(1, Math.round(dmg));
+  e.hp -= actual;
+  const dx = e.x - srcX, dy = e.y - srcY, len = Math.hypot(dx, dy) || 1;
+  e.vx += (dx / len) * knock;
+  e.vy += (dy / len) * knock;
+  b2dFloatText(`-${actual}`, e.x, e.y - 18, rgb);
+  if (e.hp <= 0) {
+    M.bastion.realmTier = e.tier || M.bastion.realmTier || 1;
+    bastionDropLoot(e.x, !!e.isBoss || !!e.siege, e.y);
+    B2D.rings.push({ x: e.x, y: e.y, r: 8, maxR: 52, life: 0.25, max: 0.25, rgb: e.rgb });
+  }
+}
+
+function b2dDamageCircle(cx, cy, rad, dmg, rgb, knock = 140) {
+  for (const e of B2D.enemies) {
+    if (e.hp > 0 && Math.hypot(e.x - cx, e.y - cy) <= rad + e.r) {
+      b2dDamageEnemy(e, dmg, cx, cy, rgb, knock);
+    }
+  }
+}
+
+function b2dPlayerAttack() {
+  const pl = B2D.player, B0 = M.bastion; if (!pl || !B0 || pl.downed || pl.atkCd > 0) return;
+  const st = bastionStats();
+  pl.atkCd = 0.28 / st.speedMul;
+  const ang = pl.aim || 0;
+  let dmg = 95 * st.atkMul;
+  if (st.gc.berserker >= 6 && pl.hp < pl.maxHp * 0.5) dmg *= 1.35;
+  if (st.gc.ranger >= 6) dmg *= (1 + Math.min(0.5, Math.floor((B0.unbankedSilver || 0) / 100) * 0.02));
+  const rgb = (st.eq.weapon && BASTION_GENRE_BY[st.eq.weapon.genre]) ? BASTION_GENRE_BY[st.eq.weapon.genre].rgb : '125,230,200';
+  B2D.slashes.push({ x: pl.x, y: pl.y, ang, r: 108, life: 0.18, max: 0.18, rgb });
+  for (const e of B2D.enemies) {
+    if (e.hp <= 0) continue;
+    const dx = e.x - pl.x, dy = e.y - pl.y, dist = Math.hypot(dx, dy);
+    if (dist > 118 + e.r) continue;
+    let da = Math.abs(Math.atan2(dy, dx) - ang);
+    if (da > Math.PI) da = Math.PI * 2 - da;
+    if (da <= 1.25 || dist < 44) {
+      b2dDamageEnemy(e, dmg, pl.x, pl.y, rgb, 150 * st.staggerMul);
+      if (st.gc.berserker >= 4) pl.hp = Math.min(pl.maxHp, pl.hp + Math.round(dmg * 0.08));
+    }
+  }
+  B2D.projs.push({
+    x: pl.x + Math.cos(ang) * 24, y: pl.y + Math.sin(ang) * 24,
+    vx: Math.cos(ang) * 560, vy: Math.sin(ang) * 560,
+    r: 8, dmg: Math.round(dmg * 0.55), team: 0, life: 0.42, rgb,
+  });
+}
+
+function b2dPlayerDash() {
+  const pl = B2D.player; if (!pl || pl.downed || pl.dashCd > 0) return;
+  const st = bastionStats();
+  pl.dashCd = 1.6 / st.speedMul;
+  pl.dashT = 0.22;
+  pl.invul = Math.max(pl.invul, 0.35);
+  const ang = pl.aim || 0;
+  pl.vx = Math.cos(ang) * 680;
+  pl.vy = Math.sin(ang) * 680;
+  B2D.rings.push({ x: pl.x, y: pl.y, r: 12, maxR: 75, life: 0.28, max: 0.28, rgb: '140,220,255' });
+}
+
+function b2dPlayerSkill() {
+  const pl = B2D.player; if (!pl || pl.downed || pl.skillCd > 0) return;
+  const st = bastionStats();
+  pl.skillCd = 4.2;
+  const mul = st.gc.siege >= 6 ? 1.35 : 1.0;
+  const rgb = (st.eq.weapon && BASTION_GENRE_BY[st.eq.weapon.genre]) ? BASTION_GENRE_BY[st.eq.weapon.genre].rgb : '233,196,106';
+  B2D.rings.push({ x: pl.x, y: pl.y, r: 24, maxR: 230, life: 0.45, max: 0.45, rgb });
+  b2dDamageCircle(pl.x, pl.y, 225, Math.round(175 * st.atkMul * mul), rgb, 240);
+  if (st.gc.elemental >= 6) {
+    for (let i = 0; i < 8; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      B2D.projs.push({ x: pl.x, y: pl.y, vx: Math.cos(a) * 440, vy: Math.sin(a) * 440, r: 9, dmg: Math.round(90 * st.atkMul), team: 0, life: 0.65, rgb: '120,200,255' });
+    }
+  }
+}
+
+function b2dInteract() {
+  if (!B2D.nearInteract) { bastionToggleArmory(); return; }
+  const spot = B2D.nearInteract;
+  if (spot.kind === 'waystation') bastionWaystationBank();
+  else { bastionArmoryTab = spot.tab || 'city'; bastionToggleArmory(true); }
+}
+
+function bastionCoopOpen(roomCode) {
+  if (B2D.bc) { try { B2D.bc.close(); } catch (e) {} B2D.bc = null; }
+  B2D.roomCode = (roomCode || B2D.roomCode || 'TIANSHU').toUpperCase().slice(0, 12);
+  if (typeof BroadcastChannel === 'function') {
+    B2D.bc = new BroadcastChannel('ry-bastion-coop-' + B2D.roomCode);
+    B2D.bc.onmessage = ev => {
+      const m = ev.data;
+      if (!m || m.from === B2D.myId) return;
+      if (m.t === 'state') {
+        B2D.peers.set(m.from, { id: m.from, name: m.name || '同袍', x: m.x, y: m.y, hp: m.hp, maxHp: m.maxHp, sosT: m.sosT || 0, rgb: '140,200,255', ts: Date.now() });
+      } else if (m.t === 'sos') {
+        B2D.sosBeacons.push({ x: m.x, y: m.y, life: 15, name: m.name || '同袍' });
+        bastionMsg(`${m.name || '同袍'} 发射穿云箭！按 [T] 零冷却传送援护`);
+      } else if (m.t === 'city') {
+        const p = bastionProfile();
+        if (m.buildings) for (const [k, v] of Object.entries(m.buildings)) p.buildings[k] = Math.max(p.buildings[k] || 1, v);
+        if (m.guild && m.guild.lv > p.guild.lv) p.guild.lv = m.guild.lv;
+        bastionSave();
+      }
+    };
+  }
+}
+
+function bastionCoopSend(payload) {
+  if (!B2D.bc) return;
+  try { B2D.bc.postMessage({ from: B2D.myId, ...payload }); } catch (e) {}
+}
+
+function bastion2dStep(dt) {
+  const B0 = bastionEnsureState(), p = bastionProfile(), st = bastionStats();
+  B2D.clock += dt;
+  B0.tpCd = Math.max(0, B0.tpCd - dt);
+  B0.sosCd = Math.max(0, B0.sosCd - dt);
+  B0.sosActiveT = Math.max(0, B0.sosActiveT - dt);
+  B0.cheatDeathCd = Math.max(0, B0.cheatDeathCd - dt);
+
+  const pl = B2D.player;
+  pl.atkCd = Math.max(0, pl.atkCd - dt);
+  pl.dashCd = Math.max(0, pl.dashCd - dt);
+  pl.skillCd = Math.max(0, pl.skillCd - dt);
+  pl.invul = Math.max(0, pl.invul - dt);
+
+  if (!B0.armoryOpen && !pl.downed) {
+    let mx = 0, my = 0;
+    if (B2D.keys.has('KeyA') || B2D.keys.has('ArrowLeft')) mx -= 1;
+    if (B2D.keys.has('KeyD') || B2D.keys.has('ArrowRight')) mx += 1;
+    if (B2D.keys.has('KeyW') || B2D.keys.has('ArrowUp')) my -= 1;
+    if (B2D.keys.has('KeyS') || B2D.keys.has('ArrowDown')) my += 1;
+    if (pl.dashT > 0) {
+      pl.dashT -= dt;
+    } else {
+      const mlen = Math.hypot(mx, my);
+      const spd = 285 * st.speedMul;
+      pl.vx = mlen > 0 ? (mx / mlen) * spd : pl.vx * Math.max(0, 1 - dt * 14);
+      pl.vy = mlen > 0 ? (my / mlen) * spd : pl.vy * Math.max(0, 1 - dt * 14);
+    }
+    pl.x = clamp(pl.x + pl.vx * dt, 32, B2D_W - 32);
+    pl.y = clamp(pl.y + pl.vy * dt, 32, B2D_H - 32);
+    if (B2D.mouse.down) b2dPlayerAttack();
+  }
+  const distCit = Math.hypot(pl.x - B2D_CITADEL.x, pl.y - B2D_CITADEL.y);
+  if (distCit < 260 && pl.hp < pl.maxHp && !pl.downed) {
+    pl.hp = Math.min(pl.maxHp, pl.hp + Math.round(45 * dt));
+  }
+  B2D.camX += (pl.x - B2D.camX) * Math.min(1, dt * 10);
+  B2D.camY += (pl.y - B2D.camY) * Math.min(1, dt * 10);
+
+  // 检测附近交互点（驿站/建筑）
+  B2D.nearInteract = null;
+  for (const ws of B2D_WAYSTATIONS) {
+    if (Math.hypot(pl.x - ws.x, pl.y - ws.y) <= ws.r + 16) {
+      B2D.nearInteract = { kind: 'waystation', name: ws.name, x: ws.x, y: ws.y };
+      pl.hp = Math.min(pl.maxHp, pl.hp + Math.round(35 * dt));
+      break;
+    }
+  }
+  if (!B2D.nearInteract) {
+    for (const bs of B2D_BUILD_SPOTS) {
+      if (Math.hypot(pl.x - bs.x, pl.y - bs.y) <= 56) {
+        const bDef = BASTION_BUILDINGS.find(b => b.id === bs.id);
+        B2D.nearInteract = { kind: 'building', tab: bs.tab, name: bDef ? bDef.name : bs.id, x: bs.x, y: bs.y };
+        break;
+      }
+    }
+  }
+
+  // AI 同袍：在野外协同游走或回防主城
+  const al = B2D.ally;
+  al.atkCd = Math.max(0, al.atkCd - dt);
+  al.invul = Math.max(0, al.invul - dt);
+  const allyFoe = B2D.enemies.find(e => e.hp > 0 && Math.hypot(e.x - al.x, e.y - al.y) < 360)
+    || B2D.enemies.find(e => e.hp > 0);
+  let atx = B0.space === 'siege' ? B2D_CITADEL.x + Math.cos(B2D.clock * 0.6) * 210 : (allyFoe ? allyFoe.x : B2D_WAYSTATIONS[1].x);
+  let aty = B0.space === 'siege' ? B2D_CITADEL.y + Math.sin(B2D.clock * 0.6) * 210 : (allyFoe ? allyFoe.y : B2D_WAYSTATIONS[1].y);
+  const adx = atx - al.x, ady = aty - al.y, adist = Math.hypot(adx, ady);
+  if (adist > 58) {
+    al.x = clamp(al.x + (adx / adist) * 195 * dt, 40, B2D_W - 40);
+    al.y = clamp(al.y + (ady / adist) * 195 * dt, 40, B2D_H - 40);
+    al.aim = Math.atan2(ady, adx);
+  }
+  if (allyFoe && Math.hypot(allyFoe.x - al.x, allyFoe.y - al.y) < 110 && al.atkCd <= 0) {
+    al.atkCd = 0.7;
+    B2D.slashes.push({ x: al.x, y: al.y, ang: Math.atan2(allyFoe.y - al.y, allyFoe.x - al.x), r: 85, life: 0.16, max: 0.16, rgb: '95,225,215' });
+    b2dDamageEnemy(allyFoe, 58 * st.atkMul, al.x, al.y, '95,225,215', 90);
+  }
+  if (pl.downed && Math.hypot(al.x - pl.x, al.y - pl.y) < 120) {
+    B0.reviveT[0] += dt * st.reviveMul;
+  }
+
+  // 玩家倒地/灵狐救治判定
+  if (pl.downed) {
+    pl.bleedT -= dt;
+    if (B0.comps.some(c => c.id === 'c_fox')) B0.reviveT[0] += dt * st.reviveMul * 0.75;
+    if (B0.reviveT[0] >= 1.5) {
+      pl.downed = false; B0.reviveT[0] = 0;
+      pl.hp = Math.round(pl.maxHp * (st.gc.medic >= 4 ? 0.75 : 0.45));
+      pl.invul = 2.0;
+      B2D.rings.push({ x: pl.x, y: pl.y, r: 16, maxR: 120, life: 0.45, max: 0.45, rgb: '130,235,175' });
+    } else if (pl.bleedT <= 0) {
+      B0.unbankedSilver = Math.floor(B0.unbankedSilver * (st.gc.ranger >= 4 ? 0.75 : 0.5));
+      pl.downed = false; pl.hp = pl.maxHp; pl.invul = 2.0;
+      pl.x = B2D_CITADEL.x; pl.y = B2D_CITADEL.y + 85;
+      bastionMsg('重伤撤回天枢城，未寄存碎银折损！');
+    }
+  }
+
+  bastionStepCompanions(dt);
+
+  // 拾取地面掉落
+  const pickR = st.gc.ranger >= 2 ? 150 : 62;
+  for (let i = B0.drops.length - 1; i >= 0; i--) {
+    const d = B0.drops[i];
+    d.life -= dt;
+    if (d.life <= 0) { B0.drops.splice(i, 1); continue; }
+    if (Math.hypot(d.x - pl.x, d.y - pl.y) <= pickR) {
+      bastionCollectDrop(d);
+      B0.drops.splice(i, 1);
+    }
+  }
+
+  // 四角城防弩炮
+  const tInterval = st.gc.summoner >= 4 ? 1.5 : 2.3;
+  const tdmg = Math.round(45 + (p.buildings.walls || 1) * 12);
+  for (const tr of B2D_TURRETS) {
+    tr.cd = Math.max(0, tr.cd - dt);
+    if (tr.cd > 0) continue;
+    const tg = B2D.enemies.find(e => e.hp > 0 && Math.hypot(e.x - tr.x, e.y - tr.y) < 460);
+    if (tg) {
+      tr.cd = tInterval;
+      const a = Math.atan2(tg.y - tr.y, tg.x - tr.x);
+      B2D.projs.push({ x: tr.x, y: tr.y, vx: Math.cos(a) * 620, vy: Math.sin(a) * 620, r: 7, dmg: tdmg, team: 0, life: 0.9, rgb: '233,196,106' });
+    }
+  }
+
+  // 怪物 AI（野外游走追击 / 守城强攻核心）
+  for (let i = B2D.enemies.length - 1; i >= 0; i--) {
+    const e = B2D.enemies[i];
+    if (e.hp <= 0) { B2D.enemies.splice(i, 1); continue; }
+    e.vx *= Math.max(0, 1 - dt * 8);
+    e.vy *= Math.max(0, 1 - dt * 8);
+    e.cd = Math.max(0, e.cd - dt);
+    const distP = Math.hypot(pl.x - e.x, pl.y - e.y);
+    const tx = e.siege && distP > 240 ? B2D_CITADEL.x : (distP < 520 ? pl.x : e.x);
+    const ty = e.siege && distP > 240 ? B2D_CITADEL.y : (distP < 520 ? pl.y : e.y);
+    const dx = tx - e.x, dy = ty - e.y, d = Math.hypot(dx, dy);
+    const stopR = e.isRanger ? 220 : 28;
+    if (d > stopR) {
+      e.x += (dx / d) * e.spd * dt;
+      e.y += (dy / d) * e.spd * dt;
+    }
+    e.x = clamp(e.x + e.vx * dt, 30, B2D_W - 30);
+    e.y = clamp(e.y + e.vy * dt, 30, B2D_H - 30);
+    // 守城核心碰撞与远程射击
+    const dCore = Math.hypot(e.x - B2D_CITADEL.x, e.y - B2D_CITADEL.y);
+    if (e.siege && dCore < 110 && e.cd <= 0) {
+      e.cd = 1.4;
+      B0.gateHp = Math.max(0, B0.gateHp - e.dmg);
+      B2D.rings.push({ x: B2D_CITADEL.x, y: B2D_CITADEL.y, r: 40, maxR: 90, life: 0.25, max: 0.25, rgb: '255,95,95' });
+    } else if (distP < (e.isRanger ? 290 : e.r + pl.r + 12) && e.cd <= 0 && !pl.downed) {
+      e.cd = e.isRanger ? 1.7 : 1.15;
+      if (e.isRanger) {
+        const a = Math.atan2(pl.y - e.y, pl.x - e.x);
+        B2D.projs.push({ x: e.x, y: e.y, vx: Math.cos(a) * 340, vy: Math.sin(a) * 340, r: 7, dmg: e.dmg, team: 1, life: 1.4, rgb: e.rgb });
+      } else if (pl.invul <= 0) {
+        b2dHitPlayer(e.dmg);
+      }
+    }
+  }
+
+  // 投射物更新
+  for (let i = B2D.projs.length - 1; i >= 0; i--) {
+    const pr = B2D.projs[i];
+    pr.life -= dt;
+    pr.x += pr.vx * dt; pr.y += pr.vy * dt;
+    if (pr.life <= 0) { B2D.projs.splice(i, 1); continue; }
+    if (pr.team === 0) {
+      for (const e of B2D.enemies) {
+        if (e.hp > 0 && Math.hypot(e.x - pr.x, e.y - pr.y) <= e.r + pr.r) {
+          b2dDamageEnemy(e, pr.dmg, pr.x, pr.y, pr.rgb, 55);
+          B2D.projs.splice(i, 1); break;
+        }
+      }
+    } else if (Math.hypot(pl.x - pr.x, pl.y - pr.y) <= pl.r + pr.r && pl.invul <= 0 && !pl.downed) {
+      b2dHitPlayer(pr.dmg);
+      B2D.projs.splice(i, 1);
+    }
+  }
+
+  // 特效与飘字衰减
+  for (let i = B2D.slashes.length - 1; i >= 0; i--) if ((B2D.slashes[i].life -= dt) <= 0) B2D.slashes.splice(i, 1);
+  for (let i = B2D.rings.length - 1; i >= 0; i--) if ((B2D.rings[i].life -= dt) <= 0) B2D.rings.splice(i, 1);
+  for (let i = B2D.sosBeacons.length - 1; i >= 0; i--) if ((B2D.sosBeacons[i].life -= dt) <= 0) B2D.sosBeacons.splice(i, 1);
+  for (let i = B2D.toasts.length - 1; i >= 0; i--) if ((B2D.toasts[i].t -= dt) <= 0) B2D.toasts.splice(i, 1);
+  for (let i = B2D.texts.length - 1; i >= 0; i--) {
+    const t = B2D.texts[i]; t.life -= dt; t.y += t.vy * dt;
+    if (t.life <= 0) B2D.texts.splice(i, 1);
+  }
+
+  // 野外自动刷怪 & 守城波次判定
+  B2D.spawnT -= dt;
+  if (B2D.spawnT <= 0) {
+    B2D.spawnT = 5.5;
+    if (B2D.enemies.length < 14) {
+      const bm = B2D_BIOMES[Math.floor(Math.random() * B2D_BIOMES.length)];
+      b2dSpawnPack(bm.x0 + 380 + Math.random() * 820, bm.y0 + 280 + Math.random() * 640, bm.tier, Math.random() < 0.25);
+    }
+  }
+  if (B0.space === 'siege') {
+    const siegeAlive = B2D.enemies.some(e => e.siege && e.hp > 0);
+    if (!siegeAlive && B2D.siegeLeft > 0) {
+      b2dSpawnSiegeWave(B0.realmTier || 1);
+      B2D.siegeLeft = Math.max(0, B2D.siegeLeft - 4);
+    } else if (!siegeAlive && B2D.siegeLeft <= 0) {
+      p.merit += 180; p.ley = Math.min(10000, p.ley + 200); p.threat = 0; p.stats.sieges++;
+      bastionSave();
+      B0.space = 'citadel';
+      bastionMsg('守城大捷！+180 功勋 +200 灵脉');
+    } else if (B0.gateHp <= 0) {
+      B0.space = 'citadel'; p.threat = 35;
+      B2D.enemies = B2D.enemies.filter(e => !e.siege);
+      B0.gateHp = B0.gateMaxHp;
+      bastionMsg('天枢核心受损，妖潮暂时退去！');
+    }
+  }
+
+  // 同步 2.5D 战斗锚点 + 多人房间状态广播
+  if (typeof A === 'object' && A) { A.x = pl.x; A.y = pl.y; A.hp = pl.hp; A.maxHp = pl.maxHp; }
+  if (typeof C === 'object' && C) { C.x = al.x; C.y = al.y; C.hp = al.hp; C.maxHp = al.maxHp; }
+  B2D.syncT -= dt;
+  if (B2D.syncT <= 0) {
+    B2D.syncT = 0.08;
+    bastionCoopSend({ t: 'state', name: (typeof curName === 'function' && curName()) || '侠士', x: Math.round(pl.x), y: Math.round(pl.y), hp: Math.round(pl.hp), maxHp: Math.round(pl.maxHp), sosT: B0.sosActiveT });
+    b2dRenderTopBar();
+    bastionSyncHUD();
+  }
+}
+
+function b2dHitPlayer(rawDmg) {
+  const pl = B2D.player, B0 = M.bastion, st = bastionStats();
+  let d = Math.max(1, Math.round(rawDmg * (1 - st.dr)));
+  if (pl.shield > 0) {
+    const abs = Math.min(pl.shield, d);
+    pl.shield -= abs; d -= abs;
+  }
+  pl.hp = Math.max(0, pl.hp - d);
+  pl.invul = 0.25;
+  b2dFloatText(`-${d}`, pl.x, pl.y - 24, '255,95,105');
+  if (pl.hp <= 0) {
+    if (st.gc.berserker >= 6 && B0.cheatDeathCd <= 0) {
+      B0.cheatDeathCd = 15;
+      pl.hp = Math.max(1, Math.round(pl.maxHp * 0.25));
+      pl.invul = 2.0;
+      b2dFloatText('血煞免死!', pl.x, pl.y - 36, '235,75,85');
+      return;
+    }
+    pl.downed = true;
+    pl.bleedT = 12;
+    bastionMsg('重伤倒地！队友靠近或灵狐正在救治…');
+  }
+}
+
+function b2dDrawWorld() {
+  const cv = document.getElementById('bastionCanvas'); if (!cv) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const w = cv.clientWidth || window.innerWidth, h = cv.clientHeight || window.innerHeight;
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+  }
+  const c2 = cv.getContext('2d');
+  c2.save();
+  c2.scale(dpr, dpr);
+  c2.fillStyle = '#070b11';
+  c2.fillRect(0, 0, w, h);
+
+  const ox = w / 2 - B2D.camX, oy = h / 2 - B2D.camY;
+  c2.translate(ox, oy);
+
+  // 1. 四大 2D 平面地貌分区
+  for (const bm of B2D_BIOMES) {
+    c2.fillStyle = bm.bg;
+    c2.fillRect(bm.x0, bm.y0, bm.x1 - bm.x0, bm.y1 - bm.y0);
+    c2.strokeStyle = bm.grid;
+    c2.lineWidth = 1;
+    const step = 120;
+    for (let x = bm.x0; x <= bm.x1; x += step) {
+      c2.beginPath(); c2.moveTo(x, bm.y0); c2.lineTo(x, bm.y1); c2.stroke();
+    }
+    for (let y = bm.y0; y <= bm.y1; y += step) {
+      c2.beginPath(); c2.moveTo(bm.x0, y); c2.lineTo(bm.x1, y); c2.stroke();
+    }
+    c2.font = '700 22px "Noto Serif SC", serif';
+    c2.fillStyle = `rgba(${bm.rgb},0.22)`;
+    c2.textAlign = 'center';
+    c2.fillText(`${bm.name} (T${bm.tier})`, (bm.x0 + bm.x1) / 2, (bm.y0 + bm.y1) / 2 - 220);
+  }
+
+  // 四方驰道（连接主城与四方驿站）
+  c2.fillStyle = 'rgba(233,196,106,0.06)';
+  c2.fillRect(B2D_CITADEL.x - 42, 460, 84, B2D_H - 920);
+  c2.fillRect(700, B2D_CITADEL.y - 42, B2D_W - 1400, 84);
+
+  // 2. 天枢主城（城墙、核心、炮台、七座建筑）
+  c2.beginPath(); c2.arc(B2D_CITADEL.x, B2D_CITADEL.y, B2D_CITADEL.r, 0, Math.PI * 2);
+  c2.fillStyle = '#151925'; c2.fill();
+  c2.lineWidth = 8; c2.strokeStyle = 'rgba(233,196,106,0.48)'; c2.stroke();
+
+  const B0 = bastionEnsureState();
+  c2.beginPath(); c2.arc(B2D_CITADEL.x, B2D_CITADEL.y, 44, 0, Math.PI * 2);
+  c2.fillStyle = 'rgba(95,225,215,0.2)'; c2.fill();
+  c2.lineWidth = 3; c2.strokeStyle = '#6fe8dc'; c2.stroke();
+  c2.font = '700 13px "Noto Serif SC", sans-serif'; c2.fillStyle = '#e9c46a'; c2.textAlign = 'center';
+  c2.fillText(`天枢核心 ${Math.round(B0.gateHp)}/${B0.gateMaxHp}`, B2D_CITADEL.x, B2D_CITADEL.y - 54);
+
+  for (const tr of B2D_TURRETS) {
+    c2.fillStyle = '#2b3248'; c2.strokeStyle = '#e9c46a'; c2.lineWidth = 2;
+    c2.beginPath(); c2.arc(tr.x, tr.y, 16, 0, Math.PI * 2); c2.fill(); c2.stroke();
+  }
+
+  const p = bastionProfile();
+  for (const bs of B2D_BUILD_SPOTS) {
+    const bDef = BASTION_BUILDINGS.find(b => b.id === bs.id);
+    const active = B2D.nearInteract && B2D.nearInteract.x === bs.x && B2D.nearInteract.y === bs.y;
+    c2.fillStyle = active ? 'rgba(233,196,106,0.28)' : 'rgba(233,196,106,0.1)';
+    c2.strokeStyle = active ? '#ffd97a' : 'rgba(233,196,106,0.45)';
+    c2.lineWidth = active ? 2.5 : 1.5;
+    c2.beginPath(); c2.arc(bs.x, bs.y, 26, 0, Math.PI * 2); c2.fill(); c2.stroke();
+    c2.font = '600 12px "Noto Serif SC", sans-serif'; c2.fillStyle = '#efe8d8';
+    c2.fillText(`${bDef ? bDef.name : bs.id} L${p.buildings[bs.id] || 1}`, bs.x, bs.y - 32);
+  }
+
+  // 3. 四方驿站
+  for (const ws of B2D_WAYSTATIONS) {
+    c2.beginPath(); c2.arc(ws.x, ws.y, ws.r, 0, Math.PI * 2);
+    c2.fillStyle = 'rgba(110,235,175,0.12)'; c2.fill();
+    c2.lineWidth = 2.5; c2.strokeStyle = 'rgba(110,235,175,0.65)'; c2.stroke();
+    c2.font = '700 13px "Noto Serif SC", sans-serif'; c2.fillStyle = '#9ef5c8';
+    c2.fillText(`⛩ ${ws.name}`, ws.x, ws.y - ws.r - 8);
+  }
+
+  // 4. 地面掉落与 SOS 信标
   for (const d of B0.drops) {
     const rgb = d.kind === 'silver' ? '245,215,110' : ((BASTION_MAT_BY[d.id] && BASTION_MAT_BY[d.id].rgb) || '180,220,255');
-    ctx.fillStyle = `rgb(${rgb})`;
-    ctx.beginPath(); ctx.arc(d.x, d.y, 10, 0, Math.PI * 2); ctx.fill();
+    c2.fillStyle = `rgb(${rgb})`;
+    c2.beginPath(); c2.arc(d.x, d.y, 8, 0, Math.PI * 2); c2.fill();
   }
-  // 守城门 / 驿站标牌
-  if (B0.space === 'siege') {
-    ctx.strokeStyle = 'rgba(233,196,106,0.85)'; ctx.lineWidth = 4;
-    ctx.strokeRect(WALL + 20, -220, 48, 220);
-  } else if (B0.space === 'expedition' && B0.room === 3) {
-    ctx.fillStyle = 'rgba(130,235,175,0.22)';
-    ctx.fillRect(STAGE_W / 2 - 90, -180, 180, 180);
-    ctx.font = `700 13px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.fillStyle = '#8ef0b5';
-    ctx.fillText(cvT('⛩ 驿站（可寄存/撤离）'), STAGE_W / 2, -190);
+  for (const sb of B2D.sosBeacons) {
+    const pulse = 28 + Math.sin(B2D.clock * 8) * 10;
+    c2.strokeStyle = 'rgba(255,165,80,0.85)'; c2.lineWidth = 3;
+    c2.beginPath(); c2.arc(sb.x, sb.y, pulse, 0, Math.PI * 2); c2.stroke();
   }
-  ctx.restore();
+
+  // 5. 敌人
+  for (const e of B2D.enemies) {
+    c2.fillStyle = `rgba(${e.rgb},0.88)`;
+    c2.beginPath(); c2.arc(e.x, e.y, e.r, 0, Math.PI * 2); c2.fill();
+    c2.strokeStyle = '#111'; c2.lineWidth = 2; c2.stroke();
+    c2.fillStyle = 'rgba(0,0,0,0.65)'; c2.fillRect(e.x - 22, e.y - e.r - 12, 44, 5);
+    c2.fillStyle = `rgb(${e.rgb})`; c2.fillRect(e.x - 22, e.y - e.r - 12, 44 * Math.max(0, e.hp / e.maxHp), 5);
+    c2.font = '600 12px "Noto Serif SC", sans-serif'; c2.fillStyle = '#f8d8d0';
+    c2.fillText(e.name, e.x, e.y - e.r - 16);
+  }
+
+  // 6. 队友、同房玩家、灵侍与本地玩家
+  const drawActor = (act, fillRgb, label) => {
+    c2.save();
+    if (act.invul > 0) {
+      c2.strokeStyle = 'rgba(130,235,255,0.8)'; c2.lineWidth = 3;
+      c2.beginPath(); c2.arc(act.x, act.y, act.r + 8, 0, Math.PI * 2); c2.stroke();
+    }
+    c2.fillStyle = `rgb(${fillRgb})`;
+    c2.beginPath(); c2.arc(act.x, act.y, act.r, 0, Math.PI * 2); c2.fill();
+    c2.strokeStyle = '#fff'; c2.lineWidth = 2; c2.stroke();
+    c2.beginPath(); c2.moveTo(act.x, act.y); c2.lineTo(act.x + Math.cos(act.aim || 0) * (act.r + 12), act.y + Math.sin(act.aim || 0) * (act.r + 12)); c2.stroke();
+    c2.fillStyle = 'rgba(0,0,0,0.65)'; c2.fillRect(act.x - 24, act.y - act.r - 14, 48, 5);
+    c2.fillStyle = '#6fe89f'; c2.fillRect(act.x - 24, act.y - act.r - 14, 48 * Math.max(0, act.hp / act.maxHp), 5);
+    c2.font = '700 12px "Noto Serif SC", sans-serif'; c2.fillStyle = '#fff'; c2.textAlign = 'center';
+    c2.fillText(label, act.x, act.y - act.r - 19);
+    c2.restore();
+  };
+  drawActor(B2D.ally, B2D.ally.rgb, B2D.ally.name);
+  const now = Date.now();
+  for (const peer of B2D.peers.values()) {
+    if (now - peer.ts < 8000) drawActor({ ...peer, r: 15, invul: 0, aim: 0 }, peer.rgb, peer.name);
+  }
+  drawActor(B2D.player, B2D.player.downed ? '235,95,95' : '233,196,106', (typeof curName === 'function' && curName()) || '你');
+
+  for (const cp of B0.comps || []) {
+    const def = BASTION_COMP_BY[cp.id]; if (!def) continue;
+    c2.fillStyle = `rgba(${def.rgb},0.35)`; c2.strokeStyle = `rgb(${def.rgb})`; c2.lineWidth = 2;
+    c2.beginPath(); c2.arc(cp.x, cp.y, 11, 0, Math.PI * 2); c2.fill(); c2.stroke();
+    c2.font = '600 12px "Noto Serif SC", sans-serif'; c2.fillStyle = `rgb(${def.rgb})`; c2.textAlign = 'center';
+    c2.fillText(def.name, cp.x, cp.y - 15);
+  }
+
+  // 7. 挥砍弧光、光环、投射物与飘字
+  for (const s of B2D.slashes) {
+    const a = s.life / s.max;
+    c2.strokeStyle = `rgba(${s.rgb},${a})`; c2.lineWidth = 10 * a;
+    c2.beginPath(); c2.arc(s.x, s.y, s.r, s.ang - 1.1, s.ang + 1.1); c2.stroke();
+  }
+  for (const r of B2D.rings) {
+    const p2 = 1 - r.life / r.max;
+    c2.strokeStyle = `rgba(${r.rgb},${r.life / r.max})`; c2.lineWidth = 3;
+    c2.beginPath(); c2.arc(r.x, r.y, r.r + (r.maxR - r.r) * p2, 0, Math.PI * 2); c2.stroke();
+  }
+  for (const pr of B2D.projs) {
+    c2.fillStyle = `rgb(${pr.rgb})`;
+    c2.beginPath(); c2.arc(pr.x, pr.y, pr.r, 0, Math.PI * 2); c2.fill();
+  }
+  for (const tx of B2D.texts) {
+    c2.font = '700 13px "Noto Serif SC", sans-serif';
+    c2.fillStyle = `rgba(${tx.rgb},${tx.life / tx.max})`;
+    c2.textAlign = 'center';
+    c2.fillText(tx.text, tx.x, tx.y);
+  }
+
+  // 附近交互提示
+  if (B2D.nearInteract) {
+    c2.font = '700 13px "Noto Serif SC", sans-serif';
+    c2.fillStyle = '#ffe596';
+    c2.textAlign = 'center';
+    c2.fillText(B2D.nearInteract.kind === 'waystation' ? `[E] 寄存战利品 (${B2D.nearInteract.name})` : `[E] 进入 ${B2D.nearInteract.name}`, B2D.player.x, B2D.player.y + 38);
+  }
+  c2.restore();
+
+  // 屏幕左下提示队列
+  if (B2D.toasts.length) {
+    c2.save();
+    c2.scale(dpr, dpr);
+    c2.font = '600 13px "Noto Serif SC", sans-serif';
+    c2.textAlign = 'left';
+    B2D.toasts.forEach((tt, idx) => {
+      c2.fillStyle = 'rgba(12,15,24,0.82)';
+      c2.fillRect(16, h - 135 - idx * 30, 320, 24);
+      c2.fillStyle = '#f5de9a';
+      c2.fillText(tt.text, 24, h - 118 - idx * 30);
+    });
+    c2.restore();
+  }
+
+  b2dDrawMinimap();
 }
 
-function drawBastionScore(cx, top, bh, gap) {
-  const B0 = M.bastion; if (!B0) return;
-  const p = bastionProfile();
-  ctx.save();
-  ctx.font = `700 ${Math.max(12, Math.round(bh * 0.9))}px ${BODY_FONT}`;
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#e9c46a';
-  const spaceName = B0.space === 'siege' ? '天枢守城战' : B0.space === 'citadel' ? '天枢城·整备区' : `${(BASTION_REALMS[B0.realmTier - 1] || BASTION_REALMS[0]).name} (${B0.room}/${B0.maxRooms})`;
-  ctx.fillText(`${cvT(spaceName)} | 功勋:${p.merit} 碎银:${B0.unbankedSilver} 威胁:${Math.floor(p.threat)}%`, cx, top + bh * 2.1);
-  ctx.restore();
+function b2dDrawMinimap() {
+  const mm = document.getElementById('bastionMinimap'); if (!mm) return;
+  const mc = mm.getContext('2d'), mw = mm.width, mh = mm.height;
+  const sx = mw / B2D_W, sy = mh / B2D_H;
+  mc.clearRect(0, 0, mw, mh);
+  for (const bm of B2D_BIOMES) {
+    mc.fillStyle = bm.bg;
+    mc.fillRect(bm.x0 * sx, bm.y0 * sy, (bm.x1 - bm.x0) * sx, (bm.y1 - bm.y0) * sy);
+  }
+  mc.strokeStyle = 'rgba(233,196,106,0.7)'; mc.lineWidth = 1.5;
+  mc.beginPath(); mc.arc(B2D_CITADEL.x * sx, B2D_CITADEL.y * sy, B2D_CITADEL.r * sx, 0, Math.PI * 2); mc.stroke();
+  mc.fillStyle = '#9ef5c8';
+  for (const ws of B2D_WAYSTATIONS) { mc.fillRect(ws.x * sx - 2, ws.y * sy - 2, 4, 4); }
+  mc.fillStyle = '#ff6d6d';
+  for (const e of B2D.enemies) { mc.fillRect(e.x * sx - 1.5, e.y * sy - 1.5, 3, 3); }
+  mc.fillStyle = '#ffa84a';
+  for (const sb of B2D.sosBeacons) { mc.beginPath(); mc.arc(sb.x * sx, sb.y * sy, 5, 0, Math.PI * 2); mc.fill(); }
+  mc.fillStyle = '#6fe8dc';
+  mc.beginPath(); mc.arc(B2D.ally.x * sx, B2D.ally.y * sy, 4, 0, Math.PI * 2); mc.fill();
+  const now = Date.now();
+  for (const peer of B2D.peers.values()) {
+    if (now - peer.ts < 8000) {
+      mc.fillStyle = '#8cc8ff';
+      mc.beginPath(); mc.arc(peer.x * sx, peer.y * sy, 4, 0, Math.PI * 2); mc.fill();
+    }
+  }
+  mc.fillStyle = '#ffd97a';
+  mc.beginPath(); mc.arc(B2D.player.x * sx, B2D.player.y * sy, 4.5, 0, Math.PI * 2); mc.fill();
 }
 
+function b2dRenderTopBar() {
+  const bar = document.getElementById('bastionTopBar'); if (!bar) return;
+  const B0 = bastionEnsureState(), p = bastionProfile(), bm = b2dBiomeAt(B2D.player.x, B2D.player.y);
+  const now = Date.now(), peers = [];
+  for (const pr of B2D.peers.values()) if (now - pr.ts < 8000) peers.push(pr);
+  const allyHtml = `<button type="button" class="b2d-ally-btn" data-tp="${B2D.ally.id}">TP → ${B2D.ally.name}</button>`
+    + peers.map(pr => `<button type="button" class="b2d-ally-btn" data-tp="${pr.id}">TP → ${pr.name}</button>`).join('');
+  bar.innerHTML = `<span class="b2d-pill"><b>${B0.space === 'siege' ? '守城战' : bm.name}</b> · 威胁 ${Math.floor(p.threat)}%</span>`
+    + `<span class="b2d-pill">气血 <b>${Math.round(B2D.player.hp)}/${B2D.player.maxHp}</b>${B2D.player.shield > 0 ? ` (+${Math.round(B2D.player.shield)}盾)` : ''}</span>`
+    + `<span class="b2d-pill">功勋 <b>${p.merit}</b> · 随身银 <b>${B0.unbankedSilver}</b> · 寄存 <b>${B0.bankedSilver}</b></span>`
+    + allyHtml
+    + `<button type="button" class="b2d-ally-btn" id="b2dRoomBtn">房号:${B2D.roomCode} (${1 + peers.length}人)</button>`;
+  for (const btn of bar.querySelectorAll('[data-tp]')) btn.onclick = () => bastionTpToAlly(btn.dataset.tp);
+  const rb = document.getElementById('b2dRoomBtn');
+  if (rb) rb.onclick = () => {
+    const nxt = prompt('输入联机房号（相同房号可随时加入并互相传送）：', B2D.roomCode);
+    if (nxt && nxt.trim()) { bastionCoopOpen(nxt.trim()); b2dRenderTopBar(); }
+  };
+}
+
+function b2dLoop(ts) {
+  if (!B2D.open) return;
+  const dt = Math.min(0.05, Math.max(0.004, (ts - (B2D.lastTs || ts)) / 1000));
+  B2D.lastTs = ts;
+  bastion2dStep(dt);
+  b2dDrawWorld();
+  B2D.raf = requestAnimationFrame(b2dLoop);
+}
+
+function b2dBindDom() {
+  if (B2D.boundDom) return;
+  B2D.boundDom = true;
+  const cv = document.getElementById('bastionCanvas');
+  const mm = document.getElementById('bastionMinimap');
+  const back = document.getElementById('bastionBack');
+  if (back) back.onclick = closeBastion;
+  if (cv) {
+    cv.addEventListener('mousemove', e => {
+      const r = cv.getBoundingClientRect();
+      B2D.mouse.x = e.clientX - r.left; B2D.mouse.y = e.clientY - r.top;
+      const wx = B2D.mouse.x - r.width / 2 + B2D.camX;
+      const wy = B2D.mouse.y - r.height / 2 + B2D.camY;
+      B2D.player.aim = Math.atan2(wy - B2D.player.y, wx - B2D.player.x);
+    });
+    cv.addEventListener('mousedown', e => {
+      if (e.button === 2) b2dPlayerDash();
+      else { B2D.mouse.down = true; b2dPlayerAttack(); }
+    });
+    cv.addEventListener('contextmenu', e => e.preventDefault());
+  }
+  if (mm) {
+    mm.onclick = ev => {
+      const r = mm.getBoundingClientRect();
+      const wx = ((ev.clientX - r.left) / r.width) * B2D_W;
+      const wy = ((ev.clientY - r.top) / r.height) * B2D_H;
+      let nearest = B2D.ally, best = Math.hypot(B2D.ally.x - wx, B2D.ally.y - wy);
+      for (const peer of B2D.peers.values()) {
+        const d = Math.hypot(peer.x - wx, peer.y - wy);
+        if (d < best) { best = d; nearest = peer; }
+      }
+      if (best < 420 && nearest) bastionTpToAlly(nearest.id);
+    };
+  }
+  window.addEventListener('mouseup', () => { B2D.mouse.down = false; });
+  window.addEventListener('keydown', e => {
+    if (!B2D.open) return;
+    if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+    B2D.keys.add(e.code);
+    if (e.repeat) return;
+    if (e.code === 'KeyT') { e.preventDefault(); bastionTpToAlly(); }
+    else if (e.code === 'KeyV') { e.preventDefault(); bastionFireSos(); }
+    else if (e.code === 'KeyG') { e.preventDefault(); bastionCastCompanionSkill(); }
+    else if (e.code === 'KeyB') { e.preventDefault(); bastionToggleArmory(); }
+    else if (e.code === 'KeyE' || e.code === 'KeyR') { e.preventDefault(); b2dInteract(); }
+    else if (e.code === 'KeyJ' || e.code === 'Space') { e.preventDefault(); b2dPlayerAttack(); }
+    else if (e.code === 'KeyK' || e.code === 'ShiftLeft') { e.preventDefault(); b2dPlayerDash(); }
+    else if (e.code === 'KeyU') { e.preventDefault(); b2dPlayerSkill(); }
+    else if (e.code === 'Escape') {
+      e.preventDefault();
+      if (M.bastion && M.bastion.armoryOpen) bastionToggleArmory(false);
+      else closeBastion();
+    }
+  });
+  window.addEventListener('keyup', e => { B2D.keys.delete(e.code); });
+}
+
+function openBastion() {
+  initAudio();
+  b2dBindDom();
+  const wrap = document.getElementById('bastionGame');
+  if (wrap) wrap.classList.remove('hidden');
+  B2D.open = true;
+  B2D.lastTs = performance.now();
+  const B0 = bastionEnsureState();
+  bastionSync2dPlayerStats();
+  bastionInitCompanions();
+  if (!B2D.enemies.length) {
+    for (const bm of B2D_BIOMES) b2dSpawnPack((bm.x0 + bm.x1) / 2, (bm.y0 + bm.y1) / 2, bm.tier, true);
+  }
+  bastionCoopOpen(B2D.roomCode);
+  b2dRenderTopBar();
+  ensureBastionOverlay();
+  bastionSyncHUD();
+  bastionMsg('已进入 2D 平面天枢大世界（WASD移动 · 鼠标/J攻击 · K冲刺 · T传音 · V穿云）');
+  if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(B2D.raf);
+  B2D.raf = requestAnimationFrame(b2dLoop);
+  const cv = document.getElementById('bastionCanvas');
+  if (cv && typeof cv.focus === 'function') cv.focus();
+}
+
+function closeBastion() {
+  B2D.open = false;
+  if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(B2D.raf);
+  B2D.keys.clear();
+  B2D.mouse.down = false;
+  if (B2D.bc) { try { B2D.bc.close(); } catch (e) {} B2D.bc = null; }
+  const wrap = document.getElementById('bastionGame');
+  if (wrap) wrap.classList.add('hidden');
+  if (M.bastion) M.bastion.armoryOpen = false;
+  bastionSyncHUD();
+}
+
+// ======================= 整备抽屉与 HUD =======================
 let bastionArmoryTab = 'forge';
 function bastionToggleArmory(force) {
-  if (!M.bastion) return;
-  M.bastion.armoryOpen = force !== undefined ? !!force : !M.bastion.armoryOpen;
+  const B0 = bastionEnsureState();
+  B0.armoryOpen = force !== undefined ? !!force : !B0.armoryOpen;
   bastionRenderArmory();
 }
 
@@ -827,19 +1710,23 @@ function ensureBastionOverlay() {
     bar = document.createElement('div');
     bar.id = 'bastionHudBar';
     bar.className = 'bastion-hud-bar';
+    document.body.appendChild(bar);
+  }
+  if (!bar.dataset.bound) {
+    bar.dataset.bound = '1';
     bar.innerHTML = `<button type="button" class="ghost small" id="bHudTp">[T] 传音同袍</button>`
       + `<button type="button" class="ghost small" id="bHudSos">[V] 穿云箭</button>`
       + `<button type="button" class="ghost small" id="bHudComp">[G] 灵侍绝技</button>`
       + `<button type="button" class="ghost small" id="bHudBank">⛩ 寄存</button>`
       + `<button type="button" class="ghost small" id="bHudExtract">撤离回城</button>`
       + `<button type="button" class="go small" id="bHudArmory">[B] 天枢整备</button>`;
-    document.body.appendChild(bar);
-    document.getElementById('bHudTp').onclick = () => bastionTpToAlly();
-    document.getElementById('bHudSos').onclick = () => bastionFireSos();
-    document.getElementById('bHudComp').onclick = () => bastionCastCompanionSkill();
-    document.getElementById('bHudBank').onclick = () => bastionWaystationBank();
-    document.getElementById('bHudExtract').onclick = () => bastionExtract();
-    document.getElementById('bHudArmory').onclick = () => bastionToggleArmory();
+    const bind = (id, fn) => { const el = document.getElementById(id); if (el) el.onclick = fn; };
+    bind('bHudTp', () => bastionTpToAlly());
+    bind('bHudSos', () => bastionFireSos());
+    bind('bHudComp', () => bastionCastCompanionSkill());
+    bind('bHudBank', () => bastionWaystationBank());
+    bind('bHudExtract', () => bastionExtract());
+    bind('bHudArmory', () => bastionToggleArmory());
   }
   let drawer = document.getElementById('bastionDrawer');
   if (!drawer) {
@@ -853,7 +1740,7 @@ function ensureBastionOverlay() {
 
 function bastionSyncHUD() {
   const ui = ensureBastionOverlay(); if (!ui) return;
-  const on = bastionOn() && !document.querySelector('.scr.on');
+  const on = B2D.open || (M.mode === 'bastion' && !document.querySelector('.scr.on'));
   ui.bar.style.display = on ? 'flex' : 'none';
   if (!on || !M.bastion) { ui.drawer.classList.add('hidden'); return; }
   const tpBtn = document.getElementById('bHudTp');
@@ -942,13 +1829,5 @@ function startBastion(p1, p2, lv, opts = {}) {
   REC.on = false;
   startRound();
   if (opts.space) bastionSwitchSpace(opts.space, opts.tier || 1);
-  say('天枢城 · 守境', 1.5, 'big', '随时加入 · 传音支援 · 灵侍随行');
   bastionSyncHUD();
 }
-
-const bastionStartBtn = document.getElementById('bastionStartBtn');
-if (bastionStartBtn) bastionStartBtn.addEventListener('click', () => bpStart('bastion', { level: pickLevel }));
-const bastionCoopBtn = document.getElementById('bastionCoopBtn');
-if (bastionCoopBtn) bastionCoopBtn.addEventListener('click', () => bpStart('bastion', { level: pickLevel, pvp: true }));
-const bastionSiegeBtn = document.getElementById('bastionSiegeBtn');
-if (bastionSiegeBtn) bastionSiegeBtn.addEventListener('click', () => bpStart('bastion', { level: pickLevel, space: 'siege' }));

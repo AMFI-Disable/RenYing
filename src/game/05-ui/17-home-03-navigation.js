@@ -13,7 +13,8 @@ function updateXiwuSummary() {
 function openScreen(name, reveal = true) {
   if (OFFLINE_BUILD && name === 'netp') name = 'stage';
   if (name === 'watch2v2' || name === '2v2') return open2v2Hub(null, reveal);   // 2v2 只有一个入口：组队弹窗
-  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem' || name === 'maps' || name === 'cuju' || name === 'koth' || name === 'party' || name === 'bastion') {
+  if (name === 'bastion') { if (typeof openBastion === 'function') openBastion(); return null; }
+  if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem' || name === 'maps' || name === 'cuju' || name === 'koth' || name === 'party') {
     singleSec(name);
     if (reveal) showScreen('single');
     return 'single';
@@ -123,6 +124,7 @@ function navTo(name) {
   if (name === 'menu') { backToMenu(); return; }
   if (name === 'acc') { openAcc(); return; }
   if (name === 'qfx') { openQfx(); return; }
+  if (name === 'bastion') { if (typeof openBastion === 'function') openBastion(); return; }
   if ($id('menu').classList.contains('on')) { menuGo(name); return; }   // 和卡片走同一条时间线，目的地一样感觉就一样
   if (MENU_SPOT[name] !== undefined) { menuCam.tx = MENU_SPOT[name]; menuCam.tz = 1.35; }
   openScreen(name);
@@ -176,6 +178,7 @@ for (const b of document.querySelectorAll('#menu [data-go]')) {
   b.addEventListener('click', () => {
     if (menuLock) return;                                  // 连点只算一次
     if (b.dataset.go === 'qfx') { navTo('qfx'); return; }  // 青锋行是另一个网页，不走镜头推进
+    if (b.dataset.go === 'bastion') { navTo('bastion'); return; }
     b.classList.add('pressed');
     setTimeout(() => b.classList.remove('pressed'), 900);
     menuGo(b.dataset.go);

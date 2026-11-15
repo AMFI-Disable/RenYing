@@ -153,7 +153,7 @@ function singleSec(sec) {
     el.style.display = secs.includes(active) ? '' : 'none';
   }
   const duel = ['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2'].includes(active);
-  if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju', 'koth', 'party', 'bastion'].includes(active);
+  if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju', 'koth', 'party'].includes(active);
   if ($id('xiwuQuickCard')) $id('xiwuQuickCard').hidden = !duel;
   const mutators = $id('mutatorPills');
   if (mutators && mutators.parentElement) mutators.parentElement.hidden = !duel;
@@ -176,8 +176,7 @@ function singleSec(sec) {
       maps: '换一处战场：投票选地图，断崖、冰面都会改变侠客的打法',
       cuju: '不比气血比进球：用普攻和技能把墨球打进对方球门，先进三球获胜',
       koth: '占领灵坛先达 100% 获胜，阵亡或落崖 2.5 秒无限复活！',
-      party: '五局三胜趣味百戏：传火折、断崖推手、飞球乱舞轮换上阵',
-      bastion: '天枢城多人共防与宗门远征：传音援护 [T]、穿云求援 [V]、6位灵侍 [G]、8流派百兵与24种材料'
+      party: '五局三胜趣味百戏：传火折、断崖推手、飞球乱舞轮换上阵'
     };
     subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
   }
@@ -200,7 +199,6 @@ const XIWU_MODE_INFO = {
   cuju: { title: '墨球蹴鞠 · 玩法说明', body: '双方不扣气血，比谁先把墨球打进对方球门（默认先 3 球，可选 5/7 球）。普攻与技能可抽射/挑射墨球，格挡可扑救，精准格挡触发神扑！' },
   koth: { title: '灵坛争锋 · 玩法说明', body: '三层断崖高台上每 18 秒轮流激活灵坛。站入无人争抢的灵坛即可累积占领进度，先达 100% 获胜；阵亡或被打落悬崖后 2.5 秒重返战场。' },
   party: { title: '江湖百戏 · 玩法说明', body: '五局三胜趣味小游戏轮换：第一局「传火折」（击中对手把 9 秒火折传出去，归零即炸）、第二局「断崖推手」（0 伤害但 2.6 倍击退，推落悬崖即胜）、第三局「飞球乱舞」（格挡弹反飞球，砸中即出局）。' },
-  bastion: { title: '天枢守境 · 玩法说明', body: '随时加入天枢主城共御异界妖潮！按 [T] 传送至队友身旁并获得短暂护盾，按 [V] 发射穿云箭召唤友方零冷却支援；按 [G] 施放 6 位随行灵侍绝技，按 [B] 打开整备百业（24 种材料、6 槽 8 流派套装锻造、城防与宗门共建，在驿站寄存战利品并安全撤离）。' },
   train: { title: '训练场 · 玩法说明', body: '包含招式教学、木人桩自由练习（可看判定框、帧数差与回放）、以及防反/连段等专项情景训练。' },
   stage: { title: '守关挑战 · 玩法说明', body: '十三侠客专属六章三十关斩妖除魔路线。每关击败首领积累星级与墨锭，最终章迎战六技融魂魔首。' },
   saga: { title: '侠客列传 · 玩法说明', body: '每位侠客独立的五节剧情篇章，在关键节点做出抉择可解锁不同结局与专属秘闻。' },

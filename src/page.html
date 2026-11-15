@@ -45,6 +45,7 @@
       <button type="button" data-nav="menu">首页</button>
       <button type="button" data-nav="single">习武</button>
       <button type="button" data-nav="qfx" class="tn-qfx" title="打通青锋行三章，可领刃影奖励">青锋行</button>
+      <button type="button" data-nav="bastion" class="tn-qfx" title="2D 俯视角多人守城与肉鸽远征">天枢守境</button>
       <button type="button" data-nav="netp" class="tn-play tn-online">对战</button>
       <button type="button" data-nav="stage" class="tn-offline">闯关</button>
       <button type="button" data-nav="codex">英雄</button>
@@ -197,7 +198,6 @@
               <button data-tab="cuju" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18M5 7c3 2 11 2 14 0M5 17c3-2 11-2 14 0"/></svg></span><b class="pt-n">墨球蹴鞠</b><span class="pt-d">不比气血，比谁先进三球</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="cuju" title="玩法说明" aria-label="玩法说明">i</span></button>
               <button data-tab="koth" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.4 1.1 6L12 17.5 6.4 20.4l1.1-6L3 10l6-1z"/></svg></span><b class="pt-n">灵坛争锋</b><span class="pt-d">占领灵坛，无限复活抢分</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="koth" title="玩法说明" aria-label="玩法说明">i</span></button>
               <button data-tab="party" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="4"/><circle cx="16" cy="9" r="3"/><path d="M4 20c1.5-3 8.5-3 10 0"/></svg></span><b class="pt-n">江湖百戏</b><span class="pt-d">传火折、断崖推手、飞球乱舞</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="party" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="bastion" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l4-4 4 3 4-3 4 4v11z"/><path d="M9 20v-5h6v5"/></svg></span><b class="pt-n">天枢守境</b><span class="pt-d">共防主城、灵侍百兵与传音支援</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="bastion" title="玩法说明" aria-label="玩法说明">i</span></button>
             </div>
 
 
@@ -530,20 +530,6 @@
         </div>
       </div>
 
-      <!-- 天枢守境 · 2D 共防城邦与流派百业 -->
-      <div data-sec="bastion" class="single-sec-pane" style="display:none">
-        <div class="sec-head-row">
-          <h3 class="spt">天枢城 · 守境远征</h3>
-          <span class="sub-badge">随时加入 · 传音支援 · 宗门共建</span>
-        </div>
-        <p class="sub" style="margin:2px 0 12px;text-align:left">集结天枢主城：出征五境夺取 24 种炼材，锻造 8 大流派 6 部位百兵套装，携 6 位随行灵侍共战。途中按 <code>[T]</code> 传音至队友身旁并获护盾，按 <code>[V]</code> 鸣穿云箭开启零冷却援护，第 3 室驿站可寄存战利品并撤离，按 <code>[B]</code> 打开整备百业。</p>
-        <div class="single-action-row">
-          <button class="go" id="bastionStartBtn" type="button">进入天枢城 · 单人配灵侍</button>
-          <button class="go alt" id="bastionCoopBtn" type="button">本地同屏共守</button>
-          <button class="ghost" id="bastionSiegeBtn" type="button">直赴守城战</button>
-        </div>
-      </div>
-
       <!-- 山河异境 · 投票选地图 -->
       <div data-sec="maps" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
@@ -673,7 +659,6 @@
                   <button class="ghost small" data-mode="cuju" type="button">墨球蹴鞠</button>
                   <button class="ghost small" data-mode="koth" type="button">灵坛争锋</button>
                   <button class="ghost small" data-mode="party" type="button">江湖百戏</button>
-                  <button class="ghost small" data-mode="bastion" type="button">天枢守境</button>
                 </div>
                 <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。2v2 的全服匹配和同一台电脑对战在「开始演武」的 2v2 组队里。</p>
               </details>
@@ -1431,6 +1416,7 @@
 
 <div id="rpBar" class="hidden"><span id="rpInfo">回放</span><button id="rpPause">暂停</button><button data-sp="0.25">0.25×</button><button data-sp="0.5">0.5×</button><button data-sp="1" class="sel">1×</button><button data-sp="2">2×</button><button data-sp="4">4×</button><label class="rp-rate" for="rpHz"><span>频率</span><input id="rpHz" type="range" min="1" max="120" step="1" value="120"><output id="rpHzValue" for="rpHz">120 Hz</output></label><button id="rpHitbox" type="button" aria-pressed="false">F1 判定框：关</button><button id="rpStep" type="button" disabled>推进 1 帧</button><button id="rpExit">退出</button></div>
 <div id="extGame" class="hidden"><iframe id="extFrame" title="青锋行" allow="autoplay; fullscreen; gamepad"></iframe><div id="extToast"></div><button id="extBack">返回刃影</button></div>
+<div id="bastionGame" class="hidden"><canvas id="bastionCanvas" tabindex="0"></canvas><div id="bastionTopBar" class="b2d-topbar"></div><div id="bastionMinimapWrap" class="b2d-minimap-wrap"><canvas id="bastionMinimap" width="180" height="135"></canvas><div class="b2d-mm-hint">点击地图队友或按 [T] 传音降临</div></div><div id="bastionHudBar" class="bastion-hud-bar"></div><div id="bastionDrawer" class="bastion-drawer hidden"></div><button id="bastionBack" type="button">返回刃影</button></div>
 <!--@music-->
 <!--@scripts-->
 <!--@qfx-->

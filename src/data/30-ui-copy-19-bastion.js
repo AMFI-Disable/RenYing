@@ -1,18 +1,7 @@
-// 英文界面词条 · 天枢城守境模式：{ 中文原文: 英文译文 }
+// 英文界面词条 · 天枢城守境（独立 2D 俯视角模式）：{ 中文原文: 英文译文 }
 Object.assign(UI_COPY_EN, {
   "天枢守境": "Tianshu Bastion",
-  "共防主城、灵侍百兵与传音支援": "Co-op bastion defense, companions & 8-genre gear",
-  "天枢城 · 守境远征": "Tianshu Bastion · Co-op Expedition",
-  "随时加入 · 传音支援 · 宗门共建": "Drop-in · Ally TP · Guild Progression",
-  "集结天枢主城：出征五境夺取 24 种炼材，锻造 8 大流派 6 部位百兵套装，携 6 位随行灵侍共战。途中按 <code>[T]</code> 传音至队友身旁并获护盾，按 <code>[V]</code> 鸣穿云箭开启零冷却援护，第 3 室驿站可寄存战利品并撤离，按 <code>[B]</code> 打开整备百业。": "Rally at Tianshu Citadel: clear 5 realms for 24 materials, forge 6-slot sets across 8 genres, and fight alongside 6 companions. Press <code>[T]</code> to warp to an ally with Arrival Aegis, <code>[V]</code> for a zero-CD SOS flare, bank loot at the Room 3 waystation, and open the Armory drawer with <code>[B]</code>.",
-  "进入天枢城 · 单人配灵侍": "Enter Bastion · Solo + Companion",
-  "本地同屏共守": "Local 2P Co-op Bastion",
-  "直赴守城战": "Deploy to Siege Defense",
-  "天枢守境 · 玩法说明": "Tianshu Bastion · Mode Guide",
-  "随时加入天枢主城共御异界妖潮！按 [T] 传送至队友身旁并获得短暂护盾，按 [V] 发射穿云箭召唤友方零冷却支援；按 [G] 施放 6 位随行灵侍绝技，按 [B] 打开整备百业（24 种材料、6 槽 8 流派套装锻造、城防与宗门共建，在驿站寄存战利品并安全撤离）。": "Join Tianshu Bastion anytime to hold back the realm tide! Press [T] to warp to an ally with a brief shield, [V] to fire an SOS flare enabling zero-cooldown ally warps, [G] to cast your companion's active skill, and [B] to open the Bastion Armory (24 materials, 6-slot × 8-genre sets, buildings, guild upgrades, and waystation banking/extraction).",
-  "天枢城多人共防与宗门远征：传音援护 [T]、穿云求援 [V]、6位灵侍 [G]、8流派百兵与24种材料": "Co-op bastion defense & guild expeditions: Ally TP [T], SOS Flare [V], 6 Companions [G], 8-genre gear & 24 materials",
-  "天枢城 · 守境": "Tianshu Bastion",
-  "随时加入 · 传音支援 · 灵侍随行": "Drop-In Co-op · Ally TP · Companions",
+  "点击地图队友或按 [T] 传音降临": "Click minimap ally or press [T] to TP",
   "[T] 传音同袍": "[T] Ally TP",
   "[V] 穿云箭": "[V] SOS Flare",
   "[G] 灵侍绝技": "[G] Companion Skill",

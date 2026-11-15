@@ -36,7 +36,7 @@ function autoQualityTick(now) {
   toast(SETTINGS.quality === 'mid' ? '画面有点卡，已自动调成中画质（可在设置里改回）' : '画面还是卡，已自动调成低画质（可在设置里改回）');
 }
 function frame(now) {
-  if (EXT.on) { last = now; requestAnimationFrame(frame); return; }   // 正在玩青锋行：刃影这边不画也不算
+  if (EXT.on || (typeof bastion2dActive === 'function' && bastion2dActive())) { last = now; requestAnimationFrame(frame); return; }   // 正在玩青锋行或天枢守境：刃影这边不画也不算
   try { frameBody(now); }
   catch (e) { frame.errs = (frame.errs || 0) + 1; if (frame.errs <= 3) console.error('刃影：这一帧出错了，已跳过', e); }
   requestAnimationFrame(frame);

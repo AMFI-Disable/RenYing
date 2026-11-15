@@ -4,6 +4,7 @@
 window.addEventListener('keydown', e => {
   initAudio();
   if (e.code === 'KeyM') { muted = !muted; return; }
+  if (typeof bastion2dActive === 'function' && bastion2dActive()) return;
   if (e.code === 'Backquote' || e.code === 'F2') { NET_HUD = !NET_HUD; return; }
   if (e.code === 'F1') {
     if ((M.mode === 'train' && !REPLAY.on) || (M.mode === 'replay' && REPLAY.on && M.phase !== 'end')) {
