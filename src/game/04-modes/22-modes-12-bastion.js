@@ -35,6 +35,26 @@ const B2D_BIOMES = [
   { name: '雷煞古坛', tier: 3, x0: 0, y0: 1200, x1: 1600, y1: 2400, bg: '#161128', grid: 'rgba(155,115,235,0.16)', rgb: '185,145,255' },
   { name: '炎狱魔窟', tier: 4, x0: 1600, y0: 1200, x1: 3200, y1: 2400, bg: '#221012', grid: 'rgba(225,105,85,0.16)', rgb: '245,120,90' },
 ];
+const BASTION_CARDS = [
+  { id: 'card_frenzy', name: '狂澜剑意', rar: 'rare', desc: '每层 +18% 攻击、+10% 攻速' },
+  { id: 'card_twin_wave', name: '重浪飞刃', rar: 'mythic', desc: '每次普攻额外发出两道侧翼剑气' },
+  { id: 'card_lightning', name: '九霄引雷', rar: 'mythic', desc: '命中触发连锁天雷，造成 45% 额外雷伤' },
+  { id: 'card_lifesteal', name: '饮血回春', rar: 'rare', desc: '每次攻击命中回复 6% 伤害气血' },
+  { id: 'card_vitality', name: '金刚体魄', rar: 'common', desc: '+220 上限气血并立刻回复 220 气血' },
+  { id: 'card_haste', name: '踏雪疾风', rar: 'common', desc: '+14% 移速与攻速' },
+  { id: 'card_cd', name: '玄妙灵机', rar: 'rare', desc: '绝技与冲刺冷却缩短 20%' },
+  { id: 'card_greed', name: '聚宝灵印', rar: 'common', desc: '+30% 战利品掉落与 +55 拾取范围' },
+  { id: 'card_ward', name: '玄龟护体', rar: 'rare', desc: '+10% 减伤并立刻获得 140 护盾' },
+  { id: 'card_critical', name: '破甲重击', rar: 'common', desc: '+25% 破韧与攻击威力' },
+];
+const BASTION_CARD_BY = Object.fromEntries(BASTION_CARDS.map(c => [c.id, c]));
+const BASTION_BOOSTS = {
+  frenzy: { name: '狂暴灵珠', rgb: '245,110,95', desc: '+35% 攻击 · +20% 速 (18s)' },
+  barrier: { name: '玄盾灵珠', rgb: '125,215,255', desc: '+280 护盾 · +15% 减伤 (18s)' },
+  magnet: { name: '聚宝灵珠', rgb: '245,205,95', desc: '全图吸宝 · +50% 掉落 (18s)' },
+  haste: { name: '疾风灵珠', rgb: '125,245,180', desc: '+30% 移速 · -35% 冷却 (18s)' },
+};
+const bastionXpNeeded = lv => 100 + Math.max(0, (lv | 0) - 1) * 60;
 
 const bastionOn = () => M.mode === 'bastion' || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'bastion') || B2D.open;
 const bastion2dActive = () => !!B2D.open;
@@ -59,6 +79,8 @@ function bastionDefaultProfile() {
   const buildings = {};
   for (const b of BASTION_BUILDINGS) buildings[b.id] = 1;
   return {
+    level: 1,
+    xp: 0,
     merit: 240,
     ley: 600,
     threat: 22,
@@ -106,6 +128,8 @@ function bastionProfile() {
   BASTION_PROF.guild.research = Object.assign({}, d.guild.research, BASTION_PROF.guild.research || {});
   BASTION_PROF.comp = Object.assign({}, d.comp, BASTION_PROF.comp || {});
   BASTION_PROF.stats = Object.assign({}, d.stats, BASTION_PROF.stats || {});
+  if (!(BASTION_PROF.level >= 1)) BASTION_PROF.level = 1;
+  if (!(BASTION_PROF.xp >= 0)) BASTION_PROF.xp = 0;
   if (!Array.isArray(BASTION_PROF.bag)) BASTION_PROF.bag = d.bag;
   return BASTION_PROF;
 }
@@ -139,11 +163,15 @@ function bastionGenreCounts() {
 
 function bastionStats() {
   const p = bastionProfile(), eq = bastionEquippedItems(), gc = bastionGenreCounts();
-  let atkMul = 1 + ((p.guild.research.dmg || 0) * 0.04) + ((p.buildings.library || 1) - 1) * 0.02;
+  const B0 = typeof M === 'object' && M ? M.bastion : null;
+  const cards = (B0 && B0.cards) || {};
+  const boosts = (B0 && B0.boosts) || {};
+  let atkMul = 1 + ((p.guild.research.dmg || 0) * 0.04) + ((p.buildings.library || 1) - 1) * 0.02 + Math.max(0, (p.level || 1) - 1) * 0.04;
   let hpMul = 1;
-  let hpFlat = ((p.buildings.walls || 1) - 1) * 30;
+  let hpFlat = ((p.buildings.walls || 1) - 1) * 30 + Math.max(0, (p.level || 1) - 1) * 45;
   let dr = 0;
   let speedMul = 1;
+  let cdMul = 1;
   let tpCd = Math.max(8, 22 - (p.guild.research.tpCd || 0) * 2 - ((p.buildings.array || 1) - 1));
   let reviveMul = 1 + (p.guild.research.revive || 0) * 0.15;
   let dropMul = 1 + (p.guild.research.drop || 0) * 0.08;
@@ -151,8 +179,9 @@ function bastionStats() {
   for (const s of BASTION_SLOTS) {
     const it = eq[s.id];
     if (!it) continue;
-    atkMul += it.atkPct || 0;
-    hpFlat += it.hpFlat || 0;
+    const upg = it.upg || 0;
+    atkMul += (it.atkPct || 0) + upg * 0.03;
+    hpFlat += (it.hpFlat || 0) + upg * 25;
   }
   if (gc.berserker >= 2) atkMul += 0.14;
   if (gc.juggernaut >= 2) { hpMul += 0.22; dr += 0.08; }
@@ -166,7 +195,18 @@ function bastionStats() {
   if (gc.siege >= 2) { staggerMul += 0.28; atkMul += 0.10; }
   if (gc.siege >= 4) dr += 0.08;
   if (gc.ranger >= 2) { dropMul += 0.25; speedMul += 0.08; }
-  return { gc, atkMul, hpMul, hpFlat, dr: Math.min(0.65, dr), speedMul, tpCd, reviveMul, dropMul, staggerMul, eq };
+  if (cards.card_frenzy) { atkMul += 0.18 * cards.card_frenzy; speedMul += 0.10 * cards.card_frenzy; }
+  if (cards.card_vitality) hpFlat += 220 * cards.card_vitality;
+  if (cards.card_haste) speedMul += 0.14 * cards.card_haste;
+  if (cards.card_cd) cdMul *= Math.pow(0.8, cards.card_cd);
+  if (cards.card_greed) dropMul += 0.30 * cards.card_greed;
+  if (cards.card_ward) dr += 0.10 * cards.card_ward;
+  if (cards.card_critical) { staggerMul += 0.25 * cards.card_critical; atkMul += 0.12 * cards.card_critical; }
+  if ((boosts.frenzy || 0) > 0) { atkMul += 0.35; speedMul += 0.20; }
+  if ((boosts.barrier || 0) > 0) dr += 0.15;
+  if ((boosts.magnet || 0) > 0) dropMul += 0.50;
+  if ((boosts.haste || 0) > 0) { speedMul += 0.30; cdMul *= 0.65; }
+  return { gc, cards, boosts, atkMul, hpMul, hpFlat, dr: Math.min(0.75, dr), speedMul, cdMul: Math.max(0.35, cdMul), tpCd, reviveMul, dropMul, staggerMul, eq };
 }
 
 function bastionForgeItem(slotId, genreId, tier = 1, useCatalyst = false) {
@@ -241,6 +281,27 @@ function bastionSalvageItem(itemId) {
   p.bag.splice(idx, 1);
   bastionSave();
   bastionSync2dPlayerStats();
+  return true;
+}
+
+function bastionEnhanceItem(itemId) {
+  const p = bastionProfile();
+  const it = p.bag.find(x => x.id === itemId);
+  if (!it) return false;
+  const cur = it.upg || 0;
+  if (cur >= 5) { bastionMsg('该装备已强化至满级 +5'); return false; }
+  const meritCost = (cur + 1) * 50, ironCost = cur + 1;
+  if (p.merit < meritCost || (p.mats.m_iron1 || 0) < ironCost) {
+    bastionMsg(`强化需 ${meritCost} 功勋 + ${ironCost}×粗玄铁`);
+    return false;
+  }
+  p.merit -= meritCost;
+  p.mats.m_iron1 -= ironCost;
+  it.upg = cur + 1;
+  bastionSave();
+  if (typeof A === 'object' && A && bastionOn()) bastionApplyPlayerStats(A);
+  bastionSync2dPlayerStats();
+  bastionMsg(`${it.name} 已强化至 +${it.upg}`);
   return true;
 }
 
@@ -400,9 +461,118 @@ function bastionEnsureState() {
       cheatDeathCd: 0,
       downed: [false, false],
       armoryOpen: false,
+      cards: {},
+      pendingCards: [],
+      boosts: {},
     };
   }
   return M.bastion;
+}
+
+function bastionRollCardDraft(force = false) {
+  const B0 = bastionEnsureState();
+  if (B0.pendingCards && B0.pendingCards.length && !force) return B0.pendingCards;
+  const pool = BASTION_CARDS.slice();
+  for (let i = pool.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [pool[i], pool[j]] = [pool[j], pool[i]];
+  }
+  B0.pendingCards = pool.slice(0, 3).map(c => c.id);
+  b2dRenderCardModal();
+  return B0.pendingCards;
+}
+
+function bastionPickCard(idxOrId) {
+  const B0 = bastionEnsureState();
+  if (!B0.pendingCards || !B0.pendingCards.length) return false;
+  const id = typeof idxOrId === 'number' ? B0.pendingCards[idxOrId] : B0.pendingCards.find(x => x === idxOrId);
+  if (!id || !BASTION_CARD_BY[id]) return false;
+  B0.cards = B0.cards || {};
+  B0.cards[id] = (B0.cards[id] || 0) + 1;
+  B0.pendingCards = [];
+  if (id === 'card_vitality' && B2D.open) {
+    bastionSync2dPlayerStats();
+    B2D.player.hp = Math.min(B2D.player.maxHp, B2D.player.hp + 220);
+  } else if (id === 'card_ward' && B2D.open) {
+    B2D.player.shield = (B2D.player.shield || 0) + 140;
+  } else {
+    bastionSync2dPlayerStats();
+  }
+  b2dRenderCardModal();
+  b2dRenderTopBar();
+  bastionMsg(`习得秘卷：${BASTION_CARD_BY[id].name}`);
+  return true;
+}
+
+function bastionGainXp(amount) {
+  const p = bastionProfile();
+  let gain = Math.max(0, Math.round(amount));
+  if (!gain) return false;
+  p.xp = (p.xp || 0) + gain;
+  let leveled = false;
+  while (p.xp >= bastionXpNeeded(p.level || 1)) {
+    p.xp -= bastionXpNeeded(p.level || 1);
+    p.level = (p.level || 1) + 1;
+    leveled = true;
+  }
+  if (leveled) {
+    bastionSave();
+    bastionSync2dPlayerStats();
+    if (B2D.open) {
+      B2D.player.hp = Math.min(B2D.player.maxHp, B2D.player.hp + Math.round(B2D.player.maxHp * 0.25));
+      b2dFloatText(`升级 Lv.${p.level}!`, B2D.player.x, B2D.player.y - 42, '255,220,115');
+      B2D.rings.push({ x: B2D.player.x, y: B2D.player.y, r: 18, maxR: 160, life: 0.45, max: 0.45, rgb: '255,215,105' });
+    }
+    bastionRollCardDraft();
+    bastionMsg(`境界提升 Lv.${p.level}！请选择 1 张强化秘卷`);
+  } else {
+    bastionSave();
+  }
+  return leveled;
+}
+
+function bastionApplyBoost(kind, dur = 18) {
+  const B0 = bastionEnsureState(), def = BASTION_BOOSTS[kind];
+  if (!def) return false;
+  B0.boosts = B0.boosts || {};
+  B0.boosts[kind] = Math.max(B0.boosts[kind] || 0, dur);
+  if (kind === 'barrier' && B2D.open) {
+    B2D.player.shield = (B2D.player.shield || 0) + 280;
+  }
+  if (B2D.open) {
+    b2dFloatText(def.name, B2D.player.x, B2D.player.y - 36, def.rgb);
+    B2D.rings.push({ x: B2D.player.x, y: B2D.player.y, r: 14, maxR: 110, life: 0.38, max: 0.38, rgb: def.rgb });
+  }
+  bastionMsg(`${def.name}：${def.desc}`);
+  return true;
+}
+
+function b2dRenderCardModal() {
+  if (typeof document === 'undefined') return;
+  const el = document.getElementById('bastionCardModal');
+  if (!el) return;
+  const B0 = M.bastion;
+  if (!B2D.open || !B0 || !B0.pendingCards || !B0.pendingCards.length) {
+    el.classList.add('hidden');
+    return;
+  }
+  el.classList.remove('hidden');
+  const rarLabel = { common: '玄阶', rare: '地阶', mythic: '天阶' };
+  el.innerHTML = `<div class="b2d-card-wrap"><div class="b2d-card-head">悟道择卷（点击或按 [1][2][3] 选择）</div>`
+    + `<div class="b2d-card-grid">`
+    + B0.pendingCards.map((cid, idx) => {
+      const c = BASTION_CARD_BY[cid];
+      if (!c) return '';
+      const stacks = (B0.cards && B0.cards[cid]) || 0;
+      return `<button type="button" class="b2d-pick-card ${c.rar}" data-cidx="${idx}">`
+        + `<span class="b2d-pick-rar">${rarLabel[c.rar] || c.rar} · [${idx + 1}]</span>`
+        + `<b>${c.name}${stacks > 0 ? ` ×${stacks + 1}` : ''}</b>`
+        + `<span>${c.desc}</span></button>`;
+    }).join('')
+    + `</div></div>`;
+  for (const btn of el.querySelectorAll('[data-cidx]')) {
+    btn.onclick = () => bastionPickCard(+btn.dataset.cidx);
+  }
 }
 
 function bastionRoundInit() {
@@ -778,7 +948,8 @@ function bastionWaystationBank() {
 function bastionExtract() {
   const B0 = bastionEnsureState(), p = bastionProfile(), st = bastionStats();
   const totSilver = B0.unbankedSilver + B0.bankedSilver;
-  const meritGain = Math.max(20, Math.round(totSilver / 10) + B0.room * 25);
+  const cardStacks = Object.values(B0.cards || {}).reduce((a, b) => a + b, 0);
+  const meritGain = Math.max(20, Math.round(totSilver / 10) + B0.room * 25 + cardStacks * 15);
   p.merit += meritGain;
   let matTotal = 0;
   for (const src of [B0.unbankedMats, B0.bankedMats]) {
@@ -786,12 +957,14 @@ function bastionExtract() {
   }
   if (st.gc.ranger >= 6) { p.mats.m_iron1 = (p.mats.m_iron1 || 0) + 2; matTotal += 2; }
   B0.unbankedSilver = 0; B0.bankedSilver = 0; B0.unbankedMats = {}; B0.bankedMats = {};
+  B0.cards = {}; B0.pendingCards = []; B0.boosts = {};
   p.threat = Math.min(100, p.threat + Math.max(5, Math.round(matTotal * 1.5)));
   p.stats.runs++;
   bastionSave();
   B0.space = 'citadel';
   B0.room = 1;
   bastionSpawnSpaceWave();
+  b2dRenderCardModal();
   bastionMsg(`凯旋撤离 · +${meritGain} 功勋 / +${matTotal} 材料`);
   bastionSyncHUD();
   return true;
@@ -914,6 +1087,7 @@ const B2D = {
   slashes: [],
   rings: [],
   ghosts: [],
+  orbs: [],
   texts: [],
   toasts: [],
   sosBeacons: [],
@@ -996,17 +1170,34 @@ function b2dSpawnSiegeWave(tier = 1) {
   }
 }
 
-function b2dDamageEnemy(e, dmg, srcX, srcY, rgb = '255,210,120', knock = 110) {
+function b2dDamageEnemy(e, dmg, srcX, srcY, rgb = '255,210,120', knock = 110, noChain = false) {
   if (!e || e.hp <= 0) return;
+  const st = bastionStats();
   const actual = Math.max(1, Math.round(dmg));
   e.hp -= actual;
   const dx = e.x - srcX, dy = e.y - srcY, len = Math.hypot(dx, dy) || 1;
   e.vx += (dx / len) * knock;
   e.vy += (dy / len) * knock;
   b2dFloatText(`-${actual}`, e.x, e.y - 18, rgb);
+  if (st.cards.card_lifesteal && B2D.player && !B2D.player.downed) {
+    B2D.player.hp = Math.min(B2D.player.maxHp, B2D.player.hp + Math.max(1, Math.round(actual * 0.06 * st.cards.card_lifesteal)));
+  }
+  if (!noChain && st.cards.card_lightning) {
+    const chain = B2D.enemies.find(o => o !== e && o.hp > 0 && Math.hypot(o.x - e.x, o.y - e.y) < 210);
+    if (chain) {
+      B2D.rings.push({ x: chain.x, y: chain.y, r: 6, maxR: 38, life: 0.18, max: 0.18, rgb: '125,215,255' });
+      b2dDamageEnemy(chain, actual * 0.45 * st.cards.card_lightning, e.x, e.y, '125,215,255', 60, true);
+    }
+  }
   if (e.hp <= 0) {
     M.bastion.realmTier = e.tier || M.bastion.realmTier || 1;
     bastionDropLoot(e.x, !!e.isBoss || !!e.siege, e.y);
+    bastionGainXp((e.isBoss ? 110 : 28) * (e.tier || 1));
+    if (e.isBoss) {
+      const kinds = Object.keys(BASTION_BOOSTS);
+      const kind = kinds[Math.floor(Math.random() * kinds.length)];
+      B2D.orbs.push({ x: clamp(e.x + 28, 45, B2D_W - 45), y: clamp(e.y, 45, B2D_H - 45), kind, life: 35 });
+    }
     B2D.rings.push({ x: e.x, y: e.y, r: 8, maxR: 52, life: 0.25, max: 0.25, rgb: e.rgb });
   }
 }
@@ -1041,17 +1232,20 @@ function b2dPlayerAttack() {
       if (st.gc.berserker >= 4) pl.hp = Math.min(pl.maxHp, pl.hp + Math.round(dmg * 0.08));
     }
   }
-  B2D.projs.push({
-    x: pl.x + Math.cos(ang) * 24, y: pl.y + Math.sin(ang) * 24,
-    vx: Math.cos(ang) * 560, vy: Math.sin(ang) * 560,
-    r: 8, dmg: Math.round(dmg * 0.55), team: 0, life: 0.42, rgb,
-  });
+  const dirs = st.cards.card_twin_wave ? [ang, ang - 0.24, ang + 0.24] : [ang];
+  for (const a of dirs) {
+    B2D.projs.push({
+      x: pl.x + Math.cos(a) * 24, y: pl.y + Math.sin(a) * 24,
+      vx: Math.cos(a) * 560, vy: Math.sin(a) * 560,
+      r: 8, dmg: Math.round(dmg * 0.55), team: 0, life: 0.42, rgb,
+    });
+  }
 }
 
 function b2dPlayerDash() {
   const pl = B2D.player; if (!pl || pl.downed || pl.dashCd > 0) return;
   const st = bastionStats();
-  pl.dashCd = 1.6 / st.speedMul;
+  pl.dashCd = (1.6 / st.speedMul) * st.cdMul;
   pl.dashT = 0.22;
   pl.invul = Math.max(pl.invul, 0.35);
   const ang = pl.aim || 0;
@@ -1063,7 +1257,7 @@ function b2dPlayerDash() {
 function b2dPlayerSkill() {
   const pl = B2D.player; if (!pl || pl.downed || pl.skillCd > 0) return;
   const st = bastionStats();
-  pl.skillCd = 4.2;
+  pl.skillCd = 4.2 * st.cdMul;
   const mul = st.gc.siege >= 6 ? 1.35 : 1.0;
   const rgb = (st.eq.weapon && BASTION_GENRE_BY[st.eq.weapon.genre]) ? BASTION_GENRE_BY[st.eq.weapon.genre].rgb : '233,196,106';
   B2D.rings.push({ x: pl.x, y: pl.y, r: 24, maxR: 230, life: 0.45, max: 0.45, rgb });
@@ -1232,8 +1426,14 @@ function bastion2dStep(dt) {
 
   bastionStepCompanions(dt);
 
-  // 拾取地面掉落
-  const pickR = st.gc.ranger >= 2 ? 150 : 62;
+  // 增益灵珠计时衰减与拾取（地面掉落 + 灵珠）
+  if (B0.boosts) {
+    for (const k of Object.keys(B0.boosts)) {
+      B0.boosts[k] -= dt;
+      if (B0.boosts[k] <= 0) delete B0.boosts[k];
+    }
+  }
+  const pickR = (B0.boosts && B0.boosts.magnet > 0) ? 1200 : ((st.gc.ranger >= 2 ? 150 : 62) + (st.cards.card_greed || 0) * 55);
   for (let i = B0.drops.length - 1; i >= 0; i--) {
     const d = B0.drops[i];
     d.life -= dt;
@@ -1241,6 +1441,15 @@ function bastion2dStep(dt) {
     if (Math.hypot(d.x - pl.x, d.y - pl.y) <= pickR) {
       bastionCollectDrop(d);
       B0.drops.splice(i, 1);
+    }
+  }
+  for (let i = B2D.orbs.length - 1; i >= 0; i--) {
+    const o = B2D.orbs[i];
+    o.life -= dt;
+    if (o.life <= 0) { B2D.orbs.splice(i, 1); continue; }
+    if (Math.hypot(o.x - pl.x, o.y - pl.y) <= Math.max(68, Math.min(260, pickR))) {
+      bastionApplyBoost(o.kind);
+      B2D.orbs.splice(i, 1);
     }
   }
 
@@ -1656,6 +1865,17 @@ function b2dDrawWorld() {
     c2.fillText(def.name, cp.x, cp.y - 15);
   }
 
+  for (const o of B2D.orbs) {
+    const def = BASTION_BOOSTS[o.kind] || { name: '灵珠', rgb: '233,196,106' };
+    const bob = Math.sin(B2D.clock * 6 + o.x) * 3;
+    c2.fillStyle = `rgba(${def.rgb},0.32)`; c2.strokeStyle = `rgb(${def.rgb})`; c2.lineWidth = 2.5;
+    c2.beginPath(); c2.arc(o.x, o.y + bob, 13, 0, Math.PI * 2); c2.fill(); c2.stroke();
+    c2.fillStyle = '#fff';
+    c2.beginPath(); c2.arc(o.x - 3, o.y + bob - 3, 3.5, 0, Math.PI * 2); c2.fill();
+    c2.font = '700 12px "Noto Serif SC", sans-serif'; c2.fillStyle = `rgb(${def.rgb})`; c2.textAlign = 'center';
+    c2.fillText(def.name, o.x, o.y + bob - 18);
+  }
+
   // 7. 挥砍弧光、光环、投射物与飘字
   for (const s of B2D.slashes) {
     const a = s.life / s.max;
@@ -1742,7 +1962,10 @@ function b2dRenderTopBar() {
   for (const pr of B2D.peers.values()) if (now - pr.ts < 8000) peers.push(pr);
   const allyHtml = `<button type="button" class="b2d-ally-btn" data-tp="${B2D.ally.id}">TP → ${B2D.ally.name}</button>`
     + peers.map(pr => `<button type="button" class="b2d-ally-btn" data-tp="${pr.id}">TP → ${pr.name}</button>`).join('');
+  const cardStacks = Object.values(B0.cards || {}).reduce((a, b) => a + b, 0);
+  const activeBoosts = Object.entries(B0.boosts || {}).map(([k, t]) => `${BASTION_BOOSTS[k]?.name || k} ${Math.ceil(t)}s`).join(' · ');
   bar.innerHTML = `<span class="b2d-pill"><b>${B0.space === 'siege' ? '守城战' : bm.name}</b> · 威胁 ${Math.floor(p.threat)}%</span>`
+    + `<span class="b2d-pill"><b>Lv.${p.level || 1}</b> (${p.xp || 0}/${bastionXpNeeded(p.level || 1)})${cardStacks ? ` · 秘卷×${cardStacks}` : ''}${activeBoosts ? ` · ${activeBoosts}` : ''}</span>`
     + `<span class="b2d-pill">气血 <b>${Math.round(B2D.player.hp)}/${B2D.player.maxHp}</b>${B2D.player.shield > 0 ? ` (+${Math.round(B2D.player.shield)}盾)` : ''}</span>`
     + `<span class="b2d-pill">功勋 <b>${p.merit}</b> · 随身银 <b>${B0.unbankedSilver}</b> · 寄存 <b>${B0.bankedSilver}</b></span>`
     + allyHtml
@@ -1804,6 +2027,11 @@ function b2dBindDom() {
     if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
     B2D.keys.add(e.code);
     if (e.repeat) return;
+    if (M.bastion && M.bastion.pendingCards && M.bastion.pendingCards.length) {
+      if (e.code === 'Digit1') { e.preventDefault(); bastionPickCard(0); return; }
+      if (e.code === 'Digit2') { e.preventDefault(); bastionPickCard(1); return; }
+      if (e.code === 'Digit3') { e.preventDefault(); bastionPickCard(2); return; }
+    }
     if (e.code === 'KeyT') { e.preventDefault(); bastionTpToAlly(); }
     else if (e.code === 'KeyV') { e.preventDefault(); bastionFireSos(); }
     else if (e.code === 'KeyG') { e.preventDefault(); bastionCastCompanionSkill(); }
@@ -1926,13 +2154,17 @@ function bastionRenderArmory() {
     + `</div><div class="bd-body">`;
   if (bastionArmoryTab === 'forge') {
     const activeSets = BASTION_GENRES.filter(g => st.gc[g.id] >= 2).map(g => `${g.name} (${st.gc[g.id]}件)`).join('、') || '暂无激活套装';
-    html += `<p class="bd-sub">已穿戴流派：${activeSets} | 传音冷却 ${st.tpCd}s | 攻击×${st.atkMul.toFixed(2)} | 气血×${st.hpMul.toFixed(2)}</p>`;
+    const cardList = Object.entries(st.cards || {}).map(([id, n]) => `${BASTION_CARD_BY[id]?.name || id}×${n}`).join('、') || '暂无本局秘卷';
+    html += `<p class="bd-sub">境界 Lv.${p.level || 1} | 套装：${activeSets} | 秘卷：${cardList} | 攻击×${st.atkMul.toFixed(2)} | 气血×${st.hpMul.toFixed(2)}</p>`;
     html += `<div class="bd-grid">` + BASTION_SLOTS.map(s => {
       const it = st.eq[s.id];
-      return `<div class="bd-card"><b>${s.name}</b><small>${it ? it.name : '未穿戴'}</small></div>`;
+      const upgTxt = it && it.upg ? ` +${it.upg}` : '';
+      return `<div class="bd-card"><b>${s.name}</b><small>${it ? it.name + upgTxt : '未穿戴'}</small>`
+        + (it && (it.upg || 0) < 5 ? `<button type="button" class="ghost small bEnhBtn" data-bi="${it.id}">强化 +1 (${((it.upg || 0) + 1) * 50}功勋)</button>` : '')
+        + `</div>`;
     }).join('') + `</div>`;
     html += `<div class="bd-row">` + BASTION_GENRES.map(g => `<button type="button" class="ghost small bForgeBtn" data-bg="${g.id}">锻造 ${g.name} 兵器</button>`).join('') + `</div>`;
-    html += `<div class="bd-row">` + p.bag.slice(-8).map(it => `<button type="button" class="ghost small bEquipBtn" data-bi="${it.id}">穿戴 ${it.name}</button>`).join('') + `</div>`;
+    html += `<div class="bd-row">` + p.bag.slice(-8).map(it => `<button type="button" class="ghost small bEquipBtn" data-bi="${it.id}">穿戴 ${it.name}${it.upg ? ` +${it.upg}` : ''}</button>`).join('') + `</div>`;
   } else if (bastionArmoryTab === 'comp') {
     html += `<div class="bd-grid">` + BASTION_COMPANIONS.map(c => {
       const has = p.comp.unlocked.includes(c.id), isAct = p.comp.active === c.id;
@@ -1957,6 +2189,7 @@ function bastionRenderArmory() {
   for (const t of ui.drawer.querySelectorAll('[data-bt]')) t.onclick = () => { bastionArmoryTab = t.dataset.bt; bastionRenderArmory(); };
   for (const b of ui.drawer.querySelectorAll('.bForgeBtn')) b.onclick = () => { bastionForgeItem('weapon', b.dataset.bg, 1); bastionRenderArmory(); };
   for (const b of ui.drawer.querySelectorAll('.bEquipBtn')) b.onclick = () => { bastionEquipItem(b.dataset.bi); bastionRenderArmory(); };
+  for (const b of ui.drawer.querySelectorAll('.bEnhBtn')) b.onclick = () => { bastionEnhanceItem(b.dataset.bi); bastionRenderArmory(); };
   for (const b of ui.drawer.querySelectorAll('.bCompBtn')) b.onclick = () => {
     const id = b.dataset.bc;
     if (p.comp.unlocked.includes(id) && p.comp.active !== id) { p.comp.active = id; bastionSave(); bastionInitCompanions(); }

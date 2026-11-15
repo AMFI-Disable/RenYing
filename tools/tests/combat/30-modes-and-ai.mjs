@@ -564,6 +564,19 @@ export default [
       }
       if (bastionTpToAlly()) return { pass: false, error: 'flat 2D TP bypassed cooldown' };
       if (!bastionFireSos() || !bastionTpToAlly()) return { pass: false, error: 'flat 2D SOS zero-CD TP failed' };
+      const atkBeforeProg = bastionStats().atkMul;
+      if (!bastionGainXp(120) || p.level < 2 || M.bastion.pendingCards.length !== 3) {
+        return { pass: false, error: 'player level-up card draft failed' };
+      }
+      if (!bastionPickCard(0) || M.bastion.pendingCards.length !== 0) return { pass: false, error: 'bastionPickCard failed' };
+      const eqWep = p.equipped.weapon;
+      if (!bastionEnhanceItem(eqWep) || bastionStats().atkMul <= atkBeforeProg) {
+        return { pass: false, error: 'bastionEnhanceItem failed' };
+      }
+      const atkBeforeBoost = bastionStats().atkMul;
+      if (!bastionApplyBoost('frenzy') || !(bastionStats().atkMul > atkBeforeBoost)) {
+        return { pass: false, error: 'bastionApplyBoost failed' };
+      }
       closeBastion();
       if (bastion2dActive()) return { pass: false, error: 'flat 2D closeBastion failed' };
 
