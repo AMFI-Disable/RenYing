@@ -907,12 +907,13 @@ const B2D = {
   camY: 1200,
   keys: new Set(),
   mouse: { x: 0, y: 0, wx: 1600, wy: 1200, down: false },
-  player: { x: 1600, y: 1280, vx: 0, vy: 0, r: 16, hp: 1000, maxHp: 1000, shield: 0, aim: 0, atkCd: 0, dashCd: 0, dashT: 0, skillCd: 0, invul: 0, downed: false, bleedT: 12, reviveT: 0 },
-  ally: { id: 'ally_ai', name: '同袍·墨影', x: 1710, y: 1250, vx: 0, vy: 0, r: 15, hp: 900, maxHp: 900, shield: 0, aim: 0, atkCd: 0, invul: 0, sosT: 0, rgb: '95,225,215' },
+  player: { x: 1600, y: 1280, vx: 0, vy: 0, r: 16, hp: 1000, maxHp: 1000, shield: 0, aim: 0, walkT: 0, atkAnim: 0, genre: 'berserker', atkCd: 0, dashCd: 0, dashT: 0, skillCd: 0, invul: 0, downed: false, bleedT: 12, reviveT: 0 },
+  ally: { id: 'ally_ai', name: '同袍·墨影', x: 1710, y: 1250, vx: 0, vy: 0, r: 15, hp: 900, maxHp: 900, shield: 0, aim: 0, walkT: 0, atkAnim: 0, genre: 'assassin', atkCd: 0, invul: 0, sosT: 0, rgb: '95,225,215' },
   enemies: [],
   projs: [],
   slashes: [],
   rings: [],
+  ghosts: [],
   texts: [],
   toasts: [],
   sosBeacons: [],
@@ -933,6 +934,7 @@ function bastionSync2dPlayerStats() {
   const prevRatio = B2D.player.maxHp ? B2D.player.hp / B2D.player.maxHp : 1;
   B2D.player.maxHp = Math.round(1000 * st.hpMul + st.hpFlat);
   B2D.player.hp = Math.min(B2D.player.maxHp, Math.max(1, Math.round(B2D.player.maxHp * prevRatio)));
+  B2D.player.genre = (st.eq.weapon && st.eq.weapon.genre) || 'berserker';
 }
 
 function b2dFloatText(text, x, y, rgb = '245,235,205') {
@@ -1021,6 +1023,7 @@ function b2dPlayerAttack() {
   const pl = B2D.player, B0 = M.bastion; if (!pl || !B0 || pl.downed || pl.atkCd > 0) return;
   const st = bastionStats();
   pl.atkCd = 0.28 / st.speedMul;
+  pl.atkAnim = 0.22;
   const ang = pl.aim || 0;
   let dmg = 95 * st.atkMul;
   if (st.gc.berserker >= 6 && pl.hp < pl.maxHp * 0.5) dmg *= 1.35;
@@ -1089,7 +1092,11 @@ function bastionCoopOpen(roomCode) {
       const m = ev.data;
       if (!m || m.from === B2D.myId) return;
       if (m.t === 'state') {
-        B2D.peers.set(m.from, { id: m.from, name: m.name || '同袍', x: m.x, y: m.y, hp: m.hp, maxHp: m.maxHp, sosT: m.sosT || 0, rgb: '140,200,255', ts: Date.now() });
+        B2D.peers.set(m.from, {
+          id: m.from, name: m.name || '同袍', x: m.x, y: m.y, vx: m.vx || 0, vy: m.vy || 0,
+          aim: m.aim || 0, genre: m.genre || 'berserker', shield: m.shield || 0, atkAnim: m.atkAnim || 0, downed: !!m.downed,
+          hp: m.hp, maxHp: m.maxHp, sosT: m.sosT || 0, rgb: '140,200,255', ts: Date.now()
+        });
       } else if (m.t === 'sos') {
         B2D.sosBeacons.push({ x: m.x, y: m.y, life: 15, name: m.name || '同袍' });
         bastionMsg(`${m.name || '同袍'} 发射穿云箭！按 [T] 零冷却传送援护`);
@@ -1118,6 +1125,7 @@ function bastion2dStep(dt) {
 
   const pl = B2D.player;
   pl.atkCd = Math.max(0, pl.atkCd - dt);
+  pl.atkAnim = Math.max(0, (pl.atkAnim || 0) - dt);
   pl.dashCd = Math.max(0, pl.dashCd - dt);
   pl.skillCd = Math.max(0, pl.skillCd - dt);
   pl.invul = Math.max(0, pl.invul - dt);
@@ -1130,6 +1138,9 @@ function bastion2dStep(dt) {
     if (B2D.keys.has('KeyS') || B2D.keys.has('ArrowDown')) my += 1;
     if (pl.dashT > 0) {
       pl.dashT -= dt;
+      if (!B2D.ghosts.length || Math.hypot(pl.x - B2D.ghosts[B2D.ghosts.length - 1].x, pl.y - B2D.ghosts[B2D.ghosts.length - 1].y) > 22) {
+        B2D.ghosts.push({ x: pl.x, y: pl.y, aim: pl.aim, r: pl.r, rgb: '130,220,255', life: 0.24, max: 0.24 });
+      }
     } else {
       const mlen = Math.hypot(mx, my);
       const spd = 285 * st.speedMul;
@@ -1138,7 +1149,13 @@ function bastion2dStep(dt) {
     }
     pl.x = clamp(pl.x + pl.vx * dt, 32, B2D_W - 32);
     pl.y = clamp(pl.y + pl.vy * dt, 32, B2D_H - 32);
+    const pSpd = Math.hypot(pl.vx, pl.vy);
+    if (pSpd > 18) pl.walkT = (pl.walkT || 0) + dt * Math.min(16, 7 + pSpd * 0.025);
     if (B2D.mouse.down) b2dPlayerAttack();
+  }
+  for (let i = B2D.ghosts.length - 1; i >= 0; i--) {
+    B2D.ghosts[i].life -= dt;
+    if (B2D.ghosts[i].life <= 0) B2D.ghosts.splice(i, 1);
   }
   const distCit = Math.hypot(pl.x - B2D_CITADEL.x, pl.y - B2D_CITADEL.y);
   if (distCit < 260 && pl.hp < pl.maxHp && !pl.downed) {
@@ -1169,6 +1186,7 @@ function bastion2dStep(dt) {
   // AI 同袍：在野外协同游走或回防主城
   const al = B2D.ally;
   al.atkCd = Math.max(0, al.atkCd - dt);
+  al.atkAnim = Math.max(0, (al.atkAnim || 0) - dt);
   al.invul = Math.max(0, al.invul - dt);
   const allyFoe = B2D.enemies.find(e => e.hp > 0 && Math.hypot(e.x - al.x, e.y - al.y) < 360)
     || B2D.enemies.find(e => e.hp > 0);
@@ -1176,12 +1194,18 @@ function bastion2dStep(dt) {
   let aty = B0.space === 'siege' ? B2D_CITADEL.y + Math.sin(B2D.clock * 0.6) * 210 : (allyFoe ? allyFoe.y : B2D_WAYSTATIONS[1].y);
   const adx = atx - al.x, ady = aty - al.y, adist = Math.hypot(adx, ady);
   if (adist > 58) {
-    al.x = clamp(al.x + (adx / adist) * 195 * dt, 40, B2D_W - 40);
-    al.y = clamp(al.y + (ady / adist) * 195 * dt, 40, B2D_H - 40);
+    al.vx = (adx / adist) * 195;
+    al.vy = (ady / adist) * 195;
+    al.x = clamp(al.x + al.vx * dt, 40, B2D_W - 40);
+    al.y = clamp(al.y + al.vy * dt, 40, B2D_H - 40);
     al.aim = Math.atan2(ady, adx);
+    al.walkT = (al.walkT || 0) + dt * 10;
+  } else {
+    al.vx = 0; al.vy = 0;
   }
   if (allyFoe && Math.hypot(allyFoe.x - al.x, allyFoe.y - al.y) < 110 && al.atkCd <= 0) {
     al.atkCd = 0.7;
+    al.atkAnim = 0.22;
     B2D.slashes.push({ x: al.x, y: al.y, ang: Math.atan2(allyFoe.y - al.y, allyFoe.x - al.x), r: 85, life: 0.16, max: 0.16, rgb: '95,225,215' });
     b2dDamageEnemy(allyFoe, 58 * st.atkMul, al.x, al.y, '95,225,215', 90);
   }
@@ -1331,7 +1355,13 @@ function bastion2dStep(dt) {
   B2D.syncT -= dt;
   if (B2D.syncT <= 0) {
     B2D.syncT = 0.08;
-    bastionCoopSend({ t: 'state', name: (typeof curName === 'function' && curName()) || '侠士', x: Math.round(pl.x), y: Math.round(pl.y), hp: Math.round(pl.hp), maxHp: Math.round(pl.maxHp), sosT: B0.sosActiveT });
+    bastionCoopSend({
+      t: 'state', name: (typeof curName === 'function' && curName()) || '侠士',
+      x: Math.round(pl.x), y: Math.round(pl.y), vx: Math.round(pl.vx || 0), vy: Math.round(pl.vy || 0),
+      aim: Math.round((pl.aim || 0) * 100) / 100, genre: pl.genre || 'berserker',
+      shield: Math.round(pl.shield || 0), atkAnim: pl.atkAnim || 0, downed: !!pl.downed,
+      hp: Math.round(pl.hp), maxHp: Math.round(pl.maxHp), sosT: B0.sosActiveT
+    });
     b2dRenderTopBar();
     bastionSyncHUD();
   }
@@ -1462,27 +1492,159 @@ function b2dDrawWorld() {
     c2.fillText(e.name, e.x, e.y - e.r - 16);
   }
 
-  // 6. 队友、同房玩家、灵侍与本地玩家
-  const drawActor = (act, fillRgb, label) => {
+  // 6. 冲刺残影、队友、同房玩家、灵侍与本地玩家（分层俯视角武侠身形）
+  for (const g of B2D.ghosts) {
+    const a = (g.life / g.max) * 0.45;
     c2.save();
-    if (act.invul > 0) {
-      c2.strokeStyle = 'rgba(130,235,255,0.8)'; c2.lineWidth = 3;
-      c2.beginPath(); c2.arc(act.x, act.y, act.r + 8, 0, Math.PI * 2); c2.stroke();
+    c2.translate(g.x, g.y); c2.rotate(g.aim || 0);
+    c2.fillStyle = `rgba(${g.rgb},${a})`;
+    c2.beginPath(); c2.arc(0, 0, g.r * 0.9, 0, Math.PI * 2); c2.fill();
+    c2.restore();
+  }
+
+  const drawWeapon = (genre, r, accentRgb) => {
+    c2.save();
+    if (genre === 'ranger') {
+      c2.strokeStyle = '#d9b578'; c2.lineWidth = 3;
+      c2.beginPath(); c2.arc(r * 0.55, 0, r * 0.95, -0.85, 0.85); c2.stroke();
+      c2.strokeStyle = 'rgba(255,255,255,0.65)'; c2.lineWidth = 1.2;
+      c2.beginPath(); c2.moveTo(r * 0.55 + Math.cos(-0.85) * r * 0.95, Math.sin(-0.85) * r * 0.95);
+      c2.lineTo(r * 0.55 + Math.cos(0.85) * r * 0.95, Math.sin(0.85) * r * 0.95); c2.stroke();
+      c2.strokeStyle = '#e7edf5'; c2.lineWidth = 2;
+      c2.beginPath(); c2.moveTo(r * 0.45, 0); c2.lineTo(r * 1.9, 0); c2.stroke();
+    } else if (genre === 'assassin') {
+      for (const sgn of [-1, 1]) {
+        c2.fillStyle = '#dce6f2'; c2.strokeStyle = `rgb(${accentRgb})`; c2.lineWidth = 1.2;
+        c2.beginPath(); c2.moveTo(r * 0.6, sgn * r * 0.72);
+        c2.lineTo(r * 1.75, sgn * r * 0.55); c2.lineTo(r * 0.85, sgn * r * 0.92);
+        c2.closePath(); c2.fill(); c2.stroke();
+      }
+    } else if (genre === 'elemental' || genre === 'medic' || genre === 'summoner') {
+      c2.strokeStyle = '#9c784c'; c2.lineWidth = 3;
+      c2.beginPath(); c2.moveTo(-r * 0.4, r * 0.62); c2.lineTo(r * 1.65, r * 0.36); c2.stroke();
+      c2.fillStyle = `rgb(${accentRgb})`;
+      c2.beginPath(); c2.arc(r * 1.72, r * 0.34, 4.5, 0, Math.PI * 2); c2.fill();
+    } else if (genre === 'juggernaut' || genre === 'warden' || genre === 'siege') {
+      c2.fillStyle = '#536275'; c2.strokeStyle = '#e9c46a'; c2.lineWidth = 2;
+      c2.beginPath(); c2.arc(r * 0.85, -r * 0.42, r * 0.72, -1.1, 1.1); c2.stroke();
+      c2.strokeStyle = '#d8dee8'; c2.lineWidth = 3;
+      c2.beginPath(); c2.moveTo(0, r * 0.72); c2.lineTo(r * 2.0, r * 0.62); c2.stroke();
+    } else {
+      c2.fillStyle = '#dde5ef'; c2.strokeStyle = '#8b9bb0'; c2.lineWidth = 1.2;
+      c2.beginPath(); c2.moveTo(r * 0.65, r * 0.5); c2.lineTo(r * 2.05, r * 0.32);
+      c2.lineTo(r * 1.88, r * 0.64); c2.lineTo(r * 0.65, r * 0.66);
+      c2.closePath(); c2.fill(); c2.stroke();
+      c2.strokeStyle = '#e9c46a'; c2.lineWidth = 2.4;
+      c2.beginPath(); c2.moveTo(r * 0.62, r * 0.32); c2.lineTo(r * 0.62, r * 0.8); c2.stroke();
     }
+    c2.restore();
+  };
+
+  const drawActor = (act, fillRgb, label) => {
+    const r = act.r || 15;
+    const genre = act.genre || 'berserker';
+    const wepDef = BASTION_GENRE_BY[genre];
+    const accentRgb = wepDef ? wepDef.rgb : fillRgb;
+    const walk = act.walkT || 0;
+    const stride = Math.sin(walk) * 5.5;
+    const swing = act.atkAnim > 0 ? ((act.atkAnim / 0.22) - 0.5) * 1.9 : 0;
+    const spd = Math.hypot(act.vx || 0, act.vy || 0);
+    const flutter = Math.sin(B2D.clock * 8 + act.x * 0.02) * (spd > 20 ? 5.5 : 2.2);
+
+    c2.save();
+    // 地面投影
+    c2.save();
+    c2.translate(act.x + 2, act.y + 6);
+    c2.scale(1.18, 0.72);
+    c2.fillStyle = 'rgba(0,0,0,0.42)';
+    c2.beginPath(); c2.arc(0, 0, r * 0.96, 0, Math.PI * 2); c2.fill();
+    c2.restore();
+
+    // 无敌 / 护盾 / 倒地外环
+    if (act.downed) {
+      const pulse = 0.45 + 0.35 * Math.sin(B2D.clock * 7);
+      c2.strokeStyle = `rgba(255,95,95,${pulse})`; c2.lineWidth = 3;
+      c2.beginPath(); c2.arc(act.x, act.y, r + 10, 0, Math.PI * 2); c2.stroke();
+    } else if (act.invul > 0) {
+      c2.strokeStyle = 'rgba(130,235,255,0.82)'; c2.lineWidth = 3;
+      c2.beginPath(); c2.arc(act.x, act.y, r + 8, 0, Math.PI * 2); c2.stroke();
+    }
+    if ((act.shield || 0) > 0) {
+      c2.fillStyle = 'rgba(115,215,255,0.16)'; c2.strokeStyle = 'rgba(130,230,255,0.72)'; c2.lineWidth = 2;
+      c2.beginPath(); c2.arc(act.x, act.y, r + 5, 0, Math.PI * 2); c2.fill(); c2.stroke();
+    }
+
+    // 旋转至面朝方向绘制角色身形
+    c2.save();
+    c2.translate(act.x, act.y);
+    c2.rotate(act.aim || 0);
+    if (act.downed) c2.scale(0.9, 0.72);
+
+    // 飘动披风/绶带
+    c2.fillStyle = `rgba(${fillRgb},0.48)`;
+    c2.beginPath();
+    c2.moveTo(-r * 0.35, -r * 0.62);
+    c2.quadraticCurveTo(-r * 1.45, -r * 0.25 + flutter, -r * 1.65 - Math.min(8, spd * 0.025), flutter);
+    c2.quadraticCurveTo(-r * 1.3, r * 0.45 + flutter, -r * 0.35, r * 0.62);
+    c2.closePath();
+    c2.fill();
+
+    // 行走双足
+    c2.fillStyle = '#1d2230';
+    for (const [fx, fy] of [[stride, -r * 0.46], [-stride, r * 0.46]]) {
+      c2.beginPath(); c2.arc(fx, fy, 4.2, 0, Math.PI * 2); c2.fill();
+    }
+
+    // 武器与双掌（随攻击挥砍摆动）
+    c2.save();
+    c2.rotate(swing);
+    drawWeapon(genre, r, accentRgb);
+    c2.fillStyle = '#f2cfb0'; c2.strokeStyle = '#2b221a'; c2.lineWidth = 1.2;
+    for (const [hx, hy] of [[r * 0.56, r * 0.58], [r * 0.52, -r * 0.54]]) {
+      c2.beginPath(); c2.arc(hx, hy, 4, 0, Math.PI * 2); c2.fill(); c2.stroke();
+    }
+    c2.restore();
+
+    // 宽肩武袍与护肩
+    c2.save();
+    c2.scale(0.76, 1.16);
     c2.fillStyle = `rgb(${fillRgb})`;
-    c2.beginPath(); c2.arc(act.x, act.y, act.r, 0, Math.PI * 2); c2.fill();
-    c2.strokeStyle = '#fff'; c2.lineWidth = 2; c2.stroke();
-    c2.beginPath(); c2.moveTo(act.x, act.y); c2.lineTo(act.x + Math.cos(act.aim || 0) * (act.r + 12), act.y + Math.sin(act.aim || 0) * (act.r + 12)); c2.stroke();
-    c2.fillStyle = 'rgba(0,0,0,0.65)'; c2.fillRect(act.x - 24, act.y - act.r - 14, 48, 5);
-    c2.fillStyle = '#6fe89f'; c2.fillRect(act.x - 24, act.y - act.r - 14, 48 * Math.max(0, act.hp / act.maxHp), 5);
+    c2.strokeStyle = 'rgba(255,255,255,0.88)'; c2.lineWidth = 1.8;
+    c2.beginPath(); c2.arc(0, 0, r * 0.92, 0, Math.PI * 2); c2.fill(); c2.stroke();
+    // 交领前襟
+    c2.strokeStyle = 'rgba(22,26,36,0.65)'; c2.lineWidth = 2;
+    c2.beginPath(); c2.moveTo(r * 0.15, -r * 0.45); c2.lineTo(r * 0.68, r * 0.25); c2.stroke();
+    c2.restore();
+
+    // 头部、束发发髻与护额
+    c2.fillStyle = '#202432';
+    c2.beginPath(); c2.arc(2, 0, r * 0.56, 0, Math.PI * 2); c2.fill();
+    c2.fillStyle = '#f3d2b5';
+    c2.beginPath(); c2.arc(5, 0, r * 0.34, -1.1, 1.1); c2.fill();
+    c2.fillStyle = '#181b26';
+    c2.beginPath(); c2.arc(-3, 0, r * 0.28, 0, Math.PI * 2); c2.fill();
+    c2.fillStyle = `rgb(${accentRgb})`;
+    c2.beginPath(); c2.arc(-3, 0, r * 0.13, 0, Math.PI * 2); c2.fill();
+    c2.restore();
+
+    // 血条与姓名
+    c2.fillStyle = 'rgba(0,0,0,0.68)'; c2.fillRect(act.x - 24, act.y - r - 18, 48, 5);
+    c2.fillStyle = act.downed ? '#eb5f5f' : '#6fe89f';
+    c2.fillRect(act.x - 24, act.y - r - 18, 48 * Math.max(0, act.hp / act.maxHp), 5);
+    if ((act.shield || 0) > 0) {
+      c2.fillStyle = '#8ad8ff';
+      c2.fillRect(act.x - 24, act.y - r - 18, 48 * Math.min(1, act.shield / act.maxHp), 2);
+    }
     c2.font = '700 12px "Noto Serif SC", sans-serif'; c2.fillStyle = '#fff'; c2.textAlign = 'center';
-    c2.fillText(label, act.x, act.y - act.r - 19);
+    c2.fillText(label, act.x, act.y - r - 23);
     c2.restore();
   };
   drawActor(B2D.ally, B2D.ally.rgb, B2D.ally.name);
   const now = Date.now();
   for (const peer of B2D.peers.values()) {
-    if (now - peer.ts < 8000) drawActor({ ...peer, r: 15, invul: 0, aim: 0 }, peer.rgb, peer.name);
+    if (now - peer.ts < 8000) {
+      drawActor({ ...peer, r: 15, invul: 0, walkT: B2D.clock * (Math.hypot(peer.vx || 0, peer.vy || 0) > 20 ? 10 : 0) }, peer.rgb, peer.name);
+    }
   }
   drawActor(B2D.player, B2D.player.downed ? '235,95,95' : '233,196,106', (typeof curName === 'function' && curName()) || '你');
 
