@@ -58,6 +58,12 @@ window.addEventListener('keydown', e => {
   }
   if (M.mode === 'demo') return;
   if (dummyBarOn()) return;   // 对手行为栏开着：方向键、回车给栏用（26-kbnav.js），不进对局
+  if (typeof bastionOn === 'function' && bastionOn() && !M.bastionPvp && !e.repeat) {
+    if (e.code === 'KeyT' && typeof bastionTpToAlly === 'function') { e.preventDefault(); bastionTpToAlly(); return; }
+    if (e.code === 'KeyV' && typeof bastionFireSos === 'function') { e.preventDefault(); bastionFireSos(); return; }
+    if (e.code === 'KeyG' && typeof bastionCastCompanionSkill === 'function') { e.preventDefault(); bastionCastCompanionSkill(); return; }
+    if (e.code === 'KeyB' && typeof bastionToggleArmory === 'function') { e.preventDefault(); bastionToggleArmory(); return; }
+  }
   for (let p = 0; p < KEYS.length; p++) {
     const act = KEYS[p] ? KEYS[p][e.code] : null; if (!act) continue;
     e.preventDefault();
@@ -77,7 +83,7 @@ window.addEventListener('keydown', e => {
         c = human[0];
       }
     } else {
-      c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp)) ? human[0] : (human[p] || human[0]);
+      c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
     }
     if (secretEnabled && c === human[0] && !REPLAY.on) continue;
     if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
@@ -103,7 +109,7 @@ window.addEventListener('keyup', e => {
         c = human[0];
       }
     } else {
-      c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp)) ? human[0] : (human[p] || human[0]);
+      c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
     }
     if (secretEnabled && c === human[0] && !REPLAY.on) continue;
     if (act === 'left' || act === 'right' || act === 'down') {

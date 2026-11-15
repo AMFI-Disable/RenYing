@@ -47,7 +47,7 @@ function startRound() {
   announce = null;
   announceQueue.length = 0;
   secretRound();
-  STAGE_W = M.mode === 'world' ? WORLD_W : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
+  STAGE_W = M.mode === 'world' ? WORLD_W : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
   const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
   M.mapEnv = mp ? { wT: mp.wind ? mp.wind.every : 0, wOn: 0, wDir: 1, wN: 0, tT: mp.thunder ? mp.thunder.every : 0, tWarn: 0 } : null;   // 风、天雷的计时：每回合从头算
   if (typeof applySkins === 'function') applySkins();
@@ -98,6 +98,7 @@ function startRound() {
   if (cujuOn()) cujuRoundInit();   // 墨球蹴鞠：摆好两人和墨球，换成这个模式的比赛时长
   if (typeof kothOn === 'function' && kothOn()) kothRoundInit();
   if (typeof partyOn === 'function' && partyOn()) partyRoundInit();
+  if (typeof bastionOn === 'function' && bastionOn()) bastionRoundInit();
   hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
   for (const cu of comboUI) cu.t = 0;
   if (M.mode !== 'demo' && M.mode !== 'train') {
@@ -135,6 +136,7 @@ function updateMatch() {
     if (FOREST.on) return;   // 斩妖波次由 forestUpdate 独立推进，清完群妖再衔接六技魔首或结算
     if (cujuOn()) { cujuMatch(); return; }   // 墨球蹴鞠：按进球判胜负（22-modes-09-cuju/）
     if (typeof kothOn === 'function' && kothOn()) { kothMatch(); return; }
+    if (typeof bastionOn === 'function' && bastionOn()) { bastionMatch(); return; }
     if (M.mode === 'boss') gbossStep();   // 天魔倒下会再站起来，见 22-tianmo.js
     if (isRaid() && typeof updateRaidBoss === 'function') updateRaidBoss(STEP);
     const team0Out = isRaid() ? sideFighters(0).every(f => f.hp <= 0) : (is2v2() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0));

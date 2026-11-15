@@ -477,4 +477,78 @@ export default [
       return { pass: true, error: null };
     })()`
   },
+  {
+    name: 'Tianshu Bastion (bastion): TP + SOS flare, 6 companions, 24 mats, 8x6 set gear, waystation & siege defense',
+    fn: `(() => {
+      if (BASTION_MATS.length !== 24 || BASTION_SLOTS.length !== 6 || BASTION_GENRES.length !== 8 || BASTION_COMPANIONS.length !== 6 || BASTION_BUILDINGS.length !== 7 || BASTION_REALMS.length !== 5) {
+        return { pass: false, error: 'bastion data table count mismatch' };
+      }
+      BASTION_PROF = bastionDefaultProfile();
+      startBastion(0, 1, 'normal', { space: 'expedition' });
+      M.phase = 'fight';
+      if (!bastionOn() || !is2v2()) return { pass: false, error: 'bastion mode flags invalid' };
+
+      const p = bastionProfile();
+      p.merit += 5000;
+      for (const m of BASTION_MATS) p.mats[m.id] = 80;
+      for (const s of BASTION_SLOTS) {
+        const it = bastionForgeItem(s.id, 'berserker', 1);
+        if (!it || !bastionEquipItem(it.id)) return { pass: false, error: 'forge/equip failed at ' + s.id };
+      }
+      const st = bastionStats();
+      if (st.gc.berserker !== 6) return { pass: false, error: '6pc berserker bonus not active' };
+      A.hp = Math.round(A.maxHp * 0.4);
+      const hitMod = bastionModifyHit(A, B, { dmg: 100, move: 'cs1' });
+      if (!(hitMod.dmg > 100) || !(A.hp > Math.round(A.maxHp * 0.4))) return { pass: false, error: 'set combat hook failed' };
+
+      A.x = 400; C.x = 1200;
+      if (!bastionTpToAlly()) return { pass: false, error: 'initial ally TP failed' };
+      if (Math.abs(A.x - 1200) > 80 || !(A.invul >= 0.8) || !(M.bastion.tpCd > 0)) return { pass: false, error: 'ally TP arrival state invalid' };
+      if (bastionTpToAlly()) return { pass: false, error: 'TP succeeded while on cooldown' };
+      A.x = 400;
+      if (!bastionFireSos() || !bastionTpToAlly()) return { pass: false, error: 'SOS zero-CD TP failed' };
+
+      if (bastionUnlockOrBondCompanion('c_kite')) return { pass: false, error: 'sanctuary gate bypassed' };
+      for (let i = 0; i < 6; i++) bastionDonateBuilding('sanctuary', 10);
+      if (p.buildings.sanctuary < 4) return { pass: false, error: 'sanctuary did not reach L4' };
+      for (const c of BASTION_COMPANIONS) {
+        if (!bastionUnlockOrBondCompanion(c.id)) return { pass: false, error: 'companion unlock failed: ' + c.id };
+      }
+      p.comp.active = 'c_fox';
+      bastionInitCompanions();
+      if (!bastionCastCompanionSkill()) return { pass: false, error: 'companion active skill failed' };
+      if (!bastionFighterDown(A, B) || M.bastion.downed[0] || !(M.bastion.cheatDeathCd > 0)) return { pass: false, error: '6pc berserker cheat-death did not trigger' };
+      if (!bastionFighterDown(A, B) || !M.bastion.downed[0]) return { pass: false, error: 'second lethal did not enter downed state' };
+      for (let i = 0; i < 600 && M.bastion.downed[0]; i++) bastionTick();
+      if (M.bastion.downed[0] || A.hp <= 0) return { pass: false, error: 'c_fox failed to auto-revive A' };
+
+      B.hp = 0; D.hp = 0;
+      if (!bastionFighterDown(B, A) || M.bastion.drops.length === 0) return { pass: false, error: 'enemy death drop failed' };
+      A.x = B.x; A.y = B.y;
+      bastionTick();
+      if (!(M.bastion.unbankedSilver > 0)) return { pass: false, error: 'silver loot pickup failed' };
+      bastionMatch();
+      if (M.bastion.room !== 2) return { pass: false, error: 'room did not advance to 2' };
+      M.bastion.room = 3; bastionSpawnSpaceWave();
+      if (!bastionWaystationBank() || !(M.bastion.bankedSilver > 0) || M.bastion.unbankedSilver !== 0) return { pass: false, error: 'waystation bank failed' };
+      if (!bastionExtract() || M.bastion.space !== 'citadel') return { pass: false, error: 'extract failed' };
+
+      p.mats.m_iron1 = 80;
+      if (!bastionTransmuteMat('m_iron1') || !bastionDonateGuild(10) || !bastionUpgradeGuildResearch('tpCd')) {
+        return { pass: false, error: 'transmute or guild progression failed' };
+      }
+      p.buildings.walls = 1;
+      if (!bastionSwitchSpace('siege', 1)) return { pass: false, error: 'enter siege failed' };
+      for (let i = 0; i < 400; i++) bastionTick();
+      B.hp = 0; B.hidden = true; D.hp = 0; D.hidden = true;
+      const mBefore = p.merit;
+      bastionMatch();
+      if (p.merit !== mBefore + 180 || M.bastion.space !== 'citadel') return { pass: false, error: 'siege reward failed' };
+
+      M.bastion = null;
+      bastionSyncHUD();
+      toMenu();
+      return { pass: true, error: null };
+    })()`
+  },
 ];

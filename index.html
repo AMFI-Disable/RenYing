@@ -3264,6 +3264,56 @@ white-space: nowrap;
 .bd-cards-grid { grid-template-columns: 1fr; }
 .bd-card { min-height: 145px; }
 }
+.bastion-hud-bar {
+position: fixed;
+left: 50%;
+bottom: 14px;
+transform: translateX(-50%);
+z-index: 42;
+display: flex;
+flex-wrap: wrap;
+align-items: center;
+justify-content: center;
+gap: 6px;
+max-width: min(96vw, 760px);
+padding: 6px 10px;
+border: 1px solid rgba(233, 196, 106, 0.42);
+border-radius: 10px;
+background: rgba(12, 14, 24, 0.88);
+box-shadow: 0 8px 26px rgba(0, 0, 0, 0.52);
+backdrop-filter: blur(8px);
+}
+.bastion-hud-bar button { font-size: 12px; min-height: 30px; padding: 4px 10px; white-space: nowrap; }
+.bastion-drawer {
+position: fixed;
+inset: auto 50% 62px auto;
+right: auto;
+left: 50%;
+transform: translateX(-50%);
+z-index: 48;
+width: min(860px, 94vw);
+max-height: min(72vh, 560px);
+overflow-y: auto;
+padding: 14px 16px;
+border: 1px solid rgba(233, 196, 106, 0.48);
+border-radius: 12px;
+background: linear-gradient(160deg, rgba(24, 22, 36, 0.96), rgba(11, 13, 22, 0.98));
+box-shadow: 0 18px 48px rgba(0, 0, 0, 0.72);
+color: #f4f2ec;
+font-size: 13px;
+}
+.bastion-drawer.hidden { display: none !important; }
+.bastion-drawer .bd-head { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-bottom: 10px; font-size: 14px; color: var(--gold); }
+.bastion-drawer .bd-tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
+.bastion-drawer .bd-tabs button { font-size: 12px; min-height: 30px; padding: 4px 10px; }
+.bastion-drawer .bd-tabs button.sel { border-color: rgba(233, 196, 106, 0.7); background: rgba(233, 196, 106, 0.16); color: #f7dc88; }
+.bastion-drawer .bd-sub { margin: 0 0 10px; font-size: 12px; color: rgba(255, 255, 255, 0.8); line-height: 1.5; }
+.bastion-drawer .bd-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; margin-bottom: 10px; }
+.bastion-drawer .bd-card { display: flex; flex-direction: column; gap: 5px; min-height: 0; padding: 9px 10px; border: 1px solid rgba(233, 196, 106, 0.22); border-radius: 8px; background: rgba(18, 20, 32, 0.85); text-align: left; }
+.bastion-drawer .bd-card b { font-size: 13px; color: #f6e3a8; }
+.bastion-drawer .bd-card small { font-size: 12px; color: rgba(255, 255, 255, 0.74); line-height: 1.4; }
+.bastion-drawer .bd-card button, .bastion-drawer .bd-row button { font-size: 12px; min-height: 28px; padding: 4px 9px; }
+.bastion-drawer .bd-row { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
 </style>
 </head>
 <body>
@@ -3445,6 +3495,7 @@ white-space: nowrap;
               <button data-tab="cuju" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18M5 7c3 2 11 2 14 0M5 17c3-2 11-2 14 0"/></svg></span><b class="pt-n">墨球蹴鞠</b><span class="pt-d">不比气血，比谁先进三球</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="cuju" title="玩法说明" aria-label="玩法说明">i</span></button>
               <button data-tab="koth" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.4 1.1 6L12 17.5 6.4 20.4l1.1-6L3 10l6-1z"/></svg></span><b class="pt-n">灵坛争锋</b><span class="pt-d">占领灵坛，无限复活抢分</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="koth" title="玩法说明" aria-label="玩法说明">i</span></button>
               <button data-tab="party" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="4"/><circle cx="16" cy="9" r="3"/><path d="M4 20c1.5-3 8.5-3 10 0"/></svg></span><b class="pt-n">江湖百戏</b><span class="pt-d">传火折、断崖推手、飞球乱舞</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="party" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="bastion" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V9l4-4 4 3 4-3 4 4v11z"/><path d="M9 20v-5h6v5"/></svg></span><b class="pt-n">天枢守境</b><span class="pt-d">共防主城、灵侍百兵与传音支援</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="bastion" title="玩法说明" aria-label="玩法说明">i</span></button>
             </div>
 
 
@@ -3777,6 +3828,20 @@ white-space: nowrap;
         </div>
       </div>
 
+      <!-- 天枢守境 · 2D 共防城邦与流派百业 -->
+      <div data-sec="bastion" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">天枢城 · 守境远征</h3>
+          <span class="sub-badge">随时加入 · 传音支援 · 宗门共建</span>
+        </div>
+        <p class="sub" style="margin:2px 0 12px;text-align:left">集结天枢主城：出征五境夺取 24 种炼材，锻造 8 大流派 6 部位百兵套装，携 6 位随行灵侍共战。途中按 <code>[T]</code> 传音至队友身旁并获护盾，按 <code>[V]</code> 鸣穿云箭开启零冷却援护，第 3 室驿站可寄存战利品并撤离，按 <code>[B]</code> 打开整备百业。</p>
+        <div class="single-action-row">
+          <button class="go" id="bastionStartBtn" type="button">进入天枢城 · 单人配灵侍</button>
+          <button class="go alt" id="bastionCoopBtn" type="button">本地同屏共守</button>
+          <button class="ghost" id="bastionSiegeBtn" type="button">直赴守城战</button>
+        </div>
+      </div>
+
       <!-- 山河异境 · 投票选地图 -->
       <div data-sec="maps" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
@@ -3906,6 +3971,7 @@ white-space: nowrap;
                   <button class="ghost small" data-mode="cuju" type="button">墨球蹴鞠</button>
                   <button class="ghost small" data-mode="koth" type="button">灵坛争锋</button>
                   <button class="ghost small" data-mode="party" type="button">江湖百戏</button>
+                  <button class="ghost small" data-mode="bastion" type="button">天枢守境</button>
                 </div>
                 <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。2v2 的全服匹配和同一台电脑对战在「开始演武」的 2v2 组队里。</p>
               </details>
@@ -7890,6 +7956,7 @@ cuju2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方�
 koth: { bp: 'open', local: true, foe: '电脑' },   // 灵坛争锋：占领灵坛 + 无限复活
 koth2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 灵坛争锋
 party: { bp: 'open', local: true, foe: '电脑' },   // 江湖百戏：轮换趣味小游戏
+bastion: { bp: 'open', local: true, foe: '电脑' },   // 天枢城·守境：多人守城+肉鸽+灵侍+流派装备
 tag3: { bp: 'trio', team: true, local: true, foe: '敌方战队' },
 tower: { bp: 'solo', local: true },
 stage: { bp: 'solo', local: true },
@@ -7907,6 +7974,7 @@ maps: { bp: 'open', slots: [[0], [1]], rule: 'maps' },   // 山河异境：两�
 cuju: { bp: 'open', slots: [[0], [1]], rule: 'cuju' },   // 墨球蹴鞠：好友房联机踢球
 koth: { bp: 'open', slots: [[0], [1]], rule: 'koth' },   // 灵坛争锋：好友房抢坛
 party: { bp: 'open', slots: [[0], [1]], rule: 'party' },   // 江湖百戏：好友房趣味百戏
+bastion: { bp: 'open', slots: [[0], [1]], rule: 'bastion' },   // 天枢守境：随时加入传音守城与远征
 pp_cc: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true },
 pp_pp: { bp: 'duo', team: true, us: '我方战队', slots: [[0, 2], [1, 3]], four: true },
 raid: { bp: 'squadNet', team: true, us: '我方战队', slots: [[0], [2]], raid: true },   // 房主 A、好友 C、电脑同袍 D 一起打魔首 B
@@ -8074,6 +8142,110 @@ line: CHRON.LINE[g][(ch + k) % CHRON.LINE[g].length],
 };
 }
 if (typeof globalThis !== 'undefined') globalThis.RenyingChron = { CHRON, chronNode };   // 服务器（cloudflare/worker.js）从这里拿
+const BASTION_MAT_CATS = [
+{ id: 'metal', name: '金铁矿石' },
+{ id: 'wood', name: '灵木织物' },
+{ id: 'core', name: '妖丹兽骨' },
+{ id: 'herb', name: '灵草丹材' },
+{ id: 'rune', name: '符砂古卷' },
+{ id: 'boss', name: '魔首秘宝' },
+];
+const BASTION_MATS = [
+{ id: 'm_iron1', name: '粗玄铁', cat: 'metal', tier: 1, rgb: '160,175,195' },
+{ id: 'm_steel2', name: '寒纹钢', cat: 'metal', tier: 2, rgb: '120,200,245' },
+{ id: 'm_copper3', name: '赤霄铜', cat: 'metal', tier: 3, rgb: '240,135,90' },
+{ id: 'm_gold4', name: '陨星真金', cat: 'metal', tier: 4, rgb: '245,205,95' },
+{ id: 'm_bamboo1', name: '青竹韧材', cat: 'wood', tier: 1, rgb: '120,205,130' },
+{ id: 'm_wood2', name: '古道铁木', cat: 'wood', tier: 2, rgb: '180,135,85' },
+{ id: 'm_silk3', name: '幽冥阴丝', cat: 'wood', tier: 3, rgb: '175,130,235' },
+{ id: 'm_phoenix4', name: '梧桐神木', cat: 'wood', tier: 4, rgb: '255,165,90' },
+{ id: 'm_bone1', name: '碎妖骨', cat: 'core', tier: 1, rgb: '215,210,190' },
+{ id: 'm_blood2', name: '凶煞血晶', cat: 'core', tier: 2, rgb: '235,75,90' },
+{ id: 'm_asura3', name: '修罗魔核', cat: 'core', tier: 3, rgb: '205,65,185' },
+{ id: 'm_dragon4', name: '混沌龙髓', cat: 'core', tier: 4, rgb: '255,95,65' },
+{ id: 'm_herb1', name: '月见草', cat: 'herb', tier: 1, rgb: '130,225,185' },
+{ id: 'm_berry2', name: '赤阳朱果', cat: 'herb', tier: 2, rgb: '255,115,85' },
+{ id: 'm_lotus3', name: '玄冰玉莲', cat: 'herb', tier: 3, rgb: '115,230,255' },
+{ id: 'm_fungus4', name: '九转还魂芝', cat: 'herb', tier: 4, rgb: '250,225,110' },
+{ id: 'm_paper1', name: '朱砂符纸', cat: 'rune', tier: 1, rgb: '235,110,95' },
+{ id: 'm_sand2', name: '星辉流砂', cat: 'rune', tier: 2, rgb: '240,210,135' },
+{ id: 'm_page3', name: '天机残页', cat: 'rune', tier: 3, rgb: '145,190,255' },
+{ id: 'm_void4', name: '太虚界石', cat: 'rune', tier: 4, rgb: '195,140,255' },
+{ id: 'm_horn', name: '断岳雷角', cat: 'boss', tier: 4, rgb: '110,215,255' },
+{ id: 'm_heart', name: '千机枢心', cat: 'boss', tier: 4, rgb: '240,185,95' },
+{ id: 'm_lamp', name: '幽冥魂灯', cat: 'boss', tier: 4, rgb: '165,245,210' },
+{ id: 'm_scale', name: '天魔逆鳞', cat: 'boss', tier: 4, rgb: '255,80,105' },
+];
+const BASTION_MAT_BY = Object.fromEntries(BASTION_MATS.map(m => [m.id, m]));
+const BASTION_SLOTS = [
+{ id: 'weapon', name: '兵魄', stat: '攻势' },
+{ id: 'armor', name: '战袍', stat: '护体' },
+{ id: 'boots', name: '战靴', stat: '身法' },
+{ id: 'gauntlets', name: '护腕', stat: '巧劲' },
+{ id: 'pendant', name: '佩玉', stat: '聚气' },
+{ id: 'cloak', name: '背旗', stat: '同袍' },
+];
+const BASTION_SLOT_BY = Object.fromEntries(BASTION_SLOTS.map(s => [s.id, s]));
+const BASTION_GENRES = [
+{
+id: 'berserker', name: '狂战血煞', rgb: '235,75,85', cats: ['metal', 'core'],
+b2: '攻击 +15%，残血愈战愈勇', b4: '重击 / 蓄力斩附带 12% 吸血与霸体', b6: '半血触发血煞：增伤 35% 且挥出赤浪，15 秒内抵御一次致命伤'
+},
+{
+id: 'juggernaut', name: '玄甲镇岳', rgb: '225,185,95', cats: ['metal', 'wood'],
+b2: '气血上限 +25%，受击减伤 15%', b4: '精准格挡爆发震波并附带大量破防值', b6: '定力未空前免疫击飞；守护城门或濒死队友分担 40% 伤害'
+},
+{
+id: 'assassin', name: '疾风踏影', rgb: '95,225,215', cats: ['wood', 'rune'],
+b2: '移速 +18%，传音传送冷却缩减 25%', b4: '背击必暴 +40% 伤并返还技能冷却', b6: '传音冷却降至 15 秒，落点震波造成 300% 伤害且闪步留爆影'
+},
+{
+id: 'elemental', name: '天雷寒霜', rgb: '120,190,255', cats: ['herb', 'rune'],
+b2: '招式附带寒霜减速或链式奔雷', b4: '重击碎冰引爆雷霜，冻结周围敌人', b6: '施放绝技自动在敌阵降下天罚墨柱，元素伤提升 45%'
+},
+{
+id: 'summoner', name: '千机御兽', rgb: '235,175,90', cats: ['wood', 'rune'],
+b2: '随行灵侍攻防 +35%，灵技冷却 -25%', b4: '随时携两位灵侍共战，操炮射速提升 40%', b6: '灵侍继承 2 件套词条，按 G 齐发双灵绝技并架设连弩塔'
+},
+{
+id: 'medic', name: '济世药王', rgb: '130,235,175', cats: ['herb', 'wood'],
+b2: '救援速度 +50%，丹药有几率不消耗', b4: '0.8 秒极速救起队友并恢复 75% 气血与无敌增伤', b6: '背旗常驻 320px 回血光环；穿云箭仅 25 秒冷却并群疗'
+},
+{
+id: 'siege', name: '破军摧城', rgb: '255,125,75', cats: ['metal', 'core'],
+b2: '魔首破防效率 +30%，对攻城怪增伤 25%', b4: '破防虚弱时长 +2 秒并回复 40% 怒气', b6: '蓄力与大招发出 500px 震地波，对虚弱魔首增伤 65%'
+},
+{
+id: 'ranger', name: '寻宝奇侠', rgb: '245,215,110', cats: ['rune', 'core'],
+b2: '碎银与材谱掉落 +25%，拾取范围大幅扩大', b4: '驿站寄存零手续费，阵亡损耗减半', b6: '身上碎银每百两增伤 2%（上限 50%），撤离额外赠全队材料'
+},
+];
+const BASTION_GENRE_BY = Object.fromEntries(BASTION_GENRES.map(g => [g.id, g]));
+const BASTION_COMPANIONS = [
+{ id: 'c_blade', name: '剑傀·墨羽', role: '近战连段', skill: '回旋聚敌斩', cd: 12, rgb: '143,240,255', desc: '主动夹击并延长浮空连段，按 G 聚拢周遭妖物。' },
+{ id: 'c_turtle', name: '玄龟·镇岳', role: '前排护盾', skill: '镇岳吼啸', cd: 16, rgb: '225,190,105', desc: '挡在身前拦截弹道，按 G 嘲讽聚怪并予主 25% 减伤。' },
+{ id: 'c_fox', name: '灵狐·青灯', role: '疗愈救援', skill: '清心灵泉', cd: 18, rgb: '135,240,185', desc: '周期回血并在主人或队友倒地时自动上前救起。' },
+{ id: 'c_kite', name: '机关鸢·穿云', role: '高空点射', skill: '猎影标记', cd: 14, rgb: '255,195,110', desc: '悬空巡弋点杀飞妖，按 G 标记强敌令其受创 +15%。' },
+{ id: 'c_cub', name: '吞金兽·貔貅崽', role: '拾荒聚宝', skill: '寻宝震慑', cd: 20, rgb: '250,220,95', desc: '自动大范围吸纳碎银与材料，精英战有几率额外掉宝。' },
+{ id: 'c_spark', name: '雷灵·惊蛰', role: '破防雷控', skill: '九霄落雷', cd: 14, rgb: '175,155,255', desc: '随身电弧干扰盾兵，按 G 连雷劈砍大幅削减魔首破防条。' },
+];
+const BASTION_COMP_BY = Object.fromEntries(BASTION_COMPANIONS.map(c => [c.id, c]));
+const BASTION_BUILDINGS = [
+{ id: 'array', name: '传送阵', desc: '缩短传音冷却并解锁更高重秘境' },
+{ id: 'forge', name: '兵器坊', desc: '解锁高阶八流派装备锻造与炼化' },
+{ id: 'sanctuary', name: '灵兽园', desc: '喂养灵侍提升羁绊并解锁全部六位灵侍' },
+{ id: 'apothecary', name: '药庐', desc: '用灵草炼制回春丹与起死回生符' },
+{ id: 'library', name: '藏经阁', desc: '配置开局秘卷，提升初始构筑深度' },
+{ id: 'walls', name: '城防箭楼', desc: '提高城门耐久并强化守城弩炮与天雷塔' },
+{ id: 'guild', name: '宗门大殿', desc: '宗门捐献、共有宗门库与全宗门研习加成' },
+];
+const BASTION_REALMS = [
+{ tier: 1, name: '一重·竹影谷', enemyMul: 1.0, drops: ['m_iron1', 'm_bamboo1', 'm_bone1', 'm_herb1', 'm_paper1'], catDrop: 'm_horn', reqArray: 1 },
+{ tier: 2, name: '二重·赤岩寨', enemyMul: 1.35, drops: ['m_steel2', 'm_wood2', 'm_blood2', 'm_berry2', 'm_sand2'], catDrop: 'm_heart', reqArray: 2 },
+{ tier: 3, name: '三重·幽冥村', enemyMul: 1.75, drops: ['m_copper3', 'm_silk3', 'm_asura3', 'm_lotus3', 'm_page3'], catDrop: 'm_lamp', reqArray: 4 },
+{ tier: 4, name: '四重·玄冰渊', enemyMul: 2.25, drops: ['m_gold4', 'm_phoenix4', 'm_dragon4', 'm_fungus4', 'm_void4'], catDrop: 'm_scale', reqArray: 6 },
+{ tier: 5, name: '五重·万妖祖坛', enemyMul: 2.9, drops: ['m_gold4', 'm_phoenix4', 'm_dragon4', 'm_fungus4', 'm_void4', 'm_scale'], catDrop: 'm_scale', reqArray: 8 },
+];
 const DUMMY_ACTS = [
 { id: 'stand', n: '站桩', d: '站着不动，任你打', k: 'hold' },
 { id: 'walk', n: '来回走动', d: '在原地附近左右走', k: 'hold' },
@@ -10555,6 +10727,39 @@ Object.assign(UI_COPY_EN, {
 "每位侠客独立的五节剧情篇章，在关键节点做出抉择可解锁不同结局与专属秘闻。": "A 5-act story for each hero with branching choices and dual endings.",
 "问剑密卷 · 玩法说明": "Endless Tower · Mode Guide",
 "无尽爬塔肉鸽试炼：每层获胜后三选一武林秘卷叠加词条，守关 AI 境界随层数递进。": "Endless roguelike climb: pick 1 of 3 scrolls after each floor as AI challengers grow smarter.",
+});
+Object.assign(UI_COPY_EN, {
+"天枢守境": "Tianshu Bastion",
+"共防主城、灵侍百兵与传音支援": "Co-op bastion defense, companions & 8-genre gear",
+"天枢城 · 守境远征": "Tianshu Bastion · Co-op Expedition",
+"随时加入 · 传音支援 · 宗门共建": "Drop-in · Ally TP · Guild Progression",
+"集结天枢主城：出征五境夺取 24 种炼材，锻造 8 大流派 6 部位百兵套装，携 6 位随行灵侍共战。途中按 <code>[T]</code> 传音至队友身旁并获护盾，按 <code>[V]</code> 鸣穿云箭开启零冷却援护，第 3 室驿站可寄存战利品并撤离，按 <code>[B]</code> 打开整备百业。": "Rally at Tianshu Citadel: clear 5 realms for 24 materials, forge 6-slot sets across 8 genres, and fight alongside 6 companions. Press <code>[T]</code> to warp to an ally with Arrival Aegis, <code>[V]</code> for a zero-CD SOS flare, bank loot at the Room 3 waystation, and open the Armory drawer with <code>[B]</code>.",
+"进入天枢城 · 单人配灵侍": "Enter Bastion · Solo + Companion",
+"本地同屏共守": "Local 2P Co-op Bastion",
+"直赴守城战": "Deploy to Siege Defense",
+"天枢守境 · 玩法说明": "Tianshu Bastion · Mode Guide",
+"随时加入天枢主城共御异界妖潮！按 [T] 传送至队友身旁并获得短暂护盾，按 [V] 发射穿云箭召唤友方零冷却支援；按 [G] 施放 6 位随行灵侍绝技，按 [B] 打开整备百业（24 种材料、6 槽 8 流派套装锻造、城防与宗门共建，在驿站寄存战利品并安全撤离）。": "Join Tianshu Bastion anytime to hold back the realm tide! Press [T] to warp to an ally with a brief shield, [V] to fire an SOS flare enabling zero-cooldown ally warps, [G] to cast your companion's active skill, and [B] to open the Bastion Armory (24 materials, 6-slot × 8-genre sets, buildings, guild upgrades, and waystation banking/extraction).",
+"天枢城多人共防与宗门远征：传音援护 [T]、穿云求援 [V]、6位灵侍 [G]、8流派百兵与24种材料": "Co-op bastion defense & guild expeditions: Ally TP [T], SOS Flare [V], 6 Companions [G], 8-genre gear & 24 materials",
+"天枢城 · 守境": "Tianshu Bastion",
+"随时加入 · 传音支援 · 灵侍随行": "Drop-In Co-op · Ally TP · Companions",
+"[T] 传音同袍": "[T] Ally TP",
+"[V] 穿云箭": "[V] SOS Flare",
+"[G] 灵侍绝技": "[G] Companion Skill",
+"⛩ 寄存": "⛩ Bank Loot",
+"撤离回城": "Extract",
+"[B] 天枢整备": "[B] Armory & City",
+"关闭 [B]": "Close [B]",
+"百兵衣冠 (8流派6槽)": "Gear & Sets (8×6)",
+"随行灵侍 (6位)": "Companions (6)",
+"万象材谱 (24种)": "Materials (24)",
+"城防·宗门·传送阵": "City · Guild · Realms",
+"宗门捐献 (+25 宗门库/贡献)": "Guild Donate (+25 Treasury/Contrib)",
+"进入守城战": "Enter Siege Defense",
+"出战中 · 喂养": "Active · Bond",
+"设为出战": "Set Active",
+"契约解锁": "Unlock Pact",
+"4→1 炼化": "4→1 Transmute",
+"捐献材料": "Donate Mats"
 });
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
@@ -15587,7 +15792,7 @@ C.hidden = true; D.hidden = true;
 const roomDef = () => ROOM_MODES[netRoomMode] || ROOM_MODES.normal;   // 联机房间的规则（src/data/10-modes.js）
 const netRoom = () => (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net' && REPLAY.m) ? (ROOM_MODES[REPLAY.m.room || REPLAY.m.sub || 'normal'] || null) : M.mode === 'net' ? roomDef() : null;
 const netSim = () => (ROLL.on && M.mode === 'net') || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net');
-const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'cuju' && !!M.cujuFour) || (M.mode === 'koth' && !!M.kothFour) || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four));
+const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'cuju' && !!M.cujuFour) || (M.mode === 'koth' && !!M.kothFour) || (typeof bastionOn === 'function' && bastionOn()) || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four));
 const isRaid = () => M.mode === 'raid' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.raid)) || !!(netRoom() && netRoom().raid);
 const isMulti = () => is2v2() || isRaid();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
@@ -16021,7 +16226,7 @@ if (typeof statMatch === 'function') statMatch();   // 匿名统计：一局的�
 announce = null;
 announceQueue.length = 0;
 secretRound();
-STAGE_W = M.mode === 'world' ? WORLD_W : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
+STAGE_W = M.mode === 'world' ? WORLD_W : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
 const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
 M.mapEnv = mp ? { wT: mp.wind ? mp.wind.every : 0, wOn: 0, wDir: 1, wN: 0, tT: mp.thunder ? mp.thunder.every : 0, tWarn: 0 } : null;   // 风、天雷的计时：每回合从头算
 if (typeof applySkins === 'function') applySkins();
@@ -16072,6 +16277,7 @@ M.phase = 'intro'; M.t = 0; M.timer = isRaid() ? 120 : (is2v2() ? ROUND_TIME_2V2
 if (cujuOn()) cujuRoundInit();   // 墨球蹴鞠：摆好两人和墨球，换成这个模式的比赛时长
 if (typeof kothOn === 'function' && kothOn()) kothRoundInit();
 if (typeof partyOn === 'function' && partyOn()) partyRoundInit();
+if (typeof bastionOn === 'function' && bastionOn()) bastionRoundInit();
 hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
 for (const cu of comboUI) cu.t = 0;
 if (M.mode !== 'demo' && M.mode !== 'train') {
@@ -16108,6 +16314,7 @@ if (M.t > go + 0.35) { M.phase = 'fight'; M.t = 0; }
 if (FOREST.on) return;   // 斩妖波次由 forestUpdate 独立推进，清完群妖再衔接六技魔首或结算
 if (cujuOn()) { cujuMatch(); return; }   // 墨球蹴鞠：按进球判胜负（22-modes-09-cuju/）
 if (typeof kothOn === 'function' && kothOn()) { kothMatch(); return; }
+if (typeof bastionOn === 'function' && bastionOn()) { bastionMatch(); return; }
 if (M.mode === 'boss') gbossStep();   // 天魔倒下会再站起来，见 22-tianmo.js
 if (isRaid() && typeof updateRaidBoss === 'function') updateRaidBoss(STEP);
 const team0Out = isRaid() ? sideFighters(0).every(f => f.hp <= 0) : (is2v2() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0));
@@ -16390,7 +16597,7 @@ if (REC.on && (M.mode === 'tag3' || M.mode === 'saga' || (M.mode === 'tower' && 
 if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
 if (M.worldKey && M.worldKey.kind === 'boss') { worldKeyRound(w); return; }   // 全服肉鸽的天道 Boss：结果和奖励都以服务器为准，这里不加墨锭（车轮战照常换人，打完在 showEnd 里交出去）
 if (M.mode === 'saga') { sagaEnd(w); return; }
-if (cujuOn() || (typeof kothOn === 'function' && kothOn())) { M.phase = 'end'; showEnd(w); return; }   // 蹴鞠与灵坛争锋只有一局
+if (cujuOn() || (typeof kothOn === 'function' && kothOn()) || (typeof bastionOn === 'function' && bastionOn())) { M.phase = 'end'; showEnd(w); return; }   // 蹴鞠与灵坛争锋只有一局
 if (isRaid()) {
 if (w === 0) {
 for (const f of sideFighters(0)) scFire(f, 'clear');
@@ -18157,6 +18364,7 @@ hitVisual({ e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: isBlocked
 predicted.push(performance.now());
 }
 function applyHit(att, def, m, pt) {
+if (typeof bastionOn === 'function' && bastionOn() && typeof bastionModifyHit === 'function') m = bastionModifyHit(att, def, m);
 if (M.mode === 'net' && !RESIM) NET.matchHits = (NET.matchHits || 0) + 1;   // 回滚重算不能再记一次，不然两边会算成不一样
 if (def.forestProxy) { forestHit(att, m, pt); return; }
 if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 22-world.js
@@ -18505,6 +18713,9 @@ hitVisual(ev); netEmit(ev);
 function fighterDown(def, att, ev) {
 if (cujuOn()) { def.hp = def.lagHp = def.maxHp; return; }   // 墨球蹴鞠：没有人会被打倒
 if (typeof kothOn === 'function' && kothOn()) { def.hp = 0; def.hidden = true; return; }   // 灵坛争锋：进入复活倒计时
+if (typeof bastionOn === 'function' && bastionOn() && typeof bastionFighterDown === 'function') {
+if (bastionFighterDown(def, att)) { if (fighterTeam(def) === 1) { def.hp = 0; def.hidden = true; } return; }
+}
 if (is2v2()) {
 const mate = def === A ? C : def === C ? A : def === B ? D : B;
 if (mate && !mate.hidden && mate.hp > 0) {
@@ -18967,6 +19178,7 @@ cujuAimHook();
 updateProjs();
 cujuTick();   // 墨球蹴鞠：墨球的物理和进球（不在这个模式就什么都不做）
 if (typeof partyTick === 'function') partyTick();
+if (typeof bastionTick === 'function') bastionTick();
 trSample();
 if (FOREST.on) forestUpdate();
 if (!RESIM) updateFX(STEP);
@@ -24417,6 +24629,7 @@ ctx.restore();
 if (M.mode === 'train') drawTrainStats(cx, top, bh);
 if (cujuOn()) drawCujuScore(cx, top, bh, gap);
 if (typeof kothOn === 'function' && kothOn()) drawKothScore(cx, top, bh, gap);
+if (typeof bastionOn === 'function' && bastionOn()) drawBastionScore(cx, top, bh, gap);
 }
 function drawStats() {
 if (M.mode === 'demo') return;
@@ -24707,6 +24920,7 @@ drawDecoys();
 drawClones();
 drawCujuField();
 if (typeof drawKothField === 'function') drawKothField();
+if (typeof drawBastionField === 'function') drawBastionField();
 if (typeof drawRaidMechanics === 'function') drawRaidMechanics();
 drawProjs();
 if (WORLD.on && !M.worldKey) drawWorldGhosts();   // 关键战是各打各的一场：不画大地图上的同道
@@ -25088,7 +25302,7 @@ const secs = el.dataset.sec.split(' ');
 el.style.display = secs.includes(active) ? '' : 'none';
 }
 const duel = ['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2'].includes(active);
-if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju', 'koth', 'party'].includes(active);
+if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju', 'koth', 'party', 'bastion'].includes(active);
 if ($id('xiwuQuickCard')) $id('xiwuQuickCard').hidden = !duel;
 const mutators = $id('mutatorPills');
 if (mutators && mutators.parentElement) mutators.parentElement.hidden = !duel;
@@ -25111,7 +25325,8 @@ mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷�
 maps: '换一处战场：投票选地图，断崖、冰面都会改变侠客的打法',
 cuju: '不比气血比进球：用普攻和技能把墨球打进对方球门，先进三球获胜',
 koth: '占领灵坛先达 100% 获胜，阵亡或落崖 2.5 秒无限复活！',
-party: '五局三胜趣味百戏：传火折、断崖推手、飞球乱舞轮换上阵'
+party: '五局三胜趣味百戏：传火折、断崖推手、飞球乱舞轮换上阵',
+bastion: '天枢城多人共防与宗门远征：传音援护 [T]、穿云求援 [V]、6位灵侍 [G]、8流派百兵与24种材料'
 };
 subEl.textContent = subs[active] || '挑选离线玩法，潜心修习剑术招式';
 }
@@ -25133,6 +25348,7 @@ watch2v2: { title: '2v2 组队 · 玩法说明', body: '四人同屏大场地混
 cuju: { title: '墨球蹴鞠 · 玩法说明', body: '双方不扣气血，比谁先把墨球打进对方球门（默认先 3 球，可选 5/7 球）。普攻与技能可抽射/挑射墨球，格挡可扑救，精准格挡触发神扑！' },
 koth: { title: '灵坛争锋 · 玩法说明', body: '三层断崖高台上每 18 秒轮流激活灵坛。站入无人争抢的灵坛即可累积占领进度，先达 100% 获胜；阵亡或被打落悬崖后 2.5 秒重返战场。' },
 party: { title: '江湖百戏 · 玩法说明', body: '五局三胜趣味小游戏轮换：第一局「传火折」（击中对手把 9 秒火折传出去，归零即炸）、第二局「断崖推手」（0 伤害但 2.6 倍击退，推落悬崖即胜）、第三局「飞球乱舞」（格挡弹反飞球，砸中即出局）。' },
+bastion: { title: '天枢守境 · 玩法说明', body: '随时加入天枢主城共御异界妖潮！按 [T] 传送至队友身旁并获得短暂护盾，按 [V] 发射穿云箭召唤友方零冷却支援；按 [G] 施放 6 位随行灵侍绝技，按 [B] 打开整备百业（24 种材料、6 槽 8 流派套装锻造、城防与宗门共建，在驿站寄存战利品并安全撤离）。' },
 train: { title: '训练场 · 玩法说明', body: '包含招式教学、木人桩自由练习（可看判定框、帧数差与回放）、以及防反/连段等专项情景训练。' },
 stage: { title: '守关挑战 · 玩法说明', body: '十三侠客专属六章三十关斩妖除魔路线。每关击败首领积累星级与墨锭，最终章迎战六技融魂魔首。' },
 saga: { title: '侠客列传 · 玩法说明', body: '每位侠客独立的五节剧情篇章，在关键节点做出抉择可解锁不同结局与专属秘闻。' },
@@ -25171,7 +25387,7 @@ info.textContent = pieces.map(x => typeof cvT === 'function' ? cvT(x) : x).join(
 function openScreen(name, reveal = true) {
 if (OFFLINE_BUILD && name === 'netp') name = 'stage';
 if (name === 'watch2v2' || name === '2v2') return open2v2Hub(null, reveal);   // 2v2 只有一个入口：组队弹窗
-if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem' || name === 'maps' || name === 'cuju' || name === 'koth' || name === 'party') {
+if (name === 'cpu' || name === 'tag3' || name === 'tower' || name === 'chaos' || name === 'stage' || name === 'saga' || name === 'train' || name === 'mayhem' || name === 'maps' || name === 'cuju' || name === 'koth' || name === 'party' || name === 'bastion') {
 singleSec(name);
 if (reveal) showScreen('single');
 return 'single';
@@ -28586,6 +28802,7 @@ menuEntered = true;
 }
 if (id === 'settings') $id('setReplays').hidden = settingsBack !== 'menu';
 if (id === 'acc') renderAccPage();
+if (typeof bastionSyncHUD === 'function') bastionSyncHUD();
 if (!id) {
 refocusGame();
 } else if (document.activeElement && !document.activeElement.closest('#' + id)) {
@@ -28597,7 +28814,7 @@ pickMode = mode;
 if (mode === 'net') { menuCam.tx = MENU_SPOT.netp; menuCam.tz = 1.9; showScreen('netp'); }
 }
 const AI_LEVEL_KEY = 'renying-ai-level', AI_LEVEL_IDS = ['easy', 'normal', 'hard', 'impossible', 'god'];
-const AI_LEVEL_MODES = ['cpu', 'tag3', 'chaos', 'mayhem', 'maps', '2v2'];
+const AI_LEVEL_MODES = ['cpu', 'tag3', 'chaos', 'mayhem', 'maps', '2v2', 'bastion'];
 function setPickLevel(lv, save = true) {
 if (!AI_LEVEL_IDS.includes(lv)) return;
 pickLevel = lv;
@@ -29058,6 +29275,10 @@ toMenuScreen: () => { singleSec('koth'); showScreen('single'); },
 party: {
 rematch: () => bpStart('party', { level: M.level || pickLevel, pvp: !!M.partyPvp }),
 toMenuScreen: () => { singleSec('party'); showScreen('single'); },
+},
+bastion: {
+rematch: () => bpStart('bastion', { level: M.level || pickLevel, pvp: !!M.bastionPvp }),
+toMenuScreen: () => { singleSec('bastion'); showScreen('single'); },
 },
 mayhem: {
 rematch: () => bpStart('mayhem', { level: pickLevel, isWatch: false }),
@@ -31450,6 +31671,909 @@ const partyStartBtn = document.getElementById('partyStartBtn');
 if (partyStartBtn) partyStartBtn.addEventListener('click', () => bpStart('party', { level: pickLevel }));
 const partyPvpBtn = document.getElementById('partyPvpBtn');
 if (partyPvpBtn) partyPvpBtn.addEventListener('click', () => bpStart('party', { level: pickLevel, pvp: true }));
+const BASTION_KEY_PFX = 'ry_bastion_v1_';
+const bastionOn = () => M.mode === 'bastion' || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'bastion');
+const bastionAcctId = () => {
+try {
+if (typeof currentAccount === 'function' && currentAccount()) return String(currentAccount());
+} catch (e) {}
+return 'guest';
+};
+let BASTION_PROF = null;
+function bastionDefaultProfile() {
+const mats = {};
+for (const m of BASTION_MATS) mats[m.id] = m.tier === 1 ? 8 : 0;
+mats.m_iron1 = 16;
+mats.m_bamboo1 = 12;
+mats.m_herb1 = 10;
+mats.m_paper1 = 10;
+mats.m_bone1 = 10;
+const starterWep = { id: 'it_boot_w', slot: 'weapon', genre: 'berserker', tier: 1, name: '粗玄铁·狂战兵魄', mythic: false, atkPct: 0.08, hpFlat: 40 };
+const starterCloak = { id: 'it_boot_c', slot: 'cloak', genre: 'juggernaut', tier: 1, name: '青竹·镇岳背旗', mythic: false, atkPct: 0.04, hpFlat: 100 };
+const buildings = {};
+for (const b of BASTION_BUILDINGS) buildings[b.id] = 1;
+return {
+merit: 240,
+ley: 600,
+threat: 22,
+mats,
+equipped: { weapon: 'it_boot_w', armor: null, boots: null, gauntlets: null, pendant: null, cloak: 'it_boot_c' },
+bag: [starterWep, starterCloak],
+presets: [null, null, null],
+nextItemId: 1,
+comp: {
+active: 'c_blade',
+sub: 'c_fox',
+stance: 'aggressive',
+unlocked: ['c_blade', 'c_turtle', 'c_fox'],
+bonds: { c_blade: 1, c_turtle: 1, c_fox: 1, c_kite: 1, c_cub: 1, c_spark: 1 },
+core: null,
+},
+buildings,
+guild: { name: '天枢义盟', lv: 1, treasury: 320, contrib: 120, research: { drop: 1, revive: 0, dmg: 0 } },
+stats: { runs: 0, clears: 0, sieges: 0, revives: 0, tps: 0 },
+};
+}
+function bastionProfile() {
+const key = BASTION_KEY_PFX + bastionAcctId();
+if (BASTION_PROF && BASTION_PROF._key === key) return BASTION_PROF;
+let data = null;
+try { data = JSON.parse(localStorage.getItem(key) || 'null'); } catch (e) {}
+const def = bastionDefaultProfile();
+if (!data || typeof data !== 'object') data = def;
+else {
+data = { ...def, ...data };
+data.mats = { ...def.mats, ...(data.mats || {}) };
+data.equipped = { ...def.equipped, ...(data.equipped || {}) };
+data.buildings = { ...def.buildings, ...(data.buildings || {}) };
+data.comp = { ...def.comp, ...(data.comp || {}), bonds: { ...def.comp.bonds, ...((data.comp && data.comp.bonds) || {}) } };
+data.guild = { ...def.guild, ...(data.guild || {}) };
+if (!Array.isArray(data.bag)) data.bag = def.bag.slice();
+if (!Array.isArray(data.presets)) data.presets = [null, null, null];
+}
+data._key = key;
+BASTION_PROF = data;
+return data;
+}
+function bastionSave() {
+const p = bastionProfile();
+const clean = { ...p };
+delete clean._key;
+try { localStorage.setItem(p._key, JSON.stringify(clean)); } catch (e) {}
+}
+function bastionEquippedItems() {
+const p = bastionProfile();
+const out = {};
+for (const s of BASTION_SLOTS) {
+const iid = p.equipped[s.id];
+out[s.id] = iid ? (p.bag.find(it => it.id === iid) || null) : null;
+}
+return out;
+}
+function bastionGenreCounts() {
+const eq = bastionEquippedItems();
+const counts = {};
+for (const g of BASTION_GENRES) counts[g.id] = 0;
+for (const s of BASTION_SLOTS) {
+const it = eq[s.id];
+if (!it || !(it.genre in counts)) continue;
+counts[it.genre] += it.mythic ? 2 : 1;
+}
+return counts;
+}
+function bastionStats() {
+const p = bastionProfile();
+const eq = bastionEquippedItems();
+const gc = bastionGenreCounts();
+let atkMul = 1.0, hpMul = 1.0, dr = 0, hpFlat = 0, speedMul = 1.0;
+let tpCdRed = Math.min(10, Math.max(0, (p.buildings.array || 1) - 1) * 1.5);
+let reviveMul = 1.0 + (p.guild.research && p.guild.research.revive ? 0.1 : 0);
+let dropMul = 1.0 + (p.guild.research && p.guild.research.drop ? 0.08 : 0);
+let staggerMul = 1.0;
+for (const s of BASTION_SLOTS) {
+const it = eq[s.id];
+if (!it) continue;
+atkMul += it.atkPct || 0;
+hpFlat += it.hpFlat || 0;
+}
+if (p.guild.research && p.guild.research.dmg) atkMul += 0.05;
+if (gc.berserker >= 2) atkMul += 0.15;
+if (gc.juggernaut >= 2) { hpMul += 0.25; dr += 0.15; }
+if (gc.assassin >= 2) { speedMul += 0.18; tpCdRed += 11; }
+if (gc.siege >= 2) staggerMul += 0.30;
+if (gc.medic >= 2) reviveMul += 0.50;
+if (gc.ranger >= 2) dropMul += 0.25;
+const activeComp = BASTION_COMP_BY[p.comp.active];
+if (activeComp) {
+if (activeComp.id === 'c_turtle') hpMul += 0.15;
+if (activeComp.id === 'c_fox') reviveMul += 0.25;
+if (activeComp.id === 'c_cub') dropMul += 0.10;
+if (activeComp.id === 'c_spark') staggerMul += 0.15;
+}
+const tpCd = gc.assassin >= 6 ? 15 : Math.max(15, Math.round(45 - tpCdRed));
+return { gc, atkMul, hpMul, hpFlat, dr: Math.min(0.65, dr), speedMul, tpCd, reviveMul, dropMul, staggerMul, eq };
+}
+function bastionForgeItem(slotId, genreId, tier = 1, useCatalyst = false) {
+const p = bastionProfile();
+const s = BASTION_SLOT_BY[slotId], g = BASTION_GENRE_BY[genreId];
+if (!s || !g) return null;
+const t = clamp(tier | 0, 1, 4);
+const forgeReq = [1, 1, 2, 4, 7][t] || 1;
+if ((p.buildings.forge || 1) < forgeReq) {
+if (!RESIM) toast(`需兵器坊达 L${forgeReq} 方可锻造 T${t} 装备`);
+return null;
+}
+const catA = BASTION_MATS.find(m => m.cat === g.cats[0] && m.tier === t);
+const catB = BASTION_MATS.find(m => m.cat === g.cats[1] && m.tier === t);
+const needA = 2 + t, needB = 2 + t, meritCost = 40 * t;
+if (!catA || !catB || (p.mats[catA.id] || 0) < needA || (p.mats[catB.id] || 0) < needB || p.merit < meritCost) {
+if (!RESIM) toast(`材料或功勋不足（需 ${needA}×${catA ? catA.name : ''} + ${needB}×${catB ? catB.name : ''} + ${meritCost} 功勋）`);
+return null;
+}
+let mythic = false, catId = null;
+if (t === 4 && useCatalyst) {
+const bossCat = ['m_horn', 'm_heart', 'm_lamp', 'm_scale'].find(id => (p.mats[id] || 0) >= 1);
+if (bossCat) { catId = bossCat; mythic = true; p.mats[bossCat]--; }
+}
+p.mats[catA.id] -= needA;
+p.mats[catB.id] -= needB;
+p.merit -= meritCost;
+const item = {
+id: `it_${p.nextItemId++}`,
+slot: slotId,
+genre: genreId,
+tier: t,
+mythic,
+name: `${mythic ? '绝世·' : t === 4 ? '神兵·' : t === 3 ? '珍稀·' : t === 2 ? '精良·' : ''}${g.name}·${s.name}`,
+atkPct: +(0.05 * t + (s.id === 'weapon' ? 0.06 * t : 0)).toFixed(2),
+hpFlat: Math.round(45 * t * (s.id === 'armor' || s.id === 'cloak' ? 2 : 1)),
+catId,
+};
+p.bag.push(item);
+p.equipped[slotId] = item.id;
+bastionSave();
+if (typeof A === 'object' && A && bastionOn()) bastionApplyPlayerStats(A);
+return item;
+}
+function bastionEquipItem(itemId) {
+const p = bastionProfile();
+const it = p.bag.find(x => x.id === itemId);
+if (!it) return false;
+p.equipped[it.slot] = it.id;
+bastionSave();
+if (typeof A === 'object' && A && bastionOn()) bastionApplyPlayerStats(A);
+return true;
+}
+function bastionSalvageItem(itemId) {
+const p = bastionProfile();
+const idx = p.bag.findIndex(x => x.id === itemId);
+if (idx < 0) return false;
+const it = p.bag[idx];
+const g = BASTION_GENRE_BY[it.genre];
+if (g) {
+const catA = BASTION_MATS.find(m => m.cat === g.cats[0] && m.tier === it.tier);
+const catB = BASTION_MATS.find(m => m.cat === g.cats[1] && m.tier === it.tier);
+const ref = Math.max(1, Math.floor((2 + it.tier) * 0.7));
+if (catA) p.mats[catA.id] = (p.mats[catA.id] || 0) + ref;
+if (catB) p.mats[catB.id] = (p.mats[catB.id] || 0) + ref;
+}
+if (p.equipped[it.slot] === it.id) p.equipped[it.slot] = null;
+p.bag.splice(idx, 1);
+bastionSave();
+return true;
+}
+function bastionTransmuteMat(matId) {
+const p = bastionProfile();
+const m = BASTION_MAT_BY[matId];
+if (!m || m.tier >= 4 || m.cat === 'boss') return false;
+if ((p.mats[matId] || 0) < 4) return false;
+const next = BASTION_MATS.find(x => x.cat === m.cat && x.tier === m.tier + 1);
+if (!next) return false;
+p.mats[matId] -= 4;
+p.mats[next.id] = (p.mats[next.id] || 0) + 1;
+bastionSave();
+return true;
+}
+function bastionSavePreset(idx) {
+const p = bastionProfile();
+if (idx < 0 || idx > 2) return false;
+p.presets[idx] = { eq: { ...p.equipped }, comp: p.comp.active, sub: p.comp.sub };
+bastionSave();
+return true;
+}
+function bastionLoadPreset(idx) {
+const p = bastionProfile();
+const pr = p.presets[idx];
+if (!pr) return false;
+p.equipped = { ...pr.eq };
+if (pr.comp) p.comp.active = pr.comp;
+if (pr.sub) p.comp.sub = pr.sub;
+bastionSave();
+if (typeof A === 'object' && A && bastionOn()) bastionApplyPlayerStats(A);
+return true;
+}
+function bastionUnlockOrBondCompanion(compId) {
+const p = bastionProfile();
+if (!BASTION_COMP_BY[compId]) return false;
+if (!p.comp.unlocked.includes(compId)) {
+const req = { c_kite: ['m_bamboo1', 4, 'sanctuary', 2], c_cub: ['m_bone1', 4, 'sanctuary', 3], c_spark: ['m_sand2', 3, 'sanctuary', 4] }[compId];
+if (req) {
+if ((p.buildings[req[2]] || 1) < req[3]) {
+if (!RESIM) toast(`需灵兽园 L${req[3]} 方可契约此灵侍`);
+return false;
+}
+if ((p.mats[req[0]] || 0) < req[1]) {
+if (!RESIM) toast(`需要 ${req[1]}×${BASTION_MAT_BY[req[0]].name}`);
+return false;
+}
+p.mats[req[0]] -= req[1];
+}
+p.comp.unlocked.push(compId);
+p.comp.active = compId;
+bastionSave();
+return true;
+}
+const lv = p.comp.bonds[compId] || 1;
+if (lv >= 10) return false;
+const herb = p.mats.m_herb1 >= 2 ? 'm_herb1' : (p.mats.m_berry2 >= 1 ? 'm_berry2' : null);
+if (!herb) {
+if (!RESIM) toast('需要月见草 ×2 或赤阳朱果 ×1 喂养灵侍');
+return false;
+}
+p.mats[herb] -= herb === 'm_herb1' ? 2 : 1;
+p.comp.bonds[compId] = lv + 1;
+bastionSave();
+return true;
+}
+function bastionDonateBuilding(bId, units = 3) {
+const p = bastionProfile();
+const lv = p.buildings[bId] || 1;
+if (lv >= 10) return false;
+const matPool = ['m_iron1', 'm_bamboo1', 'm_paper1', 'm_herb1', 'm_bone1'].find(id => (p.mats[id] || 0) >= units);
+if (!matPool) {
+if (!RESIM) toast(`至少需 ${units} 份基础材料方可捐献`);
+return false;
+}
+p.mats[matPool] -= units;
+p.merit += Math.round(units * 12);
+p.ley = Math.min(10000, p.ley + units * 8);
+const key = '_prog_' + bId;
+p[key] = (p[key] || 0) + units;
+const need = lv * 10;
+if (p[key] >= need) {
+p[key] -= need;
+p.buildings[bId] = lv + 1;
+if (!RESIM) { say(`${BASTION_BUILDINGS.find(b => b.id === bId).name} 升至 L${lv + 1}！`, 1.5, 'big'); SFX.gong(); }
+}
+bastionSave();
+return true;
+}
+function bastionDonateGuild(units = 3) {
+const p = bastionProfile();
+const matId = ['m_iron1', 'm_bamboo1', 'm_paper1', 'm_bone1', 'm_herb1'].find(id => (p.mats[id] || 0) >= units);
+if (!matId) { if (!RESIM) toast(`至少需 ${units} 份材料方可捐献宗门`); return false; }
+p.mats[matId] -= units;
+p.guild.treasury += units * 25;
+p.guild.contrib += units * 25;
+if (p.guild.treasury >= p.guild.lv * 400 && p.guild.lv < 10) p.guild.lv++;
+bastionSave();
+return true;
+}
+function bastionUpgradeGuildResearch(key) {
+const p = bastionProfile();
+const lv = (p.guild.research && p.guild.research[key]) || 0;
+const cost = (lv + 1) * 180;
+if (p.guild.treasury < cost || lv >= 5) return false;
+p.guild.treasury -= cost;
+p.guild.research[key] = lv + 1;
+bastionSave();
+if (typeof A === 'object' && A && bastionOn()) bastionApplyPlayerStats(A);
+return true;
+}
+function bastionApplyPlayerStats(f) {
+if (!f || !f.ch || !f.ch.stat) return;
+const st = bastionStats();
+const baseHp = f.ch.stat.hp || 1000;
+const ratio = f.maxHp > 0 ? clamp(f.hp / f.maxHp, 0, 1) : 1;
+f.maxHp = Math.round(baseHp * st.hpMul + st.hpFlat);
+f.hp = f.hp > 0 ? Math.max(1, Math.round(f.maxHp * ratio)) : 0;
+f.lagHp = Math.max(f.lagHp, f.hp);
+f.bastionSpeedMul = st.speedMul;
+}
+function bastionRoundInit() {
+const p = bastionProfile();
+M.timer = 180;
+M.bastion = M.bastion || {
+space: 'expedition',
+realmTier: 1,
+room: 1,
+maxRooms: 5,
+unbankedSilver: 0,
+bankedSilver: 0,
+unbankedMats: {},
+bankedMats: {},
+tpCd: 0,
+sosCd: 0,
+sosActiveT: 0,
+gateHp: 2000 + (p.buildings.walls || 1) * 400,
+gateMaxHp: 2000 + (p.buildings.walls || 1) * 400,
+turretCd: 0,
+barricadeHp: 350,
+drops: [],
+comps: [],
+reviveT: [0, 0],
+bleedT: [0, 0],
+cheatDeathCd: 0,
+downed: [false, false],
+armoryOpen: false,
+};
+const B0 = M.bastion;
+B0.tpCd = 0; B0.sosCd = 0; B0.sosActiveT = 0; B0.drops = []; B0.reviveT = [0, 0]; B0.bleedT = [0, 0]; B0.downed = [false, false];
+bastionApplyPlayerStats(A);
+bastionApplyPlayerStats(C);
+bastionSpawnSpaceWave();
+bastionInitCompanions();
+}
+function bastionInitCompanions() {
+const B0 = M.bastion; if (!B0) return;
+const p = bastionProfile(), st = bastionStats();
+const soloOrDual = !M.bastionPvp || (st.gc.summoner >= 4);
+const list = [{ id: p.comp.active || 'c_blade', x: A.x - 80, y: 0, cd: 0, tickT: 2, slot: 0 }];
+if (soloOrDual && p.comp.sub && BASTION_COMP_BY[p.comp.sub]) {
+list.push({ id: p.comp.sub, x: A.x - 140, y: 0, cd: 0, tickT: 3, slot: 1 });
+}
+B0.comps = list;
+}
+function bastionSpawnSpaceWave() {
+const B0 = M.bastion; if (!B0) return;
+const realm = BASTION_REALMS[(B0.realmTier || 1) - 1] || BASTION_REALMS[0];
+const mul = realm.enemyMul * (1 + (B0.room - 1) * 0.14);
+if (B0.space === 'citadel') {
+STAGE_W = 2400;
+A.x = 640; A.face = 1;
+C.x = 840; C.face = 1;
+B.x = 1860; B.face = -1; D.x = 2040; D.face = -1;
+B.hidden = false; D.hidden = false; B.state = 'idle'; D.state = 'idle';
+B.maxHp = B.hp = B.lagHp = Math.round(900 * mul);
+D.maxHp = D.hp = D.lagHp = Math.round(900 * mul);
+return;
+}
+STAGE_W = 2200;
+A.x = 460; A.face = 1;
+C.x = 620; C.face = 1;
+if (B0.space === 'siege') {
+B.x = 1660; B.face = -1; D.x = 1840; D.face = -1;
+B.hidden = false; D.hidden = false; B.state = 'idle'; D.state = 'idle';
+B.maxHp = B.hp = B.lagHp = Math.round(1450 * mul);
+D.maxHp = D.hp = D.lagHp = Math.round(1150 * mul);
+B0.gateHp = B0.gateMaxHp = 2000 + (bastionProfile().buildings.walls || 1) * 400;
+if (!RESIM) say('天枢守城战 · 守住城门与核心！', 1.5, 'big');
+return;
+}
+const isBossRoom = B0.room >= B0.maxRooms;
+const isWaystation = B0.room === 3;
+B.x = 1620; B.face = -1; D.x = 1820; D.face = -1;
+if (isWaystation) {
+B.hidden = false; B.state = 'idle';
+B.maxHp = B.hp = B.lagHp = Math.round(700 * mul);
+D.hp = 0; D.hidden = true;
+if (!RESIM) say('⛩ 驿站补给区 · 可整备、寄存战利品或撤离！', 1.6, 'big');
+} else {
+B.hidden = false; D.hidden = false; B.state = 'idle'; D.state = 'idle';
+B.maxHp = B.hp = B.lagHp = Math.round((isBossRoom ? 1850 : 950) * mul);
+D.maxHp = D.hp = D.lagHp = Math.round((isBossRoom ? 1200 : 800) * mul);
+if (!RESIM) say(`${realm.name} · 第 ${B0.room}/${B0.maxRooms} 室`, 1.3, isBossRoom ? 'big' : '');
+}
+}
+function bastionDropLoot(x, isBoss) {
+const B0 = M.bastion; if (!B0) return;
+const realm = BASTION_REALMS[(B0.realmTier || 1) - 1] || BASTION_REALMS[0];
+const st = bastionStats();
+const silver = Math.round((isBoss ? 120 : 45) * st.dropMul * (1 + (B0.realmTier - 1) * 0.35));
+const matPool = isBoss ? [realm.catDrop, ...realm.drops] : realm.drops;
+const pick = matPool[Math.floor(grnd() * matPool.length)];
+const qty = isBoss ? 2 : 1;
+B0.drops.push({ x: clamp(x, WALL + 80, STAGE_W - WALL - 80), y: -18, kind: 'silver', val: silver, life: 30 });
+if (pick) B0.drops.push({ x: clamp(x + 36, WALL + 80, STAGE_W - WALL - 80), y: -18, kind: 'mat', id: pick, val: qty, life: 30 });
+}
+function bastionCollectDrop(d) {
+const B0 = M.bastion; if (!B0 || !d) return;
+if (d.kind === 'silver') {
+B0.unbankedSilver += d.val;
+if (!RESIM) addP({ type: 'text', text: `+${d.val} 碎银`, x: d.x, y: -70, life: 0.8, max: 0.8, rgb: '245,215,110' });
+} else if (d.kind === 'mat' && BASTION_MAT_BY[d.id]) {
+B0.unbankedMats[d.id] = (B0.unbankedMats[d.id] || 0) + d.val;
+const m = BASTION_MAT_BY[d.id];
+if (!RESIM) addP({ type: 'text', text: `+${d.val} ${m.name}`, x: d.x, y: -90, life: 0.9, max: 0.9, rgb: m.rgb });
+}
+}
+function bastionTpToAlly() {
+const B0 = M.bastion; if (!B0) return false;
+const ally = !C.hidden && C.hp > 0 ? C : (!C.hidden ? C : null);
+if (!ally) return false;
+const freeSos = B0.sosActiveT > 0;
+if (B0.tpCd > 0 && !freeSos) {
+if (!RESIM) toast(`同袍传音冷却中：${Math.ceil(B0.tpCd)}s`);
+return false;
+}
+const st = bastionStats();
+const destX = clamp(ally.x - ally.face * 70, WALL + 60, STAGE_W - WALL - 60);
+A.x = destX; A.y = ally.y; A.vy = 0; A.vx = 0;
+A.invul = Math.max(A.invul || 0, 1.5);
+ally.invul = Math.max(ally.invul || 0, 1.5);
+B0.tpCd = freeSos ? 0 : (B0.space === 'citadel' ? 15 : st.tpCd);
+if (freeSos) B0.sosActiveT = 0;
+const p = bastionProfile();
+p.stats.tps++;
+bastionSave();
+const shockMul = st.gc.assassin >= 6 ? 3.0 : 1.0;
+for (const foe of [B, D]) {
+if (!foe.hidden && foe.hp > 0 && Math.abs(foe.x - A.x) < 190) {
+applyHit(A, foe, { dmg: Math.round(65 * shockMul), kb: [(foe.x >= A.x ? 1 : -1) * 420, -320], stun: 0.45, hs: 0.05, launch: true, dir: foe.x >= A.x ? 1 : -1 }, [foe.x, foe.y - 50]);
+}
+}
+if (!RESIM) {
+ring(A.x, A.y - 50, 180, '95,225,215', 0.55);
+addP({ type: 'text', text: '同袍降临阵!', x: A.x, y: A.y - 125, life: 1.0, max: 1.0, rgb: '95,225,215' });
+SFX.gong();
+}
+bastionSyncHUD();
+return true;
+}
+function bastionFireSos() {
+const B0 = M.bastion; if (!B0) return false;
+const st = bastionStats();
+if (B0.sosCd > 0) { if (!RESIM) toast(`穿云箭冷却中：${Math.ceil(B0.sosCd)}s`); return false; }
+B0.sosCd = st.gc.medic >= 6 ? 25 : 60;
+B0.sosActiveT = 15;
+B0.tpCd = 0;
+if (st.gc.medic >= 6) {
+for (let idx = 0; idx < 2; idx++) {
+const f = idx === 0 ? A : C;
+if (f && f.hp <= 0 && Math.abs(f.x - A.x) < 240) {
+f.hp = f.lagHp = Math.round(f.maxHp * 0.75);
+f.invul = 2.0; B0.downed[idx] = false;
+}
+}
+}
+if (!RESIM) {
+ring(A.x, A.y - 60, 210, '255,140,80', 0.6);
+addP({ type: 'text', text: '求援穿云箭! 传音无冷却', x: A.x, y: A.y - 140, life: 1.2, max: 1.2, rgb: '255,180,90' });
+SFX.gong();
+}
+bastionSyncHUD();
+return true;
+}
+function bastionCastCompanionSkill() {
+const B0 = M.bastion; if (!B0 || !B0.comps || !B0.comps.length) return false;
+const st = bastionStats();
+let fired = false;
+for (const cp of B0.comps) {
+if (cp.cd > 0) continue;
+const def = BASTION_COMP_BY[cp.id]; if (!def) continue;
+const cdScale = st.gc.summoner >= 2 ? 0.75 : 1.0;
+cp.cd = def.cd * cdScale;
+fired = true;
+const tx = foeOf(A) ? foeOf(A).x : A.x + A.face * 180;
+if (cp.id === 'c_blade' || cp.id === 'c_spark') {
+for (const f of [B, D]) {
+if (!f.hidden && f.hp > 0 && Math.abs(f.x - cp.x) < 340) {
+applyHit(A, f, { dmg: cp.id === 'c_spark' ? 95 : 85, kb: [(tx >= f.x ? 1 : -1) * 180, -260], stun: 0.4, hs: 0.04, dir: A.face }, [f.x, f.y - 50]);
+if (cp.id === 'c_spark' && typeof M.raidStagger === 'number') M.raidStagger = Math.min(100, (M.raidStagger || 0) + 18);
+}
+}
+} else if (cp.id === 'c_turtle') {
+A.invul = Math.max(A.invul || 0, 1.5);
+A.guard = Math.min(A.maxGuard || 100, (A.guard || 0) + 40);
+} else if (cp.id === 'c_fox') {
+for (const f of [A, C]) if (!f.hidden && f.hp > 0) f.hp = Math.min(f.maxHp, f.hp + Math.round(f.maxHp * 0.15));
+} else if (cp.id === 'c_kite') {
+for (const f of [B, D]) if (!f.hidden && f.hp > 0) applyHit(A, f, { dmg: 70, kb: [120 * A.face, -180], stun: 0.25, hs: 0.03, dir: A.face }, [f.x, f.y - 60]);
+} else if (cp.id === 'c_cub') {
+B0.unbankedSilver += 35;
+}
+if (!RESIM) {
+ring(cp.x, cp.y - 50, 120, def.rgb, 0.45);
+addP({ type: 'text', text: def.skill, x: cp.x, y: cp.y - 95, life: 0.85, max: 0.85, rgb: def.rgb });
+}
+if (st.gc.summoner < 6) break;
+}
+return fired;
+}
+function bastionStepCompanions(dt) {
+const B0 = M.bastion; if (!B0 || !B0.comps) return;
+const p = bastionProfile(), st = bastionStats(), stance = p.comp.stance || 'aggressive';
+for (const cp of B0.comps) {
+cp.cd = Math.max(0, cp.cd - dt);
+cp.tickT = (cp.tickT || 0) - dt;
+const def = BASTION_COMP_BY[cp.id];
+const targetFoe = [B, D].find(f => !f.hidden && f.hp > 0);
+const desiredX = cp.id === 'c_cub' && B0.drops.length
+? B0.drops[0].x
+: cp.id === 'c_fox' && B0.downed[0]
+? A.x - A.face * 36
+: stance === 'aggressive' && targetFoe && Math.abs(targetFoe.x - A.x) < 480
+? targetFoe.x - Math.sign(targetFoe.x - A.x || 1) * 75
+: A.x - A.face * (80 + cp.slot * 50);
+const spd = cp.id === 'c_cub' ? 380 : 280;
+const dx = desiredX - cp.x;
+if (Math.abs(dx) > 12) cp.x += Math.sign(dx) * Math.min(Math.abs(dx), spd * dt);
+cp.y = cp.id === 'c_kite' ? -185 + Math.sin(clock * 4) * 14 : 0;
+if (cp.id === 'c_cub') {
+for (let i = B0.drops.length - 1; i >= 0; i--) {
+if (Math.abs(B0.drops[i].x - cp.x) < 480) { bastionCollectDrop(B0.drops[i]); B0.drops.splice(i, 1); }
+}
+}
+if (cp.id === 'c_fox' && B0.downed[0] && Math.abs(cp.x - A.x) < 120) {
+B0.reviveT[0] += dt * st.reviveMul * 0.7;
+}
+if (cp.tickT <= 0) {
+cp.tickT = 2.8;
+if (cp.id === 'c_fox' && A.hp > 0 && A.hp < A.maxHp) {
+A.hp = Math.min(A.maxHp, A.hp + Math.round(A.maxHp * 0.05));
+} else if (targetFoe && Math.abs(targetFoe.x - cp.x) < (cp.id === 'c_kite' ? 420 : 150) && stance !== 'passive') {
+const bondMul = 1 + ((p.comp.bonds[cp.id] || 1) - 1) * 0.08 + (st.gc.summoner >= 2 ? 0.35 : 0);
+applyHit(A, targetFoe, { dmg: Math.round(18 * bondMul), kb: [80 * A.face, -90], stun: 0.15, hs: 0.01, dir: A.face }, [targetFoe.x, targetFoe.y - 40]);
+}
+}
+}
+}
+function bastionModifyHit(att, def, m) {
+if (!bastionOn() || !M.bastion) return m;
+const st = bastionStats();
+if (fighterTeam(att) === 0 && m.dmg) {
+let mul = st.atkMul;
+if (st.gc.berserker >= 6 && att.hp < att.maxHp * 0.5) mul *= 1.35;
+if (st.gc.ranger >= 6) mul *= (1 + Math.min(0.5, Math.floor((M.bastion.unbankedSilver || 0) / 100) * 0.02));
+if (st.gc.siege >= 6 && (m.move === 'cs2' || m.ult)) mul *= 1.3;
+if (st.gc.elemental >= 6 && m.ult && !RESIM) ring(def.x, -40, 130, '120,190,255', 0.45);
+m = { ...m, dmg: Math.round(m.dmg * mul) };
+}
+if (fighterTeam(def) === 0 && st.dr > 0 && m.dmg) {
+m = { ...m, dmg: Math.max(1, Math.round(m.dmg * (1 - st.dr))) };
+}
+if (st.gc.berserker >= 4 && att === A && (m.move === 'cs1' || m.move === 'cs2')) {
+A.hp = Math.min(A.maxHp, A.hp + Math.round((m.dmg || 0) * 0.12));
+}
+return m;
+}
+function bastionFighterDown(def, att) {
+const B0 = M.bastion; if (!B0) return false;
+if (fighterTeam(def) === 1) {
+bastionDropLoot(def.x, B0.room >= B0.maxRooms || B0.space === 'siege');
+return true;
+}
+const st = bastionStats();
+if (st.gc.berserker >= 6 && def === A && B0.cheatDeathCd <= 0) {
+B0.cheatDeathCd = 15;
+def.hp = def.lagHp = Math.max(1, Math.round(def.maxHp * 0.25));
+def.invul = 2.0;
+if (!RESIM) addP({ type: 'text', text: '血煞免死!', x: def.x, y: -110, life: 1.0, max: 1.0, rgb: '235,75,85' });
+return true;
+}
+const slot = def === A ? 0 : 1;
+B0.downed[slot] = true;
+B0.bleedT[slot] = 12;
+def.hp = 0;
+def.invul = 99;
+if (!RESIM) say('队友倒地 · 靠近或灵狐自动救治！', 1.2);
+return true;
+}
+function bastionWaystationBank() {
+const B0 = M.bastion; if (!B0) return false;
+const st = bastionStats();
+const fee = st.gc.ranger >= 4 ? 0 : 0.15;
+const bankedS = Math.floor(B0.unbankedSilver * (1 - fee));
+B0.bankedSilver += bankedS;
+B0.unbankedSilver = 0;
+for (const [id, v] of Object.entries(B0.unbankedMats)) B0.bankedMats[id] = (B0.bankedMats[id] || 0) + v;
+B0.unbankedMats = {};
+if (A.hp > 0) A.hp = A.lagHp = A.maxHp;
+if (!C.hidden && C.hp > 0) C.hp = C.lagHp = C.maxHp;
+if (!RESIM) toast(`已安全寄存 ${bankedS} 碎银及全部材料！（手续费 ${Math.round(fee * 100)}%）`);
+bastionSyncHUD();
+return true;
+}
+function bastionExtract() {
+const B0 = M.bastion; if (!B0) return false;
+const p = bastionProfile(), st = bastionStats();
+const totSilver = B0.unbankedSilver + B0.bankedSilver;
+const meritGain = Math.max(20, Math.round(totSilver / 10) + B0.room * 25);
+p.merit += meritGain;
+let matTotal = 0;
+for (const src of [B0.unbankedMats, B0.bankedMats]) {
+for (const [id, v] of Object.entries(src)) { p.mats[id] = (p.mats[id] || 0) + v; matTotal += v; }
+}
+if (st.gc.ranger >= 6) { p.mats.m_iron1 = (p.mats.m_iron1 || 0) + 2; matTotal += 2; }
+B0.unbankedSilver = 0; B0.bankedSilver = 0; B0.unbankedMats = {}; B0.bankedMats = {};
+p.threat = Math.min(100, p.threat + Math.max(5, Math.round(matTotal * 1.5)));
+p.stats.runs++;
+bastionSave();
+B0.space = 'citadel';
+B0.room = 1;
+bastionSpawnSpaceWave();
+if (!RESIM) { say(`凯旋撤离 · +${meritGain} 功勋 / +${matTotal} 材料`, 1.6, 'big'); SFX.gong(); }
+bastionSyncHUD();
+return true;
+}
+function bastionSwitchSpace(space, tier = 1) {
+const B0 = M.bastion; if (!B0) return false;
+const p = bastionProfile();
+const realm = BASTION_REALMS[(tier || 1) - 1] || BASTION_REALMS[0];
+if (space === 'expedition' && (p.buildings.array || 1) < realm.reqArray) {
+if (!RESIM) toast(`需传送阵达 L${realm.reqArray} 方可进入 ${realm.name}`);
+return false;
+}
+B0.space = space;
+B0.realmTier = clamp(tier || 1, 1, 5);
+B0.room = 1;
+bastionSpawnSpaceWave();
+bastionSyncHUD();
+return true;
+}
+function bastionTick() {
+if (!bastionOn() || !M.bastion || M.phase !== 'fight') return;
+const B0 = M.bastion, st = bastionStats();
+B0.tpCd = Math.max(0, B0.tpCd - STEP);
+B0.sosCd = Math.max(0, B0.sosCd - STEP);
+B0.sosActiveT = Math.max(0, B0.sosActiveT - STEP);
+B0.cheatDeathCd = Math.max(0, B0.cheatDeathCd - STEP);
+bastionStepCompanions(STEP);
+const pickR = st.gc.ranger >= 2 ? 230 : 80;
+for (let i = B0.drops.length - 1; i >= 0; i--) {
+const d = B0.drops[i];
+d.life -= STEP;
+if (d.life <= 0) { B0.drops.splice(i, 1); continue; }
+if (Math.abs(d.x - A.x) < pickR && Math.abs(d.y - A.y) < 120) {
+bastionCollectDrop(d);
+B0.drops.splice(i, 1);
+}
+}
+for (const slot of [0, 1]) {
+const f = slot === 0 ? A : C, helper = slot === 0 ? C : A;
+if (!f || f.hidden || f.hp > 0) { B0.downed[slot] = false; B0.reviveT[slot] = 0; continue; }
+B0.bleedT[slot] = Math.max(0, B0.bleedT[slot] - STEP);
+if (!helper.hidden && helper.hp > 0 && Math.abs(helper.x - f.x) < 105) {
+B0.reviveT[slot] += STEP * st.reviveMul;
+}
+if (B0.reviveT[slot] >= 1.5) {
+B0.reviveT[slot] = 0; B0.downed[slot] = false;
+f.hp = f.lagHp = Math.round(f.maxHp * (st.gc.medic >= 4 ? 0.75 : 0.45));
+f.invul = 2.0; f.state = 'idle';
+if (!RESIM) { ring(f.x, -50, 120, '130,235,175', 0.5); SFX.gong(); }
+} else if (B0.bleedT[slot] <= 0 && !B0.comps.some(c => c.id === 'c_fox')) {
+B0.unbankedSilver = Math.floor(B0.unbankedSilver * (st.gc.ranger >= 4 ? 0.75 : 0.5));
+f.hp = f.lagHp = f.maxHp; f.invul = 2.0; B0.downed[slot] = false;
+B0.space = 'citadel'; B0.room = 1; bastionSpawnSpaceWave();
+if (!RESIM) toast('重伤撤回天枢城，未寄存碎银折损！');
+break;
+}
+}
+if (B0.space === 'siege') {
+B0.turretCd = Math.max(0, B0.turretCd - STEP);
+if (B0.turretCd <= 0) {
+B0.turretCd = st.gc.summoner >= 4 ? 1.8 : 2.8;
+const tg = [B, D].find(e => !e.hidden && e.hp > 0);
+if (tg) {
+const tdmg = Math.round(32 + (bastionProfile().buildings.walls || 1) * 8);
+applyHit(A, tg, { dmg: tdmg, kb: [90, -80], stun: 0.15, hs: 0.01, dir: 1 }, [tg.x, tg.y - 45]);
+}
+}
+}
+}
+function bastionMatch() {
+const B0 = M.bastion; if (!B0) return;
+if (B0.space === 'citadel') {
+for (const e of [B, D]) if (e.hp <= 0) { e.hp = e.lagHp = e.maxHp; e.x = 1900; }
+return;
+}
+const foesDown = [B, D].every(e => e.hidden || e.hp <= 0);
+if (!foesDown) return;
+if (B0.space === 'siege') {
+const p = bastionProfile();
+p.merit += 180; p.ley = Math.min(10000, p.ley + 200); p.threat = 0; p.stats.sieges++;
+bastionSave();
+B0.space = 'citadel'; B0.room = 1;
+bastionSpawnSpaceWave();
+if (!RESIM) { say('守城大捷! +180 功勋 +200 灵脉', 1.6, 'big'); SFX.gong(); }
+bastionSyncHUD();
+return;
+}
+if (B0.room < B0.maxRooms) {
+B0.room++;
+bastionSpawnSpaceWave();
+} else {
+const p = bastionProfile();
+p.stats.clears++;
+bastionExtract();
+}
+bastionSyncHUD();
+}
+function drawBastionField() {
+if (!bastionOn() || !M.bastion) return;
+const B0 = M.bastion, st = bastionStats();
+ctx.save();
+const cloakIt = st.eq.cloak;
+if (cloakIt && BASTION_GENRE_BY[cloakIt.genre] && A.hp > 0) {
+const rgb = BASTION_GENRE_BY[cloakIt.genre].rgb;
+ctx.strokeStyle = `rgba(${rgb},0.65)`;
+ctx.lineWidth = 3;
+const fx = A.x - A.face * 18;
+ctx.beginPath(); ctx.moveTo(fx, A.y - 25); ctx.lineTo(fx, A.y - 125); ctx.lineTo(fx - A.face * 26, A.y - 102); ctx.closePath();
+ctx.fillStyle = `rgba(${rgb},0.35)`; ctx.fill(); ctx.stroke();
+}
+for (const cp of B0.comps) {
+const def = BASTION_COMP_BY[cp.id]; if (!def) continue;
+ctx.fillStyle = `rgba(${def.rgb},0.3)`;
+ctx.strokeStyle = `rgb(${def.rgb})`;
+ctx.lineWidth = 2.5;
+ctx.beginPath(); ctx.arc(cp.x, cp.y - 38, 16, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+ctx.font = `700 12px ${BODY_FONT}`;
+ctx.textAlign = 'center';
+ctx.fillStyle = `rgb(${def.rgb})`;
+ctx.fillText(cvT(def.name), cp.x, cp.y - 62);
+}
+for (const d of B0.drops) {
+const rgb = d.kind === 'silver' ? '245,215,110' : ((BASTION_MAT_BY[d.id] && BASTION_MAT_BY[d.id].rgb) || '180,220,255');
+ctx.fillStyle = `rgb(${rgb})`;
+ctx.beginPath(); ctx.arc(d.x, d.y, 10, 0, Math.PI * 2); ctx.fill();
+}
+if (B0.space === 'siege') {
+ctx.strokeStyle = 'rgba(233,196,106,0.85)'; ctx.lineWidth = 4;
+ctx.strokeRect(WALL + 20, -220, 48, 220);
+} else if (B0.space === 'expedition' && B0.room === 3) {
+ctx.fillStyle = 'rgba(130,235,175,0.22)';
+ctx.fillRect(STAGE_W / 2 - 90, -180, 180, 180);
+ctx.font = `700 13px ${BODY_FONT}`; ctx.textAlign = 'center'; ctx.fillStyle = '#8ef0b5';
+ctx.fillText(cvT('⛩ 驿站（可寄存/撤离）'), STAGE_W / 2, -190);
+}
+ctx.restore();
+}
+function drawBastionScore(cx, top, bh, gap) {
+const B0 = M.bastion; if (!B0) return;
+const p = bastionProfile();
+ctx.save();
+ctx.font = `700 ${Math.max(12, Math.round(bh * 0.9))}px ${BODY_FONT}`;
+ctx.textAlign = 'center';
+ctx.fillStyle = '#e9c46a';
+const spaceName = B0.space === 'siege' ? '天枢守城战' : B0.space === 'citadel' ? '天枢城·整备区' : `${(BASTION_REALMS[B0.realmTier - 1] || BASTION_REALMS[0]).name} (${B0.room}/${B0.maxRooms})`;
+ctx.fillText(`${cvT(spaceName)} | 功勋:${p.merit} 碎银:${B0.unbankedSilver} 威胁:${Math.floor(p.threat)}%`, cx, top + bh * 2.1);
+ctx.restore();
+}
+let bastionArmoryTab = 'forge';
+function bastionToggleArmory(force) {
+if (!M.bastion) return;
+M.bastion.armoryOpen = force !== undefined ? !!force : !M.bastion.armoryOpen;
+bastionRenderArmory();
+}
+function ensureBastionOverlay() {
+if (typeof document === 'undefined' || !document.body) return null;
+let bar = document.getElementById('bastionHudBar');
+if (!bar) {
+bar = document.createElement('div');
+bar.id = 'bastionHudBar';
+bar.className = 'bastion-hud-bar';
+bar.innerHTML = `<button type="button" class="ghost small" id="bHudTp">[T] 传音同袍</button>`
++ `<button type="button" class="ghost small" id="bHudSos">[V] 穿云箭</button>`
++ `<button type="button" class="ghost small" id="bHudComp">[G] 灵侍绝技</button>`
++ `<button type="button" class="ghost small" id="bHudBank">⛩ 寄存</button>`
++ `<button type="button" class="ghost small" id="bHudExtract">撤离回城</button>`
++ `<button type="button" class="go small" id="bHudArmory">[B] 天枢整备</button>`;
+document.body.appendChild(bar);
+document.getElementById('bHudTp').onclick = () => bastionTpToAlly();
+document.getElementById('bHudSos').onclick = () => bastionFireSos();
+document.getElementById('bHudComp').onclick = () => bastionCastCompanionSkill();
+document.getElementById('bHudBank').onclick = () => bastionWaystationBank();
+document.getElementById('bHudExtract').onclick = () => bastionExtract();
+document.getElementById('bHudArmory').onclick = () => bastionToggleArmory();
+}
+let drawer = document.getElementById('bastionDrawer');
+if (!drawer) {
+drawer = document.createElement('div');
+drawer.id = 'bastionDrawer';
+drawer.className = 'bastion-drawer hidden';
+document.body.appendChild(drawer);
+}
+return { bar, drawer };
+}
+function bastionSyncHUD() {
+const ui = ensureBastionOverlay(); if (!ui) return;
+const on = bastionOn() && !document.querySelector('.scr.on');
+ui.bar.style.display = on ? 'flex' : 'none';
+if (!on || !M.bastion) { ui.drawer.classList.add('hidden'); return; }
+const tpBtn = document.getElementById('bHudTp');
+if (tpBtn) tpBtn.textContent = M.bastion.tpCd > 0 && M.bastion.sosActiveT <= 0 ? `[T] 传音 (${Math.ceil(M.bastion.tpCd)}s)` : '[T] 传音同袍';
+const sosBtn = document.getElementById('bHudSos');
+if (sosBtn) sosBtn.textContent = M.bastion.sosCd > 0 ? `[V] 穿云 (${Math.ceil(M.bastion.sosCd)}s)` : '[V] 穿云箭';
+}
+function bastionRenderArmory() {
+const ui = ensureBastionOverlay(); if (!ui) return;
+if (!M.bastion || !M.bastion.armoryOpen) { ui.drawer.classList.add('hidden'); return; }
+ui.drawer.classList.remove('hidden');
+const p = bastionProfile(), st = bastionStats();
+let html = `<div class="bd-head"><b>天枢城 · 整备百业（功勋:${p.merit} | 灵脉:${p.ley} | 宗门库:${p.guild.treasury}）</b>`
++ `<button type="button" class="ghost small" id="bCloseDrawer">关闭 [B]</button></div>`
++ `<div class="bd-tabs">`
++ `<button type="button" class="ghost small ${bastionArmoryTab === 'forge' ? 'sel' : ''}" data-bt="forge">百兵衣冠 (8流派6槽)</button>`
++ `<button type="button" class="ghost small ${bastionArmoryTab === 'comp' ? 'sel' : ''}" data-bt="comp">随行灵侍 (6位)</button>`
++ `<button type="button" class="ghost small ${bastionArmoryTab === 'mats' ? 'sel' : ''}" data-bt="mats">万象材谱 (24种)</button>`
++ `<button type="button" class="ghost small ${bastionArmoryTab === 'city' ? 'sel' : ''}" data-bt="city">城防·宗门·传送阵</button>`
++ `</div><div class="bd-body">`;
+if (bastionArmoryTab === 'forge') {
+const activeSets = BASTION_GENRES.filter(g => st.gc[g.id] >= 2).map(g => `${g.name} (${st.gc[g.id]}件)`).join('、') || '暂无激活套装';
+html += `<p class="bd-sub">已穿戴流派：${activeSets} | 传音冷却 ${st.tpCd}s | 攻击×${st.atkMul.toFixed(2)} | 气血×${st.hpMul.toFixed(2)}</p>`;
+html += `<div class="bd-grid">` + BASTION_SLOTS.map(s => {
+const it = st.eq[s.id];
+return `<div class="bd-card"><b>${s.name}</b><small>${it ? it.name : '未穿戴'}</small></div>`;
+}).join('') + `</div>`;
+html += `<div class="bd-row">` + BASTION_GENRES.map(g => `<button type="button" class="ghost small bForgeBtn" data-bg="${g.id}">锻造 ${g.name} 兵器</button>`).join('') + `</div>`;
+html += `<div class="bd-row">` + p.bag.slice(-8).map(it => `<button type="button" class="ghost small bEquipBtn" data-bi="${it.id}">穿戴 ${it.name}</button>`).join('') + `</div>`;
+} else if (bastionArmoryTab === 'comp') {
+html += `<div class="bd-grid">` + BASTION_COMPANIONS.map(c => {
+const has = p.comp.unlocked.includes(c.id), isAct = p.comp.active === c.id;
+return `<div class="bd-card"><b>${c.name} (${c.role})</b><small>${c.desc} 羁绊 L${p.comp.bonds[c.id] || 1}</small>`
++ `<button type="button" class="ghost small bCompBtn" data-bc="${c.id}">${has ? (isAct ? '出战中 · 喂养' : '设为出战') : '契约解锁'}</button></div>`;
+}).join('') + `</div>`;
+} else if (bastionArmoryTab === 'mats') {
+html += `<div class="bd-grid">` + BASTION_MATS.map(m => `<div class="bd-card"><b>${m.name} (T${m.tier})</b><small>持有：${p.mats[m.id] || 0}</small>`
++ (m.tier < 4 && m.cat !== 'boss' ? `<button type="button" class="ghost small bTransBtn" data-bm="${m.id}">4→1 炼化</button>` : '')
++ `</div>`).join('') + `</div>`;
+} else {
+html += `<div class="bd-grid">` + BASTION_BUILDINGS.map(b => `<div class="bd-card"><b>${b.name} L${p.buildings[b.id] || 1}</b><small>${b.desc}</small>`
++ `<button type="button" class="ghost small bBuildBtn" data-bb="${b.id}">捐献材料</button></div>`).join('') + `</div>`;
+html += `<div class="bd-row">`
++ `<button type="button" class="ghost small" id="bGuildDonBtn">宗门捐献 (+25 宗门库/贡献)</button>`
++ BASTION_REALMS.map(r => `<button type="button" class="ghost small bRealmBtn" data-br="${r.tier}">传送 ${r.name}</button>`).join('')
++ `<button type="button" class="go small" id="bGoSiegeBtn">进入守城战</button></div>`;
+}
+html += `</div>`;
+ui.drawer.innerHTML = html;
+const cl = document.getElementById('bCloseDrawer'); if (cl) cl.onclick = () => bastionToggleArmory(false);
+for (const t of ui.drawer.querySelectorAll('[data-bt]')) t.onclick = () => { bastionArmoryTab = t.dataset.bt; bastionRenderArmory(); };
+for (const b of ui.drawer.querySelectorAll('.bForgeBtn')) b.onclick = () => { bastionForgeItem('weapon', b.dataset.bg, 1); bastionRenderArmory(); };
+for (const b of ui.drawer.querySelectorAll('.bEquipBtn')) b.onclick = () => { bastionEquipItem(b.dataset.bi); bastionRenderArmory(); };
+for (const b of ui.drawer.querySelectorAll('.bCompBtn')) b.onclick = () => {
+const id = b.dataset.bc;
+if (p.comp.unlocked.includes(id) && p.comp.active !== id) { p.comp.active = id; bastionSave(); bastionInitCompanions(); }
+else bastionUnlockOrBondCompanion(id);
+bastionRenderArmory();
+};
+for (const b of ui.drawer.querySelectorAll('.bTransBtn')) b.onclick = () => { bastionTransmuteMat(b.dataset.bm); bastionRenderArmory(); };
+for (const b of ui.drawer.querySelectorAll('.bBuildBtn')) b.onclick = () => { bastionDonateBuilding(b.dataset.bb, 3); bastionRenderArmory(); };
+for (const b of ui.drawer.querySelectorAll('.bRealmBtn')) b.onclick = () => { bastionSwitchSpace('expedition', +b.dataset.br); bastionToggleArmory(false); };
+const gd = document.getElementById('bGuildDonBtn'); if (gd) gd.onclick = () => { bastionDonateGuild(3); bastionRenderArmory(); };
+const sg = document.getElementById('bGoSiegeBtn'); if (sg) sg.onclick = () => { bastionSwitchSpace('siege', 1); bastionToggleArmory(false); };
+}
+function startBastion(p1, p2, lv, opts = {}) {
+initAudio();
+paused = false;
+const pvp = !!opts.pvp;
+M.mode = 'bastion';
+M.level = lv || pickLevel || 'normal';
+M.round = 1; M.wins = [0, 0]; M.carry = null; M.stage = null; M.duo = null; M.map = null; M.quick = false;
+M.watchAi = false; M.bastionPvp = pvp;
+M.teamMutator = 'normal';
+const allyCh = (p1 + 1) % CHARS.length;
+const bossCh = (p2 + 2) % CHARS.length;
+setChars(p1, p2, allyCh, bossCh);
+A.ctrl = human[0];
+C.ctrl = pvp ? human[1] : new AICtrl(M.level);
+B.ctrl = new AICtrl(M.level);
+D.ctrl = new AICtrl(M.level);
+human[0].clear(); human[1].clear();
+showScreen(null);
+REC.on = false;
+startRound();
+if (opts.space) bastionSwitchSpace(opts.space, opts.tier || 1);
+say('天枢城 · 守境', 1.5, 'big', '随时加入 · 传音支援 · 灵侍随行');
+bastionSyncHUD();
+}
+const bastionStartBtn = document.getElementById('bastionStartBtn');
+if (bastionStartBtn) bastionStartBtn.addEventListener('click', () => bpStart('bastion', { level: pickLevel }));
+const bastionCoopBtn = document.getElementById('bastionCoopBtn');
+if (bastionCoopBtn) bastionCoopBtn.addEventListener('click', () => bpStart('bastion', { level: pickLevel, pvp: true }));
+const bastionSiegeBtn = document.getElementById('bastionSiegeBtn');
+if (bastionSiegeBtn) bastionSiegeBtn.addEventListener('click', () => bpStart('bastion', { level: pickLevel, space: 'siege' }));
 const SAGA = Object.fromEntries(HEROES.map(x => [x.id, x.saga]));
 const SAGA_INK = { node: 40, end: 150 };
 const SAGA_GOAL = { ko: '击败对手', survive: '撑过 {t} 秒', fast: '{t} 秒内击败对手' };
@@ -33709,7 +34833,7 @@ const bpSideName = side => {
 const md = bpModeDef();
 if (md.sides) return md.sides[side];
 if (bpCustomOpts && bpCustomOpts.isWatch) return side === 0 ? '苍龙 (AI)' : '赤凤 (AI)';
-if ((bpMode === 'cuju' || bpMode === 'cuju2v2' || bpMode === 'koth' || bpMode === 'koth2v2' || bpMode === 'party') && bpCustomOpts && bpCustomOpts.pvp) return side === 0 ? '1P' : '2P';
+if ((bpMode === 'cuju' || bpMode === 'cuju2v2' || bpMode === 'koth' || bpMode === 'koth2v2' || bpMode === 'party' || bpMode === 'bastion') && bpCustomOpts && bpCustomOpts.pvp) return side === 0 ? '1P' : '2P';
 if (isLocalBothHumanBP()) return side === 0 ? '苍龙队 (1P/2P)' : '赤凤队 (3P/4P)';
 if (side === bpMySide()) return md.us || '你';
 if (md.foe) return md.foe;
@@ -34223,6 +35347,8 @@ startCuju(picks[0], picks[1], opts.level || pickLevel, { ...opts, four: mode ===
 startKoth(picks[0], picks[1], opts.level || pickLevel, { ...opts, four: mode === 'koth2v2' || !!opts.four });
 } else if (mode === 'party') {
 startParty(picks[0], picks[1], opts.level || pickLevel, opts);
+} else if (mode === 'bastion') {
+startBastion(picks[0], picks[1], opts.level || pickLevel, opts);
 } else if (mode === 'maps') {
 startMapsMode(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch, mapId);
 } else if (mode === 'tag3') {
@@ -34462,6 +35588,7 @@ else if (bpMode === 'maps') modePrefix = '山河异境 · ';
 else if (bpMode === 'cuju' || bpMode === 'cuju2v2') modePrefix = bpMode === 'cuju2v2' ? '2v2 墨球蹴鞠 · ' : '墨球蹴鞠 · ';
 else if (bpMode === 'koth' || bpMode === 'koth2v2') modePrefix = bpMode === 'koth2v2' ? '2v2 灵坛争锋 · ' : '灵坛争锋 · ';
 else if (bpMode === 'party') modePrefix = '江湖百戏 · ';
+else if (bpMode === 'bastion') modePrefix = '天枢守境 · ';
 else if (bpMode === 'mayhem') modePrefix = '通天神决 · ';
 else if (bpMode === 'tag3') modePrefix = '3v3车轮 · ';
 else if (bpMode === 'tower') modePrefix = '问剑密卷 · ';
@@ -35354,7 +36481,7 @@ window.updateNetLobby = updateNetLobby;
 function roomWrapShow() { const w = $id('roomWrap'); if (w) w.classList.remove('hidden'); }
 const netTeamMutator = () => !NET.isRanked && ['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode) && ['chaos', 'mayhem'].includes(teamMutator) ? teamMutator : 'normal';
 let netRoomMode = 'normal';   // 好友房的规则，见 src/data/10-modes.js 的 ROOM_MODES；快速匹配和排位固定 normal（3v3 车轮战）
-const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '天机乱斗', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏' };
+const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '天机乱斗', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏', bastion: '天枢守境' };
 const lobbyModesSegEl = $id('lobbyModesSeg');
 if (lobbyModesSegEl) {
 lobbyModesSegEl.addEventListener('click', e => {
@@ -35814,6 +36941,12 @@ paused = !paused; showScreen(paused ? 'pause' : null); if (!paused) refocusGame(
 }
 if (M.mode === 'demo') return;
 if (dummyBarOn()) return;   // 对手行为栏开着：方向键、回车给栏用（26-kbnav.js），不进对局
+if (typeof bastionOn === 'function' && bastionOn() && !M.bastionPvp && !e.repeat) {
+if (e.code === 'KeyT' && typeof bastionTpToAlly === 'function') { e.preventDefault(); bastionTpToAlly(); return; }
+if (e.code === 'KeyV' && typeof bastionFireSos === 'function') { e.preventDefault(); bastionFireSos(); return; }
+if (e.code === 'KeyG' && typeof bastionCastCompanionSkill === 'function') { e.preventDefault(); bastionCastCompanionSkill(); return; }
+if (e.code === 'KeyB' && typeof bastionToggleArmory === 'function') { e.preventDefault(); bastionToggleArmory(); return; }
+}
 for (let p = 0; p < KEYS.length; p++) {
 const act = KEYS[p] ? KEYS[p][e.code] : null; if (!act) continue;
 e.preventDefault();
@@ -35833,7 +36966,7 @@ c = human[p] || human[0];
 c = human[0];
 }
 } else {
-c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp)) ? human[0] : (human[p] || human[0]);
+c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
 }
 if (secretEnabled && c === human[0] && !REPLAY.on) continue;
 if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
@@ -35859,7 +36992,7 @@ c = human[p] || human[0];
 c = human[0];
 }
 } else {
-c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp)) ? human[0] : (human[p] || human[0]);
+c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
 }
 if (secretEnabled && c === human[0] && !REPLAY.on) continue;
 if (act === 'left' || act === 'right' || act === 'down') {

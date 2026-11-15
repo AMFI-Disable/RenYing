@@ -53,6 +53,7 @@ function showScreen(id) {
   }
   if (id === 'settings') $id('setReplays').hidden = settingsBack !== 'menu';
   if (id === 'acc') renderAccPage();
+  if (typeof bastionSyncHUD === 'function') bastionSyncHUD();
   if (!id) {
     refocusGame();
   } else if (document.activeElement && !document.activeElement.closest('#' + id)) {
@@ -68,7 +69,7 @@ function selectMode(mode) {
 // 守关、列传、问剑密卷、开放世界、全服肉鸽有自己的难度曲线，不看它。
 // 栏只有一条（#levels）：平时在单人页顶上，2v2 弹窗开着时挪进弹窗（levelBarTo）
 const AI_LEVEL_KEY = 'renying-ai-level', AI_LEVEL_IDS = ['easy', 'normal', 'hard', 'impossible', 'god'];
-const AI_LEVEL_MODES = ['cpu', 'tag3', 'chaos', 'mayhem', 'maps', '2v2'];
+const AI_LEVEL_MODES = ['cpu', 'tag3', 'chaos', 'mayhem', 'maps', '2v2', 'bastion'];
 function setPickLevel(lv, save = true) {
   if (!AI_LEVEL_IDS.includes(lv)) return;
   pickLevel = lv;

@@ -47,6 +47,7 @@ function step() {
   updateProjs();
   cujuTick();   // 墨球蹴鞠：墨球的物理和进球（不在这个模式就什么都不做）
   if (typeof partyTick === 'function') partyTick();
+  if (typeof bastionTick === 'function') bastionTick();
   trSample();
   if (FOREST.on) forestUpdate();
   if (!RESIM) updateFX(STEP);

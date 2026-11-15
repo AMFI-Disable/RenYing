@@ -51,6 +51,10 @@ const MODE_HANDLERS = {
     rematch: () => bpStart('party', { level: M.level || pickLevel, pvp: !!M.partyPvp }),
     toMenuScreen: () => { singleSec('party'); showScreen('single'); },
   },
+  bastion: {
+    rematch: () => bpStart('bastion', { level: M.level || pickLevel, pvp: !!M.bastionPvp }),
+    toMenuScreen: () => { singleSec('bastion'); showScreen('single'); },
+  },
   mayhem: {
     rematch: () => bpStart('mayhem', { level: pickLevel, isWatch: false }),
     toMenuScreen: () => { singleSec('mayhem'); showScreen('single'); },

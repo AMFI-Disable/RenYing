@@ -197,6 +197,7 @@ async function main() {
     console.log(`\n\x1b[32m======================================================`);
     console.log(`  ALL SUITES FINISHED SUCCESSFULLY IN ${totalSec}s`);
     console.log(`======================================================\x1b[0m\n`);
+    process.exit(0);
   } catch (err) {
     console.error(`\n\x1b[31mMaster test runner failed: ${err.message}\x1b[0m`);
     process.exit(1);

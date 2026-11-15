@@ -21,6 +21,7 @@ const MODES = {
   koth: { bp: 'open', local: true, foe: '电脑' },   // 灵坛争锋：占领灵坛 + 无限复活
   koth2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 灵坛争锋
   party: { bp: 'open', local: true, foe: '电脑' },   // 江湖百戏：轮换趣味小游戏
+  bastion: { bp: 'open', local: true, foe: '电脑' },   // 天枢城·守境：多人守城+肉鸽+灵侍+流派装备
   tag3: { bp: 'trio', team: true, local: true, foe: '敌方战队' },
   tower: { bp: 'solo', local: true },
   stage: { bp: 'solo', local: true },
@@ -39,6 +40,7 @@ const ROOM_MODES = {
   cuju: { bp: 'open', slots: [[0], [1]], rule: 'cuju' },   // 墨球蹴鞠：好友房联机踢球
   koth: { bp: 'open', slots: [[0], [1]], rule: 'koth' },   // 灵坛争锋：好友房抢坛
   party: { bp: 'open', slots: [[0], [1]], rule: 'party' },   // 江湖百戏：好友房趣味百戏
+  bastion: { bp: 'open', slots: [[0], [1]], rule: 'bastion' },   // 天枢守境：随时加入传音守城与远征
   pp_cc: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true },
   pp_pp: { bp: 'duo', team: true, us: '我方战队', slots: [[0, 2], [1, 3]], four: true },
   raid: { bp: 'squadNet', team: true, us: '我方战队', slots: [[0], [2]], raid: true },   // 房主 A、好友 C、电脑同袍 D 一起打魔首 B

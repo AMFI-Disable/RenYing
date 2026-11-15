@@ -551,4 +551,5 @@ function drawHUD() {
   if (M.mode === 'train') drawTrainStats(cx, top, bh);
   if (cujuOn()) drawCujuScore(cx, top, bh, gap);
   if (typeof kothOn === 'function' && kothOn()) drawKothScore(cx, top, bh, gap);
+  if (typeof bastionOn === 'function' && bastionOn()) drawBastionScore(cx, top, bh, gap);
 }

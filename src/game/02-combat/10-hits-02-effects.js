@@ -1,4 +1,5 @@
 function applyHit(att, def, m, pt) {
+  if (typeof bastionOn === 'function' && bastionOn() && typeof bastionModifyHit === 'function') m = bastionModifyHit(att, def, m);
   if (M.mode === 'net' && !RESIM) NET.matchHits = (NET.matchHits || 0) + 1;   // 回滚重算不能再记一次，不然两边会算成不一样
   if (def.forestProxy) { forestHit(att, m, pt); return; }
   if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 22-world.js
@@ -369,6 +370,9 @@ function applyHit(att, def, m, pt) {
 function fighterDown(def, att, ev) {
   if (cujuOn()) { def.hp = def.lagHp = def.maxHp; return; }   // 墨球蹴鞠：没有人会被打倒
   if (typeof kothOn === 'function' && kothOn()) { def.hp = 0; def.hidden = true; return; }   // 灵坛争锋：进入复活倒计时
+  if (typeof bastionOn === 'function' && bastionOn() && typeof bastionFighterDown === 'function') {
+    if (bastionFighterDown(def, att)) { if (fighterTeam(def) === 1) { def.hp = 0; def.hidden = true; } return; }
+  }
   if (is2v2()) {
     const mate = def === A ? C : def === C ? A : def === B ? D : B;
     if (mate && !mate.hidden && mate.hp > 0) {
