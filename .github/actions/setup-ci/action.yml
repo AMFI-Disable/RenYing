@@ -1,0 +1,38 @@
+name: Setup CI Environment
+description: Set up Node 22, optional Python 3.12, and optional local static web server on port 8791.
+
+inputs:
+  python:
+    description: Install Python 3.12
+    required: false
+    default: "false"
+  http-server:
+    description: Start python3 -m http.server 8791
+    required: false
+    default: "false"
+
+runs:
+  using: composite
+  steps:
+    - name: Set Up Python
+      if: ${{ inputs.python == 'true' || inputs.http-server == 'true' }}
+      uses: actions/setup-python@v7
+      with:
+        python-version: "3.12"
+
+    - name: Set Up Node
+      uses: actions/setup-node@v7
+      with:
+        node-version: "22"
+        package-manager-cache: false
+
+    - name: Start Static Web Server
+      if: ${{ inputs.http-server == 'true' }}
+      shell: bash
+      run: |
+        python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &
+        for _ in $(seq 1 20); do
+          curl -sf http://127.0.0.1:8791/ >/dev/null && break
+          sleep 0.5
+        done
+        curl -sf http://127.0.0.1:8791/ >/dev/null || { cat /tmp/renying-http.log; exit 1; }

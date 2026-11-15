@@ -1,6 +1,6 @@
-# 主 CI：先用 tools/ci/change-groups.py 按改了哪些文件分组，只跑相关的检查；改了构建或测试工具时全跑。
-# 每个 job 对应一组测试，失败时在本地单独跑那个 job 里的命令（node tools/... 那一行）就能复现。
-# 全部本地跑一遍：node tools/tests/test.mjs
+# 统一主 CI：push(main) 与 pull_request 共用路径分组（tools/ci/change-groups.py），
+# 合并预检/Node/浏览器审计为 4 个并行任务，减少重复虚拟机启动与网页服务器初始化耗时。
+# 全部本地复现：node tools/tests/test.mjs
 name: CI
 
 on:
@@ -8,6 +8,7 @@ on:
     branches: [ main ]
   pull_request:
     branches: [ main ]
+  workflow_dispatch:
 
 permissions:
   contents: read
@@ -17,9 +18,10 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  changes:
-    name: Select Relevant Checks
+  preflight:
+    name: Preflight And Repo Checks
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       all: ${{ steps.classify.outputs.all }}
       game: ${{ steps.classify.outputs.game }}
@@ -35,6 +37,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Set Up Environment
+        uses: ./.github/actions/setup-ci
+        with:
+          python: "true"
+
       - name: Classify Changed Files
         id: classify
         env:
@@ -42,27 +49,7 @@ jobs:
           HEAD_SHA: ${{ github.sha }}
         run: python3 tools/ci/change-groups.py "$BASE_SHA" "$HEAD_SHA" "$GITHUB_OUTPUT"
 
-  repo-quality:
-    name: Repository Checks
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 0
-
-      - name: Set Up Python
-        uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-
-      - name: Set Up Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          package-manager-cache: false
-
-      - name: Validate Build Script, YAML, Filenames, And Entrypoints
+      - name: Validate Scripts, YAML, Filenames, And Entrypoints
         run: |
           python3 -m py_compile tools/build.py tools/ci/change-groups.py
           ruby -ryaml -e 'Dir.glob(".github/**/*.{yml,yaml}").each { |f| YAML.safe_load(File.read(f)); puts "Validated: #{f}" }'
@@ -100,235 +87,125 @@ jobs:
           print("Commit message conventions passed.")
           '
 
-  game:
-    name: Game And Rollback Checks
-    if: github.event_name == 'pull_request' && (needs.changes.outputs.game == 'true' || needs.changes.outputs.all == 'true')
-    needs: changes
+  node-checks:
+    name: Node Game, Cloud, Economy And Worker Checks
+    needs: preflight
+    if: >
+      needs.preflight.outputs.all == 'true' ||
+      needs.preflight.outputs.game == 'true' ||
+      needs.preflight.outputs.cloud == 'true' ||
+      needs.preflight.outputs.economy == 'true' ||
+      needs.preflight.outputs.worker == 'true' ||
+      needs.preflight.outputs.offline == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          package-manager-cache: false
-      - name: Validate Data And Combat
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set Up Node
+        uses: ./.github/actions/setup-ci
+
+      - name: Game Data, Combat, Rollback, Netplay And Anti-Cheat
+        if: needs.preflight.outputs.game == 'true' || needs.preflight.outputs.all == 'true'
         run: |
           node tools/checks/data-check.mjs --strict-copy
           node tools/tests/combat-test.mjs --sim
-      - name: Verify Rollback And Netplay
-        run: |
           node tools/tests/rollback-test.mjs --rollback
           node tools/tests/netplay-test.mjs
-      - name: Verify Anti-Cheat Boundaries
-        run: node tools/tests/anticheat-test.mjs
-      - name: Check Hero AI Patterns
-        run: node tools/tests/ai-lingque-test.mjs
+          node tools/tests/anticheat-test.mjs
+          node tools/tests/ai-lingque-test.mjs
 
-  ai:
-    name: AI Simulation Checks
-    if: github.event_name == 'pull_request' && (needs.changes.outputs.ai == 'true' || needs.changes.outputs.all == 'true')
-    needs: changes
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          package-manager-cache: false
-      - run: node tools/tests/test-ai.mjs
-
-  cloud:
-    name: Cloud Save And World Checks
-    if: github.event_name == 'pull_request' && (needs.changes.outputs.cloud == 'true' || needs.changes.outputs.all == 'true')
-    needs: changes
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          package-manager-cache: false
-      - name: Verify Cloud Save And Sync
+      - name: Cloud Save, Sync And Open World
+        if: needs.preflight.outputs.cloud == 'true' || needs.preflight.outputs.all == 'true'
         run: |
           node tools/tests/cloud-test.mjs
           node tools/tests/sync-test.mjs
           node tools/tests/sync-test.mjs --bundle
-      - name: Verify Open World Server
-        run: node tools/tests/world-test.mjs
+          node tools/tests/world-test.mjs
 
-  economy:
-    name: Armory And Economy Checks
-    if: github.event_name == 'pull_request' && (needs.changes.outputs.economy == 'true' || needs.changes.outputs.all == 'true')
-    needs: changes
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          package-manager-cache: false
-      - run: |
+      - name: Armory And Economy
+        if: needs.preflight.outputs.economy == 'true' || needs.preflight.outputs.all == 'true'
+        run: |
           node tools/tests/econ-test.mjs
           node tools/tests/econ-test.mjs --bundle
 
-  worker:
-    name: Worker And Deployment Checks
-    if: github.event_name == 'pull_request' && (needs.changes.outputs.worker == 'true' || needs.changes.outputs.all == 'true')
-    needs: changes
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          package-manager-cache: false
-      - name: Verify Schema And Deployment
+      - name: Worker Schema, Predeploy And Wrangler Dry-Run
+        if: needs.preflight.outputs.worker == 'true' || needs.preflight.outputs.all == 'true'
         run: |
+          node --input-type=module --check < cloudflare/worker.bundle.js
           node tools/tests/rollback-test.mjs --schema
           node tools/tests/predeploy-check.mjs
           node tools/tests/predeploy-check.mjs --source
+          npx --yes wrangler@4.154.0 deploy --dry-run --env="" --outdir "$RUNNER_TEMP/wrangler-prod"
+          npx --yes wrangler@4.154.0 deploy --dry-run --env staging --outdir "$RUNNER_TEMP/wrangler-staging"
 
-  browser-flow:
-    name: Browser Flow Checks
-    if: github.event_name == 'pull_request' && (needs.changes.outputs.browser == 'true' || needs.changes.outputs.all == 'true')
-    needs: changes
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          package-manager-cache: false
-      - name: Start Static Web Server
+      - name: Offline Standalone And QFX 3D Bundles
+        if: needs.preflight.outputs.offline == 'true' || needs.preflight.outputs.all == 'true'
         run: |
-          python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &
-          for _ in $(seq 1 20); do
-            curl -sf http://127.0.0.1:8791/ >/dev/null && break
-            sleep 0.5
-          done
-          curl -sf http://127.0.0.1:8791/ >/dev/null || { cat /tmp/renying-http.log; exit 1; }
-      - name: Test Draft, Offline Font Fallback, And Keyboard Navigation
+          node tools/tests/rollback-test.mjs --offline
+          node tools/tests/rollback-test.mjs --qfx
+
+  ai:
+    name: AI Simulation Checks
+    needs: preflight
+    if: needs.preflight.outputs.ai == 'true' || needs.preflight.outputs.all == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set Up Node
+        uses: ./.github/actions/setup-ci
+
+      - name: Run AI Simulation Suite
+        run: node tools/tests/test-ai.mjs
+
+  browser-audits:
+    name: Browser Flow, UI, Mobile And Performance Audits
+    needs: preflight
+    if: needs.preflight.outputs.browser == 'true' || needs.preflight.outputs.all == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Set Up Environment And Static Server
+        uses: ./.github/actions/setup-ci
+        with:
+          python: "true"
+          http-server: "true"
+
+      - name: Run Browser Flow And Keyboard Navigation
         run: |
           node tools/audits/bp-flow-test.mjs
           node tools/audits/kb-flow-test.mjs ci-kb 1440 900
+          node tools/audits/kb-flow-test.mjs ci-kb-en 844 390 --en
 
-  ui-layout:
-    name: UI Layout And HUD Audits
-    if: github.event_name == 'pull_request' && (needs.changes.outputs.browser == 'true' || needs.changes.outputs.all == 'true')
-    needs: changes
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          package-manager-cache: false
-      - name: Start Static Web Server
-        run: |
-          python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &
-          for _ in $(seq 1 20); do
-            curl -sf http://127.0.0.1:8791/ >/dev/null && break
-            sleep 0.5
-          done
-          curl -sf http://127.0.0.1:8791/ >/dev/null || { cat /tmp/renying-http.log; exit 1; }
-      - name: Run Visual Layout And HUD Audits
+      - name: Run UI Layout, HUD And Touch Audits
         run: |
           node tools/audits/ui-audit.mjs ci-ui 1440 900
           node tools/audits/hud-audit.mjs ci-hud 1440 900
           node tools/audits/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2
-
-  mobile-ui:
-    name: Mobile Layout And Touch Audits
-    if: github.event_name == 'pull_request' && (needs.changes.outputs.browser == 'true' || needs.changes.outputs.all == 'true')
-    needs: changes
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          package-manager-cache: false
-      - name: Start Static Web Server
-        run: |
-          python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &
-          for _ in $(seq 1 20); do
-            curl -sf http://127.0.0.1:8791/ >/dev/null && break
-            sleep 0.5
-          done
-          curl -sf http://127.0.0.1:8791/ >/dev/null || { cat /tmp/renying-http.log; exit 1; }
-      - name: Verify Touch And English Keyboard Flow
-        run: |
           node tools/audits/touch-audit.mjs ci-touch
-          node tools/audits/kb-flow-test.mjs ci-kb-en 844 390 --en
 
-  visual-performance:
-    name: First Load And Performance Audits
-    if: github.event_name == 'pull_request' && (needs.changes.outputs.browser == 'true' || needs.changes.outputs.all == 'true')
-    needs: changes
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
-        with:
-          python-version: "3.12"
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          package-manager-cache: false
-      - name: Start Static Web Server
-        run: |
-          python3 -m http.server 8791 > /tmp/renying-http.log 2>&1 &
-          for _ in $(seq 1 20); do
-            curl -sf http://127.0.0.1:8791/ >/dev/null && break
-            sleep 0.5
-          done
-          curl -sf http://127.0.0.1:8791/ >/dev/null || { cat /tmp/renying-http.log; exit 1; }
-      - name: Verify First Load And Frame Budgets
+      - name: Run First Load And Frame Budget Audits
         run: |
           node tools/audits/perf-audit.mjs ci-perf
           node tools/audits/firstload-audit.mjs ci-firstload 3
-
-  offline-qfx:
-    name: Offline And QFX Bundle Checks
-    if: github.event_name == 'pull_request' && (needs.changes.outputs.offline == 'true' || needs.changes.outputs.all == 'true')
-    needs: changes
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
-        with:
-          node-version: "22"
-          package-manager-cache: false
-      - run: |
-          node tools/tests/rollback-test.mjs --offline
-          node tools/tests/rollback-test.mjs --qfx
 
   quality:
     name: Codebase & Syntax Validation
     if: always()
     needs:
-      - changes
-      - repo-quality
-      - game
+      - preflight
+      - node-checks
       - ai
-      - cloud
-      - economy
-      - worker
-      - browser-flow
-      - ui-layout
-      - mobile-ui
-      - visual-performance
-      - offline-qfx
+      - browser-audits
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Require All Applicable Checks To Pass
         env:

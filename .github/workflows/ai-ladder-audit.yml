@@ -3,17 +3,6 @@
 name: AI Difficulty Ladder & Win-Rate Report
 
 on:
-  push:
-    branches: [ main ]
-    paths:
-      - "src/ai.js"
-      - "src/data/**"
-      - "src/game/**"
-      - "src/models/ai-brain.json"
-      - "tools/ai/ai-arena.mjs"
-      - "tools/ai/ai-ladder-report.mjs"
-  pull_request:
-    branches: [ main ]
   schedule:
     - cron: "0 6 * * 0"
   workflow_dispatch:
@@ -21,11 +10,15 @@ on:
 permissions:
   contents: read
 
+concurrency:
+  group: ai-ladder
+  cancel-in-progress: false
+
 jobs:
   ai-ladder:
-    if: github.event_name != 'pull_request'
     name: Benchmark AI Ladder & Update Markdown Report
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     permissions:
       contents: write
 
