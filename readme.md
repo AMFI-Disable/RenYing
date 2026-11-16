@@ -1,6 +1,6 @@
-# ⚔ RenYing
-
 <div align="center">
+
+# RenYing
 
 <img src="assets/skin-qingfengxing.png" width="240" alt="RenYing artwork" />
 
@@ -98,19 +98,19 @@ Default keyboard and mouse layout for player 1. Every key can be changed in **�
 
 | Action | Mouse | Keyboard |
 | :--- | :--- | :--- |
-| Move | | `A` / `D` |
-| Jump, double jump | | `W` or `Space` |
-| Block (hold), drop through a platform (`↓` + jump) | | `S` |
+| Move | — | `A`/ `D` |
+| Jump, double jump | — | `W`or `Space` |
+| Block (hold), drop through a platform (`↓`+ jump) | — | `S` |
 | Attack, 5-hit combo | Left click | `X` |
 | Charged slash | Hold left click, release | Hold `X`, release |
-| Skill 1 | | `Q` |
+| Skill 1 | — | `Q` |
 | Skill 2 | Hold left click, then right click | `R` |
-| Ultimate (needs a full meter) | | `E` |
+| Ultimate (needs a full meter) | — | `E` |
 | Escape (腾空闪) | Right click | `Left Shift` |
-| Pause / mute | | `P` / `M` |
+| Pause / mute | — | `P`/ `M` |
 
-- **Keyboard only:** every menu, dialog, the draft screen and the results screen work with the arrow keys or WASD, `Enter`/`Space` to press and `Esc` to go back. A gold frame shows the selection.
-- **Same computer, several players:** players 2 to 4 have their own key blocks (arrows + `UIOJK`, `TFGH` + `CVBNM`, and the number pad).
+- **Keyboard only:** every menu, dialog, the draft screen and the results screen work with the arrow keys or WASD, `Enter`/`Space`to press and `Esc` to go back. A gold frame shows the selection.
+- **Same computer, several players:** players 2 to 4 have their own key blocks (arrows + `UIOJK`, `TFGH`+ `CVBNM`, and the number pad).
 - **Touch:** a virtual stick on the left and action buttons on the right.
 
 ---
@@ -143,7 +143,7 @@ Some modes (ranked, open world, Demon Raid, the armory market) need the server a
 
 ## Heroes
 
-Sixteen heroes. Each has a passive, a skill on `Q`, a second skill on `R` and an ultimate on `E`.
+Sixteen heroes. Each has a passive, a skill on `Q`, a second skill on `R`and an ultimate on `E`.
 
 | Hero | Style | Q | R | E |
 | :--- | :--- | :--- | :--- | :--- |
@@ -199,7 +199,7 @@ flowchart LR
 - **Rollback netcode:** both browsers simulate the match with the same seed and exchange only inputs. A late input makes that side rewind to the stored frame, replay with the correct input and catch up. Periodic state checksums catch any drift.
 - **Connection:** WebRTC DataChannels with PeerJS for the handshake and public STUN servers; the Worker can hand out short-lived TURN credentials for networks where a direct link fails.
 - **Server (optional):** a Cloudflare Worker with a D1 database for accounts, cloud saves, the armory economy, leaderboards and the open world (a Durable Object per world line). The game still works without it.
-- **Generated pages:** `tools/build.py` joins the sources in `src/` into `index.html` (online) and `renying-offline.html` (single file, offline).
+- **Generated pages:** `tools/build.py`joins the sources in `src/`into `index.html`(online) and `renying-offline.html` (single file, offline).
 
 More in the wiki: [Multiplayer And Netcode](https://github.com/AMFI-Disable/RenYing/wiki/Multiplayer-and-Netcode) and [Architecture And Development](https://github.com/AMFI-Disable/RenYing/wiki/Architecture-and-Development).
 
@@ -219,11 +219,11 @@ More in the wiki: [Multiplayer And Netcode](https://github.com/AMFI-Disable/RenY
 | `src/anticheat.js` | Client-side integrity checks |
 | `src/social.js`, `src/errlog.js`, `src/i18n.js` | Community features, error reports, translation lookup |
 | `src/qfx/` | Sources of the 青锋行 mini-game |
-| `assets/` | Music, the generated mini-game page, vendored `peerjs` and `three.js` |
+| `assets/` | Music, the generated mini-game page, vendored `peerjs`and `three.js` |
 | `cloudflare/` | Numbered Worker sources, generated Worker entry points, admin page, D1 schema and migrations |
 | `src/models/` | Trained AI weights |
-| `tools/` | `build.py` plus `ai/`, `admin/`, `audits/`, `checks/`, `tests/` and `music/` |
-| `docs/` | By topic: `ai/` (AI specs, frame data, trainer reports), `bugs/`, `design/`, `ops/` (deploy runbook in Chinese, admin guide), `project/`, `history/` (changelog, version history), and `wiki/` (wiki source) |
+| `tools/` | `build.py`plus `ai/`, `admin/`, `audits/`, `checks/`, `tests/`and `music/` |
+| `docs/` | By topic: `ai/`(AI specs, frame data, trainer reports), `bugs/`, `design/`, `ops/`(deploy runbook in Chinese, admin guide), `project/`, `history/`(changelog, version history), and `wiki/` (wiki source) |
 | `.github/` | CI workflows, issue and pull request templates, `contributing.md` |
 | `index.html`, `renying-offline.html` | **Generated.** Online and offline editions |
 | `renying.html` | Notice page for the old address |
@@ -234,7 +234,7 @@ More in the wiki: [Multiplayer And Netcode](https://github.com/AMFI-Disable/RenY
 
 You need Python 3.10+ and Node 22. There is no `npm install`.
 
-Edit files in `src/`, `assets/` or `cloudflare/`, never the generated pages. Then rebuild:
+Edit files in `src/`, `assets/`or `cloudflare/`, never the generated pages. Then rebuild:
 
 ```bash
 python3 tools/build.py
@@ -259,7 +259,7 @@ Main test suites (all run in CI):
 | Open world server | `node tools/tests/world-test.mjs` |
 | Anti-cheat checks | `node tools/tests/anticheat-test.mjs` |
 
-Browser audits need a local server first (`python3 -m http.server 8791`), then for example `node tools/audits/ui-audit.mjs ci-ui 1440 900`, `node tools/audits/hud-audit.mjs ci-hud 1440 900`, `node tools/audits/touch-audit.mjs ci-touch` and `node tools/audits/kb-flow-test.mjs ci-kb 1440 900`. `node tools/tests/test.mjs` runs the main set in one go.
+Browser audits need a local server first (`python3 -m http.server 8791`), then for example `node tools/audits/ui-audit.mjs ci-ui 1440 900`, `node tools/audits/hud-audit.mjs ci-hud 1440 900`, `node tools/audits/touch-audit.mjs ci-touch`and `node tools/audits/kb-flow-test.mjs ci-kb 1440 900`. `node tools/tests/test.mjs` runs the main set in one go.
 
 The full test matrix is on the wiki page [Testing And CI](https://github.com/AMFI-Disable/RenYing/wiki/Testing-and-CI). The Worker is deployed by the maintainer; the steps are in [docs/ops/deploy-runbook.md](docs/ops/deploy-runbook.md).
 
@@ -269,7 +269,7 @@ The full test matrix is on the wiki page [Testing And CI](https://github.com/AMF
 
 Read [contributing.md](.github/contributing.md) first. In short:
 
-- Commit messages are `type: three lowercase words` (for example `fix: guard break timing`). CI rejects anything else.
+- Commit messages are `type: three lowercase words`(for example `fix: guard break timing`). CI rejects anything else.
 - Every tracked file name is lowercase.
 - Markdown headings use Title Case.
 - Rebuild and commit the generated pages together with the source change.

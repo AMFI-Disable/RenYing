@@ -1,9 +1,9 @@
 ---
 name: Bug Report
-about: Report something in RenYing that does not work
+about: Report a bug or unexpected behavior
 title: "[BUG] "
 labels: bug
-assignees: ''
+assignees: AMFI-Disable
 ---
 
 ## Description Of The Defect
@@ -12,24 +12,21 @@ A clear and concise description of what the bug is.
 
 ## Steps To Reproduce
 
-1. Open the game (online or offline edition).
-2. Go to '...'
-3. Pick hero / mode '...'
-4. See the problem.
+1. Open '...'
+2. Navigate to '...'
+3. Trigger '...'
+4. Observe the issue.
 
 ## Expected Behavior
 
-A clear and concise description of what you expected to happen.
+What you expected to happen.
 
 ## Environment Details
 
-- **Browser**: [e.g. Chrome 125, Safari 17, Firefox 126]
-- **OS Version**: [e.g. macOS Sonoma 14.5, Windows 11, Linux]
-- **Edition**: [online (GitHub Pages) or offline file]
-- **Game Version**: [shown at the bottom of the account page, e.g. 1.0.1]
-- **Input**: [keyboard and mouse, keyboard only, touch]
-- **Account**: [guest, local account or cloud account; never post your password]
+- **Project Version**: [e.g. 1.0.0]
+- **Browser / Runtime**: [e.g. Chrome 130, Firefox 132, Tampermonkey 5.x]
+- **Operating System**: [e.g. macOS 15, Windows 11, Linux]
 
 ## Additional Context
 
-Add screenshots, a replay file or the browser console output here.
+Add console errors, screenshots, or reproduction logs here.

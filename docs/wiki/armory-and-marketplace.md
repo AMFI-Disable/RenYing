@@ -40,7 +40,7 @@ Five tiers, from most common to rarest. Odds are for a regular weapon case.
 | 2 | 碧玉 | Purple | 27% |
 | 3 | 灵犀 | Pink | 13% |
 | 4 | 赤霄 | Red | 5.2% |
-| 5 | ★ 绝世 | Gold | 1.8% |
+| 5 | 绝世 | Gold | 1.8% |
 
 About **20%** of opened items are **斩数版 (kill-count editions)**: they count how many knockouts you score while wearing them and show the count on the inspect and results screens.
 

@@ -2,28 +2,28 @@
 
 ## The Roster / 侠客一览
 
-Sixteen heroes. Each has a passive, a skill on `Q`, a second skill on `R` (or hold left click + right click) and an ultimate on `E` that needs a full meter. Difficulty is the hero's 上手难度 from the game data (★ easy to pick up, ★★★ hardest).
+Sixteen heroes. Each has a passive, a skill on `Q`, a second skill on `R` (or hold left click + right click) and an ultimate on `E` that needs a full meter. Difficulty is the hero's 上手难度 from the game data ( easy to pick up, hardest).
 
 十六位侠客，每位一个被动、`Q` 技能、`R` 第二技能（也可以按住左键点右键）、`E` 大招（气满才能放）。上手难度取自游戏数据。
 
 | Hero / 侠客 | Style / 定位 | Passive / 被动 | Q | R | E | Difficulty / 上手 |
 | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-| **青锋** Qing Feng | 游龙剑客 Wandering Swordsman | 剑意 Sword Intent | 疾风斩 Gale Slash | 剑气 Sword Qi | 残月 Crescent Moon | ★☆☆ |
-| **绯影** Fei Ying | 暗影刺客 Shadow Assassin | 身轻 Featherweight | 影遁 Shadow Blink | 飞镖 Kunai Star | 千影 Thousand Shadows | ★★☆ |
-| **铁山** Tie Shan | 玄铁重甲 Heavy Iron Armor | 霸体 Super Armor | 震地 Earthquake | 铁壁冲 Iron Wall Charge | 山崩 Avalanche | ★☆☆ |
-| **凌霜** Ling Shuang | 寒枪骁将 Frost Spear Champion | 枪尖 Spear Tip | 回马枪 Back Thrust | 枪旋 Spear Whirl | 刹那 Time Freeze | ★★☆ |
-| **流云** Liu Yun | 御风散人 Wind Walker | 御风 Wind Rider | 风刃 Wind Blade | 开扇 Fan Flourish | 龙卷 Tornado Storm | ★★☆ |
-| **雷鸣** Lei Ming | 雷拳武僧 Thunder Monk | 连环 Chain Fists | 雷闪 Thunder Fist | 金刚雷铠 Vajra Armor | 雷霆万钧 Thunderstruck | ★☆☆ |
-| **墨羽** Mo Yu | 泼墨画师 Ink Painter | 笔锋 Brush Tip | 墨阵 Ink Trap | 画符 Talisman Brush | 符阵 Talisman Array | ★★★ |
-| **月华** Yue Hua | 月镜宗师 Moon Mirror Master | 月华 Yue Hua | 月镜 Moon Mirror | 月轮 Moon Chariot | 月华如水 Moonlight Cascade | ★★★ |
-| **燕翎** Yan Ling | 御空飞燕 Sky Swallows | 御空 Sky Rider | 俯冲 Falcon Dive | 翎羽 Feather Darts | 万羽 Feather Storm | ★★☆ |
-| **玉箫** Yu Xiao | 箫音乐师 Flute Musician | 宫商 Five Notes | 清音 Clear Tone | 回音壁 Echo Barrier | 广陵散 Guangling Verse | ★★★ |
-| **醉翁** Zui Weng | 山水醉翁 Drunken Hermit | 酒 Wine | 亭中留客 Pavilion Trap | 与民同乐 Wine Feast | 山水之间 Landscape Domain | ★★★ |
-| **勾陈** Gou Chen | 链锤游侠 Chain Hammer Wanderer | 震魄 Shock | 飞锤 Chain Hook | 旋锤 Hammer Whirl | 开天一锤 Heavensplitter | ★★☆ |
-| **凌雀** Ling Que | 飞梭游侠 Shuttle Wanderer | 雀芒 Sparrow Mark | 穿叶飞梭 Leaf-Piercing Shuttle | 移形换影 Shadow Swap | 万线归宗 Thousand Threads | ★★★ |
-| **离影** Li Ying | 离魂刀客 Soul-Parted Blade | 离魂 Parted Soul | 留影 Mist Mark | 渡影 Mist Crossing | 万影归一 Myriad Mists | ★★★ |
-| **磁仙** Ci Xian | 两极方士 Two-Pole Adept | 磁极 Magnet Poles | 极性反转 Pole Swap | 磁极 Magnet Poles | 天地磁合 Heaven-Earth Clamp | ★★★ |
-| **千机** Qian Ji | 机关傀客 Puppet Engineer | 机栝动能 Clockwork Momentum | 金丝回环 Silk Loop | 穿丝急袭 Tether Lash | 机轮三穿 Gearwheel Triple Pass | ★★★ |
+| **青锋**Qing Feng | 游龙剑客 Wandering Swordsman | 剑意 Sword Intent | 疾风斩 Gale Slash | 剑气 Sword Qi | 残月 Crescent Moon | |
+| **绯影**Fei Ying | 暗影刺客 Shadow Assassin | 身轻 Featherweight | 影遁 Shadow Blink | 飞镖 Kunai Star | 千影 Thousand Shadows | |
+| **铁山**Tie Shan | 玄铁重甲 Heavy Iron Armor | 霸体 Super Armor | 震地 Earthquake | 铁壁冲 Iron Wall Charge | 山崩 Avalanche | |
+| **凌霜**Ling Shuang | 寒枪骁将 Frost Spear Champion | 枪尖 Spear Tip | 回马枪 Back Thrust | 枪旋 Spear Whirl | 刹那 Time Freeze | |
+| **流云**Liu Yun | 御风散人 Wind Walker | 御风 Wind Rider | 风刃 Wind Blade | 开扇 Fan Flourish | 龙卷 Tornado Storm | |
+| **雷鸣**Lei Ming | 雷拳武僧 Thunder Monk | 连环 Chain Fists | 雷闪 Thunder Fist | 金刚雷铠 Vajra Armor | 雷霆万钧 Thunderstruck | |
+| **墨羽**Mo Yu | 泼墨画师 Ink Painter | 笔锋 Brush Tip | 墨阵 Ink Trap | 画符 Talisman Brush | 符阵 Talisman Array | |
+| **月华**Yue Hua | 月镜宗师 Moon Mirror Master | 月华 Yue Hua | 月镜 Moon Mirror | 月轮 Moon Chariot | 月华如水 Moonlight Cascade | |
+| **燕翎**Yan Ling | 御空飞燕 Sky Swallows | 御空 Sky Rider | 俯冲 Falcon Dive | 翎羽 Feather Darts | 万羽 Feather Storm | |
+| **玉箫**Yu Xiao | 箫音乐师 Flute Musician | 宫商 Five Notes | 清音 Clear Tone | 回音壁 Echo Barrier | 广陵散 Guangling Verse | |
+| **醉翁**Zui Weng | 山水醉翁 Drunken Hermit | 酒 Wine | 亭中留客 Pavilion Trap | 与民同乐 Wine Feast | 山水之间 Landscape Domain | |
+| **勾陈**Gou Chen | 链锤游侠 Chain Hammer Wanderer | 震魄 Shock | 飞锤 Chain Hook | 旋锤 Hammer Whirl | 开天一锤 Heavensplitter | |
+| **凌雀**Ling Que | 飞梭游侠 Shuttle Wanderer | 雀芒 Sparrow Mark | 穿叶飞梭 Leaf-Piercing Shuttle | 移形换影 Shadow Swap | 万线归宗 Thousand Threads | |
+| **离影**Li Ying | 离魂刀客 Soul-Parted Blade | 离魂 Parted Soul | 留影 Mist Mark | 渡影 Mist Crossing | 万影归一 Myriad Mists | |
+| **磁仙**Ci Xian | 两极方士 Two-Pole Adept | 磁极 Magnet Poles | 极性反转 Pole Swap | 磁极 Magnet Poles | 天地磁合 Heaven-Earth Clamp | |
+| **千机**Qian Ji | 机关傀客 Puppet Engineer | 机栝动能 Clockwork Momentum | 金丝回环 Silk Loop | 穿丝急袭 Tether Lash | 机轮三穿 Gearwheel Triple Pass | |
 
 ## Hero Notes / 侠客要点
 

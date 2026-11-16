@@ -1,6 +1,6 @@
-# ⚔ 刃影
-
 <div align="center">
+
+# 刃影
 
 <img src="assets/skin-qingfengxing.png" width="240" alt="刃影插画" />
 
@@ -98,19 +98,19 @@
 
 | 动作 | 鼠标 | 键盘 |
 | :--- | :--- | :--- |
-| 移动 | | `A` / `D` |
-| 跳、二段跳 | | `W` 或 `空格` |
-| 防御（按住）、从平台跳下（`↓` + 跳） | | `S` |
+| 移动 | | `A`/ `D` |
+| 跳、二段跳 | | `W`或 `空格` |
+| 防御（按住）、从平台跳下（`↓`+ 跳） | | `S` |
 | 普攻，五连段 | 左键 | `X` |
 | 蓄力斩 | 按住左键再松开 | 按住 `X` 再松开 |
 | 技能一 | | `Q` |
 | 技能二 | 按住左键再点右键 | `R` |
 | 大招（气满才能放） | | `E` |
 | 腾空闪 | 右键 | `左 Shift` |
-| 暂停 / 静音 | | `P` / `M` |
+| 暂停 / 静音 | | `P`/ `M` |
 
-- **纯键盘：** 所有菜单、对话框、点将台和结算页都能用方向键或 WASD 移动，`Enter`/`空格` 确认，`Esc` 返回，金色框表示当前选中。
-- **一台电脑多人：** 2P 到 4P 各有一组键（方向键 + `UIOJK`、`TFGH` + `CVBNM`、小键盘）。
+- **纯键盘：** 所有菜单、对话框、点将台和结算页都能用方向键或 WASD 移动，`Enter`/`空格`确认，`Esc` 返回，金色框表示当前选中。
+- **一台电脑多人：** 2P 到 4P 各有一组键（方向键 + `UIOJK`、`TFGH`+ `CVBNM`、小键盘）。
 - **触屏：** 左边虚拟摇杆，右边动作按钮。
 
 ---
@@ -143,7 +143,7 @@
 
 ## 侠客
 
-一共十六位。每位都有一个被动，`Q` 一个技能，`R` 第二个技能，`E` 大招。
+一共十六位。每位都有一个被动，`Q`一个技能，`R`第二个技能，`E` 大招。
 
 | 侠客 | 定位 | Q | R | E |
 | :--- | :--- | :--- | :--- | :--- |
@@ -199,7 +199,7 @@ flowchart LR
 - **回滚联机：** 两个浏览器用同一个随机种子各自算整局，只互相发操作。某一帧的操作来晚了，就退回存好的那一帧，用正确的操作重算再追上来；双方还定期对一次状态校验和，发现不同步。
 - **连接：** WebRTC 数据通道，PeerJS 负责握手，公共 STUN 服务器打洞；直连不通时 Worker 可以发短时有效的 TURN 中转凭据。
 - **服务器（可选）：** Cloudflare Worker 加 D1 数据库，负责账号、云存档、武库经济、排行榜和开放世界（每条线一个 Durable Object）。没有它游戏也能玩。
-- **生成的网页：** `tools/build.py` 把 `src/` 里的源码拼成 `index.html`（在线版）和 `renying-offline.html`（单文件离线版）。
+- **生成的网页：** `tools/build.py`把 `src/`里的源码拼成 `index.html`（在线版）和 `renying-offline.html`（单文件离线版）。
 
 更多见 Wiki：[联机与回滚同步](https://github.com/AMFI-Disable/RenYing/wiki/Multiplayer-and-Netcode)、[架构与开发](https://github.com/AMFI-Disable/RenYing/wiki/Architecture-and-Development)。
 
@@ -210,8 +210,8 @@ flowchart LR
 | 路径 | 是什么 |
 | :--- | :--- |
 | `src/page.html`、`src/style.css`、`src/styles/` | 页面结构（带构建标记）和按文件名顺序拼接的样式 |
-| `src/game/` | 游戏本体，按编号拆成多个文件，`tools/build.py` 按顺序拼起来 |
-| `src/data/` | 数据表：`src/data/heroes/` 一位侠客一个文件，还有模式、点将台顺序、地图、电脑难度、界面英文。构建时由 `tools/checks/data-check.mjs` 检查 |
+| `src/game/`| 游戏本体，按编号拆成多个文件，`tools/build.py` 按顺序拼起来 |
+| `src/data/`| 数据表：`src/data/heroes/`一位侠客一个文件，还有模式、点将台顺序、地图、电脑难度、界面英文。构建时由 `tools/checks/data-check.mjs` 检查 |
 | `src/ai.js` | 电脑对手 |
 | `src/net-p2p.js` | 点对点连接 |
 | `src/cloud.js` | 账号和云存档 |
@@ -219,12 +219,12 @@ flowchart LR
 | `src/anticheat.js` | 客户端完整性检查 |
 | `src/social.js`、`src/errlog.js`、`src/i18n.js` | 社区功能、错误上报、翻译查表 |
 | `src/qfx/` | 青锋行小游戏的源码 |
-| `assets/` | 音乐、生成的小游戏页面、内置的 `peerjs` 和 `three.js` |
+| `assets/`| 音乐、生成的小游戏页面、内置的 `peerjs`和 `three.js` |
 | `cloudflare/` | 按编号拆分的 Worker 源码、生成的 Worker 入口、管理后台页面、D1 表结构和迁移 |
 | `src/models/` | 训练好的电脑 AI 权重 |
-| `tools/` | `build.py`，以及 `ai/`、`admin/`、`audits/`、`checks/`、`tests/` 和 `music/` |
-| `docs/` | 按主题分：`ai/`（AI 设计、帧数表、平衡报告）、`bugs/`、`design/`、`ops/`（部署手册、管理后台说明）、`project/`、`history/`（更新日志、版本历史），以及 `wiki/`（Wiki 源文件） |
-| `.github/` | CI 流程、issue 和 PR 模板、`contributing.md` |
+| `tools/`| `build.py`，以及 `ai/`、`admin/`、`audits/`、`checks/`、`tests/`和 `music/` |
+| `docs/`| 按主题分：`ai/`（AI 设计、帧数表、平衡报告）、`bugs/`、`design/`、`ops/`（部署手册、管理后台说明）、`project/`、`history/`（更新日志、版本历史），以及 `wiki/`（Wiki 源文件） |
+| `.github/`| CI 流程、issue 和 PR 模板、`contributing.md` |
 | `index.html`、`renying-offline.html` | **生成的文件。** 在线版和离线版 |
 | `renying.html` | 旧地址的提示页 |
 
@@ -234,7 +234,7 @@ flowchart LR
 
 需要 Python 3.10 以上和 Node 22，不需要 `npm install`。
 
-只改 `src/`、`assets/` 或 `cloudflare/` 里的文件，不要手改生成的网页。改完重新生成：
+只改 `src/`、`assets/`或 `cloudflare/` 里的文件，不要手改生成的网页。改完重新生成：
 
 ```bash
 python3 tools/build.py

@@ -400,7 +400,7 @@ Each hero is one object in `CHARS` (`src/game.js:261`):
 
 `cd` multiplies skill cooldowns. The comment above the table says it was “validated over 5 940 high-intensity matches”.
 
-> ⚠️ **Observation:** Tieshan's `hp` multiplier (0.90) makes his effective HP the lowest-but-one in the cast even though
+> **Observation:**Tieshan's `hp` multiplier (0.90) makes his effective HP the lowest-but-one in the cast even though
 > his raw HP is mid-high, and his 0.67 damage multiplier is far below everyone else. Whatever the auto-balancer was
 > optimising, “tank” here is a description of mass (1.32) and guard (115), not of survivability. Worth a second look.
 
@@ -651,7 +651,7 @@ These are worth knowing before you touch balance or the codex UI:
 
 1. **`readme.md` says “Nine characters”** and `src/game.js`'s header comment says “8 个角色”; `CHARS` actually has **12**.
 2. **Stale HP in `passiveDesc`:** Feiying says 470 (actual 520), Tieshan says 530 (actual 510), Leiming says 520
-   (actual 540), Yuehua says 460 (actual 460 ✓), Yuxiao says 455 ✓. The codex numbers come from `stat.hp`, so only the
+   (actual 540), Yuehua says 460 (actual 460 ), Yuxiao says 455 . The codex numbers come from `stat.hp`, so only the
    prose is wrong.
 3. **Qingfeng's meter passive** is described as “+8 % (meterMul 1.08)” in the codex string, but `CHARS` sets
    `meterMul: 1.10` (and `PASSIVE_SHORT` also says 8 %).
