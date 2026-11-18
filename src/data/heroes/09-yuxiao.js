@@ -2,7 +2,7 @@
 defHero({
   id: 'yuxiao', skin: 'yx', en: 'Yu Xiao',
   // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
-  bal: { normal: 0.999, skill: 0.999, ult: 0.999, cd: 1.0, hp: 0.999 },
+  bal: { normal: 0.996, skill: 0.996, ult: 0.996, cd: 1.0, hp: 0.996 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '玉箫', role: '箫音乐师', diff: 3, escCD: 9.0, skill: 'soundwave', skill2: 'echowall', ult: 'guangling', passive: 'rhythm',
     passiveName: '宫商', passiveDesc: '以箫为刃，以音为兵。普攻每命中一次积攒一枚音律，不出手时每 2.5 秒也会自己攒一枚（最多 3 枚），清音会把音律一次吹尽：音律越满，音波越大、越快、越重，三律齐鸣时音波可穿透、挑空并令对手失律迟缓。身形清瘦（0.86 体量/775 血），被近身缠斗时要靠回音壁脱身。',

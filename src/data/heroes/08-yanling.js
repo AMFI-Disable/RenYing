@@ -2,7 +2,7 @@
 defHero({
   id: 'yanling', skin: 'yl', en: 'Yan Ling',
   // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
-  bal: { normal: 1.068, skill: 1.068, ult: 1.068, cd: 1.0, hp: 1.068 },
+  bal: { normal: 1.144, skill: 1.144, ult: 1.144, cd: 1.0, hp: 1.144 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '燕翎', role: '御空飞燕', diff: 2, escCD: 8.5, skill: 'dive', skill2: 'darts', ult: 'featherstorm', passive: 'flight',
     passiveName: '御空', passiveDesc: '一飞冲天，羽翼轻捷（0.84体量）；空中回避地面冲击，但空战格挡抗性偏低（85架势），一旦被重兵器挑中需速用腾空闪化解。',

@@ -1,93 +1,114 @@
 {
   "qingfeng": {
-    "normal": 0.898,
-    "skill": 0.898,
-    "ult": 0.898,
+    "normal": 0.976,
+    "skill": 0.976,
+    "ult": 0.976,
     "cd": 1,
-    "hp": 0.898
+    "hp": 0.976
   },
   "feiying": {
-    "normal": 1.007,
-    "skill": 1.007,
-    "ult": 1.007,
+    "normal": 1.061,
+    "skill": 1.061,
+    "ult": 1.061,
     "cd": 1,
-    "hp": 1.007
+    "hp": 1.061
   },
   "tieshan": {
-    "normal": 1.069,
-    "skill": 1.069,
-    "ult": 1.069,
+    "normal": 1.163,
+    "skill": 1.163,
+    "ult": 1.163,
     "cd": 1,
-    "hp": 1.069
+    "hp": 1.163
   },
   "lingshuang": {
-    "normal": 1.063,
-    "skill": 1.063,
-    "ult": 1.063,
+    "normal": 1.126,
+    "skill": 1.126,
+    "ult": 1.126,
     "cd": 1,
-    "hp": 1.063
+    "hp": 1.126
   },
   "liuyun": {
-    "normal": 0.915,
-    "skill": 0.915,
-    "ult": 0.915,
+    "normal": 1.014,
+    "skill": 1.014,
+    "ult": 1.014,
     "cd": 1,
-    "hp": 0.915
+    "hp": 1.014
   },
   "leiming": {
-    "normal": 1.062,
-    "skill": 1.062,
-    "ult": 1.062,
+    "normal": 1.076,
+    "skill": 1.076,
+    "ult": 1.076,
     "cd": 1,
-    "hp": 1.062
+    "hp": 1.076
   },
   "moyu": {
-    "normal": 0.843,
-    "skill": 0.843,
-    "ult": 0.843,
+    "normal": 1.083,
+    "skill": 1.083,
+    "ult": 1.083,
     "cd": 1,
-    "hp": 0.843
+    "hp": 1.083
   },
   "yuehua": {
-    "normal": 0.899,
-    "skill": 0.899,
-    "ult": 0.899,
+    "normal": 0.957,
+    "skill": 0.957,
+    "ult": 0.957,
     "cd": 1,
-    "hp": 0.899
+    "hp": 0.957
   },
   "yanling": {
-    "normal": 1.086,
-    "skill": 1.086,
-    "ult": 1.086,
+    "normal": 1.144,
+    "skill": 1.144,
+    "ult": 1.144,
     "cd": 1,
-    "hp": 1.086
+    "hp": 1.144
   },
   "yuxiao": {
-    "normal": 1.012,
-    "skill": 1.012,
-    "ult": 1.012,
+    "normal": 0.996,
+    "skill": 0.996,
+    "ult": 0.996,
     "cd": 1,
-    "hp": 1.012
+    "hp": 0.996
   },
   "zuixian": {
-    "normal": 1.05,
-    "skill": 1.05,
-    "ult": 1.05,
+    "normal": 1.21,
+    "skill": 1.21,
+    "ult": 1.21,
     "cd": 1,
-    "hp": 1.05
+    "hp": 1.21
   },
   "gouchen": {
-    "normal": 1.112,
-    "skill": 1.112,
-    "ult": 1.112,
+    "normal": 1.245,
+    "skill": 1.245,
+    "ult": 1.245,
     "cd": 1,
-    "hp": 1.112
+    "hp": 1.245
   },
   "lingque": {
-    "normal": 1.151,
-    "skill": 1.151,
-    "ult": 1.151,
+    "normal": 0.888,
+    "skill": 0.888,
+    "ult": 0.888,
     "cd": 1,
-    "hp": 1.151
+    "hp": 0.888
+  },
+  "liying": {
+    "normal": 1.074,
+    "skill": 1.074,
+    "ult": 1.074,
+    "cd": 1,
+    "hp": 1.074
+  },
+  "cixian": {
+    "normal": 1.233,
+    "skill": 1.233,
+    "ult": 1.233,
+    "cd": 1,
+    "hp": 1.233
+  },
+  "qianji": {
+    "normal": 0.753,
+    "skill": 0.753,
+    "ult": 0.753,
+    "cd": 1,
+    "hp": 0.753
   }
 }

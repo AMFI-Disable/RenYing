@@ -2,7 +2,7 @@
 defHero({
   id: 'lingque', skin: 'lq', en: 'Ling Que',
   // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
-  bal: { normal: 1.108, skill: 1.108, ult: 1.108, cd: 1.0, hp: 1.108 },
+  bal: { normal: 0.888, skill: 0.888, ult: 0.888, cd: 1.0, hp: 0.888 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '凌雀', role: '飞梭游侠', diff: 3, escCD: 8.5, skill: 'spindle', skill2: 'shadowdash', ult: 'needlestorm', passive: 'needlemark',
     passiveName: '雀芒', passiveDesc: '双持子母飞梭，以悬丝牵引。对敌人造成三次普攻、穿叶飞梭命中、蓄力斩（无需满蓄）命中或万线归宗命中均可施加【雀芒】印记（最多叠加 5 层，印记环绕目标周身，持续 5 秒）；移形换影每次穿刺引爆 1 层印记造成 30 点爆炸伤害并挑空敌人，同时立即清零移形换影冷却，可连续发动 5 次突进而无冷却！',

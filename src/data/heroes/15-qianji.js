@@ -3,7 +3,7 @@
 defHero({
   id: 'qianji', skin: 'qj', en: 'Qian Ji',
   // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
-  bal: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  bal: { normal: 0.753, skill: 0.753, ult: 0.753, cd: 1.0, hp: 0.753 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: {
     name: '千机', role: '机关傀客', diff: 3, escCD: 8.0,

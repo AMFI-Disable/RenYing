@@ -2,7 +2,7 @@
 defHero({
   id: 'yuehua', skin: 'yh', en: 'Yue Hua',
   // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
-  bal: { normal: 0.926, skill: 0.926, ult: 0.926, cd: 1.0, hp: 0.926 },
+  bal: { normal: 0.957, skill: 0.957, ult: 0.957, cd: 1.0, hp: 0.957 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '月华', role: '月镜宗师', diff: 3, escCD: 8.0, skill: 'mirror', skill2: 'moonring', ult: 'moonflow', passive: 'regen',
     passiveName: '月华', passiveDesc: '月镜格开近战必出反斩锁定惩罚；体态仙灵（0.92体量/780血），自带月魄神罡（110架势/6%微透伤）与脱战自愈，以静制动。',

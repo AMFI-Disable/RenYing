@@ -2,7 +2,7 @@
 defHero({
   id: 'liuyun', skin: 'ly', en: 'Liu Yun',
   // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
-  bal: { normal: 0.959, skill: 0.959, ult: 0.959, cd: 1.0, hp: 0.959 },
+  bal: { normal: 1.014, skill: 1.014, ult: 1.014, cd: 1.0, hp: 1.014 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '流云', role: '御风散人', diff: 2, escCD: 8.0, skill: 'windblade', skill2: 'windstep', ult: 'tornado', passive: 'float',
     passiveName: '御风', passiveDesc: '御风而行，三段跳与开扇疾冲来去自如；龙卷自平地而起卷敌浮空。折扇迎风架势大幅强化（112架势/7%微穿透），身法飘忽制胜。',

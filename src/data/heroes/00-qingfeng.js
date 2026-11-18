@@ -2,7 +2,7 @@
 defHero({
   id: 'qingfeng', skin: 'qf', en: 'Qing Feng',
   // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
-  bal: { normal: 0.915, skill: 0.915, ult: 0.915, cd: 1.0, hp: 0.915 },
+  bal: { normal: 0.976, skill: 0.976, ult: 0.976, cd: 1.0, hp: 0.976 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '青锋', role: '游龙剑客', diff: 1, escCD: 8.0, skill: 'gale', skill2: 'swordqi', ult: 'crescent', passive: 'meter',
     passiveName: '剑意', passiveDesc: '剑意流转，聚气比常人快 10%。体量身法均称（1.02），剑气与疾风斩攻守自如。',

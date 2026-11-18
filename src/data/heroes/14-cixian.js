@@ -5,7 +5,7 @@
 defHero({
   id: 'cixian', skin: 'cx', en: 'Ci Xian',
   // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
-  bal: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
+  bal: { normal: 1.233, skill: 1.233, ult: 1.233, cd: 1.0, hp: 1.233 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '磁仙', role: '两极方士', diff: 3, escCD: 8.5, skill: 'polarswap', skill2: 'magfield', ult: 'sandwich', passive: 'magnet',
     passiveName: '磁极', passiveDesc: '开局随机带正极（⊕）或负极（⊖），按 Q 切换。正极普攻伤害高、每下击飞；负极普攻轻吸对手、伤害低，四段循环可以一直连下去；负极普攻最多连 15 下，之后消磁（不再吸、改成弹开），停手 1 秒或按 Q 恢复。',

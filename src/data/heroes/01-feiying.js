@@ -2,7 +2,7 @@
 defHero({
   id: 'feiying', skin: 'fy', en: 'Fei Ying',
   // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
-  bal: { normal: 0.999, skill: 0.999, ult: 0.999, cd: 1.0, hp: 0.999 },
+  bal: { normal: 1.061, skill: 1.061, ult: 1.061, cd: 1.0, hp: 1.061 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '绯影', role: '暗影刺客', diff: 2, escCD: 8.0, skill: 'blink', skill2: 'kunai', ult: 'shadows', passive: 'swift',
     passiveName: '身轻', passiveDesc: '身法最快、出手最疾，体格轻巧（0.82）且气血充实（800）。架势耐力韧性提升（95/9%微伤），身手矫捷，唯有以疾速、背刺与影遁分身取胜。',
