@@ -144,6 +144,7 @@ function kbnBack(roots) {
 }
 window.addEventListener('keydown', e => {
   if (typeof rebindingKey !== 'undefined' && rebindingKey) return;   // 设置里正在改键，按键全给它
+  if (typeof bastion2dActive === 'function' && bastion2dActive()) return;   // 天枢守境盖在菜单上面：WASD、方向键要给它走路，不能被菜单选中框吃掉
   if (e.ctrlKey || e.metaKey || e.altKey || e.isComposing) return;
   const roots = kbnRoots();
   if (!roots) { if (e.isTrusted && e.code !== 'KeyM') kbnOn(); return; }   // 对局中用键盘打的人，暂停、结算页一出来就有选中框

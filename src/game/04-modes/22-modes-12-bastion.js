@@ -640,6 +640,7 @@ function bastionSpawnSpaceWave() {
     if (B0.space === 'siege') {
       B0.gateHp = B0.gateMaxHp = 2000 + (bastionProfile().buildings.walls || 1) * 400;
       b2dSpawnSiegeWave(B0.realmTier || 1);
+      B2D.siegeLeft = 6 + (B0.realmTier || 1) * 2;   // 第一波已经出来 4 个，剩下的分批来；打完才算守住
       bastionMsg('天枢守城战开启！四面敌潮来袭，守住天枢核心！');
     } else if (B0.space === 'expedition') {
       const targetBiome = B2D_BIOMES[clamp((B0.realmTier || 1) - 1, 0, B2D_BIOMES.length - 1)];
@@ -1155,7 +1156,6 @@ function b2dSpawnPack(cx, cy, tier, hasBoss = false) {
 }
 
 function b2dSpawnSiegeWave(tier = 1) {
-  B2D.siegeLeft = 10 + tier * 2;
   const dirs = [[1600, 120], [1600, B2D_H - 120], [120, 1200], [B2D_W - 120, 1200]];
   for (let i = 0; i < dirs.length; i++) {
     const [sx, sy] = dirs[i];
@@ -1248,7 +1248,7 @@ function b2dPlayerDash() {
   pl.dashCd = (1.6 / st.speedMul) * st.cdMul;
   pl.dashT = 0.22;
   pl.invul = Math.max(pl.invul, 0.35);
-  const ang = pl.aim || 0;
+  const ang = pl.moveDir != null ? pl.moveDir : (pl.aim || 0);   // 按着方向键就往走的方向闪，没按才朝准心
   pl.vx = Math.cos(ang) * 680;
   pl.vy = Math.sin(ang) * 680;
   B2D.rings.push({ x: pl.x, y: pl.y, r: 12, maxR: 75, life: 0.28, max: 0.28, rgb: '140,220,255' });
@@ -1330,6 +1330,8 @@ function bastion2dStep(dt) {
     if (B2D.keys.has('KeyD') || B2D.keys.has('ArrowRight')) mx += 1;
     if (B2D.keys.has('KeyW') || B2D.keys.has('ArrowUp')) my -= 1;
     if (B2D.keys.has('KeyS') || B2D.keys.has('ArrowDown')) my += 1;
+    if ((mx || my) && B2D.clock - (B2D.mouse.movedAt || -99) > 1.2) pl.aim = Math.atan2(my, mx);   // 只用键盘时朝走的方向出招
+    pl.moveDir = (mx || my) ? Math.atan2(my, mx) : null;
     if (pl.dashT > 0) {
       pl.dashT -= dt;
       if (!B2D.ghosts.length || Math.hypot(pl.x - B2D.ghosts[B2D.ghosts.length - 1].x, pl.y - B2D.ghosts[B2D.ghosts.length - 1].y) > 22) {
@@ -1498,6 +1500,32 @@ function bastion2dStep(dt) {
         B2D.projs.push({ x: e.x, y: e.y, vx: Math.cos(a) * 340, vy: Math.sin(a) * 340, r: 7, dmg: e.dmg, team: 1, life: 1.4, rgb: e.rgb });
       } else if (pl.invul <= 0) {
         b2dHitPlayer(e.dmg);
+      }
+    }
+  }
+
+  // 实体碰撞：怪物之间互相挤开，不再叠成一团；人和怪也不能穿过去
+  const ens = B2D.enemies;
+  for (let i = 0; i < ens.length; i++) {
+    const a = ens[i]; if (a.hp <= 0) continue;
+    for (let j = i + 1; j < ens.length; j++) {
+      const b = ens[j]; if (b.hp <= 0) continue;
+      const dx = b.x - a.x, dy = b.y - a.y, min = a.r + b.r;
+      if (Math.abs(dx) >= min || Math.abs(dy) >= min) continue;
+      const d = Math.hypot(dx, dy);
+      if (d >= min) continue;
+      const nx = d > 0.01 ? dx / d : 1, ny = d > 0.01 ? dy / d : 0, push = (min - d) * 0.5;
+      const wa = a.isBoss ? 0.25 : 1, wb = b.isBoss ? 0.25 : 1, wsum = wa + wb;
+      a.x -= nx * push * 2 * wa / wsum; a.y -= ny * push * 2 * wa / wsum;
+      b.x += nx * push * 2 * wb / wsum; b.y += ny * push * 2 * wb / wsum;
+    }
+    if (!pl.downed && pl.dashT <= 0) {
+      const dx = pl.x - a.x, dy = pl.y - a.y, min = a.r + pl.r, d = Math.hypot(dx, dy);
+      if (d < min) {
+        const nx = d > 0.01 ? dx / d : 1, ny = d > 0.01 ? dy / d : 0, over = min - d;
+        const share = a.isBoss ? 0.8 : 0.5;   // 魔首更重，主要是人被推开
+        pl.x = clamp(pl.x + nx * over * share, 32, B2D_W - 32); pl.y = clamp(pl.y + ny * over * share, 32, B2D_H - 32);
+        a.x -= nx * over * (1 - share); a.y -= ny * over * (1 - share);
       }
     }
   }
@@ -2001,6 +2029,7 @@ function b2dBindDom() {
       const wx = B2D.mouse.x - r.width / 2 + B2D.camX;
       const wy = B2D.mouse.y - r.height / 2 + B2D.camY;
       B2D.player.aim = Math.atan2(wy - B2D.player.y, wx - B2D.player.x);
+      B2D.mouse.movedAt = B2D.clock;
     });
     cv.addEventListener('mousedown', e => {
       if (e.button === 2) b2dPlayerDash();
@@ -2047,6 +2076,7 @@ function b2dBindDom() {
     }
   });
   window.addEventListener('keyup', e => { B2D.keys.delete(e.code); });
+  window.addEventListener('blur', () => { B2D.keys.clear(); B2D.mouse.down = false; });   // 切出窗口时松开所有键，回来不会自己一直走
 }
 
 function openBastion() {
