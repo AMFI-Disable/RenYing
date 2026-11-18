@@ -1042,7 +1042,10 @@ function bastionMatch() {
   const B0 = M.bastion; if (!B0) return;
   if (B2D.open) return;
   if (B0.space === 'citadel') {
-    for (const e of [B, D]) if (e.hp <= 0) { e.hp = e.lagHp = e.maxHp; e.x = 1900; }
+    for (const e of [B, D]) if (e.hp <= 0) {   // 主城广场的陪练魔卒倒下后重新站起来（以前回满血却一直隐身，广场上就没人可打了）
+      e.hp = e.lagHp = e.maxHp; e.x = e === B ? 1860 : 2040; e.y = 0; e.vx = e.vy = 0;
+      e.hidden = false; e.state = 'idle'; e.t = 0; e.invul = 1.0;
+    }
     return;
   }
   const foesDown = [B, D].every(e => e.hidden || e.hp <= 0);

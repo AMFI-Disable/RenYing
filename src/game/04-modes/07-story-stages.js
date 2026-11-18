@@ -11,9 +11,12 @@ const MON_KEYS = Object.keys(MON_TYPES);
 // 十三位侠客在斩妖除魔（打小怪 + 肉鸽共斗）模式中的专属故事篇章
 const HERO_FOREST_STORIES = Object.fromEntries(HEROES.map(x => [x.id, x.forest]));
 // 妖物的强度：按难度值线性增长（闯关时第几个妖物关决定难度值）
+// 妖物的数值原本按早期的小血量写的：侠客气血和招式伤害放大以后，妖物两下就倒、一刀只掉 0.3% 血，闯关没有威胁。
+// 这两个倍数把妖物拉回和侠客同一个量级（约 3～4 下普攻打倒一只，挨一刀掉 3%～5% 气血）。
+const FOREST_HP_SCALE = 2.4, FOREST_DMG_SCALE = 7;
 function waveK(w) {
   const n = Math.max(0, w - 1);
-  return { hp: 1 + 0.12 * n, dk: 1 + 0.1 * n, spd: 1 + 0.03 * n, cdk: 1 / (1 + 0.05 * n), wk: Math.max(0.55, 1 - 0.022 * n),
+  return { hp: (1 + 0.1 * n) * FOREST_HP_SCALE, dk: (1 + 0.06 * n) * FOREST_DMG_SCALE, spd: 1 + 0.03 * n, cdk: 1 / (1 + 0.05 * n), wk: Math.max(0.55, 1 - 0.022 * n),
     cap: 3 + Math.floor(w / 3), gap: Math.max(0.45, 2 - 0.07 * n), prot: Math.max(0.3, 0.7 - 0.02 * n) };
 }
 // 十三章：对应十三位侠客的专属斩妖传；第五关迎战守关宗师或六技融魂魔首

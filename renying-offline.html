@@ -15245,9 +15245,10 @@ owl: { name: '夜枭', kind: '飞空', hp: 18, spd: 220, w: 30, h: 40, eye: '255
 };
 const MON_KEYS = Object.keys(MON_TYPES);
 const HERO_FOREST_STORIES = Object.fromEntries(HEROES.map(x => [x.id, x.forest]));
+const FOREST_HP_SCALE = 2.4, FOREST_DMG_SCALE = 7;
 function waveK(w) {
 const n = Math.max(0, w - 1);
-return { hp: 1 + 0.12 * n, dk: 1 + 0.1 * n, spd: 1 + 0.03 * n, cdk: 1 / (1 + 0.05 * n), wk: Math.max(0.55, 1 - 0.022 * n),
+return { hp: (1 + 0.1 * n) * FOREST_HP_SCALE, dk: (1 + 0.06 * n) * FOREST_DMG_SCALE, spd: 1 + 0.03 * n, cdk: 1 / (1 + 0.05 * n), wk: Math.max(0.55, 1 - 0.022 * n),
 cap: 3 + Math.floor(w / 3), gap: Math.max(0.45, 2 - 0.07 * n), prot: Math.max(0.3, 0.7 - 0.02 * n) };
 }
 const CHAPTERS = [
@@ -30977,9 +30978,15 @@ if (Math.abs(ny) < 0.5 && b.y > -R - 2) b.vy = Math.min(b.vy, -70);   // 贴地�
 function cujuRect(b, r, e) {
 const R = cujuBallR(), cx = clamp(b.x, r[0], r[2]), cy = clamp(b.y, r[1], r[3]);
 let nx = b.x - cx, ny = b.y - cy; const d = Math.hypot(nx, ny);
-if (d >= R || d < 0.001) return false;
+if (d >= R) return false;
+if (d < 0.001) {   // 球心已经钻进横梁里（球很快时）：从最近的一边推出去，不能直接穿过
+const pen = [b.x - r[0], r[2] - b.x, b.y - r[1], r[3] - b.y], k = pen.indexOf(Math.min(...pen));
+nx = k === 0 ? -1 : k === 1 ? 1 : 0; ny = k === 2 ? -1 : k === 3 ? 1 : 0;
+b.x = k === 0 ? r[0] - R : k === 1 ? r[2] + R : b.x; b.y = k === 2 ? r[1] - R : k === 3 ? r[3] + R : b.y;
+} else {
 nx /= d; ny /= d;
 b.x = cx + nx * R; b.y = cy + ny * R;
+}
 const dot = b.vx * nx + b.vy * ny;
 if (dot < 0) { b.vx -= (1 + e) * dot * nx; b.vy -= (1 + e) * dot * ny; }
 return true;
@@ -32687,7 +32694,10 @@ function bastionMatch() {
 const B0 = M.bastion; if (!B0) return;
 if (B2D.open) return;
 if (B0.space === 'citadel') {
-for (const e of [B, D]) if (e.hp <= 0) { e.hp = e.lagHp = e.maxHp; e.x = 1900; }
+for (const e of [B, D]) if (e.hp <= 0) {   // 主城广场的陪练魔卒倒下后重新站起来（以前回满血却一直隐身，广场上就没人可打了）
+e.hp = e.lagHp = e.maxHp; e.x = e === B ? 1860 : 2040; e.y = 0; e.vx = e.vy = 0;
+e.hidden = false; e.state = 'idle'; e.t = 0; e.invul = 1.0;
+}
 return;
 }
 const foesDown = [B, D].every(e => e.hidden || e.hp <= 0);
