@@ -14,7 +14,7 @@
 [![Online: WebRTC + Rollback](https://img.shields.io/badge/Online-WebRTC%20%2B%20Rollback-blue.svg?style=flat-square)](#how-it-works)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](license)
 
-**[English](readme.md)** • **[简体中文](readme.zh-cn.md)** • **[Wiki](https://github.com/AMFI-Disable/RenYing/wiki)**
+**[English](readme.md)** · **[简体中文](readme.zh-cn.md)** · **[Wiki](https://github.com/AMFI-Disable/RenYing/wiki)** · [Changelog](changelog.md) · [Security Policy](security.md) · [MIT License](license)
 
 </div>
 

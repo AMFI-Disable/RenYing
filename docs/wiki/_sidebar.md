@@ -17,4 +17,4 @@
 - [Contributing / 参与开发](contributing.md)
 - [Version History / 版本迭代史](version-history.md)
 
-[▶ Play / 游玩](https://amfi-disable.github.io/RenYing/)
+[Play / 游玩](https://amfi-disable.github.io/RenYing/)

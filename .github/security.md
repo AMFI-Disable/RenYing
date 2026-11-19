@@ -6,8 +6,8 @@ Only the version currently served at <https://amfi-disable.github.io/RenYing/> a
 
 | Version | Supported |
 | :--- | :--- |
-| Latest on `main` (1.0.x) | :white_check_mark: |
-| Older builds and old cached pages | :x: |
+| Latest on `main` (1.0.x) | Yes |
+| Older builds and old cached pages | No |
 
 ## What Is In Scope
 
