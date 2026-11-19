@@ -2,7 +2,7 @@
 defHero({
   id: 'moyu', skin: 'my', en: 'Mo Yu',
   // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
-  bal: { normal: 0.882, skill: 0.882, ult: 0.882, cd: 1.0, hp: 0.882 },
+  bal: { normal: 1.083, skill: 1.083, ult: 1.083, cd: 1.0, hp: 1.083 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '墨羽', role: '泼墨画师', diff: 3, escCD: 8.5, skill: 'inktrap', skill2: 'inksplash', ult: 'inkdragon', passive: 'brush',
     passiveName: '笔锋', passiveDesc: '墨韵宗师宗风深沉（1.10体量），墨阵定身强行封锁走位；墨水屏障加持架势耐力（115），蓄力挥洒自如，更有【墨韵护体】减免重创，专破铁山等钝重武夫。',

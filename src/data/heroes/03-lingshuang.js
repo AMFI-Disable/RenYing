@@ -2,7 +2,7 @@
 defHero({
   id: 'lingshuang', skin: 'ls', en: 'Ling Shuang',
   // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
-  bal: { normal: 1.066, skill: 1.066, ult: 1.066, cd: 1.0, hp: 1.066 },
+  bal: { normal: 1.126, skill: 1.126, ult: 1.126, cd: 1.0, hp: 1.126 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '凌霜', role: '寒枪骁将', diff: 2, escCD: 8.0, skill: 'backthrust', skill2: 'spin', ult: 'timestop', passive: 'tip',
     passiveName: '枪尖', passiveDesc: '枪走一线：枪尖命中增伤 25% 且一挑冲天。枪长步稳（1.05体量），枪旋可拨开暗器并保持中线绝对压制。',

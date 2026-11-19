@@ -2,7 +2,7 @@
 defHero({
   id: 'tieshan', skin: 'ts', en: 'Tie Shan',
   // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
-  bal: { normal: 1.076, skill: 1.076, ult: 1.076, cd: 1.0, hp: 1.076 },
+  bal: { normal: 1.163, skill: 1.163, ult: 1.163, cd: 1.0, hp: 1.163 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '铁山', role: '玄铁重甲', diff: 1, escCD: 8.5, skill: 'quake', skill2: 'ironwall', ult: 'avalanche', passive: 'armor',
     passiveName: '霸体', passiveDesc: '玄铁重甲冠绝群雄，气血深厚（900），体量威严（1.35）。重斩与蓄力斩自带霸体减伤20%，巨刃沉身格挡稳健（115架势/8%微伤），刚猛沉稳。',

@@ -2,7 +2,7 @@
 defHero({
   id: 'leiming', skin: 'lm', en: 'Lei Ming',
   // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
-  bal: { normal: 1.067, skill: 1.067, ult: 1.067, cd: 1.0, hp: 1.067 },
+  bal: { normal: 1.076, skill: 1.076, ult: 1.076, cd: 1.0, hp: 1.076 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '雷鸣', role: '雷拳武僧', diff: 1, escCD: 8.0, skill: 'thunderfist', skill2: 'stomp', ult: 'thunder', passive: 'chain',
     passiveName: '连环', passiveDesc: '六连重拳如惊雷，金刚体魄筋骨强横（885血/1.22体量）；架势耐力深厚且回涌较快（32/秒），金刚雷铠御守引雷反击，防守沉稳转守为攻。',

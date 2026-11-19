@@ -2,7 +2,7 @@
 defHero({
   id: 'gouchen', skin: 'gc', en: 'Gou Chen',
   // ---- 强度倍率（伤害 / 冷却 / 气血），调平衡只改这一行 ----
-  bal: { normal: 1.08, skill: 1.08, ult: 1.08, cd: 1.0, hp: 1.08 },
+  bal: { normal: 1.245, skill: 1.245, ult: 1.245, cd: 1.0, hp: 1.245 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '勾陈', role: '链锤游侠', diff: 2, escCD: 9.0, skill: 'hook', skill2: 'whirl', ult: 'skynet', passive: 'bind',
     passiveName: '震魄', passiveDesc: '一条铁链拴着一柄方锤，走路时锤子在身边晃荡，出手时整条链子甩出去。飞锤砸中会扯链把对手拽到身前，被锤中的 1.2 秒内对手承受的伤害提高 25%；旋锤抡圆了能连砸带甩。链长（1.25 臂展），但霸体能硬吃飞锤。',

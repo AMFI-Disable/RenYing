@@ -229,7 +229,7 @@ export default [
     })()`
   },
   {
-    // 离影渡影：路过的敌人挨一刀（约 95，打飞）；不在路上的不挨。磁仙正极普攻、正极 R 伤害比负极高很多
+    // 离影渡影：路过的敌人挨一刀（平衡倍率前约 65，打飞）；不在路上的不挨。磁仙正极普攻、正极 R 伤害比负极高很多
     name: 'LiYing swap path damage and CiXian polarity damage',
     fn: `(() => {
       startMatch('train', 'stand', [CHAR_IDX.liying, CHAR_IDX.qingfeng]);
@@ -244,7 +244,8 @@ export default [
       };
       const on = swap(600), off = swap(1400);
       if (A.x !== 900) { toMenu(); return { pass: false, error: 'the swap should still land on the clone' }; }
-      if (on < 90 || on > 105) { toMenu(); return { pass: false, error: 'a foe on the path should take about 95, got ' + on }; }
+      const onBase = on / ((BAL.liying || {}).skill || 1);   // 去掉离影的平衡倍率再比：倍率调过以后这一刀的基础伤害仍约 65
+      if (onBase < 61 || onBase > 72) { toMenu(); return { pass: false, error: 'a foe on the path should take about 65 before balance scaling, got ' + onBase }; }
       if (off !== 0) { toMenu(); return { pass: false, error: 'a foe off the path should take nothing, got ' + off }; }
       if (MAG.plusDmg < 1.8 || MAG.rPlusDmg < 75 || !(MAG.minusDmg > 0.55 && MAG.minusDmg < 0.7)) { toMenu(); return { pass: false, error: 'cixian polarity damage: ' + JSON.stringify(MAG) }; }
       toMenu();

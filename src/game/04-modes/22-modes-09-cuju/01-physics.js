@@ -286,9 +286,15 @@ function cujuBodies(b) {
 function cujuRect(b, r, e) {
   const R = cujuBallR(), cx = clamp(b.x, r[0], r[2]), cy = clamp(b.y, r[1], r[3]);
   let nx = b.x - cx, ny = b.y - cy; const d = Math.hypot(nx, ny);
-  if (d >= R || d < 0.001) return false;
-  nx /= d; ny /= d;
-  b.x = cx + nx * R; b.y = cy + ny * R;
+  if (d >= R) return false;
+  if (d < 0.001) {   // 球心已经钻进横梁里（球很快时）：从最近的一边推出去，不能直接穿过
+    const pen = [b.x - r[0], r[2] - b.x, b.y - r[1], r[3] - b.y], k = pen.indexOf(Math.min(...pen));
+    nx = k === 0 ? -1 : k === 1 ? 1 : 0; ny = k === 2 ? -1 : k === 3 ? 1 : 0;
+    b.x = k === 0 ? r[0] - R : k === 1 ? r[2] + R : b.x; b.y = k === 2 ? r[1] - R : k === 3 ? r[3] + R : b.y;
+  } else {
+    nx /= d; ny /= d;
+    b.x = cx + nx * R; b.y = cy + ny * R;
+  }
   const dot = b.vx * nx + b.vy * ny;
   if (dot < 0) { b.vx -= (1 + e) * dot * nx; b.vy -= (1 + e) * dot * ny; }
   return true;
