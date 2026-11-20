@@ -315,10 +315,10 @@ Bugs and ideas go in [Issues](https://github.com/AMFI-Disable/RenYing/issues). S
 
 ### Star History
 
-<a href="https://www.star-history.com/#AMFI-Disable/RenYing&Date">
+<a href="https://www.star-history.com/#AMFI-Disable/AMFI-Disable,AMFI-Disable/AMFI-Disable.github.io,AMFI-Disable/Brew-Ghost,AMFI-Disable/BrewStore,AMFI-Disable/DustIII,AMFI-Disable/FMG_Free-MapGenie,AMFI-Disable/GeoFS_Extension,AMFI-Disable/GimSell_Gimkit-Seller,AMFI-Disable/Homebrew-BrewStore,AMFI-Disable/Homebrew-Juicer,AMFI-Disable/Homebrew-Tap,AMFI-Disable/Juicer,AMFI-Disable/Lichess-AutoPlayer,AMFI-Disable/OmniSuite,AMFI-Disable/PathDeck,AMFI-Disable/RenYing,AMFI-Disable/TornTools&Date">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=AMFI-Disable/RenYing&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=AMFI-Disable/RenYing&type=Date" />
-    <img alt="AMFI-Disable/RenYing Star History Chart" src="https://api.star-history.com/svg?repos=AMFI-Disable/RenYing&type=Date" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=AMFI-Disable/AMFI-Disable,AMFI-Disable/AMFI-Disable.github.io,AMFI-Disable/Brew-Ghost,AMFI-Disable/BrewStore,AMFI-Disable/DustIII,AMFI-Disable/FMG_Free-MapGenie,AMFI-Disable/GeoFS_Extension,AMFI-Disable/GimSell_Gimkit-Seller,AMFI-Disable/Homebrew-BrewStore,AMFI-Disable/Homebrew-Juicer,AMFI-Disable/Homebrew-Tap,AMFI-Disable/Juicer,AMFI-Disable/Lichess-AutoPlayer,AMFI-Disable/OmniSuite,AMFI-Disable/PathDeck,AMFI-Disable/RenYing,AMFI-Disable/TornTools&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=AMFI-Disable/AMFI-Disable,AMFI-Disable/AMFI-Disable.github.io,AMFI-Disable/Brew-Ghost,AMFI-Disable/BrewStore,AMFI-Disable/DustIII,AMFI-Disable/FMG_Free-MapGenie,AMFI-Disable/GeoFS_Extension,AMFI-Disable/GimSell_Gimkit-Seller,AMFI-Disable/Homebrew-BrewStore,AMFI-Disable/Homebrew-Juicer,AMFI-Disable/Homebrew-Tap,AMFI-Disable/Juicer,AMFI-Disable/Lichess-AutoPlayer,AMFI-Disable/OmniSuite,AMFI-Disable/PathDeck,AMFI-Disable/RenYing,AMFI-Disable/TornTools&type=Date" />
+    <img alt="AMFI-Disable Combined Star History Chart" src="https://api.star-history.com/svg?repos=AMFI-Disable/AMFI-Disable,AMFI-Disable/AMFI-Disable.github.io,AMFI-Disable/Brew-Ghost,AMFI-Disable/BrewStore,AMFI-Disable/DustIII,AMFI-Disable/FMG_Free-MapGenie,AMFI-Disable/GeoFS_Extension,AMFI-Disable/GimSell_Gimkit-Seller,AMFI-Disable/Homebrew-BrewStore,AMFI-Disable/Homebrew-Juicer,AMFI-Disable/Homebrew-Tap,AMFI-Disable/Juicer,AMFI-Disable/Lichess-AutoPlayer,AMFI-Disable/OmniSuite,AMFI-Disable/PathDeck,AMFI-Disable/RenYing,AMFI-Disable/TornTools&type=Date" />
   </picture>
 </a>
