@@ -296,3 +296,29 @@ python3 tools/build.py --check
 ## 许可
 
 [MIT](license)。Copyright (c) 2026 AMFI-Disable, Even, Luffy, Opus 5.5, and Gemini 4 Argon.
+
+---
+
+## GitHub 活跃度与星标趋势
+
+[![Total Stars](https://img.shields.io/github/stars/AMFI-Disable?affiliations=OWNER&style=flat-square&label=Total%20Stars&color=f59e0b)](https://github.com/AMFI-Disable?tab=repositories)
+
+> **105 颗总星标**（AMFI-Disable 全仓库累计）。
+
+### 贡献六边形图
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/AMFI-Disable/AMFI-Disable/main/assets/contribution-hexagon-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/AMFI-Disable/AMFI-Disable/main/assets/contribution-hexagon-light.svg" />
+  <img alt="AMFI-Disable Hexagonal Contribution Graph" src="https://raw.githubusercontent.com/AMFI-Disable/AMFI-Disable/main/assets/contribution-hexagon-dark.svg" />
+</picture>
+
+### 星标历史
+
+<a href="https://www.star-history.com/#AMFI-Disable/RenYing&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=AMFI-Disable/RenYing&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=AMFI-Disable/RenYing&type=Date" />
+    <img alt="AMFI-Disable/RenYing Star History Chart" src="https://api.star-history.com/svg?repos=AMFI-Disable/RenYing&type=Date" />
+  </picture>
+</a>

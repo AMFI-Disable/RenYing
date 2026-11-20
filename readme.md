@@ -296,3 +296,29 @@ Bugs and ideas go in [Issues](https://github.com/AMFI-Disable/RenYing/issues). S
 ## License
 
 [MIT](license). Copyright (c) 2026 AMFI-Disable, Even, Luffy, Opus 5.5, and Gemini 4 Argon.
+
+---
+
+## GitHub Activity & Stars
+
+[![Total Stars](https://img.shields.io/github/stars/AMFI-Disable?affiliations=OWNER&style=flat-square&label=Total%20Stars&color=f59e0b)](https://github.com/AMFI-Disable?tab=repositories)
+
+> **105 combined stars** across all AMFI-Disable repositories.
+
+### Contribution Hexagon Graph
+
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="https://raw.githubusercontent.com/AMFI-Disable/AMFI-Disable/main/assets/contribution-hexagon-dark.svg" />
+  <source media="(prefers-color-scheme: light)" srcset="https://raw.githubusercontent.com/AMFI-Disable/AMFI-Disable/main/assets/contribution-hexagon-light.svg" />
+  <img alt="AMFI-Disable Hexagonal Contribution Graph" src="https://raw.githubusercontent.com/AMFI-Disable/AMFI-Disable/main/assets/contribution-hexagon-dark.svg" />
+</picture>
+
+### Star History
+
+<a href="https://www.star-history.com/#AMFI-Disable/RenYing&Date">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=AMFI-Disable/RenYing&type=Date&theme=dark" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=AMFI-Disable/RenYing&type=Date" />
+    <img alt="AMFI-Disable/RenYing Star History Chart" src="https://api.star-history.com/svg?repos=AMFI-Disable/RenYing&type=Date" />
+  </picture>
+</a>
