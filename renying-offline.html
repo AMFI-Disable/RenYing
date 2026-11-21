@@ -3614,7 +3614,7 @@ font-size: 13px;
               <div class="mutator-pills seal-group" id="mutatorPills" role="group" aria-label="战场异变">
                 <button type="button" class="mut-pill seal-stamp sel" data-mut="normal"><span class="stamp-border"><b>常规标准</b></span></button>
                 <button type="button" class="mut-pill seal-stamp" data-mut="chaos"><span class="stamp-border"><b>天机乱斗</b></span></button>
-                <button type="button" class="mut-pill seal-stamp" data-mut="mayhem"><span class="stamp-border"><b>通天神诀</b></span></button>
+                <button type="button" class="mut-pill seal-stamp" data-mut="mayhem"><span class="stamp-border"><b>通天神决</b></span></button>
               </div>
             </div>
 
@@ -3726,7 +3726,7 @@ font-size: 13px;
           <h3 class="spt">侠客列传</h3>
           <span class="sub-badge">每人一条路</span>
         </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">十三位侠客各有各的来路：五节故事、一个抉择、两个结局。每位侠客的进度分开存。</p>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">每位侠客各有各的来路：五节故事、一个抉择、两个结局。每位侠客的进度分开存。</p>
         <div class="saga-wrap"><div class="saga-heroes" id="sagaHeroes"></div><div class="saga-route" id="sagaRoute"></div></div>
       </div>
 
@@ -6475,7 +6475,52 @@ const PATTERNS_EN = [
 [/^已读取 (.+)（(\d+) 个账号）$/, (m0, f, n) => `Read ${f} (${n} accounts)`],
 [/^成功载入 (\d+) 个账号数据$/, (m0, n) => `Loaded ${n} accounts`],
 [/^导入失败：(.+)$/, (m0, x) => `Import failed: ${lookup(x) || x}`],
-[/^文件解析失败：(.+)$/, (m0, x) => `Couldn't read the file: ${lookup(x) || x}`]
+[/^文件解析失败：(.+)$/, (m0, x) => `Couldn't read the file: ${lookup(x) || x}`],
+[/^第 (\d+) 节$/, (m0, n) => `Chapter ${n}`],
+[/^对手 (.+)$/, (m0, h) => `Opponent: ${lookup(h) || h}`],
+[/^撑过 (\d+) 秒$/, (m0, n) => `Survive ${n}s`],
+[/^(\d+) 秒内击败对手$/, (m0, n) => `Win within ${n}s`],
+[/^(.+)阵线$/, (m0, x) => x === '你' ? 'Your Lineup' : lookup(x) ? `${lookup(x)} Lineup` : m0],
+[/^(先锋|中坚|大将) (.+)$/, (m0, s, h) => `${lookup(s) || s} ${lookup(h) || h}`],
+[/^(\d+) \((\d+)段\)$/, (m0, d, n) => `${d} (${n} hits)`],
+[/^(\d+)上限$/, (m0, n) => `${n} cap`],
+[/^(.+)武器箱$/, (m0, c) => lookup(c) ? `${lookup(c)} Case` : m0],
+[/^(精铁|碧玉|灵犀|赤霄|绝世|斩数版) ([\d.]+%)$/, (m0, t, p) => `${lookup(t)} ${p}`],
+[/^(精铁|碧玉|灵犀|赤霄) →(?: (精铁|碧玉|灵犀|赤霄|绝世))?$/, (m0, a, b) => `${lookup(a)} →${b ? ' ' + lookup(b) : ''}`],
+[/^集齐这个箱子的 (\d+) 款精铁：(\d+)\/(\d+)，送 1 个(.+)武器箱 \+ 1 张改名标签$/, (m0, n, a, b, c) => `Collect all ${n} Iron items from this case: ${a}/${b}. Reward: 1 ${lookup(c) || c} Case + 1 Rename Tag`],
+[/^库存里的(精铁|碧玉|灵犀|赤霄)饰品$/, (m0, t) => `Your ${lookup(t)} cosmetics`],
+[/^放进 (\d+) 件(精铁|碧玉|灵犀|赤霄)饰品，换 1 件(碧玉|灵犀|赤霄|绝世)。出什么取决于材料来自哪个武器箱；斩数版只能和斩数版一起换，换出来的也是斩数版。$/,
+(m0, n, a, b) => `Put in ${n} ${lookup(a)} cosmetics to get 1 ${lookup(b)}. What you get depends on which cases the materials came from; Kill Counter items only trade with Kill Counter items and give a Kill Counter item.`],
+[/^还有 (\d+) 台没开封$/, (m0, n) => `${n} unopened`],
+[/^货郎在商店按固定价格卖（一台 ([\d,]+) 墨锭），每周补给、星章兑换也有，新手礼也送一台。$/, (m0, n) => `Peddlers are sold in the shop at a fixed price (${n} Ink each). The weekly supply, the Star Exchange and the starter gift also give them.`],
+[/^每天限开 (\d+) 个$/, (m0, n) => `${n} per day`],
+[/^每周限开 (\d+) 个$/, (m0, n) => `${n} per week`],
+[/^赤霄和绝世加起来 ([\d.]+%)$/, (m0, p) => `Crimson + Peerless: ${p}`],
+[/^(十二星座，每位侠客都有星辉、星焰、星冕三款。每个号都送了 1 个星座武器箱，可以先免费开一次。)?只出这三档，这 (\d+) 款饰品别的武器箱都开不出来，开它也不占每天那 (\d+) 个普通武器箱。点一下饰品，就能先看看穿上的样子。$/,
+(m0, z, n, d) => `${z ? lookup(z) + ' ' : ''}Only these three tiers drop. These ${n} cosmetics come from no other case, and opening this one doesn't use up your ${d} daily standard cases. Click a cosmetic to preview it.`],
+[/^(\d+) 天没有成交$/, (m0, n) => `No sales in ${n} days`],
+[/^收录全部 (\d+) 款皮肤。点选查看效果、所属套装和获取方式。$/, (m0, n) => `All ${n} skins. Click one to see its effects, its set and how to get it.`],
+[/^(\d+) 款$/, (m0, n) => `${n} skins`],
+[/^(\d+) 款已拥有$/, (m0, n) => `${n} owned`],
+[/^第 (\d+) 季$/, (m0, n) => `Season ${n}`],
+[/^本季共得 (\d+)$/, (m0, n) => `${n} earned this season`],
+[/^这周再打 (\d+) 局解锁（(\d+)\/(\d+)）$/, (m0, n, a, b) => `Play ${n} more this week to unlock (${a}/${b})`],
+[/^(\d+) 墨锭$/, (m0, n) => `${n} Ink`],
+[/^(\d+) 星章兑换$/, (m0, n) => `Redeem for ${n} Star${n === '1' ? '' : 's'}`],
+[/^对局掉落：每局 (\d+)% 机会掉一件饰品或武器箱，每周最多 (\d+) 次（本周已掉 (\d+) 次）。$/, (m0, p, m, k) => `Match drops: each match has a ${p}% chance to drop a cosmetic or case, up to ${m} per week (${k} this week).`],
+[/^进行 (\d+) 局对战$/, (m0, n) => `Play ${n} match${n === '1' ? '' : 'es'}`],
+[/^赢下 (\d+) 局$/, (m0, n) => `Win ${n} match${n === '1' ? '' : 'es'}`],
+[/^用(.+)赢下 (\d+) 局$/, (m0, h, n) => `Win ${n} match${n === '1' ? '' : 'es'} as ${lookup(h) || h}`],
+[/^在劲敌或更高难度下赢 (\d+) 局人机$/, (m0, n) => `Win ${n} match${n === '1' ? '' : 'es'} vs AI on ${lookup('劲敌')} or above`],
+[/^以 2 : 0 拿下 (\d+) 局$/, (m0, n) => `Win ${n} match${n === '1' ? '' : 'es'} 2 : 0`],
+[/^一局里打出 (\d+) 连击$/, (m0, n) => `Land a ${n}-hit combo in one match`],
+[/^施展 (\d+) 次终极奥义$/, (m0, n) => `Use ${n} ultimate${n === '1' ? '' : 's'}`],
+[/^联机对战 (\d+) 局$/, (m0, n) => `Play ${n} online match${n === '1' ? '' : 'es'}`],
+[/^打 (\d+) 局(问剑密卷|天机乱斗|2v2)$/, (m0, n, x) => `Play ${n} ${lookup(x) || x} match${n === '1' ? '' : 'es'}`],
+[/^赢下 (\d+) 局 3v3 车轮战$/, (m0, n) => `Win ${n} ${lookup('3v3 车轮战')} match${n === '1' ? '' : 'es'}`],
+[/^开启 (\d+) 个武器箱$/, (m0, n) => `Open ${n} case${n === '1' ? '' : 's'}`],
+[/^签 (\d+) 份熔铸契$/, (m0, n) => `Sign ${n} ${lookup('熔铸契')}${n === '1' ? '' : 's'}`],
+[/^在玩家市场(卖出|买入) (\d+) 件饰品$/, (m0, v, n) => `${v === '卖出' ? 'Sell' : 'Buy'} ${n} cosmetic${n === '1' ? '' : 's'} on the player market`]
 ];
 function lookup(text) {
 if (!text) return '';
@@ -6485,13 +6530,46 @@ for (let i = 0; i < PATTERNS_EN.length; i++) {
 const re = PATTERNS_EN[i][0];
 if (re.test(text)) return text.replace(re, PATTERNS_EN[i][1]);
 }
-return '';
+return joined(text);
+}
+const JOIN_SEPS = [' | ', ' · ', '·', '，'];
+const CJK = /[\u4e00-\u9fff]/;
+function joined(text) {
+const sep = JOIN_SEPS.find(s => text.includes(s));
+if (!sep) return '';
+const parts = text.split(sep);
+let hit = false;
+for (let i = 0; i < parts.length; i++) {
+const p = parts[i].trim();
+if (!p || !CJK.test(p)) continue;
+const out = lookup(p);
+if (!out) return '';
+parts[i] = parts[i].replace(p, out);
+hit = true;
+}
+return hit ? parts.join(sep === '·' ? ' · ' : sep === '，' ? ', ' : sep) : '';
 }
 function t(text) {
 if (currentLang === 'zh' || !text || typeof text !== 'string') return text;
 const trimmed = text.trim();
 const out = lookup(trimmed);
 return out ? text.replace(trimmed, out) : text;
+}
+const TR_ATTRS = ['title', 'placeholder', 'aria-label'];
+function translateAttrs(node) {
+for (const attr of TR_ATTRS) {
+const val = node.getAttribute(attr);
+if (!val) continue;
+const origKey = 'orig_' + attr.replace(/-/g, '_');
+const wrote = node.__trAttr && node.__trAttr[attr];
+if (node.dataset[origKey] === undefined || (val !== wrote && val !== node.dataset[origKey])) node.dataset[origKey] = val;
+const orig = node.dataset[origKey];
+const trimmed = orig.trim();
+const out = currentLang === 'en' && trimmed ? lookup(trimmed) : '';
+const next = out ? orig.replace(trimmed, out) : orig;
+(node.__trAttr || (node.__trAttr = {}))[attr] = next;
+if (val !== next) node.setAttribute(attr, next);
+}
 }
 function translateNode(node) {
 if (!node) return;
@@ -6511,20 +6589,7 @@ node.nodeValue = orig;
 return;
 }
 if (node.nodeType === Node.ELEMENT_NODE) {
-['title', 'placeholder', 'aria-label'].forEach(attr => {
-const val = node.getAttribute(attr);
-if (val) {
-const origKey = 'orig_' + attr.replace(/-/g, '_');
-const orig = node.dataset[origKey] !== undefined ? node.dataset[origKey] : val;
-if (node.dataset[origKey] === undefined) {
-node.dataset[origKey] = orig;
-}
-const trimmed = orig.trim();
-const out = currentLang === 'en' && trimmed ? lookup(trimmed) : '';
-const next = out ? orig.replace(trimmed, out) : orig;
-if (node.getAttribute(attr) !== next) node.setAttribute(attr, next);
-}
-});
+translateAttrs(node);
 if (node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE' && node.tagName !== 'CANVAS' && !node.classList.contains('no-i18n')) {
 for (let i = 0; i < node.childNodes.length; i++) {
 translateNode(node.childNodes[i]);
@@ -6544,11 +6609,12 @@ function trWatch() {
 if (trMO || typeof MutationObserver === 'undefined' || typeof document === 'undefined' || !document.body) return;
 trMO = new MutationObserver(recs => {
 if (currentLang !== 'en') return;
-for (const r of recs) for (const n of r.addedNodes) {
-if (n.nodeType === 1 || n.nodeType === 3) translateNode(n);
+for (const r of recs) {
+if (r.type === 'attributes') { if (r.target.nodeType === 1) translateAttrs(r.target); continue; }
+for (const n of r.addedNodes) if (n.nodeType === 1 || n.nodeType === 3) translateNode(n);
 }
 });
-trMO.observe(document.body, { childList: true, subtree: true });
+trMO.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: TR_ATTRS });
 }
 if (typeof document !== 'undefined') {
 if (document.body) trWatch();
@@ -10783,6 +10849,227 @@ Object.assign(UI_COPY_EN, {
 "捐献材料": "Donate Mats"
 });
 Object.assign(UI_COPY_EN, {
+"2D 俯视角多人守城与肉鸽远征": "2D top-down co-op defense and roguelike expedition",
+"故事与试炼": "Stories and Trials",
+"在训练场学习招式、自由练习木人桩，或进行专项情景训练": "Learn moves in the training ground, practice freely on the dummy, or run focused drills",
+"挑选三位豪杰排定出战顺序，胜者保留残血守擂，直至一方全灭！": "Pick three heroes and set their order. The winner stays in with the health they have left, until one side is wiped out!",
+"禁选": "Bans",
+"禁": "Ban",
+"天机莫测，乾坤逆转！每隔十五息随机降临百种异象秘法加持": "Fate turns without warning! Every fifteen breaths a random omen from over a hundred empowers the fight",
+"动态随机词条": "Random rolling mutators",
+"108天机秘令": "108 secret omens",
+"天道无常，战局每隔 15 秒天降水墨异象，在超过 100 种天机词条中随机变幻！（疾风超速、月华倒转、浮空低重力、无限怒气、雷霆反震、乾坤移形…）": "Heaven is fickle: every 15 seconds an ink omen falls on the fight, rolled from over 100 mutators! (Gale speed, moon reversal, low gravity, endless rage, thunder recoil, swapped positions…)",
+"点将台规则": "Draft rules",
+"娱乐异变免禁用盲选": "Casual mutators, no bans, blind pick",
+"选定境界后点击开启，在点将台中自由点选本命侠客迎战天机异变。": "Pick a difficulty and start, then choose any hero in the draft to face the omens.",
+"通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！": "An all-out clash of gods and demons! Ten times the meter and no cooldowns on any skill or ultimate!",
+"通天彻地，狂魔乱舞！全员真元暴涨 10 倍，小技能与终极绝学全免冷却随心倾泻，招式威能翻倍狂化，全屏水墨震颤狂澜！": "Heaven and earth go wild! Everyone gains 10 times the meter, skills and ultimates have no cooldown, move power is doubled, and the whole screen shakes with ink!",
+"狂暴神通免禁用直选": "Frenzied powers, no bans, direct pick",
+"选定电脑境界后点击开启，进入点将台点选你的神魔出战侠客。": "Pick the AI difficulty and start, then choose your hero in the draft.",
+"切换架势": "Switch Stance",
+"鼠标也能用：左键轻击与蓄力，右键腾空闪，左键加右键使远程招式": "The mouse works too: left click for light attacks and charging, right click for Aerial Flash, left plus right click for ranged moves",
+"敌方阵线": "Enemy Lineup",
+"反应很慢（0.42~0.7 秒），很少格挡（15%），一套最多打 2 下，技能常常乱放，三成动作会失误。适合熟悉移动、按键手感和技能命中。": "Very slow reactions (0.42–0.7s), rarely guards (15%), combos of at most 2 hits, often wastes skills and fumbles three moves in ten. Good for learning movement, controls and landing skills.",
+"反应 0.4 秒以上": "Reacts in 0.4s+",
+"很少格挡 (15%)": "Rarely guards (15%)",
+"反应 0.26~0.42 秒，会格挡（40%）、偶尔确反，能打 3 连段、偶尔取消接技能，被连多了会腾空闪。适合练常规走位和破招时机。": "Reacts in 0.26–0.42s, guards (40%) and sometimes punishes, lands 3-hit combos and sometimes cancels into skills, and uses Aerial Flash after a long combo. Good for practicing footwork and punish timing.",
+"反应约 0.3 秒": "Reacts in about 0.3s",
+"格挡 40%": "Guards 40%",
+"3 连段": "3-hit combos",
+"反应 0.15~0.25 秒，格挡 68% 并偶尔精准招架，挡住就确反，5 连段接技能，会压起身、偶尔骗闪，血量领先会拉开距离，并按双方角色调整站位。": "Reacts in 0.15–0.25s, guards 68% with the occasional perfect parry, punishes after every block, chains 5-hit combos into skills, pressures your wake-up, sometimes baits your escape, backs off when ahead on health and adjusts spacing to the matchup.",
+"挡后确反": "Punishes after blocks",
+"压起身": "Wake-up pressure",
+"按角色针对": "Plays the matchup",
+"反应 0.08~0.13 秒，格挡 88%、四成精准招架，记住你被连几下会闪并停手骗闪，算好起身时机压起身，用自我对弈训练出的角色打法。本难度电脑多 35% 血。": "Reacts in 0.08–0.13s, guards 88% with 40% perfect parries, remembers after how many hits you escape and stops to bait it, times your wake-up, and plays each hero with a style trained through self-play. The AI has 35% more health on this difficulty.",
+"骗闪": "Baits escapes",
+"读你的起身习惯": "Reads your wake-up",
+"训练出的角色打法": "Trained hero styles",
+"反应只有 0.025~0.05 秒，几乎每招都防、九成精准招架，蓄力斩没蓄满就打断，躲大招、骗闪、压起身、针对角色特性全开；每个角色的打法都是 AI 和 AI 自我对弈进化出来的。": "Reacts in only 0.025–0.05s, guards almost everything with 90% perfect parries, interrupts charged slashes before they finish, dodges ultimates, baits escapes, pressures wake-ups and exploits every hero trait. Every hero's style evolved through AI self-play.",
+"自我对弈训练": "Self-play trained",
+"九成精准招架": "90% perfect parries",
+"骗闪与压起身": "Baits and wake-up pressure",
+"，可二段跳；燕翎在空中按住可以飞": ", double jump available; Yan Ling can hold it in the air to fly",
+"鼠标左键或": "Left click or",
+"，连点五段": ", tap for a five-hit chain",
+"按住左键（或": "Hold left click (or",
+"）蓄力，松开便出；蓄力时能缓步挪动": ") to charge and release to strike; you can walk slowly while charging",
+"按住左键再点右键（或": "Hold left click and tap right click (or",
+"），各家不同": "); different for every hero",
+"点一下鼠标右键（或": "Tap right click (or",
+"左 Shift": "Left Shift",
+"），任何状态都能用": "); usable in any state",
+"最后按的是": "If the last key was",
+"就朝左，是": "you face left; if it was",
+"就朝右；按住防御时自动面向对手（设置里可以改成一直自动面向对手）": "you face right. Holding guard turns you toward the opponent (Settings can make you always face them)",
+"，各家不同": ", different for every hero",
+"，气满时": ", when your meter is full",
+"回合": "Rounds",
+"练习时按": "In practice press",
+"切换：任打不还手 / 一味死守 / 被连便闪 / 钉在原地": "to switch: never fights back / always guards / escapes combos / stands still",
+"菜单、选人、暂停和结算页：方向键或": "Menus, hero select, pause and results: arrow keys or",
+"移动金色选中框，": "move the gold highlight,",
+"确认，": "confirms,",
+"返回；对局里用": "goes back. In a match use",
+"攻击，全程不用鼠标": "to attack. No mouse needed at all",
+"人机对战开打前双方各禁用一个角色、各选一个角色，每回合双方都满血。联机对战（房间、匹配、排位）各禁 1 人、各选 3 人车轮接力：先由第一人出战，输掉一回合的一方换上下一人（满血），活下来的人只回 80 血继续守擂，谁的三人都被击倒谁输。从首页点「开始人机对战」不用选人，直接用首页的角色开打。在选人界面双击角色卡即可确认。": "Before a match against the AI, each side bans one hero and picks one, and both start every round at full health. Online matches (rooms, matchmaking, ranked) ban 1 and pick 3 for a relay: the first hero fights, the side that loses a round sends in its next hero at full health, and the survivor only heals 80 and stays in. Whoever loses all three heroes loses. Starting a match against the AI from the home screen skips the draft and uses your home hero. Double-click a hero card in the draft to confirm.",
+"：被连击、被挑飞、倒地都能用，立刻解除受制并向上闪起；落地或出手之前，对手碰不到你。冷却 9 秒，被大招锁住时用不出。": ": works while you are being combo'd, launched or knocked down. It frees you at once and flashes you upward, and until you land or attack the opponent cannot touch you. 9s cooldown; it can't be used while an ultimate holds you.",
+"：蓄满时角色会闪一下，松开便是满蓄力的一斩，能打穿防御。蓄力斩会把对手直接打倒，倒地期间打不到。": ": your hero flashes when fully charged, and releasing then gives a full-power slash that breaks through guard. A charged slash knocks the opponent down, and they can't be hit while down.",
+"（按住左键再点右键）：都会把对手短暂打飞，打中后可以接着连。": " (hold left click, then tap right click): every one briefly launches the opponent, so you can keep comboing after it lands.",
+"连招示例：五段连击的最后一下把对手打飞，马上跳起追上去，空中连点两下左键（第二下是下砸）；远程招式也会把对手短暂打飞，可以接着连。": "Combo example: the last hit of the five-hit chain launches the opponent. Jump after them right away and tap left click twice in the air (the second hit slams down). Ranged moves also briefly launch the opponent, so you can follow up.",
+"触控板两指点按就是右键。单人练习时按 P 暂停，M 静音。": "On a trackpad, a two-finger tap is a right click. In solo practice press P to pause and M to mute.",
+"每位侠客自己的故事：五节、一个抉择、两个结局": "Each hero's own story: five chapters, one choice, two endings",
+"每人一条路": "One Road Each",
+"每位侠客各有各的来路：五节故事、一个抉择、两个结局。每位侠客的进度分开存。": "Every hero has a road of their own: five chapters, one choice, two endings. Progress is saved separately for each hero.",
+"击败对手": "Defeat the opponent",
+"已走过": "Done",
+"抉择未定": "Choice pending",
+"下一节": "Next",
+"重温": "Replay",
+"做出抉择": "Make your choice",
+"开始": "Start",
+"撑住了": "You held on",
+"时辰已到": "Time is up",
+"再战一次": "Fight Again",
+"返回列传": "Back to Sagas",
+"最近走完的：": "Recently finished:",
+"所有在线玩家都能看到，点名字可以加好友": "Everyone online can see this. Click a name to add a friend",
+"正在连接大厅…": "Connecting to the lobby…",
+"你好": "Hello",
+"哈哈": "Haha",
+"呜呜": "Sob",
+"生气": "Angry",
+"震惊": "Shocked",
+"淡定": "Calm",
+"来战": "Fight me",
+"好局": "Good game",
+"承让": "Well fought",
+"无法连接到云端服务器，请检查网络连接或接口配置": "Can't reach the cloud server. Check your network connection or the server settings",
+"皮肤图鉴": "Skin Codex",
+"武学": "Martial Arts",
+"武学与徽记": "Martial Arts and Badges",
+"登录之后才能开箱、交易。先逛逛看吧。": "Log in to open cases and trade. Feel free to look around first.",
+"件（无限容量）": "items (no limit)",
+"武库的库存还是空的。去皮肤图鉴看看所有皮肤和获取方式。": "Your armory is still empty. Check the Skin Codex to see every skin and how to get it.",
+"看皮肤图鉴": "Open Skin Codex",
+"墨锭：打对局、做任务、在市场卖饰品得到；用来买武器箱": "Ink: earned from matches, tasks and selling cosmetics on the market; spent on weapon cases",
+"初刃": "First Blade",
+"名剑": "Famed Sword",
+"江湖": "Wanderer",
+"惊雷": "Startling Thunder",
+"寒月": "Cold Moon",
+"神兵": "Divine Arms",
+"星座": "Zodiac",
+"普通武器箱": "Standard Cases",
+"星辉": "Starglow",
+"星焰": "Starflame",
+"星冕": "Star Crown",
+"狮子": "Leo",
+"天蝎": "Scorpio",
+"金牛": "Taurus",
+"射手": "Sagittarius",
+"天秤": "Libra",
+"白羊": "Aries",
+"处女": "Virgo",
+"巨蟹": "Cancer",
+"双子": "Gemini",
+"双鱼": "Pisces",
+"水瓶": "Aquarius",
+"摩羯": "Capricorn",
+"天罗星杼": "Celestial Star Shuttle",
+"幽夜星魄": "Night Star Soul",
+"极星乾坤": "Polestar Cosmos",
+"今天还能开": "Openable today:",
+"个普通武器箱": "standard cases",
+"个神兵武器箱": "Divine Arms cases",
+"本周还能开": "Openable this week:",
+"个星座武器箱": "Zodiac cases",
+"普通和神兵武器箱每天零点刷新，星座武器箱每周一刷新；武器箱在商店按固定价格买，不限量": "Standard and Divine Arms limits reset at midnight, Zodiac on Monday. Cases are sold in the shop at a fixed price with no limit",
+"拥有": "Owned",
+"十二星座，每位侠客都有星辉、星焰、星冕三款。每个号都送了 1 个星座武器箱，可以先免费开一次。": "Twelve signs, and every hero has a Starglow, Starflame and Star Crown version. Every account gets 1 free Zodiac case to try.",
+"未集齐": "Incomplete",
+"看看穿上的样子": "Preview it on",
+"开封一台": "Open One",
+"买一台": "Buy One",
+"货郎报价的概率": "Peddler offer odds",
+"每件都从八个武器箱的全部饰品里抽（神兵、星座武器箱的也有），报价按饰品的品质定，有高有低": "Every offer is drawn from all cosmetics in the eight cases (Divine Arms and Zodiac included); the price depends on the item's quality and can be high or low",
+"买下一件，这台货郎就用掉了；5 件都不要，货郎也没了。开封 3 天内不处理会作废。货郎只在商店卖，买来的不能转卖。": "Buying one item uses up the peddler; passing on all 5 uses it up too. An opened peddler expires after 3 days. Peddlers are only sold in the shop and can't be resold.",
+"开封以后一次给你看一件饰品、报一个价：想要就买下，不要就换下一件，最多看 5 件。": "Once opened it shows you one cosmetic at a time with a price: buy it, or skip to the next, up to 5 items.",
+"在卖的饰品": "For Sale",
+"我的挂单": "My Listings",
+"成交记录": "Sales History",
+"玩家市场只卖饰品：每一件都是别的玩家挂的，标价全由卖家自己定，系统不定价、也不收购；成交扣 15% 手续费。武器箱和货郎在商店按固定价格买。": "The player market only sells cosmetics. Every item is listed by another player at a price they choose; the game neither sets prices nor buys items, and each sale has a 15% fee. Cases and peddlers are sold in the shop at fixed prices.",
+"玩家市场要登录云端账号、连上服务器才能用：本机存档只能开箱、熔铸，不能和别的玩家买卖。": "The player market needs a cloud account and a server connection. A local save can open cases and reforge, but not trade with other players.",
+"只看有人在卖的": "Only items on sale",
+"没人在卖": "None for sale",
+"签订合同": "Sign Contract",
+"点一下放进合同": "Click to add to the contract",
+"库存里没有这一档的饰品。": "You have no cosmetics of this tier.",
+"星章": "Stars",
+"每周一换四个任务，完成拿星章，星章换武器箱、货郎、改名标签和饰品。": "Four new missions every Monday. Finish them for Stars and trade Stars for cases, peddlers, rename tags and cosmetics.",
+"本周任务": "This Week's Missions",
+"每周补给": "Weekly Supply",
+"已解锁：四样里挑两样": "Unlocked: pick two of four",
+"星章兑换": "Star Exchange",
+"饰品都从普通武器箱里出，神兵、星座武器箱的换不到": "Cosmetics come from standard cases; Divine Arms and Zodiac items can't be exchanged",
+"随机武器箱": "Random Case",
+"随机碧玉饰品": "Random Jade Cosmetic",
+"随机灵犀饰品": "Random Spirit Cosmetic",
+"自选赤霄饰品": "Crimson Cosmetic of Your Choice",
+"（武库获取或破关解锁）": "(from the Armory or by clearing stages)",
+"个 · 商店价": "· Shop price",
+"攻击硬直更长，伤害略低，攻击距离缩短。": "Longer hitstun, slightly less damage, shorter reach.",
+"轻击判定更窄更远，蓄力斩后摇增加。": "Light attack hitboxes are narrower and reach further; charged slashes recover slower.",
+"打开连段追步窗口；紫金阶可改接技能。": "Opens a chase-step window; Purple Gold can cancel into a skill instead.",
+"下一次格挡交锋减少击退；紫金阶技能也可承接。": "Your next blocked exchange has less pushback; at Purple Gold skills can use it too.",
+"重击获得短促踏进，抓住招架后的反击时机。": "Heavy attacks gain a short step-in to catch the counter window after a parry.",
+"立刻重置冲刺冷却；紫金阶可选重击踏进追击。": "Instantly resets the dash cooldown; Purple Gold can step in with a heavy to chase.",
+"腾空时最多续一次空中冲刺；紫金阶可接空中技能。": "Restores up to one air dash while airborne; Purple Gold can cancel into an aerial skill.",
+"打开退步窗口；紫金阶退步带短暂无敌。": "Opens a retreat-step window; at Purple Gold the step grants brief invincibility.",
+"窗口延长 30%，踏进距离略增。": "Window 30% longer, slightly longer step-in.",
+"链锤强袭：近崖拽击力道强劲，坠崖判定门槛降低。": "Chain Assault: pulls near the cliff hit harder and knock opponents over the edge more easily.",
+"极性推拒：两极磁场排斥增强，更易将敌弹落断崖。": "Polar Repulsion: stronger magnetic push makes it easier to knock enemies off the cliff.",
+"凌空渡虚：浮空滞空与三段跳，身处险境不易失足。": "Sky Walker: hovering and a triple jump make it hard to fall off.",
+"羽行御风：空中滑翔平稳无阻，坠崖受到伤害减半。": "Feather Glide: smooth gliding, and falls off the cliff deal half damage.",
+"寒枪扼险：长枪突刺压制崖口，近崖击退力度提升 20%。": "Spear at the Edge: spear thrusts control the cliff edge; knockback near the cliff +20%.",
+"踏雪无痕：冰面疾行与闪步突进速度提升 15%。": "Traceless Step: running and dashing on ice are 15% faster.",
+"顺风滑斩：冰面冲刺轻击滑行追击，招式连贯流畅。": "Gliding Slash: dash and light attacks slide across the ice for smooth follow-ups.",
+"冰魄机轮：玄铁傀丸在冰面上极低阻力滑行更快更远。": "Ice Gearwheel: the iron puppet ball slides faster and further on the ice.",
+"顺风旋岚：大招龙卷风与旋风掌顺风速度与范围增加。": "Tailwind Gale: the ultimate tornado and whirlwind palm gain speed and range downwind.",
+"顺风泼墨：顺风甩墨泼洒射程增加 30%。": "Tailwind Ink: ink splashes travel 30% further downwind.",
+"雾迷竹影：竹台高低借势布局，雾身消散时回气加倍。": "Misty Bamboo: use the high bamboo platforms; mist clones refund double meter when they fade.",
+"雷鸣琴音：石坛回响，天雷降临时音律充能提速。": "Thunder Melody: the stone altar echoes, and notes charge faster while lightning falls.",
+"镜光引雷：明镜初现可折射天雷震荡，受到天雷伤害减半。": "Mirror Lightning: the moon mirror can deflect lightning, and lightning deals half damage to you.",
+"雷磁共振：雷云笼罩期间，磁场吸引与斥力范围扩大 25%。": "Thunder Resonance: while storm clouds cover the stage, magnetic pull and push range +25%.",
+"高台清乐：立于檐角弹奏，音律波及范围增大 20%。": "High Melody: playing from the eaves gives notes 20% more range.",
+"居高布机：高檐投掷机关傀丸弹跳弧线更加开阔。": "High Ground Devices: puppet balls thrown from the eaves bounce in wider arcs.",
+"俯冲破风：飞檐起跳滞空时间更长，空中出招判定更广。": "Diving Wind: jumps from the eaves hang longer and aerial attacks cover more ground.",
+"清露润镜：酒雾中脱战回复生命速度提升 50%。": "Dewy Mirror: out-of-combat healing in the wine mist is 50% faster.",
+"雾影重重：酒雾之中雾身更凝练，打碎雾身反震对手。": "Layered Mist: mist clones are sturdier in the wine mist, and breaking one jolts the attacker.",
+"机簧润滑：酒雾浸润傀丸，蓄力出击冷却恢复提速。": "Oiled Springs: the wine mist soaks the puppet ball, so charged strikes recover faster.",
+"破防": "Guard Break",
+"破防推掌": "Guard-Break Palm",
+"已禁用": "banned",
+"当前不可选": "not available",
+"已选中": "selected",
+"已被选择": "already picked",
+"未拥有": "Not owned",
+"本周限免": "Free this week",
+"主导航": "Main navigation",
+"战场异变": "Battle mutator",
+"两人一组默契配合，可带电脑同袍或同屏对决！": "Team up in pairs: bring an AI teammate or face off on the same screen!",
+"2v2 组队对决": "2v2 Team Battle",
+"携手破阵": "Break the Line Together",
+"对阵编制": "Team Setup",
+"点将": "Draft",
+"双方各禁 1 人 + 蛇形选 2 人": "each side bans 1, then snake-picks 2",
+"开始选角 (BP)": "Start Draft (BP)",
+"开战": "Fight",
+"随机阵容": "Random Lineup",
+"观战 4 天道 AI 对决": "Watch 4 Transcendent AIs Fight",
+"制胜球数": "Goals to win",
+"连不上牵线服务器，检查网络": "Can't reach the matchmaking server. Check your network"
+});
+Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
 "剑意流转，聚气比常人快 10%。体量身法均称（1.02），剑气与疾风斩攻守自如。": "Sword intent flows freely: builds meter 10% faster than others. Balanced build and footwork (1.02), equally at home attacking or defending with Sword Qi and Gale Slash.",
 "一步居合，身随刀走，直穿敌身；锋刃掠过处施加【居合斩穴】强定身（0.65 秒），并立即重置瞬步冲刺冷却。途中若遇墨阵，一刀两断。": "A single iaido step: the body follows the blade straight through the enemy. The edge applies [Iaido Pressure Point], a hard root (0.65s), and instantly resets the dash cooldown. Any Ink Trap in the way is cut in two.",
@@ -11826,6 +12113,61 @@ Object.assign(UI_COPY_EN, {
 "⊕ 正极": "⊕ Positive",
 "⊖ 负极": "⊖ Negative",
 "天地磁合 · 夹成肉饼": "Heaven-Earth Clamp · Meat Patty",
+"机关傀客": "Puppet Mechanist",
+"机栝动能": "Clockwork Momentum",
+"战场唯一天工傀丸由金丝约束在有限距离内持续往返。普攻与蓄力可以击打傀丸、改变方向并短暂加速。R 穿丝急袭令傀丸沿朝向高速穿击，且可在受击硬直或浮空时强制解控；E 机轮三穿让傀丸横穿战场三次，每名敌人最多承受 120 点伤害，随后收回并刷新 Q。": "A single masterwork puppet ball, held by golden silk, keeps swinging back and forth within a set range. Normal and charged attacks can strike the ball to change its direction and briefly speed it up. R Tether Lash fires the ball forward at high speed and can break you out of hitstun or a launch. E Gearwheel Triple Pass sends the ball across the battlefield three times, dealing at most 120 damage to each enemy, then recalls it and refreshes Q.",
+"金丝傀丸限距往返，击打改向并加速(830血)": "Silk-bound puppet ball swings within range; strike it to redirect and speed it up (830 HP)",
+"击打傀丸改向加速，受击时可按 R 穿丝解控": "Strike the puppet ball to redirect and speed it up; press R while hit to break free with Tether Lash",
+"【机关机栝 · 动能汇聚】金丝约束傀丸往返回环，普攻与蓄力击打可改向加速；R 穿丝急袭能在受击时解控，E 机轮三穿横扫全场并收回傀丸。": "[Clockwork · Gathered Momentum] Golden silk keeps the puppet ball looping back and forth; normal and charged attacks redirect and speed it up. R Tether Lash breaks you free when hit, and E Gearwheel Triple Pass sweeps the whole stage before recalling the ball.",
+"铜手推掌": "Bronze Palm",
+"天工连推": "Masterwork Palm Chain",
+"✦ 传动机掌": "✦ Drive Palm",
+"铜腕推击，末段推掌击飞；命中场上傀丸可将其击飞平推加速。": "Bronze-wrist pushes; the last palm launches. Hitting the puppet ball knocks it forward and speeds it up.",
+"重机轰爆": "Heavy Machine Blast",
+"机关臂重轰，击中傀丸时将其轰击成极速重炮。": "A heavy blow from the machine arm; hitting the puppet ball turns it into a high-speed cannonball.",
+"机影凌空": "Machine Shadow Leap",
+"✦ 空中连击": "✦ Air Combo",
+"半空翻身拍掌，二段势大力沉压地。": "Flip in mid-air and strike with the palm; the second hit slams down hard.",
+"✦ 限距往返": "✦ Bounded Swing",
+"沿朝向放出傀丸，在有限距离内持续往返；普攻与蓄力击打可改向并短暂加速。": "Release the puppet ball forward to swing back and forth within a set range; normal and charged attacks redirect it and briefly speed it up.",
+"🛡️ 受击可放": "🛡️ Usable While Hit",
+"受击可放": "Usable while hit",
+"傀丸沿当前朝向高速穿击，随后回到往返环；受击硬直或浮空时可强制解控。": "The puppet ball shoots forward at high speed, then returns to its loop; it can break you out of hitstun or a launch.",
+"✦ 三次全场穿击": "✦ Three Full-Stage Passes",
+"傀丸疾驰横穿战场三次，再沿金丝回手；每名敌人最多承受 120 点伤害，回手后刷新 Q。": "The puppet ball races across the battlefield three times, then returns along the silk. Each enemy takes at most 120 damage, and Q refreshes once it returns.",
+"金丝引遁": "Silk Escape",
+"强解受击硬直，借金丝后撤腾空。": "Forcefully breaks hitstun and pulls you back into the air on the silk.",
+"铜手连推": "Bronze Palm Chain",
+"机掌击飞": "Machine Palm Launch",
+"重械爆轰": "Heavy Machine Burst",
+"限距往返": "Bounded Swing",
+"傀丸穿击": "Ball Pierce",
+"三穿回手": "Triple Pass Recall",
+"机轮三穿 · 横扫战场": "Gearwheel Triple Pass · Sweep the Stage",
+"三次穿击": "Three Passes",
+"金丝约束傀丸往返回环，击打可改向加速。": "Golden silk keeps the puppet ball looping; strike it to redirect and speed it up.",
+"铜臂推掌，击中傀丸就能改向传动。": "A bronze-arm palm push. Hitting the puppet ball redirects it.",
+"蓄力重击，让傀丸短暂高速穿行。": "A charged heavy that sends the puppet ball racing for a moment.",
+"空中翻掌，能将傀丸击向新方向。": "An aerial palm that can knock the puppet ball in a new direction.",
+"金丝回环，限距往返持续施压。": "Silk Loop keeps up pressure by swinging within range.",
+"穿丝急袭，沿朝穿击并受击解控。": "Tether Lash pierces forward and breaks you free when hit.",
+"机轮三穿，三次横扫后回手重置 Q。": "Gearwheel Triple Pass sweeps three times, then returns and resets Q.",
+"金丝借力，腾跃后退。": "Pulls on the silk to leap backward.",
+"千机传 · 机破千重": "Tale of Qian Ji · Breaking a Thousand Gears",
+"千机阁": "Qianji Pavilion",
+"千机阁机括轰鸣，群妖借铜甲铁傀之躯盘踞阵中。千机执金丝傀丸，誓以机道正宗荡涤魔障！": "The gears of Qianji Pavilion roar as demons take over its bronze-armored iron puppets. Qian Ji takes up the silk-bound puppet ball, sworn to sweep the evil away with the true art of machines!",
+"铜人列阵": "Bronze Ranks",
+"机关机变": "Shifting Mechanisms",
+"飞轮铁雨": "Iron Rain of Wheels",
+"金丝穿云": "Silk Through the Clouds",
+"万工归宗": "All Crafts Return",
+"千机：「你们身上的发条，是我亲手调的。今天让你们见识真正的天工机道。」": "Qian Ji: \"I wound the springs inside you myself. Today you'll see what true craftsmanship is.\"",
+"千机：「傀丸过处，铜甲亦如烂泥。一个都走不掉！」": "Qian Ji: \"Where the puppet ball passes, bronze armor turns to mud. None of you are leaving!\"",
+"千机：「暗伏梨花针，金丝连九重。你们已被大阵包围。」": "Qian Ji: \"Hidden needles, nine layers of silk. You are already surrounded.\"",
+"千机：「机栝一发，万物归一。收网之时已到！」": "Qian Ji: \"One trigger, and all becomes one. Time to pull in the net!\"",
+"千机：「融魂魔首，窃我天工图谱，纳天地生灵为偶。今日看我千机破阵！」": "Qian Ji: \"Fused Demon Lord, you stole our master blueprints to turn living things into puppets. Today I break your formation!\"",
+"千机传 · 金丝引": "Tale of Qian Ji · Golden Silk Thread",
+"金丝引": "Golden Silk Thread",
 });
 defHero({
 id: 'qingfeng', skin: 'qf', en: 'Qing Feng',
@@ -42070,7 +42412,7 @@ const kos = s.heroKOs[ch.id] || 0, unlocked = kos >= 20, stance = s.stances[ch.i
 const options = [`<option value="">不装备</option>`, ...owned.map(([id]) => `<option value="${id}" ${equipped === id ? 'selected' : ''}>${cvT(C.BADGES[id].name)} · ${cvT(s.badgeOwned[id] === 'silver' ? '银徽' : s.badgeOwned[id] === 'gold' ? '金徽' : '紫金徽')}</option>`)].join('');
 const stanceTitle = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(window.HERO_STANCES[ch.id].name) : cvT('第二架势');
 const stanceDesc = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(window.HERO_STANCES[ch.id].desc) : '';
-return `<article class="ar-card ar-loadout"><b>${escapeHTML(ch.name)}</b><small>${unlocked ? `${kos} / 20 ${cvT('斩')}` : `${kos} / 20 ${cvT('斩')} · ${cvT('未解锁')}`}</small><p>${stanceDesc}</p><div class="row"><button type="button" class="${stance ? 'ghost' : 'go'} small" data-stance="${ch.id}" data-value="0" ${live() ? '' : 'disabled'}>${cvT('本式')}</button><button type="button" class="${stance ? 'go' : 'ghost'} small" data-stance="${ch.id}" data-value="1" ${live() && unlocked ? '' : 'disabled'}>${stanceTitle}</button></div><div class="row"><select data-badge-choice="${ch.id}" aria-label="${escapeHTML(ch.name)} ${cvT('徽记')}">${options}</select><button type="button" class="go small" data-badge-set="${ch.id}" ${live() ? '' : 'disabled'}>${cvT('装备')}</button></div></article>`;
+return `<article class="ar-card ar-loadout"><b>${escapeHTML(ch.name)}</b><small>${unlocked ? `${kos} / 20 ${cvT('斩')}` : `${kos} / 20 ${cvT('斩')} · ${cvT('未解锁')}`}</small><p>${stanceDesc}</p><div class="row"><button type="button" class="${stance ? 'ghost' : 'go'} small" data-stance="${ch.id}" data-value="0" ${live() ? '' : 'disabled'}>${cvT('本式')}</button><button type="button" class="${stance ? 'go' : 'ghost'} small" data-stance="${ch.id}" data-value="1" ${live() && unlocked ? '' : 'disabled'}>${stanceTitle}</button></div><div class="row"><select data-badge-choice="${ch.id}" aria-label="${escapeHTML(cvT(ch.name))} ${cvT('徽记')}">${options}</select><button type="button" class="go small" data-badge-set="${ch.id}" ${live() ? '' : 'disabled'}>${cvT('装备')}</button></div></article>`;
 }).join('');
 const shardProgress = totalKOs % C.BADGE_SIGIL_KOS;
 const shardBar = `<div class="ar-badge-progress"><label for="arBadgeShardProgress">${cvT('距离下一枚徽记碎片')}</label><progress id="arBadgeShardProgress" max="${C.BADGE_SIGIL_KOS}" value="${shardProgress}"></progress><small>${shardProgress} / ${C.BADGE_SIGIL_KOS} · ${C.BADGE_SIGIL_KOS - shardProgress} ${cvT('斩后获得')}</small></div>`;

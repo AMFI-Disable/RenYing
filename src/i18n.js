@@ -335,7 +335,57 @@
     [/^已读取 (.+)（(\d+) 个账号）$/, (m0, f, n) => `Read ${f} (${n} accounts)`],
     [/^成功载入 (\d+) 个账号数据$/, (m0, n) => `Loaded ${n} accounts`],
     [/^导入失败：(.+)$/, (m0, x) => `Import failed: ${lookup(x) || x}`],
-    [/^文件解析失败：(.+)$/, (m0, x) => `Couldn't read the file: ${lookup(x) || x}`]
+    [/^文件解析失败：(.+)$/, (m0, x) => `Couldn't read the file: ${lookup(x) || x}`],
+    // 侠客列传（src/game/04-modes/22-saga.js）：「第 1 节 · 竹林 · 断剑」「对手 铁山 · 击败对手」由拼接短语那一步逐段查
+    [/^第 (\d+) 节$/, (m0, n) => `Chapter ${n}`],
+    [/^对手 (.+)$/, (m0, h) => `Opponent: ${lookup(h) || h}`],
+    [/^撑过 (\d+) 秒$/, (m0, n) => `Survive ${n}s`],
+    [/^(\d+) 秒内击败对手$/, (m0, n) => `Win within ${n}s`],
+    // 3v3 点将台阵线（src/game/05-ui/23-prematch-04-ban-pick-ui.js）
+    [/^(.+)阵线$/, (m0, x) => x === '你' ? 'Your Lineup' : lookup(x) ? `${lookup(x)} Lineup` : m0],
+    [/^(先锋|中坚|大将) (.+)$/, (m0, s, h) => `${lookup(s) || s} ${lookup(h) || h}`],
+    // 图鉴招式卡的伤害（src/game/05-ui/18-codex-content.js）
+    [/^(\d+) \((\d+)段\)$/, (m0, d, n) => `${d} (${n} hits)`],
+    [/^(\d+)上限$/, (m0, n) => `${n} cap`],
+    // 武库（src/armory.js、src/armory-core.js）
+    [/^(.+)武器箱$/, (m0, c) => lookup(c) ? `${lookup(c)} Case` : m0],
+    [/^(精铁|碧玉|灵犀|赤霄|绝世|斩数版) ([\d.]+%)$/, (m0, t, p) => `${lookup(t)} ${p}`],
+    [/^(精铁|碧玉|灵犀|赤霄) →(?: (精铁|碧玉|灵犀|赤霄|绝世))?$/, (m0, a, b) => `${lookup(a)} →${b ? ' ' + lookup(b) : ''}`],
+    [/^集齐这个箱子的 (\d+) 款精铁：(\d+)\/(\d+)，送 1 个(.+)武器箱 \+ 1 张改名标签$/, (m0, n, a, b, c) => `Collect all ${n} Iron items from this case: ${a}/${b}. Reward: 1 ${lookup(c) || c} Case + 1 Rename Tag`],
+    [/^库存里的(精铁|碧玉|灵犀|赤霄)饰品$/, (m0, t) => `Your ${lookup(t)} cosmetics`],
+    [/^放进 (\d+) 件(精铁|碧玉|灵犀|赤霄)饰品，换 1 件(碧玉|灵犀|赤霄|绝世)。出什么取决于材料来自哪个武器箱；斩数版只能和斩数版一起换，换出来的也是斩数版。$/,
+      (m0, n, a, b) => `Put in ${n} ${lookup(a)} cosmetics to get 1 ${lookup(b)}. What you get depends on which cases the materials came from; Kill Counter items only trade with Kill Counter items and give a Kill Counter item.`],
+    [/^还有 (\d+) 台没开封$/, (m0, n) => `${n} unopened`],
+    [/^货郎在商店按固定价格卖（一台 ([\d,]+) 墨锭），每周补给、星章兑换也有，新手礼也送一台。$/, (m0, n) => `Peddlers are sold in the shop at a fixed price (${n} Ink each). The weekly supply, the Star Exchange and the starter gift also give them.`],
+    [/^每天限开 (\d+) 个$/, (m0, n) => `${n} per day`],
+    [/^每周限开 (\d+) 个$/, (m0, n) => `${n} per week`],
+    [/^赤霄和绝世加起来 ([\d.]+%)$/, (m0, p) => `Crimson + Peerless: ${p}`],
+    [/^(十二星座，每位侠客都有星辉、星焰、星冕三款。每个号都送了 1 个星座武器箱，可以先免费开一次。)?只出这三档，这 (\d+) 款饰品别的武器箱都开不出来，开它也不占每天那 (\d+) 个普通武器箱。点一下饰品，就能先看看穿上的样子。$/,
+      (m0, z, n, d) => `${z ? lookup(z) + ' ' : ''}Only these three tiers drop. These ${n} cosmetics come from no other case, and opening this one doesn't use up your ${d} daily standard cases. Click a cosmetic to preview it.`],
+    [/^(\d+) 天没有成交$/, (m0, n) => `No sales in ${n} days`],
+    [/^收录全部 (\d+) 款皮肤。点选查看效果、所属套装和获取方式。$/, (m0, n) => `All ${n} skins. Click one to see its effects, its set and how to get it.`],
+    [/^(\d+) 款$/, (m0, n) => `${n} skins`],
+    [/^(\d+) 款已拥有$/, (m0, n) => `${n} owned`],
+    [/^第 (\d+) 季$/, (m0, n) => `Season ${n}`],
+    [/^本季共得 (\d+)$/, (m0, n) => `${n} earned this season`],
+    [/^这周再打 (\d+) 局解锁（(\d+)\/(\d+)）$/, (m0, n, a, b) => `Play ${n} more this week to unlock (${a}/${b})`],
+    [/^(\d+) 墨锭$/, (m0, n) => `${n} Ink`],
+    [/^(\d+) 星章兑换$/, (m0, n) => `Redeem for ${n} Star${n === '1' ? '' : 's'}`],
+    [/^对局掉落：每局 (\d+)% 机会掉一件饰品或武器箱，每周最多 (\d+) 次（本周已掉 (\d+) 次）。$/, (m0, p, m, k) => `Match drops: each match has a ${p}% chance to drop a cosmetic or case, up to ${m} per week (${k} this week).`],
+    // 江湖行动的任务（src/armory-core.js 的 C.MISSIONS，{n} 换成数字以后的样子）
+    [/^进行 (\d+) 局对战$/, (m0, n) => `Play ${n} match${n === '1' ? '' : 'es'}`],
+    [/^赢下 (\d+) 局$/, (m0, n) => `Win ${n} match${n === '1' ? '' : 'es'}`],
+    [/^用(.+)赢下 (\d+) 局$/, (m0, h, n) => `Win ${n} match${n === '1' ? '' : 'es'} as ${lookup(h) || h}`],
+    [/^在劲敌或更高难度下赢 (\d+) 局人机$/, (m0, n) => `Win ${n} match${n === '1' ? '' : 'es'} vs AI on ${lookup('劲敌')} or above`],
+    [/^以 2 : 0 拿下 (\d+) 局$/, (m0, n) => `Win ${n} match${n === '1' ? '' : 'es'} 2 : 0`],
+    [/^一局里打出 (\d+) 连击$/, (m0, n) => `Land a ${n}-hit combo in one match`],
+    [/^施展 (\d+) 次终极奥义$/, (m0, n) => `Use ${n} ultimate${n === '1' ? '' : 's'}`],
+    [/^联机对战 (\d+) 局$/, (m0, n) => `Play ${n} online match${n === '1' ? '' : 'es'}`],
+    [/^打 (\d+) 局(问剑密卷|天机乱斗|2v2)$/, (m0, n, x) => `Play ${n} ${lookup(x) || x} match${n === '1' ? '' : 'es'}`],
+    [/^赢下 (\d+) 局 3v3 车轮战$/, (m0, n) => `Win ${n} ${lookup('3v3 车轮战')} match${n === '1' ? '' : 'es'}`],
+    [/^开启 (\d+) 个武器箱$/, (m0, n) => `Open ${n} case${n === '1' ? '' : 's'}`],
+    [/^签 (\d+) 份熔铸契$/, (m0, n) => `Sign ${n} ${lookup('熔铸契')}${n === '1' ? '' : 's'}`],
+    [/^在玩家市场(卖出|买入) (\d+) 件饰品$/, (m0, v, n) => `${v === '卖出' ? 'Sell' : 'Buy'} ${n} cosmetic${n === '1' ? '' : 's'} on the player market`]
   ];
   // ---------- 3. 查表与翻页面 ----------
   // 一处查表：先查固定词条，再试模板；返回空串表示“没有这句的译文”
@@ -347,7 +397,30 @@
       const re = PATTERNS_EN[i][0];
       if (re.test(text)) return text.replace(re, PATTERNS_EN[i][1]);
     }
-    return '';
+    return joined(text);
+  }
+
+  // 拼起来的短语：「月华 | 广寒」「绝世 · 霜华武器箱」「被动 · 机栝动能」这类由几段词条加分隔符拼成的句子，
+  // 整句不在表里，但每一段都有译文。按分隔符切开逐段查，全部查得到（或本来就不是中文）才拼回去；
+  // 有一段查不到就当没有译文，不拼出半中半英的句子。
+  // 先按最外层的分隔符切：「月华 | 双子·星冕」先切「 | 」，后半段「双子·星冕」再整段查（查不到才接着切「·」）
+  // 最后才按中文逗号切：无障碍标签「青锋，游龙剑客，本局地利」这种由几个词条拼成的短句
+  const JOIN_SEPS = [' | ', ' · ', '·', '，'];
+  const CJK = /[\u4e00-\u9fff]/;
+  function joined(text) {
+    const sep = JOIN_SEPS.find(s => text.includes(s));
+    if (!sep) return '';
+    const parts = text.split(sep);
+    let hit = false;
+    for (let i = 0; i < parts.length; i++) {
+      const p = parts[i].trim();
+      if (!p || !CJK.test(p)) continue;
+      const out = lookup(p);
+      if (!out) return '';
+      parts[i] = parts[i].replace(p, out);
+      hit = true;
+    }
+    return hit ? parts.join(sep === '·' ? ' · ' : sep === '，' ? ', ' : sep) : '';
   }
 
   // 翻译指定文本
@@ -356,6 +429,25 @@
     const trimmed = text.trim();
     const out = lookup(trimmed);
     return out ? text.replace(trimmed, out) : text;
+  }
+
+  // 翻译 title / placeholder / aria-label。原文记在 data-orig-*；页面代码之后改了这个属性
+  // （比如大厅连上以后输入框提示从「正在连接大厅…」换成「在大厅说点什么」），新值既不是原文也不是我们写进去的译文，就当成新的原文
+  const TR_ATTRS = ['title', 'placeholder', 'aria-label'];
+  function translateAttrs(node) {
+    for (const attr of TR_ATTRS) {
+      const val = node.getAttribute(attr);
+      if (!val) continue;
+      const origKey = 'orig_' + attr.replace(/-/g, '_');
+      const wrote = node.__trAttr && node.__trAttr[attr];
+      if (node.dataset[origKey] === undefined || (val !== wrote && val !== node.dataset[origKey])) node.dataset[origKey] = val;
+      const orig = node.dataset[origKey];
+      const trimmed = orig.trim();
+      const out = currentLang === 'en' && trimmed ? lookup(trimmed) : '';
+      const next = out ? orig.replace(trimmed, out) : orig;
+      (node.__trAttr || (node.__trAttr = {}))[attr] = next;
+      if (val !== next) node.setAttribute(attr, next);
+    }
   }
 
   // 递归或属性扫描翻译 DOM 节点
@@ -382,21 +474,7 @@
     }
 
     if (node.nodeType === Node.ELEMENT_NODE) {
-      // 翻译特定属性
-      ['title', 'placeholder', 'aria-label'].forEach(attr => {
-        const val = node.getAttribute(attr);
-        if (val) {
-          const origKey = 'orig_' + attr.replace(/-/g, '_');
-          const orig = node.dataset[origKey] !== undefined ? node.dataset[origKey] : val;
-          if (node.dataset[origKey] === undefined) {
-            node.dataset[origKey] = orig;
-          }
-          const trimmed = orig.trim();
-          const out = currentLang === 'en' && trimmed ? lookup(trimmed) : '';
-          const next = out ? orig.replace(trimmed, out) : orig;
-          if (node.getAttribute(attr) !== next) node.setAttribute(attr, next);
-        }
-      });
+      translateAttrs(node);
 
       // 递归子节点（跳过脚本与画布内部）
       if (node.tagName !== 'SCRIPT' && node.tagName !== 'STYLE' && node.tagName !== 'CANVAS' && !node.classList.contains('no-i18n')) {
@@ -416,18 +494,21 @@
   }
 
   // 每个页面打开时都是现拼 innerHTML，切完语言之后再画出来的那批文本没人翻译（英文模式下
-  // 打开单人模式、任务、图鉴……全是中文）。盯住 body 的新增节点补一遍；只观察 childList，
+  // 打开单人模式、任务、图鉴……全是中文）。盯住 body 的新增节点补一遍（另外盯 title / placeholder / aria-label 三个属性），
   // 自己写 nodeValue 是 characterData，不会反过来再触发，也就不存在来回翻译的死循环。
   let trMO = null;
   function trWatch() {
     if (trMO || typeof MutationObserver === 'undefined' || typeof document === 'undefined' || !document.body) return;
     trMO = new MutationObserver(recs => {
       if (currentLang !== 'en') return;
-      for (const r of recs) for (const n of r.addedNodes) {
-        if (n.nodeType === 1 || n.nodeType === 3) translateNode(n);
+      for (const r of recs) {
+        if (r.type === 'attributes') { if (r.target.nodeType === 1) translateAttrs(r.target); continue; }
+        for (const n of r.addedNodes) if (n.nodeType === 1 || n.nodeType === 3) translateNode(n);
       }
     });
-    trMO.observe(document.body, { childList: true, subtree: true });
+    // 只盯 childList 和这三个属性：自己写 nodeValue 是 characterData，不会反过来触发；
+    // 自己写属性会再来一条记录，但那时值已经是译文，translateAttrs 不会再写
+    trMO.observe(document.body, { childList: true, subtree: true, attributes: true, attributeFilter: TR_ATTRS });
   }
 
   if (typeof document !== 'undefined') {
