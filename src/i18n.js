@@ -94,6 +94,7 @@
     [/^第一赛季\s*(\d.*?)\s*后开启(（[^）]*）)?$/, (m0, left, tail) => `Season 1 starts in ${EN_DUR(left)}${tail ? ' (preseason rating resets)' : ''}`],
     [/^全皮肤限免\s*·\s*剩\s*(\d+)\s*天$/, (m0, d) => `All skins free · ${d}d left`],
     [/^赛季已结束$/, () => 'Season over'],
+    [/^第([一二三四五六七八九十]+)赛季\s*·\s*(\d+\.\d+\s*[–-]\s*\d+\.\d+)(?:\s*·\s*(?:(已结束)|剩余\s*(.+)))?$/, (m0, n, span, over, left) => `Season ${'一二三四五六七八九十'.indexOf(n) + 1} · ${span}` + (over ? ' · Over' : left ? ` · ${EN_DUR(left)} left` : '')],
     [/^训练集：(.+?)\s*个样本$/, (m0, n) => `Training set: ${n} samples`],
     [/^(\d+)\s*个样本$/, (m0, n) => `${n} samples`],
     [/^(.+?)\s*个样本\s*·\s*(.+)$/, (m0, n, rest) => `${n} samples · ${rest}`],

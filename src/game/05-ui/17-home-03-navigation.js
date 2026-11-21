@@ -149,10 +149,21 @@ function renderTopNav() {
   $id('tnSync').className = 'tn-sync s-' + (name ? st.state : 'none');
   $id('tnSync').title = !name ? '' : { local: '本机存档', idle: '已连接云端', ok: '云端已同步', pending: '等待上传', syncing: '上传中', offline: '断网中，联网后补传', error: '上传失败', blocked: '云端拒绝了存档', expired: '登录已过期，请重新登录' }[st.state] || '';
 }
+// 新赛季开始后第一次回到首页：提示一次（每个赛季一次，记在本机）
+function seasonNotice(sea) {
+  if (sea.pre || sea.over || SEASON.id === SEASONS[0].id) return;
+  const key = 'renying-season-seen';
+  let seen = '';
+  try { seen = localStorage.getItem(key) || ''; } catch (e) { return; }
+  if (seen === SEASON.id) return;
+  try { localStorage.setItem(key, SEASON.id); } catch (e) {}
+  toast('新赛季开始了：排位重新打 3 场定级赛，大家都从头再比', 5);
+}
 function renderHome() {
   const sea = rkSeason();
   $id('homeSeason').textContent = sea.pre ? '季前赛' : SEASON.name;
-  $id('homeSeasonTxt').textContent = sea.pre ? `第一赛季 ${fmtLeft(sea.left)} 后开启` : sea.over ? '赛季已结束' : `10.22 – 11.22 · 剩余 ${fmtLeft(sea.left)}`;
+  $id('homeSeasonTxt').textContent = sea.pre ? `第一赛季 ${fmtLeft(sea.left)} 后开启` : sea.over ? '赛季已结束' : `${SEASON.span} · 剩余 ${fmtLeft(sea.left)}`;
+  seasonNotice(sea);
   renderHomeTasks();
   renderHomeReplays();
 }

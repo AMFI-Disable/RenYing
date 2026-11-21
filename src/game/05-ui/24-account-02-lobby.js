@@ -305,7 +305,7 @@ $id('mmCancelBtn').addEventListener('click', () => { statQueueResult(false); net
 $id('mmRankInfoBtn').addEventListener('click', () => {
   renderRankInfo();
   const sea = rkSeason();
-  $id('rkInfoSeason').textContent = sea.pre ? `季前赛 · 第一赛季 10 月 22 日开启` : `${SEASON.name} · 10.22 – 11.22${sea.over ? ' · 已结束' : ' · 剩余 ' + fmtLeft(sea.left)}`;
+  $id('rkInfoSeason').textContent = sea.pre ? `季前赛 · 第一赛季 10 月 22 日开启` : `${SEASON.name} · ${SEASON.span}${sea.over ? ' · 已结束' : ' · 剩余 ' + fmtLeft(sea.left)}`;
   $id('rkInfo').classList.remove('hidden');
 });
 $id('rkInfoClose').addEventListener('click', () => $id('rkInfo').classList.add('hidden'));

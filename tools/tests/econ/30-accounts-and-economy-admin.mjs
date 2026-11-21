@@ -404,6 +404,20 @@ section('排行榜：段位榜只列本赛季打满定级赛的，战绩榜按�
   const wn = await call('GET', '/api/leaderboard?k=wins', undefined, undefined, '8.8.1.2');
   const wl = (wn.list || []).map(r => r.name);
   ok(wn.ok && wn.players > 0 && wl.indexOf('lbBeta') < wl.indexOf('lbAlpha') && !wl.includes('lbGamma') && !wl.includes('lbEvil'), '战绩榜：按胜场排，没赢过的、被封的不上', wl);
+  const busy = await mk('lbBusy', { season: 'S1', pts: 0, placed: 0 }, 40, 2);
+  const cheat = await mk('lbCheat', { season: 'S1', pts: 0, placed: 0 }, 9999, 0);
+  ok(profOf(cheat.uid).netWins === 60, '一条增量报 9999 胜：一天最多认 60 场', profOf(cheat.uid).netWins);
+  const again = await call('POST', '/api/profile', { profile: profOf(cheat.uid), ledger: { deltas: [], ev: 0 }, prog: { deltas: [{ id: 'beef00112233', d: { netWins: 5, netLosses: 3 } }] } }, cheat.token);
+  ok(again.ok && profOf(cheat.uid).netWins === 60 && profOf(cheat.uid).netLosses === 0, '当天已经认满 60 场：再报也不加（编号照样划掉）', [profOf(cheat.uid).netWins, profOf(cheat.uid).netLosses]);
+  const fake = (name, w, l) => { const u = row('SELECT id, profile_json FROM users WHERE username = ?', name); const p = JSON.parse(u.profile_json); p.netWins = w; p.netLosses = l; ENV.DB.raw.prepare('UPDATE users SET profile_json = ? WHERE id = ?').run(JSON.stringify(p), u.id); };
+  fake('lbBusy', 47, 35);   // 以前已经存进库里的正常战绩
+  await newUser('lbOld9999'); fake('lbOld9999', 9999, 0);   // 以前用改过的请求刷上去的
+  await newUser('lbOld1000'); fake('lbOld1000', 1000, 3);
+  const wn2 = await call('GET', '/api/leaderboard?k=wins', undefined, undefined, '8.8.1.4');
+  const wl2 = (wn2.list || []).map(r => r.name);
+  ok(wl2.includes('lbBusy') && !wl2.includes('lbCheat') && !wl2.includes('lbOld9999') && !wl2.includes('lbOld1000') && wl2.includes('lbBeta'),
+    '战绩榜挡掉改出来的数：上千胜、一场没输却赢了 30 场以上的不上榜；正常的 47 胜 35 负、30 胜 1 负照常上', wl2);
+  ok(!!busy, 'lbBusy 建好了');
   ok((await call('GET', '/api/leaderboard?k=rank&s=bad', undefined, undefined, '8.8.1.3')).list.length === 0, '赛季乱填：空榜');
   let lim = null;
   for (let i = 0; i < 31; i++) lim = await call('GET', '/api/leaderboard?k=wins', undefined, undefined, '8.8.1.9');

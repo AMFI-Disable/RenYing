@@ -3468,7 +3468,7 @@ font-size: 13px;
       <div class="home-mist"></div>
       <div class="home-mist home-mist-2"></div>
     </div>
-    <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span><span class="home-online-pill" id="homeOnlinePill" title="全服在线侠士"><span class="home-online-dot"></span><span id="homeOnlineCount">全服 — 人在线</span></span><button class="home-evt-pill" id="homeEvt" type="button" hidden>活动：全皮肤限免 · <span id="homeEvtLeft"></span></button></div>
+    <div class="home-kicker"><span class="season-tag" id="homeSeason">第二赛季</span><span id="homeSeasonTxt">11.22 – 12.22 · 段位排位开启</span><span class="home-online-pill" id="homeOnlinePill" title="全服在线侠士"><span class="home-online-dot"></span><span id="homeOnlineCount">全服 — 人在线</span></span><button class="home-evt-pill" id="homeEvt" type="button" hidden>活动：全皮肤限免 · <span id="homeEvtLeft"></span></button></div>
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
     <p class="home-tag">十六位侠客 · 回滚联机 · 赛季排位</p>
     <div class="home-side">
@@ -3936,8 +3936,8 @@ font-size: 13px;
       <!-- 对战页：一张 3v3 卡（快速匹配、排位、好友约战），进了房间下面再露出候战厅 -->
       <div class="mm-hero" id="mmHero">
         <div class="season-bar">
-          <span class="season-tag" id="seasonName">第一赛季</span>
-          <span class="season-range">10.22 – 11.22</span>
+          <span class="season-tag" id="seasonName">第二赛季</span>
+          <span class="season-range" id="seasonRange">11.22 – 12.22</span>
           <span class="season-left" id="seasonLeft"></span>
         </div>
         <!-- 联机对战只有这一张 3v3 卡：快速匹配、排位赛都是 3v3 车轮战（各禁 1 人、蛇形各选 3 人，输一回合换下一人）；
@@ -6275,6 +6275,7 @@ const PATTERNS_EN = [
 [/^第一赛季\s*(\d.*?)\s*后开启(（[^）]*）)?$/, (m0, left, tail) => `Season 1 starts in ${EN_DUR(left)}${tail ? ' (preseason rating resets)' : ''}`],
 [/^全皮肤限免\s*·\s*剩\s*(\d+)\s*天$/, (m0, d) => `All skins free · ${d}d left`],
 [/^赛季已结束$/, () => 'Season over'],
+[/^第([一二三四五六七八九十]+)赛季\s*·\s*(\d+\.\d+\s*[–-]\s*\d+\.\d+)(?:\s*·\s*(?:(已结束)|剩余\s*(.+)))?$/, (m0, n, span, over, left) => `Season ${'一二三四五六七八九十'.indexOf(n) + 1} · ${span}` + (over ? ' · Over' : left ? ` · ${EN_DUR(left)} left` : '')],
 [/^训练集：(.+?)\s*个样本$/, (m0, n) => `Training set: ${n} samples`],
 [/^(\d+)\s*个样本$/, (m0, n) => `${n} samples`],
 [/^(.+?)\s*个样本\s*·\s*(.+)$/, (m0, n, rest) => `${n} samples · ${rest}`],
@@ -8483,7 +8484,7 @@ Object.assign(UI_COPY_EN, {
 "/ 负": "/ Loss",
 "0 胜 0 负": "0 W 0 L",
 "1.1 通关": "1.1 Cleared",
-"10.22 – 11.22 · 段位排位开启": "10.22 – 11.22 · Ranked Season Live",
+"11.22 – 12.22 · 段位排位开启": "11.22 – 12.22 · Ranked Season Live",
 "10倍真元 · 零CD · 狂暴神通": "10x Mana · Zero CD · Rampage Mayhem",
 "1P 键位设置": "1P Keybindings",
 "2 连段": "2-Hit Combo",
@@ -8865,6 +8866,8 @@ Object.assign(UI_COPY_EN, {
 "立即上传": "Upload Now",
 "符阵": "Talisman Array",
 "第一赛季": "Season 1",
+"第二赛季": "Season 2",
+"新赛季开始了：排位重新打 3 场定级赛，大家都从头再比": "A new season has started: play 3 placement matches again, everyone starts fresh",
 "等待上传": "Pending Upload",
 "等待加入": "Waiting for player...",
 "简体中文": "简体中文",
@@ -25907,10 +25910,20 @@ const st = window.CloudSave && CloudSave.getSyncState ? CloudSave.getSyncState()
 $id('tnSync').className = 'tn-sync s-' + (name ? st.state : 'none');
 $id('tnSync').title = !name ? '' : { local: '本机存档', idle: '已连接云端', ok: '云端已同步', pending: '等待上传', syncing: '上传中', offline: '断网中，联网后补传', error: '上传失败', blocked: '云端拒绝了存档', expired: '登录已过期，请重新登录' }[st.state] || '';
 }
+function seasonNotice(sea) {
+if (sea.pre || sea.over || SEASON.id === SEASONS[0].id) return;
+const key = 'renying-season-seen';
+let seen = '';
+try { seen = localStorage.getItem(key) || ''; } catch (e) { return; }
+if (seen === SEASON.id) return;
+try { localStorage.setItem(key, SEASON.id); } catch (e) {}
+toast('新赛季开始了：排位重新打 3 场定级赛，大家都从头再比', 5);
+}
 function renderHome() {
 const sea = rkSeason();
 $id('homeSeason').textContent = sea.pre ? '季前赛' : SEASON.name;
-$id('homeSeasonTxt').textContent = sea.pre ? `第一赛季 ${fmtLeft(sea.left)} 后开启` : sea.over ? '赛季已结束' : `10.22 – 11.22 · 剩余 ${fmtLeft(sea.left)}`;
+$id('homeSeasonTxt').textContent = sea.pre ? `第一赛季 ${fmtLeft(sea.left)} 后开启` : sea.over ? '赛季已结束' : `${SEASON.span} · 剩余 ${fmtLeft(sea.left)}`;
+seasonNotice(sea);
 renderHomeTasks();
 renderHomeReplays();
 }
@@ -28333,7 +28346,21 @@ if ($id('tMsg')) $id('tMsg').textContent = '兑换码无效或已过期';
 $id('rdBtn').addEventListener('click', () => redeemCode());
 $id('rdCode').addEventListener('keydown', e => { e.stopPropagation(); if (e.key === 'Enter') redeemCode(); });
 window.redeemCode = redeemCode;
-const SEASON = { id: 'S1', name: '第一赛季', start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 21, 16) };   // 北京时间 10 月 22 日 0 点到 11 月 22 日 0 点
+const SEASONS = [
+{ id: 'S1', name: '第一赛季', start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 21, 16) },    // 10 月 22 日到 11 月 22 日
+{ id: 'S2', name: '第二赛季', start: Date.UTC(2026, 10, 21, 16), end: Date.UTC(2026, 11, 21, 16) },   // 11 月 22 日到 12 月 22 日
+];
+const SEASON = { ...SEASONS[0], span: '' };
+function seasonSpan(se) {
+const md = t => { const d = new Date(t + 8 * 3600e3); return `${d.getUTCMonth() + 1}.${d.getUTCDate()}`; };
+return `${md(se.start)} – ${md(se.end)}`;
+}
+function seasonPick(now) {
+let se = SEASONS[0];
+for (const x of SEASONS) if (now >= x.start) se = x;
+if (SEASON.id !== se.id || !SEASON.span) Object.assign(SEASON, se, { span: seasonSpan(se) });
+return SEASON;
+}
 const RK = { MIN: 1000, MAX: 25000, STEP: 5000, EDGE: 1500, PLACE: 3, PLACE_CAP: 14999, PLACE_START: 2600 };
 const RK_TIERS = [
 { l: 'D', n: '初出茅庐', c1: '#e0a06a', c2: '#5a2c12', glow: '#ffb27a' },
@@ -28344,6 +28371,7 @@ const RK_TIERS = [
 ];
 function rkSeason() {
 const now = Date.now();
+seasonPick(now);
 if (now < SEASON.start) return { id: 'S0', name: '季前赛', pre: true, left: SEASON.start - now };
 return { id: SEASON.id, name: SEASON.name, pre: false, left: Math.max(0, SEASON.end - now), over: now >= SEASON.end };
 }
@@ -28559,6 +28587,7 @@ function fmtLeft(ms) { const d = Math.floor(ms / 86400000), h = Math.floor(ms / 
 function renderLobby() {
 const sea = rkSeason();
 if ($id('seasonName')) $id('seasonName').textContent = sea.pre ? '季前赛' : SEASON.name;
+if ($id('seasonRange') && $id('seasonRange').textContent !== SEASON.span) $id('seasonRange').textContent = SEASON.span;
 if ($id('seasonLeft')) $id('seasonLeft').textContent = sea.pre ? `第一赛季 ${fmtLeft(sea.left)} 后开启（季前赛分数届时清零）` : sea.over ? '赛季已结束' : `剩余 ${fmtLeft(sea.left)}`;
 const owner = rkOwner();
 if ($id('mmMedal')) $id('mmMedal').innerHTML = owner ? rkMedalFor(null, 108) : rkMedalSVG(null, 108, { placed: 0 });
@@ -38295,7 +38324,7 @@ $id('mmCancelBtn').addEventListener('click', () => { statQueueResult(false); net
 $id('mmRankInfoBtn').addEventListener('click', () => {
 renderRankInfo();
 const sea = rkSeason();
-$id('rkInfoSeason').textContent = sea.pre ? `季前赛 · 第一赛季 10 月 22 日开启` : `${SEASON.name} · 10.22 – 11.22${sea.over ? ' · 已结束' : ' · 剩余 ' + fmtLeft(sea.left)}`;
+$id('rkInfoSeason').textContent = sea.pre ? `季前赛 · 第一赛季 10 月 22 日开启` : `${SEASON.name} · ${SEASON.span}${sea.over ? ' · 已结束' : ' · 剩余 ' + fmtLeft(sea.left)}`;
 $id('rkInfo').classList.remove('hidden');
 });
 $id('rkInfoClose').addEventListener('click', () => $id('rkInfo').classList.add('hidden'));

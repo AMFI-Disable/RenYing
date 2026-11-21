@@ -123,8 +123,10 @@ async function gbHit(env, auth, body, now) {
 
 /* ---------- 排行榜 ----------
  * 段位分、胜负场都是玩家自己的网页算好存进存档的（rk、netWins / netLosses），服务器只负责排序和挡掉被封的号，
- * 所以这里的数只用来展示，不拿去发奖励。 */
-const LB_N = 100, RK_PLACE = 3, RK_MIN = 1000, RK_MAX = 25000;
+ * 所以这里的数只用来展示，不拿去发奖励。
+ * 胜场榜挡掉明显是改出来的数：胜场到了 LB_WIN_FAKE（游戏开服才一个多月，没人打得到），或者一场没输却赢了 LB_WIN_CLEAN 场以上。
+ * 这些号不封、存档不动，只是不上榜；真要处理用管理网页封号。 */
+const LB_N = 100, RK_PLACE = 3, RK_MIN = 1000, RK_MAX = 25000, LB_WIN_FAKE = 1000, LB_WIN_CLEAN = 30;
 async function leaderboard(env, kind, season, me, now) {
   const notBanned = 'deleted_at = 0 AND id NOT IN (SELECT uid FROM sanctions WHERE perm = 1 OR ban_until > ?1)';
   if (kind === 'rank') {
@@ -138,7 +140,9 @@ async function leaderboard(env, kind, season, me, now) {
   const [rows, cnt] = await Promise.all([
     env.DB.prepare(
       `SELECT id, username, json_extract(profile_json, '$.netWins') AS w, json_extract(profile_json, '$.netLosses') AS l FROM users WHERE ${notBanned}
-       AND json_extract(profile_json, '$.netWins') > 0 ORDER BY w DESC, l, updated_at LIMIT ?2`).bind(now, LB_N).all(),
+       AND json_extract(profile_json, '$.netWins') > 0 AND json_extract(profile_json, '$.netWins') < ?3
+       AND NOT (COALESCE(json_extract(profile_json, '$.netLosses'), 0) = 0 AND json_extract(profile_json, '$.netWins') > ?4)
+       ORDER BY w DESC, l, updated_at LIMIT ?2`).bind(now, LB_N, LB_WIN_FAKE, LB_WIN_CLEAN).all(),
     env.DB.prepare('SELECT COUNT(*) AS n FROM users WHERE deleted_at = 0').first(),
   ]);
   const n = v => Math.max(0, Math.min(1e6, Math.floor(+v || 0)));

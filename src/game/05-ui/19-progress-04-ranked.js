@@ -5,7 +5,24 @@
 // 分数 1000–25000。D C B A S 每个字母 5000 分（D 从 1000 起，只有 4000 分），
 // 每个字母最低的 1500 分是“-”、最高的 1500 分是“+”，中间是不带符号的。
 // 新赛季先打 3 场定级赛：定级期间显示一个估分（～xxxx 分），最高只能定到 B+。
-const SEASON = { id: 'S1', name: '第一赛季', start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 21, 16) };   // 北京时间 10 月 22 日 0 点到 11 月 22 日 0 点
+// 赛季表：按开始时间排，时间都是北京时间 0 点（UTC 16 点）。上一季结束的那一刻下一季就开始，排位分按赛季编号各存一份，
+// 进了新赛季 rkState 会自动换一份新的（重新打 3 场定级赛），上一季的段位记在 RKS.last。加新赛季就在这里加一行。
+const SEASONS = [
+  { id: 'S1', name: '第一赛季', start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 21, 16) },    // 10 月 22 日到 11 月 22 日
+  { id: 'S2', name: '第二赛季', start: Date.UTC(2026, 10, 21, 16), end: Date.UTC(2026, 11, 21, 16) },   // 11 月 22 日到 12 月 22 日
+];
+// 现在这一季（rkSeason 每次调用都会更新它）：还没开打时是第一季，最后一季打完了停在最后一季（显示「赛季已结束」）
+const SEASON = { ...SEASONS[0], span: '' };
+function seasonSpan(se) {
+  const md = t => { const d = new Date(t + 8 * 3600e3); return `${d.getUTCMonth() + 1}.${d.getUTCDate()}`; };
+  return `${md(se.start)} – ${md(se.end)}`;
+}
+function seasonPick(now) {
+  let se = SEASONS[0];
+  for (const x of SEASONS) if (now >= x.start) se = x;
+  if (SEASON.id !== se.id || !SEASON.span) Object.assign(SEASON, se, { span: seasonSpan(se) });
+  return SEASON;
+}
 const RK = { MIN: 1000, MAX: 25000, STEP: 5000, EDGE: 1500, PLACE: 3, PLACE_CAP: 14999, PLACE_START: 2600 };
 const RK_TIERS = [
   { l: 'D', n: '初出茅庐', c1: '#e0a06a', c2: '#5a2c12', glow: '#ffb27a' },
@@ -16,6 +33,7 @@ const RK_TIERS = [
 ];
 function rkSeason() {
   const now = Date.now();
+  seasonPick(now);
   if (now < SEASON.start) return { id: 'S0', name: '季前赛', pre: true, left: SEASON.start - now };
   return { id: SEASON.id, name: SEASON.name, pre: false, left: Math.max(0, SEASON.end - now), over: now >= SEASON.end };
 }
@@ -242,6 +260,7 @@ function fmtLeft(ms) { const d = Math.floor(ms / 86400000), h = Math.floor(ms / 
 function renderLobby() {
   const sea = rkSeason();
   if ($id('seasonName')) $id('seasonName').textContent = sea.pre ? '季前赛' : SEASON.name;
+  if ($id('seasonRange') && $id('seasonRange').textContent !== SEASON.span) $id('seasonRange').textContent = SEASON.span;
   if ($id('seasonLeft')) $id('seasonLeft').textContent = sea.pre ? `第一赛季 ${fmtLeft(sea.left)} 后开启（季前赛分数届时清零）` : sea.over ? '赛季已结束' : `剩余 ${fmtLeft(sea.left)}`;
   const owner = rkOwner();
   if ($id('mmMedal')) $id('mmMedal').innerHTML = owner ? rkMedalFor(null, 108) : rkMedalSVG(null, 108, { placed: 0 });

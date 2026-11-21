@@ -463,6 +463,9 @@ async function handleEcon(env, auth, body, now, ip) {
  * 存档里报上来的绝对数不认。网页重试、刷新后重报、两台设备同时报，都不会重复加。
  * 没有 prog 的存档（老版本网页）：报上来的绝对数不认，计数留在服务器上那份（不然能把进度退回去重新领）。 */
 const PG_KEY = /^(netWins|netLosses|frags\.[a-z]{2,16})$/, PG_MAX = 1e6, PG_STEP = 10000, PG_KEEP = 10 * DAY_MS;
+// 联机胜负场一天最多认 PG_NET_DAY 场（胜 + 负，按北京时间算一天）。一局 3v3 车轮战要好几分钟，一天打不了这么多；
+// 以前每条增量最多能加 10000，改过请求的人一下就把胜场榜刷到 9999。超出的部分照样划掉（网页不会一直重报），只是不加。
+const PG_NET_DAY = 60;
 function clampPg(x) { return Math.max(0, Math.min(PG_MAX, Math.floor(+x || 0))); }
 function pgVals(p) {
   const v = { netWins: clampPg(p.netWins), netLosses: clampPg(p.netLosses) };
@@ -479,12 +482,20 @@ function pgPut(p, v) {
 function pgApply(srv, vals, deltas, now) {
   const pg = srv.pg && typeof srv.pg === 'object' && !Array.isArray(srv.pg) ? srv.pg : (srv.pg = {});
   const acks = [];
+  const day = Math.floor((now + 8 * 3600e3) / DAY_MS);
+  const nd = srv.pgNet && typeof srv.pgNet === 'object' && srv.pgNet.d === day ? srv.pgNet : (srv.pgNet = { d: day, n: 0 });
   for (const e of (Array.isArray(deltas) ? deltas : []).slice(0, 60)) {
     if (!e || typeof e.id !== 'string' || !/^[0-9a-f]{8,32}$/.test(e.id) || !e.d || typeof e.d !== 'object') continue;
     if (pg[e.id]) { acks.push(e.id); continue; }
     for (const [k, d] of Object.entries(e.d)) {
       const n = Math.trunc(+d);
       if (!PG_KEY.test(k) || !Number.isFinite(n) || n === 0 || Math.abs(n) > PG_STEP || (n < 0 && !k.startsWith('frags.'))) continue;
+      if (k === 'netWins' || k === 'netLosses') {
+        const ok = Math.max(0, Math.min(n, PG_NET_DAY - nd.n));
+        nd.n += ok;
+        if (ok) vals[k] = clampPg((vals[k] || 0) + ok);
+        continue;
+      }
       vals[k] = clampPg((vals[k] || 0) + n);
     }
     pg[e.id] = now; acks.push(e.id);
