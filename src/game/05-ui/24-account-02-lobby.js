@@ -196,6 +196,7 @@ $id('hostBtn').addEventListener('click', () => { initAudio(); roomWrapShow(); ne
 let mmKind = null;
 function mmUI(kind) {
   mmKind = kind || null;
+  mmFbHide(); MMFB.snooze = 0;
   const box = $id('mmSearch');
   if (!box) return;
   box.classList.toggle('hidden', !kind);
@@ -227,7 +228,63 @@ function mmTick() {
     sub += ` · 匹配范围 ${lo === hi ? lo + ' 段' : lo + '–' + hi + ' 段'}`;
   } else sub += ' · 全服随机';
   $id('mmSearchSub').textContent = sub;
+  mmFallback(t);
 }
+// ---------- 排队太久：人少的时候别让人干等 ----------
+// 3v3 快速匹配和排位排了 MMFB_AFTER 秒还没配到人，搜索条下面露出一张小卡：现在就打电脑 / 继续等 / 建房叫同学。
+// 快速匹配再等 MMFB_AUTO 秒没人点，就自动停掉排队、先开一局 3v3 车轮战打电脑（和习武里的车轮战一样，先进点将台）。
+// 排位不自动跳走（排位是自己选的，不替人做主），只给按钮。点「继续等对手」就收起来，再等 MMFB_SNOOZE 秒才会再出来。
+const MMFB_AFTER = 20, MMFB_AUTO = 10, MMFB_SNOOZE = 60;
+const MMFB = { shown: 0, snooze: 0 };
+function mmFbHide() {
+  MMFB.shown = 0;
+  const box = $id('mmFallback');
+  if (box) box.classList.add('hidden');
+}
+function mmFallback(t) {
+  const box = $id('mmFallback');
+  if (!box) return;
+  const solo = mmKind === 'quick' || mmKind === 'ranked';
+  // 只在对战页开着、网页在前台时出：排着队去逛武库、切到别的窗口时不替人跳进对局
+  const here = $id('netp').classList.contains('on') && !(typeof document !== 'undefined' && document.hidden);
+  if (!solo || !here || NET.open || t < MMFB_AFTER || t < MMFB.snooze) { if (MMFB.shown) mmFbHide(); return; }
+  const auto = mmKind === 'quick';
+  if (!MMFB.shown) {
+    MMFB.shown = t;
+    $id('mmFbTxt').textContent = auto
+      ? '现在排队的人少。先和电脑打一局 3v3 车轮战吧，打完再回来匹配。'
+      : '现在排队的人少。可以先和电脑练一局 3v3 车轮战，或者建房叫同学来打。';
+    $id('mmFbCount').classList.toggle('hidden', !auto);
+    box.classList.remove('hidden');
+  }
+  if (!auto) return;
+  const left = Math.max(0, MMFB_AUTO - (t - MMFB.shown));
+  $id('mmFbLeft').textContent = String(left);
+  if (left <= 0) mmFbCpu();
+}
+// 停掉排队，先打一局电脑：和习武里 3v3 车轮战的「快速开局」一样进点将台，电脑境界用习武页记住的那一档
+function mmFbCpu() {
+  initAudio();
+  statQueueResult(false);
+  netReset();
+  paused = false;
+  bpStart('tag3', { level: pickLevel, quickRelay: true });
+}
+$id('mmFbCpu').addEventListener('click', mmFbCpu);
+$id('mmFbWait').addEventListener('click', () => {
+  if (typeof MM === 'undefined' || !MM.on) return mmFbHide();
+  MMFB.snooze = Math.floor((Date.now() - MM.t0) / 1000) + MMFB_SNOOZE;
+  mmFbHide();
+});
+$id('mmFbRoom').addEventListener('click', () => {
+  initAudio();
+  statQueueResult(false);
+  netReset();
+  roomWrapShow();
+  netConnect(true);
+  const card = $id('mmFriendCard');
+  if (card && card.scrollIntoView) card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+});
 setInterval(mmTick, 1000);
 setInterval(() => { if ($id('netp').classList.contains('on') && !mmKind) renderLobby(); }, 30000);
 function mmGo(kind) {
@@ -472,7 +529,13 @@ function refreshOnline() {
   const parts = [`对局中 ${o.playing} 人`]; if (o.waiting) parts.push(`匹配中 ${o.waiting} 人`);
   set('netOnlineOverview', `${o.total} 人在线 · ` + parts.join(' · '));
   set('homeOnlineCount', `全服 ${o.total} 人在线`);
+  // 首页「匹配对战」：有别人正在排队就告诉一声，现在点进去就能配上，人少的时候大家能凑到一起
+  const others = o.waiting - (mmKind ? 1 : 0);
+  const card = $id('mMatch'), ms = card && card.querySelector('.ms');
+  if (card) card.classList.toggle('mm-hot', others > 0);
+  if (ms) set2(ms, others > 0 ? '有人正在等对手 · 现在点就能开打' : '3v3 车轮战 · 全服随机对手');
 }
+function set2(el, t) { if (el.textContent !== t && el.textContent !== (window.t ? window.t(t) : t)) el.textContent = t; }
 setInterval(refreshOnline, 1000);
 setTimeout(refreshOnline, 300);
 setTimeout(() => presBeat(), 1200);

@@ -119,7 +119,7 @@
     </div>
     <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span><span class="home-online-pill" id="homeOnlinePill" title="全服在线侠士"><span class="home-online-dot"></span><span id="homeOnlineCount">全服 — 人在线</span></span><button class="home-evt-pill" id="homeEvt" type="button" hidden>活动：全皮肤限免 · <span id="homeEvtLeft"></span></button></div>
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
-    <p class="home-tag">十二位侠客 · 回滚联机 · 赛季排位</p>
+    <p class="home-tag">十六位侠客 · 回滚联机 · 赛季排位</p>
     <div class="home-side">
       <button class="home-card home-gboss tn-online" id="homeGboss" type="button" hidden>
         <span class="hc-kicker">天魔讨伐 · 全服共斗</span>
@@ -441,7 +441,7 @@
           <span class="bp-rule-seal pick-only">直选</span>
           <div class="bp-rule-txt">
             <b>点将台规则 · 肉鸽爬塔免禁用直选</b>
-            <span>点击「开启新试炼」后进入水墨点将台，自由检视十二位侠客武学并钦点本命试炼侠客登阁。</span>
+            <span>点击「开启新试炼」后进入水墨点将台，自由检视十六位侠客武学并钦点本命试炼侠客登阁。</span>
           </div>
         </div>
         <div class="single-action-row">
@@ -669,6 +669,16 @@
           <span class="mm-spin" aria-hidden="true"></span>
           <div class="mm-search-txt"><b id="mmSearchTitle">正在寻找对手</b><span id="mmSearchSub">0:00</span></div>
           <button class="mm-cancel" id="mmCancelBtn" type="button">取消</button>
+        </div>
+        <!-- 排队 20 秒还没配到人：人少的时候别让人干等。快速匹配 10 秒后自动先打一局电脑；排位只给按钮。见 24-account-02-lobby.js 的 mmFallback -->
+        <div class="mm-fallback hidden" id="mmFallback" role="status">
+          <p class="mm-fb-txt" id="mmFbTxt">现在排队的人少。先和电脑打一局 3v3 车轮战吧，打完再回来匹配。</p>
+          <p class="mm-fb-count" id="mmFbCount"><span>自动开始倒计时</span> <b id="mmFbLeft">10</b></p>
+          <div class="mm-fb-btns">
+            <button class="mm-go" id="mmFbCpu" type="button">现在就打电脑</button>
+            <button class="mm-cancel" id="mmFbWait" type="button">继续等对手</button>
+            <button class="mm-cancel" id="mmFbRoom" type="button">建房叫同学</button>
+          </div>
         </div>
       </div>
 

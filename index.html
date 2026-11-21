@@ -1196,6 +1196,14 @@ clip-path: polygon(0 0, 100% 0, 100% calc(100% - 12px), calc(100% - 12px) 100%, 
 .mm-search-txt span { font-family: var(--v-cond); font-size: 13px; color: rgba(236,232,225,.6); letter-spacing: .05em; }
 .mm-cancel { background: transparent; color: var(--v-white); border: 1px solid rgba(236,232,225,.35); padding: 7px 18px; cursor: pointer; font-family: var(--body); font-size: 13px; }
 .mm-cancel:hover { border-color: var(--v-red); color: #fff; background: rgba(255,70,85,.15); }
+.mm-fallback { margin: 8px 0 0; padding: 12px 18px; background: rgba(15,25,35,.92); border-left: 4px solid var(--gold); display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.mm-fb-txt { margin: 0; flex: 1 1 280px; font-size: 14px; color: var(--v-white); line-height: 1.5; }
+.mm-fb-count { margin: 0; font-family: var(--v-cond); font-size: 13px; color: rgba(236,232,225,.7); letter-spacing: .05em; }
+.mm-fb-count b { color: var(--gold); font-size: 16px; }
+.mm-fb-btns { display: flex; flex-wrap: wrap; gap: 8px; }
+.mm-fb-btns .mm-go { margin: 0; min-width: 0; padding: 8px 46px 8px 20px; font-size: 14px; letter-spacing: .12em; }
+.menuscr .mcard.mm-hot { filter: drop-shadow(0 0 14px rgba(184,57,46,.7)); }
+.menuscr .mcard.mm-hot .ms { color: #ffd7a8; }
 .mm-foot { display: flex; justify-content: center; margin-top: 14px; }
 .mm-room-btn { background: rgba(15,25,35,.6); border: 1px solid rgba(236,232,225,.2); color: rgba(236,232,225,.78); font-family: var(--body); font-size: 13px; padding: 7px 18px; cursor: pointer; letter-spacing: .04em; }
 .mm-room-btn::after { content: "▾"; margin-left: 8px; display: inline-block; transition: transform .2s; }
@@ -3462,7 +3470,7 @@ font-size: 13px;
     </div>
     <div class="home-kicker"><span class="season-tag" id="homeSeason">第一赛季</span><span id="homeSeasonTxt">10.22 – 11.22 · 段位排位开启</span><span class="home-online-pill" id="homeOnlinePill" title="全服在线侠士"><span class="home-online-dot"></span><span id="homeOnlineCount">全服 — 人在线</span></span><button class="home-evt-pill" id="homeEvt" type="button" hidden>活动：全皮肤限免 · <span id="homeEvtLeft"></span></button></div>
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
-    <p class="home-tag">十二位侠客 · 回滚联机 · 赛季排位</p>
+    <p class="home-tag">十六位侠客 · 回滚联机 · 赛季排位</p>
     <div class="home-side">
       <button class="home-card home-gboss tn-online" id="homeGboss" type="button" hidden>
         <span class="hc-kicker">天魔讨伐 · 全服共斗</span>
@@ -3784,7 +3792,7 @@ font-size: 13px;
           <span class="bp-rule-seal pick-only">直选</span>
           <div class="bp-rule-txt">
             <b>点将台规则 · 肉鸽爬塔免禁用直选</b>
-            <span>点击「开启新试炼」后进入水墨点将台，自由检视十二位侠客武学并钦点本命试炼侠客登阁。</span>
+            <span>点击「开启新试炼」后进入水墨点将台，自由检视十六位侠客武学并钦点本命试炼侠客登阁。</span>
           </div>
         </div>
         <div class="single-action-row">
@@ -4012,6 +4020,16 @@ font-size: 13px;
           <span class="mm-spin" aria-hidden="true"></span>
           <div class="mm-search-txt"><b id="mmSearchTitle">正在寻找对手</b><span id="mmSearchSub">0:00</span></div>
           <button class="mm-cancel" id="mmCancelBtn" type="button">取消</button>
+        </div>
+        <!-- 排队 20 秒还没配到人：人少的时候别让人干等。快速匹配 10 秒后自动先打一局电脑；排位只给按钮。见 24-account-02-lobby.js 的 mmFallback -->
+        <div class="mm-fallback hidden" id="mmFallback" role="status">
+          <p class="mm-fb-txt" id="mmFbTxt">现在排队的人少。先和电脑打一局 3v3 车轮战吧，打完再回来匹配。</p>
+          <p class="mm-fb-count" id="mmFbCount"><span>自动开始倒计时</span> <b id="mmFbLeft">10</b></p>
+          <div class="mm-fb-btns">
+            <button class="mm-go" id="mmFbCpu" type="button">现在就打电脑</button>
+            <button class="mm-cancel" id="mmFbWait" type="button">继续等对手</button>
+            <button class="mm-cancel" id="mmFbRoom" type="button">建房叫同学</button>
+          </div>
         </div>
       </div>
 
@@ -8583,7 +8601,7 @@ Object.assign(UI_COPY_EN, {
 "勾陈": "Gou Chen",
 "匹配对战": "Quick Match",
 "匹配对战 · 排位赛 · 好友房间": "Matchmaking · Ranked · Custom Room",
-"十二位侠客 · 回滚联机 · 赛季排位": "12 Heroes · Rollback Netcode · Ranked Season",
+"十六位侠客 · 回滚联机 · 赛季排位": "16 Heroes · Rollback Netcode · Ranked Season",
 "千影": "Thousand Shadows",
 "单人": "Solo",
 "单人模式": "Single Player",
@@ -9496,6 +9514,14 @@ Object.assign(UI_COPY_EN, {
 "匹配对战：正在全服寻找对手…": "Quick Match: searching for an opponent…",
 "排位中…": "In queue…",
 "排位中": "In queue",
+"现在排队的人少。先和电脑打一局 3v3 车轮战吧，打完再回来匹配。": "Not many players are queuing right now. Play a 3v3 relay against the AI first, then come back to queue.",
+"现在排队的人少。可以先和电脑练一局 3v3 车轮战，或者建房叫同学来打。": "Not many players are queuing right now. Warm up with a 3v3 relay against the AI, or open a room and invite friends.",
+"自动开始倒计时": "Auto start in",
+"现在就打电脑": "Play the AI now",
+"继续等对手": "Keep waiting",
+"建房叫同学": "Open a room for friends",
+"有人正在等对手 · 现在点就能开打": "Someone is waiting for an opponent · Join now",
+"点击「开启新试炼」后进入水墨点将台，自由检视十六位侠客武学并钦点本命试炼侠客登阁。": "Click \"Start New Trial\" to enter the hero draft, browse all 16 heroes and pick the one who will climb the tower.",
 "匹配中": "Searching",
 "排位赛需先登录（右上角）": "Sign in to play Competitive (top right)",
 "已取消": "Cancelled",
@@ -38165,6 +38191,7 @@ $id('hostBtn').addEventListener('click', () => { initAudio(); roomWrapShow(); ne
 let mmKind = null;
 function mmUI(kind) {
 mmKind = kind || null;
+mmFbHide(); MMFB.snooze = 0;
 const box = $id('mmSearch');
 if (!box) return;
 box.classList.toggle('hidden', !kind);
@@ -38196,7 +38223,57 @@ const lo = L[Math.max(0, b - span)], hi = L[Math.min(4, b + span)];
 sub += ` · 匹配范围 ${lo === hi ? lo + ' 段' : lo + '–' + hi + ' 段'}`;
 } else sub += ' · 全服随机';
 $id('mmSearchSub').textContent = sub;
+mmFallback(t);
 }
+const MMFB_AFTER = 20, MMFB_AUTO = 10, MMFB_SNOOZE = 60;
+const MMFB = { shown: 0, snooze: 0 };
+function mmFbHide() {
+MMFB.shown = 0;
+const box = $id('mmFallback');
+if (box) box.classList.add('hidden');
+}
+function mmFallback(t) {
+const box = $id('mmFallback');
+if (!box) return;
+const solo = mmKind === 'quick' || mmKind === 'ranked';
+const here = $id('netp').classList.contains('on') && !(typeof document !== 'undefined' && document.hidden);
+if (!solo || !here || NET.open || t < MMFB_AFTER || t < MMFB.snooze) { if (MMFB.shown) mmFbHide(); return; }
+const auto = mmKind === 'quick';
+if (!MMFB.shown) {
+MMFB.shown = t;
+$id('mmFbTxt').textContent = auto
+? '现在排队的人少。先和电脑打一局 3v3 车轮战吧，打完再回来匹配。'
+: '现在排队的人少。可以先和电脑练一局 3v3 车轮战，或者建房叫同学来打。';
+$id('mmFbCount').classList.toggle('hidden', !auto);
+box.classList.remove('hidden');
+}
+if (!auto) return;
+const left = Math.max(0, MMFB_AUTO - (t - MMFB.shown));
+$id('mmFbLeft').textContent = String(left);
+if (left <= 0) mmFbCpu();
+}
+function mmFbCpu() {
+initAudio();
+statQueueResult(false);
+netReset();
+paused = false;
+bpStart('tag3', { level: pickLevel, quickRelay: true });
+}
+$id('mmFbCpu').addEventListener('click', mmFbCpu);
+$id('mmFbWait').addEventListener('click', () => {
+if (typeof MM === 'undefined' || !MM.on) return mmFbHide();
+MMFB.snooze = Math.floor((Date.now() - MM.t0) / 1000) + MMFB_SNOOZE;
+mmFbHide();
+});
+$id('mmFbRoom').addEventListener('click', () => {
+initAudio();
+statQueueResult(false);
+netReset();
+roomWrapShow();
+netConnect(true);
+const card = $id('mmFriendCard');
+if (card && card.scrollIntoView) card.scrollIntoView({ block: 'center', behavior: 'smooth' });
+});
 setInterval(mmTick, 1000);
 setInterval(() => { if ($id('netp').classList.contains('on') && !mmKind) renderLobby(); }, 30000);
 function mmGo(kind) {
@@ -38416,7 +38493,12 @@ return;
 const parts = [`对局中 ${o.playing} 人`]; if (o.waiting) parts.push(`匹配中 ${o.waiting} 人`);
 set('netOnlineOverview', `${o.total} 人在线 · ` + parts.join(' · '));
 set('homeOnlineCount', `全服 ${o.total} 人在线`);
+const others = o.waiting - (mmKind ? 1 : 0);
+const card = $id('mMatch'), ms = card && card.querySelector('.ms');
+if (card) card.classList.toggle('mm-hot', others > 0);
+if (ms) set2(ms, others > 0 ? '有人正在等对手 · 现在点就能开打' : '3v3 车轮战 · 全服随机对手');
 }
+function set2(el, t) { if (el.textContent !== t && el.textContent !== (window.t ? window.t(t) : t)) el.textContent = t; }
 setInterval(refreshOnline, 1000);
 setTimeout(refreshOnline, 300);
 setTimeout(() => presBeat(), 1200);
