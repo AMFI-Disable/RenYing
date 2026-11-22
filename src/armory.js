@@ -29,7 +29,7 @@
   for (const [k, char, name, look] of C.PAINTS) SKINS[k] = { char, rarity: 'rare', name, cs: 'paint', look: { ...look } };
   for (const [k, d] of Object.entries(C.FULL)) {
     SKINS[k] = { char: d.char, rarity: 'legend', name: d.name, cs: 'star', look: { ...d.look }, deco: JSON.parse(JSON.stringify(d.deco)), fx: { ...d.fx } };
-    SCENES[k] = JSON.parse(JSON.stringify(d.scene));
+    if (d.scene) SCENES[k] = JSON.parse(JSON.stringify(d.scene));
   }
   for (const d of Object.values(C.FULL)) if (d.deco.sign && d.deco.weapStyle) {   // 星座皮肤的流星锤：链子、锤头、锤箍、裂纹光都换成这个星座的颜色
     const { look: l, deco: e } = d;

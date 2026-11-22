@@ -618,7 +618,7 @@ function drawBody(sk, f, o) {
   for (const s of [...segs, ...arm]) drawTaperedSeg(s[0], s[1], s[2] + 2.5, s[3] + 2.5, L.outline);
   circle(sk.head, 12.5);
   if (!hideBaseHead) headAcc(sk, 3, L.outline, L);
-  weapon(sk, L, true, false);
+  weapon(sk, L, true, false, f);
   ctx.globalAlpha = alpha;
   // 身体与流派服饰细节
   for (const s of segs) drawTaperedSeg(s[0], s[1], s[2], s[3], o.flash ? '#fff' : (s[4] ? L.shade : L.body));
@@ -630,8 +630,9 @@ function drawBody(sk, f, o) {
   ctx.fillStyle = o.flash ? '#fff' : L.body; circle(sk.head, 10);
   drawFace(sk, f, L, o.flash);
   if (!hideBaseHead) headAcc(sk, 0, o.flash ? '#fff' : L.body, L);
-  weapon(sk, L, false, o.flash);
-  if (L.fx && !o.flash) { if (L.legend) skinBlade(sk, f, L); else skinTint(sk, f, L); }
+  weapon(sk, L, false, o.flash, f);
+  // 绞带的曲线与坠子直接使用皮肤配色，不沿骨架画直线刃光。
+  if (L.fx && !o.flash && L.weapon !== 'dyelash') { if (L.legend) skinBlade(sk, f, L); else skinTint(sk, f, L); }
   if (L.deco && L.deco.zw && !o.flash) drawZodiacGleam(sk, L);
   // 前手臂（在剑柄之上）
   for (const s of arm) drawTaperedSeg(s[0], s[1], s[2], s[3], o.flash ? '#fff' : L.body);

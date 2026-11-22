@@ -17,7 +17,7 @@ var HERO_STANCES = {
   liying: { name: '照影式', en: 'Reflected Mist', kind: 'control', desc: '攻击硬直更长，伤害略低，攻击距离缩短。' },
   cixian: { name: '双仪式', en: 'Twin Poles', kind: 'power', desc: '重击更重，前后摇都更长。' },
   qianji: { name: '游线式', en: 'Tether Flow', kind: 'reach', desc: '攻击更远，伤害略低，出招稍慢。' },
-  chixiao: { name: '焚野式', en: 'Wildfire Halberd', kind: 'power', desc: '重击与蓄力更猛，前后摇略长。' },
+  chixiao: { name: '焚野式', en: 'Firebreak Stance', kind: 'power', desc: '重击与蓄力更猛，前后摇略长。' },
   youhuang: { name: '翠影式', en: 'Emerald Lash', kind: 'swift', desc: '轻击与空中出招更快，收招略长。' },
   xuanji: { name: '星枢式', en: 'Astral Pivot', kind: 'control', desc: '命中硬直更久，伤害略低，距离略缩。' },
   polang: { name: '镇涛式', en: 'Tide Anchor', kind: 'guard', desc: '攻击略低，静止调息时架势恢复更快。' },

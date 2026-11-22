@@ -5,7 +5,7 @@
 //   drawParticles / drawProjs / drawPetals：粒子、飞行道具、花瓣的画法
 // 找 bug 提示：兵器画出来和判定对不上属于正常（皮肤只换样子）；判定长度看 02-heroes.js 的 WEAPON_LEN。
 const SKIN_WEAP = {};
-function skinWeapon(ws, sk, L, o, flash) {
+function skinWeapon(ws, sk, L, o, flash, f) {
   const draw = SKIN_WEAP[ws]; if (!draw) return false;
   const g = sk.guard, t = sk.tip, hl = sk.hilt, pf = sk.face || 1;
   const dx = t[0] - g[0], dy = t[1] - g[1], len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, px = -uy * pf, py = ux * pf;
@@ -30,7 +30,7 @@ function skinWeapon(ws, sk, L, o, flash) {
     ctx.fillStyle = mid; circle(c, r * 0.5);
   };
   ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-  draw({ sk, L, o, flash, live, g, t, hl, len, ux, uy, px, py, pf, T, P, At, fillWith, poly, bar, lg, glow, leaf, flower });
+  draw({ sk, L, o, flash, live, g, t, hl, len, ux, uy, px, py, pf, T, P, At, fillWith, poly, bar, lg, glow, leaf, flower, f });
   ctx.restore();
   return true;
 }
@@ -605,13 +605,79 @@ const HAMMER_LOOK = {
   crimson_hammer: { chain: ['#6a2a22', '#b0503a'], head: '#4a1610', band: '#ff6a2a', crack: '255,120,50', spikes: '#2a0c08' },
   underworld_hammer: { chain: ['#4a2a7a', '#b48cff'], head: '#2a1840', band: '#a855f7', crack: '185,105,255', ghost: true },
 };
-function weapon(sk, L, outline, flash) {
+// ---------- 新侠客的原装兵器 ----------
+SKIN_WEAP.firerake = ({ At, g, t, bar, poly, L }) => {
+  const crown = At(t, -18);
+  bar(At(g, -29), crown, 4, '#613222');
+  for (const offset of [-8, 8]) bar(At(g, offset, -2), At(g, offset, 2), 2.5, L.scarf);
+  bar(At(crown, 0, -13), At(crown, 0, 13), 5, '#9e4934');
+  for (const side of [-1, 0, 1]) {
+    const w = side * 11, length = side ? 13 : 18;
+    poly([At(crown, -3, w - 2.5), At(crown, length - 4, w - 3.5),
+      At(crown, length, w + 1), At(crown, length - 6, w + 3.5), At(crown, -3, w + 2.5)], L.blade);
+  }
+};
+
+SKIN_WEAP.dyelash = ({ sk, g, hl, t, len, bar, poly, f, L, o, flash }) => {
+  bar(hl, g, 5, '#462439');
+  const cast = f.state === 'skill' && f.skill === 'whiplash' && f.skPh === 1
+    ? clamp(1 - f.t / 0.26, 0, 1) : 0;
+  const swinging = f.state === 'attack' || f.state === 'special';
+  const end = cast ? [g[0] + sk.face * (len + 135 * cast), g[1] - 6]
+    : swinging ? t : [g[0] + sk.face * 22, g[1] + 38];
+  const dx = end[0] - g[0], dy = end[1] - g[1];
+  const bend = (cast || swinging) ? 14 : 27;
+  const ribbon = (width, color) => {
+    ctx.strokeStyle = color;
+    ctx.lineWidth = width;
+    ctx.beginPath();
+    ctx.moveTo(...g);
+    ctx.bezierCurveTo(g[0] + dx * 0.32, g[1] + dy * 0.32 - bend,
+      g[0] + dx * 0.75, g[1] + dy * 0.75 + bend, ...end);
+    ctx.stroke();
+  };
+  ribbon(o ? 10 : 7, o ? L.outline : flash ? '#fff' : L.scarf);
+  if (!o && !flash) ribbon(2, L.blade);
+  const [x, y] = end;
+  poly([[x - 5, y], [x, y - 5], [x + 5, y], [x, y + 5]], '#d5ac7b');
+};
+
+SKIN_WEAP.stargauge = ({ At, hl, t, bar, poly, L, live, T }) => {
+  const hub = At(t, -24);
+  const sights = [t, At(hub, -11, 18), At(hub, -11, -18)];
+  bar(hl, At(hub, -9), 4, '#915d3d');
+  for (let i = 0; i < sights.length; i++) {
+    bar(sights[i], sights[(i + 1) % sights.length], 2.4, '#ad8f55');
+    bar(hub, sights[i], 2.6, L.blade);
+  }
+  poly([At(hub, 6), At(hub, 0, 5), At(hub, -6), At(hub, 0, -5)], L.scarf);
+  if (!live) return;
+  const needle = T * 2.8;
+  bar(hub, At(hub, 11 * Math.cos(needle), 11 * Math.sin(needle)), 1.8, '#fff2a9');
+};
+
+SKIN_WEAP.rescueanchor = ({ At, hl, t, bar, poly, L }) => {
+  const crown = At(t, -4);
+  bar(At(hl, -6), crown, 5.5, '#3b5763');
+  bar(At(hl, 5, -11), At(hl, 5, 11), 4.5, '#c69156');
+  const eye = [At(hl, -12), At(hl, -6, 5), At(hl, 0), At(hl, -6, -5)];
+  for (let i = 0; i < eye.length; i++) bar(eye[i], eye[(i + 1) % eye.length], 2.5, '#c69156');
+  for (const side of [-1, 1]) {
+    const w = n => n * side;
+    poly([At(crown, 4, 0), At(crown, 1, w(12)), At(crown, -9, w(22)),
+      At(crown, -24, w(24)), At(crown, -17, w(12)), At(crown, -14, w(17)),
+      At(crown, -6, w(9)), At(crown, -5, 0)], L.blade);
+  }
+};
+
+function weapon(sk, L, outline, flash, f) {
   const g = sk.guard, t = sk.tip, hl = sk.hilt;
   const dx = t[0] - g[0], dy = t[1] - g[1], dl = Math.hypot(dx, dy) || 1, ux = dx / dl, uy = dy / dl, px = -uy, py = ux;
   const blade = flash ? '#fff' : L.blade;
-  const ws = (L.deco && L.deco.weapStyle) || '';
+  const ws = (L.deco && L.deco.weapStyle) || L.weapon;
   ctx.lineCap = 'round';
-  if (ws && L.weapon !== 'hammer' && skinWeapon(ws, sk, L, outline, flash)) return;
+  if (L.weapon !== 'hammer' && (skinWeapon(ws, sk, L, outline, flash, f) ||
+      (ws !== L.weapon && skinWeapon(L.weapon, sk, L, outline, flash, f)))) return;
   const guardBar = (w, col = L.metal || '#d9b36a') => { ctx.strokeStyle = col; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(g[0] - px * w, g[1] - py * w); ctx.lineTo(g[0] + px * w, g[1] + py * w); ctx.stroke(); };
   switch (L.weapon) {
     case 'fists':

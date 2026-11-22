@@ -28,6 +28,8 @@ const INK_MAX = 100, INK_COST = 15, INK_REGEN = 10, INK_DMG = 24;
 // 墨羽的符：R 画一张花 FU_INK 格墨水，最多 FU_MAX 张；大招全部烧掉，伤害 FU_BASE + FU_PER × 张数
 const FU_MAX = 5, FU_INK = 3, FU_BASE = 80, FU_PER = 40;
 const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 36, fists: 16, brush: 66, moonblade: 58, flute: 50, gourd: 16, hammer: 56, spindle: 42, magnet: 16, puppet: 20 };
+// 新兵器沿用原有骨架长度，保持招式轨迹与距离。
+Object.assign(WEAPON_LEN, { firerake: 88, dyelash: 56, stargauge: 58, rescueanchor: 70 });
 // 按兵器流派定制专属普攻武学动作映射
 const WEAPON_POSE_MODS = {
   wing: { a1: ['aj_wing_1s', 'aj_wing_1a'], a2: ['aj_wing_2s', 'aj_wing_2a'] },
@@ -45,6 +47,12 @@ const WEAPON_POSE_MODS = {
   spindle: { l1: ['du_l1s', 'du_l1a'], l2: ['du_l2s', 'du_l2a'], l3: ['du_l1s', 'lca'], hv: ['du_l1s', 'hva'], a1: ['aj_spindle_1s', 'aj_spindle_1a'], a2: ['aj_spindle_2s', 'aj_spindle_2a'] },
   magnet: { l1: ['lm_boxer', 'lm_jab'], l2: ['l2s', 'lm_jab'], l3: ['fn_l1s', 'fn_l1a'], l4: ['lds', 'lm_kick'], hv: ['hvs', 'hva'], a1: ['aj_fists_1s', 'aj_fists_1a'], a2: ['aj_fists_2s', 'aj_fists_2a'] },   // 磁仙：两手各托一块磁石，推掌、拍掌
 };
+Object.assign(WEAPON_POSE_MODS, {
+  firerake: WEAPON_POSE_MODS.spear,
+  dyelash: WEAPON_POSE_MODS.hammer,
+  stargauge: WEAPON_POSE_MODS.moonblade,
+  rescueanchor: WEAPON_POSE_MODS.greatsword
+});
 // 按角色属性生成每个角色自己的招式表
 function buildMoves(ch) {
   const out = {}, st = ch.stat;

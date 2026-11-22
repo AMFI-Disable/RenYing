@@ -86,7 +86,7 @@ function skinBlade(sk, f, L) {
     }
     ctx.restore(); return;
   }
-  const [a, b] = seg, own = !!(L.deco && L.deco.weapStyle);   // 有自己兵器样子的皮肤，刃光压淡，不把兵器盖成一根光棍
+  const [a, b] = seg, own = !!(SKIN_WEAP[L.weapon] || (L.deco && L.deco.weapStyle));   // 有专属外形的兵器只加淡光
   if (!own && (th === 'void' || th === 'ink' || th === 'star')) {   // 暗芯：先压一道深色，再描亮边
     ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = `rgba(${c2},${th === 'ink' ? 0.55 : 0.7})`; ctx.lineWidth = 7; line(a, b);
     ctx.globalCompositeOperation = 'lighter';

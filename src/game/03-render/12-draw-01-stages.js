@@ -72,8 +72,88 @@ function bgGrads(sky, mc, legend) {
   }
   return g;
 }
+const STORY_BACKDROPS = {
+  chixiao: {
+    sky: ['#16101d', '#312031', '#694032', '#312130'], mist: '210,126,89', orb: 'moon', orbC: '255,181,130',
+    draw() {
+      ctx.fillStyle = '#271d27';
+      ctx.fillRect(-75, -35, 150, 37);
+      for (const [x, h, w] of [[-65, 110, 16], [-41, 84, 12], [53, 102, 14]]) {
+        ctx.fillRect(x, -h, w, h);
+        ctx.fillRect(x - 3, -h, w + 6, 5);
+      }
+      for (const x of [-26, 24]) {
+        ctx.fillStyle = '#3b2530';
+        ctx.beginPath(); ctx.ellipse(x, -24, 25, 30, 0, Math.PI, 0); ctx.fill();
+        ctx.fillStyle = '#b46346';
+        ctx.beginPath(); ctx.ellipse(x, -2, 12, 19, 0, Math.PI, 0); ctx.fill();
+      }
+    }
+  },
+  youhuang: {
+    sky: ['#130e20', '#272138', '#533c56', '#2b2941'], mist: '168,118,162', orb: 'moon', orbC: '227,182,215',
+    draw() {
+      ctx.strokeStyle = '#221c2d'; ctx.lineWidth = 5;
+      line([-70, -76], [70, -76]);
+      for (const x of [-69, 69]) line([x, 0], [x, -86]);
+      for (const [x, h, color] of [[-62, 48, '#764365'], [-23, 64, '#454970'], [23, 52, '#855775']]) {
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.moveTo(x, -74); ctx.lineTo(x + 30, -74);
+        ctx.quadraticCurveTo(x + 24, -55, x + 33, -74 + h);
+        ctx.lineTo(x - 3, -71 + h); ctx.quadraticCurveTo(x + 4, -43, x, -74); ctx.fill();
+      }
+    }
+  },
+  xuanji: {
+    sky: ['#0b1226', '#192840', '#3b4968', '#202637'], mist: '113,143,192', orb: 'moon', orbC: '197,218,255',
+    draw() {
+      ctx.fillStyle = '#232939';
+      ctx.fillRect(-21, -105, 42, 106);
+      ctx.beginPath(); ctx.moveTo(-36, -105); ctx.lineTo(0, -137); ctx.lineTo(36, -105); ctx.fill();
+      ctx.strokeStyle = '#99845e'; ctx.lineWidth = 3.5;
+      ctx.beginPath(); ctx.arc(0, -84, 12, 0, Math.PI * 2); ctx.stroke();
+      line([0, -84], [0, -92]); line([0, -84], [6, -81]);
+      ctx.fillStyle = '#635747'; ctx.fillRect(-4, -55, 8, 17);
+    }
+  },
+  polang: {
+    sky: ['#0c1a27', '#162f41', '#335365', '#223c4e'], mist: '117,182,197', orb: 'moon', orbC: '183,227,228',
+    draw() {
+      ctx.strokeStyle = '#78939b'; ctx.lineWidth = 1.5;
+      for (const [y, x] of [[-24, -89], [-14, -103], [-7, -81]]) line([x, y], [x + 172, y]);
+      ctx.fillStyle = '#25323d';
+      ctx.beginPath(); ctx.moveTo(-69, -27); ctx.lineTo(70, -27);
+      ctx.lineTo(48, -7); ctx.lineTo(-44, -7); ctx.fill();
+      ctx.strokeStyle = '#273540'; ctx.lineWidth = 5; line([-13, -27], [-13, -101]);
+      ctx.fillStyle = '#62838c'; ctx.beginPath(); ctx.moveTo(-9, -96);
+      ctx.quadraticCurveTo(17, -76, 43, -39); ctx.lineTo(-9, -39); ctx.fill();
+    }
+  }
+};
+
+function storyBackdrop() {
+  const hero = M.mode === 'saga' ? SG.hero : M.mode === 'raid' ? M.raidStoryHero : M.stage?.C?.hero;
+  return STORY_BACKDROPS[hero];
+}
+
+function drawStorySetting(setting, gy, sc) {
+  const scale = sc * 0.85;
+  const spacing = 210;
+  const center = cam.x * 0.45;
+  const first = Math.floor((center - W / 2 / scale) / spacing);
+  const last = Math.ceil((center + W / 2 / scale) / spacing);
+  for (let i = first; i <= last; i++) {
+    ctx.save();
+    ctx.translate(W / 2 + (i * spacing - center) * scale, gy);
+    ctx.scale(scale, scale);
+    setting.draw();
+    ctx.restore();
+  }
+}
+
 function drawBackground(sc) {
-  const T = SCN, sky = T ? T.sky : ['#060914', '#141b30', '#262b44', '#181c2b'], mc = T ? T.mist : SCN_DEF.mist;
+  const setting = storyBackdrop();
+  const T = setting || SCN, sky = T ? T.sky : ['#060914', '#141b30', '#262b44', '#181c2b'], mc = T ? T.mist : SCN_DEF.mist;
   const bg = bgGrads(sky, mc, !!(T && T.legend));
   ctx.fillStyle = bg.sky; ctx.fillRect(0, 0, W, H);
   // 宣纸水墨暗纹晕染（四角微暗、天际微亮）
@@ -100,7 +180,7 @@ function drawBackground(sc) {
   const pagX = W * 0.76 - (cam.x - STAGE_W / 2) * 0.08 * sc;
   const pagU = (pagX + (cam.x - STAGE_W / 2) * 0.08 * sc) / H;
   const pagY = (gy - H * 0.2) - (H * 0.16) * (0.55 * Math.sin(pagU * 2.3 + 1.3) + 0.3 * Math.sin(pagU * 5.1 + 2.6) + 0.15 * Math.sin(pagU * 11 + 3.9));
-  drawDistantPagoda(pagX, pagY + 4 * sc, sc * 0.95);
+  if (!setting) drawDistantPagoda(pagX, pagY + 4 * sc, sc * 0.95);
   // 中层云岚流雾（渐变按 y=0 缓存，画之前整体移到地平线）
   ctx.save(); ctx.translate(0, gy);
   ctx.fillStyle = bg.mid; ctx.fillRect(0, -H * 0.32, W, H * 0.24);
@@ -111,9 +191,11 @@ function drawBackground(sc) {
   ctx.save(); ctx.translate(0, gy);
   ctx.fillStyle = bg.low; ctx.fillRect(0, -H * 0.25, W, H * 0.25);
   ctx.restore();
-  // 竹林
-  bamboo(0.5, sc, gy, bm[0], 150, 0.75);
-  bamboo(0.75, sc, gy, bm[1], 210, 0.9);
+  if (setting) drawStorySetting(setting, gy, sc);
+  else {
+    bamboo(0.5, sc, gy, bm[0], 150, 0.75);
+    bamboo(0.75, sc, gy, bm[1], 210, 0.9);
+  }
   if (T && T.legend) {   // 传说场景：地平线上一层主题色的光
     const gl = ctx.createLinearGradient(0, gy - H * 0.12, 0, gy + 4);
     gl.addColorStop(0, `rgba(${T.orbC},0)`); gl.addColorStop(1, `rgba(${T.orbC},0.2)`);

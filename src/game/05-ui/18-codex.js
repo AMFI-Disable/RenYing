@@ -81,6 +81,7 @@ function renderCodex() {
   const rName = (skin && skinSkillName(skin, 2)) || S2.name;
   const uName = (skin && skinUltName(skin)) || U.name;
   $id('cxMoves').innerHTML = [
+    c.profile ? tile('chronicle', '侠客小传', escapeHTML(c.profile.weapon), escapeHTML(c.profile.bio), '', true) : '',
     tile('passive', `被动 · ${c.passiveName}`, '', PASSIVE_SHORT[c.id] || '', '', true),
     tile('light', `左键 · 连击 <small class="type-tag ${lType.type}">${lType.label}</small>`, sum, `${lk.length} 段${c.id === 'cixian' ? '循环 · 负极能一直连' : ' · 末段击飞'}${c.inkShot ? ` · 另有墨团 ${lk.length}×${INK_DMG}` : ''}`, '', false, 'light'),
     tile('charge', `按住左键 · 蓄力 <small class="type-tag ${cType.type}">${cType.label}</small>`, `${dv(m.cs1.dmg)} / ${dv(m.cs2.dmg)}`, '满蓄破防 · 打倒', '', false, 'charge'),

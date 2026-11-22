@@ -58,7 +58,7 @@ const lines = (where, ls) => { if (!Array.isArray(ls) || !ls.length) err(where, 
 const STAT = { hp: 'pos', walk: 'pos', speed: 'pos', dmg: 'pos', reach: 'pos', swing: 'pos', jump: 'pos', weight: 'pos', defRating: 'pos', guardMax: 'pos', guardStab: 'pos', guardChip: 'num', guardRegen: 'pos', poise: 'pos', size: 'pos' };
 const LOOK = { body: 'str', shade: 'str', outline: 'str', outlineA: 'num', scarf: 'str', slash: 'str', blade: 'str', head: 'str', weapon: 'str', 'hair?': 'str' };
 const CHAR = { id: 'str', name: 'str', role: 'str', diff: 'int', escCD: 'pos', skill: 'str', skill2: 'str', ult: 'str', passive: 'str', passiveName: 'str', passiveDesc: 'str',
-  stat: 'obj', look: 'obj', ai: 'obj', beats: 'arr', weakTo: 'arr', 'meterMul?': 'pos', 'hitFeel?': 'pos', 'moveMods?': 'obj', 'jumps?': 'int', 'fly?': 'pos', 'scaling?': 'num', 'inkShot?': 'bool', 'cancel?': 'obj', 'clone?': 'obj' };
+  stat: 'obj', look: 'obj', ai: 'obj', beats: 'arr', weakTo: 'arr', 'meterMul?': 'pos', 'hitFeel?': 'pos', 'moveMods?': 'obj', 'jumps?': 'int', 'fly?': 'pos', 'scaling?': 'num', 'inkShot?': 'bool', 'cancel?': 'obj', 'clone?': 'obj', 'profile?': 'obj' };
 const CANCEL_SPEC = { blockEarly: 'num', chainAt: 'num', skill2FromLight: 'bool', skillOnHit: 'bool' };
 // 雾身（离影）：上限、存在秒数、拴绳距离、换影结印 / 凝身 / 无敌秒数、打碎一个给对手多少气
 const CLONE_SPEC = { max: 'int', life: 'pos', leash: 'num', swapSeal: 'pos', swapLand: 'pos', swapInvul: 'pos', breakMeter: 'num', swapPathDmg: 'num', swapPathPad: 'num', 'hp?': 'pos', 'subHp?': 'pos', 'swapArmor?': 'num', 'swapFreeze?': 'num', 'waveDmg?': 'num', 'waveGuardMul?': 'num' };
@@ -202,6 +202,7 @@ function checkHeroes(env) {
     if (shape(w + ' char', c, CHAR)) {
       shape(w + ' char.stat', c.stat, STAT);
       shape(w + ' char.look', c.look, LOOK);
+      if (c.profile) shape(w + ' char.profile', c.profile, { weapon: 'str', bio: 'str' });
       if (shape(w + ' char.ai', c.ai, { range: 'arr' }) && !(c.ai.range.length === 2 && c.ai.range.every(TYPES.pos) && c.ai.range[0] < c.ai.range[1])) err(w + ' char.ai', 'range 要写成 [近, 远]');
       if (!(c.diff >= 1 && c.diff <= 3)) err(w + ' char', `diff 上手难度是 1~3，现在是 ${c.diff}`);
       for (const k of ['skill', 'skill2']) if (!env.SKILLS[c[k]]) err(w + ' char', `${k} 技能 ${c[k]} 在 SKILLS 里没有`);

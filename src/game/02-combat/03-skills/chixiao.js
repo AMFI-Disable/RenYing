@@ -1,6 +1,6 @@
 Object.assign(SKILLS, {
   // ---- 炽霄 · Q：烈焰突刺（flamehalberd） ----
-  flamehalberd: { name: '烈焰突刺', cd: 6, pass: true, nofric: true, desc: '携烈焰长戟疾步突刺，命中引燃对手并持续灼烧。',
+  flamehalberd: { name: '烈焰突刺', cd: 6, pass: true, nofric: true, desc: '挺起火耙冲刺，命中引燃对手。',
     start(f) { f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.09) { f.skPh = 1; f.t = 0; f.vx = 1360 * f.face; f.armorT = 0.22; f.armorHits = 1; f.hitDone = false; SFX.dash(); }
@@ -15,7 +15,7 @@ Object.assign(SKILLS, {
     pose: f => f.skPh === 0 ? ['qf_charge', 26] : f.skPh === 1 ? ['qf_thrust', 56] : ['idle', 14],
     ai: (me, foe, d) => d > 110 && d < 320 },
   // ---- 炽霄 · R：炎轮扫荡（blazering） ----
-  blazering: { name: '炎轮扫荡', cd: 5.5, desc: '挥戟旋出烈焰火轮，挑飞近身敌众并施加灼烧。',
+  blazering: { name: '炎轮扫荡', cd: 5.5, desc: '横抡火耙，卷出的火轮挑飞近处对手并点燃他们。',
     start(f) { f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.11) {

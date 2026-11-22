@@ -1,6 +1,6 @@
 Object.assign(SKILLS, {
   // ---- 幽篁 · Q：幽篁毒针（venomfan） ----
-  venomfan: { name: '幽篁毒针', cd: 5, desc: '挥袖齐射三枚翠竹寒针，命中减速对手。',
+  venomfan: { name: '幽篁毒针', cd: 5, desc: '从袖中齐射三枚淬药细针，命中减速对手。',
     start(f) { f.vx *= 0.3; },
     update(f) {
       if (f.skPh === 0 && f.t >= 0.08) {
@@ -13,8 +13,8 @@ Object.assign(SKILLS, {
     },
     pose: f => f.skPh === 0 ? ['qf_charge', 30] : ['qf_thrust', 56],
     ai: (me, foe, d) => d > 150 && d < 420 },
-  // ---- 幽篁 · R：青竹缠鞭（whiplash） ----
-  whiplash: { name: '青竹缠鞭', cd: 5.5, desc: '甩出青竹长鞭远距抽击，将对手拽至身前并造成硬直。',
+  // ---- 幽篁 · R：回纹缠带（whiplash） ----
+  whiplash: { name: '回纹缠带', cd: 5.5, desc: '甩出带坠的绞带，从远处拉近对手并造成硬直。',
     start(f) { f.vx = 0; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.1) {

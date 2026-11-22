@@ -1,6 +1,6 @@
 Object.assign(SKILLS, {
   // ---- 破浪 · Q：怒涛震锚（tidalslam） ----
-  tidalslam: { name: '怒涛震锚', cd: 6, desc: '举起玄铁重锚猛砸地面，掀起怒涛震波破防挑空。',
+  tidalslam: { name: '怒涛震锚', cd: 6, desc: '抡起燕尾救生锚砸地，震波削减架势并挑飞对手。',
     start(f) { f.vx = 0; f.armorT = 0.25; f.armorHits = 1; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.16) {
@@ -13,7 +13,7 @@ Object.assign(SKILLS, {
     pose: f => f.skPh === 0 ? ['hva', 24] : ['lda', 52],
     ai: (me, foe, d) => d < 185 },
   // ---- 破浪 · R：破浪突进（undertow） ----
-  undertow: { name: '破浪突进', cd: 5.5, nofric: true, desc: '身披沧澜霸体顶锚冲锋，强行撞开正面敌军。',
+  undertow: { name: '破浪突进', cd: 5.5, nofric: true, desc: '以救生锚顶在身前冲锋，凭霸体撞飞对手。',
     start(f) { f.vx = 0; f.armorT = 0.36; f.armorHits = 2; },
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.08) { f.skPh = 1; f.t = 0; f.vx = 1120 * f.face; f.hitDone = false; SFX.dash(); }

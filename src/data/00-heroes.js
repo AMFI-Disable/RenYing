@@ -13,6 +13,7 @@
 //           调之前各侠客平均胜率 24%~83%，换一组随机种子复核 44%~54%。详见 docs/ai/trainer/plan.md。
 //   char    基础设定（就是 CHARS 里的一项，id 自动补上）：
 //           name 名字，role 称号，diff 上手难度，escCD 腾空闪冷却，skill 是 Q 技能，skill2 是右键招式，ult 是 E 大招，passive 是被动。
+//           profile（选填）：图鉴中的 weapon 兵器名称与 bio 出身和性格。
 //           stat：hp 生命，walk 移速倍率，speed 出招时间倍率（越小越快），dmg 伤害倍率，reach 攻击距离倍率，其余是体量和架势。
 //           moveMods 改这位侠客的普攻招式（前摇、判定、后摇、连段，字段见 src/data/01-moves.js），cancel 改取消规则（只写要改的项），
 //           look 画法和配色，ai.range 电脑喜欢站的距离。beats/weakTo 只给电脑选人、禁人时打分用，界面上不显示。

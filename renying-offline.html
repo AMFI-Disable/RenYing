@@ -6379,6 +6379,7 @@ const PATTERNS_EN = [
 [/^(快速上手|完整教学) (\d+) \/ (\d+)$/, (m0, w, a, b) => `${w === '快速上手' ? 'Quick start' : 'Full tutorial'} ${a} / ${b}`],
 [/^难度 ([●○]+)$/, (m0, d) => `Difficulty ${d}`],
 [/^平衡 · 伤害与气血 ×([\d.]+)$/, (m0, n) => `Balance · Damage & HP ×${n}`],
+[/^(伤害|普攻|技能|技能与大招|大招|气血) ×([\d.]+)$/, (m0, label, n) => `${{ 伤害: 'Damage', 普攻: 'Normals', 技能: 'Skills', 技能与大招: 'Skills & Ultimate', 大招: 'Ultimate', 气血: 'HP' }[label]} ×${n}`],
 [/^(正常|原速) ([\d.]+)x$/, (m0, w, n) => `Normal ${n}x`],
 [/^慢放 ([\d.]+)x$/, (m0, n) => `Slow ${n}x`],
 [/^(你赢了|你输了)，比分 (\d+) : (\d+)$/, (m0, r, a, b) => `${r === '你赢了' ? 'You won' : 'You lost'} · Score ${a} : ${b}`],
@@ -6413,6 +6414,9 @@ const PATTERNS_EN = [
 [/^侠客列传 · (.+?)传 · (.+)$/, (m0, h, t) => `Hero Tales · ${lookup(h) || h} · ${lookup(t) || t}`],
 [/^走到第 (\d+) \/ (\d+) 节$/, (m0, a, b) => `Reached part ${a} / ${b}`],
 [/^结局 ((?:「[^」]+」)+)$/, (m0, x) => `Endings: ${x.slice(1, -1).split('」「').map(n => lookup(n) || n).join(', ')}`],
+[/^📖 (.+)（([^（）]+)）$/, (m0, title, place) => `📖 ${lookup(title) || title} (${lookup(place) || place})`],
+[/^(.+) \((\d+)波妖\)$/, (m0, name, count) => `${lookup(name) || name} (${count} waves)`],
+[/^(.+) · 魔首决战$/, (m0, name) => `${lookup(name) || name} · Final Boss`],
 [/^(\S+?)传 · (.+?)(?: · (.+))?$/, (m0, h, t, st) => { const a = lookup(t); return a ? `Tale of ${lookup(h) || h} · ${a}${st ? ` · ${lookup(st) || st}` : ''}` : ''; }],
 [/^(\S{2,3})：「([\s\S]+)」$/, (m0, h, x) => { const t = lookup(x); return t ? `${lookup(h) || h}: “${t}”` : ''; }],
 [/^第 (\d+) 幕$/, (m0, n) => `Act ${n}`],
@@ -6557,6 +6561,10 @@ const PATTERNS_EN = [
 [/^成功载入 (\d+) 个账号数据$/, (m0, n) => `Loaded ${n} accounts`],
 [/^导入失败：(.+)$/, (m0, x) => `Import failed: ${lookup(x) || x}`],
 [/^文件解析失败：(.+)$/, (m0, x) => `Couldn't read the file: ${lookup(x) || x}`],
+[/^【这一战】(.+?)(?:，开局只剩 (\d+)% 生命)?$/, (m0, goal, hp) => `[This Fight] ${lookup(goal) || goal}${hp ? ` · Start at ${hp}% HP` : ''}`],
+[/^第 (\d+) 节走完(?:，获得 (\d+) 墨锭)?$/, (m0, chapter, ink) => `Chapter ${chapter} complete${ink ? ` · +${ink} Ink` : ''}`],
+[/^—— 结局 · 「([^」]+)」 ——(?:　获得 (\d+) 墨锭)?$/, (m0, title, ink) => `Ending · ${lookup(title) || title}${ink ? ` · +${ink} Ink` : ''}`],
+[/^结局：((?:「[^」]+」)+)$/, (m0, titles) => `Endings: ${[...titles.matchAll(/「([^」]+)」/g)].map(([, title]) => lookup(title) || title).join(', ')}`],
 [/^第 (\d+) 节$/, (m0, n) => `Chapter ${n}`],
 [/^对手 (.+)$/, (m0, h) => `Opponent: ${lookup(h) || h}`],
 [/^撑过 (\d+) 秒$/, (m0, n) => `Survive ${n}s`],
@@ -11258,7 +11266,74 @@ Object.assign(UI_COPY_EN, {
 "开战 · 夺旗争锋": "Start Capture the Banner",
 "开战 · 无尽试炼": "Start Endless Gauntlet",
 "我方兵力": "Allied Tickets",
-"敌方兵力": "Enemy Tickets"
+"敌方兵力": "Enemy Tickets",
+"挑选离线玩法，潜心修习剑术招式": "Choose an offline mode to practice your moves",
+"大厅里还没人说话，来说第一句吧": "The lobby is quiet. Say something to get it started.",
+"在大厅说点什么（回车发送）": "Say something in the lobby (Enter to send)",
+"初影": "First Glimpse",
+"平衡": "Balance",
+"奥义": "Ultimate",
+"玄华": "Mysterious Radiance",
+"重击与蓄力更猛，前后摇略长。": "Stronger heavy and charged attacks with slightly longer startup and recovery.",
+"轻击与空中出招更快，收招略长。": "Faster light and air attacks with slightly longer recovery.",
+"命中硬直更久，伤害略低，距离略缩。": "Longer hitstun with slightly less damage and reach.",
+"攻击略低，静止调息时架势恢复更快。": "Slightly lower attack power. Guard recovers faster while standing still.",
+"连续格挡 3 次后，下一次反击附带短暂霸体护身。": "Block three times in a row to give the next counterattack brief super armor.",
+"连续格挡 3 次": "Block three times in a row",
+"格挡 3 次后获得 0.5 秒霸体。": "Gain 0.5s of super armor after three blocks.",
+"霸体持续延长 15%。": "Super armor lasts 15% longer.",
+"霸体延长 30% 并恢复 12 点架势。": "Super armor lasts 30% longer and restores 12 guard.",
+"Q/R 技能命中后，下一次普攻起手提速并延长追击窗口。": "Land a Q or R skill to speed up the next normal attack and extend the follow-up window.",
+"Q/R 技能命中": "Land a Q or R skill",
+"技能命中后减少 0.4 秒剩余冷却。": "Skill hits cut 0.4s off the remaining cooldown.",
+"减少 0.6 秒冷却。": "Cuts 0.6s off cooldown.",
+"减少 0.85 秒冷却并附加短促追步窗口。": "Cuts 0.85s off cooldown and opens a brief dash follow-up window.",
+"气血低于 35% 时，命中回复少量气血并额外积攒真气。": "Below 35% HP, hits restore a little HP and grant extra meter.",
+"低血量（<35%）命中": "Land a hit below 35% HP",
+"每次命中额外回气 +4 并回血 1%。": "Each hit grants 4 extra meter and restores 1% HP.",
+"回气 +6，回血 1.5%。": "Gain 6 meter and restore 1.5% HP.",
+"回气 +8，回血 2%。": "Gain 8 meter and restore 2% HP.",
+"虚招翻滚（C）后 1.2 秒内首次命中伤害提升。": "The first hit within 1.2s of a feint roll (C) deals more damage.",
+"虚招翻滚（C）后命中": "Land a hit after a feint roll (C)",
+"虚招后 1.2 秒内命中回气 +6。": "Land a hit within 1.2s of a feint to gain 6 meter.",
+"窗口延长 15%，回气 +8。": "The window lasts 15% longer and grants 8 meter.",
+"窗口延长 30%，回气 +10 并略增击退。": "The window lasts 30% longer, grants 10 meter, and slightly increases knockback.",
+"发动灵宠秘技（V）后，立刻缩短 Q/R 技能剩余冷却。": "Using a pet skill (V) immediately cuts the remaining Q/R cooldowns.",
+"发动灵宠秘技（V）": "Use a pet skill (V)",
+"Q/R 冷却立减 1.0 秒。": "Immediately cut Q/R cooldowns by 1.0s.",
+"Q/R 冷却立减 1.5 秒。": "Immediately cut Q/R cooldowns by 1.5s.",
+"Q/R 冷却立减 2.2 秒并回气 +8。": "Immediately cut Q/R cooldowns by 2.2s and gain 8 meter.",
+"空中蓄力斩命中后，重置空中跳跃与冲刺次数。": "Land an aerial charged strike to restore air jumps and dashes.",
+"空中蓄力斩命中": "Land an aerial charged strike",
+"重置 1 次空中跳跃。": "Restore one air jump.",
+"重置空中跳跃与冲刺。": "Restore air jumps and dashes.",
+"全重置并回复 10 点真气。": "Restore all uses and gain 10 meter.",
+"霸体硬扛受击后，下一次重击或蓄力斩威力增强。": "After absorbing a hit with super armor, the next heavy or charged strike is stronger.",
+"霸体扛伤后命中": "Land a hit after absorbing one with super armor",
+"霸体扛伤后回气 +8。": "Gain 8 meter after absorbing a hit with super armor.",
+"回气 +12 并补 10 架势。": "Gain 12 meter and restore 10 guard.",
+"回气 +16 并补 18 架势。": "Gain 16 meter and restore 18 guard.",
+"多人团战中协同命中敌人时，为己方附近队友回复真气。": "Coordinated hits in team fights restore meter to nearby allies.",
+"团战命中敌人": "Hit an opponent in a team fight",
+"附近队友获得 +3 真气。": "Nearby allies gain 3 meter.",
+"附近队友获得 +5 真气。": "Nearby allies gain 5 meter.",
+"附近队友获得 +7 真气与 +6 架势。": "Nearby allies gain 7 meter and restore 6 guard.",
+"连击额外回气": "Combos build extra meter",
+"灵狐突袭：前冲造成缓速印记": "Fox Pounce (rush forward and apply a slowing mark)",
+"架势恢复提速": "Guard recovers faster",
+"玄甲护盾：获得短暂霸体与架势回复": "Obsidian Shield (gain brief super armor and recover guard)",
+"空中招式威力略增": "Air attacks deal slightly more damage",
+"惊雷俯冲：电光劈向锁定目标": "Thunder Dive (strike the target with lightning)",
+"脱战缓慢回血": "Gradually recover HP out of combat",
+"寒露甘泉：瞬间回复气血与架势": "Frostdew Spring (instantly restore HP and guard)",
+"蓄力斩破防增强": "Charged strikes damage more guard",
+"烈焰狮吼：震退近身敌众并灼烧": "Flame Roar (push back and burn nearby opponents)",
+"虚招与闪避冷却略减": "Feints and dodges have slightly shorter cooldowns",
+"鸦影袭背：瞬闪扰敌并积攒真气": "Crow Ambush (blink to disrupt the opponent and gain meter)",
+"闪避无敌略微延长": "Dodge invulnerability lasts slightly longer",
+"跃渊清心：驱散减速灼烧并疾行": "Clearwater Leap (clear slows and burns and move faster)",
+"Q/R 技能冷却略减": "Q/R skills have slightly shorter cooldowns",
+"连弩齐发：齐射三枚追踪机矢": "Repeating Volley (fire three homing bolts)"
 });
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
@@ -12360,28 +12435,24 @@ Object.assign(UI_COPY_EN, {
 "千机传 · 金丝引": "Tale of Qian Ji · Golden Silk Thread",
 "金丝引": "Golden Silk Thread",
 "炽霄": "Chi Xiao",
-"烈焰戟将": "Flame Halberd Vanguard",
-"赤炎戟势": "Crimson Halberd Stance",
+"炉火护身": "Firewatch Guard",
 "烈焰突刺": "Ember Thrust",
 "炎轮扫荡": "Blazing Ring",
 "炽霄焚天": "Crimson Skyfall",
-"焚野式": "Wildfire Halberd",
+"焚野式": "Firebreak Stance",
 "幽篁": "You Huang",
-"竹鞭毒师": "Bamboo Whip Tactician",
-"幽竹缠毒": "Venomous Bamboo",
+"染坊配方": "Dyeworks Formula",
 "幽篁毒针": "Venom Needle Fan",
-"青竹缠鞭": "Snaring Bamboo Lash",
-"万竹凌霄": "Emerald Thicket",
+"回纹缠带": "Sash Snare",
+"千缕重叠": "Thousand Folds",
 "翠影式": "Emerald Lash",
 "玄机": "Xuan Ji",
-"星仪阵师": "Astral Compass Master",
 "星枢引力": "Astral Gravity",
-"星仪灵珠": "Starlight Orb",
+"星规流火": "Gauge Spark",
 "天枢重力": "Gravity Well",
 "星宿归元": "Celestial Alignment",
 "星枢式": "Astral Pivot",
 "破浪": "Po Lang",
-"沧海锚客": "Tide Anchor Bruiser",
 "沧澜重锚": "Heavy Tide Anchor",
 "怒涛震锚": "Tidal Slam",
 "破浪突进": "Undertow Dash",
@@ -12392,7 +12463,248 @@ Object.assign(UI_COPY_EN, {
 "沧澜雷霆": "Stormtide Tempest",
 "星陨": "Starfall",
 "丹青": "Cinnabar Ink",
-"沧澜": "Stormtide"
+"沧澜": "Stormtide",
+"巡火人": "Fire Warden",
+"三齿火耙": "Three-Tine Fire Rake",
+"炽霄曾在百炉坊烧饼，现在带街坊巡火。她说话像报更，句句要人答应；每救出一个人，就在火耙柄上刻一道线。": "Chi Xiao baked flatbread in Kiln Row before taking charge of its fire watch. She barks instructions and waits for an answer. For every life saved, she cuts a notch in her rake.",
+"炉街夜班": "Night Watch on Kiln Row",
+"炽霄传 · 炉街夜班": "Tale of Chi Xiao · Night Watch on Kiln Row",
+"百炉坊": "Kiln Row",
+"地底的窑火沿着废烟道钻进民居，妖物也跟着出来了。炽霄提起拆火用的三齿耙，挨家挨户叫醒街坊。": "Kiln fire spreads through abandoned flues into the houses, and demons crawl out after it. Chi Xiao grabs her three-tine fire rake and goes door to door waking her neighbors.",
+"叩门报火": "Raise the Alarm",
+"拆棚断火": "Break the Fireline",
+"烟道逆行": "Against the Smoke",
+"清点街坊": "Count the Neighbors",
+"封窑留灯": "Seal the Kiln, Leave a Light",
+"炽霄：「听得见就应一声。咳嗽也算。」": "Chi Xiao: “Call out if you hear me. A cough counts.”",
+"炽霄：「拆棚前先看棚下。耙子举高，别碰着人。」": "Chi Xiao: “Check under the awning before you pull it down. Rake up high. Mind the people.”",
+"炽霄：「出门不必锁门。钥匙留着，回来还能用。」": "Chi Xiao: “Leave the door unlocked. Keep your key. You’ll need it when you come back.”",
+"炽霄：「名单上还有两个。再看一遍，别嫌我啰嗦。」": "Chi Xiao: “Two names left on my list. Check again. You can call me a nag later.”",
+"炽霄：「刚才应声的都到我身后。剩下这一窑归我。」": "Chi Xiao: “Everyone who called out, behind me. I’ll take this last kiln.”",
+"缺一声": "One Voice Missing",
+"炽霄传 · 缺一声": "Tale of Chi Xiao · One Voice Missing",
+"百炉坊的窑主锁住了泄烟闸，炽霄敲遍一条街，唯独没人从地下作坊答应。": "The kiln owner has locked the smoke gate. Chi Xiao has knocked on every door, but nobody in the underground workshop has answered.",
+"揭瓦巷": "Tilebreaker Lane",
+"敲门": "Knock",
+"半条街在冒烟，铁山还扶着一堵歪墙。": "Half the street is smoking. Tie Shan is still holding up a leaning wall.",
+"里头空了，我亲自看过。": "Nobody inside. I checked myself.",
+"看过地面。现在让我看看地底。": "You checked above ground. Let me check below.",
+"墙我扶着。你带人下去。": "I’ll hold the wall. Take your crew down.",
+"回烟井": "Backdraft Shaft",
+"听声": "Listen",
+"井底每响一次，就会倒灌一口热烟。": "The shaft belches hot smoke with every thump from below.",
+"这里守住四十五息，我带街坊过桥。": "Hold here for forty-five seconds while I get the neighbors across.",
+"桥上都到了。地下还有敲管子的声音。": "Everyone’s across. Someone’s still tapping a pipe below.",
+"开闸能给暗道换气，走暗道则能立刻接应最深处的工人。": "The gate will vent the passage. Going in now will reach the deepest crew sooner.",
+"先开泄烟闸": "Open the Smoke Gate",
+"先给他们一口能喘的气。": "First, give them some air they can breathe.",
+"从暗道接人": "Reach the Crew Below",
+"听见我就敲两下。我下来了。": "Two taps if you hear me. I’m coming down.",
+"侧风廊": "Crosswind Gallery",
+"留缝": "Leave a Gap",
+"雷鸣要砸开石门，炽霄用耙柄顶住了门缝。": "Lei Ming goes to smash the stone door. Chi Xiao jams her rake handle into the crack.",
+"先留条缝。你听，里头有人在数数。": "Leave a gap first. Listen. Somebody’s counting inside.",
+"我听见了。你撬门，我拉人。": "I hear it. You pry. I’ll pull them out.",
+"三岔烟道": "Three-Way Flue",
+"借链": "Borrow a Chain",
+"勾陈只接了拖走窑主的活。他把链子扣上了升降筐。": "Gou Chen was hired to get the kiln owner out. He hooks his chain to the lift basket.",
+"先拉一筐工人。要加工钱，算我头上。": "Pull up a load of workers first. If it costs extra, put it on my tab.",
+"工钱回头再算。把筐装满。": "We’ll settle up later. Fill the basket.",
+"百炉总闸": "Kiln Row Main Gate",
+"最后一户": "The Last Household",
+"闸杆发红，积在烟道里的火凝成了一个握耙的人影。": "The gate lever glows red. The fire trapped in the flues takes the shape of a figure with a rake.",
+"铁山撑着总闸。炽霄必须守住筐口，等最后一趟升上来。": "Tie Shan braces the gate. Chi Xiao has to hold the lift landing until the last basket comes up.",
+"门门有人": "Every Door Answered",
+"闸门升起，整条街第一次看清天色。工人自己从暗道走了出来。": "The gate lifts and the whole street sees daylight. The workers walk out of the passage on their own.",
+"数一遍。再数一遍。行，今天我请烧饼。": "Count again. One more time. Good. Flatbread’s on me.",
+"把钥匙留下": "Keep Your Key",
+"百炉坊烧掉了三间店。出筐的工人把钥匙挂在废屋门框上，约好重建那天再来取。": "Three shops burn down. The rescued workers hang their keys on the ruined door frames and agree to come back for them when they rebuild.",
+"把我那把也挂上。往左一点，让我认得出来。": "Hang mine up too. A little to the left, so I can find it.",
+"试染师": "Dye Tester",
+"回纹绞带": "Patterned Sash",
+"幽篁在碱湾染坊做过学徒，记药方只认实测。她把带铅坠的捞布绞带练成了兵器，最烦别人说「大概没毒」。": "You Huang learned her trade in the Lye Bend dyeworks and trusts a recipe only after testing it. Her weighted sash once hauled cloth out of vats. She can’t stand hearing that something is probably safe.",
+"一缸坏蓝": "One Spoiled Vat",
+"幽篁传 · 一缸坏蓝": "Tale of You Huang · One Spoiled Vat",
+"碱湾染坊": "Lye Bend Dyeworks",
+"碱湾新染料入水变黑，封缸的妖物沿排水渠冒了出来。幽篁带上试纸和绞带，要留一份活证。": "A new dye turns black in water, and demons burst from the drains under the sealed vats. You Huang brings test strips and her sash, determined to keep a sample as proof.",
+"取水试色": "Sample the Water",
+"封沟隔染": "Seal the Drain",
+"绞带翻缸": "Upend the Vats",
+"晾场截污": "Hold the Drying Yard",
+"留样作证": "Keep the Evidence",
+"幽篁：「先取样。你倒进去就只剩你的说法了。」": "You Huang: “Sample first. Pour it out and all we’ll have left is your word.”",
+"幽篁：「指头变蓝不算中毒。不会弯了才算。」": "You Huang: “Blue fingers don’t mean poisoning. Fingers that won’t bend do.”",
+"幽篁：「三枚针是三种剂量。替我记一下，第二枚见效最快。」": "You Huang: “Three needles, three doses. Write this down for me. The second acted fastest.”",
+"幽篁：「我说别碰那缸。好，现在把两只手都举起来给我看。」": "You Huang: “I said don’t touch that vat. Right. Now hold up both hands so I can see them.”",
+"幽篁：「你说这水没事？行，拿只白碗来。」": "You Huang: “You say the water’s fine? All right. Bring me a white bowl.”",
+"蓝从何来": "Where the Blue Comes From",
+"幽篁传 · 蓝从何来": "Tale of You Huang · Where the Blue Comes From",
+"染坊发了新方子，幽篁的师弟照着做，第二天两只手都握不住筷子。": "The dyeworks issued a new recipe. Her fellow apprentice followed it and the next day couldn’t hold chopsticks in either hand.",
+"碱湾试台": "Lye Bend Test Bench",
+"两张纸": "Two Strips",
+"墨羽把墨滴在水样里，一张试纸变蓝，一张变灰。": "Mo Yu drops ink into the samples. One test strip turns blue, the other gray.",
+"两张都晾着，我要知道哪张先褪色。你守住左边。": "Leave both to dry. I need to see which fades first. Watch the left side.",
+"灰的先褪。那桶水出自夜班。": "The gray faded first. That bucket came from the night shift.",
+"晾布架": "Drying Racks",
+"逆洗": "Backwash",
+"凌雀的梭子上挂着一截染坏的布。染坊的人正来收走整批。": "A spoiled scrap hangs from Ling Que’s shuttle. The dyeworks hands are coming to collect the whole batch.",
+"借你的梭把样布送过河。我把人拖住。": "Send the sample across with your shuttle. I’ll hold them here.",
+"布送过去了。不过排水渠里的颜色更深。": "The cloth is across. The water in the drain is darker.",
+"原缸可以留作证据，但闸下的污水已经快溢出来了。": "The original vat is evidence. The waste below the gate is about to overflow.",
+"先藏原缸保住证据": "Hide the Original Vat",
+"带签子一起藏。没有批号，他们会说是我配的。": "Keep the tag with it. Without the batch number they’ll say I mixed it.",
+"先改水道护住下游": "Divert the Runoff",
+"证据以后再找。下游那口井今晚还要有人喝。": "I can find more proof later. People need that well tonight.",
+"明矾窖": "Alum Cellar",
+"辨味": "By Scent",
+"两具雾身守着门。门缝里飘出一股酸味。": "Two mist doubles guard the door. A sour smell slips through the gap.",
+"我受托守门。你找谁？": "I was hired to guard the door. Who are you looking for?",
+"拎药罐的。你若真是雾，最好别先尝。": "Whoever carried in the jar. If you’re made of mist, I wouldn’t taste it first.",
+"药罐在窖底。掌柜让我别问，我该问的。": "The jar’s at the bottom. The owner told me to keep my questions to myself. I should have asked.",
+"下游酒摊": "Downstream Wine Stall",
+"停杯": "Put Down the Cup",
+"醉翁正从渠里舀水给酒客煮茶。": "Zui Weng is drawing canal water to make tea for his customers.",
+"锅放下。要比谁先倒，你喝你的，我等你。": "Put the pot down. If you want to see who drops first, drink it. I’ll wait.",
+"锅放下了。老朽现在就挨家挨户收水。": "The pot’s down. I’ll go house to house and collect the water.",
+"末道滤池": "Final Filter Basin",
+"兑方": "Test the Recipe",
+"监工拿着同一批染料调出的药，来抢藏在滤池边的原缸。": "The foreman has made a dose from the same dye batch. He comes for the vat hidden by the filter.",
+"墨羽在滤池边勾出第二道堤。幽篁守着缺口，等他落完最后一笔。": "Mo Yu paints a second embankment beside the filter. You Huang holds the breach until his last stroke.",
+"写清批号": "Sign the Batch",
+"原缸摆到议事桌上，连签子上的指印都还在。": "The vat goes before the council. Even the fingerprints on the tag are intact.",
+"谁配的，谁签。以后连我也一样。": "If you mixed it, you sign it. That goes for me too.",
+"井水无色": "Clear Well Water",
+"原缸里的料冲散了。幽篁带着试纸挨家验井，天亮才收工。": "The contents of the original vat wash away. You Huang tests every well and finishes at dawn.",
+"今天的水能喝。明天我还来，记得给我留碗。": "Today’s water is safe. I’ll be back tomorrow. Leave me a bowl.",
+"报时匠": "Clockkeeper",
+"三臂星规": "Three-Arm Star Gauge",
+"玄机在刻漏城给各街的钟校时，从不接受「差不多」。他用折叠星规观星，随身带着一本小册，专记自己算错的地方。": "Xuan Ji sets the clocks of Waterclock City and has no use for “close enough.” He sights the stars with a folding gauge and keeps a pocket ledger of every calculation he gets wrong.",
+"漏掉一刻": "The Missing Quarter",
+"玄机传 · 漏掉一刻": "Tale of Xuan Ji · The Missing Quarter",
+"刻漏城": "Waterclock City",
+"刻漏城每晚都少走一刻，钟漏一停，妖群便从空掉的刻度里爬出来。玄机立起星规，要查明谁挪走了这一刻。": "Waterclock City loses a quarter hour every night. When the clocks stop, demons climb out of the missing interval. Xuan Ji sets up his gauge to find out where the time goes.",
+"校准子夜": "Set Midnight",
+"追查漏刻": "Trace the Missing Time",
+"更鼓错拍": "The Drums Fall Out of Step",
+"星规对点": "Align the Gauge",
+"还民一刻": "Give the City Its Time Back",
+"玄机：「记下来。它比刚才早到一息。」": "Xuan Ji: “Write that down. It arrived a breath earlier this time.”",
+"玄机：「第四响迟了半拍。重敲，我这次不数妖。」": "Xuan Ji: “The fourth beat was half a beat late. Again. This time I won’t count the demons.”",
+"玄机：「谁动了我的规尺？很好，你调得比我准。」": "Xuan Ji: “Who touched my gauge? Good. You set it better than I did.”",
+"玄机：「我算错了一次。现在换你们数，我守。」": "Xuan Ji: “I got it wrong once. You count this time. I’ll keep watch.”",
+"玄机：「你偷走的是别人的一刻。还回来，我可以不问你用它做了什么。」": "Xuan Ji: “You took a quarter hour that belonged to other people. Give it back, and I won’t ask what you did with it.”",
+"慢一刻": "A Quarter Hour Slow",
+"玄机传 · 慢一刻": "Tale of Xuan Ji · A Quarter Hour Slow",
+"玄机校好全城的钟，只有母亲生前值守的东楼仍慢一刻。那一刻里竟然还能听见她的更鼓。": "Xuan Ji brings the whole city’s clocks into line except the east tower, where his late mother kept watch. Her drum still sounds inside its missing quarter hour.",
+"东楼更台": "East Tower Watch",
+"多一拍": "An Extra Beat",
+"月华两次掠过钟面。第二次，玄机没听见落脚声。": "Yue Hua crosses the clock face twice. The second time, Xuan Ji hears no footfall.",
+"照刚才的步子再走一遍。我想知道漏的是声音，还是时辰。": "Take the same steps again. I need to know if the sound went missing or the time did.",
+"漏掉的是时辰。我也记不得那一步。": "It was the time. I can’t remember taking that step either.",
+"城底水钟": "Undercity Waterclock",
+"刻痕": "Time Marks",
+"磁仙按住一面乱跳的铜盘，盘上有一段磨得发亮。": "Ci Xian steadies a jumping bronze dial. One stretch is worn bright.",
+"你计时。我给它加一点阻力，看看什么时候会再跳。": "You time it. I’ll give it some resistance and see when it jumps again.",
+"四十五息里跳了两次。每次都绕过我娘刻的那一道。": "Twice in forty-five seconds. Both times it skipped the mark my mother cut.",
+"可抹去重复的旧刻，也可把它分到各楼，每年只准响一次。": "Erase the repeating interval, or divide it among the towers and let it sound once a year.",
+"让旧刻走完": "Let the Old Hour End",
+"我总不能让她天天值这一班。": "I can’t keep making her take the same shift.",
+"为全城留一刻": "Keep a Quarter Hour for Everyone",
+"每年借一刻。把这笔账写在城门上，谁都能查。": "Borrow it once a year. Put the account on the city gate where anyone can check it.",
+"更鼓长廊": "Watch Drum Gallery",
+"听错": "Misheard",
+"玉箫照着旧谱打拍子，每到末尾总空出一拍。": "Yu Xiao plays the old score, leaving a beat empty at the end.",
+"谱上没写空拍。": "There’s no rest in the score.",
+"写谱的人知道，听的人要喘气。": "Whoever wrote it knew the listener needed room to breathe.",
+"原来我娘也漏过拍。我一直以为是我数错了。": "My mother missed a beat sometimes too. I always thought I’d counted wrong.",
+"西楼配重室": "West Tower Counterweight Room",
+"借重": "Counterweight",
+"千机用金丝拴住了铅坠。上面的齿轮每动一格，下面便亮起一户人家。": "Qian Ji tethers the lead weight with gold silk. Each turn of the gears lights a home below.",
+"你要取出那一刻，得有人接住这些钟。": "If you take out that quarter hour, someone has to keep these clocks running.",
+"我来。先用你的傀丸试我的星规。": "I’ll do it. Test my gauge with your tether ball first.",
+"这回算准了。上楼吧。": "You got it right this time. Go on up.",
+"总更台": "City Watch Tower",
+"交班": "End of Watch",
+"握着星规的影子迟迟不肯敲响末更。玄机认出了自己抬手的样子。": "A figure with a star gauge refuses to strike the last beat. Xuan Ji recognizes the way it holds its hand.",
+"磁仙稳住铜盘，震荡却一阵比一阵重。玄机要撑到各楼都接住这段时辰。": "Ci Xian steadies the dial as the jolts grow stronger. Xuan Ji must hold out until every tower takes its share of the interval.",
+"准点放行": "On the Hour",
+"东楼终于报出了下一更。玄机把母亲的名字从值夜簿抄进家谱。": "The east tower finally strikes the next watch. Xuan Ji copies his mother’s name out of the duty ledger and into the family book.",
+"准点。现在我可以想她了。": "Right on time. Now I can miss her.",
+"一年一刻": "A Quarter Hour Each Year",
+"以后每年有一夜，全城停钟一刻。有人想家，有人听雨，还有人只想再睡一会。": "On one night each year the city stops its clocks for a quarter hour. Some think of home, some listen to rain, and some just get a little more sleep.",
+"我给这条加个附注。睡觉也算用过。": "I’ll add a note to the rule. Sleeping counts.",
+"捞船人": "Wreck Diver",
+"燕尾救生锚": "Swallowtail Rescue Anchor",
+"破浪小时候靠一根空船绳活下来，如今在回头湾捞船也捞人。他一害怕就笑得格外响，还给每条靠岸的船起外号。": "As a child, Po Lang survived by clinging to a line from an empty boat. Now he salvages wrecks and pulls people out of Turnback Bay. The more frightened he is, the louder he laughs. Every boat that comes in gets a nickname.",
+"空船回信": "A Reply from an Empty Boat",
+"破浪传 · 空船回信": "Tale of Po Lang · A Reply from an Empty Boat",
+"回头湾": "Turnback Bay",
+"回头湾漂来一队无人渡船，船底却缠着活人的求救绳。破浪卸下救生锚，一条条把船拉回浅滩。": "Empty ferries drift into Turnback Bay with distress lines tangled under their hulls. Po Lang unships his rescue anchor and drags the ferries into the shallows one by one.",
+"空船撞岸": "Empty Boats Run Aground",
+"水底牵绳": "A Line from Below",
+"双钩挂礁": "Set the Twin Flukes",
+"接人上滩": "Bring Them Ashore",
+"退潮数船": "Count the Boats at Ebb",
+"破浪：「这艘叫漏勺。漏勺，你给我浮稳了。」": "Po Lang: “This one’s Ladle. Ladle, you mind staying afloat for me?”",
+"破浪：「绳子扯三下就是有人。扯四下是我没听清。」": "Po Lang: “Three tugs means someone’s there. Four means I miscounted.”",
+"破浪：「哈哈哈。听见我笑就把绳攥紧点。」": "Po Lang: “Ha! If you hear me laughing, hold the line a little tighter.”",
+"破浪：「一个个上岸。谁说自己不怕，谁就先帮我扶梯子。」": "Po Lang: “Ashore, one at a time. Anyone who says they aren’t scared can steady the ladder for me.”",
+"破浪：「老伙计，把绳借我。水底那位脾气大，咱们别跟他客气。」": "Po Lang: “Old friend, lend me your line. The one down there’s in a foul mood. Let’s skip the pleasantries.”",
+"捞错一条船": "The Wrong Boat",
+"破浪传 · 捞错一条船": "Tale of Po Lang · The Wrong Boat",
+"撤渡那年，破浪亲手割过一条拖绳。如今同一条船空着漂回来，舱里多了正在划动的桨。": "When the ferry line closed, Po Lang cut a towrope with his own hands. Now that same boat has drifted back empty, with an oar still rowing inside.",
+"回头湾旧埠": "Turnback Bay Old Pier",
+"认船": "Recognize the Hull",
+"青锋拦下空船，船头露出一道补过的裂痕。": "Qing Feng stops the empty boat. A patched split shows on its bow.",
+"是歪嘴。裂的那边是我补的。她还肯回来骂我，真好。": "Crooked Mouth. I patched that side. I’m glad she came back to give me an earful.",
+"桨还在划。去看一眼吧，我替你拴住。": "The oar’s still moving. Take a look. I’ll tie her up.",
+"双绳浮桥": "Twin-Rope Pontoon",
+"回拉": "Haul Back",
+"勾陈的链钩扯住了浮桥。每一道浪都把桥往外推一寸。": "Gou Chen hooks the pontoon with his chain. Every wave pushes it another inch out.",
+"链子借我受个力。你别收劲，让我试试锚会不会脱。": "Put some load on my anchor with that chain. Keep pulling. I need to see if it slips.",
+"锚没脱。可旧渡口和这浮桥，你只能先挂一边。": "The anchor held. You can rig the old landing or the pontoon first. Pick one.",
+"先走旧渡道能赶到空船旁，先系浮桥能给幸存者留一条退路。": "The old ferry route gets you to the empty boat sooner. Securing the pontoon first gives survivors a way back.",
+"沿旧渡道追船": "Take the Old Ferry Route",
+"这回我上船。该听谁骂，我就在那儿听。": "I’m getting aboard this time. Whoever wants to shout at me can do it to my face.",
+"先把浮桥系牢": "Secure the Pontoon",
+"骂我可以等。过桥的人等不了。": "They can shout at me later. People need that bridge now.",
+"倒潮闸口": "Reverse Tide Gate",
+"等风": "Wait for Wind",
+"流云站在闸上，风把绳吹得笔直。": "Liu Yun stands on the gate. The wind pulls the line straight.",
+"别把风都收了。绳子松了，我就摸不到回去的路。": "Don’t take all the wind. If the line goes slack, I won’t be able to feel my way back.",
+"我留一股横风。你沿绳走，别顺浪漂。": "I’ll leave you a crosswind. Follow the line and keep out of the swell.",
+"翻壳船坞": "Capsized Boatyard",
+"报数": "Sound Off",
+"铁山顶住翻过来的船壳，下面还有人在敲木板。": "Tie Shan props up a capsized hull. Someone underneath is knocking on the planks.",
+"扛得住多久？说实数。我会笑，手会抖，数不会错。": "How long can you hold it? Give me the real number. I’ll laugh and my hands will shake, but I won’t lose count.",
+"够你回返一趟。用你那双钩，别再割绳。": "Long enough for one trip. Use both flukes and keep that rope whole.",
+"风眼系缆柱": "Mooring Post at the Eye",
+"收绳": "Bring In the Line",
+"歪嘴船上站着年少的破浪，刀已架在湿透的拖绳上。": "On Crooked Mouth stands Po Lang as a boy, a knife laid across the soaked towrope.",
+"勾陈守着桥外一头。破浪扛住内侧浪涌，等众人全部走过浮桥。": "Gou Chen holds the far end of the bridge. Po Lang braces against the surge until everyone is across.",
+"空船有名": "The Empty Boat Has a Name",
+"破浪握住自己的手，把刀放下。退潮时，他拖回了歪嘴和满船的旧渡票。": "Po Lang takes his own hand and lowers the knife. At ebb he brings Crooked Mouth back, full of old ferry tickets.",
+"往后叫她回来的船。歪嘴这名字，也留着。": "We’ll call her the Boat That Came Back. But keep Crooked Mouth too.",
+"桥上满员": "Everyone Across",
+"空船不见了，浮桥上却挤满了人。有人问破浪要收多少渡钱。": "The empty boat is gone, but the pontoon is full. Someone asks Po Lang the fare.",
+"一人喊一声到。听齐了我就收摊。": "One “here” from each of you. When I’ve heard everyone, I’ll close up for the night.",
+"重击与蓄力攻击附带短暂霸体；Q 烈焰突刺与 R 炎轮扫荡命中后点燃对手。": "Heavy and charged attacks gain brief super armor. Ember Thrust (Q) and Blazing Ring (R) burn on hit.",
+"Q 幽篁毒针齐射三枚寒针使对手减速，R 回纹缠带从远处将对手拉近。": "Venom Needle Fan (Q) fires three slowing needles. Sash Snare (R) draws in opponents from a distance.",
+"Q 星规流火远程压制，R 天枢重力牵引对手并削减架势，E 星宿归元用连击破阵。": "Gauge Spark (Q) threatens at range, Gravity Well (R) pulls opponents in and damages guard, and Celestial Alignment (E) follows up with a flurry.",
+"重击与蓄力攻击附带短暂霸体；Q 怒涛震锚重创架势并挑飞对手，R 破浪突进携霸体冲锋。": "Heavy and charged attacks gain brief super armor. Tidal Slam (Q) damages guard and launches, and Undertow Dash (R) charges with super armor.",
+"挺起火耙冲刺，命中引燃对手。": "Rush forward behind the fire rake and set the opponent alight on hit.",
+"横抡火耙，卷出的火轮挑飞近处对手并点燃他们。": "Sweep the rake to send out a ring of fire that launches and burns nearby opponents.",
+"以火耙突进，六记连击扫出火星，最后跃起重劈。": "Rush with the rake, throw sparks with six successive hits, then leap into a finishing blow.",
+"从袖中齐射三枚淬药细针，命中减速对手。": "Fire three treated needles from your sleeve to slow opponents on hit.",
+"甩出带坠的绞带，从远处拉近对手并造成硬直。": "Cast the weighted sash to pull in a distant opponent and stagger them.",
+"抽出绞带疾袭，七次连抽后甩出带坠打出重击。": "Rush in with seven lashes, then swing the sash weight into a heavy finisher.",
+"让三臂星规对准一线，向中远距离射出星火。": "Align the three arms of the star gauge and fire a spark at mid to long range.",
+"拨开星规三臂，在身前展开力场，牵引对手并削减架势。": "Spread the three arms to open a field ahead that pulls opponents in and damages guard.",
+"举星规突进，循着规尺上的刻线连击六次，最后合拢三臂重击。": "Rush with the gauge, strike six times along its graduations, then close all three arms for the finisher.",
+"抡起燕尾救生锚砸地，震波削减架势并挑飞对手。": "Slam the swallowtail rescue anchor down to damage guard and launch with a shockwave.",
+"以救生锚顶在身前冲锋，凭霸体撞飞对手。": "Brace the rescue anchor in front and charge with super armor to knock opponents away.",
+"双手抡锚突进，连续五记重击后将双钩一起砸下。": "Rush with a two-handed anchor swing, strike five times, then slam both flukes down.",
+"侠客小传": "Hero Profile",
 });
 defHero({
 id: 'qingfeng', skin: 'qf', en: 'Qing Feng',
@@ -13164,212 +13476,216 @@ defHero({
 id: 'chixiao', skin: 'ch', en: 'Chi Xiao',
 bal: { normal: 0.92, skill: 0.94, ult: 0.95, cd: 1.0, hp: 0.96 },
 char: {
-name: '炽霄', role: '烈焰戟将', diff: 2, escCD: 7.5,
+name: '炽霄', role: "巡火人", diff: 2, escCD: 7.5,
 skill: 'flamehalberd', skill2: 'blazering', ult: 'skyfall', passive: 'armor',
-passiveName: '赤炎戟势',
-passiveDesc: '重击与蓄力斩附带短暂霸体；Q 烈焰突刺与 R 炎轮扫荡命中后点燃对手，持续灼烧气血。',
+profile: { weapon: "三齿火耙", bio: "炽霄曾在百炉坊烧饼，现在带街坊巡火。她说话像报更，句句要人答应；每救出一个人，就在火耙柄上刻一道线。" },
+passiveName: '炉火护身',
+passiveDesc: '重击与蓄力攻击附带短暂霸体；Q 烈焰突刺与 R 炎轮扫荡命中后点燃对手。',
 stat: { hp: 860, walk: 0.96, speed: 0.95, dmg: 1.04, reach: 1.12, swing: 0.9, jump: 1.0, weight: 1.15, defRating: 1.08, guardMax: 110, guardStab: 1.05, guardChip: 0.08, guardRegen: 27, poise: 1.12, size: 1.04 },
 hitFeel: 1.05,
-look: { body: '#3b1c18', shade: '#1f0d0a', outline: '#ff7a45', outlineA: 0.9, scarf: '#ff4d2e', slash: '255,115,65', blade: '#ffe6d0', hair: '#1d1210', head: 'headband', weapon: 'spear' },
+look: { body: '#3b1c18', shade: '#1f0d0a', outline: '#ff7a45', outlineA: 0.9, scarf: '#ff4d2e', slash: '255,115,65', blade: '#ffe6d0', hair: '#1d1210', head: 'headband', weapon: 'firerake' },
 ai: { range: [100, 240] },
 beats: ['qianji', 'lingque'], weakTo: ['lingshuang', 'liuyun']
 },
 forest: {
-title: '炽霄传 · 焚野破关', place: '赤焰关',
-synopsis: '赤焰关外魔气冲霄，炽霄提烈焰长戟独守雄关，势要以赤火荡尽群魔！',
-stageNames: ['烽火初燃', '烈戟破阵', '赤风掠野', '焦土重围', '焚天镇关'],
+title: "炽霄传 · 炉街夜班", place: "百炉坊",
+synopsis: "地底的窑火沿着废烟道钻进民居，妖物也跟着出来了。炽霄提起拆火用的三齿耙，挨家挨户叫醒街坊。",
+stageNames: ["叩门报火", "拆棚断火", "烟道逆行", "清点街坊", "封窑留灯"],
 waveDialogues: [
-'炽霄：「长戟在手，群妖休想越雷池一步！」',
-'炽霄：「火势已起，尝尝赤炎焚身的滋味！」',
-'炽霄：「区区魔障，也敢犯我赤焰关？」',
-'炽霄：「戟锋所指，万魔皆烬！」'
+"炽霄：「听得见就应一声。咳嗽也算。」",
+"炽霄：「拆棚前先看棚下。耙子举高，别碰着人。」",
+"炽霄：「出门不必锁门。钥匙留着，回来还能用。」",
+"炽霄：「名单上还有两个。再看一遍，别嫌我啰嗦。」"
 ],
-bossIntro: '炽霄：「融魂魔首，今日便以我赤炎长戟，斩断你的邪焰！」'
+bossIntro: "炽霄：「刚才应声的都到我身后。剩下这一窑归我。」"
 },
 saga: {
-title: '炽霄传 · 赤戟誓', motive: '赤焰关烽火连天，炽霄追查边关失火之谜，誓护关内百姓。',
+title: "炽霄传 · 缺一声", motive: "百炉坊的窑主锁住了泄烟闸，炽霄敲遍一条街，唯独没人从地下作坊答应。",
 nodes: [
-{ place: '赤焰关', name: '烽起', fight: { foe: 'tieshan', lv: 'easy', goal: 'ko' },
-pre: [['', '赤焰关城楼烈风呼啸，炽霄长戟拄地。'], ['铁山', '你这杆火戟太招摇，先过我这关！'], ['炽霄', '关外异变将至，恕不奉陪，接戟！']],
-post: [['铁山', '好重的戟劲！关外西谷确有妖火。'], ['炽霄', '多谢告知，我这就去查明。']] },
-{ place: '赤风谷', name: '火痕', fight: { foe: 'lingshuang', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '赤风谷中冰火交错，凌霜长枪横立。'], ['凌霜', '此地邪火反常，莫非是你所为？'], ['炽霄', '误会！待我压下邪焰再向你解释！']],
-post: [['凌霜', '你的火焰堂堂正正，确实不是谷中邪火。']],
-choice: { q: '谷底分岔：一侧直通火脉源头，一侧通往受困商队。', opts: [
-{ t: '直捣火脉源头', f: 'source', say: [['炽霄', '断其源头，方能永绝后患！']] },
-{ t: '先救受困商队', f: 'rescue', say: [['炽霄', '百姓性命要紧，我先护送他们出谷！']] }] } },
-{ place: '熔岩栈道', name: '炙行', fight: { foe: 'leiming', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '炽热岩浆翻涌，雷鸣拦路试戟。'], ['雷鸣', '雷火相激，让我看看你能否扛得住！'], ['炽霄', '来得正好！']],
-post: [['雷鸣', '好气魄，前面便是火山祭坛。']] },
-{ place: '炎狱前殿', name: '焚阵', fight: { foe: 'gouchen', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '铁链横空，勾陈挥锤震裂石板。'], ['勾陈', '想过去？先接住我的流星锤！'], ['炽霄', '火戟破链，看招！']],
-post: [['勾陈', '真是烫手的疯子……过去吧。']] },
-{ place: '赤霄熔炉', name: '镇火',
-pre: { source: [['', '火山熔炉深处，赤焰魔影咆哮。'], ['炽霄', '借天地正火，斩尽邪焰！']],
-rescue: [['', '商队脱险，邪焰却已凝成巨影。'], ['炽霄', '护得了百姓，同样镇得住你！']] },
+{ place: "揭瓦巷", name: "敲门", fight: { foe: 'tieshan', lv: 'easy', goal: 'ko' },
+pre: [["", "半条街在冒烟，铁山还扶着一堵歪墙。"], ["铁山", "里头空了，我亲自看过。"], ["炽霄", "看过地面。现在让我看看地底。"]],
+post: [["铁山", "墙我扶着。你带人下去。"]] },
+{ place: "回烟井", name: "听声", fight: { foe: 'lingshuang', lv: 'normal', goal: 'survive', time: 45 },
+pre: [["", "井底每响一次，就会倒灌一口热烟。"], ["凌霜", "这里守住四十五息，我带街坊过桥。"]],
+post: [["炽霄", "桥上都到了。地下还有敲管子的声音。"]],
+choice: { q: "开闸能给暗道换气，走暗道则能立刻接应最深处的工人。", opts: [
+{ t: "先开泄烟闸", f: "source", say: [["炽霄", "先给他们一口能喘的气。"]] },
+{ t: "从暗道接人", f: "rescue", say: [["炽霄", "听见我就敲两下。我下来了。"]] }] } },
+{ place: "侧风廊", name: "留缝", fight: { foe: 'leiming', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
+pre: [["", "雷鸣要砸开石门，炽霄用耙柄顶住了门缝。"], ["炽霄", "先留条缝。你听，里头有人在数数。"]],
+post: [["雷鸣", "我听见了。你撬门，我拉人。"]] },
+{ place: "三岔烟道", name: "借链", fight: { foe: 'gouchen', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
+pre: [["", "勾陈只接了拖走窑主的活。他把链子扣上了升降筐。"], ["炽霄", "先拉一筐工人。要加工钱，算我头上。"]],
+post: [["勾陈", "工钱回头再算。把筐装满。"]] },
+{ place: "百炉总闸", name: "最后一户",
+pre: { source: [["", "闸杆发红，积在烟道里的火凝成了一个握耙的人影。"]],
+rescue: [["", "铁山撑着总闸。炽霄必须守住筐口，等最后一趟升上来。"]] },
 fight: { source: { foe: 'chixiao', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
 rescue: { foe: 'tieshan', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { source: { title: '正火明霄', text: [['', '邪焰散尽，赤焰关重归安宁。'], ['炽霄', '长戟不熄，边关长明。']] },
-rescue: { title: '赤心护民', text: [['', '商队平安归城，百姓焚香相迎。'], ['炽霄', '守土安民，本就是武者本分。']] } } },
+end: { source: { title: "门门有人", text: [["", "闸门升起，整条街第一次看清天色。工人自己从暗道走了出来。"], ["炽霄", "数一遍。再数一遍。行，今天我请烧饼。"]] },
+rescue: { title: "把钥匙留下", text: [["", "百炉坊烧掉了三间店。出筐的工人把钥匙挂在废屋门框上，约好重建那天再来取。"], ["炽霄", "把我那把也挂上。往左一点，让我认得出来。"]] } } },
 ] },
 });
 defHero({
 id: 'youhuang', skin: 'yu', en: 'You Huang',
 bal: { normal: 0.94, skill: 0.95, ult: 0.94, cd: 1.0, hp: 0.94 },
 char: {
-name: '幽篁', role: '竹鞭毒师', diff: 3, escCD: 7.0,
+name: '幽篁', role: "试染师", diff: 3, escCD: 7.0,
 skill: 'venomfan', skill2: 'whiplash', ult: 'thicket', passive: 'none',
-passiveName: '幽竹缠毒',
-passiveDesc: '灵活轻捷的竹林策士；Q 幽篁毒针齐射三枚寒针减速敌人，R 青竹缠鞭远距抽击并将敌拉近。',
+profile: { weapon: "回纹绞带", bio: "幽篁在碱湾染坊做过学徒，记药方只认实测。她把带铅坠的捞布绞带练成了兵器，最烦别人说「大概没毒」。" },
+passiveName: '染坊配方',
+passiveDesc: 'Q 幽篁毒针齐射三枚寒针使对手减速，R 回纹缠带从远处将对手拉近。',
 stat: { hp: 790, walk: 1.06, speed: 1.06, dmg: 0.98, reach: 1.08, swing: 1.06, jump: 1.06, weight: 0.88, defRating: 0.94, guardMax: 95, guardStab: 0.96, guardChip: 0.11, guardRegen: 30, poise: 0.92, size: 0.98 },
 hitFeel: 0.86,
-look: { body: '#1c3329', shade: '#0e1d16', outline: '#5ee8a0', outlineA: 0.88, scarf: '#2fd080', slash: '85,235,155', blade: '#dffef0', hair: '#121c16', head: 'bamboohat', weapon: 'hammer' },
+look: { body: '#352238', shade: '#1d1024', outline: '#f4afcc', outlineA: 0.88, scarf: '#c2528c', slash: '245,137,180', blade: '#fce7cc', hair: '#121c16', head: 'ribbon', weapon: 'dyelash' },
 ai: { range: [120, 270] },
 beats: ['tieshan', 'gouchen'], weakTo: ['feiying', 'yanling']
 },
 forest: {
-title: '幽篁传 · 翠影除瘴', place: '幽篁深谷',
-synopsis: '幽篁深谷毒瘴四起，群妖借林影藏身。幽篁挥动青竹长鞭，以毒攻毒清扫魔林！',
-stageNames: ['翠影初动', '寒针破雾', '青鞭缠风', '竹海迷阵', '幽篁清瘴'],
+title: "幽篁传 · 一缸坏蓝", place: "碱湾染坊",
+synopsis: "碱湾新染料入水变黑，封缸的妖物沿排水渠冒了出来。幽篁带上试纸和绞带，要留一份活证。",
+stageNames: ["取水试色", "封沟隔染", "绞带翻缸", "晾场截污", "留样作证"],
 waveDialogues: [
-'幽篁：「藏在竹影里？这片林子我比你们熟。」',
-'幽篁：「三枚毒针封路，看你们往哪躲！」',
-'幽篁：「青竹长鞭所及之处，寸步难行。」',
-'幽篁：「竹海合围，该收网了。」'
+"幽篁：「先取样。你倒进去就只剩你的说法了。」",
+"幽篁：「指头变蓝不算中毒。不会弯了才算。」",
+"幽篁：「三枚针是三种剂量。替我记一下，第二枚见效最快。」",
+"幽篁：「我说别碰那缸。好，现在把两只手都举起来给我看。」"
 ],
-bossIntro: '幽篁：「融魂魔首，你污染了整片竹谷，今日便用青竹鞭了结你！」'
+bossIntro: "幽篁：「你说这水没事？行，拿只白碗来。」"
 },
 saga: {
-title: '幽篁传 · 翠鞭引', motive: '幽篁竹谷灵泉突染黑毒，幽篁循毒踪入江湖查明幕后黑手。',
+title: "幽篁传 · 蓝从何来", motive: "染坊发了新方子，幽篁的师弟照着做，第二天两只手都握不住筷子。",
 nodes: [
-{ place: '幽篁谷口', name: '毒泉', fight: { foe: 'moyu', lv: 'easy', goal: 'ko' },
-pre: [['', '竹叶婆娑，幽篁捻起一滴黑水。'], ['墨羽', '这墨毒颇为古怪，莫急，先试过你身手。'], ['幽篁', '请墨先生指教！']],
-post: [['墨羽', '鞭法灵动，去东边竹林找寻毒源吧。']] },
-{ place: '翠风坡', name: '暗针', fight: { foe: 'lingque', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '竹梢寒光一闪，凌雀飞梭掠过。'], ['凌雀', '比比谁的暗器更快？'], ['幽篁', '正合我意！']],
-post: [['凌雀', '好刁钻的毒针，毒源就在前面古亭。']],
-choice: { q: '古亭内外：可潜行绕后截断毒囊，或正面破阵震散瘴气。', opts: [
-{ t: '潜行截断毒囊', f: 'stealth', say: [['幽篁', '悄无声息拔除毒囊最为稳妥。']] },
-{ t: '正面震散毒瘴', f: 'direct', say: [['幽篁', '以鞭引风，一举吹散毒瘴！']] }] } },
-{ place: '寒竹亭', name: '缠风', fight: { foe: 'liying', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '雾影重重，离影现身亭中。'], ['离影', '竹林雾大，你分得清真身吗？'], ['幽篁', '长鞭横扫，真假立判！']],
-post: [['离影', '鞭影如网，佩服。']] },
-{ place: '毒潭栈桥', name: '清源', fight: { foe: 'zuixian', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '醉翁倚栏独酌，挡在潭口。'], ['醉翁', '以酒解毒，不如先陪老夫过两招！'], ['幽篁', '前辈请出招！']],
-post: [['醉翁', '痛快！潭底便交给你了。']] },
-{ place: '万竹灵泉', name: '澄翠',
-pre: { stealth: [['', '毒囊已破，暗影魔首暴怒现身。'], ['幽篁', '万竹听令，清瘴！']],
-direct: [['', '瘴气尽散，魔首直扑而来。'], ['幽篁', '来得正好，青竹鞭已蓄满毒劲！']] },
+{ place: "碱湾试台", name: "两张纸", fight: { foe: 'moyu', lv: 'easy', goal: 'ko' },
+pre: [["", "墨羽把墨滴在水样里，一张试纸变蓝，一张变灰。"], ["幽篁", "两张都晾着，我要知道哪张先褪色。你守住左边。"]],
+post: [["墨羽", "灰的先褪。那桶水出自夜班。"]] },
+{ place: "晾布架", name: "逆洗", fight: { foe: 'lingque', lv: 'normal', goal: 'survive', time: 45 },
+pre: [["", "凌雀的梭子上挂着一截染坏的布。染坊的人正来收走整批。"], ["幽篁", "借你的梭把样布送过河。我把人拖住。"]],
+post: [["凌雀", "布送过去了。不过排水渠里的颜色更深。"]],
+choice: { q: "原缸可以留作证据，但闸下的污水已经快溢出来了。", opts: [
+{ t: "先藏原缸保住证据", f: "stealth", say: [["幽篁", "带签子一起藏。没有批号，他们会说是我配的。"]] },
+{ t: "先改水道护住下游", f: "direct", say: [["幽篁", "证据以后再找。下游那口井今晚还要有人喝。"]] }] } },
+{ place: "明矾窖", name: "辨味", fight: { foe: 'liying', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
+pre: [["", "两具雾身守着门。门缝里飘出一股酸味。"], ["离影", "我受托守门。你找谁？"], ["幽篁", "拎药罐的。你若真是雾，最好别先尝。"]],
+post: [["离影", "药罐在窖底。掌柜让我别问，我该问的。"]] },
+{ place: "下游酒摊", name: "停杯", fight: { foe: 'zuixian', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
+pre: [["", "醉翁正从渠里舀水给酒客煮茶。"], ["幽篁", "锅放下。要比谁先倒，你喝你的，我等你。"]],
+post: [["醉翁", "锅放下了。老朽现在就挨家挨户收水。"]] },
+{ place: "末道滤池", name: "兑方",
+pre: { stealth: [["", "监工拿着同一批染料调出的药，来抢藏在滤池边的原缸。"]],
+direct: [["", "墨羽在滤池边勾出第二道堤。幽篁守着缺口，等他落完最后一笔。"]] },
 fight: { stealth: { foe: 'youhuang', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
 direct: { foe: 'moyu', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { stealth: { title: '翠影澄泉', text: [['', '灵泉重现碧色，竹林再起清风。'], ['幽篁', '林静泉清，足矣。']] },
-direct: { title: '清风扫瘴', text: [['', '漫山翠竹摇曳，江湖再无黑瘴之忧。'], ['幽篁', '幽篁仍在，邪毒难侵。']] } } },
+end: { stealth: { title: "写清批号", text: [["", "原缸摆到议事桌上，连签子上的指印都还在。"], ["幽篁", "谁配的，谁签。以后连我也一样。"]] },
+direct: { title: "井水无色", text: [["", "原缸里的料冲散了。幽篁带着试纸挨家验井，天亮才收工。"], ["幽篁", "今天的水能喝。明天我还来，记得给我留碗。"]] } } },
 ] },
 });
 defHero({
 id: 'xuanji', skin: 'xj', en: 'Xuan Ji',
 bal: { normal: 0.93, skill: 0.95, ult: 0.95, cd: 1.0, hp: 0.95 },
 char: {
-name: '玄机', role: '星仪阵师', diff: 3, escCD: 7.5,
+name: '玄机', role: "报时匠", diff: 3, escCD: 7.5,
 skill: 'starorb', skill2: 'gravwell', ult: 'celestial', passive: 'none',
+profile: { weapon: "三臂星规", bio: "玄机在刻漏城给各街的钟校时，从不接受「差不多」。他用折叠星规观星，随身带着一本小册，专记自己算错的地方。" },
 passiveName: '星枢引力',
-passiveDesc: '执星仪控场的宗师；Q 星仪灵珠远程压制，R 天枢重力牵引近身敌众并削减架势，E 星宿归元连斩破阵。',
+passiveDesc: 'Q 星规流火远程压制，R 天枢重力牵引对手并削减架势，E 星宿归元用连击破阵。',
 stat: { hp: 810, walk: 1.0, speed: 1.0, dmg: 1.0, reach: 1.05, swing: 0.96, jump: 1.02, weight: 0.96, defRating: 1.0, guardMax: 102, guardStab: 1.0, guardChip: 0.09, guardRegen: 29, poise: 1.0, size: 1.0 },
 hitFeel: 0.92,
-look: { body: '#1b2140', shade: '#0d1126', outline: '#9ea8ff', outlineA: 0.92, scarf: '#6e7bff', slash: '155,170,255', blade: '#eef0ff', hair: '#15182c', head: 'starguan', weapon: 'moonblade' },
+look: { body: '#1b2140', shade: '#0d1126', outline: '#9ea8ff', outlineA: 0.92, scarf: '#6e7bff', slash: '155,170,255', blade: '#eef0ff', hair: '#15182c', head: 'starguan', weapon: 'stargauge' },
 ai: { range: [130, 290] },
 beats: ['moyu', 'yuxiao'], weakTo: ['feiying', 'chixiao']
 },
 forest: {
-title: '玄机传 · 星枢镇魔', place: '观星台',
-synopsis: '观星台星轨错乱，魔潮趁夜袭来。玄机运转天枢星仪，以星辉重定乾坤！',
-stageNames: ['星轨初偏', '天枢布阵', '银辉破暗', '周天合围', '星宿归位'],
+title: "玄机传 · 漏掉一刻", place: "刻漏城",
+synopsis: "刻漏城每晚都少走一刻，钟漏一停，妖群便从空掉的刻度里爬出来。玄机立起星规，要查明谁挪走了这一刻。",
+stageNames: ["校准子夜", "追查漏刻", "更鼓错拍", "星规对点", "还民一刻"],
 waveDialogues: [
-'玄机：「星轨已定，尔等皆在局中。」',
-'玄机：「天枢引力既开，休想脱身！」',
-'玄机：「星辉所照，邪祟无所遁形。」',
-'玄机：「周天星阵已成，归元！」'
+"玄机：「记下来。它比刚才早到一息。」",
+"玄机：「第四响迟了半拍。重敲，我这次不数妖。」",
+"玄机：「谁动了我的规尺？很好，你调得比我准。」",
+"玄机：「我算错了一次。现在换你们数，我守。」"
 ],
-bossIntro: '玄机：「融魂魔首，妄图吞噬星辉？今夜便让你见识天枢正道！」'
+bossIntro: "玄机：「你偷走的是别人的一刻。还回来，我可以不问你用它做了什么。」"
 },
 saga: {
-title: '玄机传 · 天枢录', motive: '北斗星象骤暗，玄机携星仪下山查探异星坠落之地。',
+title: "玄机传 · 慢一刻", motive: "玄机校好全城的钟，只有母亲生前值守的东楼仍慢一刻。那一刻里竟然还能听见她的更鼓。",
 nodes: [
-{ place: '观星台', name: '星陨', fight: { foe: 'yuehua', lv: 'easy', goal: 'ko' },
-pre: [['', '夜空星陨如雨，玄机轻转手中星仪。'], ['月华', '星月同辉，不妨切磋一局再同行。'], ['玄机', '请月华姑娘赐教。']],
-post: [['月华', '星阵精妙，异星落在了北岭。']] },
-{ place: '北岭古坛', name: '星痕', fight: { foe: 'cixian', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '古坛磁力乱流，磁仙正查探陨石。'], ['磁仙', '磁场被星力搅乱了，先接我两招！'], ['玄机', '星磁相生，正可一试！']],
-post: [['磁仙', '好玄妙的引力，陨石核心在坛下。']],
-choice: { q: '陨石灵力外泄：可立刻布阵封印，或引导灵力回流观星台。', opts: [
-{ t: '就地布阵封印', f: 'seal', say: [['玄机', '立刻封锁异力，免伤山野。']] },
-{ t: '引流回观星台', f: 'channel', say: [['玄机', '化邪为正，重燃观星星盘！']] }] } },
-{ place: '星枢秘廊', name: '斗转', fight: { foe: 'yuxiao', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '箫声回荡星廊，玉箫横笛相迎。'], ['玉箫', '音律合星辰，让我听听你的节奏。'], ['玄机', '请听星枢之音。']],
-post: [['玉箫', '余音绕星，令人叹服。']] },
-{ place: '周天殿', name: '星移', fight: { foe: 'qianji', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '千机傀丸高速回旋，挡住殿门。'], ['千机', '天工与星象，谁更精密？'], ['玄机', '试过便知！']],
-post: [['千机', '好个天枢重力，甘拜下风。']] },
-{ place: '星穹核心', name: '归元',
-pre: { seal: [['', '星阵合拢之际，异星魔影破封而出。'], ['玄机', '周天星宿，镇！']],
-channel: [['', '星流汇入星盘，魔影企图夺阵。'], ['玄机', '星辉归位，邪影退散！']] },
+{ place: "东楼更台", name: "多一拍", fight: { foe: 'yuehua', lv: 'easy', goal: 'ko' },
+pre: [["", "月华两次掠过钟面。第二次，玄机没听见落脚声。"], ["玄机", "照刚才的步子再走一遍。我想知道漏的是声音，还是时辰。"]],
+post: [["月华", "漏掉的是时辰。我也记不得那一步。"]] },
+{ place: "城底水钟", name: "刻痕", fight: { foe: 'cixian', lv: 'normal', goal: 'survive', time: 45 },
+pre: [["", "磁仙按住一面乱跳的铜盘，盘上有一段磨得发亮。"], ["磁仙", "你计时。我给它加一点阻力，看看什么时候会再跳。"]],
+post: [["玄机", "四十五息里跳了两次。每次都绕过我娘刻的那一道。"]],
+choice: { q: "可抹去重复的旧刻，也可把它分到各楼，每年只准响一次。", opts: [
+{ t: "让旧刻走完", f: "seal", say: [["玄机", "我总不能让她天天值这一班。"]] },
+{ t: "为全城留一刻", f: "channel", say: [["玄机", "每年借一刻。把这笔账写在城门上，谁都能查。"]] }] } },
+{ place: "更鼓长廊", name: "听错", fight: { foe: 'yuxiao', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
+pre: [["", "玉箫照着旧谱打拍子，每到末尾总空出一拍。"], ["玄机", "谱上没写空拍。"], ["玉箫", "写谱的人知道，听的人要喘气。"]],
+post: [["玄机", "原来我娘也漏过拍。我一直以为是我数错了。"]] },
+{ place: "西楼配重室", name: "借重", fight: { foe: 'qianji', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
+pre: [["", "千机用金丝拴住了铅坠。上面的齿轮每动一格，下面便亮起一户人家。"], ["千机", "你要取出那一刻，得有人接住这些钟。"], ["玄机", "我来。先用你的傀丸试我的星规。"]],
+post: [["千机", "这回算准了。上楼吧。"]] },
+{ place: "总更台", name: "交班",
+pre: { seal: [["", "握着星规的影子迟迟不肯敲响末更。玄机认出了自己抬手的样子。"]],
+channel: [["", "磁仙稳住铜盘，震荡却一阵比一阵重。玄机要撑到各楼都接住这段时辰。"]] },
 fight: { seal: { foe: 'xuanji', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
 channel: { foe: 'cixian', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { seal: { title: '星锁长夜', text: [['', '异星归寂，北斗重明。'], ['玄机', '星河安澜，人间无恙。']] },
-channel: { title: '天枢耀世', text: [['', '观星台星盘大亮，照彻万里山河。'], ['玄机', '星辉不灭，正道长存。']] } } },
+end: { seal: { title: "准点放行", text: [["", "东楼终于报出了下一更。玄机把母亲的名字从值夜簿抄进家谱。"], ["玄机", "准点。现在我可以想她了。"]] },
+channel: { title: "一年一刻", text: [["", "以后每年有一夜，全城停钟一刻。有人想家，有人听雨，还有人只想再睡一会。"], ["玄机", "我给这条加个附注。睡觉也算用过。"]] } } },
 ] },
 });
 defHero({
 id: 'polang', skin: 'pl', en: 'Po Lang',
 bal: { normal: 0.92, skill: 0.94, ult: 0.94, cd: 1.0, hp: 0.96 },
 char: {
-name: '破浪', role: '沧海锚客', diff: 2, escCD: 8.0,
+name: '破浪', role: "捞船人", diff: 2, escCD: 8.0,
 skill: 'tidalslam', skill2: 'undertow', ult: 'maelstrom', passive: 'armor',
+profile: { weapon: "燕尾救生锚", bio: "破浪小时候靠一根空船绳活下来，如今在回头湾捞船也捞人。他一害怕就笑得格外响，还给每条靠岸的船起外号。" },
 passiveName: '沧澜重锚',
-passiveDesc: '力大无穷的沧海豪客；重击带霸体，Q 怒涛震锚砸地掀浪破防，R 破浪突进携霸体冲阵撞飞敌群。',
+passiveDesc: '重击与蓄力攻击附带短暂霸体；Q 怒涛震锚重创架势并挑飞对手，R 破浪突进携霸体冲锋。',
 stat: { hp: 900, walk: 0.92, speed: 0.9, dmg: 1.06, reach: 1.1, swing: 0.86, jump: 0.96, weight: 1.28, defRating: 1.12, guardMax: 120, guardStab: 1.1, guardChip: 0.07, guardRegen: 26, poise: 1.2, size: 1.08 },
 hitFeel: 1.12,
-look: { body: '#193545', shade: '#0c1c26', outline: '#54d8ff', outlineA: 0.9, scarf: '#2ca8d8', slash: '80,210,255', blade: '#dff8ff', hair: '#142028', head: 'headband', weapon: 'greatsword' },
+look: { body: '#193545', shade: '#0c1c26', outline: '#54d8ff', outlineA: 0.9, scarf: '#2ca8d8', slash: '80,210,255', blade: '#dff8ff', hair: '#142028', head: 'jadevisor', weapon: 'rescueanchor' },
 ai: { range: [75, 215] },
 beats: ['feiying', 'chixiao'], weakTo: ['youhuang', 'xuanji']
 },
 forest: {
-title: '破浪传 · 怒海靖妖', place: '东海沧澜港',
-synopsis: '东海巨浪滔天，海妖趁潮攻港。破浪双臂抡起玄铁重锚，一夫当关击碎妖潮！',
-stageNames: ['海潮初涌', '重锚镇港', '破浪冲阵', '怒涛连环', '沧海平妖'],
+title: "破浪传 · 空船回信", place: "回头湾",
+synopsis: "回头湾漂来一队无人渡船，船底却缠着活人的求救绳。破浪卸下救生锚，一条条把船拉回浅滩。",
+stageNames: ["空船撞岸", "水底牵绳", "双钩挂礁", "接人上滩", "退潮数船"],
 waveDialogues: [
-'破浪：「哈哈！这点风浪也配叫海啸？」',
-'破浪：「吃我一记重锚砸地，站稳喽！」',
-'破浪：「破浪冲阵，全都给我让开！」',
-'破浪：「大潮已定，妖孽受死！」'
+"破浪：「这艘叫漏勺。漏勺，你给我浮稳了。」",
+"破浪：「绳子扯三下就是有人。扯四下是我没听清。」",
+"破浪：「哈哈哈。听见我笑就把绳攥紧点。」",
+"破浪：「一个个上岸。谁说自己不怕，谁就先帮我扶梯子。」"
 ],
-bossIntro: '破浪：「融魂魔首，兴风作浪害我渔港？今日用铁锚把你砸回海底！」'
+bossIntro: "破浪：「老伙计，把绳借我。水底那位脾气大，咱们别跟他客气。」"
 },
 saga: {
-title: '破浪传 · 沧海行', motive: '东海航道突现诡异漩涡，破浪驾舟提锚直探海眼。',
+title: "破浪传 · 捞错一条船", motive: "撤渡那年，破浪亲手割过一条拖绳。如今同一条船空着漂回来，舱里多了正在划动的桨。",
 nodes: [
-{ place: '沧澜码头', name: '起锚', fight: { foe: 'qingfeng', lv: 'easy', goal: 'ko' },
-pre: [['', '海风猎猎，破浪肩扛玄铁重锚大笑。'], ['青锋', '海路凶险，先试过你这一身筋骨。'], ['破浪', '好！接我一锚！']],
-post: [['青锋', '好霸道的巨力，祝你一路顺风。']] },
-{ place: '礁石浅滩', name: '听潮', fight: { foe: 'gouchen', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '浪花拍岸，勾陈甩动链锤拦路。'], ['勾陈', '比比是你的铁锚沉，还是我的链锤狠！'], ['破浪', '哈哈，正合我意！']],
-post: [['勾陈', '痛快！漩涡就在前方的断崖海峡。']],
-choice: { q: '海峡风浪大作：直接破浪冲入海眼，或先加固灯塔指引航船。', opts: [
-{ t: '直冲海眼中心', f: 'eye', say: [['破浪', '长风破浪，直捣海眼！']] },
-{ t: '先固海港灯塔', f: 'beacon', say: [['破浪', '灯塔不灭，渔船才回得了家！']] }] } },
-{ place: '怒涛海峡', name: '踏浪', fight: { foe: 'liuyun', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '狂风卷浪，流云御风而立。'], ['流云', '风助浪势，你这重锚还能挥动吗？'], ['破浪', '越是大风大浪，我越来劲！']],
-post: [['流云', '真乃沧海豪杰！']] },
-{ place: '沉船古礁', name: '镇渊', fight: { foe: 'tieshan', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '沉船甲板之上，铁山如山岳般矗立。'], ['铁山', '硬碰硬，看谁先退半步！'], ['破浪', '来得好！']],
-post: [['铁山', '哈哈，好一个不退的沧海汉子！']] },
-{ place: '东海海眼', name: '平澜',
-pre: { eye: [['', '巨涡中心，深海魔影冲天而起。'], ['破浪', '沧海重锚，给我镇下这片海！']],
-beacon: [['', '灯塔高照，魔影怒扑港湾。'], ['破浪', '有我在，休想碰灯塔一根毫毛！']] },
+{ place: "回头湾旧埠", name: "认船", fight: { foe: 'qingfeng', lv: 'easy', goal: 'ko' },
+pre: [["", "青锋拦下空船，船头露出一道补过的裂痕。"], ["破浪", "是歪嘴。裂的那边是我补的。她还肯回来骂我，真好。"]],
+post: [["青锋", "桨还在划。去看一眼吧，我替你拴住。"]] },
+{ place: "双绳浮桥", name: "回拉", fight: { foe: 'gouchen', lv: 'normal', goal: 'survive', time: 45 },
+pre: [["", "勾陈的链钩扯住了浮桥。每一道浪都把桥往外推一寸。"], ["破浪", "链子借我受个力。你别收劲，让我试试锚会不会脱。"]],
+post: [["勾陈", "锚没脱。可旧渡口和这浮桥，你只能先挂一边。"]],
+choice: { q: "先走旧渡道能赶到空船旁，先系浮桥能给幸存者留一条退路。", opts: [
+{ t: "沿旧渡道追船", f: "eye", say: [["破浪", "这回我上船。该听谁骂，我就在那儿听。"]] },
+{ t: "先把浮桥系牢", f: "beacon", say: [["破浪", "骂我可以等。过桥的人等不了。"]] }] } },
+{ place: "倒潮闸口", name: "等风", fight: { foe: 'liuyun', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
+pre: [["", "流云站在闸上，风把绳吹得笔直。"], ["破浪", "别把风都收了。绳子松了，我就摸不到回去的路。"]],
+post: [["流云", "我留一股横风。你沿绳走，别顺浪漂。"]] },
+{ place: "翻壳船坞", name: "报数", fight: { foe: 'tieshan', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
+pre: [["", "铁山顶住翻过来的船壳，下面还有人在敲木板。"], ["破浪", "扛得住多久？说实数。我会笑，手会抖，数不会错。"]],
+post: [["铁山", "够你回返一趟。用你那双钩，别再割绳。"]] },
+{ place: "风眼系缆柱", name: "收绳",
+pre: { eye: [["", "歪嘴船上站着年少的破浪，刀已架在湿透的拖绳上。"]],
+beacon: [["", "勾陈守着桥外一头。破浪扛住内侧浪涌，等众人全部走过浮桥。"]] },
 fight: { eye: { foe: 'polang', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
 beacon: { foe: 'gouchen', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { eye: { title: '沧海晏清', text: [['', '漩涡平息，旭日跃出海面。'], ['破浪', '海阔天空，扬帆起航！']] },
-beacon: { title: '长灯护港', text: [['', '灯塔长明，百船安然归港。'], ['破浪', '沧澜港的风浪，我破浪替你们扛着！']] } } },
+end: { eye: { title: "空船有名", text: [["", "破浪握住自己的手，把刀放下。退潮时，他拖回了歪嘴和满船的旧渡票。"], ["破浪", "往后叫她回来的船。歪嘴这名字，也留着。"]] },
+beacon: { title: "桥上满员", text: [["", "空船不见了，浮桥上却挤满了人。有人问破浪要收多少渡钱。"], ["破浪", "一人喊一声到。听齐了我就收摊。"]] } } },
 ] },
 });
 if (window.I18N && I18N.getLang() === 'en') {
@@ -13724,6 +14040,7 @@ const CHAR_IDX = Object.fromEntries(CHARS.map((c, i) => [c.id, i]));
 const INK_MAX = 100, INK_COST = 15, INK_REGEN = 10, INK_DMG = 24;
 const FU_MAX = 5, FU_INK = 3, FU_BASE = 80, FU_PER = 40;
 const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 36, fists: 16, brush: 66, moonblade: 58, flute: 50, gourd: 16, hammer: 56, spindle: 42, magnet: 16, puppet: 20 };
+Object.assign(WEAPON_LEN, { firerake: 88, dyelash: 56, stargauge: 58, rescueanchor: 70 });
 const WEAPON_POSE_MODS = {
 wing: { a1: ['aj_wing_1s', 'aj_wing_1a'], a2: ['aj_wing_2s', 'aj_wing_2a'] },
 moonblade: { a1: ['aj_moonblade_1s', 'aj_moonblade_1a'], a2: ['aj_moonblade_2s', 'aj_moonblade_2a'] },
@@ -13740,6 +14057,12 @@ hammer: { l1: ['gc_wind', 'gc_throw'], l2: ['gc_pull', 'gc_sweep'], l3: ['gc_win
 spindle: { l1: ['du_l1s', 'du_l1a'], l2: ['du_l2s', 'du_l2a'], l3: ['du_l1s', 'lca'], hv: ['du_l1s', 'hva'], a1: ['aj_spindle_1s', 'aj_spindle_1a'], a2: ['aj_spindle_2s', 'aj_spindle_2a'] },
 magnet: { l1: ['lm_boxer', 'lm_jab'], l2: ['l2s', 'lm_jab'], l3: ['fn_l1s', 'fn_l1a'], l4: ['lds', 'lm_kick'], hv: ['hvs', 'hva'], a1: ['aj_fists_1s', 'aj_fists_1a'], a2: ['aj_fists_2s', 'aj_fists_2a'] },   // 磁仙：两手各托一块磁石，推掌、拍掌
 };
+Object.assign(WEAPON_POSE_MODS, {
+firerake: WEAPON_POSE_MODS.spear,
+dyelash: WEAPON_POSE_MODS.hammer,
+stargauge: WEAPON_POSE_MODS.moonblade,
+rescueanchor: WEAPON_POSE_MODS.greatsword
+});
 function buildMoves(ch) {
 const out = {}, st = ch.stat;
 const wMods = WEAPON_POSE_MODS[ch.look && ch.look.weapon] || {};
@@ -13822,7 +14145,7 @@ if (f.mChain > 0) { f.mT = (f.mT || 0) + STEP; if (f.mT >= MAG.demagRest) { f.mC
 const SKILLS = {};
 const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, big: true, unblockable: true, noScale: true };
 Object.assign(SKILLS, {
-flamehalberd: { name: '烈焰突刺', cd: 6, pass: true, nofric: true, desc: '携烈焰长戟疾步突刺，命中引燃对手并持续灼烧。',
+flamehalberd: { name: '烈焰突刺', cd: 6, pass: true, nofric: true, desc: '挺起火耙冲刺，命中引燃对手。',
 start(f) { f.vx = 0; },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.09) { f.skPh = 1; f.t = 0; f.vx = 1360 * f.face; f.armorT = 0.22; f.armorHits = 1; f.hitDone = false; SFX.dash(); }
@@ -13836,7 +14159,7 @@ if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['qf_charge', 26] : f.skPh === 1 ? ['qf_thrust', 56] : ['idle', 14],
 ai: (me, foe, d) => d > 110 && d < 320 },
-blazering: { name: '炎轮扫荡', cd: 5.5, desc: '挥戟旋出烈焰火轮，挑飞近身敌众并施加灼烧。',
+blazering: { name: '炎轮扫荡', cd: 5.5, desc: '横抡火耙，卷出的火轮挑飞近处对手并点燃他们。',
 start(f) { f.vx = 0; },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.11) {
@@ -14356,7 +14679,7 @@ if (f.skPh === 1 && f.t >= 0.4) toNeutral(f);
 pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 260 && (m.fu || 0) < FU_MAX && (m.ink || 0) >= INK_COST * (FU_INK + 1) },   // 电脑留一格墨甩墨团，墨不够就不去画
 });
 Object.assign(SKILLS, {
-tidalslam: { name: '怒涛震锚', cd: 6, desc: '举起玄铁重锚猛砸地面，掀起怒涛震波破防挑空。',
+tidalslam: { name: '怒涛震锚', cd: 6, desc: '抡起燕尾救生锚砸地，震波削减架势并挑飞对手。',
 start(f) { f.vx = 0; f.armorT = 0.25; f.armorHits = 1; },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.16) {
@@ -14368,7 +14691,7 @@ if (f.skPh === 1 && f.t >= 0.32) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['hva', 24] : ['lda', 52],
 ai: (me, foe, d) => d < 185 },
-undertow: { name: '破浪突进', cd: 5.5, nofric: true, desc: '身披沧澜霸体顶锚冲锋，强行撞开正面敌军。',
+undertow: { name: '破浪突进', cd: 5.5, nofric: true, desc: '以救生锚顶在身前冲锋，凭霸体撞飞对手。',
 start(f) { f.vx = 0; f.armorT = 0.36; f.armorHits = 2; },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.08) { f.skPh = 1; f.t = 0; f.vx = 1120 * f.face; f.hitDone = false; SFX.dash(); }
@@ -14522,7 +14845,7 @@ if (f.skPh === 2 && f.t >= 0.28) toNeutral(f);
 pose: f => f.skPh === 0 ? ['ts_shoulder', 26] : ['ts_shoulder', 40], ai: (m, o, d) => d < 260 },
 });
 Object.assign(SKILLS, {
-starorb: { name: '星仪灵珠', cd: 5, desc: '催动星仪射出一枚高能星辉灵珠，穿透压制中远距离对手。',
+starorb: { name: '星规流火', cd: 5, desc: '让三臂星规对准一线，向中远距离射出星火。',
 start(f) { f.vx *= 0.3; },
 update(f) {
 if (f.skPh === 0 && f.t >= 0.1) {
@@ -14533,7 +14856,7 @@ if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['yx_play', 28] : ['yx_push', 56],
 ai: (me, foe, d) => d > 140 && d < 420 },
-gravwell: { name: '天枢重力', cd: 6, desc: '在身前展开星枢力场，将附近敌人向内牵引并重创架势。',
+gravwell: { name: '天枢重力', cd: 6, desc: '拨开星规三臂，在身前展开力场，牵引对手并削减架势。',
 start(f) { f.vx = 0; },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.12) {
@@ -14578,7 +14901,7 @@ if (f.skPh === 1 && f.t >= 0.24) toNeutral(f);
 pose: f => f.skPh === 0 ? ['yl_wings', 30] : ['a1a', 60], ai: (m, o, d) => d > 120 },
 });
 Object.assign(SKILLS, {
-venomfan: { name: '幽篁毒针', cd: 5, desc: '挥袖齐射三枚翠竹寒针，命中减速对手。',
+venomfan: { name: '幽篁毒针', cd: 5, desc: '从袖中齐射三枚淬药细针，命中减速对手。',
 start(f) { f.vx *= 0.3; },
 update(f) {
 if (f.skPh === 0 && f.t >= 0.08) {
@@ -14591,7 +14914,7 @@ if (f.skPh === 1 && f.t >= 0.26) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['qf_charge', 30] : ['qf_thrust', 56],
 ai: (me, foe, d) => d > 150 && d < 420 },
-whiplash: { name: '青竹缠鞭', cd: 5.5, desc: '甩出青竹长鞭远距抽击，将对手拽至身前并造成硬直。',
+whiplash: { name: '回纹缠带', cd: 5.5, desc: '甩出带坠的绞带，从远处拉近对手并造成硬直。',
 start(f) { f.vx = 0; },
 update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.1) {
@@ -14696,7 +15019,7 @@ ai: (me, foe, d) => (me.drunk || 0) >= 50 && d > 120 && d < 800 && me.hp < me.ma
 });
 const ULTS = {};
 Object.assign(ULTS, {
-skyfall: { name: '炽霄焚天', flurry: true, n: 6, iv: 0.1, slash: 15, fin: 88, land: true, dashSpd: 1650, dashT: 0.28, desc: '持烈焰长戟直冲敌阵，六道赤焰戟影连环焚斩，最后凌空重劈引爆烈焰终结。' },
+skyfall: { name: '炽霄焚天', flurry: true, n: 6, iv: 0.1, slash: 15, fin: 88, land: true, dashSpd: 1650, dashT: 0.28, desc: '以火耙突进，六记连击扫出火星，最后跃起重劈。' },
 });
 Object.assign(ULTS, {
 sandwich: { name: '天地磁合', desc: '对手脚下浮出一块负极磁石、头顶压下一块正极磁石，两块磁石异极相吸，把对手牢牢吸住、越合越快，最后合拢夹成肉饼（125 伤害，不可格挡），被夹扁的人定住 1 秒。放的时候对手正在腾空闪这类无敌里，就只吸得住磁石，夹不到人。',
@@ -14933,7 +15256,7 @@ if (f.hitDone && f.t >= (f.fuT || 0.95) + 0.5) endSpecial(f);
 } },
 });
 Object.assign(ULTS, {
-maelstrom: { name: '沧海倾覆', flurry: true, n: 5, iv: 0.12, slash: 18, fin: 92, land: true, dashSpd: 1520, dashT: 0.3, desc: '双臂挥动玄铁重锚破浪突袭，五记惊涛重击震碎敌防，末击如沧海倾覆压垮对手。' },
+maelstrom: { name: '沧海倾覆', flurry: true, n: 5, iv: 0.12, slash: 18, fin: 92, land: true, dashSpd: 1520, dashT: 0.3, desc: '双手抡锚突进，连续五记重击后将双钩一起砸下。' },
 });
 Object.assign(ULTS, {
 recallball: { name: '机轮三穿', desc: '傀丸沿战场往返疾驰三次，再顺着金丝回到千机手中。每名敌人在本次大招中最多受到 120 点伤害；回手后傀丸收起并刷新 Q。若傀丸不在场，则先召出再发动。',
@@ -15033,7 +15356,7 @@ spawnProj(f, { kind: 'rock', x: f.x + sd * (30 + k * 14), y: -30, vx: sd * (320 
 } },
 });
 Object.assign(ULTS, {
-celestial: { name: '星宿归元', flurry: true, n: 6, iv: 0.095, slash: 14, fin: 86, land: true, dashSpd: 1620, dashT: 0.28, desc: '运转周天星仪锁敌突进，六道星辉流光交替斩击，最后汇聚星枢重击破阵。' },
+celestial: { name: '星宿归元', flurry: true, n: 6, iv: 0.095, slash: 14, fin: 86, land: true, dashSpd: 1620, dashT: 0.28, desc: '举星规突进，循着规尺上的刻线连击六次，最后合拢三臂重击。' },
 });
 Object.assign(ULTS, {
 featherstorm: { name: '万羽', desc: '展翼直上九霄，唤来漫天破甲翎羽如暴雨倾泻（14 枚，每枚 14 伤害）。齐射触发【凌霄破虚】：重置俯冲突袭与翎羽射击冷却，御空飞行耐力全额回满。',
@@ -15054,7 +15377,7 @@ if (f.t >= 1.1) endSpecial(f);
 } },
 });
 Object.assign(ULTS, {
-thicket: { name: '万竹凌霄', flurry: true, n: 7, iv: 0.085, slash: 13, fin: 82, land: true, dashSpd: 1700, dashT: 0.26, desc: '青竹长鞭化作翠影疾袭，七道毒竹剑气穿梭连斩，终结一击震裂竹阵。' },
+thicket: { name: '千缕重叠', flurry: true, n: 7, iv: 0.085, slash: 13, fin: 82, land: true, dashSpd: 1700, dashT: 0.26, desc: '抽出绞带疾袭，七次连抽后甩出带坠打出重击。' },
 });
 Object.assign(ULTS, {
 moonflow: { name: '月华如水', desc: '双手结月印，盘坐入定。月华凝露，回复 135 点生命；月芒震退贴身之敌（75 伤害）。绽放触发【太阴化生】：重置月镜架招与月轮回旋冷却，并获得 4 秒月魄霸体护盾（格挡硬直减伤）。',
@@ -16172,10 +16495,9 @@ const CHAPTERS = [
 { hero: 'liying', name: '千雾泽', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'liying', lv: 'impossible' },
 { hero: 'cixian', name: '磁石峰', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'cixian', lv: 'impossible' },
 { hero: 'qianji', name: '千机阁', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'qianji', lv: 'impossible' },
-{ hero: 'chixiao', name: '赤焰关', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'chixiao', lv: 'impossible' },
-{ hero: 'youhuang', name: '幽篁林', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'youhuang', lv: 'impossible' },
-{ hero: 'xuanji', name: '玄机台', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'xuanji', lv: 'impossible' },
-{ hero: 'polang', name: '镇海礁', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'polang', lv: 'impossible' },
+...['chixiao', 'youhuang', 'xuanji', 'polang'].map(hero => ({
+hero, name: HERO_FOREST_STORIES[hero].place, pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: hero, lv: 'impossible'
+}))
 ];
 const stageId = (c, l) => `${c + 1}.${l + 1}`;   // c 第几章、l 第几关，都从 0 开始
 function stageInfo(c, l) {
@@ -21351,8 +21673,85 @@ BG_GRAD.set(ctx, g);
 }
 return g;
 }
+const STORY_BACKDROPS = {
+chixiao: {
+sky: ['#16101d', '#312031', '#694032', '#312130'], mist: '210,126,89', orb: 'moon', orbC: '255,181,130',
+draw() {
+ctx.fillStyle = '#271d27';
+ctx.fillRect(-75, -35, 150, 37);
+for (const [x, h, w] of [[-65, 110, 16], [-41, 84, 12], [53, 102, 14]]) {
+ctx.fillRect(x, -h, w, h);
+ctx.fillRect(x - 3, -h, w + 6, 5);
+}
+for (const x of [-26, 24]) {
+ctx.fillStyle = '#3b2530';
+ctx.beginPath(); ctx.ellipse(x, -24, 25, 30, 0, Math.PI, 0); ctx.fill();
+ctx.fillStyle = '#b46346';
+ctx.beginPath(); ctx.ellipse(x, -2, 12, 19, 0, Math.PI, 0); ctx.fill();
+}
+}
+},
+youhuang: {
+sky: ['#130e20', '#272138', '#533c56', '#2b2941'], mist: '168,118,162', orb: 'moon', orbC: '227,182,215',
+draw() {
+ctx.strokeStyle = '#221c2d'; ctx.lineWidth = 5;
+line([-70, -76], [70, -76]);
+for (const x of [-69, 69]) line([x, 0], [x, -86]);
+for (const [x, h, color] of [[-62, 48, '#764365'], [-23, 64, '#454970'], [23, 52, '#855775']]) {
+ctx.fillStyle = color;
+ctx.beginPath(); ctx.moveTo(x, -74); ctx.lineTo(x + 30, -74);
+ctx.quadraticCurveTo(x + 24, -55, x + 33, -74 + h);
+ctx.lineTo(x - 3, -71 + h); ctx.quadraticCurveTo(x + 4, -43, x, -74); ctx.fill();
+}
+}
+},
+xuanji: {
+sky: ['#0b1226', '#192840', '#3b4968', '#202637'], mist: '113,143,192', orb: 'moon', orbC: '197,218,255',
+draw() {
+ctx.fillStyle = '#232939';
+ctx.fillRect(-21, -105, 42, 106);
+ctx.beginPath(); ctx.moveTo(-36, -105); ctx.lineTo(0, -137); ctx.lineTo(36, -105); ctx.fill();
+ctx.strokeStyle = '#99845e'; ctx.lineWidth = 3.5;
+ctx.beginPath(); ctx.arc(0, -84, 12, 0, Math.PI * 2); ctx.stroke();
+line([0, -84], [0, -92]); line([0, -84], [6, -81]);
+ctx.fillStyle = '#635747'; ctx.fillRect(-4, -55, 8, 17);
+}
+},
+polang: {
+sky: ['#0c1a27', '#162f41', '#335365', '#223c4e'], mist: '117,182,197', orb: 'moon', orbC: '183,227,228',
+draw() {
+ctx.strokeStyle = '#78939b'; ctx.lineWidth = 1.5;
+for (const [y, x] of [[-24, -89], [-14, -103], [-7, -81]]) line([x, y], [x + 172, y]);
+ctx.fillStyle = '#25323d';
+ctx.beginPath(); ctx.moveTo(-69, -27); ctx.lineTo(70, -27);
+ctx.lineTo(48, -7); ctx.lineTo(-44, -7); ctx.fill();
+ctx.strokeStyle = '#273540'; ctx.lineWidth = 5; line([-13, -27], [-13, -101]);
+ctx.fillStyle = '#62838c'; ctx.beginPath(); ctx.moveTo(-9, -96);
+ctx.quadraticCurveTo(17, -76, 43, -39); ctx.lineTo(-9, -39); ctx.fill();
+}
+}
+};
+function storyBackdrop() {
+const hero = M.mode === 'saga' ? SG.hero : M.mode === 'raid' ? M.raidStoryHero : M.stage?.C?.hero;
+return STORY_BACKDROPS[hero];
+}
+function drawStorySetting(setting, gy, sc) {
+const scale = sc * 0.85;
+const spacing = 210;
+const center = cam.x * 0.45;
+const first = Math.floor((center - W / 2 / scale) / spacing);
+const last = Math.ceil((center + W / 2 / scale) / spacing);
+for (let i = first; i <= last; i++) {
+ctx.save();
+ctx.translate(W / 2 + (i * spacing - center) * scale, gy);
+ctx.scale(scale, scale);
+setting.draw();
+ctx.restore();
+}
+}
 function drawBackground(sc) {
-const T = SCN, sky = T ? T.sky : ['#060914', '#141b30', '#262b44', '#181c2b'], mc = T ? T.mist : SCN_DEF.mist;
+const setting = storyBackdrop();
+const T = setting || SCN, sky = T ? T.sky : ['#060914', '#141b30', '#262b44', '#181c2b'], mc = T ? T.mist : SCN_DEF.mist;
 const bg = bgGrads(sky, mc, !!(T && T.legend));
 ctx.fillStyle = bg.sky; ctx.fillRect(0, 0, W, H);
 ctx.fillStyle = bg.wash; ctx.fillRect(0, 0, W, H);
@@ -21373,7 +21772,7 @@ mountains(0.08, gy - H * 0.2, H * 0.16, mt[0], 1.3, sc);
 const pagX = W * 0.76 - (cam.x - STAGE_W / 2) * 0.08 * sc;
 const pagU = (pagX + (cam.x - STAGE_W / 2) * 0.08 * sc) / H;
 const pagY = (gy - H * 0.2) - (H * 0.16) * (0.55 * Math.sin(pagU * 2.3 + 1.3) + 0.3 * Math.sin(pagU * 5.1 + 2.6) + 0.15 * Math.sin(pagU * 11 + 3.9));
-drawDistantPagoda(pagX, pagY + 4 * sc, sc * 0.95);
+if (!setting) drawDistantPagoda(pagX, pagY + 4 * sc, sc * 0.95);
 ctx.save(); ctx.translate(0, gy);
 ctx.fillStyle = bg.mid; ctx.fillRect(0, -H * 0.32, W, H * 0.24);
 ctx.restore();
@@ -21383,8 +21782,11 @@ drawInkClouds(gy, sc);
 ctx.save(); ctx.translate(0, gy);
 ctx.fillStyle = bg.low; ctx.fillRect(0, -H * 0.25, W, H * 0.25);
 ctx.restore();
+if (setting) drawStorySetting(setting, gy, sc);
+else {
 bamboo(0.5, sc, gy, bm[0], 150, 0.75);
 bamboo(0.75, sc, gy, bm[1], 210, 0.9);
+}
 if (T && T.legend) {   // 传说场景：地平线上一层主题色的光
 const gl = ctx.createLinearGradient(0, gy - H * 0.12, 0, gy + 4);
 gl.addColorStop(0, `rgba(${T.orbC},0)`); gl.addColorStop(1, `rgba(${T.orbC},0.2)`);
@@ -22268,7 +22670,7 @@ if (th === 'flame') { ctx.fillStyle = `rgba(${c2},0.5)`; const lk = 8 + Math.sin
 }
 ctx.restore(); return;
 }
-const [a, b] = seg, own = !!(L.deco && L.deco.weapStyle);   // 有自己兵器样子的皮肤，刃光压淡，不把兵器盖成一根光棍
+const [a, b] = seg, own = !!(SKIN_WEAP[L.weapon] || (L.deco && L.deco.weapStyle));   // 有专属外形的兵器只加淡光
 if (!own && (th === 'void' || th === 'ink' || th === 'star')) {   // 暗芯：先压一道深色，再描亮边
 ctx.globalCompositeOperation = 'source-over'; ctx.strokeStyle = `rgba(${c2},${th === 'ink' ? 0.55 : 0.7})`; ctx.lineWidth = 7; line(a, b);
 ctx.globalCompositeOperation = 'lighter';
@@ -23790,7 +24192,7 @@ ctx.globalAlpha = alpha * L.outlineA;
 for (const s of [...segs, ...arm]) drawTaperedSeg(s[0], s[1], s[2] + 2.5, s[3] + 2.5, L.outline);
 circle(sk.head, 12.5);
 if (!hideBaseHead) headAcc(sk, 3, L.outline, L);
-weapon(sk, L, true, false);
+weapon(sk, L, true, false, f);
 ctx.globalAlpha = alpha;
 for (const s of segs) drawTaperedSeg(s[0], s[1], s[2], s[3], o.flash ? '#fff' : (s[4] ? L.shade : L.body));
 if (!o.flash) {
@@ -23800,8 +24202,8 @@ line([sk.hip[0] - 6, sk.hip[1]], [sk.hip[0] + 6, sk.hip[1]]);
 ctx.fillStyle = o.flash ? '#fff' : L.body; circle(sk.head, 10);
 drawFace(sk, f, L, o.flash);
 if (!hideBaseHead) headAcc(sk, 0, o.flash ? '#fff' : L.body, L);
-weapon(sk, L, false, o.flash);
-if (L.fx && !o.flash) { if (L.legend) skinBlade(sk, f, L); else skinTint(sk, f, L); }
+weapon(sk, L, false, o.flash, f);
+if (L.fx && !o.flash && L.weapon !== 'dyelash') { if (L.legend) skinBlade(sk, f, L); else skinTint(sk, f, L); }
 if (L.deco && L.deco.zw && !o.flash) drawZodiacGleam(sk, L);
 for (const s of arm) drawTaperedSeg(s[0], s[1], s[2], s[3], o.flash ? '#fff' : L.body);
 if (!o.flash && !isRobed) {
@@ -23983,7 +24385,7 @@ for (let i = 1; i < N; i++) { const gy = i === N - 1 ? -11 : -2; if (P[i][1] > g
 return s;
 }
 const SKIN_WEAP = {};
-function skinWeapon(ws, sk, L, o, flash) {
+function skinWeapon(ws, sk, L, o, flash, f) {
 const draw = SKIN_WEAP[ws]; if (!draw) return false;
 const g = sk.guard, t = sk.tip, hl = sk.hilt, pf = sk.face || 1;
 const dx = t[0] - g[0], dy = t[1] - g[1], len = Math.hypot(dx, dy) || 1, ux = dx / len, uy = dy / len, px = -uy * pf, py = ux * pf;
@@ -24008,7 +24410,7 @@ ctx.fillStyle = col; for (let k = 0; k < 5; k++) { const a = k * 1.2566 + 0.3; c
 ctx.fillStyle = mid; circle(c, r * 0.5);
 };
 ctx.save(); ctx.lineCap = 'round'; ctx.lineJoin = 'round';
-draw({ sk, L, o, flash, live, g, t, hl, len, ux, uy, px, py, pf, T, P, At, fillWith, poly, bar, lg, glow, leaf, flower });
+draw({ sk, L, o, flash, live, g, t, hl, len, ux, uy, px, py, pf, T, P, At, fillWith, poly, bar, lg, glow, leaf, flower, f });
 ctx.restore();
 return true;
 }
@@ -24560,13 +24962,74 @@ const HAMMER_LOOK = {
 crimson_hammer: { chain: ['#6a2a22', '#b0503a'], head: '#4a1610', band: '#ff6a2a', crack: '255,120,50', spikes: '#2a0c08' },
 underworld_hammer: { chain: ['#4a2a7a', '#b48cff'], head: '#2a1840', band: '#a855f7', crack: '185,105,255', ghost: true },
 };
-function weapon(sk, L, outline, flash) {
+SKIN_WEAP.firerake = ({ At, g, t, bar, poly, L }) => {
+const crown = At(t, -18);
+bar(At(g, -29), crown, 4, '#613222');
+for (const offset of [-8, 8]) bar(At(g, offset, -2), At(g, offset, 2), 2.5, L.scarf);
+bar(At(crown, 0, -13), At(crown, 0, 13), 5, '#9e4934');
+for (const side of [-1, 0, 1]) {
+const w = side * 11, length = side ? 13 : 18;
+poly([At(crown, -3, w - 2.5), At(crown, length - 4, w - 3.5),
+At(crown, length, w + 1), At(crown, length - 6, w + 3.5), At(crown, -3, w + 2.5)], L.blade);
+}
+};
+SKIN_WEAP.dyelash = ({ sk, g, hl, t, len, bar, poly, f, L, o, flash }) => {
+bar(hl, g, 5, '#462439');
+const cast = f.state === 'skill' && f.skill === 'whiplash' && f.skPh === 1
+? clamp(1 - f.t / 0.26, 0, 1) : 0;
+const swinging = f.state === 'attack' || f.state === 'special';
+const end = cast ? [g[0] + sk.face * (len + 135 * cast), g[1] - 6]
+: swinging ? t : [g[0] + sk.face * 22, g[1] + 38];
+const dx = end[0] - g[0], dy = end[1] - g[1];
+const bend = (cast || swinging) ? 14 : 27;
+const ribbon = (width, color) => {
+ctx.strokeStyle = color;
+ctx.lineWidth = width;
+ctx.beginPath();
+ctx.moveTo(...g);
+ctx.bezierCurveTo(g[0] + dx * 0.32, g[1] + dy * 0.32 - bend,
+g[0] + dx * 0.75, g[1] + dy * 0.75 + bend, ...end);
+ctx.stroke();
+};
+ribbon(o ? 10 : 7, o ? L.outline : flash ? '#fff' : L.scarf);
+if (!o && !flash) ribbon(2, L.blade);
+const [x, y] = end;
+poly([[x - 5, y], [x, y - 5], [x + 5, y], [x, y + 5]], '#d5ac7b');
+};
+SKIN_WEAP.stargauge = ({ At, hl, t, bar, poly, L, live, T }) => {
+const hub = At(t, -24);
+const sights = [t, At(hub, -11, 18), At(hub, -11, -18)];
+bar(hl, At(hub, -9), 4, '#915d3d');
+for (let i = 0; i < sights.length; i++) {
+bar(sights[i], sights[(i + 1) % sights.length], 2.4, '#ad8f55');
+bar(hub, sights[i], 2.6, L.blade);
+}
+poly([At(hub, 6), At(hub, 0, 5), At(hub, -6), At(hub, 0, -5)], L.scarf);
+if (!live) return;
+const needle = T * 2.8;
+bar(hub, At(hub, 11 * Math.cos(needle), 11 * Math.sin(needle)), 1.8, '#fff2a9');
+};
+SKIN_WEAP.rescueanchor = ({ At, hl, t, bar, poly, L }) => {
+const crown = At(t, -4);
+bar(At(hl, -6), crown, 5.5, '#3b5763');
+bar(At(hl, 5, -11), At(hl, 5, 11), 4.5, '#c69156');
+const eye = [At(hl, -12), At(hl, -6, 5), At(hl, 0), At(hl, -6, -5)];
+for (let i = 0; i < eye.length; i++) bar(eye[i], eye[(i + 1) % eye.length], 2.5, '#c69156');
+for (const side of [-1, 1]) {
+const w = n => n * side;
+poly([At(crown, 4, 0), At(crown, 1, w(12)), At(crown, -9, w(22)),
+At(crown, -24, w(24)), At(crown, -17, w(12)), At(crown, -14, w(17)),
+At(crown, -6, w(9)), At(crown, -5, 0)], L.blade);
+}
+};
+function weapon(sk, L, outline, flash, f) {
 const g = sk.guard, t = sk.tip, hl = sk.hilt;
 const dx = t[0] - g[0], dy = t[1] - g[1], dl = Math.hypot(dx, dy) || 1, ux = dx / dl, uy = dy / dl, px = -uy, py = ux;
 const blade = flash ? '#fff' : L.blade;
-const ws = (L.deco && L.deco.weapStyle) || '';
+const ws = (L.deco && L.deco.weapStyle) || L.weapon;
 ctx.lineCap = 'round';
-if (ws && L.weapon !== 'hammer' && skinWeapon(ws, sk, L, outline, flash)) return;
+if (L.weapon !== 'hammer' && (skinWeapon(ws, sk, L, outline, flash, f) ||
+(ws !== L.weapon && skinWeapon(L.weapon, sk, L, outline, flash, f)))) return;
 const guardBar = (w, col = L.metal || '#d9b36a') => { ctx.strokeStyle = col; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(g[0] - px * w, g[1] - py * w); ctx.lineTo(g[0] + px * w, g[1] + py * w); ctx.stroke(); };
 switch (L.weapon) {
 case 'fists':
@@ -28347,6 +28810,7 @@ const qName = (skin && skinSkillName(skin, 1)) || S.name;
 const rName = (skin && skinSkillName(skin, 2)) || S2.name;
 const uName = (skin && skinUltName(skin)) || U.name;
 $id('cxMoves').innerHTML = [
+c.profile ? tile('chronicle', '侠客小传', escapeHTML(c.profile.weapon), escapeHTML(c.profile.bio), '', true) : '',
 tile('passive', `被动 · ${c.passiveName}`, '', PASSIVE_SHORT[c.id] || '', '', true),
 tile('light', `左键 · 连击 <small class="type-tag ${lType.type}">${lType.label}</small>`, sum, `${lk.length} 段${c.id === 'cixian' ? '循环 · 负极能一直连' : ' · 末段击飞'}${c.inkShot ? ` · 另有墨团 ${lk.length}×${INK_DMG}` : ''}`, '', false, 'light'),
 tile('charge', `按住左键 · 蓄力 <small class="type-tag ${cType.type}">${cType.label}</small>`, `${dv(m.cs1.dmg)} / ${dv(m.cs2.dmg)}`, '满蓄破防 · 打倒', '', false, 'charge'),
@@ -40267,7 +40731,7 @@ lingque: { name: '穿叶式', en: 'Threading Leaf', kind: 'precision', desc: '�
 liying: { name: '照影式', en: 'Reflected Mist', kind: 'control', desc: '攻击硬直更长，伤害略低，攻击距离缩短。' },
 cixian: { name: '双仪式', en: 'Twin Poles', kind: 'power', desc: '重击更重，前后摇都更长。' },
 qianji: { name: '游线式', en: 'Tether Flow', kind: 'reach', desc: '攻击更远，伤害略低，出招稍慢。' },
-chixiao: { name: '焚野式', en: 'Wildfire Halberd', kind: 'power', desc: '重击与蓄力更猛，前后摇略长。' },
+chixiao: { name: '焚野式', en: 'Firebreak Stance', kind: 'power', desc: '重击与蓄力更猛，前后摇略长。' },
 youhuang: { name: '翠影式', en: 'Emerald Lash', kind: 'swift', desc: '轻击与空中出招更快，收招略长。' },
 xuanji: { name: '星枢式', en: 'Astral Pivot', kind: 'control', desc: '命中硬直更久，伤害略低，距离略缩。' },
 polang: { name: '镇涛式', en: 'Tide Anchor', kind: 'guard', desc: '攻击略低，静止调息时架势恢复更快。' },
@@ -43007,7 +43471,7 @@ const rnd = () => { const a = new Uint32Array(2); GRV(a); return (a[0] * 2097152
 for (const [k, char, name, look] of C.PAINTS) SKINS[k] = { char, rarity: 'rare', name, cs: 'paint', look: { ...look } };
 for (const [k, d] of Object.entries(C.FULL)) {
 SKINS[k] = { char: d.char, rarity: 'legend', name: d.name, cs: 'star', look: { ...d.look }, deco: JSON.parse(JSON.stringify(d.deco)), fx: { ...d.fx } };
-SCENES[k] = JSON.parse(JSON.stringify(d.scene));
+if (d.scene) SCENES[k] = JSON.parse(JSON.stringify(d.scene));
 }
 for (const d of Object.values(C.FULL)) if (d.deco.sign && d.deco.weapStyle) {   // 星座皮肤的流星锤：链子、锤头、锤箍、裂纹光都换成这个星座的颜色
 const { look: l, deco: e } = d;

@@ -142,6 +142,7 @@
     [/^(快速上手|完整教学) (\d+) \/ (\d+)$/, (m0, w, a, b) => `${w === '快速上手' ? 'Quick start' : 'Full tutorial'} ${a} / ${b}`],
     [/^难度 ([●○]+)$/, (m0, d) => `Difficulty ${d}`],
     [/^平衡 · 伤害与气血 ×([\d.]+)$/, (m0, n) => `Balance · Damage & HP ×${n}`],
+    [/^(伤害|普攻|技能|技能与大招|大招|气血) ×([\d.]+)$/, (m0, label, n) => `${{ 伤害: 'Damage', 普攻: 'Normals', 技能: 'Skills', 技能与大招: 'Skills & Ultimate', 大招: 'Ultimate', 气血: 'HP' }[label]} ×${n}`],
     [/^(正常|原速) ([\d.]+)x$/, (m0, w, n) => `Normal ${n}x`],
     [/^慢放 ([\d.]+)x$/, (m0, n) => `Slow ${n}x`],
     // 结算页（src/game/08-fighter-match.js showEnd、src/game/19-progress-04-ranked.js reportProgress）
@@ -180,6 +181,9 @@
     [/^走到第 (\d+) \/ (\d+) 节$/, (m0, a, b) => `Reached part ${a} / ${b}`],
     [/^结局 ((?:「[^」]+」)+)$/, (m0, x) => `Endings: ${x.slice(1, -1).split('」「').map(n => lookup(n) || n).join(', ')}`],
     // 守关挑战（src/game/07-ai-story.js）：故事标题 · 关名、角色台词、结算页
+    [/^📖 (.+)（([^（）]+)）$/, (m0, title, place) => `📖 ${lookup(title) || title} (${lookup(place) || place})`],
+    [/^(.+) \((\d+)波妖\)$/, (m0, name, count) => `${lookup(name) || name} (${count} waves)`],
+    [/^(.+) · 魔首决战$/, (m0, name) => `${lookup(name) || name} · Final Boss`],
     [/^(\S+?)传 · (.+?)(?: · (.+))?$/, (m0, h, t, st) => { const a = lookup(t); return a ? `Tale of ${lookup(h) || h} · ${a}${st ? ` · ${lookup(st) || st}` : ''}` : ''; }],
     [/^(\S{2,3})：「([\s\S]+)」$/, (m0, h, x) => { const t = lookup(x); return t ? `${lookup(h) || h}: “${t}”` : ''; }],
     [/^第 (\d+) 幕$/, (m0, n) => `Act ${n}`],
@@ -338,6 +342,10 @@
     [/^导入失败：(.+)$/, (m0, x) => `Import failed: ${lookup(x) || x}`],
     [/^文件解析失败：(.+)$/, (m0, x) => `Couldn't read the file: ${lookup(x) || x}`],
     // 侠客列传（src/game/04-modes/22-saga.js）：「第 1 节 · 竹林 · 断剑」「对手 铁山 · 击败对手」由拼接短语那一步逐段查
+    [/^【这一战】(.+?)(?:，开局只剩 (\d+)% 生命)?$/, (m0, goal, hp) => `[This Fight] ${lookup(goal) || goal}${hp ? ` · Start at ${hp}% HP` : ''}`],
+    [/^第 (\d+) 节走完(?:，获得 (\d+) 墨锭)?$/, (m0, chapter, ink) => `Chapter ${chapter} complete${ink ? ` · +${ink} Ink` : ''}`],
+    [/^—— 结局 · 「([^」]+)」 ——(?:　获得 (\d+) 墨锭)?$/, (m0, title, ink) => `Ending · ${lookup(title) || title}${ink ? ` · +${ink} Ink` : ''}`],
+    [/^结局：((?:「[^」]+」)+)$/, (m0, titles) => `Endings: ${[...titles.matchAll(/「([^」]+)」/g)].map(([, title]) => lookup(title) || title).join(', ')}`],
     [/^第 (\d+) 节$/, (m0, n) => `Chapter ${n}`],
     [/^对手 (.+)$/, (m0, h) => `Opponent: ${lookup(h) || h}`],
     [/^撑过 (\d+) 秒$/, (m0, n) => `Survive ${n}s`],
