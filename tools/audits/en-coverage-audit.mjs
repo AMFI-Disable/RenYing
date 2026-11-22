@@ -137,15 +137,24 @@ if (lang !== 'en') { console.error(`English interface did not come up (lang=${la
 const ev = async js => (await cdp.send('Runtime.evaluate', { expression: js, returnByValue: true, awaitPromise: true }, S)).result.value;
 const found = new Map();   // 文本 → 第一次在哪个面板看到
 const note = (where, list) => { for (const t of list || []) if (!found.has(t)) found.set(t, where); };
+const armoryReady = () => ev(`Boolean(document.querySelector('#armory.on #arMain')?.textContent.trim()) && !document.querySelector('[data-armory-retry]')`);
+const armoryFailure = message => {
+  console.error(message);
+  chrome.kill();
+  process.exit(1);
+};
 for (const [name, js, tabs] of PANELS) {
   const err = await ev(`(async () => { try { ${js}; return ''; } catch (e) { return String(e && e.message || e); } })()`);
+  if (err && name === 'armory') armoryFailure(`Armory could not open: ${err}`);
   if (err) { console.log(`${name}: could not open (${err})`); continue; }
   await sleep(700);
   note(name, await ev(PROBE));
   const n = tabs ? await ev(`document.querySelectorAll(${JSON.stringify(tabs)}).length`) : 0;
+  if (name === 'armory' && (!n || !(await armoryReady()))) armoryFailure('Armory opened without content or tabs');
   for (let i = 0; i < n; i++) {
     await ev(`(() => { const b = document.querySelectorAll(${JSON.stringify(tabs)})[${i}]; if (b) b.click(); })()`);
     await sleep(450);
+    if (name === 'armory' && !(await armoryReady())) armoryFailure(`Armory tab ${i + 1} did not render`);
     note(`${name} tab ${i + 1}`, await ev(PROBE));
   }
 }

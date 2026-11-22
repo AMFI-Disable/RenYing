@@ -9,6 +9,22 @@ function updateXiwuSummary() {
   const pieces = [CHARS[menuHeroPick()].name, LV_NAME[pickLevel] || pickLevel, mode, ruleName];
   info.textContent = pieces.map(x => typeof cvT === 'function' ? cvT(x) : x).join(' · ');
 }
+// 武库脚本加载失败时这条备用路径仍可使用。
+function showArmoryRecovery(error) {
+  if (error) console.error('Armory unavailable', error);
+  $id('arMain').replaceChildren($id('arRecovery').content.cloneNode(true));
+}
+async function prepareArmory(tab) {
+  if (typeof window.openArmory !== 'function') return showArmoryRecovery();
+  try { await window.openArmory(tab); }
+  catch (error) { showArmoryRecovery(error); }
+}
+$id('arMain').addEventListener('click', e => {
+  if (!e.target.closest('[data-armory-retry]')) return;
+  e.stopImmediatePropagation();
+  if (typeof window.openArmory !== 'function') window.location.reload();
+  else prepareArmory('inv');
+});
 // 建页面和上屏分开：menuGo 先把页面建好（趁镜头推进时做，不占上屏那一帧），镜头到位再 showScreen
 function openScreen(name, reveal = true) {
   if (OFFLINE_BUILD && name === 'netp') name = 'stage';
@@ -28,7 +44,7 @@ function openScreen(name, reveal = true) {
   if (name === 'settings') { settingsBack = 'menu'; buildSettings(); }
   if (name === 'codex') openCodex();
   if (name === 'community') openCommunity();
-  if (name === 'armory' && typeof window.openArmory === 'function') window.openArmory();
+  if (name === 'armory') prepareArmory();
   if (name === 'gboss') { renderGboss(); gbLoad(); gbFlush(); }
   if (reveal) showScreen(name);
   return name;

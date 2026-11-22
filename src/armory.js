@@ -492,6 +492,10 @@
     return d;
   }
   function render() {
+    try { renderArmoryPage(); }
+    catch (error) { showArmoryRecovery(error); }
+  }
+  function renderArmoryPage() {
     if (!$id('armory')) return;
     const d = dots();
     for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;

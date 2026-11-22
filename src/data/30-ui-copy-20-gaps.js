@@ -331,6 +331,7 @@ Object.assign(UI_COPY_EN, {
   "初影": "First Glimpse",
   "平衡": "Balance",
   "奥义": "Ultimate",
+  "武库暂时无法加载，请重试。": "The Armory could not load. Please try again.",
   "玄华": "Mysterious Radiance",
   "重击与蓄力更猛，前后摇略长。": "Stronger heavy and charged attacks with slightly longer startup and recovery.",
   "轻击与空中出招更快，收招略长。": "Faster light and air attacks with slightly longer recovery.",

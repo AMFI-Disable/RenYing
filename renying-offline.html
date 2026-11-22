@@ -4519,6 +4519,10 @@ font-size: 13px;
       <div class="seg ar-tabs" id="arTabs" role="tablist"></div>
       <p class="ar-msg" id="arMsg" aria-live="polite"></p>
       <div class="ar-main" id="arMain"></div>
+      <template id="arRecovery">
+        <p class="ar-banner" role="alert">武库暂时无法加载，请重试。</p>
+        <button type="button" class="go small" data-armory-retry>重试</button>
+      </template>
     </div>
     <div class="ar-modal" id="arModal" hidden></div>
     <div class="ar-ins" id="arIns" hidden>
@@ -11273,6 +11277,7 @@ Object.assign(UI_COPY_EN, {
 "初影": "First Glimpse",
 "平衡": "Balance",
 "奥义": "Ultimate",
+"武库暂时无法加载，请重试。": "The Armory could not load. Please try again.",
 "玄华": "Mysterious Radiance",
 "重击与蓄力更猛，前后摇略长。": "Stronger heavy and charged attacks with slightly longer startup and recovery.",
 "轻击与空中出招更快，收招略长。": "Faster light and air attacks with slightly longer recovery.",
@@ -27147,6 +27152,21 @@ const ruleName = rule === 'chaos' ? '天机乱斗' : rule === 'mayhem' ? '通天
 const pieces = [CHARS[menuHeroPick()].name, LV_NAME[pickLevel] || pickLevel, mode, ruleName];
 info.textContent = pieces.map(x => typeof cvT === 'function' ? cvT(x) : x).join(' · ');
 }
+function showArmoryRecovery(error) {
+if (error) console.error('Armory unavailable', error);
+$id('arMain').replaceChildren($id('arRecovery').content.cloneNode(true));
+}
+async function prepareArmory(tab) {
+if (typeof window.openArmory !== 'function') return showArmoryRecovery();
+try { await window.openArmory(tab); }
+catch (error) { showArmoryRecovery(error); }
+}
+$id('arMain').addEventListener('click', e => {
+if (!e.target.closest('[data-armory-retry]')) return;
+e.stopImmediatePropagation();
+if (typeof window.openArmory !== 'function') window.location.reload();
+else prepareArmory('inv');
+});
 function openScreen(name, reveal = true) {
 if (OFFLINE_BUILD && name === 'netp') name = 'stage';
 if (name === 'watch2v2' || name === '2v2') return open2v2Hub(null, reveal);   // 2v2 只有一个入口：组队弹窗
@@ -27165,7 +27185,7 @@ if (name === 'single') renderStages();
 if (name === 'settings') { settingsBack = 'menu'; buildSettings(); }
 if (name === 'codex') openCodex();
 if (name === 'community') openCommunity();
-if (name === 'armory' && typeof window.openArmory === 'function') window.openArmory();
+if (name === 'armory') prepareArmory();
 if (name === 'gboss') { renderGboss(); gbLoad(); gbFlush(); }
 if (reveal) showScreen(name);
 return name;
@@ -43912,6 +43932,10 @@ d.any = d.inv || d.op || d.cases || d.term;
 return d;
 }
 function render() {
+try { renderArmoryPage(); }
+catch (error) { showArmoryRecovery(error); }
+}
+function renderArmoryPage() {
 if (!$id('armory')) return;
 const d = dots();
 for (const el of document.querySelectorAll('.gInk')) el.textContent = PROF.ink;
