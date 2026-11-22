@@ -128,8 +128,8 @@ export class Pool {
 
 // ---------- 4. 侠客名单和统计小工具 ----------
 // 顺序要和 src/data/heroes/ 的编号一致（下标就是 CHARS 里的下标）
-export const HEROES = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji'];
-export const NAMES = ['青锋', '绯影', '铁山', '凌霜', '流云', '雷鸣', '墨羽', '月华', '燕翎', '玉箫', '醉翁', '勾陈', '凌雀', '离影', '磁仙', '千机'];
+export const HEROES = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji', 'chixiao', 'youhuang', 'xuanji', 'polang'];
+export const NAMES = ['青锋', '绯影', '铁山', '凌霜', '流云', '雷鸣', '墨羽', '月华', '燕翎', '玉箫', '醉翁', '勾陈', '凌雀', '离影', '磁仙', '千机', '炽霄', '幽篁', '玄机', '破浪'];
 
 // 每个角色对每个角色：la 用 a 角色、lb 用 b 角色，左右互换各一半
 export function matchupGames(la, lb, n, heroes = HEROES.map((_, i) => i)) {

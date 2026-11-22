@@ -37,6 +37,10 @@ const CHAPTERS = [
   { hero: 'liying', name: '千雾泽', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'liying', lv: 'impossible' },
   { hero: 'cixian', name: '磁石峰', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'cixian', lv: 'impossible' },
   { hero: 'qianji', name: '千机阁', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'qianji', lv: 'impossible' },
+  { hero: 'chixiao', name: '赤焰关', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'chixiao', lv: 'impossible' },
+  { hero: 'youhuang', name: '幽篁林', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'youhuang', lv: 'impossible' },
+  { hero: 'xuanji', name: '玄机台', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'xuanji', lv: 'impossible' },
+  { hero: 'polang', name: '镇海礁', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'polang', lv: 'impossible' },
 ];
 const stageId = (c, l) => `${c + 1}.${l + 1}`;   // c 第几章、l 第几关，都从 0 开始
 // 一关的内容：妖物关每一波出哪些妖物是固定的（每次打都一样），并附上该侠客的专属剧情

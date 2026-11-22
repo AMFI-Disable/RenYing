@@ -138,7 +138,7 @@ function drawHUD2v2() {
 }
 function hudLocalPlayer(f) {
   if (!f) return false;
-  if (M.mode === 'net') return !!((ROLL.slots || [])[localIdx()] || []).includes([A, B, C, D].indexOf(f));
+  if (M.mode === 'net') return !!((ROLL.slots || [])[localIdx()] || []).includes(f.idx);
   return human.includes(f.ctrl);
 }
 function drawChaosHUD(cx, y, compact) {
@@ -258,10 +258,110 @@ function drawHUDRaid() {
   ctx.fillText(Math.ceil(M.timer).toString(), W / 2, topY + Math.round(38 * u));
   ctx.restore();
 }
+function drawHUDLargeTeam() {
+  const top = Math.max(16, Math.round(H * 0.025)), cx = W / 2;
+  const s0 = sideFighters(0), s1 = sideFighters(1);
+  const alive0 = s0.filter(f => f.hp > 0).length, alive1 = s1.filter(f => f.hp > 0).length;
+  const hp0 = s0.reduce((a, f) => a + Math.max(0, f.hp), 0), max0 = Math.max(1, s0.reduce((a, f) => a + f.maxHp, 0));
+  const hp1 = s1.reduce((a, f) => a + Math.max(0, f.hp), 0), max1 = Math.max(1, s1.reduce((a, f) => a + f.maxHp, 0));
+  const bw = Math.min(340, Math.round(W * 0.28)), bh = 14, gap = 64;
+  ctx.save();
+  // 左右两队总气血与存活人数
+  const drawTeamBar = (x, ratio, rev, label, colA, colB) => {
+    ctx.fillStyle = 'rgba(6,8,18,0.78)'; ctx.fillRect(x - 2, top - 2, bw + 4, bh + 4);
+    const g = ctx.createLinearGradient(x, 0, x + bw, 0);
+    g.addColorStop(0, colA); g.addColorStop(1, colB);
+    ctx.fillStyle = g;
+    const fw = bw * clamp(ratio, 0, 1);
+    ctx.fillRect(rev ? x + bw - fw : x, top, fw, bh);
+    ctx.font = `bold 13px ${TITLE_FONT}`; ctx.fillStyle = '#f2ead8';
+    ctx.textAlign = rev ? 'right' : 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(label, rev ? x + bw : x, top + bh + 5);
+  };
+  const sz = M.teamSize || s0.length;
+  drawTeamBar(cx - gap - bw, hp0 / max0, false, `${cvT('我方')} ${alive0}/${s0.length}`, '#2a8fb0', '#6ff0c8');
+  drawTeamBar(cx + gap, hp1 / max1, true, `${cvT('敌方')} ${alive1}/${s1.length}`, '#ff8a70', '#c42a45');
+  // 计时器与规模标签
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = `700 26px ${BODY_FONT}`; ctx.fillStyle = M.timer < 15 ? '#ff7868' : '#efe8d8';
+  ctx.fillText(Math.ceil(M.timer), cx, top + 12);
+  ctx.font = `600 11px ${BODY_FONT}`; ctx.fillStyle = '#e9c46a';
+  ctx.fillText(`${sz}v${sz}`, cx, top + 30);
+  // 顶部战场小地图条（一眼定位自己、队友与敌人）
+  const mw = Math.min(380, Math.round(W * 0.34)), mh = 12, mx = cx - mw / 2, my = top + 40;
+  ctx.fillStyle = 'rgba(8,10,22,0.78)'; ctx.fillRect(mx, my, mw, mh);
+  ctx.strokeStyle = 'rgba(233,196,106,0.38)'; ctx.lineWidth = 1; ctx.strokeRect(mx, my, mw, mh);
+  const lf = fighterByIdx(localIdx());
+  for (const f of allFighters()) {
+    if (f.hidden || f.hp <= 0) continue;
+    const rx = mx + clamp(f.x / Math.max(1, STAGE_W), 0, 1) * mw;
+    const isSelf = lf && f.idx === lf.idx;
+    const isAlly = fighterTeam(f) === localTeam();
+    ctx.beginPath();
+    ctx.arc(rx, my + mh / 2, isSelf ? 4.5 : 2.8, 0, Math.PI * 2);
+    ctx.fillStyle = isSelf ? '#ffe066' : isAlly ? '#6fe0ff' : '#ff6470';
+    ctx.fill();
+    if (isSelf) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2; ctx.stroke(); }
+  }
+  // 左下角：本机玩家专属清晰状态卡（气血、架势、真气、扩展技能冷却、战队指令）
+  if (lf && !lf.hidden) {
+    const cw = 264, ch = 76, px = 14, py = H - ch - 34;
+    ctx.fillStyle = 'rgba(8,10,24,0.82)'; ctx.fillRect(px, py, cw, ch);
+    ctx.strokeStyle = 'rgba(52,231,155,0.55)'; ctx.lineWidth = 1.2; ctx.strokeRect(px, py, cw, ch);
+    ctx.font = `bold 13px ${TITLE_FONT}`; ctx.fillStyle = '#34e79b'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(`${cvT('我')} · ${cvT(lf.look.name)} (${Math.max(0, Math.round(lf.hp))}/${lf.maxHp})`, px + 8, py + 6);
+    const barW2 = cw - 16;
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(px + 8, py + 24, barW2, 8);
+    ctx.fillStyle = '#34e79b'; ctx.fillRect(px + 8, py + 24, barW2 * clamp(lf.hp / lf.maxHp, 0, 1), 8);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(px + 8, py + 36, barW2 * 0.48, 5);
+    ctx.fillStyle = '#e9c46a'; ctx.fillRect(px + 8, py + 36, barW2 * 0.48 * clamp((lf.guard || 0) / (lf.maxGuard || 100), 0, 1), 5);
+    ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(px + 8 + barW2 * 0.52, py + 36, barW2 * 0.48, 5);
+    ctx.fillStyle = lf.meter >= 100 ? '#ffe9a8' : `rgb(${lf.look.slash})`; ctx.fillRect(px + 8 + barW2 * 0.52, py + 36, barW2 * 0.48 * clamp(lf.meter / 100, 0, 1), 5);
+    const cd = (k, t) => t < 0.05 ? `${k}✓` : `${k}${t.toFixed(0)}`;
+    ctx.font = `11px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.86)';
+    ctx.fillText(`${cd('Q', lf.skillCD)} ${cd('R', lf.skill2CD)} ${cd('C', lf.feintCD || 0)} ${cd('F', lf.qiParryCD || 0)} ${cd('V', lf.petCD || 0)}  [B${cvT('自标')} G${cvT('锁定')} Tab]`, px + 8, py + 47);
+    const ordMap = { auto: '自由作战', focus: '全军集火', protect: '回防掩护', spread: '分散游击' };
+    ctx.fillStyle = '#e9c46a';
+    ctx.fillText(`${cvT('指令')}: ${cvT(ordMap[M.squadOrder || 'auto'])} [1/2/3]`, px + 8, py + 61);
+  }
+  ctx.restore();
+}
+function drawTabScoreboard() {
+  if (typeof TAB_SCOREBOARD === 'undefined' || !TAB_SCOREBOARD || M.mode === 'demo') return;
+  const fs = allFighters().filter(f => !f.hidden);
+  const w = Math.min(W - 40, 620), rowH = 24, h = Math.min(H - 60, 54 + Math.ceil(fs.length / 2) * rowH + 20);
+  const x = (W - w) / 2, y = (H - h) / 2;
+  ctx.save();
+  ctx.fillStyle = 'rgba(8,10,24,0.92)'; ctx.fillRect(x, y, w, h);
+  ctx.strokeStyle = 'rgba(233,196,106,0.6)'; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, w, h);
+  ctx.font = `bold 15px ${TITLE_FONT}`; ctx.fillStyle = '#e9c46a'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+  ctx.fillText(cvT('战况总览 (Tab)'), W / 2, y + 12);
+  const s0 = sideFighters(0), s1 = sideFighters(1), colW = (w - 36) / 2;
+  const drawCol = (list, cx0, title, col) => {
+    ctx.font = `bold 12px ${BODY_FONT}`; ctx.fillStyle = col; ctx.textAlign = 'left';
+    ctx.fillText(title, cx0, y + 36);
+    list.forEach((f, idx) => {
+      const ry = y + 54 + idx * rowH;
+      const isMe = f.idx === localIdx();
+      ctx.fillStyle = isMe ? 'rgba(52,231,155,0.16)' : 'rgba(255,255,255,0.03)';
+      ctx.fillRect(cx0, ry - 2, colW, rowH - 3);
+      ctx.font = `${isMe ? 'bold ' : ''}12px ${BODY_FONT}`;
+      ctx.fillStyle = f.hp <= 0 ? 'rgba(180,140,140,0.55)' : isMe ? '#34e79b' : '#efe8d8';
+      ctx.fillText(`${isMe ? '★ ' : ''}${cvT(f.look.name)}`, cx0 + 6, ry + 3);
+      ctx.textAlign = 'right';
+      ctx.fillText(`${Math.max(0, Math.round(f.hp))}/${f.maxHp} · ${Math.round(f.meter)}%`, cx0 + colW - 6, ry + 3);
+      ctx.textAlign = 'left';
+    });
+  };
+  drawCol(s0, x + 14, cvT('我方阵营'), '#6fe0ff');
+  drawCol(s1, x + 22 + colW, cvT('敌方阵营'), '#ff7878');
+  ctx.restore();
+}
 function drawHUD() {
   if (M.mode === 'demo') return;
-  if (isRaid()) { drawHUDRaid(); return; }
-  if (is2v2()) { drawHUD2v2(); return; }
+  if (isLargeTeam()) { drawHUDLargeTeam(); drawTabScoreboard(); return; }
+  if (isRaid()) { drawHUDRaid(); drawTabScoreboard(); return; }
+  if (is2v2()) { drawHUD2v2(); drawTabScoreboard(); return; }
   const barW = Math.min(W * 0.36, 520), bh = Math.max(12, H * 0.02), top = Math.max(22, H * 0.04), cx = W / 2, gap = 56;
   [A, B].forEach((f, i) => {
     if (f.hidden) return;

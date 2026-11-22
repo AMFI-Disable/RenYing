@@ -26,7 +26,7 @@ function startMatch(mode, level, chars, isWatch = false) {
   setChars(chars[0], chars[1]);
   if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
   const keepMap = M.map;
-  M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false; M.map = keepMap || null;
+  M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false; M.map = keepMap || null; M.teamSize = 0; M.squadOrder = 'auto';
   M.watchAi = !!isWatch;
   A.meter = B.meter = 0;
   A.ctrl = (mode === 'demo' || isWatch) ? new AICtrl(level || 'god') : human[0];
@@ -47,11 +47,36 @@ function startRound() {
   announce = null;
   announceQueue.length = 0;
   secretRound();
-  STAGE_W = M.mode === 'world' ? WORLD_W : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图
+  const largeN = isLargeTeam() ? clamp(M.teamSize || 5, 3, 8) : 0;
+  STAGE_W = M.mode === 'world' ? WORLD_W : largeN ? (largeN >= 6 ? 3600 : 3000) : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图，8v8 大团战 3600 宽
   const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
   M.mapEnv = mp ? { wT: mp.wind ? mp.wind.every : 0, wOn: 0, wDir: 1, wN: 0, tT: mp.thunder ? mp.thunder.every : 0, tWarn: 0 } : null;   // 风、天雷的计时：每回合从头算
   if (typeof applySkins === 'function') applySkins();
-  if (isRaid()) {
+  for (let i = 4; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
+  if (largeN) {
+    const total = largeN * 2;
+    const span = Math.min(STAGE_W * 0.38, largeN * 150);
+    for (let i = 0; i < MAX_FIGHTERS; i++) {
+      const f = FIGHTERS[i];
+      if (i < total) {
+        f.hidden = false;
+        const side = i % 2, slot = Math.floor(i / 2);
+        const stepX = largeN > 1 ? span / (largeN - 1) : 0;
+        const x = side === 0
+          ? clamp(STAGE_W / 2 - 220 - slot * stepX, WALL + 60, STAGE_W / 2 - 140)
+          : clamp(STAGE_W / 2 + 220 + slot * stepX, STAGE_W / 2 + 140, STAGE_W - WALL - 60);
+        f.reset(x);
+        f.face = side === 0 ? 1 : -1;
+        if (i === localIdx() && !M.watchAi) f.beaconT = 1.4;
+      } else {
+        f.hidden = true;
+      }
+    }
+    initArena2v2();
+    for (const f of allFighters()) {
+      if (f.ctrl && typeof f.ctrl.updateTactic === 'function') f.ctrl.updateTactic(f, foeOf(f));
+    }
+  } else if (isRaid()) {
     const sq = M.raidSquadSize || 3;
     C.hidden = false;
     D.hidden = sq < 3;
@@ -80,8 +105,8 @@ function startRound() {
   }
   magRoll();
   if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts();
-  if (REC.on && REC.meta) REC.meta.loadouts = [A, B, C, D].map(f => ({ unlocked: !!f.stanceUnlocked, stance: f.stance || 0, badge: f.badgeId || '', tier: f.badgeTier || '' }));
-  if (M.round === 1) M.combatStats = Array.from({ length: 4 }, () => ({ damage: 0, combo: 0, breaks: 0, falls: 0 }));
+  if (REC.on && REC.meta) REC.meta.loadouts = allFighters().map(f => ({ unlocked: !!f.stanceUnlocked, stance: f.stance || 0, badge: f.badgeId || '', tier: f.badgeTier || '' }));
+  if (M.round === 1) M.combatStats = Array.from({ length: Math.max(4, allFighters().length) }, () => ({ damage: 0, combo: 0, breaks: 0, falls: 0 }));
   const isMayhem = mayhemOn();
   if (isMayhem) {
     for (const f of allFighters()) if (!f.hidden) {
@@ -94,11 +119,14 @@ function startRound() {
   if ((M.mode === 'cpu' || (M.mode === 'replay' && REPLAY.kind !== 'net') || M.mode === 'tag3') && foeHp !== 1) { B.maxHp = Math.round(B.maxHp * foeHp); B.hp = B.lagHp = B.maxHp; }
   if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
   M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
-  M.phase = 'intro'; M.t = 0; M.timer = isRaid() ? 120 : (is2v2() ? ROUND_TIME_2V2 : ROUND_TIME); M.koWinner = -1; M.flags = {};
+  M.phase = 'intro'; M.t = 0; M.timer = isLargeTeam() ? 150 : isRaid() ? 120 : (is2v2() ? ROUND_TIME_2V2 : ROUND_TIME); M.koWinner = -1; M.flags = {};
   if (cujuOn()) cujuRoundInit();   // 墨球蹴鞠：摆好两人和墨球，换成这个模式的比赛时长
   if (typeof kothOn === 'function' && kothOn()) kothRoundInit();
   if (typeof partyOn === 'function' && partyOn()) partyRoundInit();
   if (typeof bastionOn === 'function' && bastionOn()) bastionRoundInit();
+  if (typeof meleeOn === 'function' && meleeOn()) meleeRoundInit();
+  if (typeof ctfOn === 'function' && ctfOn()) ctfRoundInit();
+  if (typeof gauntletOn === 'function' && gauntletOn()) gauntletRoundInit();
   hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
   for (const cu of comboUI) cu.t = 0;
   if (M.mode !== 'demo' && M.mode !== 'train') {
@@ -137,10 +165,13 @@ function updateMatch() {
     if (cujuOn()) { cujuMatch(); return; }   // 墨球蹴鞠：按进球判胜负（22-modes-09-cuju/）
     if (typeof kothOn === 'function' && kothOn()) { kothMatch(); return; }
     if (typeof bastionOn === 'function' && bastionOn()) { bastionMatch(); return; }
+    if (typeof meleeOn === 'function' && meleeOn()) { meleeMatch(); return; }
+    if (typeof ctfOn === 'function' && ctfOn()) { ctfMatch(); return; }
+    if (typeof gauntletOn === 'function' && gauntletOn()) { gauntletMatch(); return; }
     if (M.mode === 'boss') gbossStep();   // 天魔倒下会再站起来，见 22-tianmo.js
     if (isRaid() && typeof updateRaidBoss === 'function') updateRaidBoss(STEP);
-    const team0Out = isRaid() ? sideFighters(0).every(f => f.hp <= 0) : (is2v2() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0));
-    const team1Out = isRaid() ? (B.hp <= 0) : (is2v2() ? (B.hp <= 0 && D.hp <= 0) : (B.hp <= 0));
+    const team0Out = isLargeTeam() ? sideFighters(0).every(f => f.hp <= 0) : isRaid() ? sideFighters(0).every(f => f.hp <= 0) : (is2v2() ? (A.hp <= 0 && C.hp <= 0) : (A.hp <= 0));
+    const team1Out = isLargeTeam() ? sideFighters(1).every(f => f.hp <= 0) : isRaid() ? (B.hp <= 0) : (is2v2() ? (B.hp <= 0 && D.hp <= 0) : (B.hp <= 0));
     if (M.mode !== 'train' && (team0Out || team1Out)) {
       const sumHp = sd => sideFighters(sd).reduce((s, f) => s + Math.max(0, f.hp), 0);
       const winner = (team0Out && team1Out)

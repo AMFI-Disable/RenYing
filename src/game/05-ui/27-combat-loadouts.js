@@ -17,6 +17,10 @@ var HERO_STANCES = {
   liying: { name: '照影式', en: 'Reflected Mist', kind: 'control', desc: '攻击硬直更长，伤害略低，攻击距离缩短。' },
   cixian: { name: '双仪式', en: 'Twin Poles', kind: 'power', desc: '重击更重，前后摇都更长。' },
   qianji: { name: '游线式', en: 'Tether Flow', kind: 'reach', desc: '攻击更远，伤害略低，出招稍慢。' },
+  chixiao: { name: '焚野式', en: 'Wildfire Halberd', kind: 'power', desc: '重击与蓄力更猛，前后摇略长。' },
+  youhuang: { name: '翠影式', en: 'Emerald Lash', kind: 'swift', desc: '轻击与空中出招更快，收招略长。' },
+  xuanji: { name: '星枢式', en: 'Astral Pivot', kind: 'control', desc: '命中硬直更久，伤害略低，距离略缩。' },
+  polang: { name: '镇涛式', en: 'Tide Anchor', kind: 'guard', desc: '攻击略低，静止调息时架势恢复更快。' },
 };
 var COMBAT_BADGES = {
   flowing: { n: '连势', en: 'Flow', trigger: '连续普攻第 3 击命中', effect: '打开连段追步窗口；紫金阶可改接技能。', tiers: ['0.65 秒内可用冲刺取消收招。', '窗口延长 15%。', '窗口延长 30%，并可用一次技能取消收招。'] },
@@ -25,12 +29,41 @@ var COMBAT_BADGES = {
   breaker: { n: '破军', en: 'Breaker', trigger: '造成破防', effect: '立刻重置冲刺冷却；紫金阶可选重击踏进追击。', tiers: ['破防后重置冲刺冷却，下一次冲刺距离略增。', '追击窗口延长 15%。', '窗口延长 30%，并可选择重击踏进追击。'] },
   ascent: { n: '凌空', en: 'Ascent', trigger: '空中攻击命中', effect: '腾空时最多续一次空中冲刺；紫金阶可接空中技能。', tiers: ['空中冲刺用尽后，命中可恢复一次并在收招时续闪。', '续闪窗口延长 15%。', '窗口延长 30%，并可用一次技能取消空中收招。'] },
   pursuit: { n: '追影', en: 'Pursuit', trigger: '闪避后 1 秒内首次命中', effect: '打开退步窗口；紫金阶退步带短暂无敌。', tiers: ['0.65 秒内可用冲刺取消收招并选择退路。', '窗口延长 15%。', '窗口延长 30%，退步时获得 0.08 秒无敌。'] },
+  ironwall: { n: '铁壁', en: 'Ironwall', trigger: '连续格挡 3 次', effect: '下一次反击获得短暂霸体，稳住防线。', tiers: ['格挡 3 次后获得 0.5 秒霸体。', '霸体持续延长 15%。', '霸体延长 30% 并恢复 12 点架势。'] },
+  tempest: { n: '疾电', en: 'Tempest', trigger: 'Q/R 技能命中', effect: '缩短下一招技能冷却并打开追步窗口。', tiers: ['技能命中后减少 0.4 秒剩余冷却。', '减少 0.6 秒冷却。', '减少 0.85 秒冷却并附加短促追步窗口。'] },
+  bloodlust: { n: '血怒', en: 'Bloodlust', trigger: '低血量（<35%）命中', effect: '绝境反击：命中回复微量气血与额外真气。', tiers: ['每次命中额外回气 +4 并回血 1%。', '回气 +6，回血 1.5%。', '回气 +8，回血 2%。'] },
+  phantom: { n: '绝影', en: 'Phantom', trigger: '虚招翻滚（C）后命中', effect: '翻滚绕袭后额外积攒真气并延长硬直。', tiers: ['虚招后 1.2 秒内命中回气 +6。', '窗口延长 15%，回气 +8。', '窗口延长 30%，回气 +10 并略增击退。'] },
+  resonance: { n: '共鸣', en: 'Resonance', trigger: '发动灵宠秘技（V）', effect: '灵宠协同：立刻缩短 Q/R 技能冷却。', tiers: ['Q/R 冷却立减 1.0 秒。', 'Q/R 冷却立减 1.5 秒。', 'Q/R 冷却立减 2.2 秒并回气 +8。'] },
+  skybreaker: { n: '破穹', en: 'Skybreaker', trigger: '空中蓄力斩命中', effect: '重置空中跳跃与冲刺，畅享空战连段。', tiers: ['重置 1 次空中跳跃。', '重置空中跳跃与冲刺。', '全重置并回复 10 点真气。'] },
+  juggernaut: { n: '镇岳', en: 'Juggernaut', trigger: '霸体扛伤后命中', effect: '以伤换势，增强下一次重击压迫。', tiers: ['霸体扛伤后回气 +8。', '回气 +12 并补 10 架势。', '回气 +16 并补 18 架势。'] },
+  vanguard: { n: '同心', en: 'Vanguard', trigger: '团战命中敌人', effect: '多人团战中为附近队友共享真气。', tiers: ['附近队友获得 +3 真气。', '附近队友获得 +5 真气。', '附近队友获得 +7 真气与 +6 架势。'] },
+};
+var COMBAT_PETS = {
+  inkfox: { n: '墨狐', en: 'Ink Fox', rgb: '120,235,205', cd: 7.5 },
+  tortoise: { n: '玄龟', en: 'Obsidian Tortoise', rgb: '140,200,255', cd: 8.5 },
+  falcon: { n: '雷隼', en: 'Thunder Falcon', rgb: '255,220,110', cd: 7.0 },
+  froststag: { n: '霜鹿', en: 'Frost Stag', rgb: '160,235,255', cd: 9.0 },
+  flamelion: { n: '炎狮', en: 'Flame Lion', rgb: '255,125,85', cd: 8.0 },
+  shadowcrow: { n: '影鸦', en: 'Shadow Crow', rgb: '195,140,255', cd: 7.0 },
+  jadekoi: { n: '玉鲤', en: 'Jade Koi', rgb: '115,245,175', cd: 8.0 },
+  mechfinch: { n: '机雀', en: 'Clockwork Finch', rgb: '233,196,106', cd: 6.5 },
+};
+var PET_TIER_MUL = { basic: 1, spirit: 1.25, immortal: 1.55 };
+var SKILL_MODS = {
+  std: { cd: 1, dmg: 1, guard: 1, name: '本宗' },
+  swift: { cd: 0.82, dmg: 0.92, guard: 0.95, name: '迅影' },
+  heavy: { cd: 1.16, dmg: 1.18, guard: 1.25, name: '破军' },
 };
 var BADGE_TIER_POWER = { silver: 1, gold: 1.5, purpgold: 2 };
 var BADGE_WINDOW_SCALE = { silver: 1, gold: 1.15, purpgold: 1.3 };
-if (typeof window !== 'undefined') { window.HERO_STANCES = HERO_STANCES; window.COMBAT_BADGES = COMBAT_BADGES; }
+if (typeof window !== 'undefined') { window.HERO_STANCES = HERO_STANCES; window.COMBAT_BADGES = COMBAT_BADGES; window.COMBAT_PETS = COMBAT_PETS; }
 function combatLoadoutMap() {
   try { return typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}; } catch (e) { return {}; }
+}
+function skillModFor(f, slot) {
+  const k = slot === 2 ? 'r' : slot === 'e' ? 'e' : 'q';
+  const v = (f && f.skillMod && f.skillMod[k]) || 'std';
+  return (SKILL_MODS && SKILL_MODS[v]) || { cd: 1, dmg: 1, guard: 1, name: '本宗' };
 }
 function applyCombatLoadouts() {
   const local = combatLoadoutMap(), maps = M.combatLoadouts;
@@ -45,13 +78,17 @@ function applyCombatLoadouts() {
       profile = side >= 0 ? ((maps[side] || {})[f.ch.id] || {}) : {};
     } else if (M.watchAi || (M.mode !== 'pvp' && fighterTeam(f) !== (typeof localTeam === 'function' ? localTeam() : 0))) profile = {};
     const preview = typeof window !== 'undefined' && window.BADGE_TRAINING_PREVIEW;
-    if (M.mode === 'train' && f.idx === 0 && preview && COMBAT_BADGES[preview.id])
-      profile = { ...profile, badge: preview.id, tier: BADGE_TIER_POWER[preview.tier] ? preview.tier : 'silver' };
+    if (M.mode === 'train' && f.idx === 0 && preview && COMBAT_BADGES && COMBAT_BADGES[preview.id])
+      profile = { ...profile, badge: preview.id, tier: BADGE_TIER_POWER && BADGE_TIER_POWER[preview.tier] ? preview.tier : 'silver' };
     f.stanceUnlocked = !!profile.unlocked;
     f.stance = f.stanceUnlocked && profile.stance === 1 ? 1 : 0;
     f.badgeId = COMBAT_BADGES && COMBAT_BADGES[profile.badge] ? profile.badge : '';
     f.badgeTier = BADGE_TIER_POWER && BADGE_TIER_POWER[profile.tier] ? profile.tier : '';
-    f.badgeDashT = 0;
+    f.petId = COMBAT_PETS && COMBAT_PETS[profile.pet] ? profile.pet : '';
+    f.petTier = PET_TIER_MUL && PET_TIER_MUL[profile.petTier] ? profile.petTier : (f.petId ? 'basic' : '');
+    const sl = profile.skills || {};
+    f.skillMod = { q: SKILL_MODS && SKILL_MODS[sl.q] ? sl.q : 'std', r: SKILL_MODS && SKILL_MODS[sl.r] ? sl.r : 'std', e: SKILL_MODS && SKILL_MODS[sl.e] ? sl.e : 'std' };
+    f.badgeDashT = 0; f.badgeBlockCnt = 0;
     f.badgeLinkT = f.badgePressureT = f.badgeRiposteT = f.badgeBreakT = f.badgeAirSkillT = f.badgeExitT = 0;
     f.badgePressureSkill = 0; f.badgeAirUsed = f.badgeAirSkillUsed = 0;
     f.stanceT = 0;
@@ -61,10 +98,89 @@ function badgeDuration(f, base) { return base * (BADGE_WINDOW_SCALE[f && f.badge
 function showBadgeCue(f, key, consumed = false) {
   if (!f || RESIM) return;
   const badge = COMBAT_BADGES[f.badgeId]; if (!badge) return;
-  const names = { flowing: consumed ? '连势 · 连段追步' : '连势 · 追步窗口', focus: consumed ? '凝锋 · 贴身压迫' : '凝锋 · 压迫窗口', riposte: consumed ? '回锋 · 踏进反击' : '回锋 · 反击窗口', breaker: consumed ? '破军 · 追击踏进' : '破军 · 破防追击', breakerDash: '破军 · 追击冲刺', ascent: consumed ? '凌空 · 空中续招' : '凌空 · 空中续闪', pursuit: consumed ? '追影 · 退步闪避' : '追影 · 退步窗口' };
+  const names = { flowing: consumed ? '连势 · 连段追步' : '连势 · 追步窗口', focus: consumed ? '凝锋 · 贴身压迫' : '凝锋 · 压迫窗口', riposte: consumed ? '回锋 · 踏进反击' : '回锋 · 反击窗口', breaker: consumed ? '破军 · 追击踏进' : '破军 · 破防追击', breakerDash: '破军 · 追击冲刺', ascent: consumed ? '凌空 · 空中续招' : '凌空 · 空中续闪', pursuit: consumed ? '追影 · 退步闪避' : '追影 · 退步窗口', ironwall: '铁壁 · 霸体反击', tempest: '疾电 · 灵动缩冷', bloodlust: '血怒 · 绝境回气', phantom: '绝影 · 虚招袭杀', resonance: '共鸣 · 灵宠缩冷', skybreaker: '破穹 · 御空重置', juggernaut: '镇岳 · 以伤换势', vanguard: '同心 · 众志聚气' };
   const rgb = f.look && f.look.slash || '233,196,106';
   ring(f.x, f.y - 58, consumed ? 78 : 58, rgb, consumed ? 0.28 : 0.18);
   addP({ type: 'text', text: names[key] || badge.n, x: f.x, y: f.y - 112, life: 0.7, max: 0.7, rgb });
+}
+function petTickAll() {
+  if (M.phase !== 'fight') return;
+  for (const f of allFighters()) {
+    if (!f || f.hidden || f.hp <= 0 || !f.petId) continue;
+    const mul = PET_TIER_MUL[f.petTier] || 1;
+    if (f.petId === 'tortoise' && f.state !== 'block' && f.state !== 'blockstun') {
+      f.guard = Math.min(f.maxGuard || 100, (f.guard || 0) + 4.5 * mul * STEP);
+    } else if (f.petId === 'froststag' && f.sinceHit > 3.5 && f.hp < f.maxHp) {
+      f.hp = Math.min(f.maxHp, f.hp + 5 * HERO_HP_SCALE * mul * STEP);
+    }
+  }
+}
+function tryPetActive(f, foe) {
+  if (!f || !f.petId || !COMBAT_PETS[f.petId]) return false;
+  const spec = COMBAT_PETS[f.petId], mul = PET_TIER_MUL[f.petTier] || 1;
+  f.petCD = spec.cd / (0.85 + 0.15 * mul);
+  if (f.badgeId === 'resonance' && f.badgeTier) {
+    const cut = f.badgeTier === 'purpgold' ? 2.2 : f.badgeTier === 'gold' ? 1.5 : 1.0;
+    f.skillCD = Math.max(0, (f.skillCD || 0) - cut);
+    f.skill2CD = Math.max(0, (f.skill2CD || 0) - cut);
+    if (f.badgeTier === 'purpgold') f.meter = Math.min(100, (f.meter || 0) + 8);
+    showBadgeCue(f, 'resonance');
+  }
+  const rgb = spec.rgb;
+  if (f.petId === 'inkfox') {
+    f.meter = Math.min(100, (f.meter || 0) + Math.round(12 * mul));
+    if (foe && Math.abs(foe.x - f.x) < 420) foe.slowT = Math.max(foe.slowT || 0, 1.5 * mul);
+  } else if (f.petId === 'tortoise') {
+    f.armorT = Math.max(f.armorT || 0, 0.75 * mul); f.armorHits = Math.max(f.armorHits || 0, 1);
+    f.guard = Math.min(f.maxGuard || 100, (f.guard || 0) + 25 * mul);
+  } else if (f.petId === 'falcon' && foe) {
+    spawnProj(f, { kind: 'wind', x: f.x + f.face * 32, y: f.y - 84, vx: Math.sign(foe.x - f.x || f.face) * 1150, vy: 0, w: 46, h: 40, life: 0.7, dmg: Math.round(14 * mul), kb: [180, -140], stun: 0.28, hs: 0.04, noScale: true });
+  } else if (f.petId === 'froststag') {
+    f.hp = Math.min(f.maxHp, f.hp + Math.round(f.maxHp * 0.055 * mul));
+    f.guard = Math.min(f.maxGuard || 100, (f.guard || 0) + 20 * mul);
+  } else if (f.petId === 'flamelion') {
+    for (const e of foesOf(f)) if (!e.hidden && e.hp > 0 && Math.abs(e.x - f.x) < 260) {
+      e.vx = Math.sign(e.x - f.x || f.face) * 340 * mul; e.burnT = Math.max(e.burnT || 0, 2.5 * mul);
+    }
+  } else if (f.petId === 'shadowcrow') {
+    f.feintCD = 0; f.dashCD = 0; f.meter = Math.min(100, (f.meter || 0) + Math.round(10 * mul));
+  } else if (f.petId === 'jadekoi') {
+    f.slowT = 0; f.burnT = 0; f.frostSlow = 0; f.invul = Math.max(f.invul, 0.22 * mul);
+  } else if (f.petId === 'mechfinch') {
+    const dir = foe ? Math.sign(foe.x - f.x || f.face) : f.face;
+    for (let k = -1; k <= 1; k++) {
+      spawnProj(f, { kind: 'dart', x: f.x + dir * 28, y: f.y - 78 + k * 14, vx: dir * 1050, vy: k * 80, w: 28, h: 20, life: 0.65, dmg: Math.round(7 * mul), kb: [90, 0], stun: 0.16, hs: 0.02, noScale: true });
+    }
+  }
+  if (!RESIM) {
+    ring(f.x, f.y - 68, 108, rgb, 0.36);
+    addP({ type: 'text', text: `灵宠 · ${spec.n}`, x: f.x, y: f.y - 122, life: 0.8, max: 0.8, rgb });
+  }
+  return true;
+}
+function drawPets(order) {
+  if (!order) return;
+  for (const f of order) {
+    if (!f || f.hidden || f.hp <= 0 || !f.petId || !COMBAT_PETS[f.petId]) continue;
+    const spec = COMBAT_PETS[f.petId], rgb = spec.rgb;
+    const bob = Math.sin(clock * 4.5 + f.idx * 1.3) * 7;
+    const px = f.x - f.face * 42, py = f.y - 96 + bob;
+    const ready = (f.petCD || 0) <= 0.05;
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.fillStyle = `rgba(${rgb},${ready ? 0.22 : 0.1})`;
+    ctx.beginPath(); ctx.arc(0, 0, ready ? 16 : 12, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = `rgba(${rgb},0.92)`;
+    ctx.beginPath(); ctx.ellipse(0, 0, 10, 7.5, f.face * -0.2, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#0c1020';
+    ctx.beginPath(); ctx.arc(f.face * 4, -1.5, 1.8, 0, Math.PI * 2); ctx.fill();
+    // 灵尾飘带
+    ctx.strokeStyle = `rgba(${rgb},0.75)`; ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.moveTo(-f.face * 8, 1);
+    ctx.quadraticCurveTo(-f.face * 16, Math.sin(clock * 8 + f.idx) * 6, -f.face * 22, -3);
+    ctx.stroke();
+    ctx.restore();
+  }
 }
 function stanceMove(f, name) {
   const base = f.moves[name];
@@ -91,7 +207,12 @@ function trySwitchStance(f) {
   return true;
 }
 function applyCombatBadgeHit(att, def, move, ev) {
-  if (!att || !att.badgeId || !att.badgeTier || !ev || ev.blk || ev.armor || ev.dd <= 0) return;
+  if (!att || !ev || ev.blk || ev.armor || ev.dd <= 0) return;
+  // 墨狐灵宠被动：连击额外回气
+  if (att.petId === 'inkfox' && def && (def.comboHits || 0) >= 2) {
+    att.meter = Math.min(100, (att.meter || 0) + 2.5 * (PET_TIER_MUL[att.petTier] || 1));
+  }
+  if (!att.badgeId || !att.badgeTier) return;
   const name = att.moveName || (move && move.name) || '';
   if (att.badgeId === 'flowing' && !(move && (move.isProj || move.skill || move.ult)) && /^l[1-5]$/.test(name) && def.comboHits === 3) {
     att.badgeLinkT = badgeDuration(att, 0.65); showBadgeCue(att, 'flowing');
@@ -104,11 +225,50 @@ function applyCombatBadgeHit(att, def, move, ev) {
     if (cue) showBadgeCue(att, 'ascent');
   } else if (att.badgeId === 'pursuit' && att.badgeDashT > 0) {
     att.badgeDashT = 0; att.badgeExitT = badgeDuration(att, 0.65); showBadgeCue(att, 'pursuit');
+  } else if (att.badgeId === 'tempest' && (att.state === 'skill' || (move && move.skill))) {
+    const cut = att.badgeTier === 'purpgold' ? 0.85 : att.badgeTier === 'gold' ? 0.6 : 0.4;
+    att.skillCD = Math.max(0, (att.skillCD || 0) - cut); att.skill2CD = Math.max(0, (att.skill2CD || 0) - cut);
+    if (att.badgeTier === 'purpgold') att.badgeLinkT = Math.max(att.badgeLinkT || 0, 0.45);
+    showBadgeCue(att, 'tempest');
+  } else if (att.badgeId === 'bloodlust' && att.hp > 0 && att.hp < att.maxHp * 0.35) {
+    const mul = BADGE_TIER_POWER[att.badgeTier] || 1;
+    att.meter = Math.min(100, (att.meter || 0) + 4 * mul);
+    att.hp = Math.min(att.maxHp, att.hp + Math.round(att.maxHp * 0.01 * mul));
+    showBadgeCue(att, 'bloodlust');
+  } else if (att.badgeId === 'phantom' && att.feintCD > 1.0) {
+    const gain = att.badgeTier === 'purpgold' ? 10 : att.badgeTier === 'gold' ? 8 : 6;
+    att.meter = Math.min(100, (att.meter || 0) + gain);
+    showBadgeCue(att, 'phantom');
+  } else if (att.badgeId === 'skybreaker' && att.airCharged) {
+    att.jumps = 0;
+    if (att.badgeTier !== 'silver') att.airDash = 1;
+    if (att.badgeTier === 'purpgold') att.meter = Math.min(100, (att.meter || 0) + 10);
+    showBadgeCue(att, 'skybreaker');
+  } else if (att.badgeId === 'vanguard' && isMulti()) {
+    const gain = att.badgeTier === 'purpgold' ? 7 : att.badgeTier === 'gold' ? 5 : 3;
+    for (const m of sideFighters(fighterTeam(att))) {
+      if (m !== att && !m.hidden && m.hp > 0 && Math.abs(m.x - att.x) < 620) {
+        m.meter = Math.min(100, (m.meter || 0) + gain);
+        if (att.badgeTier === 'purpgold') m.guard = Math.min(m.maxGuard || 100, (m.guard || 0) + 6);
+      }
+    }
+    showBadgeCue(att, 'vanguard');
   }
 }
 function applyCombatBadgeGuard(def, ev) {
-  if (!def || !def.badgeId || !def.badgeTier || !ev || !ev.justGuard || def.badgeId !== 'riposte') return;
-  def.badgeRiposteT = badgeDuration(def, 0.65); showBadgeCue(def, 'riposte');
+  if (!def || !def.badgeId || !def.badgeTier || !ev) return;
+  if (ev.justGuard && def.badgeId === 'riposte') {
+    def.badgeRiposteT = badgeDuration(def, 0.65); showBadgeCue(def, 'riposte');
+  } else if (def.badgeId === 'ironwall') {
+    def.badgeBlockCnt = (def.badgeBlockCnt || 0) + 1;
+    if (def.badgeBlockCnt >= 3) {
+      def.badgeBlockCnt = 0;
+      def.armorT = Math.max(def.armorT || 0, badgeDuration(def, 0.5));
+      def.armorHits = Math.max(def.armorHits || 0, 1);
+      if (def.badgeTier === 'purpgold') def.guard = Math.min(def.maxGuard || 100, (def.guard || 0) + 12);
+      showBadgeCue(def, 'ironwall');
+    }
+  }
 }
 function applyCombatBadgeBlock(att, def) {
   if (!att || att.badgeId !== 'focus' || !(att.badgePressureSkill || att.badgePressureT > 0)) return false;

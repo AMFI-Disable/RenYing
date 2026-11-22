@@ -18,12 +18,8 @@ function step() {
   if (!ROLL.on && !REPLAY.on) { const player = allFighters().find(f => f.ctrl === human[0]); if (player) secretThink(player); }
   for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
   rpPoint();
-  updateFighter(A, foeOf(A)); updateFighter(B, foeOf(B));
-  if (isMulti()) {
-    if (!C.hidden) updateFighter(C, foeOf(C));
-    if (!D.hidden) updateFighter(D, foeOf(D));
-    updateArena2v2(STEP);
-  }
+  for (const f of allFighters()) if (!f.hidden) updateFighter(f, foeOf(f));
+  if (isMulti()) updateArena2v2(STEP);
   if (M.mode === 'train' && TRAIN.frameProbe && !RESIM) {
     const p = TRAIN.frameProbe, ready = f => ['idle', 'walk', 'air', 'block'].includes(f.state);
     if (p.attacker === null && ready(A)) p.attacker = clock;
@@ -48,6 +44,7 @@ function step() {
   cujuTick();   // 墨球蹴鞠：墨球的物理和进球（不在这个模式就什么都不做）
   if (typeof partyTick === 'function') partyTick();
   if (typeof bastionTick === 'function') bastionTick();
+  if (typeof petTickAll === 'function') petTickAll();
   trSample();
   if (FOREST.on) forestUpdate();
   if (!RESIM) updateFX(STEP);
@@ -59,8 +56,9 @@ function step() {
 }
 const cam = { x: STAGE_W / 2, y: 0, zoom: 1 };
 let camPunch = { zoom: 0, x: STAGE_W / 2, y: 0, t: 0, maxT: 0 };
+let camFocusPingT = 0;
 function camImpact(x, y, zoomBoost, duration) {
-  if (M.mode === 'watch2v2') zoomBoost *= 0.6;
+  if (M.mode === 'watch2v2' || isLargeTeam()) zoomBoost *= 0.6;
   if (camPunch.t <= 0 || zoomBoost >= camPunch.zoom) {
     camPunch.zoom = zoomBoost;
     camPunch.x = x !== undefined ? x : cam.x;
@@ -81,7 +79,7 @@ function updateAim() {
     else if (h.held.left && !h.held.right) h.held.aim = -1;
     else if (h.held.right && !h.held.left) h.held.aim = 1;
     else if (!h.held.aim) {
-      const f = [A, B, C, D].find(x => x && x.ctrl === h);
+      const f = allFighters().find(x => x && x.ctrl === h);
       h.held.aim = (f && f.face) ? f.face : (i % 2 === 0 ? 1 : -1);
     }
   }

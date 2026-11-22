@@ -233,6 +233,10 @@ const AI_HERO_TACTICS = {
   liying: { style: 'trickster', range: 1.02, schools: ['ying', 'mo'] },
   cixian: { style: 'control', range: 1.08, schools: ['qi', 'jin'] },
   qianji: { style: 'setplay', range: 1.14, schools: ['feng', 'qi'] },
+  chixiao: { style: 'brawler', range: 1.04, schools: ['jin', 'xue'] },
+  youhuang: { style: 'footsies', range: 1.16, schools: ['ying', 'feng'] },
+  xuanji: { style: 'zoner', range: 1.18, schools: ['qi', 'mo'] },
+  polang: { style: 'bulwark', range: 0.9, schools: ['jin', 'mo'] },
 };
 
 function aiHeroTactic(id) { return AI_HERO_TACTICS[id] || { style: 'balanced', range: 1, schools: [] }; }

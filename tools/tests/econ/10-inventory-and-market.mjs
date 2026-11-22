@@ -10,7 +10,9 @@ section('皮肤都在箱子里：游戏里原有的皮肤和武库的新皮肤�
   ok(C.CS_KEYS.every(k => C.isItem(k)), `武库的 ${C.CS_KEYS.length} 款新皮肤也都在`);
   ok(inCases.length === new Set(inCases).size && inCases.length === orig.length + C.CS_KEYS.length, `一共 ${inCases.length} 款，没有重复的`, inCases.length);
   ok(orig.every(([k, ch]) => C.charOf(k) === ch), '每款的侠客对得上');
-  ok(C.CASES.length === 8 && C.REG.length === 6 && C.REG.every(c => C.TIERS.every(t => (C.COLS[c][t] || []).length)), '八个武器箱：六个普通武器箱，每个五档品质都有东西');
+  const classicReg = C.REG.filter(c => !C.COLS[c].themed);
+  const themedReg = C.REG.filter(c => C.COLS[c].themed);
+  ok(C.CASES.length === 11 && classicReg.length === 6 && themedReg.length === 3 && classicReg.every(c => C.TIERS.every(t => (C.COLS[c][t] || []).length)) && themedReg.every(c => ['mil', 'res', 'cla', 'cov'].every(t => (C.COLS[c][t] || []).length) && !(C.COLS[c].gold || []).length), '十一个武器箱：六个普通箱五档齐全，三套主题套装箱不含独立绝世单皮');
   const P = C.COLS.c7, pk = ['cla', 'cov', 'gold'].flatMap(t => P[t]);
   ok(P.prem && !P.mil.length && !P.res.length && pk.length === 10 && P.odds.mil === 0 && P.odds.res === 0 && Math.abs(P.odds.cov + P.odds.gold - 0.3) < 1e-9, '神兵武器箱没有精铁和碧玉，赤霄加绝世一共 30%', P.odds);
   ok(pk.every(k => C.isItem(k) && C.ITEM[k].col === 'c7') && !C.REG.some(c => C.TIERS.some(t => C.COLS[c][t].some(k => pk.includes(k)))), '神兵武器箱的 10 款只在这个箱子里出');
@@ -316,7 +318,7 @@ section('商店：武器箱和货郎按固定价格买，不限量；不能挂�
     const r = await econ(u.token, 'list', { c, price: 10 });
     ok(r.res.err && r.res.err.includes('商店') && !stateOf(u.uid).lst.length, `${c === 'term' ? '货郎' : C.COLS[c].name + '武器箱'}不能挂到市场`, r.res);
   }
-  for (const c of ['c9', '__proto__', 'constructor', 'toString', null, 7]) ok((await econ(u.token, 'buyCase', { c })).res.err, `买不存在的武器箱 ${JSON.stringify(c)} 被拒绝`);
+  for (const c of ['c99', '__proto__', 'constructor', 'toString', null, 7]) ok((await econ(u.token, 'buyCase', { c })).res.err, `买不存在的武器箱 ${JSON.stringify(c)} 被拒绝`);
 
   T = nextNoon();
   const w = await newUser('shop2', { ink: 3 * C.COLS.c5.price + 10 });

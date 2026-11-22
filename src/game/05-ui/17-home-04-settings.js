@@ -30,12 +30,22 @@ const KEY_ACTIONS = [
   ['right', '向右移动'],
   ['jump', '跳跃 / 二段跳'],
   ['down', '沉身格挡'],
-  ['atk', '攻击（按住蓄力）'],
+  ['atk', '攻击（地面/空中蓄力）'],
   ['dash', '疾步冲刺'],
   ['special', '绝技（气满）'],
   ['skill', '门派绝学（Q）'],
   ['skill2', '特殊突进（R）'],
-  ['stance', '切换架势']
+  ['stance', '切换架势'],
+  ['feint', '虚招翻滚（C）'],
+  ['parry', '聚气弹反（F）'],
+  ['pet', '灵宠秘技（V）'],
+  ['lock', '切换锁定（G）'],
+  ['beacon', '归位自标（B）'],
+  ['rally', '战意号令（T）'],
+  ['scoreboard', '战况总览（Tab）'],
+  ['orderFocus', '指令：全军集火（1）'],
+  ['orderProtect', '指令：回防掩护（2）'],
+  ['orderSpread', '指令：分散游击（3）']
 ];
 let rebindingKey = null;
 function handleKeyRebind(e) {

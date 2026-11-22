@@ -46,6 +46,21 @@ function applyHit(att, def, m, pt) {
     thunderGuardCounter(def, att, pt);
     return;
   }
+  // 聚气弹反（F 键）：精准弹反近战或飞行道具，免伤并回气震退对手
+  if (def.qiParryT > 0 && !m.ult && !m.hold) {
+    def.qiParryT = 0; def.invul = Math.max(def.invul, 0.25); def.meter = Math.min(100, (def.meter || 0) + 18);
+    if (!m.isProj && att && att !== def && Math.abs(att.x - def.x) < 260) {
+      att.vx = -fx * 320; att.stun = Math.max(att.stun || 0, 0.35); att.state = 'hitstun'; att.t = 0; att.move = null;
+    }
+    if (!RESIM) {
+      hitstop = Math.max(hitstop, 0.08);
+      ring(pt[0], pt[1], 115, '233,196,106', 0.4);
+      addP({ type: 'text', text: '聚气弹反!', x: def.x, y: def.y - 118, life: 0.75, max: 0.75, rgb: '255,230,130' });
+      SFX.justGuard ? SFX.justGuard() : SFX.block();
+    }
+    if (typeof applyCombatBadgeGuard === 'function') applyCombatBadgeGuard(def, { justGuard: true });
+    return;
+  }
   const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
   const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround()
     && (!m.backAttack || !backAttack);
@@ -57,7 +72,12 @@ function applyHit(att, def, m, pt) {
   const isBlockedCs2 = isCs2 && wasBlocking;
   const blocking = wasBlocking && !m.unblockable && !isBlockedCs2;
   if (!blocking && !isBlockedCs2 && att.badgePressureSkill) att.badgePressureSkill = 0;
-  const ev = { e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg, hs: m.hs, big: !!m.big, wb: wasBlocking && !!m.big, blk: blocking || isBlockedCs2, blockedCs2: isBlockedCs2, f: fx };
+  let skillDmgMul = 1;
+  if (typeof skillModFor === 'function') {
+    if (m.ult || att.state === 'special') skillDmgMul = skillModFor(att, 'e').dmg;
+    else if (m.skill || att.state === 'skill') skillDmgMul = skillModFor(att, att.skill === att.ch.skill2 ? 2 : 1).dmg;
+  }
+  const ev = { e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: m.dmg * skillDmgMul, hs: m.hs, big: !!m.big, wb: wasBlocking && !!m.big, blk: blocking || isBlockedCs2, blockedCs2: isBlockedCs2, f: fx };
   const mm = att.ch.meterMul || 1;
 
   // 体量压制与动量碰撞比 (Kinetic Impact Ratio)

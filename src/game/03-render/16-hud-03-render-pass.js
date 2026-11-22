@@ -313,6 +313,7 @@ function render() {
   drawClones();
   drawCujuField();
   if (typeof drawKothField === 'function') drawKothField();
+  if (typeof drawCtfField === 'function') drawCtfField();
   if (typeof drawBastionField === 'function') drawBastionField();
   if (typeof drawRaidMechanics === 'function') drawRaidMechanics();
   drawProjs();
@@ -326,6 +327,7 @@ function render() {
       if (!pf.f.hitDone) drawFu(f.x, f.y - 150 + Math.sin(clock * 6) * 4, pf.a, pf.f.spN || 0);
     } else drawFighter(f);
   }
+  if (typeof drawPets === 'function') drawPets(order);
   drawCujuBall();
   if (typeof drawPartyField === 'function') drawPartyField();
   drawParticles();

@@ -147,8 +147,33 @@
     <!-- 首页两个入口：大的「匹配对战」直接去联机，下面小一点的「习武」进对战电脑和其他模式；换侠客在正中侠客脚下 -->
     <div class="home-entries" id="homeEntries">
       <button class="mcard right" id="mMatch" data-go="netp" data-kb-default><span class="mk">匹配对战</span><span class="ms">3v3 车轮战 · 全服随机对手</span></button>
-      <button class="mcard left" id="mPlay" data-go="single"><span class="mk">习武</span><span class="ms">人机切磋 · 历练闯关 · 木人试剑</span></button>
+      <button class="mcard left" id="mPlay" data-go="single"><span class="mk">习武</span><span class="ms">人机切磋 · 8v8 团战 · 历练闯关</span></button>
     </div>
+    <div class="home-hub" id="homeHub">
+      <button type="button" class="hub-pill" id="hubLargeBtn">大型团战 8v8</button>
+      <button type="button" class="hub-pill" id="hubLoadoutBtn">灵宠 · 招式 · 徽记</button>
+      <button type="button" class="hub-pill" id="hubHeroesBtn">二十侠客 · 三大套装</button>
+      <button type="button" class="hub-pill" id="hubBannerBtn">版本更新公告</button>
+    </div>
+    <!-- 每次启动显示的最新版本更新横幅（不抢焦点、可一键直达新玩法或收起） -->
+    <aside class="update-banner" id="updateBanner" role="region" aria-label="版本更新公告">
+      <div class="ub-head">
+        <span class="ub-tag" id="ubTag">最新大更新</span>
+        <b id="ubTitle">二十侠客 · 8v8 大型团战 · 灵宠与招式自选</b>
+        <button type="button" class="ghost small ub-close" id="ubClose" aria-label="收起更新公告">知道了</button>
+      </div>
+      <div class="ub-list" id="ubList">
+        <span><b>8v8 大团战</b>群雄会战、夺旗争锋、无尽试炼与顶部战场小地图</span>
+        <span><b>4 位新侠客</b>炽霄、幽篁、玄机、破浪 + 3 套全新主题套装</span>
+        <span><b>灵宠与自选招式</b>8 只助战灵宠（V 键）、Q/R/E 招式流派、14 枚武学徽记</span>
+        <span><b>空中蓄力与全键位</b>空中长按蓄力斩、C 虚招、F 弹反、G 锁定、B 自标、Tab 战况</span>
+      </div>
+      <div class="ub-actions">
+        <button type="button" class="go small" id="ubGoMelee">立刻体验 8v8 群雄会战</button>
+        <button type="button" class="ghost small" id="ubGoPets">配置灵宠与招式</button>
+        <button type="button" class="ghost small" id="ubGoCodex">查看新侠客</button>
+      </div>
+    </aside>
     <div class="home-hero" id="homeHero">   <!-- 跟着首页正中那位侠客的脚下走：上面是名字，下面是换侠客 -->
       <div class="hh-name" id="heroName"></div>
       <div class="hh-swapwrap" id="homeSub">   <!-- 点开一排头像，选谁首页正中就站谁，进点将台也先指着他 -->
@@ -167,7 +192,7 @@
         <p class="sub" id="singleSub" style="margin:4px 0 0">选择 AI 难度与对手境界，在实战对局中锤炼招式攻防</p>
       </div>
 
-      <!-- 习武大厅：对练、训练场、江湖历练 -->
+      <!-- 习武大厅：对练、大型团战、训练场、江湖历练 -->
       <div class="xiwu-studio">
       <div class="single-nav-deck play-deck">
         <div class="xiwu-category-tabs" id="xiwuCatTabs" role="tablist">
@@ -175,6 +200,11 @@
             <span class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span>
             <span class="cat-name">对练</span>
             <span class="cat-desc">人机与组队对决</span>
+          </button>
+          <button class="xiwu-cat-btn" data-cat="large" type="button" role="tab" aria-selected="false">
+            <span class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>
+            <span class="cat-name">大型团战</span>
+            <span class="cat-desc">3v3–8v8 混战、夺旗与无尽</span>
           </button>
           <button class="xiwu-cat-btn" data-cat="training" type="button" role="tab" aria-selected="false">
             <span class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span>
@@ -189,7 +219,7 @@
         </div>
 
         <div class="single-tabs xiwu-mode-deck" id="singleTabs">
-          <!-- 实战切磋分区模式 (4 张主卡) -->
+          <!-- 实战切磋分区模式 (6 张主卡) -->
           <div class="xiwu-cat-group" data-cat-group="combat">
             <div class="xiwu-cards-row">
               <button data-tab="cpu" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">对战电脑</b><span class="pt-d">一对一，难度自选</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="cpu" title="玩法说明" aria-label="玩法说明">i</span></button>
@@ -199,8 +229,26 @@
               <button data-tab="koth" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.4 1.1 6L12 17.5 6.4 20.4l1.1-6L3 10l6-1z"/></svg></span><b class="pt-n">灵坛争锋</b><span class="pt-d">占领灵坛，无限复活抢分</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="koth" title="玩法说明" aria-label="玩法说明">i</span></button>
               <button data-tab="party" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="4"/><circle cx="16" cy="9" r="3"/><path d="M4 20c1.5-3 8.5-3 10 0"/></svg></span><b class="pt-n">江湖百戏</b><span class="pt-d">传火折、断崖推手、飞球乱舞</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="party" title="玩法说明" aria-label="玩法说明">i</span></button>
             </div>
+          </div>
 
-
+          <!-- 大型团战与新玩法分区 -->
+          <div class="xiwu-cat-group" data-cat-group="large" style="display:none">
+            <div class="xiwu-cards-row">
+              <button data-tab="melee" type="button" id="cardMelee"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">群雄会战</b><span class="pt-d">3v3 / 5v5 / 8v8 同屏大混战</span></button>
+              <button data-tab="ctf" type="button" id="cardCtf"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">夺旗争锋</b><span class="pt-d">2v2–8v8 护旗夺分战</span></button>
+              <button data-tab="gauntlet" type="button" id="cardGauntlet"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">无尽试炼</b><span class="pt-d">逐波递增车轮生存战</span></button>
+            </div>
+            <div class="xiwu-large-bar" id="xiwuLargePanel">
+              <span class="xl-lbl">团战规模</span>
+              <div class="seg" id="largeSizeSeg">
+                <button type="button" data-lsize="3">3v3</button>
+                <button type="button" data-lsize="5" class="sel">5v5</button>
+                <button type="button" data-lsize="8">8v8</button>
+              </div>
+              <button type="button" class="go small" id="largeStartMelee">开战 · 群雄会战</button>
+              <button type="button" class="ghost small" id="largeStartCtf">开战 · 夺旗争锋</button>
+              <button type="button" class="ghost small" id="largeStartGauntlet">开战 · 无尽试炼</button>
+            </div>
           </div>
 
           <div class="xiwu-cat-group" data-cat-group="training" style="display:none">

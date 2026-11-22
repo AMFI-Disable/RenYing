@@ -117,10 +117,27 @@ async function handleAdmin(env, request, path, now, ip) {
     return json({ ok: true, name, role: r, disabled: off, created: !old });
   }
   // ---------- 3. 查询：目录、统计、错误记录 ----------
-  if (route === 'GET /api/admin/catalog') {   // 管理网页用：武器箱、每档品质的名字和颜色、每件饰品在哪个箱子哪一档、能改的经济数值
+  if (route === 'GET /api/admin/catalog') {   // 管理网页用：武器箱、品质、饰品、侠客、徽记、灵宠、招式流派与经济数值
     return json({ ok: true, tiers: C.TIERS.map(t => ({ id: t, n: C.TIER[t].n, c: C.TIER[t].c })),
-      cols: C.CASES.map(c => ({ id: c, name: C.COLS[c].name, prem: !!C.COLS[c].prem })),
-      items: Object.keys(C.ITEM).map(k => ({ k, col: C.ITEM[k].col, tier: C.ITEM[k].tier, char: C.charOf(k) })), cfg: C.CFG_INFO });
+      cols: C.CASES.map(c => ({ id: c, name: C.COLS[c].name, prem: !!C.COLS[c].prem, themed: !!C.COLS[c].themed })),
+      items: Object.keys(C.ITEM).map(k => ({ k, col: C.ITEM[k].col, tier: C.ITEM[k].tier, char: C.charOf(k) })),
+      heroes: C.HERO_IDS, badges: C.BADGES, pets: C.PETS, skillVariants: C.SKILL_VARIANTS, cfg: C.CFG_INFO });
+  }
+  if (route === 'GET /api/admin/banner') {
+    const row = await env.DB.prepare("SELECT note, by, at FROM flags WHERE k = '__banner__'").first();
+    let banner = null;
+    try { banner = row && row.note ? JSON.parse(row.note) : null; } catch (e) {}
+    return json({ ok: true, banner, by: row ? row.by : '', at: row ? row.at : 0 });
+  }
+  if (route === 'POST /api/admin/banner') {
+    const w = needWhy(); if (w) return w;
+    const tag = String(body.tag || '').trim().slice(0, 24);
+    const title = String(body.title || '').trim().slice(0, 80);
+    const items = Array.isArray(body.items) ? body.items.slice(0, 6).map(x => ({ k: String((x && x.k) || '').trim().slice(0, 24), v: String((x && x.v) || '').trim().slice(0, 90) })).filter(x => x.k || x.v) : [];
+    const payload = title ? JSON.stringify({ tag: tag || '最新大更新', title, items }) : '';
+    await env.DB.prepare("INSERT INTO flags (k, mode, by, note, at) VALUES ('__banner__', 'all', ?1, ?2, ?3) ON CONFLICT(k) DO UPDATE SET by = ?1, note = ?2, at = ?3").bind(who, payload, now).run();
+    await logRow(env, '*', now, 'flag', 1, null, null, JSON.stringify({ by: who, why, k: '__banner__', title: title || '(reset)' }));
+    return json({ ok: true, banner: payload ? JSON.parse(payload) : null });
   }
   if (route === 'GET /api/admin/stats') {   // 总览与深度数据统计
     await cfgNow(env, now);

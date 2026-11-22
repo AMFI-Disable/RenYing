@@ -1121,18 +1121,50 @@
       return `<article class="ar-card ar-badge-card"><b>${cvT(b.name)}${giftCard ? '' : ` · ${cvT(currentName)}`}</b><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT(trigger)}</small>${effectLine(id)}<div class="ar-badge-actions">${giftCard ? `<button type="button" class="go small" data-badge-gift="${id}" ${live() ? '' : 'disabled'}>${cvT('领取银徽')}</button>` : upgrade}${previewButton(id, tier)}</div></article>`;
     };
     const gift = !s.badgeGift ? `<div class="ar-badge-gift"><div><h3>${cvT('初入武学 · 银徽赠礼')}</h3><p>${cvT('任选一枚银徽体验武学效果。徽记绑定账号，可在不同侠客之间调换。')}</p></div><div class="ar-grid3">${ids.map(id => badgeCard(id, 'silver', true)).join('')}</div></div>` : '';
+    const unownedBadges = ids.filter(id => !s.badgeOwned[id]);
+    const discoverBadges = s.badgeGift && unownedBadges.length ? `<h4 class="ar-h">${cvT('探索与解锁新徽记')}</h4><div class="ar-grid3">${unownedBadges.map(id => {
+      const b = C.BADGES[id], info = window.COMBAT_BADGES && window.COMBAT_BADGES[id];
+      return `<article class="ar-card ar-badge-card"><b>${cvT(b.name)}</b><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT((info && info.trigger) || '')}</small><div class="ar-badge-actions"><button type="button" class="go small" data-badge-unlock="${id}" ${live() ? '' : 'disabled'}>${cvT('解锁银徽')} (${C.BADGE_UNLOCK_SIGILS}${cvT('碎片')}/${C.BADGE_UNLOCK_INK}${cvT('墨锭')})</button>${previewButton(id, 'silver')}</div></article>`;
+    }).join('')}</div>` : '';
     const stock = owned.length ? `<div class="ar-grid3">${owned.map(([id, tier]) => badgeCard(id, tier)).join('')}</div>` : `<p class="ar-note">${cvT('领取一枚银徽后，会在这里查看、升阶和装备。')}</p>`;
+    const petIds = Object.keys(C.PETS || {});
+    const petOwned = s.petOwned || {};
+    const petTierName = t => t === 'immortal' ? '仙阶' : t === 'spirit' ? '灵阶' : '初阶';
+    const petGrid = `<h4 class="ar-h">${cvT('水墨灵宠 · 随行助战（V 键发动）')}</h4><div class="ar-grid3">${petIds.map(id => {
+      const p = C.PETS[id], tier = petOwned[id], up = tier && C.PET_UPGRADE[tier];
+      const actBtn = !tier
+        ? `<button type="button" class="go small" data-pet-buy="${id}" ${live() ? '' : 'disabled'}>${cvT('收养灵宠')} · ${C.PET_BUY_COST}${cvT('墨锭')}</button>`
+        : up
+          ? `<button type="button" class="go small" data-pet-up="${id}" ${live() && totalKOs >= up.kos ? '' : 'disabled'}>${cvT('进阶')}${cvT(petTierName(up.to))} (${up.ink}${cvT('墨锭')} · ${up.kos}${cvT('斩')})</button>`
+          : `<small>${cvT('已达仙阶圆满')}</small>`;
+      return `<article class="ar-card ar-badge-card"><b style="color:rgb(${p.rgb})">${cvT(p.name)}${tier ? ` · ${cvT(petTierName(tier))}` : ''}</b><p>${cvT(p.passive)} · ${cvT(p.active)}</p><div class="ar-badge-actions">${actBtn}</div></article>`;
+    }).join('')}</div>`;
+    const ownedPetList = Object.entries(petOwned);
     const heroes = CHARS.map(ch => {
       const kos = s.heroKOs[ch.id] || 0, unlocked = kos >= 20, stance = s.stances[ch.id] === 1 ? 1 : 0, equipped = s.badgeEquip[ch.id] || '';
-      const options = [`<option value="">不装备</option>`, ...owned.map(([id]) => `<option value="${id}" ${equipped === id ? 'selected' : ''}>${cvT(C.BADGES[id].name)} · ${cvT(s.badgeOwned[id] === 'silver' ? '银徽' : s.badgeOwned[id] === 'gold' ? '金徽' : '紫金徽')}</option>`)].join('');
+      const eqPet = (s.petEquip && s.petEquip[ch.id]) || '';
+      const su = (s.skillUnlocks && s.skillUnlocks[ch.id]) || {};
+      const sl = (s.skillLoadout && s.skillLoadout[ch.id]) || {};
+      const options = [`<option value="">${cvT('不装备')}</option>`, ...owned.map(([id]) => `<option value="${id}" ${equipped === id ? 'selected' : ''}>${cvT(C.BADGES[id].name)} · ${cvT(s.badgeOwned[id] === 'silver' ? '银徽' : s.badgeOwned[id] === 'gold' ? '金徽' : '紫金徽')}</option>`)].join('');
+      const petOpts = [`<option value="">${cvT('无灵宠')}</option>`, ...ownedPetList.map(([id, t]) => `<option value="${id}" ${eqPet === id ? 'selected' : ''}>${cvT(C.PETS[id].name)} · ${cvT(petTierName(t))}</option>`)].join('');
       const stanceTitle = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(window.HERO_STANCES[ch.id].name) : cvT('第二架势');
       const stanceDesc = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(window.HERO_STANCES[ch.id].desc) : '';
-      return `<article class="ar-card ar-loadout"><b>${escapeHTML(ch.name)}</b><small>${unlocked ? `${kos} / 20 ${cvT('斩')}` : `${kos} / 20 ${cvT('斩')} · ${cvT('未解锁')}`}</small><p>${stanceDesc}</p><div class="row"><button type="button" class="${stance ? 'ghost' : 'go'} small" data-stance="${ch.id}" data-value="0" ${live() ? '' : 'disabled'}>${cvT('本式')}</button><button type="button" class="${stance ? 'go' : 'ghost'} small" data-stance="${ch.id}" data-value="1" ${live() && unlocked ? '' : 'disabled'}>${stanceTitle}</button></div><div class="row"><select data-badge-choice="${ch.id}" aria-label="${escapeHTML(cvT(ch.name))} ${cvT('徽记')}">${options}</select><button type="button" class="go small" data-badge-set="${ch.id}" ${live() ? '' : 'disabled'}>${cvT('装备')}</button></div></article>`;
+      const skillRows = ['q', 'r', 'e'].map(slot => {
+        const curV = sl[slot] || 'std', unl = su[slot] || [];
+        return `<div class="row" style="gap:4px;margin-top:4px;align-items:center"><small style="min-width:20px;font-weight:700">${slot.toUpperCase()}</small>${['std', 'swift', 'heavy'].map(v => {
+          const isUnl = v === 'std' || unl.includes(v), active = curV === v;
+          const lbl = cvT(C.SKILL_VARIANTS[v].name);
+          return isUnl
+            ? `<button type="button" class="${active ? 'go' : 'ghost'} small" data-skill-set="${ch.id}:${slot}:${v}" ${live() ? '' : 'disabled'}>${lbl}</button>`
+            : `<button type="button" class="ghost small" data-skill-unlock="${ch.id}:${slot}:${v}" ${live() ? '' : 'disabled'}>🔒${lbl}</button>`;
+        }).join('')}</div>`;
+      }).join('');
+      return `<article class="ar-card ar-loadout"><b>${escapeHTML(ch.name)}</b><small>${unlocked ? `${kos} / 20 ${cvT('斩')}` : `${kos} / 20 ${cvT('斩')} · ${cvT('未解锁')}`}</small><p>${stanceDesc}</p><div class="row"><button type="button" class="${stance ? 'ghost' : 'go'} small" data-stance="${ch.id}" data-value="0" ${live() ? '' : 'disabled'}>${cvT('本式')}</button><button type="button" class="${stance ? 'go' : 'ghost'} small" data-stance="${ch.id}" data-value="1" ${live() && unlocked ? '' : 'disabled'}>${stanceTitle}</button></div><div class="row"><select data-badge-choice="${ch.id}" aria-label="${escapeHTML(cvT(ch.name))} ${cvT('徽记')}">${options}</select><button type="button" class="go small" data-badge-set="${ch.id}" ${live() ? '' : 'disabled'}>${cvT('装备')}</button></div><div class="row"><select data-pet-choice="${ch.id}" aria-label="${escapeHTML(cvT(ch.name))} ${cvT('灵宠')}">${petOpts}</select><button type="button" class="go small" data-pet-set="${ch.id}" ${live() ? '' : 'disabled'}>${cvT('携宠')}</button></div><div style="margin-top:6px"><small>${cvT('招式自选流派')}</small>${skillRows}</div></article>`;
     }).join('');
     const shardProgress = totalKOs % C.BADGE_SIGIL_KOS;
     const shardBar = `<div class="ar-badge-progress"><label for="arBadgeShardProgress">${cvT('距离下一枚徽记碎片')}</label><progress id="arBadgeShardProgress" max="${C.BADGE_SIGIL_KOS}" value="${shardProgress}"></progress><small>${shardProgress} / ${C.BADGE_SIGIL_KOS} · ${C.BADGE_SIGIL_KOS - shardProgress} ${cvT('斩后获得')}</small></div>`;
     return `<div class="ar-ophead"><div><span class="ar-k">${cvT('武学与徽记')}</span><h3>${cvT('徽记碎片')} <b>${s.badgeSigils || 0}</b> · ${cvT('累计斩获')} <b>${totalKOs}</b></h3>${shardBar}</div><p class="ar-note">${cvT('每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。')}</p></div>
-      ${gift}<h4 class="ar-h">${cvT('我的徽记')}</h4>${stock}<h4 class="ar-h">${cvT('侠客架势与装备')}</h4><div class="ar-grid3">${heroes}</div>`;
+      ${gift}<h4 class="ar-h">${cvT('我的徽记')}</h4>${stock}${discoverBadges}${petGrid}<h4 class="ar-h">${cvT('侠客架势与装备')}</h4><div class="ar-grid3">${heroes}</div>`;
   }
   function covPick() {
     const list = C.ofTierReg('cov');   // 神兵武器箱的不能拿星章换
@@ -1170,7 +1202,13 @@
       if (d.gotab) { TAB = d.gotab; if (d.mkv) MK.view = d.mkv; render(); return; }
       if (d.badgePreview) { startBadgeTrainingPreview(d.badgePreview, d.badgeTier); return; }
       if (d.badgeGift) { const r = await act('badgeGift', { id: d.badgeGift }); if (r && r.ok) { toast(`获得银徽「${cvT(C.BADGES[r.id].name)}」`); render(); } return; }
+      if (d.badgeUnlock) { const r = await act('badgeUnlock', { id: d.badgeUnlock }); if (r && r.ok) { toast(`已解锁徽记「${cvT(C.BADGES[r.id].name)}」`); render(); } return; }
       if (d.badgeUpgrade) { const r = await act('badgeUpgrade', { id: d.badgeUpgrade }); if (r && r.ok) { toast(`徽记已升阶：${cvT(C.BADGES[r.id].name)} · ${cvT(r.tier === 'gold' ? '金徽' : '紫金徽')}`); render(); } return; }
+      if (d.petBuy) { const r = await act('petBuy', { id: d.petBuy }); if (r && r.ok) { toast(`已收养灵宠「${cvT(C.PETS[r.id].name)}」`); render(); } return; }
+      if (d.petUp) { const r = await act('petUpgrade', { id: d.petUp }); if (r && r.ok) { toast(`灵宠已进阶：${cvT(C.PETS[r.id].name)}`); render(); } return; }
+      if (d.petSet) { const sel = main.querySelector(`[data-pet-choice="${d.petSet}"]`); const r = await act('petEquip', { hero: d.petSet, id: sel ? sel.value : '' }); if (r && r.ok) { toast(r.id ? '灵宠已随行出战' : '已收回灵宠'); render(); } return; }
+      if (d.skillUnlock) { const [hero, slot, variant] = d.skillUnlock.split(':'); const r = await act('skillUnlock', { hero, slot, variant }); if (r && r.ok) { toast('已解锁招式流派'); render(); } return; }
+      if (d.skillSet) { const [hero, slot, variant] = d.skillSet.split(':'); const r = await act('skillSet', { hero, slot, variant }); if (r && r.ok) { toast('已切换招式流派'); render(); } return; }
       if (d.stance) { const r = await act('stanceSet', { hero: d.stance, stance: +d.value }); if (r && r.ok) { toast('已设置出战架势'); render(); } return; }
       if (d.badgeSet) { const sel = main.querySelector(`[data-badge-choice="${d.badgeSet}"]`); const r = await act('badgeEquip', { hero: d.badgeSet, id: sel ? sel.value : '' }); if (r && r.ok) { toast(r.id ? '徽记已装备；原佩戴者已卸下' : '徽记已卸下'); render(); } return; }
       if (d.it && !d.sel) { const it = ST && ST.inv.find(x => x.i === +d.it); if (it) inspect(it, 'inv'); return; }
@@ -1257,7 +1295,17 @@
     const s = blankS(), out = {};
     for (const hero of C.HERO_IDS) {
       const id = s.badgeEquip[hero] || '';
-      out[hero] = { unlocked: (s.heroKOs[hero] || 0) >= 20, stance: s.stances[hero] === 1 ? 1 : 0, badge: id, tier: id ? s.badgeOwned[id] || '' : '' };
+      const pet = (s.petEquip && s.petEquip[hero]) || '';
+      const sl = (s.skillLoadout && s.skillLoadout[hero]) || {};
+      out[hero] = {
+        unlocked: (s.heroKOs[hero] || 0) >= 20,
+        stance: s.stances[hero] === 1 ? 1 : 0,
+        badge: id,
+        tier: id ? s.badgeOwned[id] || '' : '',
+        pet,
+        petTier: pet && s.petOwned ? (s.petOwned[pet] || '') : '',
+        skills: { q: sl.q || 'std', r: sl.r || 'std', e: sl.e || 'std' },
+      };
     }
     return out;
   };

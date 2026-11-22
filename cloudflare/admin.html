@@ -380,7 +380,7 @@ async function api(path, body) {
 }
 
 /* ---------- 武器箱、饰品、品质（登录后从服务器读一次） ---------- */
-const CAT = { items: {}, cols: {}, tiers: {}, order: [], caseIds: [], cfgInfo: [] };
+const CAT = { items: {}, cols: {}, tiers: {}, order: [], caseIds: [], cfgInfo: [], heroes: [], badges: {}, pets: {}, skillVariants: {} };
 function useCat(c) {
   CAT.order = c.tiers.map(t => t.id);
   for (const t of c.tiers) CAT.tiers[t.id] = t;
@@ -388,6 +388,10 @@ function useCat(c) {
   for (const x of c.items) CAT.items[x.k] = x;
   CAT.caseIds = c.cols.map(x => x.id);
   CAT.cfgInfo = c.cfg || [];
+  CAT.heroes = Array.isArray(c.heroes) ? c.heroes : Object.keys(HERO);
+  CAT.badges = c.badges || {};
+  CAT.pets = c.pets || {};
+  CAT.skillVariants = c.skillVariants || { std: '原式', swift: '疾风式', heavy: '重岳式' };
 }
 const itemName = k => SKIN[k] || k;
 const heroOf = k => HERO[(CAT.items[k] || {}).char] || '';
@@ -444,7 +448,18 @@ function detailText(act, raw, withWho) {
   const d = parse(raw);
   if (!d) return raw || '';
   const who = withWho && d.by ? d.by + (d.why ? '：' + d.why : '') + '｜' : '';
-  if (act === 'admin') return who + [...stuff(d), ...(d.give || []).map(x => '发 ' + itemRef(x)), ...(d.take || []).map(x => '收 ' + itemRef(x))].join('，');
+  if (act === 'admin') {
+    const extra = [];
+    if (d.sigils) extra.push('徽记碎片 ' + sign(d.sigils));
+    if (d.unlockAll) extra.push('一键全满配');
+    if (d.badges) extra.push('徽记 ' + Object.entries(d.badges).map(([k, v]) => (CAT.badges[k] || k) + '→' + (v || '移除')).join('、'));
+    if (d.pets) extra.push('灵宠 ' + Object.entries(d.pets).map(([k, v]) => (CAT.pets[k] || k) + '→' + (v || '移除')).join('、'));
+    if (d.badgeEquip) extra.push('装备徽记 ' + Object.entries(d.badgeEquip).map(([h, k]) => (HERO[h] || h) + ':' + (CAT.badges[k] || k || '卸下')).join('、'));
+    if (d.petEquip) extra.push('装备灵宠 ' + Object.entries(d.petEquip).map(([h, k]) => (HERO[h] || h) + ':' + (CAT.pets[k] || k || '卸下')).join('、'));
+    if (d.stances) extra.push('架势 ' + Object.entries(d.stances).map(([h, v]) => (HERO[h] || h) + ':' + (+v ? '二式' : '原式')).join('、'));
+    if (d.skills) extra.push('招式 ' + Object.entries(d.skills).map(([h, sl]) => (HERO[h] || h) + '(' + Object.entries(sl).map(([s, v]) => s.toUpperCase() + '=' + (CAT.skillVariants[v] || v)).join('/') + ')').join('、'));
+    return who + [...stuff(d), ...extra, ...(d.give || []).map(x => '发 ' + itemRef(x)), ...(d.take || []).map(x => '收 ' + itemRef(x))].join('，');
+  }
   if (act === 'restore') return who + '找回 ' + (d.items || []).map(x => itemRef(x.k + '#' + x.to + (x.st >= 0 ? ' st' : '')) + (x.to !== x.from ? '（原 #' + x.from + '）' : '')).join('、');
   if (act === 'admin_ban') return who + (d.days === 'perm' ? '永久封号' : '封 ' + d.days + ' 天');
   if (act === 'pardon') return who + '解封';
@@ -474,7 +489,7 @@ function detailText(act, raw, withWho) {
   if (act === 'mkt_cancel') return who + '强制撤下市场挂单 #' + String(d.id || '').slice(0, 8) + '（' + itemName(d.k) + '，标价 ' + fmtN(d.price) + '）';
   if (act === 'adm_login') return (withWho && d.by ? d.by + '｜' : '') + (d.how === 'secret' ? '用 ADMIN_SECRET 口令' : '用管理员账号') + '，角色：' + (ROLE[d.role] || d.role);
   if (act === 'adm_acct') return who + (d.created ? '新建 ' : '改 ') + d.name + '：角色 ' + (d.from && d.from !== d.role ? (ROLE[d.from] || d.from) + ' → ' : '') + (ROLE[d.role] || d.role) + (d.pw ? '，' + (d.created ? '设了密码' : '改了密码') : '') + (d.disabled ? '，停用' : '');
-  if (act === 'flag') return who + d.k + '：' + (FLAG_MODE[d.from] || d.from) + ' → ' + (FLAG_MODE[d.to] || d.to);
+  if (act === 'flag') return d.k === '__banner__' ? who + '启动更新横幅：' + (d.title || '恢复默认') : who + d.k + '：' + (FLAG_MODE[d.from] || d.from) + ' → ' + (FLAG_MODE[d.to] || d.to);
   // 玩家自己的操作：{ a: 参数, r: 结果, s: 这次结了几单 }
   const parts = [];
   if (d.r !== undefined && d.r !== '') parts.push(typeof d.r === 'number' ? fmtN(d.r) : itemRef(d.r));
@@ -771,6 +786,7 @@ async function vPlayer() {
       </tbody></table></div>` : ''}
     </div>
   </form>
+  ${loadoutCard(p)}
   ${devicesCard(p)}
   ${lostCard(p)}
   ${banCard(sc, isBan, p)}
@@ -778,6 +794,54 @@ async function vPlayer() {
   ${delCard(p)}
   ${logCard(p.log || [], p)}
   ${mktCard(p)}`;
+}
+
+const BADGE_TIER_LABEL = { silver: '银纹', gold: '赤金', purpgold: '紫金' };
+const PET_TIER_LABEL = { basic: '灵雏', spirit: '灵魄', immortal: '仙兽' };
+function loadoutCard(p) {
+  const s = (p.econ && p.econ.state) || {};
+  const bOwn = s.badgeOwned || {}, bEq = s.badgeEquip || {}, pOwn = s.petOwned || {}, pEq = s.petEquip || {};
+  const stances = s.stances || {}, skLoad = s.skillLoadout || {}, heroes = CAT.heroes.length ? CAT.heroes : Object.keys(HERO);
+  const badgeEntries = Object.entries(CAT.badges), petEntries = Object.entries(CAT.pets);
+  const svEntries = Object.entries(CAT.skillVariants);
+  return H`<form class="card" data-form="loadout" novalidate>
+    <div class="row between wrap">
+      <h2>武学 · 灵宠 · 招式 · 架势管理</h2>
+      <button type="button" class="btn sm" data-act="unlockall">一键全满配（全徽记紫金/全灵宠仙兽/全二式/全招式）…</button>
+    </div>
+    <p class="hint">可单独发放/升级/移除任意武学徽记或灵宠、加减徽记碎片，或为任意侠客指定架势、装备徽记、随行灵宠与 Q/R/E 流派。</p>
+    <div class="grid">
+      <label class="f">徽记碎片<span class="cur">现有 ${fmtN(+s.badgeSigils || 0)} 枚</span><input type="number" name="sigils" step="1" placeholder="0"></label>
+    </div>
+    <h3>武学徽记 <small>已拥有 ${Object.keys(bOwn).length} / ${badgeEntries.length}</small></h3>
+    <div class="grid">
+      ${badgeEntries.map(([id, name]) => H`<label class="f">${name}<span class="cur">${bOwn[id] ? (BADGE_TIER_LABEL[bOwn[id]] || bOwn[id]) : '未拥有'}</span>
+        <select name="bdg_${id}"><option value="">不改</option><option value="__rm__">移除</option><option value="silver">银纹</option><option value="gold">赤金</option><option value="purpgold">紫金</option></select></label>`)}
+    </div>
+    <h3>随行灵宠 <small>已拥有 ${Object.keys(pOwn).length} / ${petEntries.length}</small></h3>
+    <div class="grid">
+      ${petEntries.map(([id, name]) => H`<label class="f">${name}<span class="cur">${pOwn[id] ? (PET_TIER_LABEL[pOwn[id]] || pOwn[id]) : '未拥有'}</span>
+        <select name="pet_${id}"><option value="">不改</option><option value="__rm__">移除</option><option value="basic">灵雏</option><option value="spirit">灵魄</option><option value="immortal">仙兽</option></select></label>`)}
+    </div>
+    <h3>单侠客装配定制</h3>
+    <div class="grid">
+      <label class="f">选择侠客<select name="lh"><option value="">不改单侠客装配</option>${heroes.map(h => H`<option value="${h}">${HERO[h] || h}</option>`)}</select></label>
+      <label class="f">架势<select name="lh_stance"><option value="">不改</option><option value="0">原式</option><option value="1">二式（自动解锁）</option></select></label>
+      <label class="f">装备徽记<select name="lh_badge"><option value="">不改</option><option value="__rm__">卸下</option>${badgeEntries.map(([id, name]) => H`<option value="${id}">${name}</option>`)}</select></label>
+      <label class="f">随行灵宠<select name="lh_pet"><option value="">不改</option><option value="__rm__">卸下</option>${petEntries.map(([id, name]) => H`<option value="${id}">${name}</option>`)}</select></label>
+      <label class="f">Q 招式流派<select name="lh_q"><option value="">不改</option>${svEntries.map(([id, name]) => H`<option value="${id}">${name}</option>`)}</select></label>
+      <label class="f">R 招式流派<select name="lh_r"><option value="">不改</option>${svEntries.map(([id, name]) => H`<option value="${id}">${name}</option>`)}</select></label>
+      <label class="f">E 绝技流派<select name="lh_e"><option value="">不改</option>${svEntries.map(([id, name]) => H`<option value="${id}">${name}</option>`)}</select></label>
+    </div>
+    <div class="row end"><button class="btn">检查并保存武学配置…</button></div>
+    <details style="margin-top:12px"><summary class="hint" style="cursor:pointer">展开全部 ${heroes.length} 位侠客当前装配总览</summary>
+      <div class="tw"><table><thead><tr><th>侠客</th><th>架势</th><th>装备徽记</th><th>随行灵宠</th><th>Q / R / E 招式</th></tr></thead><tbody>
+        ${heroes.map(h => { const sl = skLoad[h] || {}; return H`<tr><td><b>${HERO[h] || h}</b></td><td>${stances[h] ? H`<span class="badge gold">二式</span>` : '原式'}</td>
+          <td>${bEq[h] ? (CAT.badges[bEq[h]] || bEq[h]) : '—'}</td><td>${pEq[h] ? (CAT.pets[pEq[h]] || pEq[h]) : '—'}</td>
+          <td class="nowrap">${(CAT.skillVariants[sl.q || 'std'] || '原式')} / ${(CAT.skillVariants[sl.r || 'std'] || '原式')} / ${(CAT.skillVariants[sl.e || 'std'] || '原式')}</td></tr>`; })}
+      </tbody></table></div>
+    </details>
+  </form>`;
 }
 
 function devicesCard(p) {
@@ -1072,6 +1136,7 @@ async function vErrors() {
 
 /* ---------- 匿名游玩统计 ---------- */
 const PLAY_MODE_NAME = { cpu: '人机', tag3: '3v3 车轮', tower: '问剑密卷', chaos: '天机乱斗', mayhem: '通天神决', maps: '山河异境', '2v2': '2v2', watch2v2: '观战 2v2',
+  melee: '群雄大乱斗', ctf: '江湖夺旗战', gauntlet: '无尽演武擂', cuju: '墨球蹴鞠',
   saga: '侠客列传', stage: '守关', train: '木人桩', raid: '同袍肉鸽', world: '开放世界', boss: '天魔讨伐', net: '联机', netrk: '排位', pvp: '本机对战', replay: '回放', qfx: '青锋行' };
 const pctOf = (a, b) => b ? Math.round(a * 100 / b) + '%' : '—';
 async function vPlay() {
@@ -1215,8 +1280,10 @@ async function vAuth() {
 
 /* ---------- 功能开关 ---------- */
 async function vFlags() {
-  const r = await api('flags');
+  const [r, bn] = await Promise.all([api('flags'), api('banner').catch(() => ({ banner: null }))]);
   S.flags = r.flags;
+  const b = (bn && bn.banner) || {};
+  const items = Array.isArray(b.items) ? b.items : [];
   return H`<div class="card"><h2>功能开关</h2>
     <p class="hint">大改动先做成开关：可以先只对 Dev 账号打开试，没问题再对所有人开，出了问题一键关回去。改完 30 秒内各处生效；网页那边的开关要玩家刷新网页才换。</p>
     ${r.flags.length ? H`<div class="tw"><table><thead><tr><th>开关</th><th>说明</th><th>现在</th><th>默认</th><th>最后改动</th><th></th></tr></thead><tbody>
@@ -1225,7 +1292,24 @@ async function vFlags() {
         <td class="mw">${f.at ? H`${f.by} · ${fmtT(f.at)}<br><small>${f.note}</small>` : '没改过'}</td>
         <td class="nowrap">${['off', 'dev', 'all'].filter(m => m !== f.mode).map(m => H`<button class="btn ghost sm" data-act="flagset" data-k="${f.k}" data-mode="${m}">改成${FLAG_MODE[m]}…</button> `)}</td></tr>`)}
     </tbody></table></div>` : H`<p class="empty">现在没有登记的开关</p>`}
-  </div>`;
+  </div>
+  <form class="card" data-form="banner" novalidate>
+    <div class="row between wrap">
+      <h2>启动更新横幅管理 <small>${b.title ? '已自定义' : '使用客户端内置默认'}</small></h2>
+      ${b.title ? H`<button type="button" class="btn ghost sm" data-act="bannerreset">恢复内置默认…</button>` : ''}
+    </div>
+    <p class="hint">每次玩家打开游戏首页顶部都会展示该更新横幅；留空或恢复默认将显示代码内置的最新版本公告。${bn && bn.at ? ' 上次修改：' + bn.by + ' · ' + fmtT(bn.at) : ''}</p>
+    <div class="grid">
+      <label class="f">角标标签（最多 24 字）<input name="tag" maxlength="24" value="${b.tag || ''}" placeholder="最新大更新"></label>
+      <label class="f grow">横幅主标题（最多 80 字）<input name="title" maxlength="80" value="${b.title || ''}" placeholder="如：8v8 群雄团战 · 4 位新侠客 · 随行灵宠与自选招式上线"></label>
+    </div>
+    <h3>重点更新条目（最多 4 条，每条写「类别」与「内容」）</h3>
+    <div class="grid">
+      ${[0, 1, 2, 3].map(i => H`<label class="f">条目 ${i + 1} 类别<input name="bk_${i}" maxlength="24" value="${(items[i] && items[i].k) || ''}" placeholder="如：新模式"></label>
+        <label class="f">条目 ${i + 1} 内容<input name="bv_${i}" maxlength="90" value="${(items[i] && items[i].v) || ''}" placeholder="如：3v3–8v8 群雄大乱斗 / 夺旗战"></label>`)}
+    </div>
+    <div class="row end"><button class="btn">保存并全服发布…</button></div>
+  </form>`;
 }
 
 /* ---------- 批量：删除、恢复、封号、解封 ---------- */
@@ -1870,6 +1954,54 @@ const FORMS = {
     if (!lines.length) return toast('没有改动', true);
     const a = await ask({ title: '保存经济数值', lines, ok: '保存' });
     if (a) await busy($('#cfgSave'), async () => { const r = await api('cfg', { set, why: a.why }); toast('经济数值已保存'); render(); });
+  },
+  loadout: async f => {
+    const p = S.p, E = f.elements;
+    const body = { uid: p.uid }, lines = [];
+    const sigils = numIn(f, 'sigils');
+    if (!Number.isInteger(sigils)) return toast('徽记碎片要填整数', true);
+    if (sigils) { body.sigils = sigils; lines.push('徽记碎片 ' + sign(sigils)); }
+    const badges = {}, pets = {};
+    for (const [id, name] of Object.entries(CAT.badges)) {
+      const v = E['bdg_' + id] ? E['bdg_' + id].value : '';
+      if (v) { badges[id] = v === '__rm__' ? '' : v; lines.push('徽记「' + name + '」→ ' + (v === '__rm__' ? '移除' : (BADGE_TIER_LABEL[v] || v))); }
+    }
+    if (Object.keys(badges).length) body.badges = badges;
+    for (const [id, name] of Object.entries(CAT.pets)) {
+      const v = E['pet_' + id] ? E['pet_' + id].value : '';
+      if (v) { pets[id] = v === '__rm__' ? '' : v; lines.push('灵宠「' + name + '」→ ' + (v === '__rm__' ? '移除' : (PET_TIER_LABEL[v] || v))); }
+    }
+    if (Object.keys(pets).length) body.pets = pets;
+    const lh = E.lh ? E.lh.value : '';
+    if (lh) {
+      const hn = HERO[lh] || lh;
+      const st = E.lh_stance.value, bdg = E.lh_badge.value, pet = E.lh_pet.value;
+      const q = E.lh_q.value, r = E.lh_r.value, e = E.lh_e.value;
+      if (st !== '') { body.stances = { [lh]: +st }; lines.push(hn + ' 架势 → ' + (+st ? '二式' : '原式')); }
+      if (bdg !== '') { body.badgeEquip = { [lh]: bdg === '__rm__' ? '' : bdg }; lines.push(hn + ' 装备徽记 → ' + (bdg === '__rm__' ? '卸下' : (CAT.badges[bdg] || bdg))); }
+      if (pet !== '') { body.petEquip = { [lh]: pet === '__rm__' ? '' : pet }; lines.push(hn + ' 随行灵宠 → ' + (pet === '__rm__' ? '卸下' : (CAT.pets[pet] || pet))); }
+      const sl = {};
+      if (q) sl.q = q;
+      if (r) sl.r = r;
+      if (e) sl.e = e;
+      if (Object.keys(sl).length) { body.skills = { [lh]: sl }; lines.push(hn + ' 招式 → ' + Object.entries(sl).map(([k, v]) => k.toUpperCase() + ':' + (CAT.skillVariants[v] || v)).join(' / ')); }
+    }
+    if (!lines.length) return toast('没有选择要修改的武学或灵宠项', true);
+    const a = await ask({ title: '修改 ' + p.username + ' 的武学与灵宠配置', lines, ok: '保存配置' });
+    if (a) await busy(submitBtn(f), async () => { await api('adjust', { ...body, why: a.why }); toast('已保存 ' + p.username + ' 的武学配置'); render(); });
+  },
+  banner: async f => {
+    const E = f.elements;
+    const tag = E.tag.value.trim(), title = E.title.value.trim();
+    const items = [];
+    for (let i = 0; i < 4; i++) {
+      const k = E['bk_' + i].value.trim(), v = E['bv_' + i].value.trim();
+      if (k || v) items.push({ k, v });
+    }
+    if (!title) return toast('请填写横幅主标题（如需恢复默认请点右上角恢复按钮）', true);
+    const lines = ['角标：' + (tag || '最新大更新'), '标题：' + title, ...items.map(x => '· ' + x.k + '：' + x.v)];
+    const a = await ask({ title: '发布全服启动更新横幅', lines, whyInit: '更新启动公告横幅', ok: '全服发布' });
+    if (a) await busy(submitBtn(f), async () => { await api('banner', { tag, title, items, why: a.why }); toast('启动更新横幅已全服发布'); render(); });
   },
 };
 document.addEventListener('submit', e => {

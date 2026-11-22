@@ -32,6 +32,12 @@ async function route(request, env, ctx, rid = reqId()) {
       if (path === '/admin' || path === '/admin/') return adminPage();
 
       await ensureSchema(env);
+      if (path === '/api/banner' && request.method === 'GET') {
+        const row = await env.DB.prepare("SELECT note FROM flags WHERE k = '__banner__'").first();
+        let banner = null;
+        try { banner = row && row.note ? JSON.parse(row.note) : null; } catch (e) {}
+        return json({ ok: true, banner });
+      }
       if (Math.random() < 0.02) {
         const p = cleanup(env, now).catch(() => {});
         if (ctx && ctx.waitUntil) ctx.waitUntil(p);

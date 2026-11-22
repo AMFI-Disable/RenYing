@@ -22,6 +22,9 @@ const MODES = {
   koth2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 灵坛争锋
   party: { bp: 'open', local: true, foe: '电脑' },   // 江湖百戏：轮换趣味小游戏
   bastion: { bp: 'open', local: true, foe: '电脑' },   // 天枢城·守境：多人守城+肉鸽+灵侍+流派装备
+  melee: { bp: 'open', local: true, foe: '敌方大军' },   // 群雄会战：3v3 ~ 8v8 同屏大混战
+  ctf: { bp: 'open', local: true, foe: '敌方战队' },   // 夺旗争锋：2v2 ~ 8v8 团队夺旗
+  gauntlet: { bp: 'solo', local: true },   // 无尽试炼：逐波递增车轮生存战
   tag3: { bp: 'trio', team: true, local: true, foe: '敌方战队' },
   tower: { bp: 'solo', local: true },
   stage: { bp: 'solo', local: true },
@@ -41,6 +44,8 @@ const ROOM_MODES = {
   koth: { bp: 'open', slots: [[0], [1]], rule: 'koth' },   // 灵坛争锋：好友房抢坛
   party: { bp: 'open', slots: [[0], [1]], rule: 'party' },   // 江湖百戏：好友房趣味百戏
   bastion: { bp: 'open', slots: [[0], [1]], rule: 'bastion' },   // 天枢守境：随时加入传音守城与远征
+  melee: { bp: 'open', slots: [[0], [1]], rule: 'melee' },   // 群雄会战：联机大型团战
+  ctf: { bp: 'open', slots: [[0], [1]], rule: 'ctf' },   // 夺旗争锋：联机团队夺旗
   pp_cc: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true },
   pp_pp: { bp: 'duo', team: true, us: '我方战队', slots: [[0, 2], [1, 3]], four: true },
   raid: { bp: 'squadNet', team: true, us: '我方战队', slots: [[0], [2]], raid: true },   // 房主 A、好友 C、电脑同袍 D 一起打魔首 B

@@ -1244,8 +1244,9 @@ const ADMIN_GIVE_MAX = Object.keys(C.ITEM).length;
 // 和玩家自己的操作走同一套带版本号的写入：玩家正好在开箱也不会互相覆盖。收走的皮肤记进 gone，旧存档加不回来
 async function adminAdjust(env, u, body, who, why, now) {
   const dInk = intIn(body.ink, -ADJ_INK, ADJ_INK), dTerm = intIn(body.term, -ADJ_N, ADJ_N), dTags = intIn(body.tags, -ADJ_N, ADJ_N);
+  const dSigils = body.sigils !== undefined ? intIn(body.sigils, -ADJ_N, ADJ_N) : 0;
   if (dInk === null) return error(`墨锭一次最多加减 ${ADJ_INK}，要填整数`);
-  if (dTerm === null || dTags === null) return error(`货郎、改名标签一次最多加减 ${ADJ_N} 个，要填整数`);
+  if (dTerm === null || dTags === null || dSigils === null) return error(`货郎、改名标签、徽记碎片一次最多加减 ${ADJ_N} 个，要填整数`);
   const cases = {};
   for (const [c, v] of Object.entries(isPlain(body.cases) ? body.cases : {})) {
     const n = intIn(v, -ADJ_N, ADJ_N);
@@ -1263,7 +1264,15 @@ async function adminAdjust(env, u, body, who, why, now) {
   }
   const tk = take.map(Number);
   if (tk.some(i => !Number.isInteger(i) || i < 1)) return error('要收的饰品编号不对');
-  if (!dInk && !dTerm && !dTags && !Object.keys(cases).length && !gv.length && !tk.length) return error('什么都没填，没有要改的');
+  const badgesPatch = isPlain(body.badges) ? body.badges : null;
+  const petsPatch = isPlain(body.pets) ? body.pets : null;
+  const petEqPatch = isPlain(body.petEquip) ? body.petEquip : null;
+  const badgeEqPatch = isPlain(body.badgeEquip) ? body.badgeEquip : null;
+  const stancesPatch = isPlain(body.stances) ? body.stances : null;
+  const skillsPatch = isPlain(body.skills) ? body.skills : null;
+  const unlockAll = !!body.unlockAll;
+  const hasLoadoutPatch = !!(dSigils || badgesPatch || petsPatch || petEqPatch || badgeEqPatch || stancesPatch || skillsPatch || unlockAll);
+  if (!dInk && !dTerm && !dTags && !Object.keys(cases).length && !gv.length && !tk.length && !hasLoadoutPatch) return error('什么都没填，没有要改的');
   for (let attempt = 0; attempt < 5; attempt++) {
     const urow = await env.DB.prepare('SELECT profile_json FROM users WHERE id = ?').bind(u.id).first();
     const prof = parseProfile(urow ? urow.profile_json : '', u.username);
@@ -1278,7 +1287,75 @@ async function adminAdjust(env, u, body, who, why, now) {
     }
     if (s.term + dTerm < 0) return error(`这个号只有 ${s.term} 台货郎`);
     if (s.tags + dTags < 0) return error(`这个号只有 ${s.tags} 张改名标签`);
-    s.term += dTerm; s.tags += dTags;
+    if ((s.badgeSigils || 0) + dSigils < 0) return error(`这个号只有 ${s.badgeSigils || 0} 枚徽记碎片`);
+    s.term += dTerm; s.tags += dTags; s.badgeSigils = (s.badgeSigils || 0) + dSigils;
+    if (unlockAll) {
+      s.badgeGift = 1;
+      for (const id of Object.keys(C.BADGES)) s.badgeOwned[id] = 'purpgold';
+      for (const id of Object.keys(C.PETS)) s.petOwned[id] = 'immortal';
+      for (const h of C.HERO_IDS) {
+        s.heroKOs[h] = Math.max(s.heroKOs[h] || 0, 20);
+        s.skillUnlocks[h] = { q: ['swift', 'heavy'], r: ['swift', 'heavy'], e: ['swift', 'heavy'] };
+      }
+    }
+    if (badgesPatch) {
+      for (const [id, tier] of Object.entries(badgesPatch)) {
+        if (!C.own(C.BADGES, id)) return error(`没有这枚徽记：${id}`);
+        if (!tier) { delete s.badgeOwned[id]; for (const h of Object.keys(s.badgeEquip)) if (s.badgeEquip[h] === id) delete s.badgeEquip[h]; }
+        else if (C.own(C.BADGE_TIER, tier)) { s.badgeOwned[id] = tier; s.badgeGift = 1; }
+        else return error(`徽记阶位不对：${tier}`);
+      }
+    }
+    if (petsPatch) {
+      for (const [id, tier] of Object.entries(petsPatch)) {
+        if (!C.own(C.PETS, id)) return error(`没有这只灵宠：${id}`);
+        if (!tier) { delete s.petOwned[id]; for (const h of Object.keys(s.petEquip)) if (s.petEquip[h] === id) delete s.petEquip[h]; }
+        else if (C.own(C.PET_TIER, tier)) s.petOwned[id] = tier;
+        else return error(`灵宠阶位不对：${tier}`);
+      }
+    }
+    if (petEqPatch) {
+      for (const [h, id] of Object.entries(petEqPatch)) {
+        if (!C.HERO_IDS.includes(h)) return error(`没有这位侠客：${h}`);
+        if (!id) delete s.petEquip[h];
+        else if (C.own(C.PETS, id)) { if (!s.petOwned[id]) s.petOwned[id] = 'basic'; s.petEquip[h] = id; }
+        else return error(`没有这只灵宠：${id}`);
+      }
+    }
+    if (badgeEqPatch) {
+      for (const [h, id] of Object.entries(badgeEqPatch)) {
+        if (!C.HERO_IDS.includes(h)) return error(`没有这位侠客：${h}`);
+        for (const k of Object.keys(s.badgeEquip)) if (k === h || (id && s.badgeEquip[k] === id)) delete s.badgeEquip[k];
+        if (id) {
+          if (!C.own(C.BADGES, id)) return error(`没有这枚徽记：${id}`);
+          if (!s.badgeOwned[id]) { s.badgeOwned[id] = 'silver'; s.badgeGift = 1; }
+          s.badgeEquip[h] = id;
+        }
+      }
+    }
+    if (stancesPatch) {
+      for (const [h, st] of Object.entries(stancesPatch)) {
+        if (!C.HERO_IDS.includes(h)) return error(`没有这位侠客：${h}`);
+        const v = +st ? 1 : 0;
+        if (v) s.heroKOs[h] = Math.max(s.heroKOs[h] || 0, 20);
+        s.stances[h] = v;
+      }
+    }
+    if (skillsPatch) {
+      for (const [h, slots] of Object.entries(skillsPatch)) {
+        if (!C.HERO_IDS.includes(h) || !isPlain(slots)) return error(`侠客招式配置不对：${h}`);
+        if (!s.skillUnlocks[h]) s.skillUnlocks[h] = {};
+        if (!s.skillLoadout[h]) s.skillLoadout[h] = {};
+        for (const [sl, v] of Object.entries(slots)) {
+          if (!C.SKILL_SLOTS.includes(sl) || !C.own(C.SKILL_VARIANTS, v)) return error(`招式槽位或流派不对：${sl}=${v}`);
+          if (v !== 'std') {
+            const cur = s.skillUnlocks[h][sl] || [];
+            if (!cur.includes(v)) s.skillUnlocks[h][sl] = [...cur, v];
+          }
+          s.skillLoadout[h][sl] = v;
+        }
+      }
+    }
     const given = gv.map(g => C.addItem(s, C.mkItem(s, g.k, 'admin', rnd, { st: g.st }), E)), taken = [];
     for (const i of tk) {
       if (s.lst.some(L => L.it.i === i)) return error(`第 ${i} 号饰品挂在玩家市场上，要等玩家撤下或者卖掉才能收`);
@@ -1286,7 +1363,7 @@ async function adminAdjust(env, u, body, who, why, now) {
       if (!it) return error(`库存里没有第 ${i} 号饰品`);
       taken.push(it);
     }
-    const bad = [E.ink, s.tags, s.term, ...Object.values(s.cases)].find(v => !Number.isSafeInteger(v) || v < 0 || v > 1e12);
+    const bad = [E.ink, s.tags, s.term, s.badgeSigils, ...Object.values(s.cases)].find(v => !Number.isSafeInteger(v) || v < 0 || v > 1e12);
     if (bad !== undefined) return error('算出来的数不对，没有改');
     const add = E.skins.filter(k => !skins0.includes(k)), del = skins0.filter(k => !E.skins.includes(k));
     const ver = eco.ver, srv = eco.srv;
@@ -1296,6 +1373,8 @@ async function adminAdjust(env, u, body, who, why, now) {
     const p = { ...prof, ink: E.ink, skins: E.skins, equip: E.equip, updatedAt: now };
     delete p.armory; delete p.ledger;
     const detail = JSON.stringify({ by: who, why, ink: dInk || undefined, cases: Object.keys(cases).length ? cases : undefined, term: dTerm || undefined, tags: dTags || undefined,
+      sigils: dSigils || undefined, unlockAll: unlockAll || undefined,
+      badges: badgesPatch || undefined, pets: petsPatch || undefined, petEquip: petEqPatch || undefined, badgeEquip: badgeEqPatch || undefined, stances: stancesPatch || undefined, skills: skillsPatch || undefined,
       give: given.length ? given.map(itemRef) : undefined, take: taken.length ? taken.map(itemRef) : undefined });
     const results = await env.DB.batch([
       ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [u.id, now, 'admin', 1, eco.ink, E.ink, detail.slice(0, 12000)], u.id, ver),
@@ -1303,7 +1382,7 @@ async function adminAdjust(env, u, body, who, why, now) {
       econWrite(env, u.id, ver, now, srv, E.ink, JSON.stringify(s)),
     ]);
     if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;   // 玩家刚好也在动：重读再改
-    return json({ ok: true, uid: u.id, ink: E.ink, cases: s.cases, term: s.term, tags: s.tags, given, taken });
+    return json({ ok: true, uid: u.id, ink: E.ink, cases: s.cases, term: s.term, tags: s.tags, badgeSigils: s.badgeSigils, badgeOwned: s.badgeOwned, petOwned: s.petOwned, petEquip: s.petEquip, badgeEquip: s.badgeEquip, stances: s.stances, skillLoadout: s.skillLoadout, given, taken });
   }
   return error('服务器忙，请再试一次', 503);
 }
@@ -1526,10 +1605,27 @@ async function handleAdmin(env, request, path, now, ip) {
     return json({ ok: true, name, role: r, disabled: off, created: !old });
   }
   // ---------- 3. 查询：目录、统计、错误记录 ----------
-  if (route === 'GET /api/admin/catalog') {   // 管理网页用：武器箱、每档品质的名字和颜色、每件饰品在哪个箱子哪一档、能改的经济数值
+  if (route === 'GET /api/admin/catalog') {   // 管理网页用：武器箱、品质、饰品、侠客、徽记、灵宠、招式流派与经济数值
     return json({ ok: true, tiers: C.TIERS.map(t => ({ id: t, n: C.TIER[t].n, c: C.TIER[t].c })),
-      cols: C.CASES.map(c => ({ id: c, name: C.COLS[c].name, prem: !!C.COLS[c].prem })),
-      items: Object.keys(C.ITEM).map(k => ({ k, col: C.ITEM[k].col, tier: C.ITEM[k].tier, char: C.charOf(k) })), cfg: C.CFG_INFO });
+      cols: C.CASES.map(c => ({ id: c, name: C.COLS[c].name, prem: !!C.COLS[c].prem, themed: !!C.COLS[c].themed })),
+      items: Object.keys(C.ITEM).map(k => ({ k, col: C.ITEM[k].col, tier: C.ITEM[k].tier, char: C.charOf(k) })),
+      heroes: C.HERO_IDS, badges: C.BADGES, pets: C.PETS, skillVariants: C.SKILL_VARIANTS, cfg: C.CFG_INFO });
+  }
+  if (route === 'GET /api/admin/banner') {
+    const row = await env.DB.prepare("SELECT note, by, at FROM flags WHERE k = '__banner__'").first();
+    let banner = null;
+    try { banner = row && row.note ? JSON.parse(row.note) : null; } catch (e) {}
+    return json({ ok: true, banner, by: row ? row.by : '', at: row ? row.at : 0 });
+  }
+  if (route === 'POST /api/admin/banner') {
+    const w = needWhy(); if (w) return w;
+    const tag = String(body.tag || '').trim().slice(0, 24);
+    const title = String(body.title || '').trim().slice(0, 80);
+    const items = Array.isArray(body.items) ? body.items.slice(0, 6).map(x => ({ k: String((x && x.k) || '').trim().slice(0, 24), v: String((x && x.v) || '').trim().slice(0, 90) })).filter(x => x.k || x.v) : [];
+    const payload = title ? JSON.stringify({ tag: tag || '最新大更新', title, items }) : '';
+    await env.DB.prepare("INSERT INTO flags (k, mode, by, note, at) VALUES ('__banner__', 'all', ?1, ?2, ?3) ON CONFLICT(k) DO UPDATE SET by = ?1, note = ?2, at = ?3").bind(who, payload, now).run();
+    await logRow(env, '*', now, 'flag', 1, null, null, JSON.stringify({ by: who, why, k: '__banner__', title: title || '(reset)' }));
+    return json({ ok: true, banner: payload ? JSON.parse(payload) : null });
   }
   if (route === 'GET /api/admin/stats') {   // 总览与深度数据统计
     await cfgNow(env, now);
@@ -3407,6 +3503,12 @@ async function route(request, env, ctx, rid = reqId()) {
       if (path === '/admin' || path === '/admin/') return adminPage();
 
       await ensureSchema(env);
+      if (path === '/api/banner' && request.method === 'GET') {
+        const row = await env.DB.prepare("SELECT note FROM flags WHERE k = '__banner__'").first();
+        let banner = null;
+        try { banner = row && row.note ? JSON.parse(row.note) : null; } catch (e) {}
+        return json({ ok: true, banner });
+      }
       if (Math.random() < 0.02) {
         const p = cleanup(env, now).catch(() => {});
         if (ctx && ctx.waitUntil) ctx.waitUntil(p);

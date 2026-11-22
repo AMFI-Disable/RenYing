@@ -160,7 +160,17 @@ function neutral(f, foe) {
       if (f.skill2CD <= 0 && !(SKILLS[f.ch.skill2] || {}).free && c.consume('skill2')) { f.airHover = 0; endEscape(f); return startSkill(f, foe, 2); }
       return;
     }
-    if (c.consume('light')) return startAttack(f, 'a1');
+    if (c.held.atk) {
+      c.buf.light = clock;
+      if (clock - c.atkT >= CHARGE_START) {
+        delete c.buf.light;
+        f.state = 'aircharge'; f.t = 0; f.chargeFull = false; f.vy = Math.min(f.vy, 40);
+        if (!RESIM) { ring(f.x, f.y - 60, 62, f.look.slash, 0.28); SFX.charge(); }
+        return;
+      }
+    } else {
+      if (c.consume('light')) return startAttack(f, 'a1');
+    }
     if (c.consume('heavy')) return startAttack(f, 'a2');
     const jumpLimit = (f.ch.jumps || 2) + (mapFavOn(f) && f.ch.id === 'liuyun' && M.map === 'cliff' ? 1 : 0);
     if (f.jumps < jumpLimit && c.consume('jump')) return doJump(f, dir);
@@ -390,7 +400,9 @@ function startSkill(f, foe, slot) {
   endEscape(f);
   if (f.ch.passive === 'drunk' && !S.can) f.drunk = Math.min(100, (f.drunk || 0) + 30);   // 醉翁：放技能添酒
   f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.move = null; f.skAir = !f.onGround();
-  const cd = S.cd * (balOf(f).cd || 1);
+  const smod = typeof skillModFor === 'function' ? skillModFor(f, slot) : { cd: 1 };
+  const petCdMul = f.petId === 'mechfinch' ? (1 - 0.08 * (PET_TIER_MUL[f.petTier] || 1)) : 1;
+  const cd = S.cd * (balOf(f).cd || 1) * smod.cd * petCdMul;
   if (slot === 2) f.skill2CD = cd; else f.skillCD = cd;
   if (scOn()) scFire(f, 'skill', foe, slot || 1);
   f.face = faceDir(f, foe);   // 技能朝角色面向的方向放（电脑没有方向键，自动面向对手）
@@ -516,6 +528,123 @@ function chargeUpdate(f, foe) {
   f.walkPh += STEP * f.vx * f.face * 0.07;
   if (!c.held.atk) { f.chargeFull = false; startAttack(f, full ? 'cs2' : 'cs1'); }
 }
+// 空中蓄力：滞空缓降并聚气，松手释放空中蓄力斩（满蓄为下砸破防斩）；落地无缝转地面蓄力
+function airChargeUpdate(f, foe) {
+  const c = f.ctrl;
+  if (f.skill2CD <= 0 && c.consume('skill2')) return startSkill(f, foe, 2);
+  if (M.phase !== 'fight') return toNeutral(f);
+  f.face = faceDir(f, foe);
+  const full = f.t >= CHARGE_FULL;
+  if (full && !f.chargeFull) {
+    f.chargeFull = true;
+    if (!RESIM) { ring(f.x, f.y - 60, 102, f.look.slash, 0.35); flashA = Math.max(flashA, 0.12); flashRGB = f.look.slash; SFX.chargeFull(); }
+  }
+  if (!RESIM && f.sk && Math.random() < (full ? 0.9 : 0.55)) {
+    const a = rand(0, Math.PI * 2), r = rand(40, 88);
+    addP({ type: 'spark', x: f.sk.tip[0] + Math.cos(a) * r, y: f.sk.tip[1] + Math.sin(a) * r, vx: -Math.cos(a) * r * 5, vy: -Math.sin(a) * r * 5, life: 0.18, max: 0.18, rgb: f.look.slash, w: 1.6 });
+  }
+  const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
+  f.vx = damp(f.vx, dir * wk(f) * 0.45, 8, STEP);
+  f.vy = damp(f.vy, 55, 10, STEP);
+  if (!c.held.atk || f.t >= CHARGE_FULL + 0.65) {
+    f.chargeFull = false;
+    f.airCharged = true;
+    startAttack(f, full ? 'cs2' : 'cs1');
+    f.vy = full ? 520 : -110;
+    f.vx = f.face * (full ? 160 : 210);
+    if (!RESIM) {
+      addP({ type: 'text', text: full ? '凌空重斩' : '御空蓄斩', x: f.x, y: f.y - 102, life: 0.65, max: 0.65, rgb: f.look.slash || '255,220,120' });
+      ring(f.x, f.y - 56, full ? 105 : 75, f.look.slash, 0.28);
+    }
+  }
+}
+// 扩展键位战斗与战术动作（C 虚招翻滚、F 聚气弹反、V 灵宠秘技、G 切换锁定、B 归位自标、T 战意号令、1/2/3 战队指令）
+function tryTacticalKeys(f, foe) {
+  const c = f && f.ctrl;
+  if (!c || M.phase !== 'fight' || f.hp <= 0) return false;
+  if (c.consume('beacon')) {
+    f.beaconT = 1.4;
+    if (f.idx === localIdx()) camFocusPingT = 1.2;
+    if (!RESIM) {
+      ring(f.x, f.y - 56, 120, '233,196,106', 0.42);
+      addP({ type: 'text', text: '我在此', x: f.x, y: f.y - 128, life: 0.85, max: 0.85, rgb: '255,235,140' });
+    }
+  }
+  if (c.consume('lock')) {
+    const foes = foesOf(f).filter(e => !e.hidden && e.hp > 0);
+    if (foes.length) {
+      const curI = foes.findIndex(e => e.idx === f.lockIdx);
+      const next = foes[(curI + 1) % foes.length];
+      f.lockIdx = next.idx;
+      f.target = next;
+      if (!RESIM) {
+        ring(next.x, next.y - 60, 75, '255,95,85', 0.32);
+        addP({ type: 'text', text: `锁定 · ${next.look.name}`, x: next.x, y: next.y - 118, life: 0.75, max: 0.75, rgb: '255,140,120' });
+      }
+    }
+  }
+  if (isMulti() && f.idx === localIdx()) {
+    if (c.consume('orderFocus')) {
+      M.squadOrder = 'focus';
+      if (!RESIM) addP({ type: 'text', text: '令 · 全军集火', x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '255,165,100' });
+    } else if (c.consume('orderProtect')) {
+      M.squadOrder = 'protect';
+      if (!RESIM) addP({ type: 'text', text: '令 · 回防掩护', x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '130,220,255' });
+    } else if (c.consume('orderSpread')) {
+      M.squadOrder = 'spread';
+      if (!RESIM) addP({ type: 'text', text: '令 · 分散游击', x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '140,240,180' });
+    }
+  }
+  if (f.rallyCD <= 0 && c.consume('rally')) {
+    f.rallyCD = 6.0;
+    for (const mate of sideFighters(fighterTeam(f))) {
+      if (!mate.hidden && mate.hp > 0 && Math.abs(mate.x - f.x) < 620) {
+        mate.guard = Math.min(mate.maxGuard || 100, (mate.guard || 0) + 12);
+      }
+    }
+    if (!RESIM) {
+      ring(f.x, f.y - 56, 145, '233,196,106', 0.45);
+      addP({ type: 'text', text: '战意号令!', x: f.x, y: f.y - 122, life: 0.85, max: 0.85, rgb: '255,220,130' });
+      SFX.gong ? SFX.gong() : SFX.dash();
+    }
+  }
+  if (f.petCD <= 0 && c.consume('pet')) {
+    if (typeof tryPetActive === 'function' && tryPetActive(f, foe)) {
+      // handled by pet system
+    } else {
+      f.petCD = 5.5;
+      f.meter = Math.min(100, (f.meter || 0) + 8);
+      if (!RESIM) {
+        ring(f.x, f.y - 58, 92, '140,230,255', 0.34);
+        addP({ type: 'text', text: '墨灵聚气', x: f.x, y: f.y - 114, life: 0.7, max: 0.7, rgb: '160,235,255' });
+      }
+    }
+  }
+  const canFeint = ['idle', 'walk', 'air', 'block', 'charge', 'aircharge'].includes(f.state)
+    || (f.state === 'attack' && f.move && f.t >= (f.move.su + f.move.ac) * 0.7);
+  if (canFeint && f.feintCD <= 0 && c.consume('feint')) {
+    const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0) || f.face;
+    endEscape(f);
+    f.move = null; f.skill = null; f.state = 'dash'; f.t = 0; f.dashDir = dir;
+    f.vx = DASH_V * 0.88 * dir; f.vy = f.onGround() ? 0 : Math.min(f.vy, -80);
+    f.invul = Math.max(f.invul, 0.2); f.feintCD = 2.2;
+    if (!RESIM) {
+      ring(f.x, f.y - 48, 72, '175,235,255', 0.26);
+      addP({ type: 'text', text: '虚招翻滚', x: f.x, y: f.y - 102, life: 0.6, max: 0.6, rgb: '175,235,255' });
+      SFX.dash();
+    }
+    return true;
+  }
+  if (['idle', 'walk', 'block'].includes(f.state) && f.onGround() && f.qiParryCD <= 0 && c.consume('parry')) {
+    f.qiParryT = 0.24; f.qiParryCD = 3.0; f.state = 'block'; f.t = 0; f.vx *= 0.2; f.face = blockFace(f, foe);
+    if (!RESIM) {
+      ring(f.x, f.y - 58, 86, '255,220,115', 0.3);
+      addP({ type: 'text', text: '聚气架势', x: f.x, y: f.y - 108, life: 0.55, max: 0.55, rgb: '255,225,130' });
+    }
+    return true;
+  }
+  return false;
+}
 // 顿帧、大招定格、被打飞倒地这些动不了的时候按下的技能先记着，能动了马上放，不会被吞掉
 const HOLD_KEYS = ['skill', 'skill2', 'special'], HOLD_STATES = ['launched', 'knockdown', 'getup', 'hitstun', 'held'];
 function holdBuf(f) {
@@ -529,6 +658,11 @@ function updateFighter(f, foe) {
   f.t += STEP;
   f.dashCD = Math.max(0, f.dashCD - STEP);
   f.stanceT = Math.max(0, (f.stanceT || 0) - STEP);
+  f.feintCD = Math.max(0, (f.feintCD || 0) - STEP);
+  f.qiParryCD = Math.max(0, (f.qiParryCD || 0) - STEP);
+  f.qiParryT = Math.max(0, (f.qiParryT || 0) - STEP);
+  f.petCD = Math.max(0, (f.petCD || 0) - STEP);
+  f.rallyCD = Math.max(0, (f.rallyCD || 0) - STEP);
   f.badgeDashT = Math.max(0, (f.badgeDashT || 0) - STEP);
   for (const key of ['badgeLinkT', 'badgePressureT', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'ballGuardBreakT']) f[key] = Math.max(0, (f[key] || 0) - STEP);
   f.breakCD = Math.max(0, f.breakCD - STEP);
@@ -541,6 +675,7 @@ function updateFighter(f, foe) {
   cloneTick(f);
   if (tryEscape(f, foe)) { physics(f); return; }
   if (tryBreakoutSkill(f, foe)) { physics(f); return; }
+  if (tryTacticalKeys(f, foe)) { physics(f); return; }
   f.skillCD = Math.max(0, f.skillCD - STEP);
   f.flying = false;
   if (mayhemOn()) {
@@ -676,6 +811,7 @@ function updateFighter(f, foe) {
     }
     case 'special': specialUpdate(f, foe); break;
     case 'charge': chargeUpdate(f, foe); break;
+    case 'aircharge': airChargeUpdate(f, foe); break;
     case 'skill': if (SKILLS[f.skill]) SKILLS[f.skill].update(f, foe); else toNeutral(f); break;
     case 'launched': break;
     case 'held': if (f.t >= 1.25) toNeutral(f); break;
@@ -723,6 +859,7 @@ function physics(f) {
   }
   if (f.flying) g = 0;
   if (f.state === 'dash' || f.state === 'held' || f.state === 'special' || f.airHover > 0) g = 0;
+  else if (f.state === 'aircharge') g *= 0.22;
   else if (f.state === 'attack' && f.move.air) g *= 0.45;
   else if (f.state === 'skill' && f.skAir && SKILLS[f.skill] && !SKILLS[f.skill].air) g *= 0.45;   // 地面技能在空中放：和空中普攻一样下落变慢
   else if (f.state === 'launched') {
@@ -812,7 +949,12 @@ function onLand(f) {
     return;
   }
   if (f.state === 'held') return;
-  f.jumps = 0; f.airDash = 1;
+  f.jumps = 0; f.airDash = 1; f.airCharged = false;
+  if (f.state === 'aircharge') {
+    f.state = 'charge';
+    dust(f.x, 0, 5); SFX.land();
+    return;
+  }
   if (f.state === 'air' || (f.state === 'attack' && f.move.air)) {
     const isPlunge = f.state === 'attack' && (f.moveName === 'a2' || f.moveName === 'cs2') && !f.hitConfirmed;
     toNeutral(f);

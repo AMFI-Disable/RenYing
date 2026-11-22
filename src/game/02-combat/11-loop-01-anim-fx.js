@@ -81,7 +81,7 @@ function targetPose(f) {
   else if (s === 'knockdown') { p = POSES.lying; k = 16; }
   else if (s === 'getup') { p = POSES.getup; k = 14; }
   else if (s === 'victory') { p = POSES.victory; k = 6; }
-  else if (s === 'charge') { p = POSES.charge; k = 18; }
+  else if (s === 'charge' || s === 'aircharge') { p = POSES.charge; k = 18; }
   else p = POSES.idle;
   // 复制一份，再加上呼吸、走步与三段攻击弹性超调动画
   const out = { sw: p.sw + atkOvershoot * 0.85, k };

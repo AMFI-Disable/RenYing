@@ -10,7 +10,7 @@ section('管理后台的查询：总览、找号、操作记录、饰品目录')
   ok(f2.users.length === 0 && f3.users.length === 0, '搜 % 和 _ 不会变成通配符');
   ok((await adm('GET', '/api/admin/find')).users.length === 20, '不填就列最近动过的 20 个');
   const cat = await adm('GET', '/api/admin/catalog');
-  ok(cat.ok && cat.items.length === Object.keys(C.ITEM).length && cat.cols.length === 8 && cat.tiers.length === 5 && cat.cfg.length === C.CFG_INFO.length && cat.items.every(x => C.charOf(x.k) === x.char && C.ITEM[x.k].col === x.col), `饰品目录：${cat.items.length} 款饰品、8 个武器箱、5 档品质、能改的数值`);
+  ok(cat.ok && cat.items.length === Object.keys(C.ITEM).length && cat.cols.length === 11 && cat.tiers.length === 5 && cat.cfg.length === C.CFG_INFO.length && cat.items.every(x => C.charOf(x.k) === x.char && C.ITEM[x.k].col === x.col), `饰品目录：${cat.items.length} 款饰品、11 个武器箱、5 档品质、能改的数值`);
   const au = await adm('GET', '/api/admin/audit'), acts = new Set(au.rows.map(r => r.act));
   ok(au.ok && ['admin', 'admin_ban', 'pardon', 'admin_pw', 'gift_new', 'gift_off', 'code_new', 'code_off', 'cfg'].every(a => acts.has(a)) && au.rows.every(r => !!(parseDetail(r.detail).by)), '操作记录：九种管理员操作都在，每条都写着是谁', [...acts]);
   ok(au.rows.some(r => r.uid === '*' && r.act === 'cfg') && !acts.has('open') && !acts.has('ledger') && !acts.has('gift_got') && !acts.has('code_got'), '全服的记在“全服”名下；玩家自己的操作不混进来');

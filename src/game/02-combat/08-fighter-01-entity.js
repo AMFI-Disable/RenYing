@@ -73,30 +73,44 @@ class Fighter {
       badgeLinkT: 0, badgePressureT: 0, badgePressureSkill: 0, badgeRiposteT: 0, badgeBreakT: 0, badgeAirSkillT: 0, badgeExitT: 0, badgeAirUsed: 0, badgeAirSkillUsed: 0,
       ballGuardBreakT: 0,
       juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
-      breakCD: 0, beaconT: 0, quickGetup: false, quickGetupPhase: false, plat: -1, dropT: 0 });   // plat：站在山河异境第几个平台上（-1 是地上或空中）；dropT：刚从平台上落下，这段时间穿过平台
+      breakCD: 0, beaconT: 0, quickGetup: false, quickGetupPhase: false, plat: -1, dropT: 0,
+      airCharged: false, feintCD: 0, qiParryCD: 0, qiParryT: 0, petCD: 0, rallyCD: 0, lockIdx: -1, koCount: 0 });   // plat：站在山河异境第几个平台上（-1 是地上或空中）；dropT：刚从平台上落下，这段时间穿过平台
     this.scarf = []; this.trail = []; this.ghosts = [];
     if (this.ch.passive === 'magnet') this.pol = 1;   // 磁仙的极性：真正开局时 startRound 用对局随机数再抽（magRoll）
   }
   onGround() { return (this.y >= 0 || this.plat >= 0) && this.vy >= 0; }
 }
 // ======================= 比赛流程 =======================
-const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {}, bans: [] };
-let A = new Fighter(0), B = new Fighter(1), C = new Fighter(2), D = new Fighter(3);
-C.hidden = true; D.hidden = true;
+const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {}, bans: [], teamSize: 0, squadOrder: 'auto' };
+const MAX_FIGHTERS = 16;   // 最多支持 8v8 同屏大混战（16 名侠客）
+const FIGHTERS = Array.from({ length: MAX_FIGHTERS }, (_, i) => new Fighter(i));
+let A = FIGHTERS[0], B = FIGHTERS[1], C = FIGHTERS[2], D = FIGHTERS[3];
+for (let i = 2; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
 const roomDef = () => ROOM_MODES[netRoomMode] || ROOM_MODES.normal;   // 联机房间的规则（src/data/10-modes.js）
 // 正在按哪个联机房间的规则打：联机对局里是这个房间，放联机录像时是录像里记的那个房间（M.mode 是 replay），别的时候没有。
 // 规则（2v2、同袍肉鸽、神决……）都从这里判断，不要只认 M.mode === 'net'，不然录像放出来规则不对
 const netRoom = () => (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net' && REPLAY.m) ? (ROOM_MODES[REPLAY.m.room || REPLAY.m.sub || 'normal'] || null) : M.mode === 'net' ? roomDef() : null;
 // 对局要在别的机器上算得一模一样的时候（联机回滚、放联机录像）：电脑想招、抽秘卷都用对局随机数
 const netSim = () => (ROLL.on && M.mode === 'net') || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net');
-const is2v2 = () => M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'cuju' && !!M.cujuFour) || (M.mode === 'koth' && !!M.kothFour) || (typeof bastionOn === 'function' && bastionOn()) || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four));
+const isLargeTeam = () => (M.teamSize || 0) > 2 || M.mode === 'melee' || (M.mode === 'ctf' && (M.teamSize || 0) > 2);
+const is2v2 = () => !isLargeTeam() && (M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'cuju' && !!M.cujuFour) || (M.mode === 'koth' && !!M.kothFour) || (typeof bastionOn === 'function' && bastionOn()) || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four)));
 const isRaid = () => M.mode === 'raid' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.raid)) || !!(netRoom() && netRoom().raid);
-const isMulti = () => is2v2() || isRaid();
-const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
-const sideFighters = side => isRaid() ? (side === 0 ? [A, C, D].filter(f => !f.hidden) : [B]) : (is2v2() ? (side === 0 ? [A, C] : [B, D]) : [[A, B][side]]);   // 一方场上的人：1v1 一个，2v2 两个，同袍肉鸽 2~3 人战首领
-const allFighters = () => isRaid() ? [A, B, C, D].filter(f => !f.hidden) : (is2v2() ? [A, B, C, D] : [A, B]);
+const isMulti = () => is2v2() || isRaid() || isLargeTeam();
+const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : ((is2v2() || isLargeTeam()) ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
+const sideFighters = side => {
+  if (isLargeTeam()) return FIGHTERS.filter(f => !f.hidden && (f.idx % 2) === side);
+  if (isRaid()) return side === 0 ? [A, C, D].filter(f => !f.hidden) : [B];
+  if (is2v2()) return side === 0 ? [A, C] : [B, D];
+  return [[A, B][side]];
+};
+const allFighters = () => {
+  if (isLargeTeam()) return FIGHTERS.filter(f => !f.hidden);
+  if (isRaid()) return [A, B, C, D].filter(f => !f.hidden);
+  if (is2v2()) return [A, B, C, D];
+  return [A, B];
+};
 const isAiVsAi = () => !!(M.watchAi || (M.mode === 'watch2v2' && M.watchAi) || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && !isMulti() && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
-const fighterByIdx = idx => [A, B, C, D][idx] || A;
+const fighterByIdx = idx => FIGHTERS[idx] || A;
 const foesOf = f => {
   if (isRaid()) {
     if (f === B) {
@@ -106,12 +120,18 @@ const foesOf = f => {
     }
     return [B];
   }
+  if (isLargeTeam()) {
+    const myT = fighterTeam(f);
+    const list = FIGHTERS.filter(e => !e.hidden && fighterTeam(e) !== myT);
+    const alive = list.filter(e => e.hp > 0);
+    return alive.length ? alive : list;
+  }
   if (!is2v2()) return [f === A ? B : A];
   const list = (f.idx % 2 === 0) ? [B, D] : [A, C];
   const alive = list.filter(e => !e.hidden && e.hp > 0);
   return alive.length ? alive : list;
 };
-// 2v2 里谁算电脑（会配合队友选目标）。本地四个玩家用 human[0]～[3]；联机和本地回放里玩家的操控是普通 Ctrl，带 net 标记，也不是电脑
+// 2v2 / 大型团战里谁算电脑（会配合队友选目标）。本地四个玩家用 human[0]～[3]；联机和本地回放里玩家的操控是普通 Ctrl，带 net 标记，也不是电脑
 const cpuTeamwork = f => !!(f.ctrl && !human.includes(f.ctrl) && !f.ctrl.net);
 const foeOf = f => {
   if (!isMulti()) return f === A ? B : A;
@@ -119,9 +139,34 @@ const foeOf = f => {
   const list = foesOf(f);
   if (!list.length) return A;
   if (list.length === 1) { f.target = list[0]; return list[0]; }
-  // 电脑侠客的团队意识：残血的敌人两人一起收割；队友残血被缠住就过去解围（只影响电脑，玩家的朝向不变）
+  // 玩家手动锁定目标（按 G 切换锁定）
+  if (f.lockIdx >= 0) {
+    const locked = fighterByIdx(f.lockIdx);
+    if (locked && !locked.hidden && locked.hp > 0 && list.includes(locked)) {
+      f.target = locked;
+      return locked;
+    }
+    f.lockIdx = -1;
+  }
+  // 电脑侠客的团队意识：支持 1/2/3 战术指令（集火 / 掩护 / 散开）
   if (!isRaid() && cpuTeamwork(f)) {
-    const mate = fighterByIdx(f.idx ^ 2);
+    const myTeam = fighterTeam(f);
+    if (myTeam === localTeam() && M.squadOrder && M.squadOrder !== 'auto') {
+      const playerF = fighterByIdx(localIdx());
+      if (M.squadOrder === 'focus' && playerF && playerF.target && list.includes(playerF.target) && playerF.target.hp > 0) {
+        f.target = playerF.target; return playerF.target;
+      }
+      if (M.squadOrder === 'protect' && playerF && !playerF.hidden && playerF.hp > 0) {
+        let nearP = list[0], minD = Math.abs(nearP.x - playerF.x);
+        for (let i = 1; i < list.length; i++) { const d = Math.abs(list[i].x - playerF.x); if (d < minD) { nearP = list[i]; minD = d; } }
+        f.target = nearP; return nearP;
+      }
+      if (M.squadOrder === 'spread') {
+        const pick = list[(Math.floor(f.idx / 2)) % list.length];
+        if (pick) { f.target = pick; return pick; }
+      }
+    }
+    const mate = is2v2() ? fighterByIdx(f.idx ^ 2) : sideFighters(myTeam).find(m => m !== f && m.hp > 0 && m.hp < m.maxHp * 0.3);
     const low = list.find(e => e.hp < e.maxHp * 0.25 && Math.abs(e.x - f.x) < 700);
     if (low) { f.target = low; return low; }
     if (mate && mate !== f && !mate.hidden && mate.hp > 0 && mate.hp < mate.maxHp * 0.3) {
@@ -132,14 +177,14 @@ const foeOf = f => {
   let cur = f.target && !f.target.hidden && f.target.hp > 0 && list.includes(f.target) ? f.target : null;
   if (cur) {
     const curDist = Math.abs(cur.x - f.x);
-    const other = list.find(e => e !== cur);
-    if (other) {
-      const otherDist = Math.abs(other.x - f.x);
-      // 迟滞锁定：另一名敌人至少比当前目标近 85 像素才切换，防止双人靠近时左右剧烈晃动卡顿
-      if (otherDist < curDist - 85) cur = other;
+    let closest = cur, minDist = curDist;
+    for (const e of list) {
+      if (e === cur) continue;
+      const d = Math.abs(e.x - f.x);
+      if (d < minDist - 85) { closest = e; minDist = d; }
     }
-    f.target = cur;
-    return cur;
+    f.target = closest;
+    return closest;
   }
   let best = list[0], minDist = Math.abs(best.x - f.x);
   for (let i = 1; i < list.length; i++) {

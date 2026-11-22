@@ -58,9 +58,11 @@ async function admin(method, path, body) {
 function parse(list) {
   const pos = [], o = {};
   for (let i = 0; i < list.length; i++) {
-    const a = list[i], m = /^--(why|note|days|uses|kind|format)(?:=(.*))?$/s.exec(a);
+    const a = list[i], m = /^--(why|note|days|uses|kind|format|tag|title)(?:=(.*))?$/s.exec(a);
     if (a === '--new') o.new = true;
     else if (a === '--create') o.create = true;
+    else if (a === '--unlock-all') o.unlockAll = true;
+    else if (a === '--reset') o.reset = true;
     else if (m) o[m[1]] = m[2] !== undefined ? m[2] : list[++i];
     else pos.push(a);
   }
@@ -73,8 +75,9 @@ const time = t => t ? new Date(t).toLocaleString('zh-CN', { hour12: false }) : '
 const ago = t => { if (!t) return '-'; const s = (Date.now() - t) / 1000; return s < 3600 ? Math.max(1, Math.round(s / 60)) + ' 分钟前' : s < 86400 ? Math.round(s / 3600) + ' 小时前' : Math.round(s / 86400) + ' 天前'; };
 const stuff = d => [d.ink ? `墨锭 ${d.ink > 0 ? '+' : ''}${d.ink}` : '', ...Object.entries(d.cases || {}).map(([c, n]) => `${c} ${n > 0 ? '+' : ''}${n}`),
   d.term ? `货郎 ${d.term > 0 ? '+' : ''}${d.term}` : '', d.tags ? `改名标签 ${d.tags > 0 ? '+' : ''}${d.tags}` : '',
+  d.sigils ? `徽记碎片 ${d.sigils > 0 ? '+' : ''}${d.sigils}` : '', d.unlockAll ? '一键全满配' : '',
   ...(d.skins || []).map(s => `${s.k}${s.st >= 0 ? `@${s.st}` : ''}`)].filter(Boolean).join('，');
-// 墨锭、武器箱、货郎、改名标签：ink=500 c1=2 term=1 tags=1（adjust 还认 give= 和 take=）
+// 墨锭、武器箱、货郎、改名标签：ink=500 c1=2 term=1 tags=1（adjust 还认 give/take/sigils/badge/pet/badgeeq/peteq/stance/skill）
 function amounts(list, withItems) {
   const b = { ink: 0, cases: {}, term: 0, tags: 0, give: [], take: [] };
   for (const a of list) {
@@ -83,9 +86,16 @@ function amounts(list, withItems) {
     const [, k, v] = m;
     if (k === 'ink' || k === 'term' || k === 'tags') b[k] += int(v, k);
     else if (/^c[0-9]+$/.test(k)) b.cases[k] = (b.cases[k] || 0) + int(v, k);
+    else if (withItems && k === 'sigils') b.sigils = (b.sigils || 0) + int(v, '徽记碎片');
+    else if (withItems && k === 'badge') { const [id, tier] = v.split(':'); (b.badges ||= {})[id] = tier === 'none' ? '' : (tier || 'silver'); }
+    else if (withItems && k === 'pet') { const [id, tier] = v.split(':'); (b.pets ||= {})[id] = tier === 'none' ? '' : (tier || 'basic'); }
+    else if (withItems && k === 'badgeeq') { const [h, id] = v.split(':'); (b.badgeEquip ||= {})[h] = id === 'none' ? '' : (id || ''); }
+    else if (withItems && k === 'peteq') { const [h, id] = v.split(':'); (b.petEquip ||= {})[h] = id === 'none' ? '' : (id || ''); }
+    else if (withItems && k === 'stance') { const [h, st] = v.split(':'); (b.stances ||= {})[h] = int(st, '架势'); }
+    else if (withItems && k === 'skill') { const [h, sl, vr] = v.split(':'); ((b.skills ||= {})[h] ||= {})[sl] = vr || 'std'; }
     else if (withItems && k === 'give') { const [key, st] = v.split('@'); b.give.push({ k: key, st: st === undefined ? -1 : int(st, '斩数') }); }
     else if (withItems && k === 'take') b.take.push(int(v.replace(/^#/, ''), '饰品编号'));
-    else die(`不认识「${k}」：能写 ink、c1～c8、term、tags${withItems ? '、give、take' : ''}`);
+    else die(`不认识「${k}」：能写 ink、c1～c11、term、tags${withItems ? '、sigils、badge、pet、badgeeq、peteq、stance、skill、give、take' : ''}`);
   }
   return b;
 }
@@ -237,12 +247,24 @@ if (cmd === 'whoami') {
   const file = pos[0] || (/filename="([^"]+)"/.exec(res.headers.get('Content-Disposition') || '') || [])[1] || `renying-errors-debug.${fmt}`;
   await import('node:fs/promises').then(fs => fs.writeFile(file, text, 'utf-8'));
   console.log(`已成功导出至文件：${file}`);
+} else if (cmd === 'banner') {
+  const j = await admin('GET', '/api/admin/banner');
+  if (!j.banner) console.log('当前使用客户端内置默认更新横幅');
+  else {
+    console.log(`[${j.banner.tag || '最新大更新'}] ${j.banner.title}（${j.by} 改于 ${time(j.at)}）`);
+    for (const it of j.banner.items || []) console.log(`  · ${it.k}：${it.v}`);
+  }
+} else if (cmd === 'banner-set') {
+  if (!o.reset && !o.title) die('用法：node tools/admin/econ-admin.mjs banner-set --title <主标题> [--tag <角标>] [类别=内容…] --why <原因>（或加 --reset 恢复默认）');
+  const items = o.reset ? [] : pos.map(a => { const i = a.indexOf('='); return i > 0 ? { k: a.slice(0, i), v: a.slice(i + 1) } : { k: '更新', v: a }; });
+  const j = await admin('POST', '/api/admin/banner', { tag: o.reset ? '' : (o.tag || '最新大更新'), title: o.reset ? '' : o.title, items, why: why() });
+  console.log(j.banner ? `更新横幅已发布：[${j.banner.tag}] ${j.banner.title}` : '已恢复客户端内置默认更新横幅');
 } else {
   console.log(`用法（<号> 写昵称或者账号编号；修改都要 --why 写原因）：
   node tools/admin/econ-admin.mjs whoami | stats | audit
   node tools/admin/econ-admin.mjs find [昵称开头]
   node tools/admin/econ-admin.mjs log <号>
-  node tools/admin/econ-admin.mjs adjust <号> ink=+500 c1=+2 term=+1 tags=+1 give=qf_p1 give=gc_wolf@0 take=12 --why <原因>
+  node tools/admin/econ-admin.mjs adjust <号> ink=+500 c9=+2 sigils=+10 badge=combo:purpgold pet=fox:immortal stance=chixiao:1 skill=chixiao:q:swift [--unlock-all] --why <原因>
   node tools/admin/econ-admin.mjs ban <号> <天数|perm> --why <原因>
   node tools/admin/econ-admin.mjs unban <号> --why <原因>
   node tools/admin/econ-admin.mjs password <号> [--create] --why <原因>
@@ -255,6 +277,8 @@ if (cmd === 'whoami') {
   node tools/admin/econ-admin.mjs cfg
   node tools/admin/econ-admin.mjs cfg-set price.c1=300 fee=0.1 --why <原因>
   node tools/admin/econ-admin.mjs cfg-undo <版本号|0> --why <原因>
+  node tools/admin/econ-admin.mjs banner
+  node tools/admin/econ-admin.mjs banner-set --title <主标题> [--tag <角标>] [新模式=群雄大乱斗] [--reset] --why <原因>
   node tools/admin/econ-admin.mjs errors [--days 7] [--kind client|server|slow]
   node tools/admin/econ-admin.mjs errors-export [文件] [--days 30] [--kind client|server|slow] [--format json|md]
 网页版：${API}/admin`);

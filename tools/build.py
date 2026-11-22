@@ -311,6 +311,12 @@ def admin_names():
     for pre, *codes in zof:
         for i, code in enumerate(codes):
             skins[f"{pre}_z{code}"] = f"{zod[code]}·{tiers[i]}"
+    # 三套全新主题套装皮肤（c9 山海星陨 sf、c10 墨韵丹青 ic、c11 沧澜雷霆 st）
+    set_themes = {"sf": "星陨", "ic": "丹青", "st": "沧澜"}
+    set_ranks = {"1": "初影", "2": "流光", "3": "玄华", "4": "赤霄"}
+    for k in re.findall(r"'([a-z]{2}_(?:sf|ic|st)[1-4])'", core):
+        tag = k.split("_", 1)[1]
+        skins[k] = f"{set_themes[tag[:2]]}·{set_ranks[tag[2:]]}"
     heroes = dict(re.findall(r"^  id: '([a-z]+)',[^\n]*\n(?:  [^\n]*\n)*?  char: \{\s*name: '([^']+)'", game, re.M))
     if len(skins) < 60 or len(heroes) < 12:
         raise SystemExit(f"管理网页要的名字没读全：皮肤 {len(skins)} 款、侠客 {len(heroes)} 个（src/game/ 的 SKINS、src/data/heroes/ 或 src/armory-core.js 的写法变了？）")

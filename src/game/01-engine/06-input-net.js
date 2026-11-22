@@ -15,7 +15,11 @@ class Ctrl {
 // 1P 攻击用鼠标（左键攻击/蓄力，右键重斩）或者 X 键（按住蓄力），其余用键盘；2P 全键盘
 // X 不和 2P、3P、4P 的任何键重复，同一台电脑多人玩时也不打架
 const DEFAULT_1P_KEYS = {
-  left: 'KeyA', right: 'KeyD', jump: 'KeyW', jump2: 'Space', down: 'KeyS', atk: 'KeyX', dash: 'ShiftLeft', special: 'KeyE', skill: 'KeyQ', skill2: 'KeyR', stance: 'KeyZ'
+  left: 'KeyA', right: 'KeyD', jump: 'KeyW', jump2: 'Space', down: 'KeyS',
+  atk: 'KeyX', dash: 'ShiftLeft', special: 'KeyE', skill: 'KeyQ', skill2: 'KeyR',
+  stance: 'KeyZ', feint: 'KeyC', parry: 'KeyF', pet: 'KeyV',
+  lock: 'KeyG', beacon: 'KeyB', rally: 'KeyT', scoreboard: 'Tab',
+  orderFocus: 'Digit1', orderProtect: 'Digit2', orderSpread: 'Digit3'
 };
 let custom1PKeys = { ...DEFAULT_1P_KEYS };
 try {

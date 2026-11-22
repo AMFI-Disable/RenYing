@@ -35,8 +35,8 @@
   C.DROP_P = 0.15, C.DROP_CAP = 4, C.SUPPLY_GAMES = 5;
   C.MATCH_MIN_MS = 20000, C.MATCH_MAX_MS = 45 * 60000, C.MATCH_GAP_MS = 15000, C.MATCH_DAY_CAP = 60;
   C.KO_MAX = 12;                               // 一局最多记 12 斩（三人车轮战也够了）
-  C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji'];
-  C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem'];
+  C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji', 'chixiao', 'youhuang', 'xuanji', 'polang'];
+  C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem', 'melee', 'ctf', 'gauntlet'];
   C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
   C.BADGES = {
     flowing: { name: '连势', desc: '连续普攻第 3 击命中后，可在收招时冲刺追步；紫金阶可改接技能。', en: 'Flow', effect: 'normal' },
@@ -45,10 +45,43 @@
     breaker: { name: '破军', desc: '破防后立刻重置冲刺冷却，下一次冲刺可更快追击；紫金阶也可选重击踏进。', en: 'Breaker', effect: 'break' },
     ascent: { name: '凌空', desc: '腾空攻击命中后可续一次空中冲刺；紫金阶可接空中技能。', en: 'Ascent', effect: 'air' },
     pursuit: { name: '追影', desc: '闪避后命中，可在收招时冲刺退步；紫金阶退步带短暂无敌。', en: 'Pursuit', effect: 'dash' },
+    ironwall: { name: '铁壁', desc: '连续格挡 3 次后，下一次反击附带短暂霸体护身。', en: 'Ironwall', effect: 'guard' },
+    tempest: { name: '疾电', desc: 'Q/R 技能命中后，下一次普攻起手提速并延长追击窗口。', en: 'Tempest', effect: 'skill' },
+    bloodlust: { name: '血怒', desc: '气血低于 35% 时，命中回复少量气血并额外积攒真气。', en: 'Bloodlust', effect: 'lowhp' },
+    phantom: { name: '绝影', desc: '虚招翻滚（C）后 1.2 秒内首次命中伤害提升。', en: 'Phantom', effect: 'feint' },
+    resonance: { name: '共鸣', desc: '发动灵宠秘技（V）后，立刻缩短 Q/R 技能剩余冷却。', en: 'Resonance', effect: 'pet' },
+    skybreaker: { name: '破穹', desc: '空中蓄力斩命中后，重置空中跳跃与冲刺次数。', en: 'Skybreaker', effect: 'aircharge' },
+    juggernaut: { name: '镇岳', desc: '霸体硬扛受击后，下一次重击或蓄力斩威力增强。', en: 'Juggernaut', effect: 'armor' },
+    vanguard: { name: '同心', desc: '多人团战中协同命中敌人时，为己方附近队友回复真气。', en: 'Vanguard', effect: 'team' },
   };
   C.BADGE_TIER = { silver: 1, gold: 2, purpgold: 3 };
   C.BADGE_UPGRADE = { silver: { to: 'gold', sigils: 3, ink: 2000, kos: 100 }, gold: { to: 'purpgold', sigils: 7, ink: 6000, kos: 300 } };
   C.BADGE_SIGIL_KOS = 40;
+  C.BADGE_UNLOCK_INK = 1200;
+  C.BADGE_UNLOCK_SIGILS = 2;
+
+  // 灵宠系统：8 只水墨灵宠，每只具备被动增益 + V 键主动秘技 + 三阶养成（初阶/灵阶/仙阶）
+  C.PETS = {
+    inkfox: { name: '墨狐', en: 'Ink Fox', rgb: '120,235,205', passive: '连击额外回气', active: '灵狐突袭：前冲造成缓速印记' },
+    tortoise: { name: '玄龟', en: 'Obsidian Tortoise', rgb: '140,200,255', passive: '架势恢复提速', active: '玄甲护盾：获得短暂霸体与架势回复' },
+    falcon: { name: '雷隼', en: 'Thunder Falcon', rgb: '255,220,110', passive: '空中招式威力略增', active: '惊雷俯冲：电光劈向锁定目标' },
+    froststag: { name: '霜鹿', en: 'Frost Stag', rgb: '160,235,255', passive: '脱战缓慢回血', active: '寒露甘泉：瞬间回复气血与架势' },
+    flamelion: { name: '炎狮', en: 'Flame Lion', rgb: '255,125,85', passive: '蓄力斩破防增强', active: '烈焰狮吼：震退近身敌众并灼烧' },
+    shadowcrow: { name: '影鸦', en: 'Shadow Crow', rgb: '195,140,255', passive: '虚招与闪避冷却略减', active: '鸦影袭背：瞬闪扰敌并积攒真气' },
+    jadekoi: { name: '玉鲤', en: 'Jade Koi', rgb: '115,245,175', passive: '闪避无敌略微延长', active: '跃渊清心：驱散减速灼烧并疾行' },
+    mechfinch: { name: '机雀', en: 'Clockwork Finch', rgb: '233,196,106', passive: 'Q/R 技能冷却略减', active: '连弩齐发：齐射三枚追踪机矢' },
+  };
+  C.PET_TIER = { basic: 1, spirit: 2, immortal: 3 };
+  C.PET_BUY_COST = 800;
+  C.PET_UPGRADE = { basic: { to: 'spirit', ink: 1500, kos: 30 }, spirit: { to: 'immortal', ink: 4000, kos: 100 } };
+
+  // 招式自选流派：每位侠客的 Q / R / E 均可切换本宗、迅影、破军三种变式
+  C.SKILL_SLOTS = ['q', 'r', 'e'];
+  C.SKILL_VARIANTS = {
+    std: { name: '本宗', en: 'Classic', cost: 0, kos: 0, desc: '默认均衡招式配置。' },
+    swift: { name: '迅影', en: 'Swift', cost: 400, kos: 10, desc: '冷却缩短 18%，位移更灵动，单次威力略降 8%。' },
+    heavy: { name: '破军', en: 'Ruin', cost: 600, kos: 25, desc: '威力提升 18% 且破防增强 25%，冷却延长 16%。' },
+  };
 
   // 一次性、按天按周的奖励：领没领过记在武库存档的 rw 里（云端账号就是服务器上那份，玩家改不了），墨锭由这里发。
   // 本机的领取记录（localStorage）不算数：换设备、清缓存、退出再登录都领不到第二次。离线版和本机账号没有服务器，照旧本机算
@@ -208,11 +241,19 @@
       mil: [], res: [], cla: ['my_qinglv', 'yl_kongque', 'ly_jinli'], cov: ['ts_liuli', 'yx_tianlai'], gold: ['ls_tianhe', 'fy_huandie', 'lq_star', 'li_star', 'cx_star'] },
     c8: { name: '星座', price: 1500, emblem: '星', col: '170,150,255', prem: true, ok: 'zod.', lim: 'zodWeek', cnt: 'zw', odds: { mil: 0, res: 0, cla: 0.65, cov: 0.28, gold: 0.07 },
       mil: [], res: [], cla: zodKeys(0), cov: zodKeys(1), gold: zodKeys(2) },
+    // 三套全新主题系列套装武器箱（精铁至赤霄四档，不含独立绝世单皮）
+    c9: { name: '山海星陨', price: 320, emblem: '陨', col: '130,155,255', themed: true, odds: { mil: 0.48, res: 0.30, cla: 0.15, cov: 0.07, gold: 0 },
+      mil: ['ch_sf1', 'yu_sf1', 'xj_sf1', 'pl_sf1'], res: ['qf_sf2', 'fy_sf2', 'qj_sf2'], cla: ['ch_sf3', 'xj_sf3', 'ls_sf3'], cov: ['xj_sf4', 'ch_sf4'], gold: [] },
+    c10: { name: '墨韵丹青', price: 320, emblem: '丹', col: '235,95,80', themed: true, odds: { mil: 0.48, res: 0.30, cla: 0.15, cov: 0.07, gold: 0 },
+      mil: ['qf_ic1', 'my_ic1', 'yu_ic1', 'pl_ic1'], res: ['ch_ic2', 'xj_ic2', 'yh_ic2'], cla: ['yu_ic3', 'my_ic3', 'li_ic3'], cov: ['yu_ic4', 'qf_ic4'], gold: [] },
+    c11: { name: '沧澜雷霆', price: 320, emblem: '澜', col: '80,210,245', themed: true, odds: { mil: 0.48, res: 0.30, cla: 0.15, cov: 0.07, gold: 0 },
+      mil: ['pl_st1', 'lm_st1', 'ch_st1', 'ts_st1'], res: ['pl_st2', 'ly_st2', 'cx_st2'], cla: ['pl_st3', 'lm_st3', 'gc_st3'], cov: ['pl_st4', 'lm_st4'], gold: [] },
   };
   C.CASES = Object.keys(C.COLS);
-  C.REG = C.CASES.filter(c => !C.COLS[c].prem);   // 普通武器箱：对局掉落、补给、星章送的都是这几种
+  C.REG = C.CASES.filter(c => !C.COLS[c].prem);   // 普通武器箱与主题套装箱
   // 爆率：cfg 是服务器上管理员改过的经济数值（见下面的 C.CFG_INFO），不传就是上面写死的
   C.oddsOf = (cid, cfg) => {
+    if (C.COLS[cid] && C.COLS[cid].themed) return C.COLS[cid].odds;
     if (!cfg) return C.COLS[cid].odds || C.ODDS;
     const p = C.COLS[cid].prem && C.COLS[cid].ok;
     if (p) return { mil: 0, res: 0, cla: C.cv(cfg, p + 'cla'), cov: C.cv(cfg, p + 'cov'), gold: C.cv(cfg, p + 'gold') };
@@ -331,7 +372,7 @@
   C.ofTier = t => Object.keys(C.ITEM).filter(k => C.ITEM[k].tier === t);
   C.isPrem = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].prem;
   C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座武器箱的靠开箱、市场、货郎、熔铸
-  const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque', li: 'liying', cx: 'cixian', qj: 'qianji' };
+  const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque', li: 'liying', cx: 'cixian', qj: 'qianji', ch: 'chixiao', yu: 'youhuang', xj: 'xuanji', pl: 'polang' };
   C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
 
   // 星座武器箱的 36 款：按 C.ZODIAC 的配色和 C.ZOD_OF 的分配生成。
@@ -362,6 +403,27 @@
       scene: { sky: sky(0.85, 0.55), orb: 'galaxy', orbC: rgbS(mixH(m, '#ffffff', 0.4)), mist: rgbS(m), mtn: [mixH(nt, dk, 0.8), mixH(nt, dk, 0.5)], bam: [mixH(nt, dk, 0.35), nt], wx: 'gold', wxC: rgbS(GOLD), hit: 'sunburst', hitC: rgbS(GOLD), stars: 1, rays: true } };
   };
   for (const [pre, zs] of Object.entries(C.ZOD_OF)) zs.forEach((code, ti) => { C.FULL[`${pre}_z${code}`] = zodSkin(pre, C.ZODIAC.find(z => z[0] === code), ti); });
+  // 三套全新主题套装皮肤生成（山海星陨 sf、墨韵丹青 ic、沧澜雷霆 st；不含绝世单皮）
+  const SET_THEMES = {
+    sf: { name: '星陨', body: '#1f2547', shade: '#10142a', scarf: '#8ea2ff', slash: '155,175,255', blade: '#eef2ff', outline: '#9fb2ff', trail: 'star' },
+    ic: { name: '丹青', body: '#f0e8dc', shade: '#b5a392', scarf: '#d63e32', slash: '235,95,80', blade: '#241e1c', outline: '#2a1c18', trail: 'ink' },
+    st: { name: '沧澜', body: '#183242', shade: '#0b1924', scarf: '#38c6f4', slash: '90,215,255', blade: '#e6faff', outline: '#66d8ff', trail: 'cloud' },
+  };
+  const SET_RANK = { 1: '初影', 2: '流光', 3: '玄华', 4: '赤霄' };
+  for (const cid of ['c9', 'c10', 'c11']) {
+    for (const t of ['mil', 'res', 'cla', 'cov']) {
+      for (const k of C.COLS[cid][t] || []) {
+        const [pre, tag] = k.split('_'), th = SET_THEMES[tag.slice(0, 2)], rk = SET_RANK[tag.slice(2)] || '';
+        C.FULL[k] = {
+          char: PREFIX[pre],
+          name: `${th.name}·${rk}`,
+          look: { body: th.body, shade: th.shade, scarf: th.scarf, slash: th.slash, blade: th.blade, outline: th.outline, outlineA: 0.9 },
+          deco: { trail: th.trail, aura: t === 'cov' ? 'aurora' : undefined },
+          fx: { th: th.trail, c: th.slash, c2: '240,245,255' },
+        };
+      }
+    }
+  }
 
   /* ---------- 价格 ---------- */
   // 系统只给自己卖的东西定价：武器箱、货郎（商店固定价格）和货郎报的那一件。
@@ -385,6 +447,7 @@
   C.blank = () => ({
     v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
     badgeGift: 0, badgeOwned: {}, badgeEquip: {}, badgeSigils: 0, heroKOs: {}, stances: {},
+    petOwned: {}, petEquip: {}, skillUnlocks: {}, skillLoadout: {},
     lst: [], hist: [], od: { d: 0, n: 0 }, pd: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, zw: { w: 0, n: 0 }, zf: 0, drop: { w: 0, g: 0, n: 0, sup: 0 },
     op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
     stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
@@ -419,6 +482,29 @@
     s.badgeSigils = int(s.badgeSigils, 0, 1e6);
     s.heroKOs = Object.fromEntries(Object.entries(s.heroKOs).filter(([h]) => C.HERO_IDS.includes(h)).map(([h, n]) => [h, int(n, 0, 1e6)]));
     s.stances = Object.fromEntries(Object.entries(s.stances).filter(([h, n]) => C.HERO_IDS.includes(h) && (n === 0 || n === 1) && (n === 0 || (s.heroKOs[h] || 0) >= 20)));
+    s.petOwned = Object.fromEntries(Object.entries(s.petOwned).filter(([id, tier]) => own(C.PETS, id) && own(C.PET_TIER, tier)));
+    s.petEquip = Object.fromEntries(Object.entries(s.petEquip).filter(([h, id]) => C.HERO_IDS.includes(h) && own(s.petOwned, id)));
+    const cleanSU = {};
+    for (const [h, v] of Object.entries(s.skillUnlocks)) {
+      if (!C.HERO_IDS.includes(h) || !isObj(v)) continue;
+      const slots = {};
+      for (const sl of C.SKILL_SLOTS) {
+        if (Array.isArray(v[sl])) slots[sl] = [...new Set(v[sl].filter(x => x === 'swift' || x === 'heavy'))];
+      }
+      if (Object.keys(slots).length) cleanSU[h] = slots;
+    }
+    s.skillUnlocks = cleanSU;
+    const cleanSL = {};
+    for (const [h, v] of Object.entries(s.skillLoadout)) {
+      if (!C.HERO_IDS.includes(h) || !isObj(v)) continue;
+      const slots = {};
+      for (const sl of C.SKILL_SLOTS) {
+        const pick = v[sl];
+        if (pick === 'std' || ((pick === 'swift' || pick === 'heavy') && ((cleanSU[h] && cleanSU[h][sl]) || []).includes(pick))) slots[sl] = pick;
+      }
+      if (Object.keys(slots).length) cleanSL[h] = slots;
+    }
+    s.skillLoadout = cleanSL;
     s.tags = int(s.tags, 0, 1e9); s.term = int(s.term, 0, 1e6) + oldKeys;
     s.cases = Object.fromEntries(C.CASES.map(c => [c, int(s.cases[c], 0, 1e6)]));
     const seen = new Set();
@@ -929,6 +1015,78 @@
     if (env.ink < rule.ink) return { err: `墨锭不足，需要 ${rule.ink}` };
     s.badgeSigils -= rule.sigils; giveInk(env, -rule.ink); s.badgeOwned[id] = rule.to;
     return { ok: true, id, tier: rule.to, sigils: s.badgeSigils, ink: rule.ink };
+  };
+  A.badgeUnlock = (s, a, env) => {
+    const id = String(a.id || '');
+    if (!own(C.BADGES, id)) return { err: '没有这枚徽记' };
+    if (own(s.badgeOwned, id)) return { err: '已经拥有这枚徽记' };
+    if (s.badgeSigils >= C.BADGE_UNLOCK_SIGILS) {
+      s.badgeSigils -= C.BADGE_UNLOCK_SIGILS;
+      s.badgeOwned[id] = 'silver';
+      return { ok: true, id, tier: 'silver', sigils: s.badgeSigils, usedSigils: C.BADGE_UNLOCK_SIGILS };
+    }
+    if (env.ink < C.BADGE_UNLOCK_INK) return { err: `需要 ${C.BADGE_UNLOCK_SIGILS} 枚徽记碎片或 ${C.BADGE_UNLOCK_INK} 墨锭` };
+    giveInk(env, -C.BADGE_UNLOCK_INK);
+    s.badgeOwned[id] = 'silver';
+    return { ok: true, id, tier: 'silver', ink: C.BADGE_UNLOCK_INK };
+  };
+  A.petBuy = (s, a, env) => {
+    const id = String(a.id || '');
+    if (!own(C.PETS, id)) return { err: '没有这只灵宠' };
+    if (own(s.petOwned, id)) return { err: '已经收养这只灵宠' };
+    if (env.ink < C.PET_BUY_COST) return { err: `墨锭不足，需要 ${C.PET_BUY_COST}` };
+    giveInk(env, -C.PET_BUY_COST);
+    s.petOwned[id] = 'basic';
+    return { ok: true, id, tier: 'basic', ink: C.PET_BUY_COST };
+  };
+  A.petUpgrade = (s, a, env) => {
+    const id = String(a.id || ''), tier = s.petOwned[id], rule = C.PET_UPGRADE[tier];
+    if (!own(s.petOwned, id)) return { err: '还没有这只灵宠' };
+    if (!rule) return { err: '这只灵宠已升至最高阶' };
+    const totalKOs = Object.values(s.heroKOs).reduce((sum, n) => sum + n, 0);
+    if (totalKOs < rule.kos) return { err: `累计斩获 ${rule.kos} 次后才可进阶` };
+    if (env.ink < rule.ink) return { err: `墨锭不足，需要 ${rule.ink}` };
+    giveInk(env, -rule.ink);
+    s.petOwned[id] = rule.to;
+    return { ok: true, id, tier: rule.to, ink: rule.ink };
+  };
+  A.petEquip = (s, a) => {
+    const hero = String(a.hero || ''), id = String(a.id || '');
+    if (!C.HERO_IDS.includes(hero)) return { err: '没有这位侠客' };
+    if (id && !own(s.petOwned, id)) return { err: '还没有这只灵宠' };
+    if (id) s.petEquip[hero] = id; else delete s.petEquip[hero];
+    return { ok: true, hero, id };
+  };
+  A.skillUnlock = (s, a, env) => {
+    const hero = String(a.hero || ''), slot = String(a.slot || ''), variant = String(a.variant || '');
+    if (!C.HERO_IDS.includes(hero)) return { err: '没有这位侠客' };
+    if (!C.SKILL_SLOTS.includes(slot)) return { err: '技能槽位不正确' };
+    if (variant !== 'swift' && variant !== 'heavy') return { err: '招式流派不正确' };
+    const cur = (s.skillUnlocks[hero] && s.skillUnlocks[hero][slot]) || [];
+    if (cur.includes(variant)) return { err: '已解锁该招式流派' };
+    const spec = C.SKILL_VARIANTS[variant];
+    const kos = s.heroKOs[hero] || 0;
+    let spent = 0;
+    if (kos < spec.kos) {
+      if (env.ink < spec.cost) return { err: `需要 ${spec.kos} 斩或 ${spec.cost} 墨锭解锁` };
+      giveInk(env, -spec.cost); spent = spec.cost;
+    }
+    if (!s.skillUnlocks[hero]) s.skillUnlocks[hero] = {};
+    s.skillUnlocks[hero][slot] = [...cur, variant];
+    return { ok: true, hero, slot, variant, ink: spent };
+  };
+  A.skillSet = (s, a) => {
+    const hero = String(a.hero || ''), slot = String(a.slot || ''), variant = String(a.variant || 'std');
+    if (!C.HERO_IDS.includes(hero)) return { err: '没有这位侠客' };
+    if (!C.SKILL_SLOTS.includes(slot)) return { err: '技能槽位不正确' };
+    if (!own(C.SKILL_VARIANTS, variant)) return { err: '招式流派不正确' };
+    if (variant !== 'std') {
+      const cur = (s.skillUnlocks[hero] && s.skillUnlocks[hero][slot]) || [];
+      if (!cur.includes(variant)) return { err: '尚未解锁该招式流派' };
+    }
+    if (!s.skillLoadout[hero]) s.skillLoadout[hero] = {};
+    s.skillLoadout[hero][slot] = variant;
+    return { ok: true, hero, slot, variant };
   };
   A.unequip = (s, a, env) => {
     const char = String(a.char || ''); if (!C.HERO_IDS.includes(char)) return { err: '没有这位侠客' };

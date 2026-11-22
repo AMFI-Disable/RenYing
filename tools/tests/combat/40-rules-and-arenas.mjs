@@ -9,7 +9,8 @@ export default [
         qingfeng: 870, feiying: 800, tieshan: 900, lingshuang: 815,
         liuyun: 840, leiming: 885, moyu: 825, yuehua: 780,
         yanling: 750, yuxiao: 775, zuixian: 885, gouchen: 835,
-        lingque: 790, liying: 815, cixian: 815, qianji: 830
+        lingque: 790, liying: 815, cixian: 815, qianji: 830,
+        chixiao: 860, youhuang: 790, xuanji: 810, polang: 900
       };
       for (let ci = 0; ci < CHARS.length; ci++) {
         const ch = CHARS[ci];

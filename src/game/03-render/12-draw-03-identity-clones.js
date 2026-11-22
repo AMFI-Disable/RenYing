@@ -173,9 +173,32 @@ function drawIdentityTags(list) {
   }
   tags.sort((a, b) => (a.r.kind === 'self') - (b.r.kind === 'self') || a.f.idx - b.f.idx);
 
+  const localF = fighterByIdx(localIdx());
+  const lockedIdx = localF && !localF.hidden && localF.lockIdx >= 0 ? localF.lockIdx : -1;
   // 1P 的徽章胶囊标 [ ▼ 我 ] / [ ▼ 1P ]：带微型发光描边与向下指针，视距补偿（乘 1 / cam.zoom 像素恒定）
   for (const { f, r, hx, hy } of tags) {
-    if (r.kind === 'foe') continue;   // 对手不显示头顶标，避免视觉杂乱
+    if (r.kind === 'foe') {
+      if (isLargeTeam() || f.idx === lockedIdx) {
+        ctx.save();
+        ctx.translate(hx, hy);
+        ctx.scale(px, px);
+        if (isLargeTeam()) {
+          const bw = 36, bh = 4;
+          ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(-bw / 2 - 1, -bh / 2 - 1, bw + 2, bh + 2);
+          ctx.fillStyle = '#ff5e6c'; ctx.fillRect(-bw / 2, -bh / 2, bw * clamp(f.hp / f.maxHp, 0, 1), bh);
+        }
+        if (f.idx === lockedIdx) {
+          const pulse = 0.5 + 0.5 * Math.sin(clock * 10);
+          ctx.strokeStyle = `rgba(255,95,85,${0.8 + 0.2 * pulse})`;
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(0, -16); ctx.lineTo(8, -8); ctx.lineTo(0, 0); ctx.lineTo(-8, -8); ctx.closePath();
+          ctx.stroke();
+        }
+        ctx.restore();
+      }
+      continue;
+    }
     const self = r.kind === 'self';
     const bob = Math.sin(clock * 5 + f.idx * 1.5) * 2;
     const tagText = self ? (r.label || youLabel()) : (r.label || '友');

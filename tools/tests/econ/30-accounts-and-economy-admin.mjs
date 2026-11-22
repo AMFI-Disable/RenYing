@@ -126,7 +126,7 @@ section('管理员加减：墨锭、武器箱、货郎、改名标签、发饰�
   const v1 = ver(), i1 = inkOf(P.uid);
   const bad = await badInputs('/api/admin/adjust', { uid: P.uid, why: '乱填测试' }, [
     [{ ink: -(i1 + 1) }, /扣不了/], [{ cases: { c2: -1 } }, /扣不了/], [{ term: -99 }, /货郎/], [{ tags: -3 }, /改名标签/], [{ ink: 1000001 }, /最多/], [{ ink: 1.5 }, /整数/],
-    [{ ink: 'lots' }, /整数/], [{ cases: { c9: 1 } }, /武器箱/], [{ cases: { c1: 1001 } }, /武器箱/], [{ give: [{ k: 'nope' }] }, /没有这件饰品/], [{ give: ['__proto__'] }, /没有这件饰品/],
+    [{ ink: 'lots' }, /整数/], [{ cases: { c99: 1 } }, /武器箱/], [{ cases: { c1: 1001 } }, /武器箱/], [{ give: [{ k: 'nope' }] }, /没有这件饰品/], [{ give: ['__proto__'] }, /没有这件饰品/],
     [{ give: [{ k: 'qf_p1', st: 2.5 }] }, /斩数/], [{ take: [99999] }, /库存里没有/], [{ take: ['x'] }, /编号不对/], [{}, /什么都没填/], [{ ink: 50, take: [99999] }, /库存里没有/],
     [{ give: Array.from({ length: Object.keys(C.ITEM).length + 1 }, () => ({ k: 'qf_p1' })) }, /最多/],
   ]);

@@ -959,7 +959,7 @@ function drawComboTotals() {
 function drawProjs(glowOnly) {
   for (const p of projs) {
     if (glowOnly && (p.kind === 'dragon' || p.kind === 'trap' || p.kind === 'quake' || p.kind === 'pavilion' || p.kind === 'popcorn')) continue;
-    const L = ([A, B, C, D][p.owner] || A).look;   // 2v2 里 C/D 的技能也会生成弹道，owner 可能是 2/3
+    const L = fighterByIdx(p.owner).look;   // 多人团战里最多 16 名侠客的技能也会生成弹道
     ctx.save();
     if (p.kind === 'popcorn') {   // 爆米花：落下时一小撮，半秒后噼啪炸开
       if (p.delay > 0) {

@@ -1,6 +1,7 @@
 // ======================= 键盘 =======================
 // 本文件：全局键盘事件（对局里的按键、F1 判定框、暂停……）、切到后台时要不要暂停，以及游戏启动（resize 和最后的初始化）。
 // 注意：这是 src/game/ 里倒数第二个文件，启动代码要在前面所有定义都就绪以后才跑。
+let TAB_SCOREBOARD = false;
 window.addEventListener('keydown', e => {
   initAudio();
   if (e.code === 'KeyM') { muted = !muted; return; }
@@ -65,8 +66,13 @@ window.addEventListener('keydown', e => {
     if (e.code === 'KeyG' && typeof bastionCastCompanionSkill === 'function') { e.preventDefault(); bastionCastCompanionSkill(); return; }
     if (e.code === 'KeyB' && typeof bastionToggleArmory === 'function') { e.preventDefault(); bastionToggleArmory(); return; }
   }
+  if (KEYS[0] && KEYS[0][e.code] === 'scoreboard') {
+    e.preventDefault();
+    TAB_SCOREBOARD = true;
+    return;
+  }
   for (let p = 0; p < KEYS.length; p++) {
-    const act = KEYS[p] ? KEYS[p][e.code] : null; if (!act) continue;
+    const act = KEYS[p] ? KEYS[p][e.code] : null; if (!act || act === 'scoreboard') continue;
     e.preventDefault();
     let c = human[0];
     if (M.mode === 'pvp') {
@@ -84,7 +90,7 @@ window.addEventListener('keydown', e => {
         c = human[0];
       }
     } else {
-      c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
+      c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (typeof isLargeTeam === 'function' && isLargeTeam()) || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
     }
     if (secretEnabled && c === human[0] && !REPLAY.on) continue;
     if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
@@ -94,8 +100,12 @@ window.addEventListener('keydown', e => {
   }
 });
 window.addEventListener('keyup', e => {
+  if (KEYS[0] && KEYS[0][e.code] === 'scoreboard') {
+    TAB_SCOREBOARD = false;
+    return;
+  }
   for (let p = 0; p < KEYS.length; p++) {
-    const act = KEYS[p] ? KEYS[p][e.code] : null; if (!act) continue;
+    const act = KEYS[p] ? KEYS[p][e.code] : null; if (!act || act === 'scoreboard') continue;
     let c = human[0];
     if (M.mode === 'pvp') {
       c = human[p] || human[0];
@@ -110,7 +120,7 @@ window.addEventListener('keyup', e => {
         c = human[0];
       }
     } else {
-      c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
+      c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (typeof isLargeTeam === 'function' && isLargeTeam()) || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
     }
     if (secretEnabled && c === human[0] && !REPLAY.on) continue;
     if (act === 'left' || act === 'right' || act === 'down') {

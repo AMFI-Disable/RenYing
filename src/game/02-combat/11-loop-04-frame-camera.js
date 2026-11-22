@@ -53,11 +53,11 @@ function frameBody(now) {
   if (!paused) {
     if (slowmo > 0) slowmo -= real;
     if (typeof swapFreezeTimer !== 'undefined' && swapFreezeTimer > 0) swapFreezeTimer = Math.max(0, swapFreezeTimer - real);
-    for (const f of [A, B]) if (f.state === 'special' && f.sp === 'charge' && f.t < 0.06 && cine.t < 0) { cine.t = 0; cine.owner = f; if (f.idx === localIdx()) MSTAT.ults++; if (AC && MUSIC.gain) { drum(AC.currentTime, 'taiko', 0.8); flute(noteF(12), AC.currentTime + 0.05, 1.1, 0.1); } }
+    for (const f of allFighters()) if (!f.hidden && f.state === 'special' && f.sp === 'charge' && f.t < 0.06 && cine.t < 0) { cine.t = 0; cine.owner = f; if (f.idx === localIdx()) MSTAT.ults++; if (AC && MUSIC.gain) { drum(AC.currentTime, 'taiko', 0.8); flute(noteF(12), AC.currentTime + 0.05, 1.1, 0.1); } }
     if (cine.t >= 0) { cine.t += real; if (cine.t > CINE_LEN) { cine.t = -1; cine.owner = null; } }
     updateFireflies(real); updateAim();
     if (TUT && M.mode === 'train' && !paused) tutTick(real);
-    for (const f of [A, B]) { if (f.vox) f.vox = damp(f.vox, 0, 14, real); if (f.voy) f.voy = damp(f.voy, 0, 14, real); }
+    for (const f of allFighters()) { if (f.vox) f.vox = damp(f.vox, 0, 14, real); if (f.voy) f.voy = damp(f.voy, 0, 14, real); }
     if (document.hidden && backgroundLocalActive() && (bgWorker || bgAiTimer)) { /* background ticker owns local simulation */ }
     else if (ROLL.on && M.mode === 'net') rollTick(real);
     else if (REPLAY.on) replayTick(real);
@@ -72,7 +72,7 @@ function frameBody(now) {
     shakeDirX = damp(shakeDirX, 0, 14, real);
     shakeDirY = damp(shakeDirY, 0, 14, real);
     flashA = damp(flashA, 0, 8, real);
-    dimA = damp(dimA, (superFreeze > 0 || (A.state === 'special' || B.state === 'special')) ? 1 : 0, 10, real);
+    dimA = damp(dimA, (superFreeze > 0 || allFighters().some(f => !f.hidden && f.state === 'special')) ? 1 : 0, 10, real);
     if (announce) {
       announce.t += real;
       if (announce.t >= announce.dur) {
@@ -85,7 +85,7 @@ function frameBody(now) {
       creditT -= real;
       if (creditT <= 0 && creditPending) {
         creditPending = false;
-        const rTxt = isRaid() ? `同袍肉鸽 · 第 ${M.raidWave || 1} 重魔劫！` : (M.mode === 'tag3' ? `第${CN[M.round] || M.round}局 · 开战！` : (M.mode === 'mayhem' ? '通天神决 · 开战！' : M.mode === 'cuju' ? '墨球蹴鞠 · 开球' : (M.mode === 'watch2v2' ? '天道 2v2 · 演武开战！' : `第${CN[M.round] || M.round}回合`)));
+        const rTxt = isRaid() ? `同袍肉鸽 · 第 ${M.raidWave || 1} 重魔劫！` : (M.mode === 'melee' ? `群雄会战 · ${M.teamSize || 5}v${M.teamSize || 5} 开战！` : M.mode === 'ctf' ? '夺旗争锋 · 开战！' : M.mode === 'gauntlet' ? '无尽试炼 · 开战！' : M.mode === 'tag3' ? `第${CN[M.round] || M.round}局 · 开战！` : (M.mode === 'mayhem' ? '通天神决 · 开战！' : M.mode === 'cuju' ? '墨球蹴鞠 · 开球' : (M.mode === 'watch2v2' ? '天道 2v2 · 演武开战！' : `第${CN[M.round] || M.round}回合`)));
         say(rTxt, 1.1);
         SFX.gong();
       }
@@ -102,6 +102,7 @@ function frameBody(now) {
 }
 function updateCamera(dt) {
   if (WORLD.on) { worldCamera(dt); return; }
+  if (camFocusPingT > 0) camFocusPingT = Math.max(0, camFocusPingT - dt);
   if (FOREST.on) {   // 闯关打妖物：镜头框住同袍小队与附近的妖物
     const allies = sideFighters(0).filter(f => !f.hidden && f.hp > 0);
     const allyXs = allies.length ? allies.map(f => f.x) : [A.x];
@@ -112,7 +113,25 @@ function updateCamera(dt) {
     cam.y = damp(cam.y, Math.min(0, A.y * 0.4), 6, dt);
     return;
   }
-  const tracked = isMulti() ? [A, B, C, D].filter(f => !f.hidden && f.hp > 0) : [A, B];
+  // 大型团战（3v3 ~ 8v8）：以玩家自己和附近 950px 内的战友/敌人为中心取景，不把人物缩成蚂蚁
+  if (isLargeTeam()) {
+    const lf = fighterByIdx(localIdx());
+    const anchor = (lf && !lf.hidden && lf.hp > 0) ? lf : (allFighters().find(f => !f.hidden && f.hp > 0) || A);
+    const nearby = allFighters().filter(f => !f.hidden && f.hp > 0 && Math.abs(f.x - anchor.x) < 950);
+    const pool = nearby.length >= 2 ? nearby : [anchor];
+    const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
+    const minY = Math.min(...pool.map(f => f.y));
+    const d = maxX - minX;
+    let focus = camFocusPingT > 0 ? anchor.x : lerp(anchor.x, (minX + maxX) / 2, 0.35);
+    const wantZoom = camFocusPingT > 0 ? 0.82 : clamp(0.84 - d / 2600, 0.54, 0.80);
+    cam.zoom = damp(cam.zoom, wantZoom, camFocusPingT > 0 ? 10 : 4, dt);
+    cam.y = damp(cam.y, Math.min(0, minY * 0.32), 5, dt);
+    cam.x = damp(cam.x, focus, camFocusPingT > 0 ? 14 : 7, dt);
+    const vw = W / worldScale();
+    cam.x = vw >= STAGE_W + 200 ? STAGE_W / 2 : clamp(cam.x, vw / 2 - 100, STAGE_W + 100 - vw / 2);
+    return;
+  }
+  const tracked = isMulti() ? allFighters().filter(f => !f.hidden && f.hp > 0) : [A, B];
   const pool = cujuOn() && M.cuju && M.cuju.ball ? [...allFighters(), M.cuju.ball] : (tracked.length >= 2 ? tracked : [A, B]);   // 墨球蹴鞠：镜头也框住墨球
   const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
   const minY = Math.min(...pool.map(f => f.y));
@@ -131,10 +150,11 @@ function updateCamera(dt) {
     zoomMul *= 1 + camPunch.zoom * ease;
     focus = lerp(focus, camPunch.x, 0.65 * ease);
   }
-  const lf = allFighters()[localIdx()];
-  if (lf && lf.state === 'charge' && M.mode !== 'demo' && !is2v2()) {
+  const lf = fighterByIdx(localIdx());
+  if (lf && (lf.state === 'charge' || lf.state === 'aircharge') && M.mode !== 'demo' && !is2v2()) {
     const lv = clamp(lf.t / CHARGE_FULL, 0, 1); zoomMul *= 1 + 0.24 * lv; focus = lerp(mid, lf.x, 0.4 * lv);
   }
+  if (lf && camFocusPingT > 0) focus = lerp(focus, lf.x, 0.65);
   const ce = cineEnv();
   if (ce > 0 && cine.owner) { zoomMul *= 1 + 0.4 * ce; focus = lerp(focus, cine.owner.x, 0.6 * ce); }
   const minZoom = is2v2() ? 0.4 : cujuOn() ? 0.5 : 0.6;
