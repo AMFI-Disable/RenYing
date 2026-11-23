@@ -28,7 +28,9 @@
       "i",
       "em",
       "sub",
-      "sup"
+      "sup",
+      "picture",
+      "source"
     ]
   }
 }

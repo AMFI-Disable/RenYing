@@ -20,6 +20,18 @@
 
 ---
 
+## Star History
+
+<a href="https://www.star-history.com/?type=date&repos=amfi-disable%2Frenying">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=amfi-disable%2Frenying&type=date&theme=dark&legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=amfi-disable%2Frenying&type=date&legend=top-left" />
+    <img alt="AMFI-Disable/RenYing Star History Chart" src="https://api.star-history.com/chart?repos=amfi-disable%2Frenying&type=date&legend=top-left" />
+  </picture>
+</a>
+
+---
+
 ## Contents
 
 - [What It Is](#what-it-is)
@@ -296,15 +308,3 @@ Bugs and ideas go in [Issues](https://github.com/AMFI-Disable/RenYing/issues). S
 ## License
 
 [MIT](license). Copyright (c) 2026 AMFI-Disable, Even, Luffy, Opus 5.5, and Gemini 4 Argon.
-
----
-
-## Star History
-
-<a href="https://www.star-history.com/#AMFI-Disable/RenYing&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/svg?repos=AMFI-Disable/RenYing&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/svg?repos=AMFI-Disable/RenYing&type=Date" />
-    <img alt="AMFI-Disable/RenYing Star History Chart" src="https://api.star-history.com/svg?repos=AMFI-Disable/RenYing&type=Date" />
-  </picture>
-</a>
