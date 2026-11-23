@@ -406,7 +406,11 @@ function fighterDown(def, att, ev) {
       return;
     }
   }
-  M.phase = 'ko'; M.t = 0; M.koWinner = is2v2() ? att.idx % 2 : att.idx; ev.ko = true;
+  // These modes settle eliminations, respawns or objectives in their match update.
+  if (meleeOn() || ctfOn() || gauntletOn() || FOREST.on || (M.mode === 'boss' && def === B)) return;
+  const losingTeam = fighterTeam(def);
+  if ((isLargeTeam() || isRaid()) && sideFighters(losingTeam).some(f => f.hp > 0)) return;
+  M.phase = 'ko'; M.t = 0; M.koWinner = 1 - losingTeam; ev.ko = true;
 }
 // 命中的顿帧会影响对战（顿帧里谁都不动），回滚重算和第一次算必须一模一样：两条路都只走这一个函数
 function hitStopOf(ev, att) {

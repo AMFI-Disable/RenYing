@@ -6,6 +6,10 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+### Fixed
+
+- Grand Melee now counts knockouts against team tickets, Capture the Banner uses captures to determine victory and fields four fighters in 2v2, and Endless Gauntlet advances after an enemy knockout. Raid waits for the last teammate to fall, and the World Boss can enter its next phase after taking lethal damage. Rematches restart the selected mode, and both keyboard layouts control the solo fighter in Capture the Banner and Endless Gauntlet.
+
 ### Added
 
 - **Large-Scale 8v8 Battles, Mid-Air Charging, Expanded Keybinds, Pets, Custom Skills, Badges, 4 New Heroes, 3 Themed Skin Sets, 3 New Modes, Launch Banner & Full Admin Controls (`src/data/heroes/16-chixiao.js`–`19-polang.js`, `src/game/01-engine/`, `src/game/02-combat/`, `src/game/03-render/`, `src/game/04-modes/22-modes-13-melee.js`–`15-gauntlet.js`, `src/game/05-ui/`, `src/armory-core.js`, `src/armory.js`, `src/page.html`, `src/styles/`, `cloudflare/worker/`, `cloudflare/admin.html`, `tools/admin/econ-admin.mjs`)**:

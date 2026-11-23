@@ -225,6 +225,11 @@ function endRound() {
   if (M.worldKey && M.worldKey.kind === 'boss') { worldKeyRound(w); return; }   // 全服肉鸽的天道 Boss：结果和奖励都以服务器为准，这里不加墨锭（车轮战照常换人，打完在 showEnd 里交出去）
   if (M.mode === 'saga') { sagaEnd(w); return; }
   if (cujuOn() || (typeof kothOn === 'function' && kothOn()) || (typeof bastionOn === 'function' && bastionOn())) { M.phase = 'end'; showEnd(w); return; }   // 蹴鞠与灵坛争锋只有一局
+  if (meleeOn() || ctfOn() || gauntletOn()) {
+    M.phase = 'end';
+    if (!ROLL.on) showEnd(w);
+    return;
+  }
   if (isRaid()) {
     if (w === 0) {
       for (const f of sideFighters(0)) scFire(f, 'clear');

@@ -34,6 +34,7 @@ function ctfMatch() {
           f.reset(S.flags[team].baseX + (team === 0 ? 40 : -40));
           f.face = team === 0 ? 1 : -1;
           f.invul = 1.0;
+          if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts();
           if (f.idx === localIdx()) { f.beaconT = 1.2; camFocusPingT = 0.8; }
         }
       }

@@ -17052,8 +17052,8 @@ for (let i = 2; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
 const roomDef = () => ROOM_MODES[netRoomMode] || ROOM_MODES.normal;   // 联机房间的规则（src/data/10-modes.js）
 const netRoom = () => (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net' && REPLAY.m) ? (ROOM_MODES[REPLAY.m.room || REPLAY.m.sub || 'normal'] || null) : M.mode === 'net' ? roomDef() : null;
 const netSim = () => (ROLL.on && M.mode === 'net') || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net');
-const isLargeTeam = () => (M.teamSize || 0) > 2 || M.mode === 'melee' || (M.mode === 'ctf' && (M.teamSize || 0) > 2);
-const is2v2 = () => !isLargeTeam() && (M.mode === 'watch2v2' || M.mode === '2v2' || (M.mode === 'cuju' && !!M.cujuFour) || (M.mode === 'koth' && !!M.kothFour) || (typeof bastionOn === 'function' && bastionOn()) || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four)));
+const isLargeTeam = () => meleeOn() || (ctfOn() && M.teamSize > 2);
+const is2v2 = () => !isLargeTeam() && (M.mode === 'watch2v2' || M.mode === '2v2' || ctfOn() || (M.mode === 'cuju' && !!M.cujuFour) || (M.mode === 'koth' && !!M.kothFour) || (typeof bastionOn === 'function' && bastionOn()) || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four)));
 const isRaid = () => M.mode === 'raid' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.raid)) || !!(netRoom() && netRoom().raid);
 const isMulti = () => is2v2() || isRaid() || isLargeTeam();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : ((is2v2() || isLargeTeam()) ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
@@ -17931,6 +17931,11 @@ if (M.mode === 'boss') { gbossFinish(w < 0 ? 'time' : 'down'); return; }
 if (M.worldKey && M.worldKey.kind === 'boss') { worldKeyRound(w); return; }   // 全服肉鸽的天道 Boss：结果和奖励都以服务器为准，这里不加墨锭（车轮战照常换人，打完在 showEnd 里交出去）
 if (M.mode === 'saga') { sagaEnd(w); return; }
 if (cujuOn() || (typeof kothOn === 'function' && kothOn()) || (typeof bastionOn === 'function' && bastionOn())) { M.phase = 'end'; showEnd(w); return; }   // 蹴鞠与灵坛争锋只有一局
+if (meleeOn() || ctfOn() || gauntletOn()) {
+M.phase = 'end';
+if (!ROLL.on) showEnd(w);
+return;
+}
 if (isRaid()) {
 if (w === 0) {
 for (const f of sideFighters(0)) scFire(f, 'clear');
@@ -20220,7 +20225,10 @@ addP({ type: 'text', text: '🔥 孤军奋战 · 怒气满盈', x: mate.x, y: ma
 return;
 }
 }
-M.phase = 'ko'; M.t = 0; M.koWinner = is2v2() ? att.idx % 2 : att.idx; ev.ko = true;
+if (meleeOn() || ctfOn() || gauntletOn() || FOREST.on || (M.mode === 'boss' && def === B)) return;
+const losingTeam = fighterTeam(def);
+if ((isLargeTeam() || isRaid()) && sideFighters(losingTeam).some(f => f.hp > 0)) return;
+M.phase = 'ko'; M.t = 0; M.koWinner = 1 - losingTeam; ev.ko = true;
 }
 function hitStopOf(ev, att) {
 if (ev.guardBreak) { hitstop = Math.max(hitstop, 0.22); return; }
@@ -31203,6 +31211,9 @@ bpStart('raid', { squadSize: M.raidSquadSize || rougeSquadSize || 3 });
 }
 return;
 }
+if (M.mode === 'melee') { startMelee(M.teamSize, A.chIdx, M.level, M.teamMutator); return; }
+if (M.mode === 'ctf') { startCtf(M.teamSize, A.chIdx, M.level); return; }
+if (M.mode === 'gauntlet') { startGauntlet(A.chIdx, M.level); return; }
 const handler = MODE_HANDLERS[M.mode];
 if (handler && handler.rematch) {
 handler.rematch();
@@ -35769,6 +35780,7 @@ const team = fighterTeam(f);
 f.reset(S.flags[team].baseX + (team === 0 ? 40 : -40));
 f.face = team === 0 ? 1 : -1;
 f.invul = 1.0;
+if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts();
 if (f.idx === localIdx()) { f.beaconT = 1.2; camFocusPingT = 0.8; }
 }
 }
@@ -40350,7 +40362,9 @@ c = human[p] || human[0];
 if (p === 1 && !C.hidden) { if (C.ctrl !== human[1]) C.ctrl = human[1]; c = human[1]; }
 else if (p === 2 && !D.hidden && human[2]) { if (D.ctrl !== human[2]) D.ctrl = human[2]; c = human[2]; }
 else c = human[0];
-} else if (M.mode === '2v2' || is2v2()) {
+} else if (M.mode === 'ctf' || M.mode === 'gauntlet') {
+c = human[0];
+} else if (is2v2()) {
 if (M.subMode === 'pp_cc') {
 c = p === 1 && M.mode !== 'net' ? human[1] : human[0];   // 联机共斗一台电脑只有一个人，方向键也算 1P
 } else if (M.subMode === 'pp_pp') {
@@ -40380,7 +40394,9 @@ if (M.mode === 'pvp') {
 c = human[p] || human[0];
 } else if (isRaid()) {
 c = (p === 1 && !C.hidden) ? human[1] : (p === 2 && !D.hidden && human[2]) ? human[2] : human[0];
-} else if (M.mode === '2v2' || is2v2()) {
+} else if (M.mode === 'ctf' || M.mode === 'gauntlet') {
+c = human[0];
+} else if (is2v2()) {
 if (M.subMode === 'pp_cc') {
 c = p === 1 && M.mode !== 'net' ? human[1] : human[0];   // 联机共斗一台电脑只有一个人，方向键也算 1P
 } else if (M.subMode === 'pp_pp') {
@@ -40428,6 +40444,7 @@ function shouldPauseOnBlur() {
 return M.mode !== 'demo' && M.mode !== 'net' && !isAiVsAi() && SETTINGS.backgroundPlay !== true && M.phase !== 'end' && !paused;
 }
 window.addEventListener('blur', () => {
+TAB_SCOREBOARD = false;
 human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
 if (shouldPauseOnBlur()) {
 paused = true;

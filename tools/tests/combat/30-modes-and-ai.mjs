@@ -3,6 +3,63 @@
 // 找 bug 提示：测试失败时报的是 name，在本文件里搜这个 name 就能找到它的代码。
 export default [
   {
+    name: 'Objective and survival modes settle lethal hits using their own rules',
+    fn: `(() => {
+      const fail = error => ({ pass: false, error });
+      const down = (att, def) => {
+        M.phase = 'fight';
+        def.invul = 0;
+        def.hp = 1;
+        applyHit(att, def, { dmg: 50, kb: [200, -200], stun: 0.3, hs: 0.06 }, [def.x, def.y - 40]);
+        return def.hp === 0 && M.phase === 'fight';
+      };
+      startMelee(8);
+      if (!down(A, B)) return fail('A melee knockout ended the fight');
+      updateMatch();
+      if (M.phase !== 'fight' || M.melee.tickets[1] !== 23) return fail('Melee did not debit one ticket');
+      M.melee.tickets[1] = 1;
+      if (!down(A, D)) return fail('Melee settled before processing the last ticket');
+      updateMatch();
+      if (M.phase !== 'ko' || M.koWinner !== 0) return fail('Melee ignored ticket exhaustion');
+      endRound();
+      if (M.phase !== 'end') return fail('Melee restarted after its objective was met');
+
+      if (typeof MouseEvent === 'function') {
+        $id('againBtn').click();
+        if (M.mode !== 'melee' || M.teamSize !== 8 || M.phase !== 'intro') return fail('Rematch did not restart 8v8 melee');
+      }
+
+      startCtf(2);
+      if (allFighters().length !== 4 || fighterTeam(D) !== 1) return fail('CTF did not field four fighters');
+      if (!down(A, B)) return fail('A flag match ended on a knockout');
+      updateMatch();
+      if (M.ctf.respawn[B.idx] <= 0 || M.phase !== 'fight') return fail('CTF did not schedule respawn');
+      M.ctf.score[0] = M.ctf.target - 1;
+      M.ctf.flags[1].carrier = A.idx;
+      A.x = M.ctf.flags[0].baseX;
+      updateMatch();
+      if (M.phase !== 'ko' || M.koWinner !== 0) return fail('CTF ignored the winning capture');
+
+      startGauntlet();
+      if (!down(A, B)) return fail('Gauntlet ended on the enemy knockout');
+      updateMatch();
+      M.gauntlet.nextT = STEP / 2;
+      updateMatch();
+      if (M.gauntlet.wave !== 2 || B.hp <= 0) return fail('Gauntlet did not advance to the next wave');
+      if (!down(B, A)) return fail('Gauntlet settled before recording the defeat');
+      updateMatch();
+      if (M.phase !== 'ko' || M.koWinner !== 1) return fail('Gauntlet ignored player defeat');
+
+      startRaidMatch([0, 2, 3], 3);
+      if (!down(B, A) || !down(B, C)) return fail('Raid ended while an ally was alive');
+      D.invul = 0; D.hp = 1;
+      applyHit(B, D, { dmg: 50, kb: [200, -200], stun: 0.3, hs: 0.06 }, [D.x, D.y - 40]);
+      if (M.phase !== 'ko' || M.koWinner !== 1) return fail('Raid did not settle the final team knockout');
+      startMatch('train');
+      return { pass: true };
+    })()`
+  },
+  {
     name: 'Air attacks (a1, a2) execution for all characters',
     fn: `(() => {
       for (let ci = 0; ci < CHARS.length; ci++) {

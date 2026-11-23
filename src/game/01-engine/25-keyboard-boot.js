@@ -81,7 +81,9 @@ window.addEventListener('keydown', e => {
       if (p === 1 && !C.hidden) { if (C.ctrl !== human[1]) C.ctrl = human[1]; c = human[1]; }
       else if (p === 2 && !D.hidden && human[2]) { if (D.ctrl !== human[2]) D.ctrl = human[2]; c = human[2]; }
       else c = human[0];
-    } else if (M.mode === '2v2' || is2v2()) {
+    } else if (M.mode === 'ctf' || M.mode === 'gauntlet') {
+      c = human[0];
+    } else if (is2v2()) {
       if (M.subMode === 'pp_cc') {
         c = p === 1 && M.mode !== 'net' ? human[1] : human[0];   // 联机共斗一台电脑只有一个人，方向键也算 1P
       } else if (M.subMode === 'pp_pp') {
@@ -111,7 +113,9 @@ window.addEventListener('keyup', e => {
       c = human[p] || human[0];
     } else if (isRaid()) {
       c = (p === 1 && !C.hidden) ? human[1] : (p === 2 && !D.hidden && human[2]) ? human[2] : human[0];
-    } else if (M.mode === '2v2' || is2v2()) {
+    } else if (M.mode === 'ctf' || M.mode === 'gauntlet') {
+      c = human[0];
+    } else if (is2v2()) {
       if (M.subMode === 'pp_cc') {
         c = p === 1 && M.mode !== 'net' ? human[1] : human[0];   // 联机共斗一台电脑只有一个人，方向键也算 1P
       } else if (M.subMode === 'pp_pp') {
@@ -160,6 +164,7 @@ function shouldPauseOnBlur() {
   return M.mode !== 'demo' && M.mode !== 'net' && !isAiVsAi() && SETTINGS.backgroundPlay !== true && M.phase !== 'end' && !paused;
 }
 window.addEventListener('blur', () => {
+  TAB_SCOREBOARD = false;
   human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
   if (shouldPauseOnBlur()) {
     paused = true;
