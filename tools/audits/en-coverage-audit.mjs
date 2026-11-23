@@ -137,6 +137,26 @@ const lang = (await cdp.send('Runtime.evaluate', { expression: `I18N.getLang()`,
 if (lang !== 'en') { console.error(`English interface did not come up (lang=${lang})`); chrome.kill(); process.exit(1); }
 
 const ev = async js => (await cdp.send('Runtime.evaluate', { expression: js, returnByValue: true, awaitPromise: true }, S)).result.value;
+const weaponError = await ev(`(() => {
+  try {
+    startMelee(8);
+    for (let i = 0; i < CHARS.length; i++) {
+      A.setChar(i);
+      A.reset(STAGE_W / 2 - 350);
+      animFighter(A);
+      render();
+    }
+    toMenu(true);
+    return '';
+  } catch (error) {
+    return '8v8 canvas could not render ' + A.ch.id + ': ' + error.message;
+  }
+})()`);
+if (weaponError === undefined || weaponError) {
+  console.error(weaponError || '8v8 canvas check did not complete');
+  chrome.kill();
+  process.exit(1);
+}
 const found = new Map();   // 文本 → 第一次在哪个面板看到
 const note = (where, list) => { for (const t of list || []) if (!found.has(t)) found.set(t, where); };
 const armoryReady = () => ev(`Boolean(document.querySelector('#armory.on #arMain')?.textContent.trim()) && !document.querySelector('[data-armory-retry]')`);

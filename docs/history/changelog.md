@@ -8,6 +8,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- The redesigned weapons use the shared canvas rendering interface. The browser audit renders every hero in the 8v8 arena to catch drawing failures that can hide the fight.
+
 - Delayed match results stay tied to the match that produced them, so a rematch or menu transition cannot be covered by the previous results screen. Added English copy for the expanded controls, roster and badge gallery.
 
 - Heavy Strike, Low Kick and Iaido use the normal attack entry point. Solo controls prioritize the first player’s shortcuts when bindings overlap, and the rising throw reads the jump input. Visual effect counters stay local during rollback and replay.
