@@ -426,21 +426,30 @@ function rpNetNames(m) {
   return m.raid ? [h + ' · ' + c, '魔首'] : m.four && m.sub === 'pp_cc' ? [h + ' · ' + c, '电脑'] : [h, c];
 }
 function rpTitle(m) {
-  if (m.raid && Array.isArray(m.names)) return `${m.names[0]} 对 ${m.names[1]}`;
-  const nm = i => (CHARS[(m.ch4 || m.ch)[i]] || {}).name || '?';
-  return m.four ? `${nm(0)} · ${nm(2)} 对 ${nm(1)} · ${nm(3)}` : `${nm(0)} 对 ${nm(1)}`;
+  const vs = window.I18N?.getLang() === 'en' ? ' vs ' : ' 对 ';
+  if (m.raid && Array.isArray(m.names)) return `${m.names[0]}${vs}${cvT(m.names[1])}`;
+  const name = i => cvT((CHARS[(m.ch4 || m.ch)[i]] || {}).name || '?');
+  return m.four ? `${name(0)} · ${name(2)}${vs}${name(1)} · ${name(3)}` : `${name(0)}${vs}${name(1)}`;
 }
 function rpSub(m) {
+  const en = window.I18N?.getLang() === 'en';
   const d = new Date(m.t), pad = x => String(x).padStart(2, '0');
-  const mode = replayModeTag(m);
-  const win = m.w >= 0 ? `${m.four ? (m.names || [])[m.w] || '' : (CHARS[m.ch[m.w]] || {}).name || ''} 胜` : '平局';
-  return `${d.getMonth() + 1}月${d.getDate()}日 ${pad(d.getHours())}:${pad(d.getMinutes())} · ${mode} · ${(m.names || []).join(' 对 ')} · ${win} ${m.wins ? m.wins.join(':') : ''}${m.v !== VERSION ? ' · 旧版本录的，可能对不上' : ''}`;
+  const date = en ? d.toLocaleDateString('en', { month: 'short', day: 'numeric' }) : `${d.getMonth() + 1}月${d.getDate()}日`;
+  const names = (m.names || []).map(name => m.kind === 'net' ? name : cvT(name));
+  let win = cvT('平局');
+  if (m.w >= 0) {
+    const winner = m.four ? names[m.w] || '' : cvT((CHARS[m.ch[m.w]] || {}).name || '');
+    win = en ? `${winner} wins` : `${winner} 胜`;
+  }
+  const warning = m.v !== VERSION ? ` · ${cvT('旧版本录的，可能对不上')}` : '';
+  return `${date} ${pad(d.getHours())}:${pad(d.getMinutes())} · ${replayModeTag(m)} · ${names.join(en ? ' vs ' : ' 对 ')} · ${win} ${m.wins ? m.wins.join(':') : ''}${warning}`;
 }
 function replayModeTag(m) {
   const mutator = m.st0 && m.st0.M && m.st0.M.teamMutator;
   const mutatorTag = mutator === 'chaos' ? ` · ${cvT('天机乱斗')}` : mutator === 'mayhem' ? ` · ${cvT('通天神决')}` : '';
   if (m.raid) return `${cvT(m.kind === 'net' ? '联机同袍肉鸽' : '本地同袍肉鸽')} · ${cvT('第')} ${m.raidWave || 1}${m.runId ? ` · ${cvT('全程')} ${m.segments.length} ${cvT('劫')}` : ''}`;
   if (m.mode === 'mayhem' || m.room === 'mayhem') return cvT(m.mode === 'net' ? '联机通天神决' : '通天神决');
+  if (m.room === 'melee' || m.room === 'ctf') return `${cvT('联机')} · ${cvT(m.room === 'melee' ? '群雄会战 · 8v8' : '夺旗争锋 · 8v8')}`;
   if (m.mode === 'net') return m.ranked ? cvT('排位赛') : m.four ? `${cvT('联机2v2')} · ${cvT(m.sub === 'pp_pp' ? '四人对决' : m.sub === 'pp_cc' ? '双人共斗' : '携手共斗')}` : `${cvT('联机')} · ${cvT(m.room === 'chaos' ? '天机乱斗' : m.room === 'mayhem' ? '通天神决' : '标准对战')}`;
   if (m.mode === 'cpu') return `${cvT('人机')} · ${cvT(LV_NAME[m.level] || m.level || '')}`;
   if (m.mode === 'pvp') return cvT('本地双人');

@@ -101,10 +101,10 @@ function playMatch(env, ha, hb, la, lb, seed, mode = 'duel') {
     env.A.ctrl = makeCtrl(env, la); env.B.ctrl = makeCtrl(env, lb);
   }
   let steps = 0;
-  const max = 120 * 60 * 6;
+  const max = 120 * 60 * (teams ? 12 : 6);
   while (env.M.phase !== 'end' && steps < max) { env.step(); steps++; }
   if (teams) {
-    if (env.M.phase !== 'end') throw new Error(`${mode} match did not reach a result (seed ${seed})`);
+    if (env.M.phase !== 'end') throw new Error(`${mode} match did not reach a result (seed ${seed}, phase ${env.M.phase}, timer ${env.M.timer.toFixed(1)})`);
     const [a, b] = mode === 'melee' ? env.M.melee.tickets : env.M.ctf.score;
     const scale = mode === 'melee' ? env.M.melee.maxTickets : env.M.ctf.target;
     return { w: env.M.koWinner, steps, margin: (a - b) / scale };

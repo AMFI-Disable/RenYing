@@ -10,6 +10,7 @@
 //   node tools/ai/ai-train.mjs --stage global --sweeps 2
 //   node tools/ai/ai-train.mjs --stage hero --sweeps 1 --heroes qingfeng,feiying --genes aggr,charge
 //   node tools/ai/ai-train.mjs --stage hero --modes duel,melee,ctf --heroes chixiao --genes aggr
+//   --opponents qingfeng,polang 只在角色段限制对手，省时；默认和全阵容对练。
 // 只给一个难度单独调（--lvkey，和 --level 一样写难度名）：结果存在 lvGenes[难度][角色]，只有那个难度用，共用基因不动
 //   node tools/ai/ai-train.mjs --stage hero --level god --lvkey god --heroes tieshan --genes aggr,charge
 // 角色段的对手默认和自己同一难度；--opp 换成别的难度（比如天道的铁山专门练“打绝顶的随机角色”）
@@ -29,6 +30,7 @@ const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf('--
 const STAGE = arg('stage', 'global'), SWEEPS = +arg('sweeps', 2), LEVEL = arg('level', 'god');
 const MODES = arg('modes', 'duel').split(',');
 const ONLY = arg('heroes') ? arg('heroes').split(',') : HEROES;
+const OPPONENTS = (arg('opponents') ? arg('opponents').split(',') : HEROES).map(id => HEROES.indexOf(id));
 // 每次比较的场数（每对角色左右各 REP 场）与接受门槛（胜率差）
 const REP = +arg('rep', STAGE === 'global' ? 4 : 12), GAIN = +arg('gain', STAGE === 'global' ? 0.02 : 0.03);
 
@@ -38,6 +40,9 @@ const DEF = Function('"use strict";return (' + src.slice(i0 + 'const AI_GENE_DEF
 const KEYS = arg('genes') ? arg('genes').split(',') : Object.keys(DEF);
 if (!['global', 'hero'].includes(STAGE) || MODES.some(mode => !ARENA_MODES.includes(mode)) || ONLY.some(hero => !HEROES.includes(hero)) || KEYS.some(key => !Object.hasOwn(DEF, key))) {
   throw new Error('Invalid training stage, hero or gene');
+}
+if (OPPONENTS.includes(-1) || (STAGE === 'global' && arg('opponents'))) {
+  throw new Error('Opponent selection requires valid hero IDs and the hero training stage');
 }
 const brain = existsSync(BRAIN) ? JSON.parse(readFileSync(BRAIN, 'utf8')) : {};
 const LVKEY = arg('lvkey', '');
@@ -83,7 +88,7 @@ async function evalGlobal(k, v, rep) {
 // 角色段：这个角色用 genes，对全部角色的冠军，左右各 rep 场；同一批种子
 function heroGames(hi, genes, rep, s0) {
   const g = [];
-  for (let o = 0; o < HEROES.length; o++) for (let r = 0; r < rep; r++) {
+  for (const o of OPPONENTS) for (let r = 0; r < rep; r++) {
     const s = s0 + o * 100 + r * 2;
     g.push({ a: hi, b: o, la: lv(genes), lb: foe(o), flip: 0, seed: s });
     g.push({ a: o, b: hi, la: foe(o), lb: lv(genes), flip: 1, seed: s + 1 });
@@ -96,7 +101,7 @@ async function evalHeroPair(hi, cand, rep) {   // 返回 [候选胜率, 冠军�
   return [score(rc), score(rb)];
 }
 
-log(`\n== 训练 ${new Date().toISOString()}  模式 ${MODES.join(',')}  阶段 ${STAGE}${LVKEY ? `（只调 ${LVKEY}）` : ''}  难度 ${LEVEL}${OPP ? `  对手 ${OPP}` : ''}  角色 ${ONLY.join(',')}  轮数 ${SWEEPS}  每次 ${MODES.length * (STAGE === 'global' ? HEROES.length ** 2 * REP : HEROES.length * 2 * REP)} 场  门槛 +${(GAIN * 100).toFixed(1)}% ==`);
+log(`\n== 训练 ${new Date().toISOString()}  模式 ${MODES.join(',')}  阶段 ${STAGE}${LVKEY ? `（只调 ${LVKEY}）` : ''}  难度 ${LEVEL}${OPP ? `  对手 ${OPP}` : ''}  角色 ${ONLY.join(',')}  轮数 ${SWEEPS}  每次 ${MODES.length * (STAGE === 'global' ? HEROES.length ** 2 * REP : OPPONENTS.length * 2 * REP)} 场  门槛 +${(GAIN * 100).toFixed(1)}% ==`);
 const step = {}; for (const k of KEYS) step[k] = (DEF[k][1] - DEF[k][0]) * 0.25;
 for (let sw = 1; sw <= SWEEPS; sw++) {
   for (const k of KEYS) {
