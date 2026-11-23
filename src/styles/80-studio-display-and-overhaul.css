@@ -289,14 +289,8 @@
   }
   .home-hub {
     max-width: 1220px;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 14px;
-  }
-  .update-banner {
-    max-width: 1220px;
-  }
-  .update-banner-grid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
   }
   .cx-hero-list {
     max-height: 180px;

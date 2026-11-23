@@ -1536,17 +1536,8 @@ body.has-nav .scr:not(.menuscr) > .panel { margin: auto; }
 .home-hub { position: relative; z-index: 6; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 10px auto 0; max-width: 720px; }
 .hub-pill { padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(233,196,106,.38); background: rgba(12,16,32,.78); color: #efe8d8; font-size: 12.5px; cursor: pointer; transition: border-color .2s, background .2s, transform .15s; }
 .hub-pill:hover { border-color: #e9c46a; background: rgba(233,196,106,.16); transform: translateY(-1px); }
-.update-banner { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 38; width: min(760px, calc(100vw - 24px)); background: linear-gradient(155deg, rgba(16,20,38,.95), rgba(10,12,24,.97)); border: 1px solid rgba(233,196,106,.52); border-radius: 12px; padding: 12px 16px; box-shadow: 0 14px 40px rgba(0,0,0,.62); text-align: left; }
-.update-banner[hidden] { display: none; }
-.ub-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.ub-tag { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(233,196,106,.18); color: #e9c46a; border: 1px solid rgba(233,196,106,.45); }
-.ub-head b { flex: 1; font-size: 14.5px; color: #f6efe0; }
-.ub-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; font-size: 12px; color: rgba(239,232,216,.84); margin-bottom: 10px; }
-.ub-list b { color: #e9c46a; margin-right: 6px; }
-.ub-actions { display: flex; flex-wrap: wrap; gap: 8px; }
 .xiwu-large-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(233,196,106,.24); }
 .xl-lbl { font-size: 12.5px; color: #e9c46a; font-weight: 600; }
-@media (max-width: 720px) { .ub-list { grid-template-columns: 1fr; } .update-banner { bottom: 10px; padding: 10px 12px; } }
 #endTitle.ink-title { font-family: var(--title); font-weight: 400; letter-spacing: .04em; white-space: nowrap; font-size: clamp(44px, 7vw, 92px); line-height: 1.1; margin: 4px 0 6px; color: #efe6d6; text-shadow: 0 2px 0 rgba(0,0,0,.35), 0 0 26px rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; gap: .02em; }
 #endTitle.ink-title::after { display: none; }
 #endTitle .it-name { background: linear-gradient(180deg, #f6efe2 0%, #d9cdb8 70%, #a99c86 100%); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 3px 2px rgba(0,0,0,.45)); }
@@ -3649,14 +3640,8 @@ gap: 16px;
 }
 .home-hub {
 max-width: 1220px;
-grid-template-columns: repeat(4, minmax(0, 1fr));
+grid-template-columns: repeat(3, minmax(0, 1fr));
 gap: 14px;
-}
-.update-banner {
-max-width: 1220px;
-}
-.update-banner-grid {
-grid-template-columns: repeat(4, minmax(0, 1fr));
 }
 .cx-hero-list {
 max-height: 180px;
@@ -3840,29 +3825,7 @@ gap: 6px;
       <button type="button" class="hub-pill" id="hubLargeBtn">大型团战 8v8</button>
       <button type="button" class="hub-pill" id="hubLoadoutBtn">灵宠 · 招式 · 徽记</button>
       <button type="button" class="hub-pill" id="hubHeroesBtn">二十侠客 · 三大套装</button>
-      <button type="button" class="hub-pill" id="hubBannerBtn">版本更新公告</button>
     </div>
-    <!-- 每次启动显示的最新版本更新横幅（不抢焦点、可一键直达新玩法或收起） -->
-    <aside class="update-banner" id="updateBanner" role="region" aria-label="版本更新公告">
-      <div class="ub-head">
-        <span class="ub-tag" id="ubTag">最新大更新</span>
-        <b id="ubTitle">二十侠客 · 8v8 大型团战 · 灵宠与招式自选</b>
-        <button type="button" class="ghost small ub-close" id="ubClose" aria-label="收起更新公告">知道了</button>
-      </div>
-      <div class="ub-list" id="ubList">
-        <span><b>8v8 大团战</b>群雄会战、夺旗争锋、无尽试炼与顶部战场小地图</span>
-        <span><b>4 位新侠客</b>炽霄、幽篁、玄机、破浪 + 3 套全新主题套装</span>
-        <span><b>灵宠与自选招式</b>8 只助战灵宠（V 键）、Q/R/E 招式流派、14 枚武学徽记</span>
-        <span><b>空中蓄力与全键位</b>空中长按蓄力斩、C 虚招、F 弹反、G 锁定、B 自标、Tab 战况</span>
-      </div>
-      <div class="ub-actions">
-        <button type="button" class="go small" id="ubClaimAppreciation">🎁 领取感恩全套豪礼与紫金徽记</button>
-        <button type="button" class="go small" id="ubGoMelee">立刻体验 8v8 群雄会战</button>
-        <button type="button" class="ghost small" id="ubGoPets">配置灵宠与招式</button>
-        <button type="button" class="ghost small" id="ubGoCodex">查看新侠客</button>
-        <button type="button" class="ghost small" id="ubHudCustom">自定义战斗界面</button>
-      </div>
-    </aside>
     <div class="home-hero" id="homeHero">   <!-- 跟着首页正中那位侠客的脚下走：上面是名字，下面是换侠客 -->
       <div class="hh-name" id="heroName"></div>
       <div class="hh-swapwrap" id="homeSub">   <!-- 点开一排头像，选谁首页正中就站谁，进点将台也先指着他 -->
@@ -7416,6 +7379,10 @@ const stair = battleStairTarget(me, goal ? goal.y : foe.y);
 if (stair !== null && !this.holdDown && !this.holdAtk) this.dir = Math.sign(stair - me.x);
 else if (goal && !this.holdDown && !this.holdAtk && Math.abs(goal.x - me.x) > 35) this.dir = Math.sign(goal.x - me.x);
 }
+if (d < 44 && this.dir === to && me.onGround() && AI_FREE.includes(me.state) && !this.queue.length && !this.holdDown && !this.holdAtk) {
+const cornered = (me.x < WALL + 120 && to > 0) || (me.x > STAGE_W - WALL - 120 && to < 0);
+if (!cornered) this.dir = 0;
+}
 if (me.state === 'special' && me.ch.ult === 'avalanche') this.steerAvalanche(me, foe);
 if (this.holdAtk > 0 && me.state !== 'charge' && clock - (this.chargeT0 || 0) > 0.42) this.holdAtk = 0;   // 蓄力被打断了：松手
 c.held.down = this.holdDown > 0;
@@ -8146,6 +8113,7 @@ if (mu.rush) want *= 1 - 0.2 * a;
 if (mu.kite) want = Math.max(want, want + (340 - want) * a);
 if (this.ready(foe, mu.counter) && want < 220) want += 50 * a;   // 站在架招够不着的地方等它先动
 }
+want = Math.max(58, want);   // 保持健康近战间距，避免近战 AI 反复顶撞对手身体
 this.map = { t: clock, foe, mine, theirs, want };
 return this.map;
 }
@@ -11592,21 +11560,6 @@ Object.assign(UI_COPY_EN, {
 "大型团战 8v8": "Large-Scale 8v8",
 "灵宠 · 招式 · 徽记": "Pets · Skills · Badges",
 "二十侠客 · 三大套装": "20 Heroes · 3 Skin Sets",
-"版本更新公告": "Update Notes",
-"最新大更新": "NEW UPDATE",
-"二十侠客 · 8v8 大型团战 · 灵宠与招式自选": "20 Heroes · 8v8 Team Battles · Pets & Custom Skills",
-"收起更新公告": "Dismiss update banner",
-"8v8 大团战": "8v8 Battles",
-"群雄会战、夺旗争锋、无尽试炼与顶部战场小地图": "Grand Melee, Capture the Banner, Endless Gauntlet & battlefield minimap",
-"4 位新侠客": "4 New Heroes",
-"炽霄、幽篁、玄机、破浪 + 3 套全新主题套装": "Chi Xiao, You Huang, Xuan Ji, Po Lang + 3 themed skin sets",
-"灵宠与自选招式": "Pets & Custom Skills",
-"8 只助战灵宠（V 键）、Q/R/E 招式流派、14 枚武学徽记": "8 combat pets (V key), Q/R/E skill variants, and 14 martial badges",
-"空中蓄力与全键位": "Air Charge & Keys",
-"空中长按蓄力斩、C 虚招、F 弹反、G 锁定、B 自标、Tab 战况": "Mid-air charged slash, C Feint, F Parry, G Lock, B Ping & Tab Scoreboard",
-"立刻体验 8v8 群雄会战": "Play 8v8 Grand Melee",
-"配置灵宠与招式": "Configure Pets & Skills",
-"查看新侠客": "View New Heroes",
 "大型团战": "Large-Scale",
 "3v3–8v8 混战、夺旗与无尽": "3v3–8v8 Melee, CTF & Endless",
 "群雄会战": "Grand Melee",
@@ -11694,8 +11647,6 @@ Object.assign(UI_COPY_EN, {
 });
 Object.assign(UI_COPY_EN, {
 "旧版本录的，可能对不上": "Recorded with an older version. Playback may differ.",
-"领取感恩全套豪礼与紫金徽记": "Claim the appreciation gifts and a Purple Gold Badge",
-"自定义战斗界面": "Customize Battle HUD",
 "全部": "All",
 "剑客": "Swordsmen",
 "刺客": "Assassins",
@@ -35742,21 +35693,69 @@ say('斩', 1.6, 'ko'); SFX.ko(); SFX.voiceHurt(0.75);
 }
 }
 function pushApart() {
-if (B.hidden) return;
-const skip = f => f.hidden || f.hp <= 0 || ['dash', 'special', 'launched', 'knockdown', 'held'].includes(f.state) || (f.state === 'skill' && SKILLS[f.skill] && SKILLS[f.skill].pass);
+const skip = f => !f || f.hidden || f.hp <= 0 || !f.onGround()
+|| ['dash', 'special', 'launched', 'knockdown', 'held', 'getup', 'aircharge'].includes(f.state)
+|| (f.state === 'skill' && SKILLS[f.skill] && SKILLS[f.skill].pass);
+const isFixed = f => !!(f.dummy && f.ctrl && (f.ctrl.cfg ? f.ctrl.cfg.fixed : f.ctrl.mode === 'fixed'));
 const list = allFighters();
+const BODY_MIN = 34;
+const ALLY_IDLE_MIN = 20;
 for (let i = 0; i < list.length; i++) {
 const f1 = list[i];
 if (skip(f1)) continue;
 for (let j = i + 1; j < list.length; j++) {
 const f2 = list[j];
-if (skip(f2) || Math.abs(f1.y - f2.y) > 90) continue;
-const dx = f2.x - f1.x, ov = 38 - Math.abs(dx);
-if (ov > 0) {
-const s = dx === 0 ? f1.face : Math.sign(dx);
-f1.x = clamp(f1.x - s * ov / 2, WALL, STAGE_W - WALL);
-f2.x = clamp(f2.x + s * ov / 2, WALL, STAGE_W - WALL);
-if (Math.abs(f2.x - f1.x) < 38) { if (f1.x <= WALL + 1) f2.x = f1.x + 38; else if (f2.x >= STAGE_W - WALL - 1) f1.x = f2.x - 38; }
+if (skip(f2)) continue;
+if (Math.abs(f1.y - f2.y) > 64) continue;
+if (f1.plat !== f2.plat && Math.abs(f1.y - f2.y) > 44) continue;
+const dx = f2.x - f1.x;
+const absDx = Math.abs(dx);
+const sameTeam = list.length > 2 && typeof fighterTeam === 'function' && fighterTeam(f1) === fighterTeam(f2);
+if (sameTeam) {
+if (absDx < ALLY_IDLE_MIN && Math.abs(f1.vx) < 25 && Math.abs(f2.vx) < 25) {
+const ov = ALLY_IDLE_MIN - absDx;
+const s = absDx > 0.5 ? Math.sign(dx) : (f1.idx < f2.idx ? 1 : -1);
+const step = Math.min(ov * 0.18, 2.0);
+if (!isFixed(f1)) f1.x = clamp(f1.x - s * step * 0.5, WALL, STAGE_W - WALL);
+if (!isFixed(f2)) f2.x = clamp(f2.x + s * step * 0.5, WALL, STAGE_W - WALL);
+}
+continue;
+}
+const ov = BODY_MIN - absDx;
+if (ov <= 0) continue;
+let s;
+if (absDx > 0.5) s = Math.sign(dx);
+else if (Math.abs(f2.vx - f1.vx) > 10) s = Math.sign(f2.vx - f1.vx);
+else if (f1.face && f1.face !== f2.face) s = f1.face;
+else s = f1.idx < f2.idx ? 1 : -1;
+const f1WalkInto = f1.state === 'walk' && f1.vx * s > 40;
+const f2WalkInto = f2.state === 'walk' && f2.vx * s < -40;
+if (f1WalkInto || f2WalkInto) {
+if (f1WalkInto) f1.vx *= 0.94;
+if (f2WalkInto) f2.vx *= 0.94;
+continue;
+}
+const fix1 = isFixed(f1), fix2 = isFixed(f2);
+if (fix1 && fix2) continue;
+const step = Math.min(ov, 5.0);
+let w1 = 0.5, w2 = 0.5;
+if (fix1) { w1 = 0; w2 = 1; }
+else if (fix2) { w1 = 1; w2 = 0; }
+else {
+const steady1 = ['block', 'blockstun', 'idle'].includes(f1.state) && Math.abs(f1.vx) < 25;
+const steady2 = ['block', 'blockstun', 'idle'].includes(f2.state) && Math.abs(f2.vx) < 25;
+if (steady1 && !steady2) { w1 = 0.15; w2 = 0.85; }
+else if (steady2 && !steady1) { w1 = 0.85; w2 = 0.15; }
+}
+f1.x = clamp(f1.x - s * step * w1, WALL, STAGE_W - WALL);
+f2.x = clamp(f2.x + s * step * w2, WALL, STAGE_W - WALL);
+const rem = BODY_MIN - Math.abs(f2.x - f1.x);
+if (rem > 0) {
+const pushRem = Math.min(rem, 5.0);
+if (f1.x <= WALL + 1 && !fix2) f2.x = clamp(f2.x + pushRem, WALL, STAGE_W - WALL);
+else if (f2.x <= WALL + 1 && !fix1) f1.x = clamp(f1.x + pushRem, WALL, STAGE_W - WALL);
+else if (f2.x >= STAGE_W - WALL - 1 && !fix1) f1.x = clamp(f1.x - pushRem, WALL, STAGE_W - WALL);
+else if (f1.x >= STAGE_W - WALL - 1 && !fix2) f2.x = clamp(f2.x - pushRem, WALL, STAGE_W - WALL);
 }
 }
 }
@@ -43529,27 +43528,6 @@ menuGo(b.dataset.go);
 for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', backToMenu);
 (function initExpansionHome() {
 let largeTeamSize = 5;
-const ub = $id('updateBanner');
-if (ub) {
-ub.hidden = false;
-if ($id('ubClose')) $id('ubClose').addEventListener('click', () => { ub.hidden = true; });
-if ($id('ubGoMelee')) $id('ubGoMelee').addEventListener('click', () => { ub.hidden = true; startMelee(8, menuHeroId, pickLevel || 'normal'); });
-if ($id('ubGoPets')) $id('ubGoPets').addEventListener('click', () => { ub.hidden = true; openScreen('armory'); setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="badges"]'); if (t) t.click(); }, 60); });
-if ($id('ubGoCodex')) $id('ubGoCodex').addEventListener('click', () => { ub.hidden = true; openScreen('codex'); });
-try {
-const apiBase = (window.CLOUD_API || '').replace(/\/+$/, '');
-if (apiBase) {
-fetch(apiBase + '/api/banner').then(r => r.ok ? r.json() : null).then(d => {
-if (!d || !d.banner || !d.banner.title) return;
-if ($id('ubTag') && d.banner.tag) $id('ubTag').textContent = d.banner.tag;
-if ($id('ubTitle')) $id('ubTitle').textContent = d.banner.title;
-if ($id('ubList') && Array.isArray(d.banner.items) && d.banner.items.length) {
-$id('ubList').innerHTML = d.banner.items.map(it => `<span><b>${escapeHTML(it.k || '')}</b>${escapeHTML(it.v || '')}</span>`).join('');
-}
-}).catch(() => {});
-}
-} catch (e) {}
-}
 if ($id('hubLargeBtn')) $id('hubLargeBtn').addEventListener('click', () => {
 openScreen('single');
 const tab = document.querySelector('#xiwuCatTabs [data-cat="large"]');
@@ -43560,19 +43538,6 @@ openScreen('armory');
 setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="badges"]'); if (t) t.click(); }, 60);
 });
 if ($id('hubHeroesBtn')) $id('hubHeroesBtn').addEventListener('click', () => openScreen('codex'));
-if ($id('hubBannerBtn')) $id('hubBannerBtn').addEventListener('click', () => { if (ub) ub.hidden = false; });
-if ($id('ubClaimAppreciation')) $id('ubClaimAppreciation').addEventListener('click', async () => {
-if (typeof window.armoryClaimAppreciation === 'function') {
-const r = await window.armoryClaimAppreciation('flowing');
-if (r && r.ok && $id('ubClaimAppreciation')) $id('ubClaimAppreciation').textContent = '✓ 已领取感恩全套豪礼与紫金徽记';
-} else {
-openScreen('armory');
-setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="badges"]'); if (t) t.click(); }, 60);
-}
-});
-if ($id('ubHudCustom')) $id('ubHudCustom').addEventListener('click', () => {
-if (typeof window.openHudCustomizer === 'function') window.openHudCustomizer();
-});
 const szSeg = $id('largeSizeSeg');
 if (szSeg) szSeg.addEventListener('click', e => {
 const b = e.target.closest('[data-lsize]'); if (!b) return;

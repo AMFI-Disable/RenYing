@@ -543,21 +543,74 @@ function hitVisual(ev, quiet) {
   }
 }
 function pushApart() {
-  if (B.hidden) return;
-  const skip = f => f.hidden || f.hp <= 0 || ['dash', 'special', 'launched', 'knockdown', 'held'].includes(f.state) || (f.state === 'skill' && SKILLS[f.skill] && SKILLS[f.skill].pass);
+  const skip = f => !f || f.hidden || f.hp <= 0 || !f.onGround()
+    || ['dash', 'special', 'launched', 'knockdown', 'held', 'getup', 'aircharge'].includes(f.state)
+    || (f.state === 'skill' && SKILLS[f.skill] && SKILLS[f.skill].pass);
+  const isFixed = f => !!(f.dummy && f.ctrl && (f.ctrl.cfg ? f.ctrl.cfg.fixed : f.ctrl.mode === 'fixed'));
   const list = allFighters();
+  const BODY_MIN = 34;
+  const ALLY_IDLE_MIN = 20;
   for (let i = 0; i < list.length; i++) {
     const f1 = list[i];
     if (skip(f1)) continue;
     for (let j = i + 1; j < list.length; j++) {
       const f2 = list[j];
-      if (skip(f2) || Math.abs(f1.y - f2.y) > 90) continue;
-      const dx = f2.x - f1.x, ov = 38 - Math.abs(dx);
-      if (ov > 0) {
-        const s = dx === 0 ? f1.face : Math.sign(dx);
-        f1.x = clamp(f1.x - s * ov / 2, WALL, STAGE_W - WALL);
-        f2.x = clamp(f2.x + s * ov / 2, WALL, STAGE_W - WALL);
-        if (Math.abs(f2.x - f1.x) < 38) { if (f1.x <= WALL + 1) f2.x = f1.x + 38; else if (f2.x >= STAGE_W - WALL - 1) f1.x = f2.x - 38; }
+      if (skip(f2)) continue;
+      if (Math.abs(f1.y - f2.y) > 64) continue;
+      if (f1.plat !== f2.plat && Math.abs(f1.y - f2.y) > 44) continue;
+      const dx = f2.x - f1.x;
+      const absDx = Math.abs(dx);
+      const sameTeam = list.length > 2 && typeof fighterTeam === 'function' && fighterTeam(f1) === fighterTeam(f2);
+      if (sameTeam) {
+        // 队友之间允许自由穿行，避免 2v2 / 8v8 人群互相卡位；仅在两人均静止几乎重合时轻微错开
+        if (absDx < ALLY_IDLE_MIN && Math.abs(f1.vx) < 25 && Math.abs(f2.vx) < 25) {
+          const ov = ALLY_IDLE_MIN - absDx;
+          const s = absDx > 0.5 ? Math.sign(dx) : (f1.idx < f2.idx ? 1 : -1);
+          const step = Math.min(ov * 0.18, 2.0);
+          if (!isFixed(f1)) f1.x = clamp(f1.x - s * step * 0.5, WALL, STAGE_W - WALL);
+          if (!isFixed(f2)) f2.x = clamp(f2.x + s * step * 0.5, WALL, STAGE_W - WALL);
+        }
+        continue;
+      }
+      const ov = BODY_MIN - absDx;
+      if (ov <= 0) continue;
+      // 确定性分离方向（回滚安全）：优先当前相对位置，其次相对速度、朝向与索引
+      let s;
+      if (absDx > 0.5) s = Math.sign(dx);
+      else if (Math.abs(f2.vx - f1.vx) > 10) s = Math.sign(f2.vx - f1.vx);
+      else if (f1.face && f1.face !== f2.face) s = f1.face;
+      else s = f1.idx < f2.idx ? 1 : -1;
+      const f1WalkInto = f1.state === 'walk' && f1.vx * s > 40;
+      const f2WalkInto = f2.state === 'walk' && f2.vx * s < -40;
+      if (f1WalkInto || f2WalkInto) {
+        // 主动相向或贴身走位时采用柔和擦肩通过（Shoulder-Pass），不把静止对手推着走，也不锁死卡顿
+        if (f1WalkInto) f1.vx *= 0.94;
+        if (f2WalkInto) f2.vx *= 0.94;
+        continue;
+      }
+      // 站立、格挡、出招、受击等非步行穿行状态：柔和限幅分离，防止穿模与角落死锁
+      const fix1 = isFixed(f1), fix2 = isFixed(f2);
+      if (fix1 && fix2) continue;
+      const step = Math.min(ov, 5.0);
+      let w1 = 0.5, w2 = 0.5;
+      if (fix1) { w1 = 0; w2 = 1; }
+      else if (fix2) { w1 = 1; w2 = 0; }
+      else {
+        const steady1 = ['block', 'blockstun', 'idle'].includes(f1.state) && Math.abs(f1.vx) < 25;
+        const steady2 = ['block', 'blockstun', 'idle'].includes(f2.state) && Math.abs(f2.vx) < 25;
+        if (steady1 && !steady2) { w1 = 0.15; w2 = 0.85; }
+        else if (steady2 && !steady1) { w1 = 0.85; w2 = 0.15; }
+      }
+      f1.x = clamp(f1.x - s * step * w1, WALL, STAGE_W - WALL);
+      f2.x = clamp(f2.x + s * step * w2, WALL, STAGE_W - WALL);
+      // 对称角落解耦：无论 f1 还是 f2 贴在左墙或右墙，都把另一方顺滑让出间距，避免墙角重叠抖动
+      const rem = BODY_MIN - Math.abs(f2.x - f1.x);
+      if (rem > 0) {
+        const pushRem = Math.min(rem, 5.0);
+        if (f1.x <= WALL + 1 && !fix2) f2.x = clamp(f2.x + pushRem, WALL, STAGE_W - WALL);
+        else if (f2.x <= WALL + 1 && !fix1) f1.x = clamp(f1.x + pushRem, WALL, STAGE_W - WALL);
+        else if (f2.x >= STAGE_W - WALL - 1 && !fix1) f1.x = clamp(f1.x - pushRem, WALL, STAGE_W - WALL);
+        else if (f1.x >= STAGE_W - WALL - 1 && !fix2) f2.x = clamp(f2.x - pushRem, WALL, STAGE_W - WALL);
       }
     }
   }

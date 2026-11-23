@@ -428,15 +428,5 @@
   .home-hub { position: relative; z-index: 6; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 10px auto 0; max-width: 720px; }
   .hub-pill { padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(233,196,106,.38); background: rgba(12,16,32,.78); color: #efe8d8; font-size: 12.5px; cursor: pointer; transition: border-color .2s, background .2s, transform .15s; }
   .hub-pill:hover { border-color: #e9c46a; background: rgba(233,196,106,.16); transform: translateY(-1px); }
-  /* 每次启动可见的版本更新横幅 */
-  .update-banner { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 38; width: min(760px, calc(100vw - 24px)); background: linear-gradient(155deg, rgba(16,20,38,.95), rgba(10,12,24,.97)); border: 1px solid rgba(233,196,106,.52); border-radius: 12px; padding: 12px 16px; box-shadow: 0 14px 40px rgba(0,0,0,.62); text-align: left; }
-  .update-banner[hidden] { display: none; }
-  .ub-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .ub-tag { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(233,196,106,.18); color: #e9c46a; border: 1px solid rgba(233,196,106,.45); }
-  .ub-head b { flex: 1; font-size: 14.5px; color: #f6efe0; }
-  .ub-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; font-size: 12px; color: rgba(239,232,216,.84); margin-bottom: 10px; }
-  .ub-list b { color: #e9c46a; margin-right: 6px; }
-  .ub-actions { display: flex; flex-wrap: wrap; gap: 8px; }
   .xiwu-large-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(233,196,106,.24); }
   .xl-lbl { font-size: 12.5px; color: #e9c46a; font-weight: 600; }
-  @media (max-width: 720px) { .ub-list { grid-template-columns: 1fr; } .update-banner { bottom: 10px; padding: 10px 12px; } }

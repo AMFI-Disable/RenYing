@@ -431,6 +431,11 @@ class AIBrain {
       if (stair !== null && !this.holdDown && !this.holdAtk) this.dir = Math.sign(stair - me.x);
       else if (goal && !this.holdDown && !this.holdAtk && Math.abs(goal.x - me.x) > 35) this.dir = Math.sign(goal.x - me.x);
     }
+    // 防止 AI 贴脸死顶对手：已在近身接触距离且未准备脱困时停止继续向对手怀里顶撞
+    if (d < 44 && this.dir === to && me.onGround() && AI_FREE.includes(me.state) && !this.queue.length && !this.holdDown && !this.holdAtk) {
+      const cornered = (me.x < WALL + 120 && to > 0) || (me.x > STAGE_W - WALL - 120 && to < 0);
+      if (!cornered) this.dir = 0;
+    }
     if (me.state === 'special' && me.ch.ult === 'avalanche') this.steerAvalanche(me, foe);
     if (this.holdAtk > 0 && me.state !== 'charge' && clock - (this.chargeT0 || 0) > 0.42) this.holdAtk = 0;   // 蓄力被打断了：松手
     c.held.down = this.holdDown > 0;
@@ -1302,6 +1307,7 @@ class AIBrain {
       if (mu.kite) want = Math.max(want, want + (340 - want) * a);
       if (this.ready(foe, mu.counter) && want < 220) want += 50 * a;   // 站在架招够不着的地方等它先动
     }
+    want = Math.max(58, want);   // 保持健康近战间距，避免近战 AI 反复顶撞对手身体
     this.map = { t: clock, foe, mine, theirs, want };
     return this.map;
   }

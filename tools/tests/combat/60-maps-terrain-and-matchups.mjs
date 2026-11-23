@@ -399,5 +399,90 @@ export default [
       toMenu();
       return { pass: true, error: null };
     })()`
+  },
+  {
+    name: 'Character collision resolves naturally across PvP, PvAI, AI-vs-AI, corners, airborne cross-ups, and 8v8 team modes without sticking or pushing',
+    fn: `(() => {
+      const fail = error => { toMenu(); return { pass: false, error }; };
+
+      // 1. PvP head-on walking: two players walking into each other pass cleanly instead of deadlocking nose-to-nose.
+      startMatch('pvp', 'normal', [0, 1]); M.phase = 'fight';
+      A.reset(STAGE_W / 2 - 40); B.reset(STAGE_W / 2 + 40);
+      A.ctrl = human[0]; B.ctrl = human[1]; human[0].clear(); human[1].clear();
+      human[0].held.right = true; human[1].held.left = true;
+      for (let i = 0; i < 60; i++) step();
+      human[0].held.right = false; human[1].held.left = false;
+      if (!(A.x > B.x)) return fail('PvP head-on walkers got stuck pushing instead of crossing: A=' + A.x.toFixed(1) + ' B=' + B.x.toFixed(1));
+
+      // 2. Walking into a stationary blocking defender must not shove the defender across the stage.
+      A.reset(STAGE_W / 2 - 42); B.reset(STAGE_W / 2 + 42);
+      human[0].clear(); human[1].clear();
+      const bStart = B.x;
+      human[0].held.right = true; human[1].held.down = true;
+      for (let i = 0; i < 60; i++) step();
+      human[0].held.right = false; human[1].held.down = false;
+      if (Math.abs(B.x - bStart) > 4) return fail('Stationary blocking defender was shoved by walking attacker: moved ' + Math.abs(B.x - bStart).toFixed(1));
+      if (!(A.x > B.x)) return fail('Walking player should smoothly pass stationary defender instead of getting stuck');
+
+      // 3. Symmetric corner separation: idle overlapping fighters at left or right wall separate cleanly even when B is on the left wall.
+      A.reset(WALL + 2); B.reset(WALL);
+      toNeutral(A); toNeutral(B); A.vx = 0; B.vx = 0;
+      for (let i = 0; i < 20; i++) pushApart();
+      if (Math.abs(A.x - B.x) < 33 || A.x < WALL || B.x < WALL) return fail('Left-corner symmetric separation failed: A=' + A.x + ' B=' + B.x);
+      A.reset(STAGE_W - WALL); B.reset(STAGE_W - WALL - 2);
+      toNeutral(A); toNeutral(B); A.vx = 0; B.vx = 0;
+      for (let i = 0; i < 20; i++) pushApart();
+      if (Math.abs(A.x - B.x) < 33 || A.x > STAGE_W - WALL || B.x > STAGE_W - WALL) return fail('Right-corner symmetric separation failed: A=' + A.x + ' B=' + B.x);
+
+      // 4. Airborne jump-over: jumping over a grounded opponent is not magnetically pushed backward.
+      A.reset(WALL + 10); B.reset(WALL + 52);
+      toNeutral(A); toNeutral(B);
+      doJump(A, 1);
+      for (let i = 0; i < 45 && !A.onGround(); i++) {
+        A.ctrl.held.right = true;
+        step();
+      }
+      A.ctrl.held.right = false;
+      if (!(A.x > B.x + 20)) return fail('Jumping out of corner was blocked by opponent pushbox: A=' + A.x.toFixed(1) + ' B=' + B.x.toFixed(1));
+
+      // 5. AI-vs-AI: two close-range brawlers fight without getting stuck nose-to-nose pushing each other.
+      startMatch('cpu', 'hard', [CHAR_IDX.tieshan, CHAR_IDX.zuixian]); M.watchAi = true;
+      A.ctrl = new AICtrl('hard'); B.ctrl = new AICtrl('hard');
+      M.phase = 'fight';
+      A.reset(STAGE_W / 2 - 22); B.reset(STAGE_W / 2 + 22);
+      let stuckFrames = 0;
+      for (let i = 0; i < 180; i++) {
+        step();
+        if (Math.abs(A.x - B.x) < 36 && A.state === 'walk' && B.state === 'walk' && Math.sign(A.vx) === Math.sign(B.x - A.x) && Math.sign(B.vx) === Math.sign(A.x - B.x)) {
+          stuckFrames++;
+        }
+      }
+      if (stuckFrames > 25) return fail('AI-vs-AI brawlers spent too many frames pushing head-on: ' + stuckFrames);
+
+      // 6. 8v8 team mode: teammates pass freely without blocking each other, and collision still works even when B is hidden.
+      startMelee(8); M.phase = 'fight';
+      const allies = sideFighters(0);
+      if (allies.length < 2) return fail('8v8 melee did not spawn allies');
+      const a0 = allies[0], a1 = allies[1];
+      a0.reset(STAGE_W / 2 - 20); a1.reset(STAGE_W / 2 + 10);
+      a0.state = 'walk'; a0.vx = 360; a1.state = 'walk'; a1.vx = -360;
+      const a0Before = a0.x, a1Before = a1.x;
+      for (let i = 0; i < 20; i++) { a0.x += a0.vx * STEP; a1.x += a1.vx * STEP; pushApart(); }
+      if (!(a0.x > a1.x && a0.x > a0Before + 30 && a1.x < a1Before - 30)) return fail('8v8 teammates blocked each other while crossing');
+
+      // Ensure pushApart still separates remaining opponents when B is hidden (e.g. respawning in KOTH/8v8).
+      B.hidden = true;
+      const enemies = sideFighters(1).filter(f => !f.hidden);
+      if (enemies.length) {
+        const e0 = enemies[0];
+        a0.reset(STAGE_W / 2); e0.reset(STAGE_W / 2 + 4);
+        toNeutral(a0); toNeutral(e0); a0.vx = 0; e0.vx = 0;
+        for (let i = 0; i < 20; i++) pushApart();
+        if (Math.abs(a0.x - e0.x) < 33) return fail('pushApart aborted when B was hidden: dist=' + Math.abs(a0.x - e0.x));
+      }
+
+      toMenu();
+      return { pass: true, error: null };
+    })()`
   }
 ];

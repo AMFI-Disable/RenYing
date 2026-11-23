@@ -1,8 +1,6 @@
 // English copy for the expanded roster, martial controls, and badge gallery.
 Object.assign(UI_COPY_EN, {
   "旧版本录的，可能对不上": "Recorded with an older version. Playback may differ.",
-  "领取感恩全套豪礼与紫金徽记": "Claim the appreciation gifts and a Purple Gold Badge",
-  "自定义战斗界面": "Customize Battle HUD",
   "全部": "All",
   "剑客": "Swordsmen",
   "刺客": "Assassins",

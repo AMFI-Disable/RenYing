@@ -212,31 +212,9 @@ for (const b of document.querySelectorAll('#menu [data-go]')) {
   });
 }   // 悬停不再把镜头甩到两边：场景只跟着鼠标轻轻晃（见 renderMenu 里的 MENU_M）
 for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', backToMenu);
-// ---------- 首页快捷入口、每次启动更新横幅与大型团战启动 ----------
+// ---------- 首页快捷入口与大型团战启动 ----------
 (function initExpansionHome() {
   let largeTeamSize = 5;
-  const ub = $id('updateBanner');
-  // 每次启动游戏都显示更新横幅；若连上云端则拉取管理员可在线编辑的最新公告
-  if (ub) {
-    ub.hidden = false;
-    if ($id('ubClose')) $id('ubClose').addEventListener('click', () => { ub.hidden = true; });
-    if ($id('ubGoMelee')) $id('ubGoMelee').addEventListener('click', () => { ub.hidden = true; startMelee(8, menuHeroId, pickLevel || 'normal'); });
-    if ($id('ubGoPets')) $id('ubGoPets').addEventListener('click', () => { ub.hidden = true; openScreen('armory'); setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="badges"]'); if (t) t.click(); }, 60); });
-    if ($id('ubGoCodex')) $id('ubGoCodex').addEventListener('click', () => { ub.hidden = true; openScreen('codex'); });
-    try {
-      const apiBase = (window.CLOUD_API || '').replace(/\/+$/, '');
-      if (apiBase) {
-        fetch(apiBase + '/api/banner').then(r => r.ok ? r.json() : null).then(d => {
-          if (!d || !d.banner || !d.banner.title) return;
-          if ($id('ubTag') && d.banner.tag) $id('ubTag').textContent = d.banner.tag;
-          if ($id('ubTitle')) $id('ubTitle').textContent = d.banner.title;
-          if ($id('ubList') && Array.isArray(d.banner.items) && d.banner.items.length) {
-            $id('ubList').innerHTML = d.banner.items.map(it => `<span><b>${escapeHTML(it.k || '')}</b>${escapeHTML(it.v || '')}</span>`).join('');
-          }
-        }).catch(() => {});
-      }
-    } catch (e) {}
-  }
   if ($id('hubLargeBtn')) $id('hubLargeBtn').addEventListener('click', () => {
     openScreen('single');
     const tab = document.querySelector('#xiwuCatTabs [data-cat="large"]');
@@ -247,19 +225,6 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
     setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="badges"]'); if (t) t.click(); }, 60);
   });
   if ($id('hubHeroesBtn')) $id('hubHeroesBtn').addEventListener('click', () => openScreen('codex'));
-  if ($id('hubBannerBtn')) $id('hubBannerBtn').addEventListener('click', () => { if (ub) ub.hidden = false; });
-  if ($id('ubClaimAppreciation')) $id('ubClaimAppreciation').addEventListener('click', async () => {
-    if (typeof window.armoryClaimAppreciation === 'function') {
-      const r = await window.armoryClaimAppreciation('flowing');
-      if (r && r.ok && $id('ubClaimAppreciation')) $id('ubClaimAppreciation').textContent = '✓ 已领取感恩全套豪礼与紫金徽记';
-    } else {
-      openScreen('armory');
-      setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="badges"]'); if (t) t.click(); }, 60);
-    }
-  });
-  if ($id('ubHudCustom')) $id('ubHudCustom').addEventListener('click', () => {
-    if (typeof window.openHudCustomizer === 'function') window.openHudCustomizer();
-  });
   const szSeg = $id('largeSizeSeg');
   if (szSeg) szSeg.addEventListener('click', e => {
     const b = e.target.closest('[data-lsize]'); if (!b) return;
