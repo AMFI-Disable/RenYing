@@ -49,7 +49,7 @@ function meleeMatch() {
   }
 }
 
-function startMelee(teamSize = 5, heroIdx = 0, level = 'normal', mut = 'normal') {
+function startMelee(teamSize = 5, heroIdx = 0, level = 'normal', mut = 'normal', drafted = null) {
   const sz = clamp(teamSize | 0, 3, 8);
   debugHitbox = false;
   refocusGame();
@@ -60,9 +60,12 @@ function startMelee(teamSize = 5, heroIdx = 0, level = 'normal', mut = 'normal')
   M.teamMutator = ['chaos', 'mayhem'].includes(mut) ? mut : 'normal';
   M.wins = [0, 0]; M.round = 1; M.watchAi = false;
   const total = sz * 2;
+  const hasDraft = Array.isArray(drafted) && Array.isArray(drafted[0]) && Array.isArray(drafted[1]);
   for (let i = 0; i < total; i++) {
     const f = FIGHTERS[i];
-    const cid = i === 0 ? (heroIdx | 0) : ((heroIdx + i * 3) % CHARS.length);
+    const side = i % 2, slot = Math.floor(i / 2);
+    const draftedCid = hasDraft && Number.isInteger(drafted[side][slot]) && drafted[side][slot] >= 0 ? drafted[side][slot] : -1;
+    const cid = draftedCid >= 0 ? draftedCid : (i === 0 ? (heroIdx | 0) : ((heroIdx + i * 3) % CHARS.length));
     f.setChar(cid);
     f.ctrl = i === 0 ? human[0] : new AICtrl(M.level);
     f.hidden = false;

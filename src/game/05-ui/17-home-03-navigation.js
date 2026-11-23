@@ -230,13 +230,16 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
     const b = e.target.closest('[data-lsize]'); if (!b) return;
     largeTeamSize = +b.dataset.lsize || 5;
     $id('largeStartMelee').disabled = largeTeamSize < 3;
+    if ($id('largeQuickMelee')) $id('largeQuickMelee').disabled = largeTeamSize < 3;
     szSeg.querySelectorAll('[data-lsize]').forEach(x => x.classList.toggle('sel', x === b));
   });
-  if ($id('largeStartMelee')) $id('largeStartMelee').addEventListener('click', () => startMelee(largeTeamSize, menuHeroId, pickLevel || 'normal', typeof teamMutator !== 'undefined' ? teamMutator : 'normal'));
-  if ($id('largeStartCtf')) $id('largeStartCtf').addEventListener('click', () => startCtf(largeTeamSize, menuHeroId, pickLevel || 'normal'));
+  if ($id('largeStartMelee')) $id('largeStartMelee').addEventListener('click', () => bpStart('melee', { teamSize: Math.max(3, largeTeamSize), level: pickLevel || 'normal', mut: typeof teamMutator !== 'undefined' ? teamMutator : 'normal' }));
+  if ($id('largeStartCtf')) $id('largeStartCtf').addEventListener('click', () => bpStart('ctf', { teamSize: largeTeamSize, level: pickLevel || 'normal' }));
+  if ($id('largeQuickMelee')) $id('largeQuickMelee').addEventListener('click', () => startMelee(largeTeamSize, menuHeroId, pickLevel || 'normal', typeof teamMutator !== 'undefined' ? teamMutator : 'normal'));
+  if ($id('largeQuickCtf')) $id('largeQuickCtf').addEventListener('click', () => startCtf(largeTeamSize, menuHeroId, pickLevel || 'normal'));
   if ($id('largeStartGauntlet')) $id('largeStartGauntlet').addEventListener('click', () => startGauntlet(menuHeroId, pickLevel || 'normal'));
   if ($id('cardMelee')) $id('cardMelee').addEventListener('dblclick', () => $id('largeStartMelee').click());
-  if ($id('cardCtf')) $id('cardCtf').addEventListener('dblclick', () => startCtf(largeTeamSize, menuHeroId, pickLevel || 'normal'));
+  if ($id('cardCtf')) $id('cardCtf').addEventListener('dblclick', () => $id('largeStartCtf').click());
   if ($id('cardGauntlet')) $id('cardGauntlet').addEventListener('dblclick', () => startGauntlet(menuHeroId, pickLevel || 'normal'));
 })();
 

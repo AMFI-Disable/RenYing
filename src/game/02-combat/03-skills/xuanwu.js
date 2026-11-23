@@ -18,10 +18,10 @@ Object.assign(SKILLS, {
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.16) {
         f.skPh = 1; f.t = 0; SFX.thud(); shake = Math.max(shake, 10);
-        f.guard = Math.min(f.guardMax, (f.guard || 0) + 35);
-        if (!RESIM) ring(f.x, -8, 155, '140,212,140', 0.44);
+        f.guard = Math.min(f.maxGuard || 100, (f.guard || 0) + 35);
+        if (!RESIM) ring(f.x, f.y - 8, 155, '140,212,140', 0.44);
         strike(f, foe, { box: [-135, -115, 135, 10], dmg: 52, kb: [260, -580], stun: 0.52, hs: 0.13, launch: true, guardDamage: 36 });
-        spawnProj(f, { kind: 'quake', x: f.x + f.face * 72, y: -12, vx: f.face * 540, w: 68, h: 48, life: 0.45, dmg: 26, kb: [160, -340], stun: 0.36, hs: 0.06, groundOnly: true });
+        spawnProj(f, { kind: 'quake', x: f.x + f.face * 72, y: f.y - 12, groundY: f.y, vx: f.face * 540, w: 68, h: 48, life: 0.45, dmg: 26, kb: [160, -340], stun: 0.36, hs: 0.06, groundOnly: true });
       }
       if (f.skPh === 1 && f.t >= 0.32) toNeutral(f);
     },

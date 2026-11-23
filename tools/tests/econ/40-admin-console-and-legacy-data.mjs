@@ -333,18 +333,19 @@ section('玩家市场挂单到期：挂太久没卖出的自动撤下，饰品�
   const over = await econ(S.token, 'list', { i: a.i, price: 10 });
   ok(over.res.ok && !stateOf(S.uid).inv.some(x => x.i === a.i), '市场表里已经有 30 单在卖：照样能再挂', over.res);
   ENV.DB.raw.prepare("DELETE FROM mkt WHERE id LIKE 'f%' AND seller = ?").run(S.uid);
-  // 挂得很多：一键挂牌一次最多挂 LIST_BATCH 件；到期以后每次操作最多核对、退回 LIST_CHECK 单，剩下的下次接着退，一件都不丢
+  // 挂得很多：一键挂牌不再受 50 件限制，一次全部挂完；到期以后每次操作最多核对、退回 LIST_CHECK 单，剩下的下次接着退，一件都不丢
   const D = await newUser('manylist');
   await econ(D.token, 'sync');
-  grant(D.uid, Array.from({ length: 2 * C.LIST_BATCH + 1 }, () => ({ k: 'ts_p1' })));
-  const d1 = await econ(D.token, 'listDupes'), d2 = await econ(D.token, 'listDupes');
-  ok(d1.res.ok && d1.res.count === C.LIST_BATCH && d1.res.skipped === C.LIST_BATCH && d2.res.ok && d2.res.count === C.LIST_BATCH, `一键挂牌一次挂 ${C.LIST_BATCH} 件，再点一次挂剩下的`, [d1.res, d2.res]);
-  ok(stateOf(D.uid).lst.length === 2 * C.LIST_BATCH && row('SELECT COUNT(*) AS n FROM mkt WHERE seller = ? AND state = 0', D.uid).n === 2 * C.LIST_BATCH, `一共挂着 ${2 * C.LIST_BATCH} 单，存档和市场表对得上`);
+  const totalMany = C.LIST_CHECK + 30;
+  grant(D.uid, Array.from({ length: totalMany + 1 }, () => ({ k: 'ts_p1' })));
+  const d1 = await econ(D.token, 'listDupes');
+  ok(d1.res.ok && d1.res.count === totalMany && d1.res.skipped === 0, `一键挂牌无上限一次挂完全部 ${totalMany} 件重复饰品`, d1.res);
+  ok(stateOf(D.uid).lst.length === totalMany && row('SELECT COUNT(*) AS n FROM mkt WHERE seller = ? AND state = 0', D.uid).n === totalMany, `一共挂着 ${totalMany} 单，存档和市场表对得上`);
   T += (days + 1) * 86400e3;
   const b1 = await econ(D.token, 'sync'), left1 = stateOf(D.uid).lst.length;
-  ok(b1.back && b1.back.length === C.LIST_CHECK && left1 === 2 * C.LIST_BATCH - C.LIST_CHECK, `全部到期：这次先退回 ${C.LIST_CHECK} 件`, b1.back && b1.back.length);
+  ok(b1.back && b1.back.length === C.LIST_CHECK && left1 === totalMany - C.LIST_CHECK, `全部到期：这次先退回 ${C.LIST_CHECK} 件`, b1.back && b1.back.length);
   const b2 = await econ(D.token, 'sync'), sD = stateOf(D.uid);
-  ok(b2.back && b2.back.length === left1 && !sD.lst.length && sD.inv.length === 2 * C.LIST_BATCH + 1, '下一次把剩下的也退回，库存一件不少', [b2.back && b2.back.length, sD.inv.length]);
+  ok(b2.back && b2.back.length === left1 && !sD.lst.length && sD.inv.length === totalMany + 1, '下一次把剩下的也退回，库存一件不少', [b2.back && b2.back.length, sD.inv.length]);
 }
 
 section('找回饰品：管理后台按流水查出“拿到过、现在没有”的饰品，写明是哪一步没的；只有去向不明、管理员收走的能找回，找回一次');

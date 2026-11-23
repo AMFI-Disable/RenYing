@@ -29,7 +29,55 @@ if ($id('xiwuTrainingTabs')) {
   });
   xiwuTrainingTab('lesson');
 }
-let trainChar = 0, trainTargetMode = 'dummy';
+let trainChar = 0, trainTargetMode = 'dummy', trainOppMode = 'dummy', trainAiLevel = 'normal';
+const TRAIN_AI_INFO = {
+  easy: '入门 · 延迟反应、极少格挡、2段轻击，零血量/伤害膨胀，适合熟悉出招与连段起点。',
+  normal: '寻常 · 标准立回、40%格挡、3段连招与基础追击，零血量/伤害膨胀，适合常规对练。',
+  hard: '劲敌 · 主动抓后摇、高频率招架、4段连招与起解压制，零血量/伤害膨胀，考验攻防转换。',
+  impossible: '绝顶 · 极速反应、精准弹反与连招最大化确反，完全依托 AIBrain 策略而非数值堆砌。',
+  god: '天道 · 满级神经策略、读招诱骗、无缝空战追击与极致心理博弈（纯机制强度，1.0×标准血攻）。',
+};
+function renderTrainConfig() {
+  const oppSeg = $id('trainOppSeg');
+  if (oppSeg) {
+    for (const b of oppSeg.querySelectorAll('button[data-topp]')) {
+      const on = b.dataset.topp === trainOppMode;
+      b.classList.toggle('sel', on);
+      b.setAttribute('aria-pressed', String(on));
+    }
+  }
+  const lvWrap = $id('trainAiLvWrap');
+  if (lvWrap) lvWrap.classList.toggle('is-dim', trainOppMode !== 'ai');
+  const lvSeg = $id('trainAiLvSeg');
+  if (lvSeg) {
+    for (const b of lvSeg.querySelectorAll('button[data-tlv]')) {
+      const on = b.dataset.tlv === trainAiLevel;
+      b.classList.toggle('sel', on);
+      b.setAttribute('aria-pressed', String(on));
+    }
+  }
+  const desc = $id('trainAiDesc');
+  if (desc) desc.textContent = trainOppMode === 'ai' ? (TRAIN_AI_INFO[trainAiLevel] || TRAIN_AI_INFO.normal) : '木人桩模式：可精确控制对手站桩、格挡、弹反、连段与受压闪避，并实时查看帧数差与判定框。';
+}
+if ($id('trainOppSeg')) {
+  $id('trainOppSeg').addEventListener('click', e => {
+    const b = e.target.closest('button[data-topp]');
+    if (!b) return;
+    trainOppMode = b.dataset.topp === 'ai' ? 'ai' : 'dummy';
+    renderTrainConfig();
+    SFX.slice();
+  });
+}
+if ($id('trainAiLvSeg')) {
+  $id('trainAiLvSeg').addEventListener('click', e => {
+    const b = e.target.closest('button[data-tlv]');
+    if (!b) return;
+    trainAiLevel = b.dataset.tlv;
+    trainOppMode = 'ai';
+    renderTrainConfig();
+    SFX.slice();
+  });
+}
 const trainModeSegEl = $id('trainModeSeg');
 if (trainModeSegEl) {
   trainModeSegEl.addEventListener('click', e => {
@@ -67,16 +115,55 @@ if (dummyFeatEl) dummyFeatEl.addEventListener('click', e => { const b = e.target
 // 选了动作马上生效：「一直重复」每隔「间隔」秒做一次，「只做一次」做完就站着。
 const DB = { open: false, paused: false };
 const dummyBarKey = () => (Object.values(custom1PKeys).includes('Tab') ? 'F4' : 'Tab');
-const dummyBarAvail = () => M.mode === 'train' && !!B && B.ctrl instanceof DummyCtrl && !FOREST.on && !TUT && !REPLAY.on && M.phase !== 'end';
+const dummyBarAvail = () => M.mode === 'train' && !!B && !FOREST.on && !TUT && !REPLAY.on && M.phase !== 'end';
 function dummyBarOn() { return DB.open; }
+function applyTrainOpponent() {
+  if (M.mode !== 'train' || !B) return;
+  if (trainOppMode === 'ai') {
+    const foeIdx = (trainChar + 1) % CHARS.length;
+    if (B.dummy || B.chIdx !== foeIdx) {
+      B.setChar(foeIdx);
+      B.dummy = false;
+      B.homeX = undefined;
+      B.maxHp = B.hp = B.lagHp = Math.round(((B.ch.stat && B.ch.stat.hp) || 850) * ((BAL[B.ch.id] || {}).hp || 1));
+    }
+    B.ctrl = new AICtrl(trainAiLevel || 'normal');
+    if (typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
+    M.level = trainAiLevel || 'normal';
+  } else {
+    if (!B.dummy) {
+      B.setChar(0);
+      B.dummy = true;
+      B.maxHp = B.hp = B.lagHp = 300;
+      B.look = { ...B.look, name: '木人桩' };
+    }
+    B.ctrl = new DummyCtrl({ ...dummyCfg });
+    B.homeX = dummyCfg.fixed ? STAGE_W / 2 : undefined;
+  }
+  renderTrainConfig();
+  dummyBarRender();
+}
 function dummyBarRender() {
   const acts = $id('dummyActs'); if (!acts) return;
   const c = dummyCfg, a = DUMMY_BY[c.act] || DUMMY_BY.stand, timed = a.k === 'do';
-  acts.innerHTML = DUMMY_ACTS.map(x => `<button type="button" data-act="${x.id}" class="${x.id === c.act ? 'sel' : ''}" aria-pressed="${x.id === c.act}"><b>${x.n}</b><span>${x.d}</span></button>`).join('');
-  for (const b of $id('dummyRep').querySelectorAll('button')) { const on = (b.dataset.rep === '1') === c.rep; b.classList.toggle('sel', on); b.setAttribute('aria-pressed', on); }
-  $id('dummyGap').innerHTML = DUMMY_GAPS.map(g => `<button type="button" data-gap="${g}" class="${g === c.gap ? 'sel' : ''}" aria-pressed="${g === c.gap}"${timed ? '' : ' disabled'}>${g} 秒</button>`).join('');
+  const oppEl = $id('dummyBarOpp');
+  if (oppEl) {
+    const opts = [
+      { k: 'dummy', n: '木人桩' },
+      { k: 'ai:easy', n: 'AI·入门' },
+      { k: 'ai:normal', n: 'AI·寻常' },
+      { k: 'ai:hard', n: 'AI·劲敌' },
+      { k: 'ai:impossible', n: 'AI·绝顶' },
+      { k: 'ai:god', n: 'AI·天道' },
+    ];
+    const cur = trainOppMode === 'ai' ? `ai:${trainAiLevel}` : 'dummy';
+    oppEl.innerHTML = opts.map(o => `<button type="button" data-dbopp="${o.k}" class="${o.k === cur ? 'sel' : ''}" aria-pressed="${o.k === cur}">${o.n}</button>`).join('');
+  }
+  acts.innerHTML = DUMMY_ACTS.map(x => `<button type="button" data-act="${x.id}" class="${x.id === c.act ? 'sel' : ''}" aria-pressed="${x.id === c.act}"${trainOppMode === 'ai' ? ' disabled' : ''}><b>${x.n}</b><span>${x.d}</span></button>`).join('');
+  for (const b of $id('dummyRep').querySelectorAll('button')) { const on = (b.dataset.rep === '1') === c.rep; b.classList.toggle('sel', on); b.setAttribute('aria-pressed', on); b.disabled = trainOppMode === 'ai'; }
+  $id('dummyGap').innerHTML = DUMMY_GAPS.map(g => `<button type="button" data-gap="${g}" class="${g === c.gap ? 'sel' : ''}" aria-pressed="${g === c.gap}"${timed && trainOppMode !== 'ai' ? '' : ' disabled'}>${g} 秒</button>`).join('');
   $id('dummyFeats').innerHTML = Object.entries(DUMMY_FEATURES).map(([k, f]) => `<button type="button" data-feat="${k}" class="${c[k] ? 'sel' : ''}" aria-pressed="${!!c[k]}"><b>${f.name}</b><span>${f.desc}</span></button>`).join('');
-  $id('dummyNote').textContent = a.k === 'hold' ? '这个动作会一直保持，次数和间隔不用选' : a.k === 'react' ? '这个动作看时机反应，「只做一次」就是反应一次' : '';
+  $id('dummyNote').textContent = trainOppMode === 'ai' ? (TRAIN_AI_INFO[trainAiLevel] || TRAIN_AI_INFO.normal) : (a.k === 'hold' ? '这个动作会一直保持，次数和间隔不用选' : a.k === 'react' ? '这个动作看时机反应，「只做一次」就是反应一次' : '');
   $id('dummyBarKey').textContent = TOUCH ? '' : `${dummyBarKey()} 打开 · Esc 关闭`;
 }
 // 把栏里的选择交给木人（换动作、再选一次都从头开始）
@@ -157,6 +244,13 @@ if ($id('dummyBar')) {
   $id('dummyBar').addEventListener('click', e => {
     const b = e.target.closest('button'); if (!b || b.disabled) return;
     if (b.id === 'dummyBarClose') { dummyBarShow(false); return; }
+    if (b.dataset.dbopp) {
+      if (b.dataset.dbopp === 'dummy') { trainOppMode = 'dummy'; }
+      else { trainOppMode = 'ai'; trainAiLevel = b.dataset.dbopp.split(':')[1] || 'normal'; }
+      applyTrainOpponent();
+      SFX.slice();
+      return;
+    }
     if (b.dataset.act) { dummyCfg.act = b.dataset.act; dummyApply(); SFX.slice(); }
     else if (b.dataset.rep) { dummyCfg.rep = b.dataset.rep === '1'; dummyApply(); SFX.slice(); }
     else if (b.dataset.gap) { dummyCfg.gap = +b.dataset.gap; dummyApply(); SFX.slice(); }
@@ -182,11 +276,22 @@ function startDummyTraining() {
   FOREST.on = false; B.forestProxy = false; B.hidden = false;
   initAudio(); paused = false;
   showScreen(null);
-  startMatch('train', { ...dummyCfg }, [trainChar, 0]);
+  const foeIdx = trainOppMode === 'ai' ? ((trainChar + 1) % CHARS.length) : 0;
+  startMatch('train', { ...dummyCfg }, [trainChar, foeIdx]);
   Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0, advantage: null, frameProbe: null });
-  B.dummy = true; B.maxHp = B.hp = B.lagHp = 300; B.look = { ...B.look, name: '木人桩' };
-  applySkins();
-  A.x = STAGE_W / 2 - 160; B.x = dummyCfg.fixed ? STAGE_W / 2 : STAGE_W / 2 + 60; B.homeX = dummyCfg.fixed ? STAGE_W / 2 : undefined;
+  if (trainOppMode === 'ai') {
+    B.dummy = false;
+    B.ctrl = new AICtrl(trainAiLevel || 'normal');
+    if (typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
+    B.maxHp = B.hp = B.lagHp = Math.round(((B.ch.stat && B.ch.stat.hp) || 850) * ((BAL[B.ch.id] || {}).hp || 1));
+    M.level = trainAiLevel || 'normal';
+    applySkins();
+    A.x = STAGE_W / 2 - 200; B.x = STAGE_W / 2 + 200; B.homeX = undefined;
+  } else {
+    B.dummy = true; B.maxHp = B.hp = B.lagHp = 300; B.look = { ...B.look, name: '木人桩' };
+    applySkins();
+    A.x = STAGE_W / 2 - 160; B.x = dummyCfg.fixed ? STAGE_W / 2 : STAGE_W / 2 + 60; B.homeX = dummyCfg.fixed ? STAGE_W / 2 : undefined;
+  }
 }
 // 木人试剑：木人桩直接开练；各模式的最高境界专项训练和正常开局一样先去点将台选人
 function startTrainTarget(targetMode = trainTargetMode, isWatch = false) {
@@ -207,12 +312,15 @@ function startTraining(targetMode = 'dummy', isWatch = false, badgePreview = nul
   startDummyTraining();
   if (isWatch) {
     A.ctrl = new AICtrl('god');
-    say('木人试剑 · AI 演示连招', 1.4);
+    say('训练场 · AI 演示连招', 1.4);
+  } else if (trainOppMode === 'ai') {
+    say(`训练场 · AI 实战对练 (${LV_NAME[trainAiLevel] || trainAiLevel})`, 1.5);
   } else say('木人试剑 · 开始训练', 1.4);
 }
 function startBadgeTrainingPreview(id, tier = 'silver') {
   if (!COMBAT_BADGES[id]) return;
   if (typeof menuHeroPick === 'function') trainChar = menuHeroPick();
+  trainOppMode = 'dummy';
   const action = id === 'riposte' ? 'light' : id === 'breaker' ? 'block' : 'stand';
   Object.assign(dummyCfg, { act: action, rep: true, gap: 1, fixed: false, escape: false, infGuard: id !== 'breaker', autoHeal: true });
   renderDummyFeatures();
@@ -241,6 +349,8 @@ if (trainBtnEl) trainBtnEl.addEventListener('click', () => {
   if (typeof menuHeroPick === 'function') trainChar = menuHeroPick();
   startTraining('dummy');
 });
+const trainPickBtnEl = $id('trainPickBtn');
+if (trainPickBtnEl) trainPickBtnEl.addEventListener('click', () => bpStart('train', { targetMode: 'dummy' }));
 const xiwuFullTutBtn = $id('xiwuFullTutBtn');
 if (xiwuFullTutBtn) xiwuFullTutBtn.addEventListener('click', () => { initAudio(); startTutorial(true); });
 const xiwuTrainingCpuBtn = $id('xiwuTrainingCpuBtn');
@@ -252,18 +362,31 @@ const xiwuDrillList = document.querySelector('.xiwu-drill-list');
 if (xiwuDrillList) xiwuDrillList.addEventListener('click', e => {
   const b = e.target.closest('button[data-drill]');
   if (!b) return;
+  if (b.dataset.drill === 'ai-sparring') {
+    trainOppMode = 'ai';
+    if (typeof pickLevel === 'string' && LV_NAME[pickLevel]) trainAiLevel = pickLevel;
+    if (typeof menuHeroPick === 'function') trainChar = menuHeroPick();
+    renderTrainConfig();
+    SFX.slice();
+    startTraining('dummy');
+    return;
+  }
   const drills = {
     combo: { act: 'stand', fixed: false, escape: false, infGuard: true, autoHeal: true },
     block: { act: 'block', fixed: false, escape: false, infGuard: true, autoHeal: true },
     parry: { act: 'parry', fixed: false, escape: false, infGuard: true, autoHeal: true },
-    'combo-escape': { act: 'combo', fixed: false, escape: true, infGuard: true, autoHeal: true }
+    'combo-escape': { act: 'combo', fixed: false, escape: true, infGuard: true, autoHeal: true },
+    'anti-air': { act: 'jump', fixed: false, escape: false, infGuard: true, autoHeal: true }
   };
   const preset = drills[b.dataset.drill];
   if (!preset) return;
+  trainOppMode = 'dummy';
   Object.assign(dummyCfg, preset, { rep: true, gap: 1 });
   if (typeof menuHeroPick === 'function') trainChar = menuHeroPick();
+  renderTrainConfig();
   renderDummyFeatures();
   SFX.slice();
   startTraining('dummy');
 });
+renderTrainConfig();
 renderDummyFeatures();

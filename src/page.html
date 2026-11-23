@@ -226,9 +226,11 @@
                 <button type="button" data-lsize="5" class="sel">5v5</button>
                 <button type="button" data-lsize="8">8v8</button>
               </div>
-              <button type="button" class="go small" id="largeStartMelee">开战 · 群雄会战</button>
-              <button type="button" class="ghost small" id="largeStartCtf">开战 · 夺旗争锋</button>
-              <button type="button" class="ghost small" id="largeStartGauntlet">开战 · 无尽试炼</button>
+              <button type="button" class="go small" id="largeStartMelee">禁选 BP · 群雄会战</button>
+              <button type="button" class="go small alt" id="largeStartCtf">禁选 BP · 夺旗争锋</button>
+              <button type="button" class="ghost small" id="largeQuickMelee">快速会战</button>
+              <button type="button" class="ghost small" id="largeQuickCtf">快速夺旗</button>
+              <button type="button" class="ghost small" id="largeStartGauntlet">无尽试炼</button>
             </div>
           </div>
 
@@ -435,20 +437,44 @@
             <button class="go small" id="xiwuFullTutBtn" type="button">开始完整教学</button>
           </section>
           <section class="xiwu-training-card" id="xiwuPaneFree" role="tabpanel" aria-labelledby="xiwuTabFree" data-training-pane="free" hidden>
-            <h4>自由训练</h4>
-            <p>在木人桩上练习招式与连段。开练后可随时调整木人的动作和特性。</p>
-            <div class="sec-sub-label">木人桩特性</div>
+            <h4>自由训练 · 木人桩与 AI 实战对练</h4>
+            <div class="xiwu-train-controls">
+              <div class="xiwu-train-row">
+                <span class="xl-lbl">对手类型</span>
+                <div class="seg" id="trainOppSeg" role="group" aria-label="训练对手类型">
+                  <button type="button" data-topp="dummy" class="sel" aria-pressed="true">木人桩</button>
+                  <button type="button" data-topp="ai" aria-pressed="false">AI 实战对练（纯智能难度）</button>
+                </div>
+              </div>
+              <div class="xiwu-train-row is-dim" id="trainAiLvWrap">
+                <span class="xl-lbl">AI 境界</span>
+                <div class="seg" id="trainAiLvSeg" role="group" aria-label="训练 AI 境界">
+                  <button type="button" data-tlv="easy">入门</button>
+                  <button type="button" data-tlv="normal" class="sel">寻常</button>
+                  <button type="button" data-tlv="hard">劲敌</button>
+                  <button type="button" data-tlv="impossible">绝顶</button>
+                  <button type="button" data-tlv="god">天道</button>
+                </div>
+              </div>
+              <p class="train-ai-desc" id="trainAiDesc">木人桩模式：可精确控制对手站桩、格挡、弹反、连段与受压闪避，并实时查看帧数差与判定框。</p>
+            </div>
+            <div class="sec-sub-label">木人桩与自动回血特性</div>
             <div class="dummy-feat-list" id="dummyFeatList" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px;justify-content:center"></div>
-            <button class="go small" id="trainBtn" type="button">开始自由训练</button>
+            <div class="single-action-row">
+              <button class="go small" id="trainBtn" type="button">开始自由训练</button>
+              <button class="ghost small" id="trainPickBtn" type="button">点将选人开练</button>
+            </div>
           </section>
           <section class="xiwu-training-card xiwu-scenario-card" id="xiwuPaneScenario" role="tabpanel" aria-labelledby="xiwuTabScenario" data-training-pane="scenario" hidden>
-            <h4>情景训练</h4>
-            <p>选择一个对手行为，反复练习对应的进攻或防守应对。</p>
+            <h4>情景训练 · 六大专项课题</h4>
+            <p>选择一种实战场景，立即在无限回血与帧判定工具辅助下反复演练。</p>
             <div class="xiwu-drill-list">
               <button type="button" data-drill="combo"><b>连招与追击</b><span>面对站桩目标练习起手、连段与追击</span></button>
               <button type="button" data-drill="block"><b>压制与破防</b><span>面对持续格挡的目标寻找破防时机</span></button>
               <button type="button" data-drill="parry"><b>精准招架</b><span>练习观察近身攻击并把握招架时机</span></button>
               <button type="button" data-drill="combo-escape"><b>受压与脱身</b><span>面对连段与腾空闪，练习防守和重新进攻</span></button>
+              <button type="button" data-drill="ai-sparring"><b>AI 实战拆招</b><span>开启真实 AI 难度对练（无数值膨胀），检验立回与确反</span></button>
+              <button type="button" data-drill="anti-air"><b>高台与空战应对</b><span>面对反复起跳目标练习对空截击与落台追击</span></button>
             </div>
           </section>
           <section class="xiwu-training-card xiwu-match-card" id="xiwuPaneMatch" role="tabpanel" aria-labelledby="xiwuTabMatch" data-training-pane="match" hidden>
@@ -1016,7 +1042,7 @@
           </div>
         </div>
       </div>
-      <div class="bpact"><button class="ghost" id="bpQuit">返回菜单</button><button class="ghost" id="bpUndo" type="button" hidden>撤销上一名</button><button class="ghost" id="bpSwap" type="button" hidden>交换先锋与中坚</button><button class="ghost" id="bpRotate" type="button" hidden>轮换三人顺序</button><button class="go" id="bpGo" disabled>确认</button></div>
+      <div class="bpact"><button class="ghost" id="bpQuit">返回菜单</button><button class="ghost" id="bpUndo" type="button" hidden>撤销上一名</button><button class="ghost" id="bpSwap" type="button" hidden>交换先锋与中坚</button><button class="ghost" id="bpRotate" type="button" hidden>轮换三人顺序</button><button class="ghost" id="bpAutoFill" type="button" hidden>⚡ 一键智能补全阵容</button><button class="go" id="bpGo" disabled>确认</button></div>
       <div class="bpchat hidden" id="bpChat">
         <div class="chatlog" id="chatLog"></div>
         <div class="chatside">
@@ -1042,6 +1068,14 @@
           <span class="ad-medal" id="adMedal"></span>
         </div>
         <div class="ad-stats" id="adStats"></div>
+        <div class="ad-sync ad-fullauto" id="adFullAutoBox">
+          <div class="ad-sync-head"><b>⚡ FULL AUTO · 全自动一键托管</b><span>徽记 · 皮肤 · 灵宠 · 架势 · 招式 · 无上限清理重复</span></div>
+          <p class="ad-sync-note">一键强制覆盖并优化全阵容 36 位侠客的武学徽记、最高品阶皮肤、契合灵宠、二式架势与招式流派，并自动出售库存中全部符合条件的重复饰品（无 50 件上限，绝不出售唯一或已穿戴饰品），结果同步至云端。</p>
+          <div class="ad-sync-btns">
+            <button class="go ad-fullauto-btn" id="accFullAutoBtn" type="button">⚡ FULL AUTO · 一键全自动优化</button>
+          </div>
+          <p class="netstatus" id="adFullAutoMsg" role="status"></p>
+        </div>
         <div class="ad-sync">
           <div class="ad-sync-head"><span class="ad-dot" id="adSyncDot"></span><b id="adSyncT">已同步</b><span id="adSyncS"></span></div>
           <p class="ad-sync-note" id="adSyncNote">存档先存在本机，再自动上传到云端；上传失败会自动重试，没传完就关了网页，下次打开会补传。</p>
@@ -1386,7 +1420,9 @@
   <!-- 木人试剑：对手行为栏（src/game/21-buttons-02-training.js 的 dummyBar*，动作表在 src/data/14-dummy.js） -->
   <button class="dummy-bar-btn hidden" id="dummyBarBtn" type="button">对手行为</button>
   <div class="dummy-bar hidden" id="dummyBar" role="dialog" aria-modal="true" aria-label="对手行为">
-    <div class="db-head"><b>对手行为</b><span class="db-key" id="dummyBarKey"></span><button class="mm-cancel" id="dummyBarClose" type="button">继续练</button></div>
+    <div class="db-head"><b>对手行为与 AI 难度</b><span class="db-key" id="dummyBarKey"></span><button class="mm-cancel" id="dummyBarClose" type="button">继续练</button></div>
+    <div class="db-lab">对手模式（木人桩 / 纯智能 AI 对练）</div>
+    <div class="db-seg db-opp-seg" id="dummyBarOpp"></div>
     <div class="db-lab">动作</div>
     <div class="db-acts" id="dummyActs"></div>
     <div class="db-row">

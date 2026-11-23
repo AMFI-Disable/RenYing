@@ -5,7 +5,7 @@ Object.assign(SKILLS, {
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.16) {
         f.skPh = 1; f.t = 0; SFX.heavy(); shake = Math.max(shake, 10);
-        if (!RESIM) ring(f.x + f.face * 70, -10, 145, '80,210,255', 0.38);
+        if (!RESIM) ring(f.x + f.face * 70, f.y - 10, 145, '80,210,255', 0.38);
         strike(f, foe, { box: [-40, -110, 175, 10], dmg: 60, kb: [240, -620], stun: 0.55, hs: 0.14, launch: true, guardDamage: 38 });
       }
       if (f.skPh === 1 && f.t >= 0.32) toNeutral(f);

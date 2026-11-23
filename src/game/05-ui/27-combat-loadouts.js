@@ -67,16 +67,38 @@ var COMBAT_BADGES = {
   warbanner: { n: '战旗', en: 'Warbanner', trigger: '发动战意号令（T）', effect: '强化附近队友攻防与护盾。', tiers: ['队友真气 +8。', '队友真气 +12 且移速 +8%。', '队友真气 +16 且获得 1.2 秒霸体。'] },
   guardian: { n: '护法', en: 'Guardian', trigger: '在残血队友附近格挡成功', effect: '为队友回复气血与架势。', tiers: ['为附近队友回复 3% 气血。', '回复 5% 气血。', '回复 8% 气血并分担伤害。'] },
   synergy: { n: '合击', en: 'Synergy', trigger: '接续队友连段命中', effect: '触发团队合击破甲与回气。', tiers: ['合击额外回气 +8。', '合击增伤 10% 并回气 +12。', '合击增伤 18% 并削减目标 25 架势。'] },
+  bloodmoon: { n: '血月', en: 'Blood Moon', trigger: '6 连击以上或残血命中', effect: '血月汲取：回血并削减目标架势。', tiers: ['回血 1.5% 并削减 10 架势。', '回血 2.5% 并削减 16 架势。', '回血 4% 并削减 24 架势与回气 +6。'] },
+  sunder: { n: '裂甲', en: 'Sunder', trigger: '重击/蓄力斩命中格挡', effect: '额外削减对手大量架势值。', tiers: ['额外削减 14 架势。', '额外削减 22 架势。', '额外削减 32 架势并缩短自身收招。'] },
+  frostbite: { n: '寒锋', en: 'Frostbite', trigger: '门派技能或重击命中', effect: '附加霜冻减速压制走位。', tiers: ['减速 1.0 秒。', '减速 1.5 秒。', '减速 2.2 秒并附加寒霜印记。'] },
+  lotus: { n: '莲华', en: 'Lotus Ward', trigger: '精准招架成功', effect: '护体莲华回血并震开贴身敌手。', tiers: ['回血 2.5% 并微震敌手。', '回血 4% 并强力震退。', '回血 6% 并回复 15 架势与真气 +10。'] },
+  mirror: { n: '镜反', en: 'Mirror Guard', trigger: '格挡远程飞行物', effect: '回气并稳固架势护体。', tiers: ['回气 +8。', '回气 +12 并回复 12 架势。', '回气 +18 并获得 0.6 秒霸体。'] },
+  bulwark: { n: '铜墙', en: 'Bulwark', trigger: '气血低于 40% 持续生效', effect: '稳固架势并加速脱战架势回复。', tiers: ['架势回复 +25%。', '架势回复 +40%。', '架势回复 +60% 且低血量免于微弱击退。'] },
+  cloudstep: { n: '踏云', en: 'Cloudstep', trigger: '高空二段跳或穿台下落', effect: '短时轻功提速与冲刺减耗。', tiers: ['1.5 秒内移速 +8%。', '1.8 秒内移速 +13%。', '2.2 秒内移速 +18% 并回气 +4。'] },
+  gale: { n: '乘风', en: 'Gale Stride', trigger: '冲刺绕背或迅步穿身', effect: '立获真气补给并缩短闪避冷却。', tiers: ['回气 +5。', '回气 +8 且闪避冷却 -0.3 秒。', '回气 +12 且闪避冷却 -0.6 秒。'] },
+  blink: { n: '缩地', en: 'Folded Earth', trigger: '腾空闪脱身', effect: '立减 Q/R 技能冷却并打开反击窗。', tiers: ['Q/R 冷却 -0.8 秒。', 'Q/R 冷却 -1.2 秒。', 'Q/R 冷却 -1.8 秒并回气 +8。'] },
+  yin_yang: { n: '阴阳', en: 'Yin Yang', trigger: '交替命中 Q 与 R 技能', effect: '触发阴阳调和回气并回架势。', tiers: ['回气 +10 与 +12 架势。', '回气 +16 与 +18 架势。', '回气 +24 与 +28 架势并缩冷 1 秒。'] },
+  scroll: { n: '墨韵', en: 'Ink Scroll', trigger: '奥义命中敌人', effect: '重置空中跳跃与冲刺冷却。', tiers: ['重置冲刺冷却。', '重置冲刺与空中跳跃。', '全重置并回复 15 点真气。'] },
+  spiritflow: { n: '灵息', en: 'Spirit Flow', trigger: '脱战调息 2.5 秒', effect: '每秒持续积攒真气与架势。', tiers: ['每秒 +3 真气。', '每秒 +4.5 真气与 +4 架势。', '每秒 +6 真气与 +7 架势。'] },
+  oath: { n: '结义', en: 'Sworn Oath', trigger: '团战队友受创或倒下', effect: '立获真气爆发与霸体护身。', tiers: ['真气 +12。', '真气 +18 并获 0.6 秒霸体。', '真气 +25 并获 1.0 秒霸体与满架势。'] },
+  tactician: { n: '军师', en: 'Tactician', trigger: '团战命中敌方目标', effect: '为队友共享连击回气增益。', tiers: ['附近队友真气 +4。', '附近队友真气 +6。', '附近队友真气 +9 与架势 +8。'] },
 };
 var COMBAT_PETS = {
-  inkfox: { n: '墨狐', en: 'Ink Fox', rgb: '120,235,205', cd: 7.5 },
-  tortoise: { n: '玄龟', en: 'Obsidian Tortoise', rgb: '140,200,255', cd: 8.5 },
-  falcon: { n: '雷隼', en: 'Thunder Falcon', rgb: '255,220,110', cd: 7.0 },
-  froststag: { n: '霜鹿', en: 'Frost Stag', rgb: '160,235,255', cd: 9.0 },
-  flamelion: { n: '炎狮', en: 'Flame Lion', rgb: '255,125,85', cd: 8.0 },
-  shadowcrow: { n: '影鸦', en: 'Shadow Crow', rgb: '195,140,255', cd: 7.0 },
-  jadekoi: { n: '玉鲤', en: 'Jade Koi', rgb: '115,245,175', cd: 8.0 },
-  mechfinch: { n: '机雀', en: 'Clockwork Finch', rgb: '233,196,106', cd: 6.5 },
+  inkfox: { n: '墨狐', en: 'Ink Fox', rgb: '120,235,205', cd: 7.5, shape: 'fox' },
+  tortoise: { n: '玄龟', en: 'Obsidian Tortoise', rgb: '140,200,255', cd: 8.5, shape: 'shell' },
+  falcon: { n: '雷隼', en: 'Thunder Falcon', rgb: '255,220,110', cd: 7.0, shape: 'bird' },
+  froststag: { n: '霜鹿', en: 'Frost Stag', rgb: '160,235,255', cd: 9.0, shape: 'stag' },
+  flamelion: { n: '炎狮', en: 'Flame Lion', rgb: '255,125,85', cd: 8.0, shape: 'beast' },
+  shadowcrow: { n: '影鸦', en: 'Shadow Crow', rgb: '195,140,255', cd: 7.0, shape: 'bird' },
+  jadekoi: { n: '玉鲤', en: 'Jade Koi', rgb: '115,245,175', cd: 8.0, shape: 'koi' },
+  mechfinch: { n: '机雀', en: 'Clockwork Finch', rgb: '233,196,106', cd: 6.5, shape: 'bird' },
+  azure_dragon: { n: '青龙', en: 'Azure Dragon', rgb: '70,225,255', cd: 8.5, shape: 'dragon' },
+  white_tiger: { n: '白虎', en: 'White Tiger', rgb: '240,244,255', cd: 8.0, shape: 'beast' },
+  vermilion_bird: { n: '朱雀', en: 'Vermilion Bird', rgb: '255,105,75', cd: 8.5, shape: 'bird' },
+  qilin: { n: '墨麟', en: 'Ink Qilin', rgb: '235,195,90', cd: 9.0, shape: 'stag' },
+  moonrabbit: { n: '玉兔', en: 'Moon Rabbit', rgb: '215,225,255', cd: 7.0, shape: 'rabbit' },
+  spiritcrane: { n: '灵鹤', en: 'Spirit Crane', rgb: '155,240,220', cd: 7.5, shape: 'bird' },
+  ironape: { n: '玄猿', en: 'Iron Ape', rgb: '185,155,120', cd: 8.5, shape: 'beast' },
+  starowl: { n: '星枭', en: 'Star Owl', rgb: '175,145,255', cd: 7.2, shape: 'bird' },
 };
 var PET_TIER_MUL = { basic: 1, spirit: 1.25, immortal: 1.55 };
 var SKILL_MODS = {
@@ -136,12 +158,25 @@ function showBadgeCue(f, key, consumed = false) {
 function petTickAll() {
   if (M.phase !== 'fight') return;
   for (const f of allFighters()) {
-    if (!f || f.hidden || f.hp <= 0 || !f.petId) continue;
+    if (!f || f.hidden || f.hp <= 0) continue;
+    if (f.badgeId === 'spiritflow' && f.badgeTier && f.sinceHit > 2.5) {
+      const bm = BADGE_TIER_POWER[f.badgeTier] || 1;
+      f.meter = Math.min(100, (f.meter || 0) + 3 * bm * STEP);
+      if (f.badgeTier !== 'silver') f.guard = Math.min(f.maxGuard || 100, (f.guard || 0) + 3.5 * bm * STEP);
+    } else if (f.badgeId === 'bulwark' && f.badgeTier && f.hp < f.maxHp * 0.4 && f.state !== 'block' && f.state !== 'blockstun') {
+      const bm = BADGE_TIER_POWER[f.badgeTier] || 1;
+      f.guard = Math.min(f.maxGuard || 100, (f.guard || 0) + 4 * bm * STEP);
+    }
+    if (!f.petId) continue;
     const mul = PET_TIER_MUL[f.petTier] || 1;
-    if (f.petId === 'tortoise' && f.state !== 'block' && f.state !== 'blockstun') {
+    if ((f.petId === 'tortoise' || f.petId === 'qilin' || f.petId === 'ironape') && f.state !== 'block' && f.state !== 'blockstun') {
       f.guard = Math.min(f.maxGuard || 100, (f.guard || 0) + 4.5 * mul * STEP);
     } else if (f.petId === 'froststag' && f.sinceHit > 3.5 && f.hp < f.maxHp) {
       f.hp = Math.min(f.maxHp, f.hp + 5 * HERO_HP_SCALE * mul * STEP);
+    } else if (f.petId === 'vermilion_bird' && f.hp < f.maxHp * 0.4 && f.hp < f.maxHp) {
+      f.hp = Math.min(f.maxHp, f.hp + 4.5 * HERO_HP_SCALE * mul * STEP);
+    } else if (f.petId === 'azure_dragon') {
+      f.meter = Math.min(100, (f.meter || 0) + 1.8 * mul * STEP);
     }
   }
 }
@@ -157,19 +192,21 @@ function tryPetActive(f, foe) {
     showBadgeCue(f, 'resonance');
   }
   const rgb = spec.rgb;
+  const dir = foe ? Math.sign(foe.x - f.x || f.face) : f.face;
   if (f.petId === 'inkfox') {
     f.meter = Math.min(100, (f.meter || 0) + Math.round(12 * mul));
-    if (foe && Math.abs(foe.x - f.x) < 420) foe.slowT = Math.max(foe.slowT || 0, 1.5 * mul);
+    if (foe && Math.abs(foe.x - f.x) < 420 && Math.abs(foe.y - f.y) < 160) foe.slowT = Math.max(foe.slowT || 0, 1.5 * mul);
   } else if (f.petId === 'tortoise') {
     f.armorT = Math.max(f.armorT || 0, 0.75 * mul); f.armorHits = Math.max(f.armorHits || 0, 1);
     f.guard = Math.min(f.maxGuard || 100, (f.guard || 0) + 25 * mul);
   } else if (f.petId === 'falcon' && foe) {
-    spawnProj(f, { kind: 'wind', x: f.x + f.face * 32, y: f.y - 84, vx: Math.sign(foe.x - f.x || f.face) * 1150, vy: 0, w: 46, h: 40, life: 0.7, dmg: Math.round(14 * mul), kb: [180, -140], stun: 0.28, hs: 0.04, noScale: true });
+    const dy = (foe.y - 54) - (f.y - 84), dx = foe.x - f.x, d = Math.hypot(dx, dy) || 1;
+    spawnProj(f, { kind: 'wind', x: f.x + f.face * 32, y: f.y - 84, vx: (dx / d) * 1150, vy: (dy / d) * 1150, w: 46, h: 40, life: 0.7, dmg: Math.round(14 * mul), kb: [180, -140], stun: 0.28, hs: 0.04, noScale: true });
   } else if (f.petId === 'froststag') {
     f.hp = Math.min(f.maxHp, f.hp + Math.round(f.maxHp * 0.055 * mul));
     f.guard = Math.min(f.maxGuard || 100, (f.guard || 0) + 20 * mul);
   } else if (f.petId === 'flamelion') {
-    for (const e of foesOf(f)) if (!e.hidden && e.hp > 0 && Math.abs(e.x - f.x) < 260) {
+    for (const e of foesOf(f)) if (!e.hidden && e.hp > 0 && Math.abs(e.x - f.x) < 260 && Math.abs(e.y - f.y) < 140) {
       e.vx = Math.sign(e.x - f.x || f.face) * 340 * mul; e.burnT = Math.max(e.burnT || 0, 2.5 * mul);
     }
   } else if (f.petId === 'shadowcrow') {
@@ -177,10 +214,42 @@ function tryPetActive(f, foe) {
   } else if (f.petId === 'jadekoi') {
     f.slowT = 0; f.burnT = 0; f.frostSlow = 0; f.invul = Math.max(f.invul, 0.22 * mul);
   } else if (f.petId === 'mechfinch') {
-    const dir = foe ? Math.sign(foe.x - f.x || f.face) : f.face;
     for (let k = -1; k <= 1; k++) {
       spawnProj(f, { kind: 'dart', x: f.x + dir * 28, y: f.y - 78 + k * 14, vx: dir * 1050, vy: k * 80, w: 28, h: 20, life: 0.65, dmg: Math.round(7 * mul), kb: [90, 0], stun: 0.16, hs: 0.02, noScale: true });
     }
+  } else if (f.petId === 'azure_dragon') {
+    spawnProj(f, { kind: 'wind', x: f.x + dir * 36, y: f.y - 64, vx: dir * 980, vy: 0, w: 72, h: 52, life: 0.78, dmg: Math.round(18 * mul), kb: [320, -240], stun: 0.34, hs: 0.05, pierce: true, noScale: true });
+  } else if (f.petId === 'white_tiger') {
+    for (const e of foesOf(f)) if (!e.hidden && e.hp > 0 && Math.abs(e.x - f.x) < 280 && Math.abs(e.y - f.y) < 140) {
+      e.guard = Math.max(0, (e.guard || 0) - 32 * mul);
+      e.vx = Math.sign(e.x - f.x || dir) * 360 * mul;
+    }
+    f.meter = Math.min(100, (f.meter || 0) + Math.round(10 * mul));
+  } else if (f.petId === 'vermilion_bird') {
+    f.hp = Math.min(f.maxHp, f.hp + Math.round(f.maxHp * 0.05 * mul));
+    for (const e of foesOf(f)) if (!e.hidden && e.hp > 0 && Math.abs(e.x - f.x) < 250 && Math.abs(e.y - f.y) < 140) {
+      e.vx = Math.sign(e.x - f.x || dir) * 320 * mul; e.burnT = Math.max(e.burnT || 0, 2.2 * mul);
+    }
+  } else if (f.petId === 'qilin') {
+    f.armorT = Math.max(f.armorT || 0, 0.9 * mul); f.armorHits = Math.max(f.armorHits || 0, 2);
+    f.guard = Math.min(f.maxGuard || 100, (f.guard || 0) + 30 * mul);
+    f.meter = Math.min(100, (f.meter || 0) + Math.round(10 * mul));
+  } else if (f.petId === 'moonrabbit') {
+    f.dashCD = 0; f.airDash = 1; f.jumps = 0;
+    f.meter = Math.min(100, (f.meter || 0) + Math.round(12 * mul));
+  } else if (f.petId === 'spiritcrane') {
+    for (const e of foesOf(f)) if (!e.hidden && e.hp > 0 && Math.abs(e.x - f.x) < 280 && Math.abs(e.y - f.y) < 160) {
+      e.vy = -420 * mul; e.plat = -1; e.slowT = Math.max(e.slowT || 0, 1.2 * mul);
+    }
+  } else if (f.petId === 'ironape') {
+    for (const e of foesOf(f)) if (!e.hidden && e.hp > 0 && Math.abs(e.x - f.x) < 260 && Math.abs(e.y - f.y) < 130) {
+      e.vx = Math.sign(e.x - f.x || dir) * 380 * mul; e.vy = -220; e.guard = Math.max(0, (e.guard || 0) - 24 * mul);
+    }
+  } else if (f.petId === 'starowl') {
+    for (const dy of [-18, 18]) {
+      spawnProj(f, { kind: 'dart', x: f.x + dir * 30, y: f.y - 78 + dy, vx: dir * 1020, vy: dy * 2, w: 30, h: 24, life: 0.72, dmg: Math.round(10 * mul), kb: [120, -60], stun: 0.24, hs: 0.03, noScale: true });
+    }
+    if (foe && Math.abs(foe.x - f.x) < 520) foe.slowT = Math.max(foe.slowT || 0, 1.6 * mul);
   }
   if (!RESIM) {
     ring(f.x, f.y - 68, 108, rgb, 0.36);
@@ -283,12 +352,45 @@ function applyCombatBadgeHit(att, def, move, ev) {
       }
     }
     showBadgeCue(att, 'vanguard');
+  } else if (att.badgeId === 'bloodmoon' && ((def && def.comboHits >= 6) || att.hp < att.maxHp * 0.4)) {
+    const bm = BADGE_TIER_POWER[att.badgeTier] || 1;
+    att.hp = Math.min(att.maxHp, att.hp + Math.round(att.maxHp * 0.015 * bm));
+    if (def) def.guard = Math.max(0, (def.guard || 0) - 10 * bm);
+    if (att.badgeTier === 'purpgold') att.meter = Math.min(100, (att.meter || 0) + 6);
+    showBadgeCue(att, 'bloodmoon');
+  } else if (att.badgeId === 'frostbite' && (att.state === 'skill' || (move && (move.skill || name === 'hv' || name === 'cs1' || name === 'cs2')))) {
+    const dur = att.badgeTier === 'purpgold' ? 2.2 : att.badgeTier === 'gold' ? 1.5 : 1.0;
+    if (def) def.slowT = Math.max(def.slowT || 0, dur);
+    showBadgeCue(att, 'frostbite');
+  } else if (att.badgeId === 'scroll' && (att.state === 'ult' || (move && move.ult))) {
+    att.dashCD = 0;
+    if (att.badgeTier !== 'silver') { att.jumps = 0; att.airDash = 1; }
+    if (att.badgeTier === 'purpgold') att.meter = Math.min(100, (att.meter || 0) + 15);
+    showBadgeCue(att, 'scroll');
+  } else if (att.badgeId === 'tactician' && isMulti()) {
+    const gain = att.badgeTier === 'purpgold' ? 9 : att.badgeTier === 'gold' ? 6 : 4;
+    for (const m of sideFighters(fighterTeam(att))) {
+      if (m !== att && !m.hidden && m.hp > 0 && Math.abs(m.x - att.x) < 700) m.meter = Math.min(100, (m.meter || 0) + gain);
+    }
+    showBadgeCue(att, 'tactician');
   }
 }
 function applyCombatBadgeGuard(def, ev) {
   if (!def || !def.badgeId || !def.badgeTier || !ev) return;
   if (ev.justGuard && def.badgeId === 'riposte') {
     def.badgeRiposteT = badgeDuration(def, 0.65); showBadgeCue(def, 'riposte');
+  } else if (ev.justGuard && def.badgeId === 'lotus') {
+    const bm = BADGE_TIER_POWER[def.badgeTier] || 1;
+    def.hp = Math.min(def.maxHp, def.hp + Math.round(def.maxHp * 0.025 * bm));
+    for (const e of foesOf(def)) if (!e.hidden && e.hp > 0 && Math.abs(e.x - def.x) < 180 && Math.abs(e.y - def.y) < 110) e.vx = Math.sign(e.x - def.x || def.face) * 280 * bm;
+    if (def.badgeTier === 'purpgold') { def.guard = Math.min(def.maxGuard || 100, (def.guard || 0) + 15); def.meter = Math.min(100, (def.meter || 0) + 10); }
+    showBadgeCue(def, 'lotus');
+  } else if (def.badgeId === 'mirror' && ev.isProj) {
+    const bm = BADGE_TIER_POWER[def.badgeTier] || 1;
+    def.meter = Math.min(100, (def.meter || 0) + 8 * bm);
+    if (def.badgeTier !== 'silver') def.guard = Math.min(def.maxGuard || 100, (def.guard || 0) + 12);
+    if (def.badgeTier === 'purpgold') { def.armorT = Math.max(def.armorT || 0, 0.6); def.armorHits = Math.max(def.armorHits || 0, 1); }
+    showBadgeCue(def, 'mirror');
   } else if (def.badgeId === 'ironwall') {
     def.badgeBlockCnt = (def.badgeBlockCnt || 0) + 1;
     if (def.badgeBlockCnt >= 3) {
@@ -301,7 +403,14 @@ function applyCombatBadgeGuard(def, ev) {
   }
 }
 function applyCombatBadgeBlock(att, def) {
-  if (!att || att.badgeId !== 'focus' || !(att.badgePressureSkill || att.badgePressureT > 0)) return false;
+  if (!att) return false;
+  if (att.badgeId === 'sunder' && att.badgeTier && ['hv', 'cs1', 'cs2'].includes(att.moveName)) {
+    const cut = att.badgeTier === 'purpgold' ? 32 : att.badgeTier === 'gold' ? 22 : 14;
+    def.guard = Math.max(0, (def.guard || 0) - cut);
+    showBadgeCue(att, 'sunder', true);
+    return true;
+  }
+  if (att.badgeId !== 'focus' || !(att.badgePressureSkill || att.badgePressureT > 0)) return false;
   def.vx *= 0.72;
   att.badgePressureT = 0; att.badgePressureSkill = 0;
   showBadgeCue(att, 'focus', true);

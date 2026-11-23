@@ -19,8 +19,9 @@ Object.assign(SKILLS, {
       if (f.skPh === 0 && f.t >= 0.12) {
         f.skPh = 1; f.t = 0; SFX.poof();
         const tx = clamp(f.x + f.face * clamp(Math.abs(foe.x - f.x), 90, 270), WALL, STAGE_W - WALL);
-        if (!RESIM) ring(tx, -10, 118, '56,152,200', 0.36);
-        spawnProj(f, { kind: 'trap', x: tx, y: -6, vx: 0, w: 120, h: 32, life: 4.5, delay: 0.2, dmg: 38, kb: [0, 0], stun: 0.52, hs: 0.08, root: true, groundOnly: true });
+        const ty = foe && Math.abs(foe.x - f.x) < 320 ? gndY(foe) : f.y;
+        if (!RESIM) ring(tx, ty - 10, 118, '56,152,200', 0.36);
+        spawnProj(f, { kind: 'trap', x: tx, y: ty - 6, groundY: ty, vx: 0, w: 120, h: 32, life: 4.5, delay: 0.2, dmg: 38, kb: [0, 0], stun: 0.52, hs: 0.08, root: true, groundOnly: true });
       }
       if (f.skPh === 1 && f.t >= 0.26) toNeutral(f);
     },

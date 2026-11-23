@@ -21,9 +21,12 @@ function bpStart(mode, customOpts = null) {
   bpCustomOpts = customOpts;
   // 顺序和每边选几个人都按模式表来（src/data/10-modes.js、11-bp-orders.js）
   const md = bpModeDef(mode);
-  const squad = customOpts && customOpts.squadSize === 2 ? 2 : 3;
+  const squad = customOpts && customOpts.teamSize ? clamp(customOpts.teamSize | 0, 2, 8) : (customOpts && customOpts.squadSize === 2 ? 2 : 3);
   const steps = BP_ORDERS[mode === 'tag3' && customOpts.quickRelay ? 'trioQuick' : (md.squadBp && md.squadBp[squad]) || md.bp].map(st => st.slice());
-  const bans = steps.some(st => st[1] === 'ban') ? [-1, -1] : [];
+  const banCnt = side => steps.filter(st => st[0] === side && st[1] === 'ban').length;
+  const b0 = banCnt(0), b1 = banCnt(1);
+  const bansBySide = (b0 + b1) > 0 ? [Array(b0).fill(-1), Array(b1).fill(-1)] : [[], []];
+  const bans = (b0 + b1) > 0 ? Array(b0 + b1).fill(-1) : [];
   const count = side => steps.filter(st => st[0] === side && st[1] === 'pick').length;
   const picks = md.team ? [count(0), count(1)].map(n => Array(n).fill(-1)) : [0, 1].filter(count).map(() => -1);
 
@@ -31,6 +34,7 @@ function bpStart(mode, customOpts = null) {
     step: 0,
     steps,
     bans,
+    bansBySide,
     picks,
     t: BP_TIME,
     avail: [availList(), mode === 'net' ? (NET.peerAvail || null) : null]
@@ -96,6 +100,13 @@ function bpRotateQuickPicks() {
   renderBP();
   return true;
 }
+function bpAutoFillLarge() {
+  if (currentScreen !== 'bp' || !BP || (bpMode !== 'melee' && bpMode !== 'ctf')) return false;
+  while (BP && BP.step < bpSteps().length && bpValidList().length) {
+    bpApply(bpCpuChoice());
+  }
+  return true;
+}
 function bpApply(i) {
   if (!BP || BP.step >= bpSteps().length) return;
   if (!bpValid(i)) {
@@ -105,7 +116,14 @@ function bpApply(i) {
   }
   const [side, type] = bpSteps()[BP.step];
   if (type === 'ban') {
-    BP.bans[side] = i;
+    if (BP.bansBySide && Array.isArray(BP.bansBySide[side])) {
+      const slot = BP.bansBySide[side].findIndex(v => v < 0);
+      if (slot >= 0) BP.bansBySide[side][slot] = i;
+      else BP.bansBySide[side][BP.bansBySide[side].length - 1] = i;
+      BP.bans = [...BP.bansBySide[0], ...BP.bansBySide[1]];
+    } else {
+      BP.bans[side] = i;
+    }
   } else {
     if (isMultiPickBP()) {
       const slots = BP.picks[side];
@@ -210,6 +228,14 @@ function launchBpMatch(mode, opts, picks, bans, mapId, preMatch) {
     startParty(picks[0], picks[1], opts.level || pickLevel, opts);
   } else if (mode === 'bastion') {
     startBastion(picks[0], picks[1], opts.level || pickLevel, opts);
+  } else if (mode === 'melee') {
+    const sz = opts.teamSize || (Array.isArray(picks[0]) ? picks[0].length : 5);
+    startMelee(sz, Array.isArray(picks[0]) ? picks[0][0] : picks[0], opts.level || pickLevel, opts.mut || (typeof teamMutator !== 'undefined' ? teamMutator : 'normal'), picks);
+    M.bans = bans;
+  } else if (mode === 'ctf') {
+    const sz = opts.teamSize || (Array.isArray(picks[0]) ? picks[0].length : 5);
+    startCtf(sz, Array.isArray(picks[0]) ? picks[0][0] : picks[0], opts.level || pickLevel, picks);
+    M.bans = bans;
   } else if (mode === 'maps') {
     startMapsMode(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch, mapId);
   } else if (mode === 'tag3') {

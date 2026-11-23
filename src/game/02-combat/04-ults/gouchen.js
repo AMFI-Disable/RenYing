@@ -11,7 +11,9 @@ Object.assign(ULTS, {
         f.spN = 2;
         if (foe.rooted && foe.state === 'hitstun' && foe.hp > 0 && foe.invul <= 0) {
           f.face = foe.x >= f.x ? 1 : -1; f.spPose = 'gc_pull'; f.snap = true;
-          foe.x = clamp(f.x + f.face * 70, WALL, STAGE_W - WALL); foe.y = 0;
+          foe.x = clamp(f.x + f.face * 70, WALL, STAGE_W - WALL);
+          if (f.plat >= 0 && typeof mapPutOn === 'function') mapPutOn(foe, f.plat);
+          else { foe.y = f.y; foe.plat = f.plat; }
           applyHit(f, foe, { dmg: 80, kb: [420, -820], stun: 0.6, hs: 0.2, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 60]);
           foe.hookedT = 1.2; f.skillCD = 0;
           shake = Math.max(shake, 14); SFX.heavy();

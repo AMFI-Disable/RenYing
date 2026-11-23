@@ -7,8 +7,9 @@ Object.assign(SKILLS, {
         f.skPh = 1; f.t = 0; SFX.poof();
         for (const p of projs) if (p.kind === 'trap' && p.owner === f.idx) p.dead = true;
         const tx = clamp(f.x + f.face * clamp(Math.abs(foe.x - f.x), 85, 290), WALL, STAGE_W - WALL);
-        if (!RESIM) ring(tx, -12, 90, '180,142,255', 0.35);
-        spawnProj(f, { kind: 'trap', x: tx, y: -6, vx: 0, w: 120, h: 30, life: 4.5, delay: 0.2, dmg: 38, kb: [0, 0], stun: 0.52, hs: 0.08, root: true, slow: 1.8, groundOnly: true });
+        const ty = foe && Math.abs(foe.x - f.x) < 340 ? gndY(foe) : f.y;
+        if (!RESIM) ring(tx, ty - 12, 90, '180,142,255', 0.35);
+        spawnProj(f, { kind: 'trap', x: tx, y: ty - 6, groundY: ty, vx: 0, w: 120, h: 30, life: 4.5, delay: 0.2, dmg: 38, kb: [0, 0], stun: 0.52, hs: 0.08, root: true, slow: 1.8, groundOnly: true });
       }
       if (f.skPh === 1 && f.t >= 0.24) toNeutral(f);
     },

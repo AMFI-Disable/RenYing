@@ -5,8 +5,8 @@ Object.assign(SKILLS, {
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.24) {
         f.skPh = 1; f.t = 0; f.hitDone = false;
-        shake = Math.max(shake, 14); dust(f.x, 0, 24); ring(f.x, 0, 140, '255,200,120', 0.35); SFX.thud(); SFX.heavy();
-        for (const sd of [-1, 1]) spawnProj(f, { kind: 'quake', x: f.x + sd * 30, y: -22, vx: sd * 680, w: 84, h: 48, life: 0.8, dmg: 40, kb: [200, -740], stun: 0.40, hs: 0.08, launch: true, groundOnly: true, unbreakable: true });
+        shake = Math.max(shake, 14); dust(f.x, f.y, 24); ring(f.x, f.y, 140, '255,200,120', 0.35); SFX.thud(); SFX.heavy();
+        for (const sd of [-1, 1]) spawnProj(f, { kind: 'quake', x: f.x + sd * 30, y: f.y - 22, groundY: f.y, vx: sd * 680, w: 84, h: 48, life: 0.8, dmg: 40, kb: [200, -740], stun: 0.40, hs: 0.08, launch: true, groundOnly: true, unbreakable: true });
         if (strike(f, foe, { box: [-40, -80, 100, 4], dmg: 45, kb: [220, -800], stun: 0.45, hs: 0.12, launch: true })) {
           f.guard = Math.min(f.maxGuard, (f.guard || f.maxGuard) + 30);
           f.skill2CD = Math.max(0, f.skill2CD - 2.5);

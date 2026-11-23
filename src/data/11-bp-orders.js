@@ -12,4 +12,16 @@ const BP_ORDERS = {
   trio: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick'], [0, 'pick'], [1, 'pick']],        // 本机车轮战：各禁 1 人，轮流各选 3 人
   trioQuick: [[0, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [1, 'pick']], // 快速车轮：先选三人，电脑补齐
   trioSnake: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick']],   // 联机车轮接力：各禁 1 人，蛇形各选 3 人
+  large2: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']],                                 // 大型团战 2v2：各禁 1 人，蛇形各选 2 人
+  large3: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick']],       // 大型团战 3v3：各禁 1 人，蛇形各选 3 人
+  large5: [                                                                                                              // 大型团战 5v5：各禁 2 人，蛇形各选 5 人
+    [0, 'ban'], [1, 'ban'], [0, 'ban'], [1, 'ban'],
+    [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'],
+    [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick']
+  ],
+  large8: [                                                                                                              // 大型团战 8v8：各禁 2 人，蛇形各选 8 人
+    [0, 'ban'], [1, 'ban'], [0, 'ban'], [1, 'ban'],
+    [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'],
+    [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']
+  ],
 };

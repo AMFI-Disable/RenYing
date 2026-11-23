@@ -25,8 +25,8 @@
   C.SEASON_DAYS = 32;
   C.INV_MAX = 1000000000, C.HIST_MAX = 40;
   // 玩家市场同时挂几单不设上限（和库存一样，挂出去的饰品只是从库存挪到挂单，存档不会因此变大多少）。
-  // 下面两个只是“一次请求最多做多少”，免得一次请求太重：
-  C.LIST_BATCH = 50;   // 一键挂牌一次最多挂几件，剩下的再点一次
+  // 单次批量挂牌不再受 50 件硬性上限约束：
+  C.LIST_BATCH = 500;   // 一键挂牌单次可处理大批量重复饰品
   C.LIST_CHECK = 90;   // 每次操作最多核对几单挂单还在不在卖（从最早挂的开始，快到期的先核对；D1 一条查询最多 100 个参数）
   C.MKT_DAYS = 14;   // 挂单默认挂几天：过期没卖出去的自动撤回，饰品回到卖家库存（管理员可以在线改 mktDays）
   C.FEE = 0.15;                                // 玩家市场成交扣的手续费（墨锭从这里流出去，免得越攒越多）
@@ -42,35 +42,51 @@
   C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem', 'melee', 'ctf', 'gauntlet'];
   C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
   C.BADGE_CATS = { all: '全部', offense: '进攻', defense: '防御', mobility: '身法', mastery: '绝技', team: '团队' };
+  C.BADGE_RARITIES = { all: '全部品阶', legend: '绝世', epic: '奇珍', rare: '精良' };
+  C.BADGE_RARITY_RANK = { rare: 1, epic: 2, legend: 3 };
   C.BADGES = {
-    flowing: { name: '连势', cat: 'offense', desc: '连续普攻第 3 击命中后，可在收招时冲刺追步；紫金阶可改接技能。', en: 'Flow', effect: 'normal', ach: '累计完成 50 次 5 连击' },
-    focus: { name: '凝锋', cat: 'offense', desc: '蓄力斩命中后，下一次格挡交锋会减少击退；紫金阶技能也可承接。', en: 'Focus', effect: 'charged', ach: '累计蓄力斩命中 30 次' },
-    riposte: { name: '回锋', cat: 'defense', desc: '精准招架后，限时重击会向前踏进，抓住反击时机。', en: 'Riposte', effect: 'parry', ach: '累计完成 20 次精准招架' },
-    breaker: { name: '破军', cat: 'offense', desc: '破防后立刻重置冲刺冷却，下一次冲刺可更快追击；紫金阶也可选重击踏进。', en: 'Breaker', effect: 'break', ach: '累计破防对手 25 次' },
-    ascent: { name: '凌空', cat: 'mobility', desc: '腾空攻击命中后可续一次空中冲刺；紫金阶可接空中技能。', en: 'Ascent', effect: 'air', ach: '累计空中连段命中 40 次' },
-    pursuit: { name: '追影', cat: 'mobility', desc: '闪避后命中，可在收招时冲刺退步；紫金阶退步带短暂无敌。', en: 'Pursuit', effect: 'dash', ach: '累计闪避反击 30 次' },
-    ironwall: { name: '铁壁', cat: 'defense', desc: '连续格挡 3 次后，下一次反击附带短暂霸体护身。', en: 'Ironwall', effect: 'guard', ach: '单局格挡 15 次攻击' },
-    tempest: { name: '疾电', cat: 'mastery', desc: 'Q/R 技能命中后，下一次普攻起手提速并延长追击窗口。', en: 'Tempest', effect: 'skill', ach: '累计技能命中 80 次' },
-    bloodlust: { name: '血怒', cat: 'offense', desc: '气血低于 35% 时，命中回复少量气血并额外积攒真气。', en: 'Bloodlust', effect: 'lowhp', ach: '残血反杀 10 场对局' },
-    phantom: { name: '绝影', cat: 'mobility', desc: '虚招翻滚（C）后 1.2 秒内首次命中伤害提升。', en: 'Phantom', effect: 'feint', ach: '累计虚招翻滚反击 25 次' },
-    resonance: { name: '共鸣', cat: 'mastery', desc: '发动灵宠秘技（V）后，立刻缩短 Q/R 技能剩余冷却。', en: 'Resonance', effect: 'pet', ach: '累计发动灵宠秘技 30 次' },
-    skybreaker: { name: '破穹', cat: 'mobility', desc: '空中蓄力斩命中后，重置空中跳跃与冲刺次数。', en: 'Skybreaker', effect: 'aircharge', ach: '累计空中蓄力斩命中 20 次' },
-    juggernaut: { name: '镇岳', cat: 'defense', desc: '霸体硬扛受击后，下一次重击或蓄力斩威力增强。', en: 'Juggernaut', effect: 'armor', ach: '霸体承伤反击 25 次' },
-    vanguard: { name: '同心', cat: 'team', desc: '多人团战中协同命中敌人时，为己方附近队友回复真气。', en: 'Vanguard', effect: 'team', ach: '参与 10 场大型团战胜利' },
-    iaido: { name: '居合', cat: 'mastery', desc: '居合斩穴（O）瞬拔命中后，额外延长点穴封脉时长并回气。', en: 'Iaido', effect: 'iaido', ach: '累计触发 20 次居合瞬拔' },
-    meridian: { name: '点穴', cat: 'mastery', desc: '对被点穴封脉的目标追加打击时，额外削减架势并触发震气。', en: 'Meridian', effect: 'acupoint', ach: '累计点穴封脉 30 次' },
-    grapple: { name: '擒龙', cat: 'offense', desc: '擒拿投技（H）得手后，落地瞬间重置闪避冷却并提升追击伤害。', en: 'Grapple', effect: 'grapple', ach: '累计擒拿投技命中 20 次' },
-    execution: { name: '斩魄', cat: 'offense', desc: '对手气血低于 25% 时，重击与奥义额外附带斩杀破防威力。', en: 'Execution', effect: 'execute', ach: '累计完成 60 次终结击倒' },
-    aegis: { name: '玄盾', cat: 'defense', desc: '聚气弹反（F）成功后，获得短时减伤护盾并回复架势值。', en: 'Aegis', effect: 'qiparry', ach: '累计聚气弹反成功 20 次' },
-    steadfast: { name: '磐石', cat: 'defense', desc: '受击倒地起身时，震开贴身敌人并缩短起身僵直。', en: 'Steadfast', effect: 'getup', ach: '完成 30 场无破防对局' },
-    windstep: { name: '御风', cat: 'mobility', desc: '墙面蹬跳与轻功腾跃后，2 秒内移动与突进速度提升。', en: 'Windstep', effect: 'wall', ach: '累计高空滞空连招 30 次' },
-    mirage: { name: '幻步', cat: 'mobility', desc: '连续两次闪避或翻滚后，下一次轻击突进距离显著延长。', en: 'Mirage', effect: 'evade', ach: '单局无伤闪避 10 次攻击' },
-    momentum: { name: '千钧', cat: 'offense', desc: '高速冲刺或高空下坠命中时，按动量额外放大击退与伤害。', en: 'Momentum', effect: 'velocity', ach: '累计高速重击破敌 40 次' },
-    harmony: { name: '太和', cat: 'mastery', desc: '战斗中切换二式架势时，立即回复少量架势值并获得短暂加速。', en: 'Harmony', effect: 'stance', ach: '解锁 5 位侠客的第二架势' },
-    sovereign: { name: '天威', cat: 'mastery', desc: '释放奥义（E）后无论是否命中，返还部分真气并强化下一次技能。', en: 'Sovereign', effect: 'ult', ach: '累计释放奥义 50 次' },
-    warbanner: { name: '战旗', cat: 'team', desc: '发动战意号令（T）时，附近队友同步获得攻防增幅与霸体微盾。', en: 'Warbanner', effect: 'rally', ach: '在 8v8 团战中发动号令 20 次' },
-    guardian: { name: '护法', cat: 'team', desc: '在己方残血队友附近格挡或弹反成功时，为队友分担并回复气血。', en: 'Guardian', effect: 'protect', ach: '在 2v2 或 8v8 中救援队友 15 次' },
-    synergy: { name: '合击', cat: 'team', desc: '接续队友连段命中同一敌人时，触发合击破甲并大幅积攒真气。', en: 'Synergy', effect: 'assist', ach: '触发 30 次团队合击连携' },
+    flowing: { name: '连势', cat: 'offense', rarity: 'rare', desc: '连续普攻第 3 击命中后，可在收招时冲刺追步；紫金阶可改接技能。', en: 'Flow', effect: 'normal', ach: '累计完成 50 次 5 连击' },
+    focus: { name: '凝锋', cat: 'offense', rarity: 'rare', desc: '蓄力斩命中后，下一次格挡交锋会减少击退；紫金阶技能也可承接。', en: 'Focus', effect: 'charged', ach: '累计蓄力斩命中 30 次' },
+    riposte: { name: '回锋', cat: 'defense', rarity: 'epic', desc: '精准招架后，限时重击会向前踏进，抓住反击时机。', en: 'Riposte', effect: 'parry', ach: '累计完成 20 次精准招架' },
+    breaker: { name: '破军', cat: 'offense', rarity: 'epic', desc: '破防后立刻重置冲刺冷却，下一次冲刺可更快追击；紫金阶也可选重击踏进。', en: 'Breaker', effect: 'break', ach: '累计破防对手 25 次' },
+    ascent: { name: '凌空', cat: 'mobility', rarity: 'epic', desc: '腾空攻击命中后可续一次空中冲刺；紫金阶可接空中技能。', en: 'Ascent', effect: 'air', ach: '累计空中连段命中 40 次' },
+    pursuit: { name: '追影', cat: 'mobility', rarity: 'rare', desc: '闪避后命中，可在收招时冲刺退步；紫金阶退步带短暂无敌。', en: 'Pursuit', effect: 'dash', ach: '累计闪避反击 30 次' },
+    ironwall: { name: '铁壁', cat: 'defense', rarity: 'epic', desc: '连续格挡 3 次后，下一次反击附带短暂霸体护身。', en: 'Ironwall', effect: 'guard', ach: '单局格挡 15 次攻击' },
+    tempest: { name: '疾电', cat: 'mastery', rarity: 'epic', desc: 'Q/R 技能命中后，下一次普攻起手提速并延长追击窗口。', en: 'Tempest', effect: 'skill', ach: '累计技能命中 80 次' },
+    bloodlust: { name: '血怒', cat: 'offense', rarity: 'legend', desc: '气血低于 35% 时，命中回复少量气血并额外积攒真气。', en: 'Bloodlust', effect: 'lowhp', ach: '残血反杀 10 场对局' },
+    phantom: { name: '绝影', cat: 'mobility', rarity: 'rare', desc: '虚招翻滚（C）后 1.2 秒内首次命中伤害提升。', en: 'Phantom', effect: 'feint', ach: '累计虚招翻滚反击 25 次' },
+    resonance: { name: '共鸣', cat: 'mastery', rarity: 'epic', desc: '发动灵宠秘技（V）后，立刻缩短 Q/R 技能剩余冷却。', en: 'Resonance', effect: 'pet', ach: '累计发动灵宠秘技 30 次' },
+    skybreaker: { name: '破穹', cat: 'mobility', rarity: 'legend', desc: '空中蓄力斩命中后，重置空中跳跃与冲刺次数。', en: 'Skybreaker', effect: 'aircharge', ach: '累计空中蓄力斩命中 20 次' },
+    juggernaut: { name: '镇岳', cat: 'defense', rarity: 'legend', desc: '霸体硬扛受击后，下一次重击或蓄力斩威力增强。', en: 'Juggernaut', effect: 'armor', ach: '霸体承伤反击 25 次' },
+    vanguard: { name: '同心', cat: 'team', rarity: 'rare', desc: '多人团战中协同命中敌人时，为己方附近队友回复真气。', en: 'Vanguard', effect: 'team', ach: '参与 10 场大型团战胜利' },
+    iaido: { name: '居合', cat: 'mastery', rarity: 'legend', desc: '居合斩穴（O）瞬拔命中后，额外延长点穴封脉时长并回气。', en: 'Iaido', effect: 'iaido', ach: '累计触发 20 次居合瞬拔' },
+    meridian: { name: '点穴', cat: 'mastery', rarity: 'epic', desc: '对被点穴封脉的目标追加打击时，额外削减架势并触发震气。', en: 'Meridian', effect: 'acupoint', ach: '累计点穴封脉 30 次' },
+    grapple: { name: '擒龙', cat: 'offense', rarity: 'epic', desc: '擒拿投技（H）得手后，落地瞬间重置闪避冷却并提升追击伤害。', en: 'Grapple', effect: 'grapple', ach: '累计擒拿投技命中 20 次' },
+    execution: { name: '斩魄', cat: 'offense', rarity: 'legend', desc: '对手气血低于 25% 时，重击与奥义额外附带斩杀破防威力。', en: 'Execution', effect: 'execute', ach: '累计完成 60 次终结击倒' },
+    aegis: { name: '玄盾', cat: 'defense', rarity: 'epic', desc: '聚气弹反（F）成功后，获得短时减伤护盾并回复架势值。', en: 'Aegis', effect: 'qiparry', ach: '累计聚气弹反成功 20 次' },
+    steadfast: { name: '磐石', cat: 'defense', rarity: 'rare', desc: '受击倒地起身时，震开贴身敌人并缩短起身僵直。', en: 'Steadfast', effect: 'getup', ach: '完成 30 场无破防对局' },
+    windstep: { name: '御风', cat: 'mobility', rarity: 'rare', desc: '墙面蹬跳与轻功腾跃后，2 秒内移动与突进速度提升。', en: 'Windstep', effect: 'wall', ach: '累计高空滞空连招 30 次' },
+    mirage: { name: '幻步', cat: 'mobility', rarity: 'epic', desc: '连续两次闪避或翻滚后，下一次轻击突进距离显著延长。', en: 'Mirage', effect: 'evade', ach: '单局无伤闪避 10 次攻击' },
+    momentum: { name: '千钧', cat: 'offense', rarity: 'epic', desc: '高速冲刺或高空下坠命中时，按动量额外放大击退与伤害。', en: 'Momentum', effect: 'velocity', ach: '累计高速重击破敌 40 次' },
+    harmony: { name: '太和', cat: 'mastery', rarity: 'rare', desc: '战斗中切换二式架势时，立即回复少量架势值并获得短暂加速。', en: 'Harmony', effect: 'stance', ach: '解锁 5 位侠客的第二架势' },
+    sovereign: { name: '天威', cat: 'mastery', rarity: 'legend', desc: '释放奥义（E）后无论是否命中，返还部分真气并强化下一次技能。', en: 'Sovereign', effect: 'ult', ach: '累计释放奥义 50 次' },
+    warbanner: { name: '战旗', cat: 'team', rarity: 'epic', desc: '发动战意号令（T）时，附近队友同步获得攻防增幅与霸体微盾。', en: 'Warbanner', effect: 'rally', ach: '在 8v8 团战中发动号令 20 次' },
+    guardian: { name: '护法', cat: 'team', rarity: 'epic', desc: '在己方残血队友附近格挡或弹反成功时，为队友分担并回复气血。', en: 'Guardian', effect: 'protect', ach: '在 2v2 或 8v8 中救援队友 15 次' },
+    synergy: { name: '合击', cat: 'team', rarity: 'legend', desc: '接续队友连段命中同一敌人时，触发合击破甲并大幅积攒真气。', en: 'Synergy', effect: 'assist', ach: '触发 30 次团队合击连携' },
+    bloodmoon: { name: '血月', cat: 'offense', rarity: 'legend', desc: '达成 6 连击以上或残血命敌时，触发血月汲取，回血并大幅削减敌方架势。', en: 'Blood Moon', effect: 'bloodmoon', ach: '单局打出 12 连击并获胜' },
+    sunder: { name: '裂甲', cat: 'offense', rarity: 'epic', desc: '重击或蓄力斩命中格挡目标时，额外削减大量架势并延长破防僵直。', en: 'Sunder', effect: 'sunder', ach: '累计重击压制格挡 50 次' },
+    frostbite: { name: '寒锋', cat: 'offense', rarity: 'rare', desc: '门派技能或重击命中时，为目标附加短时霜冻减速，压制对手走位。', en: 'Frostbite', effect: 'frostbite', ach: '累计减速控敌 40 次' },
+    lotus: { name: '莲华', cat: 'defense', rarity: 'legend', desc: '精准招架成功瞬间绽放护体莲华，回复气血并震开贴身敌手。', en: 'Lotus Ward', effect: 'lotus', ach: '单局完成 4 次精准招架' },
+    mirror: { name: '镜反', cat: 'defense', rarity: 'epic', desc: '格挡远程招式或暗器时，回复额外真气并反震护体。', en: 'Mirror Guard', effect: 'mirror', ach: '累计格挡飞行物 40 次' },
+    bulwark: { name: '铜墙', cat: 'defense', rarity: 'rare', desc: '气血低于 40% 时，持续稳固架势并在脱战时快速回复护体值。', en: 'Bulwark', effect: 'bulwark', ach: '承受 5000 点伤害仍赢得对局' },
+    cloudstep: { name: '踏云', cat: 'mobility', rarity: 'epic', desc: '高空二段跳或穿台下落后，获得短时轻功加速与冲刺减耗。', en: 'Cloudstep', effect: 'cloudstep', ach: '累计多层平台连段 30 次' },
+    gale: { name: '乘风', cat: 'mobility', rarity: 'rare', desc: '冲刺绕背或迅步穿身时，立获真气补给并缩短闪避冷却。', en: 'Gale Stride', effect: 'gale', ach: '累计绕背追击 35 次' },
+    blink: { name: '缩地', cat: 'mobility', rarity: 'legend', desc: '腾空闪脱身后，立减 Q/R 技能剩余冷却并获得瞬步反击窗口。', en: 'Folded Earth', effect: 'blink', ach: '腾空闪后反杀 15 次' },
+    yin_yang: { name: '阴阳', cat: 'mastery', rarity: 'legend', desc: '交替命中 Q 与 R 技能后，触发阴阳调和，大幅回气并回复架势。', en: 'Yin Yang', effect: 'yinyang', ach: '累计 Q/R 联动命中 40 次' },
+    scroll: { name: '墨韵', cat: 'mastery', rarity: 'epic', desc: '奥义命中敌人时，重置空中跳跃与冲刺冷却，无缝续接追击。', en: 'Ink Scroll', effect: 'scroll', ach: '奥义终结对手 25 次' },
+    spiritflow: { name: '灵息', cat: 'mastery', rarity: 'rare', desc: '脱战调息 2.5 秒后，每秒持续积攒真气与架势，掌控开团节奏。', en: 'Spirit Flow', effect: 'spiritflow', ach: '累计积攒 5000 点真气' },
+    oath: { name: '结义', cat: 'team', rarity: 'legend', desc: '团战中有队友倒下或受重创时，自身立获真气爆发与霸体护身。', en: 'Sworn Oath', effect: 'oath', ach: '在大型团战中逆转获胜 10 次' },
+    tactician: { name: '军师', cat: 'team', rarity: 'epic', desc: '团战命中敌手时为其施加策印，附近队友命中该目标额外回气。', en: 'Tactician', effect: 'tactician', ach: '团战累计助攻 40 次' },
   };
   C.BADGE_TIER = { silver: 1, gold: 2, purpgold: 3 };
   C.BADGE_UPGRADE = { silver: { to: 'gold', sigils: 3, ink: 2000, kos: 100 }, gold: { to: 'purpgold', sigils: 7, ink: 6000, kos: 300 } };
@@ -78,16 +94,26 @@
   C.BADGE_UNLOCK_INK = 1200;
   C.BADGE_UNLOCK_SIGILS = 2;
 
-  // 灵宠系统：8 只水墨灵宠，每只具备被动增益 + V 键主动秘技 + 三阶养成（初阶/灵阶/仙阶）
+  // 灵宠系统：16 只水墨灵宠，分四大流派与三档品阶，每只具备被动增益 + V 键主动秘技 + 三阶养成（初阶/灵阶/仙阶）
+  C.PET_CATS = { all: '全部', attack: '攻伐', defense: '护御', support: '辅助', control: '控场' };
+  C.PET_RARITIES = { all: '全部品阶', legend: '神兽', epic: '灵兽', rare: '珍兽' };
   C.PETS = {
-    inkfox: { name: '墨狐', en: 'Ink Fox', rgb: '120,235,205', passive: '连击额外回气', active: '灵狐突袭：前冲造成缓速印记' },
-    tortoise: { name: '玄龟', en: 'Obsidian Tortoise', rgb: '140,200,255', passive: '架势恢复提速', active: '玄甲护盾：获得短暂霸体与架势回复' },
-    falcon: { name: '雷隼', en: 'Thunder Falcon', rgb: '255,220,110', passive: '空中招式威力略增', active: '惊雷俯冲：电光劈向锁定目标' },
-    froststag: { name: '霜鹿', en: 'Frost Stag', rgb: '160,235,255', passive: '脱战缓慢回血', active: '寒露甘泉：瞬间回复气血与架势' },
-    flamelion: { name: '炎狮', en: 'Flame Lion', rgb: '255,125,85', passive: '蓄力斩破防增强', active: '烈焰狮吼：震退近身敌众并灼烧' },
-    shadowcrow: { name: '影鸦', en: 'Shadow Crow', rgb: '195,140,255', passive: '虚招与闪避冷却略减', active: '鸦影袭背：瞬闪扰敌并积攒真气' },
-    jadekoi: { name: '玉鲤', en: 'Jade Koi', rgb: '115,245,175', passive: '闪避无敌略微延长', active: '跃渊清心：驱散减速灼烧并疾行' },
-    mechfinch: { name: '机雀', en: 'Clockwork Finch', rgb: '233,196,106', passive: 'Q/R 技能冷却略减', active: '连弩齐发：齐射三枚追踪机矢' },
+    inkfox: { name: '墨狐', en: 'Ink Fox', cat: 'support', rarity: 'rare', rgb: '120,235,205', passive: '连击额外回气', active: '灵狐突袭：前冲造成缓速印记' },
+    tortoise: { name: '玄龟', en: 'Obsidian Tortoise', cat: 'defense', rarity: 'rare', rgb: '140,200,255', passive: '架势恢复提速', active: '玄甲护盾：获得短暂霸体与架势回复' },
+    falcon: { name: '雷隼', en: 'Thunder Falcon', cat: 'attack', rarity: 'epic', rgb: '255,220,110', passive: '空中招式威力略增', active: '惊雷俯冲：电光劈向锁定目标' },
+    froststag: { name: '霜鹿', en: 'Frost Stag', cat: 'support', rarity: 'epic', rgb: '160,235,255', passive: '脱战缓慢回血', active: '寒露甘泉：瞬间回复气血与架势' },
+    flamelion: { name: '炎狮', en: 'Flame Lion', cat: 'attack', rarity: 'epic', rgb: '255,125,85', passive: '蓄力斩破防增强', active: '烈焰狮吼：震退近身敌众并灼烧' },
+    shadowcrow: { name: '影鸦', en: 'Shadow Crow', cat: 'control', rarity: 'epic', rgb: '195,140,255', passive: '虚招与闪避冷却略减', active: '鸦影袭背：瞬闪扰敌并积攒真气' },
+    jadekoi: { name: '玉鲤', en: 'Jade Koi', cat: 'support', rarity: 'rare', rgb: '115,245,175', passive: '闪避无敌略微延长', active: '跃渊清心：驱散减速灼烧并疾行' },
+    mechfinch: { name: '机雀', en: 'Clockwork Finch', cat: 'attack', rarity: 'rare', rgb: '233,196,106', passive: 'Q/R 技能冷却略减', active: '连弩齐发：齐射三枚追踪机矢' },
+    azure_dragon: { name: '青龙', en: 'Azure Dragon', cat: 'attack', rarity: 'legend', rgb: '70,225,255', passive: '奥义积气提速', active: '苍龙破阵：释放贯通青龙气浪击飞敌众' },
+    white_tiger: { name: '白虎', en: 'White Tiger', cat: 'attack', rarity: 'legend', rgb: '240,244,255', passive: '破防与重击威力提升', active: '白虎啸天：撕裂冲击并大幅削减架势' },
+    vermilion_bird: { name: '朱雀', en: 'Vermilion Bird', cat: 'support', rarity: 'legend', rgb: '255,105,75', passive: '残血时持续微幅回血', active: '涅槃烈羽：烈焰羽扇击退敌人并回复气血' },
+    qilin: { name: '墨麟', en: 'Ink Qilin', cat: 'defense', rarity: 'legend', rgb: '235,195,90', passive: '受击硬直与架势损耗略减', active: '瑞麟镇煞：展开金墨护阵，霸体并回气回架势' },
+    moonrabbit: { name: '玉兔', en: 'Moon Rabbit', cat: 'support', rarity: 'rare', rgb: '215,225,255', passive: '轻功跳跃与落地更灵动', active: '月华跃步：重置冲刺冷却并瞬间回气' },
+    spiritcrane: { name: '灵鹤', en: 'Spirit Crane', cat: 'control', rarity: 'epic', rgb: '155,240,220', passive: '空中滞空与闪避更稳', active: '鹤唳清风：吹起浮空旋风托举近身敌手' },
+    ironape: { name: '玄猿', en: 'Iron Ape', cat: 'defense', rarity: 'epic', rgb: '185,155,120', passive: '格挡消耗降低', active: '巨猿震地：砸出震荡波击退并削减架势' },
+    starowl: { name: '星枭', en: 'Star Owl', cat: 'control', rarity: 'epic', rgb: '175,145,255', passive: '远程招式命中额外回气', active: '星瞳锁魂：发射两枚星弹并致缓敌手' },
   };
   C.PET_TIER = { basic: 1, spirit: 2, immortal: 3 };
   C.PET_BUY_COST = 800;
@@ -866,7 +892,7 @@
   A.openAll = (s, a, env) => {
     const items = [], cases = {};
     for (const cid of C.CASES) {
-      while ((s.cases[cid] || 0) > 0 && C.openLeft(s, cid, env.cfg) > 0 && items.length < 50 && !C.invFull(s)) {
+      while ((s.cases[cid] || 0) > 0 && C.openLeft(s, cid, env.cfg) > 0 && items.length < 500 && !C.invFull(s)) {
         const r = A.open(s, { c: cid }, env);
         if (!r.ok) return items.length ? { ok: true, items, cases } : r;
         items.push(r.item); cases[cid] = (cases[cid] || 0) + 1;
@@ -1007,12 +1033,12 @@
     }
     return { ok: true, count: sold.length, totalGain: plan.totalGain, sold };
   };
-  A.listDupes = (s, a, env) => {   // 一键自动挂牌市场：保留最高斩数/穿着那一件，其余挂牌出售
+  A.listDupes = (s, a, env) => {   // 一键自动挂牌市场：保留最高斩数/穿着那一件，其余全部挂牌出售（不受 50 件限制）
     const m = env.mkt;
     if (!m || (!C.isLid(m.id) && !Array.isArray(m.ids))) return { err: NO_MKT };
     const plan = C.dupePlan(s);
     if (!plan.items.length) return { err: '库存里没有重复的饰品' };
-    const ids = (Array.isArray(m.ids) ? m.ids.slice() : [m.id]).slice(0, C.LIST_BATCH);   // 挂单不设上限，一次最多挂 LIST_BATCH 件
+    const ids = Array.isArray(m.ids) ? m.ids.slice() : [m.id];
     const toList = plan.items.slice(0, ids.length);
     const listed = [];
     for (let idx = 0; idx < toList.length; idx++) {
@@ -1148,19 +1174,21 @@
     giveInk(env, 50000);
     return { ok: true, badgeId: chosen, tier: 'purpgold', ink: 50000, sigils: 50 };
   };
+  const HERO_ARCH = {
+    qingfeng: 'swordsman', lingshuang: 'swordsman', yuehua: 'swordsman', cangming: 'swordsman', baihe: 'swordsman', wuya: 'swordsman',
+    feiying: 'assassin', lingque: 'assassin', liying: 'assassin', youhuang: 'assassin', yinhu: 'assassin', youming: 'assassin',
+    tieshan: 'tank', gouchen: 'tank', polang: 'tank', xuanwu: 'tank', tiangang: 'tank', bawang: 'tank',
+    leiming: 'fighter', zuixian: 'fighter', chixiao: 'fighter', yanling: 'fighter', chiyan: 'fighter', jinpeng: 'fighter',
+    liuyun: 'support', yuxiao: 'support', xuanji: 'support', qingluan: 'support', yunhe: 'support', fengling: 'support',
+    moyu: 'controller', cixian: 'controller', qianji: 'controller', mojie: 'controller', lingxi: 'controller', danqing: 'controller',
+  };
   A.badgeAutoAssign = (s) => {
     const owned = Object.entries(s.badgeOwned || {})
       .filter(([id]) => own(C.BADGES, id))
-      .sort((a, b) => (C.BADGE_TIER[b[1]] || 0) - (C.BADGE_TIER[a[1]] || 0) || a[0].localeCompare(b[0]));
+      .sort((a, b) => (C.BADGE_TIER[b[1]] || 0) - (C.BADGE_TIER[a[1]] || 0)
+        || (C.BADGE_RARITY_RANK[C.BADGES[b[0]].rarity] || 0) - (C.BADGE_RARITY_RANK[C.BADGES[a[0]].rarity] || 0)
+        || a[0].localeCompare(b[0]));
     if (!owned.length) return { err: '还没有任何武学徽记可装配' };
-    const ARCH = {
-      qingfeng: 'swordsman', lingshuang: 'swordsman', yuehua: 'swordsman', cangming: 'swordsman', baihe: 'swordsman', wuya: 'swordsman',
-      feiying: 'assassin', lingque: 'assassin', liying: 'assassin', youhuang: 'assassin', yinhu: 'assassin', youming: 'assassin',
-      tieshan: 'tank', gouchen: 'tank', polang: 'tank', xuanwu: 'tank', tiangang: 'tank', bawang: 'tank',
-      leiming: 'fighter', zuixian: 'fighter', chixiao: 'fighter', yanling: 'fighter', chiyan: 'fighter', jinpeng: 'fighter',
-      liuyun: 'support', yuxiao: 'support', xuanji: 'support', qingluan: 'support', yunhe: 'support', fengling: 'support',
-      moyu: 'controller', cixian: 'controller', qianji: 'controller', mojie: 'controller', lingxi: 'controller', danqing: 'controller',
-    };
     const PREF = {
       offense: ['swordsman', 'fighter', 'assassin', 'tank', 'controller', 'support'],
       defense: ['tank', 'fighter', 'swordsman', 'support', 'controller', 'assassin'],
@@ -1168,7 +1196,7 @@
       mastery: ['controller', 'swordsman', 'support', 'assassin', 'fighter', 'tank'],
       team: ['support', 'controller', 'tank', 'fighter', 'swordsman', 'assassin'],
     };
-    s.badgeEquip = {};
+    s.badgeEquip = {};   // 覆盖所有现有徽记限制与旧装配，全阵容重新智能分配
     const usedHeroes = new Set();
     let assigned = 0;
     for (const [bid] of owned) {
@@ -1177,7 +1205,7 @@
       const order = PREF[cat] || PREF.offense;
       let chosenHero = '';
       for (const arch of order) {
-        chosenHero = C.HERO_IDS.find(h => !usedHeroes.has(h) && (ARCH[h] || 'fighter') === arch) || '';
+        chosenHero = C.HERO_IDS.find(h => !usedHeroes.has(h) && (HERO_ARCH[h] || 'fighter') === arch) || '';
         if (chosenHero) break;
       }
       if (!chosenHero) chosenHero = C.HERO_IDS.find(h => !usedHeroes.has(h)) || '';
@@ -1187,6 +1215,87 @@
       assigned++;
     }
     return { ok: true, assigned, badgeEquip: s.badgeEquip };
+  };
+  // FULL AUTO：全自动一键管理 —— 覆盖重配全阵容徽记、穿戴最优皮肤、匹配最佳灵宠、启用已解锁二式架势与招式流派、并无上限出售全部重复饰品
+  A.fullAuto = (s, a, env) => {
+    let badges = 0, skins = 0, pets = 0, stances = 0, skills = 0, soldCount = 0, inkGain = 0;
+    if (Object.keys(s.badgeOwned || {}).length) {
+      const br = A.badgeAutoAssign(s);
+      if (br && br.ok) badges = br.assigned || 0;
+    }
+    const tierRank = k => C.TIERS.indexOf((C.ITEM[k] && C.ITEM[k].tier) || 'mil');
+    const byHero = {};
+    for (const it of s.inv) {
+      const h = C.charOf(it.k);
+      if (!h) continue;
+      if (!byHero[h]) byHero[h] = [];
+      byHero[h].push(it);
+    }
+    for (const h of C.HERO_IDS) {
+      const list = byHero[h];
+      if (!list || !list.length) continue;
+      list.sort((x, y) => tierRank(y.k) - tierRank(x.k) || (y.st >= 0 ? 1 : 0) - (x.st >= 0 ? 1 : 0) || (y.st - x.st) || (y.i - x.i));
+      const best = list[0];
+      s.eq[h] = best.i;
+      env.equip[h] = best.k;
+      skins++;
+    }
+    const ownedPets = Object.entries(s.petOwned || {}).filter(([id]) => own(C.PETS, id));
+    if (ownedPets.length) {
+      const PET_PREF = {
+        swordsman: ['attack', 'control', 'support', 'defense'],
+        assassin: ['control', 'attack', 'support', 'defense'],
+        tank: ['defense', 'support', 'attack', 'control'],
+        fighter: ['attack', 'defense', 'support', 'control'],
+        support: ['support', 'control', 'defense', 'attack'],
+        controller: ['control', 'support', 'attack', 'defense'],
+      };
+      for (const h of C.HERO_IDS) {
+        const arch = HERO_ARCH[h] || 'fighter';
+        const pref = PET_PREF[arch] || PET_PREF.fighter;
+        const ranked = ownedPets.slice().sort((x, y) => {
+          const px = C.PETS[x[0]], py = C.PETS[y[0]];
+          const tx = C.PET_TIER[x[1]] || 0, ty = C.PET_TIER[y[1]] || 0;
+          if (ty !== tx) return ty - tx;
+          const rx = C.BADGE_RARITY_RANK[px.rarity] || 0, ry = C.BADGE_RARITY_RANK[py.rarity] || 0;
+          if (ry !== rx) return ry - rx;
+          const ix = pref.indexOf(px.cat), iy = pref.indexOf(py.cat);
+          return (ix < 0 ? 9 : ix) - (iy < 0 ? 9 : iy) || x[0].localeCompare(y[0]);
+        });
+        if (ranked.length) { s.petEquip[h] = ranked[0][0]; pets++; }
+      }
+    }
+    const SWIFT_ARCH = new Set(['assassin', 'swordsman', 'support']);
+    for (const h of C.HERO_IDS) {
+      if ((s.heroKOs[h] || 0) >= 20) { s.stances[h] = 1; stances++; }
+      const su = s.skillUnlocks[h];
+      if (su && isObj(su)) {
+        const want = SWIFT_ARCH.has(HERO_ARCH[h]) ? 'swift' : 'heavy';
+        const alt = want === 'swift' ? 'heavy' : 'swift';
+        for (const sl of C.SKILL_SLOTS) {
+          const unl = Array.isArray(su[sl]) ? su[sl] : [];
+          const pick = unl.includes(want) ? want : unl.includes(alt) ? alt : 'std';
+          if (!s.skillLoadout[h]) s.skillLoadout[h] = {};
+          s.skillLoadout[h][sl] = pick;
+          if (pick !== 'std') skills++;
+        }
+      }
+    }
+    const plan = C.dupePlan(s);
+    if (plan.items.length) {
+      for (const d of plan.items) {
+        const it = C.dropItem(s, d.i, env);
+        if (!it) continue;
+        const val = C.refVal(it);
+        giveInk(env, val);
+        s.stat.sold++;
+        histPush(s, { t: env.now, kind: 'sell', k: it.k, st: it.st, price: val, gain: val });
+        soldCount++;
+        inkGain += val;
+        bump(s, 'sell', 1);
+      }
+    }
+    return { ok: true, badges, skins, pets, stances, skills, soldCount, inkGain };
   };
   A.petBuy = (s, a, env) => {
     const id = String(a.id || '');

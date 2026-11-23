@@ -239,7 +239,7 @@ function checkModes(env) {
     const w = `src/data/11-bp-orders.js ${k}`;
     if (!Array.isArray(o) || !o.length) { err(w, '要至少一步'); continue; }
     o.forEach((st, i) => { if (!Array.isArray(st) || st.length !== 2 || ![0, 1].includes(st[0]) || !['ban', 'pick'].includes(st[1])) err(w, `第 ${i + 1} 步要写成 [0 或 1, 'ban' 或 'pick']，现在是 ${JSON.stringify(st)}`); });
-    for (const s of [0, 1]) if (o.filter(st => st[0] === s && st[1] === 'ban').length > 1) err(w, `第 ${s} 边最多禁 1 人`);
+    for (const s of [0, 1]) if (o.filter(st => st[0] === s && st[1] === 'ban').length > 3) err(w, `第 ${s} 边最多禁 3 人`);
     if (!o.some(st => st[1] === 'pick')) err(w, '至少要选一个人');
   }
   const order = (w, md) => {

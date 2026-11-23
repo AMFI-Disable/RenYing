@@ -366,8 +366,8 @@ function specialUpdate(f, foe) {
   } else if (f.sp === 'final') {
     if (t >= 0.07 && !f.finalDone) {
       f.finalDone = true; f.snap = false;
-      // 残月：最后一击把对手就近打倒，自己直接落地，不能再追击
-      if (U.land) { f.y = 0; f.vy = 0; applyHit(f, victim, { ...FINAL, dmg: U.fin, kb: [260, 0], knock: true }, [victim.x, victim.y - 60]); }
+      // 残月：最后一击把对手就近打倒，落回当前层高，不能再追击
+      if (U.land) { f.y = gndY(f); f.vy = 0; applyHit(f, victim, { ...FINAL, dmg: U.fin, kb: [260, 0], knock: true }, [victim.x, victim.y - 60]); }
       else applyHit(f, victim, { ...FINAL, dmg: U.fin }, [victim.x, victim.y - 60]);
       flashA = 0.6; flashRGB = f.ch.ult === 'shadows' ? '255,95,115' : '255,255,255'; shake = 22;
       for (let i = 0; i < (f.ch.ult === 'shadows' ? 4 : 3); i++) slashLine(victim.x, victim.y - 55, rand(-0.4, 0.4), f.look.slash);
@@ -430,12 +430,18 @@ function windDive(f, foe) {
   if (f.skPh === 10) {
     f.vx = f.face * 820; f.vy = Math.max(f.vy, 1750);
     for (let k = 0; k < 2; k++) addP({ type: 'spark', x: f.x - f.face * rand(10, 40), y: f.y - rand(10, 90), vx: -f.face * rand(120, 260), vy: -rand(300, 520), life: 0.3, max: 0.3, rgb: k ? f.look.slash : '255,255,255', w: 1.8, drag: 3 });
-    if (f.y + f.vy * STEP >= 0 || f.t >= 0.7) {   // 下一帧就着地：在这帧炸开，免得落地判定先把技能收掉
-      f.skPh = 11; f.t = 0; f.y = 0; f.vx = 0; f.vy = 0; f.hitDone = false; f.jumps = 0; f.airDash = 1;
+    let landY = 0, landPlat = -1;
+    const ps = typeof mapPlats === 'function' ? (mapPlats() || []) : [];
+    for (let i = 0; i < ps.length; i++) {
+      const P = ps[i], py = platformY(P, f.x);
+      if (Math.abs(f.x - P.x) <= P.w / 2 && f.y <= py && f.y + f.vy * STEP >= py) { landY = py; landPlat = i; break; }
+    }
+    if (landPlat >= 0 || f.y + f.vy * STEP >= 0 || f.t >= 0.7) {   // 下一帧落到平台或地面：在该层炸开
+      f.skPh = 11; f.t = 0; f.y = landPlat >= 0 ? landY : (f.y + f.vy * STEP >= 0 ? 0 : f.y); f.plat = landPlat; f.vx = 0; f.vy = 0; f.hitDone = false; f.jumps = 0; f.airDash = 1;
       strike(f, foe, { box: [-130, -120, 130, 6], dmg: 24, kb: [240, -640], stun: 0.45, hs: 0.1, launch: true });
-      for (let k = 0; k < 5; k++) spawnProj(f, { kind: 'popcorn', x: clamp(f.x + (k - 2) * 62, WALL, STAGE_W - WALL), y: -12, vx: 0, delay: 0.32 + k * 0.05, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: (clock * 5.1 + k * 1.7) % 6 });
+      for (let k = 0; k < 5; k++) spawnProj(f, { kind: 'popcorn', x: clamp(f.x + (k - 2) * 62, WALL, STAGE_W - WALL), y: f.y - 12, groundY: f.y, vx: 0, delay: 0.32 + k * 0.05, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: (clock * 5.1 + k * 1.7) % 6 });
       shake = Math.max(shake, 14); flashA = Math.max(flashA, 0.22); flashRGB = f.look.slash;
-      ring(f.x, -10, 150, f.look.slash, 0.4); ring(f.x, -10, 95, '255,255,255', 0.3); dust(f.x, 0, 22);
+      ring(f.x, f.y - 10, 150, f.look.slash, 0.4); ring(f.x, f.y - 10, 95, '255,255,255', 0.3); dust(f.x, f.y, 22);
       for (let k = 0; k < 22; k++) { const a = Math.PI + (k / 21) * Math.PI, v = rand(260, 620); addP({ type: 'spark', x: f.x, y: -8, vx: Math.cos(a) * v, vy: Math.sin(a) * v * 0.8, life: 0.45, max: 0.45, rgb: k % 3 ? f.look.slash : '255,245,210', w: 2.6, drag: 2.4 }); }
       SFX.thud(); SFX.poof();
     }
@@ -753,6 +759,10 @@ function updateFighter(f, foe) {
     if (f.notes !== undefined) f.notes = 3;
   }
   if (f.dummy && (f.ctrl && f.ctrl.cfg ? f.ctrl.cfg.autoHeal : true) && f.sinceHit > 2 && f.hp < f.maxHp) f.hp = f.maxHp;
+  if (M.mode === 'train' && !f.dummy && typeof dummyCfg !== 'undefined' && dummyCfg.autoHeal && (f.hp <= 0 || (f.sinceHit > 2.4 && f.hp < f.maxHp))) {
+    f.hp = f.maxHp;
+    if (f.state === 'knockdown' && f.hp >= f.maxHp) f.t = Math.max(f.t, 0.35);
+  }
   if (f.dummy && f.ctrl && (f.ctrl.cfg ? f.ctrl.cfg.infGuard : true)) { f.guard = f.maxGuard || 100; f.guardBroken = false; }
   if (f.dummy && f.ctrl && (f.ctrl.cfg ? f.ctrl.cfg.fixed : f.ctrl.mode === 'fixed')) { f.vx = 0; f.vy = 0; f.y = 0; if (f.homeX === undefined) f.homeX = f.x; f.x = f.homeX; } else if (f.dummy) f.homeX = undefined;
   if (f.ch.fly && f.onGround()) f.flyT = Math.min(f.ch.fly, f.flyT + STEP * 0.9);
@@ -767,11 +777,11 @@ function updateFighter(f, foe) {
   if (f.veilT > 0) f.veilT = f.hp > 0 ? Math.max(0, f.veilT - STEP) : 0;
   if (f.ch.passive === 'drunk') f.drunk = Math.max(0, (f.drunk || 0) - STEP);
   if (f.drinkT > 0) f.drinkT = Math.max(0, f.drinkT - STEP);
-  if (f.jailT > 0) {   // 醉翁亭：关在亭子里，原地挨打
+  if (f.jailT > 0) {   // 醉翁亭：关在亭子里，保持原层高原地挨打
     f.jailT = Math.max(0, f.jailT - STEP);
     if (f.hp <= 0) f.jailT = 0;
     else {
-      f.x = f.jailX; f.y = 0; f.vx = f.vy = 0;
+      f.x = f.jailX; f.y = f.jailY !== undefined ? f.jailY : gndY(f); if (f.jailPlat !== undefined) f.plat = f.jailPlat; f.vx = f.vy = 0;
       if (f.jailT > 0) { f.state = 'hitstun'; f.stun = f.t + f.jailT; f.rooted = true; f.move = null; f.skill = null; f.sp = null; }
       else { f.state = 'hitstun'; f.t = 0; f.stun = 0.12; f.rooted = false; }
     }

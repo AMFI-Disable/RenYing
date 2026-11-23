@@ -442,6 +442,15 @@
       c.skillUnlocks = JSON.parse(JSON.stringify(nextState.skillUnlocks || {}));
     } else if (name === 'skillSet') {
       c.skillLoadout = JSON.parse(JSON.stringify(nextState.skillLoadout || {}));
+    } else if (name === 'fullAuto') {
+      c.badgeEquip = {};
+      c.petEquip = {};
+      for (const h of C.HERO_IDS) {
+        c.badgeEquip[h] = (nextState.badgeEquip && nextState.badgeEquip[h]) || '';
+        c.petEquip[h] = (nextState.petEquip && nextState.petEquip[h]) || '';
+      }
+      c.stances = Object.assign(c.stances || {}, nextState.stances || {});
+      c.skillLoadout = JSON.parse(JSON.stringify(nextState.skillLoadout || {}));
     }
     compatSave(c);
   }
@@ -691,7 +700,7 @@
     const tl = tagLeft(s);
     const dupeP = C.dupePlan(s), dupeCount = dupeP.items.length;
     const upgradeQuote = C.upgradeAllQuote(s), canUpgradeAll = live() && upgradeQuote.count > 0 && PROF.ink >= upgradeQuote.price;
-    return `<div class="ar-sum"><span>饰品 <b>${s.inv.length}</b> 件（无限容量）</span>${dupeCount ? `<span>发现 <b>${dupeCount}</b> 件重复 <button type="button" class="ar-link" data-list-dupes>一键挂牌市场（${dupeCount}件）</button></span>` : ''}${s.lst.length ? `<span>挂在玩家市场 <b>${s.lst.length}</b> 件 <button type="button" class="ar-link" data-gotab="market" data-mkv="mine">去看看</button></span>` : ''}<span>改名标签 <b>${s.tags}</b>${live() ? ` <button type="button" class="ar-link" data-store="tag" ${tl ? '' : 'disabled'}>${tl ? `买一张（${C.STORE[0].cost} 墨锭）` : '本周买满了'}</button>` : ''}</span></div>
+    return `<div class="ar-sum"><span>饰品 <b>${s.inv.length}</b> 件（无限容量）</span>${dupeCount ? `<span>发现 <b>${dupeCount}</b> 件重复 <button type="button" class="ar-link" data-sell-all-dupes>一键出售全部（+${fmt(dupeP.totalGain)} 墨锭）</button> · <button type="button" class="ar-link" data-list-dupes>一键挂牌市场（${dupeCount}件）</button></span>` : ''}${s.lst.length ? `<span>挂在玩家市场 <b>${s.lst.length}</b> 件 <button type="button" class="ar-link" data-gotab="market" data-mkv="mine">去看看</button></span>` : ''}<span>改名标签 <b>${s.tags}</b>${live() ? ` <button type="button" class="ar-link" data-store="tag" ${tl ? '' : 'disabled'}>${tl ? `买一张（${C.STORE[0].cost} 墨锭）` : '本周买满了'}</button>` : ''}</span></div>
       ${upgradeQuote.count ? `<div class="ar-upgrade-all"><div class="ar-upgrade-copy"><b>批量升级为斩数版</b><small>库存中有 ${upgradeQuote.count} 件普通饰品可升级。</small></div><div class="ar-upgrade-price"><small>原价 ${fmt(upgradeQuote.basePrice)} 墨锭 · 省 ${fmt(upgradeQuote.discount)}（20% 折扣）</small><b>${fmt(upgradeQuote.price)} 墨锭</b></div><button type="button" class="go small" data-upgrade-all ${canUpgradeAll ? '' : 'disabled'}>全部升级</button>${live() && PROF.ink < upgradeQuote.price ? '<small class="ar-upgrade-short">墨锭不足</small>' : ''}</div>` : ''}
       ${cases ? `<div class="ar-caserow">${cases}</div>` : ''}
       <div class="ar-filter">
@@ -1261,20 +1270,25 @@
       <h4 class="ar-h">星章兑换 <small>饰品都从普通武器箱里出，神兵、星座武器箱的换不到</small></h4><div class="ar-grid3">${shop}</div>
       <p class="ar-note">对局掉落：每局 ${Math.round(C.cv(CF(), 'dropP') * 100)}% 机会掉一件饰品或武器箱，每周最多 ${C.cv(CF(), 'dropCap')} 次（本周已掉 ${s.drop.n} 次）。</p>`;
   }
-  const BDG = { cat: 'all', state: 'all', sort: 'tier', giftPick: 'flowing' };
+  const BDG = { sub: 'badges', cat: 'all', rarity: 'all', state: 'all', sort: 'tier', page: 1, giftPick: 'flowing', petCat: 'all', petRarity: 'all', petState: 'all', petSort: 'rarity', petPage: 1, heroArch: 'all', heroPage: 1 };
+  const pagerHtml = (kind, page, totalPages, totalItems) => totalPages <= 1 ? '' : `<div class="ar-pager" role="navigation" aria-label="分页"><button type="button" class="ghost small" data-page-${kind}="${Math.max(1, page - 1)}" ${page <= 1 ? 'disabled' : ''}>‹ ${cvT('上一页')}</button><span class="ar-pager-info">${page} / ${totalPages}（${cvT('共')} ${totalItems}）</span><button type="button" class="ghost small" data-page-${kind}="${Math.min(totalPages, page + 1)}" ${page >= totalPages ? 'disabled' : ''}>${cvT('下一页')} ›</button></div>`;
   function pBadges() {
     const s = blankS(), ids = Object.keys(C.BADGES), owned = Object.entries(s.badgeOwned || {}), totalKOs = Object.values(s.heroKOs || {}).reduce((n, x) => n + x, 0);
+    const petIds = Object.keys(C.PETS || {}), petOwned = s.petOwned || {}, ownedPetList = Object.entries(petOwned);
     const tierNames = ['银徽', '金徽', '紫金徽'];
     const tierRank = t => t === 'purpgold' ? 3 : t === 'gold' ? 2 : t === 'silver' ? 1 : 0;
+    const rarityRank = r => r === 'legend' ? 3 : r === 'epic' ? 2 : 1;
     const catNames = C.BADGE_CATS || { all: '全部', offense: '进攻', defense: '防御', mobility: '身法', mastery: '绝技', team: '团队' };
-    const effectLine = id => {
-      const spec = window.COMBAT_BADGES && window.COMBAT_BADGES[id];
-      return spec ? `<div class="ar-badge-effect">${tierNames.map((name, i) => `<small>${cvT(name)}：${cvT(spec.tiers[i])}</small>`).join('')}</div>` : '';
-    };
-    const previewButton = (id, tier) => `<button type="button" class="ghost small" data-badge-preview="${id}" data-badge-tier="${tier}">${cvT('训练场试招')}</button>`;
+    const rarNames = C.BADGE_RARITIES || { all: '全部品阶', legend: '绝世', epic: '奇珍', rare: '精良' };
+    const petCatNames = C.PET_CATS || { all: '全部', attack: '攻伐', defense: '护御', support: '辅助', control: '控场' };
+    const petRarNames = C.PET_RARITIES || { all: '全部品阶', legend: '神兽', epic: '灵兽', rare: '珍兽' };
+    const petTierName = t => t === 'immortal' ? '仙阶' : t === 'spirit' ? '灵阶' : '初阶';
+    const petTierRank = t => t === 'immortal' ? 3 : t === 'spirit' ? 2 : t === 'basic' ? 1 : 0;
+    const previewButton = (id, tier) => `<button type="button" class="ghost small" data-badge-preview="${id}" data-badge-tier="${tier}">${cvT('试招')}</button>`;
     const badgeCard = (id, tier, giftCard = false) => {
       const b = C.BADGES[id], currentName = tier ? tierNames[tier === 'gold' ? 1 : tier === 'purpgold' ? 2 : 0] : '';
       const trigger = (window.COMBAT_BADGES && window.COMBAT_BADGES[id] && window.COMBAT_BADGES[id].trigger) || b.effect;
+      const rarTag = `<span class="rar-pill rar-${b.rarity || 'rare'}">${cvT(rarNames[b.rarity] || '精良')}</span>`;
       const catTag = `<span class="badge-cat-tag">${cvT(catNames[b.cat] || '武学')}</span>`;
       const tierCls = tier === 'purpgold' ? ' tier-pg' : tier === 'gold' ? ' tier-gd' : tier === 'silver' ? ' tier-sv' : ' tier-lk';
       const up = (!giftCard && tier) ? C.BADGE_UPGRADE[tier] : null;
@@ -1283,70 +1297,102 @@
       const actionBtn = giftCard
         ? `<button type="button" class="go small" data-badge-gift="${id}" ${live() ? '' : 'disabled'}>${cvT('领取银徽')}</button>`
         : !tier
-          ? `<button type="button" class="go small" data-badge-unlock="${id}" ${live() ? '' : 'disabled'}>${cvT('解锁银徽')} (${C.BADGE_UNLOCK_SIGILS}${cvT('碎片')}/${C.BADGE_UNLOCK_INK}${cvT('墨锭')})</button>`
+          ? `<button type="button" class="go small" data-badge-unlock="${id}" ${live() ? '' : 'disabled'}>${cvT('解锁')} (${C.BADGE_UNLOCK_SIGILS}${cvT('碎')}/${C.BADGE_UNLOCK_INK}${cvT('墨')})</button>`
           : up
             ? `${requirements}<button type="button" class="go small" data-badge-upgrade="${id}" ${live() && ready ? '' : 'disabled'}>${cvT('升阶')} ${cvT(up.to === 'gold' ? '金徽' : '紫金徽')}</button>`
             : `<small style="color:#d9a6ff;font-weight:700">✦ ${cvT('紫金圆满')}</small>`;
       const holder = Object.entries(s.badgeEquip || {}).find(([, bid]) => bid === id);
       const holderTag = holder ? `<small style="color:#7fe0b0">${cvT('已佩戴')}: ${escapeHTML((CHARS.find(c => c.id === holder[0]) || { name: holder[0] }).name)}</small>` : '';
-      return `<article class="ar-card ar-badge-card${tierCls}"><div class="row" style="justify-content:space-between;align-items:center;gap:6px"><b>${cvT(b.name)}${currentName ? ` · ${cvT(currentName)}` : ''}</b>${catTag}</div><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT(trigger)}${b.ach ? ` · 🏆 ${cvT(b.ach)}` : ''}</small>${holderTag}${effectLine(id)}<div class="ar-badge-actions">${actionBtn}${previewButton(id, tier || 'silver')}</div></article>`;
+      return `<article class="ar-card ar-badge-card compact${tierCls}"><div class="row" style="justify-content:space-between;align-items:center;gap:4px"><b>${cvT(b.name)}${currentName ? ` · ${cvT(currentName)}` : ''}</b><span class="row" style="gap:4px;margin:0">${rarTag}${catTag}</span></div><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT(trigger)}</small>${holderTag}<div class="ar-badge-actions">${actionBtn}${previewButton(id, tier || 'silver')}</div></article>`;
     };
     const appBanner = !s.appreciation2026 ? `<div class="ar-badge-gift" style="border-color:rgba(217,166,255,.55);background:linear-gradient(135deg,rgba(82,36,120,.28),rgba(233,196,106,.14))"><div><h3 style="color:#f4d88a">🎁 ${cvT('感恩盛典 · 全员豪礼 + 免费紫金徽记')}</h3><p>${cvT('立即领取：50,000 墨锭 + 全系列武器箱各 10 个 + 50 徽记碎片 + 全部灵宠与招式流派 + 任选 1 枚最高阶「紫金徽记」！')}</p></div><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><select id="arAppBadgePick" style="max-width:260px">${ids.map(id => `<option value="${id}" ${BDG.giftPick === id ? 'selected' : ''}>✦ ${cvT(C.BADGES[id].name)}（${cvT(catNames[C.BADGES[id].cat] || '')}）</option>`).join('')}</select><button type="button" class="go" data-claim-appreciation="1" ${live() ? '' : 'disabled'}>🎁 ${cvT('一键领取全部豪礼与紫金徽记')}</button></div></div>` : '';
     const gift = !s.badgeGift && s.appreciation2026 ? `<div class="ar-badge-gift"><div><h3>${cvT('初入武学 · 银徽赠礼')}</h3><p>${cvT('任选一枚银徽体验武学效果。徽记绑定账号，可在不同侠客之间调换。')}</p></div><div class="ar-grid3">${ids.slice(0, 6).map(id => badgeCard(id, 'silver', true)).join('')}</div></div>` : '';
-    const filteredIds = ids.filter(id => {
-      const b = C.BADGES[id], t = s.badgeOwned[id] || '';
-      if (BDG.cat !== 'all' && b.cat !== BDG.cat) return false;
-      if (BDG.state === 'owned' && !t) return false;
-      if (BDG.state === 'unowned' && t) return false;
-      if (BDG.state === 'purpgold' && t !== 'purpgold') return false;
-      if (BDG.state === 'gold' && t !== 'gold') return false;
-      if (BDG.state === 'silver' && t !== 'silver') return false;
-      return true;
-    }).sort((a, b) => {
-      if (BDG.sort === 'name') return C.BADGES[a].name.localeCompare(C.BADGES[b].name, 'zh-CN');
-      if (BDG.sort === 'cat') return (C.BADGES[a].cat || '').localeCompare(C.BADGES[b].cat || '') || tierRank(s.badgeOwned[b]) - tierRank(s.badgeOwned[a]);
-      return tierRank(s.badgeOwned[b]) - tierRank(s.badgeOwned[a]) || a.localeCompare(b);
-    });
-    const catBar = `<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center;margin:10px 0">${Object.entries(catNames).map(([k, lbl]) => `<button type="button" class="${BDG.cat === k ? 'go' : 'ghost'} small" data-bdg-cat="${k}">${cvT(lbl)}</button>`).join('')}<select id="arBdgState" style="width:auto;min-width:110px"><option value="all" ${BDG.state === 'all' ? 'selected' : ''}>${cvT('全部状态')}</option><option value="owned" ${BDG.state === 'owned' ? 'selected' : ''}>${cvT('已拥有')} (${owned.length})</option><option value="unowned" ${BDG.state === 'unowned' ? 'selected' : ''}>${cvT('未拥有')} (${ids.length - owned.length})</option><option value="purpgold" ${BDG.state === 'purpgold' ? 'selected' : ''}>${cvT('紫金徽')}</option><option value="gold" ${BDG.state === 'gold' ? 'selected' : ''}>${cvT('金徽')}</option><option value="silver" ${BDG.state === 'silver' ? 'selected' : ''}>${cvT('银徽')}</option></select><select id="arBdgSort" style="width:auto;min-width:110px"><option value="tier" ${BDG.sort === 'tier' ? 'selected' : ''}>${cvT('阶位优先')}</option><option value="cat" ${BDG.sort === 'cat' ? 'selected' : ''}>${cvT('按类别')}</option><option value="name" ${BDG.sort === 'name' ? 'selected' : ''}>${cvT('按名称')}</option></select><button type="button" class="go small" data-badge-auto="1" ${live() && owned.length ? '' : 'disabled'}>⚡ ${cvT('一键自动装配')}</button></div>`;
-    const badgeGallery = filteredIds.length ? `<div class="ar-grid3">${filteredIds.map(id => badgeCard(id, s.badgeOwned[id] || '')).join('')}</div>` : `<p class="ar-note">${cvT('当前筛选条件下没有徽记')}</p>`;
-    const petIds = Object.keys(C.PETS || {});
-    const petOwned = s.petOwned || {};
-    const petTierName = t => t === 'immortal' ? '仙阶' : t === 'spirit' ? '灵阶' : '初阶';
-    const petGrid = `<h4 class="ar-h">${cvT('水墨灵宠 · 随行助战（V 键发动）')}</h4><div class="ar-grid3">${petIds.map(id => {
-      const p = C.PETS[id], tier = petOwned[id], up = tier && C.PET_UPGRADE[tier];
-      const actBtn = !tier
-        ? `<button type="button" class="go small" data-pet-buy="${id}" ${live() ? '' : 'disabled'}>${cvT('收养灵宠')} · ${C.PET_BUY_COST}${cvT('墨锭')}</button>`
-        : up
-          ? `<button type="button" class="go small" data-pet-up="${id}" ${live() && totalKOs >= up.kos ? '' : 'disabled'}>${cvT('进阶')}${cvT(petTierName(up.to))} (${up.ink}${cvT('墨锭')} · ${up.kos}${cvT('斩')})</button>`
-          : `<small>${cvT('已达仙阶圆满')}</small>`;
-      return `<article class="ar-card ar-badge-card"><b style="color:rgb(${p.rgb})">${cvT(p.name)}${tier ? ` · ${cvT(petTierName(tier))}` : ''}</b><p>${cvT(p.passive)} · ${cvT(p.active)}</p><div class="ar-badge-actions">${actBtn}</div></article>`;
-    }).join('')}</div>`;
-    const ownedPetList = Object.entries(petOwned);
-    const heroes = CHARS.map(ch => {
-      const kos = s.heroKOs[ch.id] || 0, unlocked = kos >= 20, stance = s.stances[ch.id] === 1 ? 1 : 0, equipped = s.badgeEquip[ch.id] || '';
-      const eqPet = (s.petEquip && s.petEquip[ch.id]) || '';
-      const su = (s.skillUnlocks && s.skillUnlocks[ch.id]) || {};
-      const sl = (s.skillLoadout && s.skillLoadout[ch.id]) || {};
-      const options = [`<option value="">${cvT('不装备')}</option>`, ...owned.map(([id]) => `<option value="${id}" ${equipped === id ? 'selected' : ''}>${cvT(C.BADGES[id].name)} · ${cvT(s.badgeOwned[id] === 'silver' ? '银徽' : s.badgeOwned[id] === 'gold' ? '金徽' : '紫金徽')}</option>`)].join('');
-      const petOpts = [`<option value="">${cvT('无灵宠')}</option>`, ...ownedPetList.map(([id, t]) => `<option value="${id}" ${eqPet === id ? 'selected' : ''}>${cvT(C.PETS[id].name)} · ${cvT(petTierName(t))}</option>`)].join('');
-      const stanceTitle = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(window.HERO_STANCES[ch.id].name) : cvT('第二架势');
-      const stanceDesc = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(window.HERO_STANCES[ch.id].desc) : '';
-      const skillRows = ['q', 'r', 'e'].map(slot => {
-        const curV = sl[slot] || 'std', unl = su[slot] || [];
-        return `<div class="row" style="gap:4px;margin-top:4px;align-items:center"><small style="min-width:20px;font-weight:700">${slot.toUpperCase()}</small>${['std', 'swift', 'heavy'].map(v => {
-          const isUnl = v === 'std' || unl.includes(v), active = curV === v;
-          const lbl = cvT(C.SKILL_VARIANTS[v].name);
-          return isUnl
-            ? `<button type="button" class="${active ? 'go' : 'ghost'} small" data-skill-set="${ch.id}:${slot}:${v}" ${live() ? '' : 'disabled'}>${lbl}</button>`
-            : `<button type="button" class="ghost small" data-skill-unlock="${ch.id}:${slot}:${v}" ${live() ? '' : 'disabled'}>🔒${lbl}</button>`;
-        }).join('')}</div>`;
+    const subTabs = `<div class="ar-seg ar-subtabs" role="tablist"><button type="button" data-bdg-sub="badges" class="${BDG.sub === 'badges' ? 'sel' : ''}">${cvT('武学徽记')} (${owned.length}/${ids.length})</button><button type="button" data-bdg-sub="pets" class="${BDG.sub === 'pets' ? 'sel' : ''}">${cvT('水墨灵宠')} (${ownedPetList.length}/${petIds.length})</button><button type="button" data-bdg-sub="loadouts" class="${BDG.sub === 'loadouts' ? 'sel' : ''}">${cvT('侠客配装')} (${CHARS.length})</button><button type="button" class="go small" data-full-auto="1" ${live() ? '' : 'disabled'} style="margin-left:auto">⚡ FULL AUTO</button></div>`;
+    let bodyHtml = '';
+    if (BDG.sub === 'badges') {
+      const filteredIds = ids.filter(id => {
+        const b = C.BADGES[id], t = s.badgeOwned[id] || '';
+        if (BDG.cat !== 'all' && b.cat !== BDG.cat) return false;
+        if (BDG.rarity !== 'all' && (b.rarity || 'rare') !== BDG.rarity) return false;
+        if (BDG.state === 'owned' && !t) return false;
+        if (BDG.state === 'unowned' && t) return false;
+        if (BDG.state === 'purpgold' && t !== 'purpgold') return false;
+        if (BDG.state === 'gold' && t !== 'gold') return false;
+        if (BDG.state === 'silver' && t !== 'silver') return false;
+        return true;
+      }).sort((a, b) => {
+        if (BDG.sort === 'name') return C.BADGES[a].name.localeCompare(C.BADGES[b].name, 'zh-CN');
+        if (BDG.sort === 'rarity') return rarityRank(C.BADGES[b].rarity) - rarityRank(C.BADGES[a].rarity) || tierRank(s.badgeOwned[b]) - tierRank(s.badgeOwned[a]);
+        if (BDG.sort === 'cat') return (C.BADGES[a].cat || '').localeCompare(C.BADGES[b].cat || '') || tierRank(s.badgeOwned[b]) - tierRank(s.badgeOwned[a]);
+        return tierRank(s.badgeOwned[b]) - tierRank(s.badgeOwned[a]) || rarityRank(C.BADGES[b].rarity) - rarityRank(C.BADGES[a].rarity) || a.localeCompare(b);
+      });
+      const perPage = 12, totalPages = Math.max(1, Math.ceil(filteredIds.length / perPage));
+      BDG.page = Math.max(1, Math.min(totalPages, BDG.page));
+      const pageIds = filteredIds.slice((BDG.page - 1) * perPage, BDG.page * perPage);
+      const catBar = `<div class="ar-filter-bar">${Object.entries(catNames).map(([k, lbl]) => `<button type="button" class="${BDG.cat === k ? 'go' : 'ghost'} small" data-bdg-cat="${k}">${cvT(lbl)}</button>`).join('')}<select id="arBdgRarity" class="ar-sel">${Object.entries(rarNames).map(([k, lbl]) => `<option value="${k}" ${BDG.rarity === k ? 'selected' : ''}>${cvT(lbl)}</option>`).join('')}</select><select id="arBdgState" class="ar-sel"><option value="all" ${BDG.state === 'all' ? 'selected' : ''}>${cvT('全部状态')}</option><option value="owned" ${BDG.state === 'owned' ? 'selected' : ''}>${cvT('已拥有')} (${owned.length})</option><option value="unowned" ${BDG.state === 'unowned' ? 'selected' : ''}>${cvT('未拥有')} (${ids.length - owned.length})</option><option value="purpgold" ${BDG.state === 'purpgold' ? 'selected' : ''}>${cvT('紫金徽')}</option><option value="gold" ${BDG.state === 'gold' ? 'selected' : ''}>${cvT('金徽')}</option><option value="silver" ${BDG.state === 'silver' ? 'selected' : ''}>${cvT('银徽')}</option></select><select id="arBdgSort" class="ar-sel"><option value="tier" ${BDG.sort === 'tier' ? 'selected' : ''}>${cvT('阶位优先')}</option><option value="rarity" ${BDG.sort === 'rarity' ? 'selected' : ''}>${cvT('品阶优先')}</option><option value="cat" ${BDG.sort === 'cat' ? 'selected' : ''}>${cvT('按类别')}</option><option value="name" ${BDG.sort === 'name' ? 'selected' : ''}>${cvT('按名称')}</option></select><button type="button" class="go small" data-badge-auto="1" ${live() && owned.length ? '' : 'disabled'}>⚡ ${cvT('自动装配徽记')}</button></div>`;
+      bodyHtml = `${catBar}${pageIds.length ? `<div class="ar-grid3">${pageIds.map(id => badgeCard(id, s.badgeOwned[id] || '')).join('')}</div>` : `<p class="ar-note">${cvT('当前筛选条件下没有徽记')}</p>`}${pagerHtml('bdg', BDG.page, totalPages, filteredIds.length)}`;
+    } else if (BDG.sub === 'pets') {
+      const filteredPets = petIds.filter(id => {
+        const p = C.PETS[id], t = petOwned[id] || '';
+        if (BDG.petCat !== 'all' && p.cat !== BDG.petCat) return false;
+        if (BDG.petRarity !== 'all' && (p.rarity || 'rare') !== BDG.petRarity) return false;
+        if (BDG.petState === 'owned' && !t) return false;
+        if (BDG.petState === 'unowned' && t) return false;
+        return true;
+      }).sort((a, b) => {
+        if (BDG.petSort === 'name') return C.PETS[a].name.localeCompare(C.PETS[b].name, 'zh-CN');
+        if (BDG.petSort === 'tier') return petTierRank(petOwned[b]) - petTierRank(petOwned[a]) || rarityRank(C.PETS[b].rarity) - rarityRank(C.PETS[a].rarity);
+        return rarityRank(C.PETS[b].rarity) - rarityRank(C.PETS[a].rarity) || petTierRank(petOwned[b]) - petTierRank(petOwned[a]) || a.localeCompare(b);
+      });
+      const perPage = 8, totalPages = Math.max(1, Math.ceil(filteredPets.length / perPage));
+      BDG.petPage = Math.max(1, Math.min(totalPages, BDG.petPage));
+      const pagePets = filteredPets.slice((BDG.petPage - 1) * perPage, BDG.petPage * perPage);
+      const petBar = `<div class="ar-filter-bar">${Object.entries(petCatNames).map(([k, lbl]) => `<button type="button" class="${BDG.petCat === k ? 'go' : 'ghost'} small" data-pet-cat="${k}">${cvT(lbl)}</button>`).join('')}<select id="arPetRarity" class="ar-sel">${Object.entries(petRarNames).map(([k, lbl]) => `<option value="${k}" ${BDG.petRarity === k ? 'selected' : ''}>${cvT(lbl)}</option>`).join('')}</select><select id="arPetState" class="ar-sel"><option value="all" ${BDG.petState === 'all' ? 'selected' : ''}>${cvT('全部状态')}</option><option value="owned" ${BDG.petState === 'owned' ? 'selected' : ''}>${cvT('已收养')} (${ownedPetList.length})</option><option value="unowned" ${BDG.petState === 'unowned' ? 'selected' : ''}>${cvT('未收养')} (${petIds.length - ownedPetList.length})</option></select><select id="arPetSort" class="ar-sel"><option value="rarity" ${BDG.petSort === 'rarity' ? 'selected' : ''}>${cvT('品阶优先')}</option><option value="tier" ${BDG.petSort === 'tier' ? 'selected' : ''}>${cvT('养成优先')}</option><option value="name" ${BDG.petSort === 'name' ? 'selected' : ''}>${cvT('按名称')}</option></select></div>`;
+      const cards = pagePets.map(id => {
+        const p = C.PETS[id], tier = petOwned[id], up = tier && C.PET_UPGRADE[tier];
+        const rarTag = `<span class="rar-pill rar-${p.rarity || 'rare'}">${cvT(petRarNames[p.rarity] || '珍兽')}</span>`;
+        const catTag = `<span class="badge-cat-tag">${cvT(petCatNames[p.cat] || '灵宠')}</span>`;
+        const actBtn = !tier
+          ? `<button type="button" class="go small" data-pet-buy="${id}" ${live() ? '' : 'disabled'}>${cvT('收养')} · ${C.PET_BUY_COST}${cvT('墨')}</button>`
+          : up
+            ? `<button type="button" class="go small" data-pet-up="${id}" ${live() && totalKOs >= up.kos ? '' : 'disabled'}>${cvT('进阶')}${cvT(petTierName(up.to))} (${up.ink}${cvT('墨')} · ${up.kos}${cvT('斩')})</button>`
+            : `<small style="color:#d9a6ff;font-weight:700">✦ ${cvT('仙阶圆满')}</small>`;
+        return `<article class="ar-card ar-badge-card compact" style="border-color:rgba(${p.rgb},.42)"><div class="row" style="justify-content:space-between;align-items:center;gap:4px"><b style="color:rgb(${p.rgb})">${cvT(p.name)}${tier ? ` · ${cvT(petTierName(tier))}` : ''}</b><span class="row" style="gap:4px;margin:0">${rarTag}${catTag}</span></div><p><b>${cvT('被动')}</b>：${cvT(p.passive)}</p><small><b>${cvT('主动 V')}</b>：${cvT(p.active)}</small><div class="ar-badge-actions">${actBtn}</div></article>`;
       }).join('');
-      return `<article class="ar-card ar-loadout"><b>${escapeHTML(ch.name)}</b><small>${unlocked ? `${kos} / 20 ${cvT('斩')}` : `${kos} / 20 ${cvT('斩')} · ${cvT('未解锁')}`}</small><p>${stanceDesc}</p><div class="row"><button type="button" class="${stance ? 'ghost' : 'go'} small" data-stance="${ch.id}" data-value="0" ${live() ? '' : 'disabled'}>${cvT('本式')}</button><button type="button" class="${stance ? 'go' : 'ghost'} small" data-stance="${ch.id}" data-value="1" ${live() && unlocked ? '' : 'disabled'}>${stanceTitle}</button></div><div class="row"><select data-badge-choice="${ch.id}" aria-label="${escapeHTML(cvT(ch.name))} ${cvT('徽记')}">${options}</select><button type="button" class="go small" data-badge-set="${ch.id}" ${live() ? '' : 'disabled'}>${cvT('装备')}</button></div><div class="row"><select data-pet-choice="${ch.id}" aria-label="${escapeHTML(cvT(ch.name))} ${cvT('灵宠')}">${petOpts}</select><button type="button" class="go small" data-pet-set="${ch.id}" ${live() ? '' : 'disabled'}>${cvT('携宠')}</button></div><div style="margin-top:6px"><small>${cvT('招式自选流派')}</small>${skillRows}</div></article>`;
-    }).join('');
+      bodyHtml = `${petBar}${cards ? `<div class="ar-grid3">${cards}</div>` : `<p class="ar-note">${cvT('当前筛选条件下没有灵宠')}</p>`}${pagerHtml('pet', BDG.petPage, totalPages, filteredPets.length)}`;
+    } else {
+      const archList = [['all', '全部'], ['swordsman', '剑客'], ['assassin', '刺客'], ['tank', '重甲'], ['fighter', '格斗'], ['support', '辅助'], ['controller', '控场']];
+      const filteredHeroes = CHARS.filter(ch => BDG.heroArch === 'all' || (typeof heroArchetypeOf === 'function' ? heroArchetypeOf(ch) === BDG.heroArch : true));
+      const perPage = 12, totalPages = Math.max(1, Math.ceil(filteredHeroes.length / perPage));
+      BDG.heroPage = Math.max(1, Math.min(totalPages, BDG.heroPage));
+      const pageHeroes = filteredHeroes.slice((BDG.heroPage - 1) * perPage, BDG.heroPage * perPage);
+      const heroBar = `<div class="ar-filter-bar">${archList.map(([k, lbl]) => `<button type="button" class="${BDG.heroArch === k ? 'go' : 'ghost'} small" data-hero-arch="${k}">${cvT(lbl)}</button>`).join('')}</div>`;
+      const heroes = pageHeroes.map(ch => {
+        const kos = s.heroKOs[ch.id] || 0, unlocked = kos >= 20, stance = s.stances[ch.id] === 1 ? 1 : 0, equipped = s.badgeEquip[ch.id] || '';
+        const eqPet = (s.petEquip && s.petEquip[ch.id]) || '';
+        const su = (s.skillUnlocks && s.skillUnlocks[ch.id]) || {};
+        const sl = (s.skillLoadout && s.skillLoadout[ch.id]) || {};
+        const options = [`<option value="">${cvT('不装备')}</option>`, ...owned.map(([id]) => `<option value="${id}" ${equipped === id ? 'selected' : ''}>${cvT(C.BADGES[id].name)} · ${cvT(s.badgeOwned[id] === 'silver' ? '银徽' : s.badgeOwned[id] === 'gold' ? '金徽' : '紫金徽')}</option>`)].join('');
+        const petOpts = [`<option value="">${cvT('无灵宠')}</option>`, ...ownedPetList.map(([id, t]) => `<option value="${id}" ${eqPet === id ? 'selected' : ''}>${cvT(C.PETS[id].name)} · ${cvT(petTierName(t))}</option>`)].join('');
+        const stanceTitle = window.HERO_STANCES && window.HERO_STANCES[ch.id] ? cvT(window.HERO_STANCES[ch.id].name) : cvT('第二架势');
+        const skillRows = ['q', 'r', 'e'].map(slot => {
+          const curV = sl[slot] || 'std', unl = su[slot] || [];
+          return `<div class="row" style="gap:4px;margin-top:4px;align-items:center"><small style="min-width:18px;font-weight:700">${slot.toUpperCase()}</small>${['std', 'swift', 'heavy'].map(v => {
+            const isUnl = v === 'std' || unl.includes(v), active = curV === v;
+            const lbl = cvT(C.SKILL_VARIANTS[v].name);
+            return isUnl
+              ? `<button type="button" class="${active ? 'go' : 'ghost'} small" data-skill-set="${ch.id}:${slot}:${v}" ${live() ? '' : 'disabled'}>${lbl}</button>`
+              : `<button type="button" class="ghost small" data-skill-unlock="${ch.id}:${slot}:${v}" ${live() ? '' : 'disabled'}>🔒${lbl}</button>`;
+          }).join('')}</div>`;
+        }).join('');
+        return `<article class="ar-card ar-loadout compact"><div class="row" style="justify-content:space-between;align-items:center"><b>${escapeHTML(ch.name)}</b><small>${unlocked ? `${kos} ${cvT('斩')}` : `${kos}/20 ${cvT('斩')}`}</small></div><div class="row"><button type="button" class="${stance ? 'ghost' : 'go'} small" data-stance="${ch.id}" data-value="0" ${live() ? '' : 'disabled'}>${cvT('本式')}</button><button type="button" class="${stance ? 'go' : 'ghost'} small" data-stance="${ch.id}" data-value="1" ${live() && unlocked ? '' : 'disabled'}>${stanceTitle}</button></div><div class="row"><select data-badge-choice="${ch.id}" aria-label="${escapeHTML(cvT(ch.name))} ${cvT('徽记')}">${options}</select><button type="button" class="go small" data-badge-set="${ch.id}" ${live() ? '' : 'disabled'}>${cvT('装备')}</button></div><div class="row"><select data-pet-choice="${ch.id}" aria-label="${escapeHTML(cvT(ch.name))} ${cvT('灵宠')}">${petOpts}</select><button type="button" class="go small" data-pet-set="${ch.id}" ${live() ? '' : 'disabled'}>${cvT('携宠')}</button></div><div style="margin-top:4px">${skillRows}</div></article>`;
+      }).join('');
+      bodyHtml = `${heroBar}<div class="ar-grid3">${heroes}</div>${pagerHtml('hero', BDG.heroPage, totalPages, filteredHeroes.length)}`;
+    }
     const shardProgress = totalKOs % C.BADGE_SIGIL_KOS;
     const shardBar = `<div class="ar-badge-progress"><label for="arBadgeShardProgress">${cvT('距离下一枚徽记碎片')}</label><progress id="arBadgeShardProgress" max="${C.BADGE_SIGIL_KOS}" value="${shardProgress}"></progress><small>${shardProgress} / ${C.BADGE_SIGIL_KOS} · ${C.BADGE_SIGIL_KOS - shardProgress} ${cvT('斩后获得')}</small></div>`;
-    return `<div class="ar-ophead"><div><span class="ar-k">${cvT('武学与徽记')}</span><h3>${cvT('徽记碎片')} <b>${s.badgeSigils || 0}</b> · ${cvT('累计斩获')} <b>${totalKOs}</b> · ${cvT('已收集徽记')} <b>${owned.length}/${ids.length}</b></h3>${shardBar}</div><p class="ar-note">${cvT('每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。')}</p></div>
-      ${appBanner}${gift}<h4 class="ar-h">${cvT('武学徽记图鉴与装配')}</h4>${catBar}${badgeGallery}${petGrid}<h4 class="ar-h">${cvT('侠客架势与装备')}</h4><div class="ar-grid3">${heroes}</div>`;
+    return `<div class="ar-ophead"><div><span class="ar-k">${cvT('武学与灵宠')}</span><h3>${cvT('徽记碎片')} <b>${s.badgeSigils || 0}</b> · ${cvT('累计斩获')} <b>${totalKOs}</b> · ${cvT('徽记')} <b>${owned.length}/${ids.length}</b> · ${cvT('灵宠')} <b>${ownedPetList.length}/${petIds.length}</b></h3>${shardBar}</div><p class="ar-note">${cvT('每累计斩获 40 次可得 1 枚徽记碎片。点击右上角 FULL AUTO 可一键全阵容最优装配。')}</p></div>
+      ${appBanner}${gift}${subTabs}${bodyHtml}`;
   }
   function covPick() {
     const list = C.ofTierReg('cov');   // 神兵武器箱的不能拿星章换
@@ -1372,7 +1418,9 @@
       else if (id === 'arCodexCol') CODEX.col = v; else if (id === 'arCodexChar') CODEX.char = v; else if (id === 'arCodexTier') CODEX.tier = v; else if (id === 'arCodexState') CODEX.state = v; else if (id === 'arCodexSort') CODEX.sort = v;
       else if (id === 'arMkTier') MK.tier = v; else if (id === 'arMkChar') MK.char = v; else if (id === 'arMkSort') MK.sort = v; else if (id === 'arMkOnly') MK.only = e.target.checked;
       else if (id === 'arMyTier') { MK.mtier = v; MK.mshow = 60; } else if (id === 'arMyChar') { MK.mchar = v; MK.mshow = 60; } else if (id === 'arMySort') { MK.msort = v; MK.mshow = 60; }
-      else if (id === 'arBdgState') BDG.state = v; else if (id === 'arBdgSort') BDG.sort = v; else if (id === 'arAppBadgePick') { BDG.giftPick = v; return; } else return;
+      else if (id === 'arBdgRarity') { BDG.rarity = v; BDG.page = 1; } else if (id === 'arBdgState') { BDG.state = v; BDG.page = 1; } else if (id === 'arBdgSort') { BDG.sort = v; BDG.page = 1; }
+      else if (id === 'arPetRarity') { BDG.petRarity = v; BDG.petPage = 1; } else if (id === 'arPetState') { BDG.petState = v; BDG.petPage = 1; } else if (id === 'arPetSort') { BDG.petSort = v; BDG.petPage = 1; }
+      else if (id === 'arAppBadgePick') { BDG.giftPick = v; return; } else return;
       render();
     });
     main.addEventListener('keydown', e => { if (e.key === 'Escape') return; e.stopPropagation(); });   // 打字时别触发游戏的快捷键
@@ -1383,7 +1431,14 @@
       const b = e.target.closest('button'); if (!b || b.disabled) return;
       const d = b.dataset;
       if (d.gotab) { TAB = d.gotab; if (d.mkv) MK.view = d.mkv; render(); return; }
-      if (d.bdgCat) { BDG.cat = d.bdgCat; render(); return; }
+      if (d.bdgSub) { BDG.sub = d.bdgSub; render(); return; }
+      if (d.bdgCat) { BDG.cat = d.bdgCat; BDG.page = 1; render(); return; }
+      if (d.pageBdg) { BDG.page = Math.max(1, +d.pageBdg || 1); render(); return; }
+      if (d.petCat) { BDG.petCat = d.petCat; BDG.petPage = 1; render(); return; }
+      if (d.pagePet) { BDG.petPage = Math.max(1, +d.pagePet || 1); render(); return; }
+      if (d.heroArch) { BDG.heroArch = d.heroArch; BDG.heroPage = 1; render(); return; }
+      if (d.pageHero) { BDG.heroPage = Math.max(1, +d.pageHero || 1); render(); return; }
+      if (d.fullAuto) { await window.armoryFullAuto(); return; }
       if (d.claimAppreciation) {
         const pick = main.querySelector('#arAppBadgePick');
         const badgeId = (pick && pick.value) || BDG.giftPick || 'flowing';
@@ -1431,6 +1486,7 @@
       }
       if (d.store) { confirmBox('买改名标签', `花 ${ink(C.STORE[0].cost)} 买一张改名标签？每周最多买 ${C.STORE[0].lim} 张。`, '购买', buyTag); return; }
       if (d.upgradeAll !== undefined) { upgradeAllGo(); return; }
+      if (d.sellAllDupes !== undefined) { sellAllDupesGo(); return; }
       if (d.sellDupes !== undefined || d.listDupes !== undefined) { listDupesGo(); return; }
       if (b.id === 'arGift') { const r = await act('gift', {}); if (r && r.ok) { SFX.gong && SFX.gong(); toast('新手礼：初刃武器箱 +1，货郎 +1'); render(); } return; }
       if (b.id === 'arTradeGo') { tradeGo(); return; }
@@ -1438,12 +1494,22 @@
       if (b.id === 'arSupGo') { const r = await act('supply', { picks: SUP.pick }); if (r && r.ok) { SUP.pick = []; SFX.gong && SFX.gong(); const it = r.got.find(x => x.t === 'item'); if (it) reveal(it.item); else toast('补给到手'); render(); } return; }
     });
   }
+  function sellAllDupesGo() {
+    const s = ST, plan = C.dupePlan(s);
+    if (!plan.items.length) { msg('没有重复的饰品可出售'); return; }
+    confirmBox('一键出售全部重复饰品', `将为您一次性出售全部 <b>${plan.items.length}</b> 件重复饰品（无数量上限），共得 <b>${fmt(plan.totalGain)}</b> 墨锭。<br><small>系统将严格保留每款饰品中斩数最高（或当前穿着）的一件。</small>`, '确认出售', async () => {
+      const r = await act('sellDupes', {});
+      if (r && r.ok) {
+        SFX.wood && SFX.wood();
+        toast(`已出售全部 ${r.count} 件重复饰品，获得 ${fmt(r.totalGain)} 墨锭！`);
+        render();
+      }
+    });
+  }
   function listDupesGo() {
     const s = ST, plan = C.dupePlan(s);
     if (!plan.items.length) { msg('没有重复的饰品可挂牌'); return; }
-    const willList = Math.min(plan.items.length, C.LIST_BATCH);   // 挂单不设上限，只是一次最多挂 LIST_BATCH 件
-    const extra = plan.items.length > willList ? `<br><small style="color:#e9c46a">一次最多挂 ${C.LIST_BATCH} 件，这次先挂前 ${willList} 件，剩下的再点一次。</small>` : '';
-    confirmBox('自动挂牌市场', `将为您自动把 <b>${willList}</b> 件重复饰品挂到玩家市场出售。<br><small>系统将为您严格保留每款饰品中斩数最高（或当前穿着）的一件。</small>${extra}`, '确认挂牌', async () => {
+    confirmBox('自动挂牌市场', `将为您自动把全部 <b>${plan.items.length}</b> 件重复饰品挂到玩家市场出售（无 50 件上限）。<br><small>系统将为您严格保留每款饰品中斩数最高（或当前穿着）的一件。</small>`, '确认挂牌', async () => {
       const r = await act('listDupes', {});
       if (r && r.ok) {
         SFX.wood && SFX.wood();
@@ -1530,6 +1596,25 @@
     const r = await act('badgeAutoAssign', {});
     if (r && r.ok) {
       toast(`⚡ 已为 ${r.assigned} 位侠客智能装配最优徽记`);
+      if ($id('armory') && $id('armory').classList.contains('on')) render();
+    }
+    return r;
+  };
+  window.armoryFullAuto = async function () {
+    if (!ST && !PROF.guest) await connect(false);
+    if (!live()) return { err: '请先登录账号后再使用 FULL AUTO' };
+    const r = await act('fullAuto', {});
+    if (r && r.ok) {
+      redrawLooks();
+      SFX.gong && SFX.gong();
+      const parts = [];
+      if (r.badges) parts.push(`徽记 ${r.badges}`);
+      if (r.skins) parts.push(`皮肤 ${r.skins}`);
+      if (r.pets) parts.push(`灵宠 ${r.pets}`);
+      if (r.stances) parts.push(`架势 ${r.stances}`);
+      if (r.skills) parts.push(`招式 ${r.skills}`);
+      if (r.soldCount) parts.push(`售出重复 ${r.soldCount} 件 (+${fmt(r.inkGain)}墨)`);
+      toast(`⚡ FULL AUTO 完成：${parts.join(' · ') || '配置均已最优'}`);
       if ($id('armory') && $id('armory').classList.contains('on')) render();
     }
     return r;

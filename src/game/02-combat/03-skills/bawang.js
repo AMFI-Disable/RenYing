@@ -5,7 +5,7 @@ Object.assign(SKILLS, {
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.16) {
         f.skPh = 1; f.t = 0; SFX.heavy(); SFX.thud(); shake = Math.max(shake, 12);
-        if (!RESIM) { ring(f.x + f.face * 76, -12, 152, '245,180,75', 0.38); dust(f.x + f.face * 76, 0, 14); }
+        if (!RESIM) { ring(f.x + f.face * 76, f.y - 12, 152, '245,180,75', 0.38); dust(f.x + f.face * 76, f.y, 14); }
         strike(f, foe, { box: [-30, -118, 185, 10], dmg: 64, kb: [260, -640], stun: 0.56, hs: 0.14, launch: true, guardDamage: 42 });
       }
       if (f.skPh === 1 && f.t >= 0.32) toNeutral(f);
@@ -18,7 +18,7 @@ Object.assign(SKILLS, {
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.12) {
         f.skPh = 1; f.t = 0; SFX.thud(); SFX.heavy(); shake = Math.max(shake, 10);
-        if (!RESIM) { ring(f.x, f.y - 62, 165, '245,180,75', 0.42); dust(f.x, 0, 16); }
+        if (!RESIM) { ring(f.x, f.y - 62, 165, '245,180,75', 0.42); dust(f.x, f.y, 16); }
         if (strike(f, foe, { box: [-148, -138, 148, 0], dmg: 48, kb: [420, -280], stun: 0.5, hs: 0.11, knock: true, guardDamage: 30 })) {
           foe.slowT = Math.max(foe.slowT || 0, 1.5);
         }

@@ -16,9 +16,9 @@ Object.assign(SKILLS, {
     start(f) { f.vx = 0; f.invul = Math.max(f.invul, 0.1); SFX.dash(); if (airH(f) > 40) { f.skPh = 10; f.vy = Math.max(f.vy, 600); } },
     update(f, foe) {
       if (f.skPh >= 10) { windDive(f, foe); return; }
-      if (f.skPh < 5 && f.t >= f.skPh * 0.07) {   // 冲的路上每隔一小段撒一颗
+      if (f.skPh < 5 && f.t >= f.skPh * 0.07) {   // 冲的路上每隔一小段撒一颗（按当前所在平台层高）
         f.skPh++;
-        spawnProj(f, { kind: 'popcorn', x: f.x, y: -12, vx: 0, delay: 0.5, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: (clock * 7.3 + f.x * 0.013) % 6 });   // 只管画面的花样，但存进回滚存档里，两边要一样
+        spawnProj(f, { kind: 'popcorn', x: f.x, y: f.y - 12, groundY: f.y, vx: 0, delay: 0.5, life: 0.62, w: 84, h: 76, dmg: 8, kb: [70, -140], stun: 0.22, hs: 0.03, unbreakable: true, noScale: true, seed: (clock * 7.3 + f.x * 0.013) % 6 });   // 只管画面的花样，但存进回滚存档里，两边要一样
       }
       f.vx = f.face * 1450 * Math.max(0, 1 - f.t / 0.38);
       if (Math.random() < 0.7) addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - rand(20, 100), vx: -f.face * 200, vy: rand(-40, 40), life: 0.25, max: 0.25, rgb: f.look.slash, w: 1.4 });

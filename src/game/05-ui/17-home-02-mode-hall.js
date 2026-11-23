@@ -154,7 +154,7 @@ function singleSec(sec) {
     el.style.display = secs.includes(active) ? '' : 'none';
   }
   const duel = ['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2'].includes(active);
-  if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju', 'koth', 'party'].includes(active);
+  if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju', 'koth', 'party', 'melee', 'ctf', 'gauntlet'].includes(active);
   if ($id('xiwuQuickCard')) $id('xiwuQuickCard').hidden = !duel;
   const mutators = $id('mutatorPills');
   if (mutators && mutators.parentElement) mutators.parentElement.hidden = !duel;
@@ -168,11 +168,14 @@ function singleSec(sec) {
       cpu: '选择 AI 难度与对手境界，在实战对局中锤炼招式攻防',
       tag3: '挑选三位豪杰排定出战顺序，胜者保留残血守擂，直至一方全灭！',
       watch2v2: '两人一组默契配合，可带电脑同袍或同屏对决！',
+      melee: '3v3–8v8 大型同屏混战：支持完整禁选（BP）排兵布阵与五层立体战场！',
+      ctf: '2v2–8v8 团队夺旗争锋：支持战略禁选（BP），护送敌旗归阵先得三分胜！',
+      gauntlet: '无尽车轮生存试炼：逐波迎战递增境界的江湖群雄！',
       tower: '挑选本命侠客登临万仞剑阁，突破层层守关者，顿悟三选一武林秘卷！',
       chaos: '天机莫测，乾坤逆转！每隔十五息随机降临百种异象秘法加持',
       stage: '六大篇章逐级挑战，斩妖除魔，迎战守关宗师',
       saga: '每位侠客自己的故事：五节、一个抉择、两个结局',
-      train: '在训练场学习招式、自由练习木人桩，或进行专项情景训练',
+      train: '训练场全面升级：支持木人桩与无数值膨胀的实战 AI 难度对练、帧级判定检视与六大专项情景！',
       mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！',
       maps: '换一处战场：投票选地图，断崖、冰面都会改变侠客的打法',
       cuju: '不比气血比进球：用普攻和技能把墨球打进对方球门，先进三球获胜',

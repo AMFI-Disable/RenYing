@@ -104,7 +104,7 @@ function drawCtfField() {
   }
 }
 
-function startCtf(teamSize = 4, heroIdx = 0, level = 'normal') {
+function startCtf(teamSize = 4, heroIdx = 0, level = 'normal', drafted = null) {
   const sz = clamp(teamSize | 0, 2, 8);
   debugHitbox = false;
   refocusGame();
@@ -114,9 +114,12 @@ function startCtf(teamSize = 4, heroIdx = 0, level = 'normal') {
   M.level = level || 'normal';
   M.wins = [0, 0]; M.round = 1; M.watchAi = false;
   const total = sz * 2;
+  const hasDraft = Array.isArray(drafted) && Array.isArray(drafted[0]) && Array.isArray(drafted[1]);
   for (let i = 0; i < total; i++) {
     const f = FIGHTERS[i];
-    f.setChar(i === 0 ? (heroIdx | 0) : ((heroIdx + i * 2 + 1) % CHARS.length));
+    const side = i % 2, slot = Math.floor(i / 2);
+    const draftedCid = hasDraft && Number.isInteger(drafted[side][slot]) && drafted[side][slot] >= 0 ? drafted[side][slot] : -1;
+    f.setChar(draftedCid >= 0 ? draftedCid : (i === 0 ? (heroIdx | 0) : ((heroIdx + i * 2 + 1) % CHARS.length)));
     f.ctrl = i === 0 ? human[0] : new AICtrl(M.level);
     f.hidden = false;
   }

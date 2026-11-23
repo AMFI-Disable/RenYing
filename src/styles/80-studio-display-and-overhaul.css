@@ -28,6 +28,72 @@
 .ar-badge-card.tier-lk {
   opacity: 0.86;
 }
+.ar-badge-card.compact,
+.ar-loadout.compact {
+  padding: 10px 12px;
+  gap: 5px;
+}
+.ar-badge-card.compact p {
+  font-size: 12.5px;
+  line-height: 1.4;
+  margin: 2px 0;
+}
+.rar-pill {
+  font-size: 10.5px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.rar-pill.rar-legend {
+  background: rgba(233, 196, 106, 0.22);
+  border: 1px solid rgba(233, 196, 106, 0.65);
+  color: #f8dc8c;
+}
+.rar-pill.rar-epic {
+  background: rgba(192, 132, 252, 0.2);
+  border: 1px solid rgba(192, 132, 252, 0.55);
+  color: #ddb8ff;
+}
+.rar-pill.rar-rare {
+  background: rgba(96, 195, 255, 0.16);
+  border: 1px solid rgba(96, 195, 255, 0.45);
+  color: #8fd8ff;
+}
+.ar-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 8px;
+}
+.ar-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+.ar-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 14px 0 6px;
+}
+.ar-pager-info {
+  font-size: 12.5px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+.ad-fullauto {
+  border-color: rgba(233, 196, 106, 0.48) !important;
+  background: linear-gradient(135deg, rgba(233, 196, 106, 0.1), rgba(150, 96, 255, 0.08)) !important;
+}
+.ad-fullauto-btn {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
 
 /* Two-Row Hero Selection in Codex (#codex) */
 .cxtabs {
@@ -339,3 +405,62 @@
     gap: 6px;
   }
 }
+
+/* Large Battle BP compact slot grid (5v5 / 8v8) */
+.slots.slots-large {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(66px, 1fr));
+  gap: 5px;
+  max-height: 112px;
+  overflow-y: auto;
+  padding-right: 2px;
+  scrollbar-width: thin;
+}
+.slots.slots-large .slot2 {
+  min-width: 0;
+  height: 48px;
+  font-size: 11px;
+}
+.slots.slots-large .slot2 .lab {
+  font-size: 10px;
+  padding: 1px 3px;
+}
+
+/* Redesigned Training Controls & AI Difficulty Sparring */
+.xiwu-train-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin: 8px 0 12px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(239, 232, 216, 0.14);
+}
+.xiwu-train-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.xiwu-train-row.is-dim {
+  opacity: 0.55;
+}
+.train-ai-desc {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--gold);
+  text-align: left;
+}
+.db-opp-seg {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 8px;
+}
+.db-opp-seg button {
+  font-size: 12px;
+  padding: 4px 10px;
+}
+

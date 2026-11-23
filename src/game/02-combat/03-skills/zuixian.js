@@ -7,7 +7,8 @@ Object.assign(SKILLS, {
         f.skPh = 1; SFX.swing();
         const towardFoe = Math.sign(foe.x - f.x) === f.face;
         const tx = clamp(towardFoe ? foe.x : f.x + f.face * 260, WALL + 40, STAGE_W - WALL - 40);
-        if (Math.abs(tx - f.x) <= 720) spawnProj(f, { kind: 'pavilion', vx: 0, x: tx, y: -260, delay: 0.45, w: 150, h: 560, life: 0.95, dmg: 20, kb: [0, 0], stun: 0.3, hs: 0.08, jail: true, unblockable: true, unbreakable: true });
+        const ty = towardFoe ? foe.y : f.y;
+        if (Math.abs(tx - f.x) <= 720) spawnProj(f, { kind: 'pavilion', vx: 0, x: tx, y: ty - 260, groundY: ty, delay: 0.45, w: 150, h: 560, life: 0.95, dmg: 20, kb: [0, 0], stun: 0.3, hs: 0.08, jail: true, unblockable: true, unbreakable: true });
         else addP({ type: 'text', text: '客在远方', x: f.x, y: f.y - 120, life: 0.7, max: 0.7, rgb: '255,190,90' });
       }
       if (f.t >= 0.27) toNeutral(f);

@@ -172,6 +172,8 @@ function renderBP() {
   else if (bpMode === 'koth' || bpMode === 'koth2v2') modePrefix = bpMode === 'koth2v2' ? '2v2 灵坛争锋 · ' : '灵坛争锋 · ';
   else if (bpMode === 'party') modePrefix = '江湖百戏 · ';
   else if (bpMode === 'bastion') modePrefix = '天枢守境 · ';
+  else if (bpMode === 'melee') modePrefix = `群雄会战 ${(bpCustomOpts && bpCustomOpts.teamSize) || (BP.picks[0] ? BP.picks[0].length : 5)}v${(bpCustomOpts && bpCustomOpts.teamSize) || (BP.picks[0] ? BP.picks[0].length : 5)} · `;
+  else if (bpMode === 'ctf') modePrefix = `夺旗争锋 ${(bpCustomOpts && bpCustomOpts.teamSize) || (BP.picks[0] ? BP.picks[0].length : 5)}v${(bpCustomOpts && bpCustomOpts.teamSize) || (BP.picks[0] ? BP.picks[0].length : 5)} · `;
   else if (bpMode === 'mayhem') modePrefix = '通天神决 · ';
   else if (bpMode === 'tag3') modePrefix = '3v3车轮 · ';
   else if (bpMode === 'tower') modePrefix = '问剑密卷 · ';
@@ -183,14 +185,19 @@ function renderBP() {
 
   const TAG3_ROLES = ['先锋', '中坚', '大将'];
   const TEAM2_ROLES = ['先锋', '次锋'];
+  const LARGE_ROLES = ['主将', '副将', '左翼', '右翼', '先锋', '奇兵', '策应', '殿军'];
 
-  const isTag3BP = bpMode === 'tag3' || !!(multiPick && BP.picks[0] && BP.picks[0].length === 3);
+  const isLargeBP = bpMode === 'melee' || bpMode === 'ctf';
+  const isTag3BP = !isLargeBP && (bpMode === 'tag3' || !!(multiPick && BP.picks[0] && BP.picks[0].length === 3));
 
   let stepTitle = '';
   if (done) {
     stepTitle = isWatch ? '点将完成 · 演武即将开战' : '点将完成 · 准备开战';
   } else if (type === 'ban') {
     stepTitle = `${bpSideName(side)}禁用一名侠客`;
+  } else if (isLargeBP) {
+    const idxNum = (BP.picks[side] || []).filter(x => x >= 0).length;
+    stepTitle = `${bpSideName(side)}钦点【${LARGE_ROLES[idxNum] || ('第' + (idxNum + 1) + '将')}】出战`;
   } else if (isTag3BP) {
     const idxNum = (BP.picks[side] || []).filter(x => x >= 0).length;
     stepTitle = `${bpSideName(side)}钦点【${TAG3_ROLES[idxNum] || '大将'}】出战`;
@@ -214,13 +221,13 @@ function renderBP() {
     const el = document.getElementById('bpS' + sd);
     if (!el) continue;
     const keep = [...el.querySelectorAll('.bubble')];
-    const banSlotHtml = hasBans
-      ? (() => {
-          const bIdx = Array.isArray(BP.bans) ? BP.bans[sd] : -1;
-          const bActive = !done && side === sd && type === 'ban';
-          return `<div class="slot2 ban${bActive ? ' on' : ''}">${bIdx >= 0 ? `<img src="${PORTRAITS[bIdx] || ''}" alt=""><span class="lab">禁 ${CHARS[bIdx].name}</span>` : '禁用'}</div>`;
-        })()
-      : '';
+    const sideBans = (BP.bansBySide && Array.isArray(BP.bansBySide[sd]) && BP.bansBySide[sd].length)
+      ? BP.bansBySide[sd]
+      : (hasBans ? [Array.isArray(BP.bans) ? BP.bans[sd] : -1] : []);
+    const banSlotHtml = sideBans.map((bIdx, bSlot) => {
+      const bActive = !done && side === sd && type === 'ban' && sideBans.filter(x => x >= 0).length === bSlot;
+      return `<div class="slot2 ban${bActive ? ' on' : ''}">${bIdx >= 0 ? `<img src="${PORTRAITS[bIdx] || ''}" alt=""><span class="lab">禁 ${CHARS[bIdx].name}</span>` : `禁${sideBans.length > 1 ? bSlot + 1 : '用'}`}</div>`;
+    }).join('');
     if (bpMode === 'raid' && sd === 1) {
       const rb = typeof pendingRaidBoss !== 'undefined' && pendingRaidBoss ? pendingRaidBoss : null;
       const bossTitle = rb ? `六技魔首：${rb.heroNames.join('·')}` : '三侠六技·融魂魔首';
@@ -240,6 +247,15 @@ function renderBP() {
         el.innerHTML = `<div class="who" style="color:var(--p1)">出战大侠</div>
           <div class="slots">${slot}</div>`;
       }
+    } else if (isLargeBP) {
+      const picks = BP.picks[sd] || [];
+      const slotsHtml = picks.map((idx, slotIdx) => {
+        const isActive = !done && side === sd && type === 'pick' && (picks.filter(x => x >= 0).length === slotIdx);
+        const role = LARGE_ROLES[slotIdx] || `${slotIdx + 1}将`;
+        return `<div class="slot2 pick${isActive ? ' on' : ''}">${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${role} ${CHARS[idx].name}</span>` : role}</div>`;
+      }).join('');
+      el.innerHTML = `<div class="who" style="color:${sd === 0 ? 'var(--p1)' : 'var(--p2)'}">${escapeHTML(bpSideName(sd))} (${picks.filter(x => x >= 0).length}/${picks.length})</div>
+        <div class="slots${picks.length > 3 ? ' slots-large' : ''}">${banSlotHtml}${slotsHtml}</div>`;
     } else if (isTag3BP) {
       const picks = BP.picks[sd] || [-1, -1, -1];
       const slotsHtml = [0, 1, 2].map(slotIdx => {
@@ -305,6 +321,7 @@ function renderBP() {
   $id('bpUndo').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step > 0 && BP.step < 3);
   $id('bpSwap').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step === 2);
   $id('bpRotate').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step === 2 && bpValid(bpSel));
+  if ($id('bpAutoFill')) $id('bpAutoFill').hidden = !(isLargeBP && !done && !isWatch);
   if (isWatch) {
     goB.disabled = true;
     goB.textContent = done ? '即将开战 · 演武观战' : 'AI 演武禁选中…';
@@ -396,4 +413,5 @@ document.getElementById('bpGo').addEventListener('click', bpConfirm);
 document.getElementById('bpUndo').addEventListener('click', bpUndoQuickPick);
 document.getElementById('bpSwap').addEventListener('click', bpSwapQuickPicks);
 document.getElementById('bpRotate').addEventListener('click', bpRotateQuickPicks);
+if (document.getElementById('bpAutoFill')) document.getElementById('bpAutoFill').addEventListener('click', bpAutoFillLarge);
 document.getElementById('bpQuit').addEventListener('click', () => toMenu());

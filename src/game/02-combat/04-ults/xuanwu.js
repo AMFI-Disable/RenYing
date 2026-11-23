@@ -1,4 +1,23 @@
 Object.assign(ULTS, {
   // ---- 玄武 · 大招 E：玄武镇岳（tortoiseslam） ----
-  tortoiseslam: { name: '玄武镇岳', flurry: true, n: 4, iv: 0.14, slash: 22, fin: 102, land: true, dashSpd: 1420, dashT: 0.32, desc: '身披玄甲携镇山重锤破阵冲锋，四记撼岳重锤连环震地，终以泰山压顶之势击溃对手。' },
+  tortoiseslam: { name: '玄武镇岳', desc: '化出玄甲龟盾蓄势护体，恢复全部架势并获强效霸体，随即向当前层引爆三连镇岳震波，强破格挡并击飞近敌。',
+    begin(f) {
+      f.sp = 'brace'; f.spN = 0; f.vx = 0; f.spPose = 'ts_shoulder'; f.invul = 0.5;
+      f.guard = f.maxGuard || 100; f.armorT = 2.6; f.armorHits = 4;
+      if (!RESIM) { ring(f.x, f.y - 58, 130, '110,195,255', 0.45); SFX.charge(); }
+    },
+    update(f, foe) {
+      if (f.spN < 3 && f.t >= 0.24 + f.spN * 0.16) {
+        const rad = 155 + f.spN * 52;
+        f.spPose = 'ts_slam';
+        if (!RESIM) { shake = Math.max(shake, 16 + f.spN * 4); ring(f.x, f.y - 24, rad, '110,205,255', 0.42); dust(f.x, f.y, 16); SFX.thud(); }
+        for (const tf of isMulti() ? foesOf(f) : [foe]) {
+          if (!tf || tf.hp <= 0 || tf.invul > 0 || Math.abs(tf.x - f.x) > rad || Math.abs(tf.y - f.y) > 120) continue;
+          const last = f.spN === 2;
+          applyHit(f, tf, { dmg: last ? 68 : 38, kb: [last ? 420 : 180, last ? -640 : -220], stun: last ? 0.65 : 0.35, hs: last ? 0.16 : 0.07, launch: last, unblockable: last, ult: true, noScale: true, big: last, dir: tf.x >= f.x ? 1 : -1 }, [tf.x, tf.y - 50]);
+        }
+        f.spN++;
+      }
+      if (f.t >= 0.88) endSpecial(f);
+    } },
 });

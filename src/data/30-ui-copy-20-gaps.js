@@ -5,7 +5,7 @@ Object.assign(UI_COPY_EN, {
   // 首页和模式大厅（src/page.html 的 #single 和各模式说明）
   "2D 俯视角多人守城与肉鸽远征": "2D top-down co-op defense and roguelike expedition",
   "故事与试炼": "Stories and Trials",
-  "在训练场学习招式、自由练习木人桩，或进行专项情景训练": "Learn moves in the training ground, practice freely on the dummy, or run focused drills",
+  "训练场全面升级：支持木人桩与无数值膨胀的实战 AI 难度对练、帧级判定检视与六大专项情景！": "Upgraded Training Grounds: dummy drills, zero-stat-inflation AI sparring by difficulty, frame inspection, and six focused scenarios!",
   "挑选三位豪杰排定出战顺序，胜者保留残血守擂，直至一方全灭！": "Pick three heroes and set their order. The winner stays in with the health they have left, until one side is wiped out!",
   "禁选": "Bans",
   "禁": "Ban",
@@ -105,7 +105,7 @@ Object.assign(UI_COPY_EN, {
   // 武库（src/armory.js、src/armory-core.js）：标签页、说明和武器箱名
   "皮肤图鉴": "Skin Codex",
   "武学": "Martial Arts",
-  "武学与徽记": "Martial Arts and Badges",
+  "徽记 · 灵宠 · 装备": "Badges · Pets · Loadouts",
   "登录之后才能开箱、交易。先逛逛看吧。": "Log in to open cases and trade. Feel free to look around first.",
   "件（无限容量）": "items (no limit)",
   "武库的库存还是空的。去皮肤图鉴看看所有皮肤和获取方式。": "Your armory is still empty. Check the Skin Codex to see every skin and how to get it.",
@@ -282,10 +282,7 @@ Object.assign(UI_COPY_EN, {
   "灵阶": "Spirit",
   "仙阶": "Immortal",
   "本宗": "Classic",
-  "解锁银徽": "Unlock Silver Badge",
-  "水墨灵宠 · 随行助战（V 键发动）": "Ink Pets · Combat Companions (Press V)",
   "收养灵宠": "Adopt Pet",
-  "已达仙阶圆满": "Max Immortal Tier",
   "无灵宠": "No Pet",
   "携宠": "Assign Pet",
   "灵宠": "Pet",

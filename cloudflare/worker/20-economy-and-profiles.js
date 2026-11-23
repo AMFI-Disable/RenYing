@@ -306,7 +306,8 @@ async function handleEcon(env, auth, body, now, ip) {
     const skins0 = mergeSkins(prof.skins, eco.state, eco.srv, eco.ver);
     // 玩家市场：自己挂的单被别人买走、钱还没结的，这次一起结；买、撤的话把那一单现在的样子交给规则核心
     const paid = (await env.DB.prepare('SELECT id, k, st, price, done_at AS at FROM mkt WHERE seller = ? AND state = 1 AND paid = 0 ORDER BY done_at LIMIT 40').bind(uid).all()).results || [];
-    const mkt = { id: randHex(8), ids: act === 'listDupes' ? Array.from({ length: C.LIST_BATCH }, () => randHex(8)) : null, row: null, out: null };
+    const dupeNeed = act === 'listDupes' ? Math.max(C.LIST_BATCH, Math.min(2000, C.dupePlan(eco.state).items.length)) : 0;
+    const mkt = { id: randHex(8), ids: act === 'listDupes' ? Array.from({ length: dupeNeed }, () => randHex(8)) : null, row: null, out: null };
     if ((act === 'buy' || act === 'cancel') && C.isLid(args.l)) {
       const r0 = await env.DB.prepare('SELECT id, seller, k, st, item_json, price, state, at FROM mkt WHERE id = ?').bind(args.l).first();
       if (r0) mkt.row = { id: r0.id, seller: r0.seller, k: r0.k, st: r0.st, price: r0.price, state: r0.state, item: parseObj(r0.item_json), expired: r0.state === 0 && r0.at < now - ttl };

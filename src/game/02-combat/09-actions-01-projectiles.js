@@ -228,7 +228,8 @@ function updateProjs() {
       p.y = clamp(p.y, -560, -24);
     }
     if (p.grow) { p.w += p.grow * STEP; p.h += p.grow * STEP; }
-    if (p.lob && p.y >= -8) { p.dead = true; for (let i = 0; i < 10; i++) addP({ type: 'ink', x: p.x, y: -4, vx: rand(-160, 160), vy: rand(-200, -40), g: 1400, life: 0.5, max: 0.5, r: rand(2, 4), rgb: '15,15,22' }); continue; }
+    const lobFloor = p.groundY !== undefined ? p.groundY : 0;
+    if (p.lob && p.y >= lobFloor - 8) { p.dead = true; for (let i = 0; i < 10; i++) addP({ type: 'ink', x: p.x, y: lobFloor - 4, vx: rand(-160, 160), vy: rand(-200, -40), g: 1400, life: 0.5, max: 0.5, r: rand(2, 4), rgb: '15,15,22' }); continue; }
     if (p.kind === 'dragon' || p.kind === 'tornado' || p.kind === 'wind') { if (Math.random() < 0.6) addP({ type: 'ink', x: p.x - Math.sign(p.vx) * p.w * 0.4, y: p.y + rand(-p.h / 3, p.h / 3), vx: -p.vx * 0.1, vy: rand(-40, 40), life: 0.5, max: 0.5, r: rand(2, 5), rgb: p.kind === 'dragon' ? '20,20,28' : CHARS[fighterByIdx(p.owner).chIdx].look.slash }); }
     if (p.life <= 0 || p.x < -300 || p.x > STAGE_W + 300) { p.dead = true; continue; }
     if (p.fx || p.dmg <= 0) continue;
@@ -245,7 +246,10 @@ function updateProjs() {
     hitClones(box, p.owner, p.dmg);
     if (hitDecoyBox(box, p.owner)) { if (!p.pierce) p.dead = true; continue; }
     if (p.hitCD > 0 || (p.kind === 'ironball' ? ironBallInvulnerable(foe) : foe.invul > 0) || foe.hp <= 0) continue;
-    if ((p.groundOnly || p.kind === 'quake') && (foe.y < -16 || foe.flying)) continue;
+    if (p.groundOnly || p.kind === 'quake') {
+      const refY = p.groundY !== undefined ? p.groundY : 0;
+      if (airH(foe) > 22 || foe.flying || Math.abs(foe.y - refY) > 68) continue;
+    }
     if (!overlap(box, hurtbox(foe))) continue;
     if (p.feast) {   // 与民同乐：砸中就得陪着喝
       p.dead = true;
@@ -297,15 +301,18 @@ function updateProjs() {
     applyHit(owner, foe, hitM, [clamp(foe.x, box[0], box[2]), clamp(foe.y - 60, box[1], box[3])]);
     const struck = foe.hp > 0 && (foe.state === 'hitstun' || foe.state === 'launched');
     if (p.burn && struck) { foe.burnT = 2; addP({ type: 'text', text: '酒火灼身', x: foe.x, y: foe.y - 110, life: 0.8, max: 0.8, rgb: '255,150,60' }); }
-    if (p.jail && foe.hp > 0 && !isClient()) {   // 醉翁亭落下：留客 1 秒
-      foe.jailT = 1.0; foe.jailX = clamp(foe.x, WALL + 30, STAGE_W - WALL - 30);
-      shake = Math.max(shake, 12); dust(foe.x, 0, 16); SFX.thud();
+    if (p.jail && foe.hp > 0 && !isClient()) {   // 醉翁亭落下：留客 1 秒（保留所在平台层高）
+      foe.jailT = 1.0; foe.jailX = clamp(foe.x, WALL + 30, STAGE_W - WALL - 30); foe.jailY = foe.y; foe.jailPlat = foe.plat;
+      shake = Math.max(shake, 12); dust(foe.x, foe.y, 16); SFX.thud();
       addP({ type: 'text', text: '醉翁亭 · 留客片刻', x: foe.x, y: foe.y - 290, life: 1.1, max: 1.1, rgb: '255,190,90' });
     }
-    if (p.hook && struck && !isClient()) {   // 勾陈飞锤：扯链拽到身前
-      foe.x = clamp(owner.x + owner.face * 72, WALL, STAGE_W - WALL); foe.y = 0; foe.vx = 0; foe.vy = 0;
+    if (p.hook && struck && !isClient()) {   // 勾陈飞锤：扯链拽到身前（保持施法者所在平台/层高）
+      foe.x = clamp(owner.x + owner.face * 72, WALL, STAGE_W - WALL);
+      if (owner.plat >= 0 && typeof mapPutOn === 'function') mapPutOn(foe, owner.plat);
+      else { foe.y = owner.y; foe.plat = owner.plat; }
+      foe.vx = 0; foe.vy = 0;
       foe.state = 'hitstun'; foe.t = 0; foe.stun = Math.max(foe.stun || 0, 0.42); foe.hookedT = 1.2;
-      dust(foe.x, 0, 6); SFX.heavy();
+      dust(foe.x, foe.y, 6); SFX.heavy();
     }
     p.hits++; p.hitCD = p.rehit || 99;
     if (p.kind === 'ironball') {
