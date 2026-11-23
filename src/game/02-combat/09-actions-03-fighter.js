@@ -647,13 +647,13 @@ function tryTacticalKeys(f, foe) {
   // U：重击劈斩（破防压迫，空中为下劈）
   if (canMartial && c.consume('heavyStrike')) {
     f.face = (c.held.right ? 1 : c.held.left ? -1 : f.face);
-    startMove(f, f.onGround() ? 'hv' : 'a2');
+    startAttack(f, f.onGround() ? 'hv' : 'a2');
     return true;
   }
   // I：下段扫腿（快起手下盘踢击，扰乱重心）
   if (canMartial && f.onGround() && c.consume('lowKick')) {
     f.face = (c.held.right ? 1 : c.held.left ? -1 : f.face);
-    startMove(f, 'dl');
+    startAttack(f, 'dl');
     if (typeof RYPhysics !== 'undefined' && RYPhysics.Balance && foe && Math.abs(foe.x - f.x) < 120) {
       RYPhysics.Balance.applyTripTorque && RYPhysics.Balance.applyTripTorque(foe, f.face * 26);
     }
@@ -664,11 +664,11 @@ function tryTacticalKeys(f, foe) {
     f.face = (c.held.right ? 1 : c.held.left ? -1 : f.face);
     f.iaidoCD = 3.2;
     f.vx = f.face * 540;
-    startMove(f, f.onGround() ? 'cs1' : 'a1');
+    startAttack(f, f.onGround() ? 'cs1' : 'a1');
     if (foe && Math.abs(foe.x - f.x) < 220 && Math.abs(foe.y - f.y) < 100) {
       foe.acupointT = Math.max(foe.acupointT || 0, 2.4);
       if (typeof RYPhysics !== 'undefined' && RYPhysics.IaidoAcupoint && RYPhysics.IaidoAcupoint.strikeAcupoint) {
-        RYPhysics.IaidoAcupoint.strikeAcupoint(f, foe, { height: c.held.up ? 'high' : c.held.down ? 'low' : 'mid' });
+        RYPhysics.IaidoAcupoint.strikeAcupoint(f, foe, { height: c.held.jump ? 'high' : c.held.down ? 'low' : 'mid' });
       }
     }
     if (!RESIM) {
@@ -685,11 +685,11 @@ function tryTacticalKeys(f, foe) {
     if (tFoe) {
       const throwDir = c.held.left ? -1 : c.held.right ? 1 : f.face;
       tFoe.vx = throwDir * 440;
-      tFoe.vy = c.held.up ? -560 : -340;
+      tFoe.vy = c.held.jump ? -560 : -340;
       tFoe.state = 'launched'; tFoe.t = 0; tFoe.stun = 0.55;
       tFoe.hp = Math.max(1, tFoe.hp - Math.round(28 * (f.ch.stat.dmg || 1)));
       if (typeof RYPhysics !== 'undefined' && RYPhysics.Grapple && RYPhysics.Grapple.executeThrow) {
-        RYPhysics.Grapple.executeThrow(f, tFoe, c.held.up ? 'sky' : throwDir !== f.face ? 'back' : 'forward');
+        RYPhysics.Grapple.executeThrow(f, tFoe, c.held.jump ? 'sky' : throwDir !== f.face ? 'back' : 'forward');
       }
       if (!RESIM) {
         ring(tFoe.x, tFoe.y - 52, 90, '255,195,110', 0.34);

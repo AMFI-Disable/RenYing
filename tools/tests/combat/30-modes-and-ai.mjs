@@ -3,6 +3,28 @@
 // 找 bug 提示：测试失败时报的是 name，在本文件里搜这个 name 就能找到它的代码。
 export default [
   {
+    name: 'Martial shortcuts use the normal attack and physics paths',
+    fn: `(() => {
+      startMatch('cpu', 'normal', [20, 35]);
+      M.phase = 'fight';
+      for (const [key, move] of [['heavyStrike', 'hv'], ['lowKick', 'dl'], ['iaido', 'cs1']]) {
+        A.reset(STAGE_W / 2 - 35); B.reset(STAGE_W / 2 + 35);
+        A.ctrl.clear();
+        A.ctrl.press(key);
+        updateFighter(A, B);
+        if (A.state !== 'attack' || A.moveName !== move || !A.move) return { pass: false, error: key + ' did not start ' + move };
+      }
+      A.reset(STAGE_W / 2 - 35); B.reset(STAGE_W / 2 + 35);
+      A.ctrl.clear();
+      A.ctrl.held.jump = true;
+      A.ctrl.press('grapple');
+      updateFighter(A, B);
+      if (B.state !== 'launched' || B.vy >= -340) return { pass: false, error: 'Jump input did not select rising throw' };
+      startMatch('train');
+      return { pass: true };
+    })()`
+  },
+  {
     name: 'Objective and survival modes settle lethal hits using their own rules',
     fn: `(() => {
       const fail = error => ({ pass: false, error });

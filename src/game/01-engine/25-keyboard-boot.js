@@ -94,6 +94,7 @@ window.addEventListener('keydown', e => {
     } else {
       c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (typeof isLargeTeam === 'function' && isLargeTeam()) || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
     }
+    if (p > 0 && c === human[0] && KEYS[0]?.[e.code]) continue;
     if (secretEnabled && c === human[0] && !REPLAY.on) continue;
     if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
     if (act === 'jump') { c.held.jump = true; if (!e.repeat) c.press('jump'); continue; }
@@ -126,6 +127,7 @@ window.addEventListener('keyup', e => {
     } else {
       c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (typeof isLargeTeam === 'function' && isLargeTeam()) || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
     }
+    if (p > 0 && c === human[0] && KEYS[0]?.[e.code]) continue;
     if (secretEnabled && c === human[0] && !REPLAY.on) continue;
     if (act === 'left' || act === 'right' || act === 'down') {
       c.held[act] = false;

@@ -8,6 +8,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- Heavy Strike, Low Kick and Iaido use the normal attack entry point. Solo controls prioritize the first player’s shortcuts when bindings overlap, and the rising throw reads the jump input. Visual effect counters stay local during rollback and replay.
+
 - AI self-play uses the full roster for both training stages. A focused God-difficulty sweep across 炽霄, 幽篁, 玄机 and 破浪 accepted a lower aggression setting for 幽篁. The trainer can also evaluate 8v8 Grand Melee and Capture the Banner, which the scheduled regression runs as full self-play matches. Hero changes now run AI checks, and Pages verifies the generated builds before publishing.
 
 - The Large Battles category opens from the homepage and Mode Hall. Capture the Banner can now be launched in 2v2 from the team-size selector. Computer-controlled fighters pursue exposed banners, bring captured banners home and intercept enemies carrying their own banner.

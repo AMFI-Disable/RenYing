@@ -73,6 +73,7 @@ class Fighter {
       badgeLinkT: 0, badgePressureT: 0, badgePressureSkill: 0, badgeRiposteT: 0, badgeBreakT: 0, badgeAirSkillT: 0, badgeExitT: 0, badgeAirUsed: 0, badgeAirSkillUsed: 0,
       ballGuardBreakT: 0,
       juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
+      iaidoCD: 0, grappleCD: 0, acupointT: 0,
       breakCD: 0, beaconT: 0, quickGetup: false, quickGetupPhase: false, plat: -1, dropT: 0,
       airCharged: false, feintCD: 0, qiParryCD: 0, qiParryT: 0, petCD: 0, rallyCD: 0, lockIdx: -1, koCount: 0 });   // plat：站在山河异境第几个平台上（-1 是地上或空中）；dropT：刚从平台上落下，这段时间穿过平台
     this.scarf = []; this.trail = []; this.ghosts = [];

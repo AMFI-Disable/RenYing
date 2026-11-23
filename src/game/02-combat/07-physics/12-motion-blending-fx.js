@@ -202,8 +202,7 @@
       stretch: m.stretch,
       stretchVel: m.stretchVel,
       scaleX: m.scaleX,
-      scaleY: m.scaleY,
-      fxSeq: m.fxSeq
+      scaleY: m.scaleY
     };
   }
 

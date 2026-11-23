@@ -30401,8 +30401,7 @@ prevVy: m.prevVy,
 stretch: m.stretch,
 stretchVel: m.stretchVel,
 scaleX: m.scaleX,
-scaleY: m.scaleY,
-fxSeq: m.fxSeq
+scaleY: m.scaleY
 };
 }
 function restoreMotionState(f, snap) {
@@ -31741,6 +31740,7 @@ stance: 0, stanceUnlocked: false, stanceT: 0, badgeId: '', badgeTier: '', badgeD
 badgeLinkT: 0, badgePressureT: 0, badgePressureSkill: 0, badgeRiposteT: 0, badgeBreakT: 0, badgeAirSkillT: 0, badgeExitT: 0, badgeAirUsed: 0, badgeAirSkillUsed: 0,
 ballGuardBreakT: 0,
 juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
+iaidoCD: 0, grappleCD: 0, acupointT: 0,
 breakCD: 0, beaconT: 0, quickGetup: false, quickGetupPhase: false, plat: -1, dropT: 0,
 airCharged: false, feintCD: 0, qiParryCD: 0, qiParryT: 0, petCD: 0, rallyCD: 0, lockIdx: -1, koCount: 0 });   // plat：站在山河异境第几个平台上（-1 是地上或空中）；dropT：刚从平台上落下，这段时间穿过平台
 this.scarf = []; this.trail = []; this.ghosts = [];
@@ -34199,12 +34199,12 @@ return true;
 const canMartial = ['idle', 'walk', 'air'].includes(f.state);
 if (canMartial && c.consume('heavyStrike')) {
 f.face = (c.held.right ? 1 : c.held.left ? -1 : f.face);
-startMove(f, f.onGround() ? 'hv' : 'a2');
+startAttack(f, f.onGround() ? 'hv' : 'a2');
 return true;
 }
 if (canMartial && f.onGround() && c.consume('lowKick')) {
 f.face = (c.held.right ? 1 : c.held.left ? -1 : f.face);
-startMove(f, 'dl');
+startAttack(f, 'dl');
 if (typeof RYPhysics !== 'undefined' && RYPhysics.Balance && foe && Math.abs(foe.x - f.x) < 120) {
 RYPhysics.Balance.applyTripTorque && RYPhysics.Balance.applyTripTorque(foe, f.face * 26);
 }
@@ -34214,11 +34214,11 @@ if (canMartial && (f.iaidoCD || 0) <= 0 && c.consume('iaido')) {
 f.face = (c.held.right ? 1 : c.held.left ? -1 : f.face);
 f.iaidoCD = 3.2;
 f.vx = f.face * 540;
-startMove(f, f.onGround() ? 'cs1' : 'a1');
+startAttack(f, f.onGround() ? 'cs1' : 'a1');
 if (foe && Math.abs(foe.x - f.x) < 220 && Math.abs(foe.y - f.y) < 100) {
 foe.acupointT = Math.max(foe.acupointT || 0, 2.4);
 if (typeof RYPhysics !== 'undefined' && RYPhysics.IaidoAcupoint && RYPhysics.IaidoAcupoint.strikeAcupoint) {
-RYPhysics.IaidoAcupoint.strikeAcupoint(f, foe, { height: c.held.up ? 'high' : c.held.down ? 'low' : 'mid' });
+RYPhysics.IaidoAcupoint.strikeAcupoint(f, foe, { height: c.held.jump ? 'high' : c.held.down ? 'low' : 'mid' });
 }
 }
 if (!RESIM) {
@@ -34234,11 +34234,11 @@ const tFoe = foe && foe.hp > 0 && Math.abs(foe.x - f.x) < 115 && Math.abs(foe.y 
 if (tFoe) {
 const throwDir = c.held.left ? -1 : c.held.right ? 1 : f.face;
 tFoe.vx = throwDir * 440;
-tFoe.vy = c.held.up ? -560 : -340;
+tFoe.vy = c.held.jump ? -560 : -340;
 tFoe.state = 'launched'; tFoe.t = 0; tFoe.stun = 0.55;
 tFoe.hp = Math.max(1, tFoe.hp - Math.round(28 * (f.ch.stat.dmg || 1)));
 if (typeof RYPhysics !== 'undefined' && RYPhysics.Grapple && RYPhysics.Grapple.executeThrow) {
-RYPhysics.Grapple.executeThrow(f, tFoe, c.held.up ? 'sky' : throwDir !== f.face ? 'back' : 'forward');
+RYPhysics.Grapple.executeThrow(f, tFoe, c.held.jump ? 'sky' : throwDir !== f.face ? 'back' : 'forward');
 }
 if (!RESIM) {
 ring(tFoe.x, tFoe.y - 52, 90, '255,195,110', 0.34);
@@ -55620,6 +55620,7 @@ c = human[0];
 } else {
 c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (typeof isLargeTeam === 'function' && isLargeTeam()) || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
 }
+if (p > 0 && c === human[0] && KEYS[0]?.[e.code]) continue;
 if (secretEnabled && c === human[0] && !REPLAY.on) continue;
 if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
 if (act === 'jump') { c.held.jump = true; if (!e.repeat) c.press('jump'); continue; }
@@ -55652,6 +55653,7 @@ c = human[0];
 } else {
 c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (typeof isLargeTeam === 'function' && isLargeTeam()) || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
 }
+if (p > 0 && c === human[0] && KEYS[0]?.[e.code]) continue;
 if (secretEnabled && c === human[0] && !REPLAY.on) continue;
 if (act === 'left' || act === 'right' || act === 'down') {
 c.held[act] = false;
