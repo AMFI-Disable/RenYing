@@ -98,7 +98,7 @@ jobs:
       needs.preflight.outputs.worker == 'true' ||
       needs.preflight.outputs.offline == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 25
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7

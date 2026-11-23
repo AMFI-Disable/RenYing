@@ -432,7 +432,7 @@
   .update-banner { position: fixed; left: 50%; bottom: 18px; transform: translateX(-50%); z-index: 38; width: min(760px, calc(100vw - 24px)); background: linear-gradient(155deg, rgba(16,20,38,.95), rgba(10,12,24,.97)); border: 1px solid rgba(233,196,106,.52); border-radius: 12px; padding: 12px 16px; box-shadow: 0 14px 40px rgba(0,0,0,.62); text-align: left; }
   .update-banner[hidden] { display: none; }
   .ub-head { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-  .ub-tag { font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(233,196,106,.18); color: #e9c46a; border: 1px solid rgba(233,196,106,.45); }
+  .ub-tag { font-size: 12px; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(233,196,106,.18); color: #e9c46a; border: 1px solid rgba(233,196,106,.45); }
   .ub-head b { flex: 1; font-size: 14.5px; color: #f6efe0; }
   .ub-list { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px 14px; font-size: 12px; color: rgba(239,232,216,.84); margin-bottom: 10px; }
   .ub-list b { color: #e9c46a; margin-right: 6px; }
