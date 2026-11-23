@@ -9,7 +9,7 @@ defHero({
     passiveDesc: '双翼御风可滞空搏杀；Q 金鹏裂空可自空中俯冲破敌，R 扶摇罡风振翼齐发金羽烈风。',
     stat: { hp: 845, walk: 1.06, speed: 0.96, dmg: 1.04, reach: 1.02, swing: 0.96, jump: 1.08, weight: 0.94, defRating: 1.0, guardMax: 100, guardStab: 0.98, guardChip: 0.1, guardRegen: 28, poise: 1.04, size: 1.02 },
     fly: 1.0, hitFeel: 0.98,
-    look: { body: '#3a2d18', shade: '#1f160a', outline: '#ffc84a', outlineA: 0.92, scarf: '#f0a828', slash: '255,205,85', blade: '#fff4d0', hair: '#1d150a', head: 'feather', weapon: 'wing' },
+    look: { body: '#3a2d18', shade: '#1f160a', outline: '#ffc84a', outlineA: 0.92, scarf: '#f0a828', slash: '255,205,85', blade: '#fff4d0', hair: '#1d150a', head: 'roc-crest', weapon: 'rocwing' },
     ai: { range: [90, 250] },
     beats: ['moyu', 'youhuang'], weakTo: ['lingshuang', 'gouchen']
   },

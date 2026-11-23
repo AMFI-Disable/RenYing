@@ -35,7 +35,9 @@ function skinLook(ci, skin) {
   const sk = SKINS[skin];
   const ok = sk && sk.char === CHARS[ci].id;
   const it = ok && window.ArmoryCore && ArmoryCore.ITEM[skin];
-  return { ...CHARS[ci].look, ...(ok ? sk.look : {}), name: CHARS[ci].name, legend: !!(ok && sk.rarity === 'legend'), deco: ok ? sk.deco || null : null, fx: ok ? sk.fx || null : null, tier: it ? it.tier : '' };
+  const baseDeco = (typeof HERO_BASE_DECO !== 'undefined' && HERO_BASE_DECO[CHARS[ci].id]) || null;
+  const deco = (baseDeco || (ok && sk.deco)) ? { ...(baseDeco || {}), ...(ok && sk.deco ? sk.deco : {}) } : null;
+  return { ...CHARS[ci].look, ...(ok ? sk.look : {}), name: CHARS[ci].name, legend: !!(ok && sk.rarity === 'legend'), deco, fx: ok ? sk.fx || null : null, tier: it ? it.tier : '' };
 }
 function skinSkillName(fOrKey, slot) {
   const skKey = typeof fOrKey === 'string' ? fOrKey : (fOrKey && fOrKey.skinKey);

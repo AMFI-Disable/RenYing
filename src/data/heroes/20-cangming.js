@@ -9,7 +9,7 @@ defHero({
     passiveDesc: '重击与蓄力斩附带短暂霸体；Q 寒渊斩挥出寒渊剑气并迟缓对手，R 裂魂斩蓄势上挑破防浮空。',
     stat: { hp: 875, walk: 0.95, speed: 0.92, dmg: 1.05, reach: 1.12, swing: 0.88, jump: 0.98, weight: 1.18, defRating: 1.08, guardMax: 112, guardStab: 1.08, guardChip: 0.08, guardRegen: 26, poise: 1.15, size: 1.05 },
     hitFeel: 1.08,
-    look: { body: '#182438', shade: '#0b121e', outline: '#6ec4ff', outlineA: 0.9, scarf: '#2b6cb0', slash: '110,196,255', blade: '#e0f4ff', hair: '#d8e8f8', head: 'topknot', weapon: 'greatsword' },
+    look: { body: '#182438', shade: '#0b121e', outline: '#6ec4ff', outlineA: 0.9, scarf: '#2b6cb0', slash: '110,196,255', blade: '#e0f4ff', hair: '#d8e8f8', head: 'abyss-mane', weapon: 'abyssblade' },
     ai: { range: [95, 235] },
     beats: ['qingfeng', 'qianji'], weakTo: ['feiying', 'lingque']
   },

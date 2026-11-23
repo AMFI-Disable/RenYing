@@ -9,7 +9,7 @@ defHero({
     passiveDesc: '以朱砂石青绘卷设阵、连绵压制；Q 朱砂画弧挥毫送出丹青弧光减速，R 青绿封卷落墨成阵定身控敌。',
     stat: { hp: 815, walk: 1.01, speed: 1.0, dmg: 1.0, reach: 1.1, swing: 1.0, jump: 1.0, weight: 0.92, defRating: 0.98, guardMax: 102, guardStab: 1.0, guardChip: 0.1, guardRegen: 29, poise: 0.98, size: 1.0 },
     hitFeel: 0.92,
-    look: { body: '#2a2220', shade: '#161110', outline: '#ff6448', outlineA: 0.9, scarf: '#3898c8', slash: '245,105,80', blade: '#ffeae4', hair: '#181414', head: 'hat', weapon: 'brush' },
+    look: { body: '#2a2220', shade: '#161110', outline: '#ff6448', outlineA: 0.9, scarf: '#3898c8', slash: '245,105,80', blade: '#ffeae4', hair: '#181414', head: 'scroll-cap', weapon: 'vermilionbrush' },
     ai: { range: [125, 285] },
     beats: ['tieshan', 'polang'], weakTo: ['feiying', 'lingque']
   },

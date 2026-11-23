@@ -9,7 +9,7 @@ defHero({
     passiveDesc: '控场凌厉的墨道书生；Q 断魂墨缚在敌足下布下墨阵禁锢迟缓，R 镇魂敕符挥毫射出墨气符波重创对手。',
     stat: { hp: 820, walk: 1.02, speed: 1.0, dmg: 1.0, reach: 1.1, swing: 1.0, jump: 1.02, weight: 0.92, defRating: 0.96, guardMax: 98, guardStab: 0.98, guardChip: 0.1, guardRegen: 29, poise: 0.96, size: 1.0 },
     hitFeel: 0.92,
-    look: { body: '#1f1c2e', shade: '#0e0c18', outline: '#b48eff', outlineA: 0.9, scarf: '#7c4dff', slash: '180,142,255', blade: '#efe6ff', hair: '#181622', head: 'hat', weapon: 'brush' },
+    look: { body: '#1f1c2e', shade: '#0e0c18', outline: '#b48eff', outlineA: 0.9, scarf: '#7c4dff', slash: '180,142,255', blade: '#efe6ff', hair: '#181622', head: 'ink-sidepart', weapon: 'soulbrush' },
     ai: { range: [120, 275] },
     beats: ['tieshan', 'xuanwu'], weakTo: ['feiying', 'yinhu']
   },

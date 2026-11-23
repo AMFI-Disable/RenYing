@@ -9,7 +9,7 @@ defHero({
     passiveDesc: '重剑挥斩沉猛稳固，出招自带霸体抗压；Q 霸王裂地重劈破防挑空，R 楚歌震军霸体怒吼震退四方。',
     stat: { hp: 930, walk: 0.89, speed: 0.88, dmg: 1.08, reach: 1.14, swing: 0.84, jump: 0.92, weight: 1.32, defRating: 1.18, guardMax: 128, guardStab: 1.18, guardChip: 0.06, guardRegen: 26, poise: 1.28, size: 1.1 },
     hitFeel: 1.16,
-    look: { body: '#3c2520', shade: '#1e100d', outline: '#e6b450', outlineA: 0.92, scarf: '#c82e28', slash: '245,180,75', blade: '#f2e4cc', hair: '#1a1210', head: 'helm', weapon: 'greatsword' },
+    look: { body: '#3c2520', shade: '#1e100d', outline: '#e6b450', outlineA: 0.92, scarf: '#c82e28', slash: '245,180,75', blade: '#f2e4cc', hair: '#1a1210', head: 'overlord-horns', weapon: 'overlordblade' },
     ai: { range: [85, 220] },
     beats: ['feiying', 'lingque'], weakTo: ['youhuang', 'moyu']
   },

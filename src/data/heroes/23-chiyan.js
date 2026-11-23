@@ -9,7 +9,7 @@ defHero({
     passiveDesc: '拳风炽烈的近战猛将；Q 烈焰冲拳疾步轰击引燃对手，R 烬火升龙腾空勾拳挑飞并持续灼烧。',
     stat: { hp: 860, walk: 1.05, speed: 1.06, dmg: 1.03, reach: 0.96, swing: 1.08, jump: 1.05, weight: 1.04, defRating: 1.02, guardMax: 105, guardStab: 1.02, guardChip: 0.09, guardRegen: 29, poise: 1.06, size: 1.02 },
     hitFeel: 1.06,
-    look: { body: '#451812', shade: '#240a07', outline: '#ff9638', outlineA: 0.92, scarf: '#ff521b', slash: '255,140,50', blade: '#fff0d6', hair: '#2a0e0a', head: 'band', weapon: 'fists' },
+    look: { body: '#451812', shade: '#240a07', outline: '#ff9638', outlineA: 0.92, scarf: '#ff521b', slash: '255,140,50', blade: '#fff0d6', hair: '#2a0e0a', head: 'flame-spiky', weapon: 'blazegauntlet' },
     ai: { range: [60, 185] },
     beats: ['moyu', 'yuxiao'], weakTo: ['lingshuang', 'xuanji']
   },

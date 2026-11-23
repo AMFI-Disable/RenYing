@@ -669,6 +669,154 @@ SKIN_WEAP.rescueanchor = ({ At, hl, t, bar, poly, L }) => {
       At(crown, -6, w(9)), At(crown, -5, 0)], L.blade);
   }
 };
+SKIN_WEAP.firerake = (P, At, L, sk) => {
+  const { hl, g, t } = sk;
+  bar(At(hl, -8), At(t, -10), 4.2, '#4a2618');
+  bar(At(t, -12, -13), At(t, -12, 13), 4.0, '#d97a38');
+  for (const s of [-11, 0, 11]) {
+    poly([At(t, -12, s - 2), At(t, 4, s), At(t, -12, s + 2)], '#ffe6d0');
+    glow(At(t, 2, s), 5, '255,115,65', 0.45);
+  }
+  bar(At(g, 0, -4), At(g, 0, 4), 3.0, '#ff7a45');
+};
+SKIN_WEAP.stargauge = (P, At, L, sk) => {
+  const { hl, g, t } = sk;
+  bar(hl, At(g, 4), 3.8, '#2c3464');
+  poly([At(g, 2, -2), At(t, -4, -10), At(t, 3, 0), At(g, 2, 2)], '#d8b660');
+  poly([At(g, 2, 0), At(t, -6, 11), At(t, 2, 2)], '#9ea8ff');
+  glow(At(t, -12, 0), 7, '155,170,255', 0.5);
+  ctx.strokeStyle = '#eef0ff'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.arc(At(g, 14)[0], At(g, 14)[1], 7, 0, 7); ctx.stroke();
+};
+SKIN_WEAP.rescueanchor = (P, At, L, sk) => {
+  const { hl, g, t } = sk;
+  bar(hl, At(t, -2), 5.0, '#1d3c4e');
+  bar(At(g, 2, -9), At(g, 2, 9), 3.4, '#54d8ff');
+  poly([At(t, -4, 0), At(t, -16, -15), At(t, -22, -10), At(t, -10, 0), At(t, -22, 10), At(t, -16, 15)], '#dff8ff');
+  ctx.strokeStyle = '#d4a65a'; ctx.lineWidth = 2.0;
+  ctx.beginPath(); ctx.arc(hl[0], hl[1], 5, 0, 7); ctx.stroke();
+};
+SKIN_WEAP.abyssblade = (P, At, L, sk) => {
+  const { hl, g, t } = sk;
+  bar(hl, g, 4.8, '#132036');
+  bar(At(g, 0, -10), At(g, 0, 10), 4.0, '#6ec4ff');
+  poly([At(g, 2, -4), At(t, -18, -7), At(t, -12, -3), At(t, 4, 0), At(t, -14, 6), At(g, 2, 5)], '#2b6cb0');
+  poly([At(g, 4, -2), At(t, 2, 0), At(t, -14, 3), At(g, 4, 2)], '#e0f4ff');
+  glow(At(g, 10, 0), 6, '110,196,255', 0.45);
+};
+SKIN_WEAP.jadefan = (P, At, L, sk) => {
+  const { hl, g, t } = sk;
+  const dx = t[0] - g[0], dy = t[1] - g[1], a = Math.atan2(dy, dx), r = 34;
+  ctx.fillStyle = '#18544a';
+  ctx.beginPath(); ctx.moveTo(g[0], g[1]); ctx.arc(g[0], g[1], r, a - 0.85, a + 0.85); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#52f0c8'; ctx.lineWidth = 2.0;
+  ctx.beginPath(); ctx.arc(g[0], g[1], r * 0.78, a - 0.78, a + 0.78); ctx.stroke();
+  for (let i = -3; i <= 3; i++) {
+    const k = a + i * 0.24;
+    bar(g, [g[0] + Math.cos(k) * r, g[1] + Math.sin(k) * r], 1.5, i === 0 ? '#e0fff6' : '#28c79e');
+  }
+  bar(hl, g, 3.5, '#0f3630');
+};
+SKIN_WEAP.blazegauntlet = (P, At, L, sk) => {
+  for (const h of [sk.hf, sk.hb]) {
+    ctx.fillStyle = '#6e2014'; ctx.beginPath(); ctx.arc(h[0], h[1], 7.8, 0, 7); ctx.fill();
+    ctx.strokeStyle = '#ff9638'; ctx.lineWidth = 2.2; ctx.beginPath(); ctx.arc(h[0], h[1], 7.8, -0.8, 1.4); ctx.stroke();
+    glow(h, 9, '255,140,50', 0.48);
+  }
+};
+SKIN_WEAP.foxdaggers = (P, At, L, sk) => {
+  for (const h of [sk.hf, sk.hb]) {
+    const dir = h === sk.hf ? 1 : -1;
+    poly([[h[0], h[1] - 2], [h[0] + dir * sk.face * 22, h[1] - 8], [h[0] + dir * sk.face * 30, h[1] + 2], [h[0] + dir * sk.face * 12, h[1] + 4]], '#d4b8ff');
+    bar([h[0], h[1] - 4], [h[0], h[1] + 4], 2.5, '#a78bfa');
+  }
+};
+SKIN_WEAP.cranewing = (P, At, L, sk) => {
+  const { hl, g, t } = sk;
+  bar(hl, At(g, 8), 3.6, '#f2d080');
+  for (let i = 0; i < 4; i++) {
+    const f = 0.4 + i * 0.16;
+    poly([At(g, 4 + i * 4, 0), At(t, -i * 6, -12 - i * 2), At(t, -i * 5 + 4, -3)], i % 2 ? '#edf6ff' : '#a8e6ff');
+  }
+  bar(g, t, 2.2, '#ffffff');
+};
+SKIN_WEAP.gangpike = (P, At, L, sk) => {
+  const { hl, g, t } = sk;
+  bar(At(hl, -12), At(t, -14), 3.6, '#2a3448');
+  poly([At(t, -16, -2), At(t, 4, 0), At(t, -16, 2)], '#fff6d6');
+  poly([At(t, -14, 0), At(t, -22, -10), At(t, -10, -3)], '#f0c860');
+  poly([At(t, -14, 0), At(t, -22, 10), At(t, -10, 3)], '#f0c860');
+  ctx.strokeStyle = '#c83e3b'; ctx.lineWidth = 3.0;
+  ctx.beginPath(); ctx.moveTo(...At(t, -18, 0)); ctx.quadraticCurveTo(...At(t, -24, 9), ...At(t, -30, 5)); ctx.stroke();
+};
+SKIN_WEAP.soulbrush = (P, At, L, sk) => {
+  const { hl, g, t } = sk;
+  bar(At(hl, -6), At(t, -16), 4.6, '#221c38');
+  bar(At(t, -18, -3), At(t, -14, -3), 5.6, '#b48eff');
+  poly([At(t, -14, -4), At(t, 4, 0), At(t, -14, 4)], '#181228');
+  glow(At(t, -2, 0), 7, '180,142,255', 0.52);
+};
+SKIN_WEAP.frostrapier = (P, At, L, sk) => {
+  const { hl, g, t } = sk;
+  bar(hl, g, 3.0, '#182430');
+  ctx.strokeStyle = '#5ec8ff'; ctx.lineWidth = 2.0;
+  ctx.beginPath(); ctx.arc(g[0], g[1], 6, 0, 7); ctx.stroke();
+  poly([At(g, 0, -2.5), At(t, 3, 0), At(g, 0, 2.5)], '#eefaff');
+  glow(At(t, -8, 0), 5, '125,220,255', 0.45);
+};
+SKIN_WEAP.rocwing = (P, At, L, sk) => {
+  const { hl, g, t } = sk;
+  bar(hl, At(g, 6), 4.0, '#5a3a14');
+  for (let i = 0; i < 4; i++) {
+    poly([At(g, 4 + i * 4, 0), At(t, -i * 5, 13 + i * 2), At(t, -i * 4 + 4, 2)], i % 2 ? '#ffc84a' : '#fff4d0');
+  }
+  bar(g, t, 2.4, '#f0a828');
+};
+SKIN_WEAP.reapscythes = (P, At, L, sk) => {
+  for (const h of [sk.hf, sk.hb]) {
+    const dir = h === sk.hf ? 1 : -1;
+    bar(h, [h[0] + dir * sk.face * 22, h[1] - 12], 3.0, '#2a1842');
+    poly([[h[0] + dir * sk.face * 20, h[1] - 14], [h[0] + dir * sk.face * 34, h[1] - 6], [h[0] + dir * sk.face * 24, h[1] + 10], [h[0] + dir * sk.face * 26, h[1] - 4]], '#b26bff');
+  }
+};
+SKIN_WEAP.spiritflute = (P, At, L, sk) => {
+  const { hl, t } = sk;
+  bar(hl, t, 3.8, '#2ec9aa');
+  bar(At(hl, 6), At(t, -6), 2.0, '#e8fffb');
+  ctx.strokeStyle = '#4ce6c8'; ctx.lineWidth = 2.0;
+  ctx.beginPath(); ctx.moveTo(hl[0], hl[1]); ctx.lineTo(hl[0] - 4, hl[1] + 14); ctx.stroke();
+};
+SKIN_WEAP.overlordblade = (P, At, L, sk) => {
+  const { hl, g, t } = sk;
+  bar(At(hl, -4), g, 5.4, '#2a1410');
+  bar(At(g, 0, -11), At(g, 0, 11), 4.4, '#e6b450');
+  poly([At(g, 2, -6), At(t, -12, -8), At(t, 4, 0), At(t, -12, 7), At(g, 2, 6)], '#6e1e1a');
+  poly([At(g, 4, -2), At(t, 2, 0), At(t, -10, 2), At(g, 4, 2)], '#f2e4cc');
+};
+SKIN_WEAP.chimefan = (P, At, L, sk) => {
+  const { hl, g, t } = sk;
+  const dx = t[0] - g[0], dy = t[1] - g[1], a = Math.atan2(dy, dx), r = 32;
+  ctx.fillStyle = '#f5a8c4';
+  ctx.beginPath(); ctx.moveTo(g[0], g[1]); ctx.arc(g[0], g[1], r, a - 0.8, a + 0.8); ctx.closePath(); ctx.fill();
+  ctx.strokeStyle = '#f5fbff'; ctx.lineWidth = 2.0;
+  ctx.beginPath(); ctx.arc(g[0], g[1], r * 0.85, a - 0.75, a + 0.75); ctx.stroke();
+  bar(hl, g, 3.2, '#4a3642');
+  glow(At(g, 18, 0), 4, '255,168,200', 0.45);
+};
+SKIN_WEAP.iaidoblade = (P, At, L, sk) => {
+  const { hl, g, t } = sk;
+  bar(hl, g, 3.6, '#141822');
+  bar(At(g, 0, -6), At(g, 0, 6), 2.8, '#7c96d8');
+  ctx.strokeStyle = '#f8fbff'; ctx.lineWidth = 2.6;
+  ctx.beginPath(); ctx.moveTo(g[0], g[1]); ctx.quadraticCurveTo(...At(g, 26, -3), t[0], t[1]); ctx.stroke();
+};
+SKIN_WEAP.vermilionbrush = (P, At, L, sk) => {
+  const { hl, t } = sk;
+  bar(At(hl, -6), At(t, -15), 4.6, '#8a281e');
+  bar(At(t, -17, 0), At(t, -13, 0), 5.6, '#d9b36a');
+  poly([At(t, -13, -4), At(t, 4, 0), At(t, -13, 4)], '#ffeae4');
+  glow(At(t, -1, 0), 6, '245,105,80', 0.5);
+};
 
 function weapon(sk, L, outline, flash, f) {
   const g = sk.guard, t = sk.tip, hl = sk.hilt;
@@ -676,7 +824,7 @@ function weapon(sk, L, outline, flash, f) {
   const blade = flash ? '#fff' : L.blade;
   const ws = (L.deco && L.deco.weapStyle) || L.weapon;
   ctx.lineCap = 'round';
-  if (L.weapon !== 'hammer' && (skinWeapon(ws, sk, L, outline, flash, f) ||
+  if (L.weapon !== 'hammer' && L.weapon !== 'dyelash' && L.weapon !== 'bastionshell' && (skinWeapon(ws, sk, L, outline, flash, f) ||
       (ws !== L.weapon && skinWeapon(L.weapon, sk, L, outline, flash, f)))) return;
   const guardBar = (w, col = L.metal || '#d9b36a') => { ctx.strokeStyle = col; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(g[0] - px * w, g[1] - py * w); ctx.lineTo(g[0] + px * w, g[1] + py * w); ctx.stroke(); };
   switch (L.weapon) {
@@ -851,6 +999,47 @@ function weapon(sk, L, outline, flash, f) {
       if (!outline) {
         ctx.strokeStyle = `rgba(${L.slash},0.75)`; ctx.lineWidth = 1.2;
         ctx.beginPath(); ctx.moveTo(sk.hf[0], sk.hf[1]); ctx.quadraticCurveTo((sk.hf[0] + sk.hb[0]) / 2, (sk.hf[1] + sk.hb[1]) / 2 + 8, sk.hb[0], sk.hb[1]); ctx.stroke();
+      }
+      return;
+    }
+    case 'dyelash': {  // 幽篁：回纹绞带，柔韧绸带连铅坠
+      const s = flailSim(sk, L, 0);
+      if (!s) return;
+      const pts = s.p, hd = pts[pts.length - 1];
+      if (outline) {
+        ctx.strokeStyle = L.outline; ctx.lineWidth = 6.0;
+        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+        ctx.stroke(); circle(hd, 8); return;
+      }
+      ctx.strokeStyle = flash ? '#fff' : '#c2528c'; ctx.lineWidth = 3.4;
+      ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+      ctx.stroke();
+      ctx.fillStyle = flash ? '#fff' : '#6cf0c2'; circle(hd, 5.5);
+      ctx.strokeStyle = '#fce7cc'; ctx.lineWidth = 1.6;
+      ctx.beginPath(); ctx.arc(hd[0], hd[1], 5.5, 0, 7); ctx.stroke();
+      return;
+    }
+    case 'bastionshell': {  // 玄武：玄甲重链流星锤
+      const s = flailSim(sk, L, 0);
+      if (!s) return;
+      const pts = s.p, hd = pts[pts.length - 1];
+      if (outline) {
+        ctx.strokeStyle = L.outline; ctx.lineWidth = 5.5;
+        ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+        for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+        ctx.stroke(); circle(hd, 11.5); return;
+      }
+      ctx.strokeStyle = flash ? '#fff' : '#58695c'; ctx.lineWidth = 3.0;
+      ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+      ctx.stroke();
+      ctx.fillStyle = flash ? '#fff' : '#2d3b32'; circle(hd, 9.2);
+      ctx.strokeStyle = '#8cd48c'; ctx.lineWidth = 2.0;
+      for (let k = 0; k < 6; k++) {
+        const a = k * 1.047 + clock * 2;
+        line(hd, [hd[0] + Math.cos(a) * 11, hd[1] + Math.sin(a) * 11]);
       }
       return;
     }

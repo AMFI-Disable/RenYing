@@ -9,7 +9,7 @@ defHero({
     passiveDesc: '身轻如羽的御风仙客，可凌空滑翔；Q 鹤翼凌空振翅疾掠并射出仙羽，R 云岚沐羽悬空疗伤并震散近身强敌。',
     stat: { hp: 810, walk: 1.08, speed: 1.02, dmg: 0.97, reach: 1.04, swing: 1.02, jump: 1.08, weight: 0.85, defRating: 0.98, guardMax: 98, guardStab: 0.98, guardChip: 0.1, guardRegen: 30, poise: 0.95, size: 0.98 },
     fly: 1.0, hitFeel: 0.88,
-    look: { body: '#27384a', shade: '#131d28', outline: '#a8e6ff', outlineA: 0.9, scarf: '#f2d080', slash: '168,230,255', blade: '#ffffff', hair: '#edf6ff', head: 'feather', weapon: 'wing' },
+    look: { body: '#27384a', shade: '#131d28', outline: '#a8e6ff', outlineA: 0.9, scarf: '#f2d080', slash: '168,230,255', blade: '#ffffff', hair: '#edf6ff', head: 'crane-plume', weapon: 'cranewing' },
     ai: { range: [120, 270] },
     beats: ['tieshan', 'polang'], weakTo: ['lingque', 'yanling']
   },

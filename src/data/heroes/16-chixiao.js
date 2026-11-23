@@ -10,7 +10,7 @@ defHero({
     passiveDesc: '重击与蓄力攻击附带短暂霸体；Q 烈焰突刺与 R 炎轮扫荡命中后点燃对手。',
     stat: { hp: 860, walk: 0.96, speed: 0.95, dmg: 1.04, reach: 1.12, swing: 0.9, jump: 1.0, weight: 1.15, defRating: 1.08, guardMax: 110, guardStab: 1.05, guardChip: 0.08, guardRegen: 27, poise: 1.12, size: 1.04 },
     hitFeel: 1.05,
-    look: { body: '#3b1c18', shade: '#1f0d0a', outline: '#ff7a45', outlineA: 0.9, scarf: '#ff4d2e', slash: '255,115,65', blade: '#ffe6d0', hair: '#1d1210', head: 'headband', weapon: 'firerake' },
+    look: { body: '#3b1c18', shade: '#1f0d0a', outline: '#ff7a45', outlineA: 0.9, scarf: '#ff4d2e', slash: '255,115,65', blade: '#ffe6d0', hair: '#1d1210', head: 'fire-band', weapon: 'firerake' },
     ai: { range: [100, 240] },
     beats: ['qianji', 'lingque'], weakTo: ['lingshuang', 'liuyun']
   },

@@ -54,7 +54,14 @@ function targetPose(f) {
     }
   } else if (s === 'special') {
     if (f.sp === 'charge') {
-      const chargePoses = { qingfeng: 'qf_charge', feiying: 'fy_seal', tieshan: 'ts_lift', lingshuang: 'ls_stance', liuyun: 'ly_fanswipe', leiming: 'lm_boxer', moyu: 'my_stroke', yuehua: 'yh_lotus', yanling: 'yl_wings', yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_wind', cixian: 'lm_boxer', qianji: 'qf_charge' };
+      const chargePoses = {
+        qingfeng: 'qf_charge', feiying: 'fy_seal', tieshan: 'ts_lift', lingshuang: 'ls_stance', liuyun: 'ly_fanswipe', leiming: 'lm_boxer', moyu: 'my_stroke', yuehua: 'yh_lotus', yanling: 'yl_wings', yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_wind', cixian: 'lm_boxer', qianji: 'qf_charge',
+        chixiao: 'rk_l2s', youhuang: 'dl_l1s', xuanji: 'sg_l1s', polang: 'an_l1s',
+        cangming: 'ab_l1s', qingluan: 'jf_l2s', xuanwu: 'bs_l1s', chiyan: 'bg_l1s',
+        yinhu: 'fd_l1s', yunhe: 'cw_l2s', tiangang: 'gp_l1s', mojie: 'sb_l1s',
+        baihe: 'fr_l1s', jinpeng: 'rw_l2s', youming: 'rs_l1s', lingxi: 'sf_l1s',
+        bawang: 'ob_l1s', fengling: 'cf_l2s', wuya: 'ib_l1s', danqing: 'vb_l1s'
+      };
       p = POSES[chargePoses[f.ch.id] || 'sps']; k = 16;
     } else if (f.ch.ult === 'crescent') {
       const m = { dash: 'qf_thrust', miss: 'l3a', flurry: f.slashN % 2 ? 'l3a' : 'hva', final: 'a2a' };
@@ -91,14 +98,28 @@ function targetPose(f) {
     out.hf[1] += (out.hf[1] - out.neck[1]) * atkOvershoot * 0.6;
     out.neck[0] += atkOvershoot * 14;
   }
+  const hid = f.ch && f.ch.id, arch = f.ch && f.ch.archetype;
   if (s === 'idle' || s === 'victory') {
     const b = Math.sin(clock * 3.2 + f.idx) * 1.8;
     out.hip[1] += b; out.neck[1] += b * 1.35; out.hf[1] += b * 1.1; out.hb[1] += b * 0.9;
     out.sw += Math.sin(clock * 2.1 + f.idx) * 0.05;
+    if (s === 'idle') {
+      if (hid === 'wuya') { out.hip[1] += 6; out.neck[0] += 5; out.neck[1] += 6; out.hf = [6, -48]; out.sw = 2.85; }
+      else if (hid === 'yinhu' || hid === 'youming' || arch === 'assassin') { out.hip[1] += 5; out.neck[0] += 7; out.neck[1] += 6; out.hf[0] += 6; out.hb[0] -= 6; out.sw += 0.35; }
+      else if (hid === 'xuanwu' || hid === 'bawang' || hid === 'tiangang' || arch === 'tank') { out.hip[1] += 3; out.ff[0] += 4; out.fb[0] -= 4; out.hf[1] -= 4; out.sw -= 0.25; }
+      else if (hid === 'yunhe' || hid === 'jinpeng' || hid === 'qingluan' || hid === 'fengling') { const fl = Math.sin(clock * 2.6 + f.idx) * 3.5; out.hip[1] -= 4 + fl * 0.5; out.neck[1] -= 4 + fl * 0.5; out.hf[1] -= 8 + fl; out.hb[0] -= 8; }
+      else if (hid === 'chiyan' || hid === 'leiming') { out.hip[1] += 4; out.neck[0] += 8; out.hf = [28, -76]; out.hb = [10, -74]; out.sw = 0; }
+      else if (hid === 'lingxi' || hid === 'yuxiao') { out.hf = [16, -82]; out.hb = [10, -82]; out.sw = 1.25; }
+      else if (hid === 'mojie' || hid === 'danqing' || hid === 'xuanji') { out.neck[0] -= 2; out.hf[1] -= 10; out.hb[0] -= 8; out.sw -= 0.4; }
+    }
   } else if (s === 'walk') {
     const ph = f.walkPh, sn = Math.sin(ph), cs = Math.cos(ph);
-    out.ff = [4 + sn * 18, -Math.max(0, cs) * 12];
-    out.fb = [-4 - sn * 18, -Math.max(0, -cs) * 12];
+    const stride = arch === 'assassin' ? 22 : (arch === 'tank' ? 14 : 18);
+    const lift = arch === 'assassin' ? 15 : (arch === 'tank' ? 8 : 12);
+    out.ff = [4 + sn * stride, -Math.max(0, cs) * lift];
+    out.fb = [-4 - sn * stride, -Math.max(0, -cs) * lift];
+    if (arch === 'assassin') { out.neck[0] += 10; out.hip[1] += 4; }
+    else if (arch === 'tank') { out.hip[1] += 2; out.neck[0] += 2; }
     const weight = clamp((f.ch && f.ch.stat && f.ch.stat.weight) || 1, 0.75, 1.4);
     const bob = -Math.abs(cs) * (2.8 + (1 - weight) * 2.2);
     out.hip[1] += bob; out.neck[1] += bob; out.hf[1] += bob - sn * 2.2; out.hb[1] += bob + sn * 2.2;

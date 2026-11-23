@@ -9,7 +9,7 @@ defHero({
     passiveDesc: '身法诡谲难测，双刃连击迅疾致命；Q 噬影掠杀瞬闪穿敌，R 幽冥拘魂扯回中距对手并减速。',
     stat: { hp: 780, walk: 1.11, speed: 1.08, dmg: 1.03, reach: 0.96, swing: 1.1, jump: 1.08, weight: 0.85, defRating: 0.92, guardMax: 90, guardStab: 0.92, guardChip: 0.12, guardRegen: 30, poise: 0.9, size: 0.96 },
     hitFeel: 0.88,
-    look: { body: '#1c1528', shade: '#0d0914', outline: '#b26bff', outlineA: 0.9, scarf: '#8f44f5', slash: '180,110,255', blade: '#efe0ff', hair: '#110c1a', head: 'hood', weapon: 'dual' },
+    look: { body: '#1c1528', shade: '#0d0914', outline: '#b26bff', outlineA: 0.9, scarf: '#8f44f5', slash: '180,110,255', blade: '#efe0ff', hair: '#110c1a', head: 'ghost-cowl', weapon: 'reapscythes' },
     ai: { range: [75, 220] },
     beats: ['yuxiao', 'xuanji'], weakTo: ['tieshan', 'polang']
   },

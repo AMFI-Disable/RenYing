@@ -128,7 +128,7 @@ function drawFighter(f) {
   // 定身墨迹
   if (f.rooted && f.state === 'hitstun') { ctx.fillStyle = 'rgba(10,10,16,0.75)'; ctx.beginPath(); ctx.ellipse(f.x, 0, 36, 8, 0, 0, Math.PI * 2); ctx.fill(); }
   // 围巾
-  if (f.look.weapon === 'hammer') {   // 链锤：告诉物理模拟锤子现在该干什么
+  if (f.look.weapon === 'hammer' || f.look.weapon === 'dyelash' || f.look.weapon === 'bastionshell') {   // 链锤/绞带/玄甲链锤：告诉物理模拟锤子现在该干什么
     const L = f.look, hk = projs.find(p => p.owner === f.idx && (p.kind === 'hook' || p.kind === 'net') && !p.dead);
     if (hk && hk.kind === 'hook') { L.flMode = 'out'; L.flTo = [hk.x, hk.y]; }
     else if (hk) { const drop = hk.delay > 0 ? hk.delay / 0.25 : 0; L.flMode = 'ult'; L.flTo = [hk.x, hk.y + 45 - drop * 320 - 40]; }

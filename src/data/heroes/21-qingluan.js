@@ -9,7 +9,7 @@ defHero({
     passiveDesc: '灵巧善守的杏林医者；Q 翠羽清风挥出翠风击退并迟缓对手，R 鸾羽回春调息回血并震开贴身之敌。',
     stat: { hp: 800, walk: 1.04, speed: 1.02, dmg: 0.96, reach: 1.02, swing: 1.02, jump: 1.04, weight: 0.9, defRating: 1.0, guardMax: 102, guardStab: 1.02, guardChip: 0.09, guardRegen: 32, poise: 0.98, size: 0.97 },
     hitFeel: 0.88,
-    look: { body: '#163a36', shade: '#0a201e', outline: '#52f0c8', outlineA: 0.9, scarf: '#28c79e', slash: '82,240,200', blade: '#e0fff6', hair: '#182b28', head: 'bun', weapon: 'fan' },
+    look: { body: '#163a36', shade: '#0a201e', outline: '#52f0c8', outlineA: 0.9, scarf: '#28c79e', slash: '82,240,200', blade: '#e0fff6', hair: '#182b28', head: 'luan-crest', weapon: 'jadefan' },
     ai: { range: [110, 250] },
     beats: ['chixiao', 'youhuang'], weakTo: ['feiying', 'leiming']
   },

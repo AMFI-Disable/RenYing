@@ -9,7 +9,7 @@ defHero({
     passiveDesc: '借清风与铃音化险为夷；Q 清铃拂风挥扇送出双股疾风击退对手，R 和风祈愿摇铃回气血并震开近敌。',
     stat: { hp: 795, walk: 1.06, speed: 1.04, dmg: 0.95, reach: 1.02, swing: 1.04, jump: 1.06, weight: 0.88, defRating: 0.98, guardMax: 100, guardStab: 1.02, guardChip: 0.09, guardRegen: 32, poise: 0.94, size: 0.96 },
     hitFeel: 0.86,
-    look: { body: '#edf6fa', shade: '#9db8c9', outline: '#ffa8c8', outlineA: 0.88, scarf: '#ff85b2', slash: '165,225,255', blade: '#f5fbff', hair: '#1d222b', head: 'bun', weapon: 'fan' },
+    look: { body: '#edf6fa', shade: '#9db8c9', outline: '#ffa8c8', outlineA: 0.88, scarf: '#ff85b2', slash: '165,225,255', blade: '#f5fbff', hair: '#1d222b', head: 'chime-ribbons', weapon: 'chimefan' },
     ai: { range: [125, 285] },
     beats: ['tieshan', 'bawang'], weakTo: ['feiying', 'yanling']
   },

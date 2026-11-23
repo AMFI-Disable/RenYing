@@ -9,7 +9,7 @@ defHero({
     passiveDesc: '收鞘蓄势，出剑即决胜负；Q 无涯居合瞬闪拔刀穿斩，R 踏虚斩影闪避反击并挥出远程剑气。',
     stat: { hp: 850, walk: 1.04, speed: 1.05, dmg: 1.05, reach: 1.08, swing: 1.05, jump: 1.02, weight: 0.98, defRating: 1.02, guardMax: 108, guardStab: 1.06, guardChip: 0.08, guardRegen: 29, poise: 1.05, size: 1.0 },
     hitFeel: 1.02,
-    look: { body: '#1a2030', shade: '#0c101a', outline: '#d8e4ff', outlineA: 0.92, scarf: '#7c96d8', slash: '215,230,255', blade: '#f8fbff', hair: '#141822', head: 'topknot', weapon: 'sword' },
+    look: { body: '#1a2030', shade: '#0c101a', outline: '#d8e4ff', outlineA: 0.92, scarf: '#7c96d8', slash: '215,230,255', blade: '#f8fbff', hair: '#141822', head: 'iaido-bun', weapon: 'iaidoblade' },
     ai: { range: [95, 245] },
     beats: ['qianji', 'xuanji'], weakTo: ['tieshan', 'bawang']
   },

@@ -9,7 +9,7 @@ defHero({
     passiveDesc: '精准格挡与反手剑势凝结寒霜；Q 寒江贯虹疾刺减速对手，R 霜华凝镜短暂护体反震近敌。',
     stat: { hp: 835, walk: 1.03, speed: 1.02, dmg: 1.02, reach: 1.06, swing: 1.02, jump: 1.02, weight: 0.98, defRating: 1.02, guardMax: 105, guardStab: 1.04, guardChip: 0.09, guardRegen: 29, poise: 1.02, size: 1.0 },
     hitFeel: 0.96,
-    look: { body: '#dcebf7', shade: '#87a8c4', outline: '#5ec8ff', outlineA: 0.9, scarf: '#48b8f0', slash: '125,220,255', blade: '#eefaff', hair: '#182430', head: 'ponytail', weapon: 'sword' },
+    look: { body: '#dcebf7', shade: '#87a8c4', outline: '#5ec8ff', outlineA: 0.9, scarf: '#48b8f0', slash: '125,220,255', blade: '#eefaff', hair: '#182430', head: 'frost-braid', weapon: 'frostrapier' },
     ai: { range: [95, 235] },
     beats: ['chixiao', 'leiming'], weakTo: ['tieshan', 'moyu']
   },

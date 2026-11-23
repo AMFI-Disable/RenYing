@@ -9,7 +9,7 @@ defHero({
     passiveDesc: '身法诡谲的月下刺客；Q 狐步幻移穿影掠至敌后突袭并强化下击，R 幻月双斩凌空双刃连切打断起手。',
     stat: { hp: 785, walk: 1.14, speed: 1.12, dmg: 1.02, reach: 0.96, swing: 1.12, jump: 1.1, weight: 0.84, defRating: 0.92, guardMax: 90, guardStab: 0.94, guardChip: 0.12, guardRegen: 30, poise: 0.9, size: 0.94 },
     hitFeel: 0.86,
-    look: { body: '#272038', shade: '#130e1e', outline: '#d4b8ff', outlineA: 0.92, scarf: '#a78bfa', slash: '212,184,255', blade: '#f5f0ff', hair: '#e8e4f5', head: 'mask', weapon: 'dual' },
+    look: { body: '#272038', shade: '#130e1e', outline: '#d4b8ff', outlineA: 0.92, scarf: '#a78bfa', slash: '212,184,255', blade: '#f5f0ff', hair: '#e8e4f5', head: 'silver-ears', weapon: 'foxdaggers' },
     ai: { range: [65, 200] },
     beats: ['xuanji', 'yuxiao'], weakTo: ['tieshan', 'xuanwu']
   },

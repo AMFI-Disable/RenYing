@@ -40,10 +40,10 @@ const TIER_TXT = { cla: ['灵犀', '235,120,255'], cov: ['赤霄', '255,120,110'
 // 兵器上“发光的那一段”：刀剑枪是护手到刃尖，拳和葫芦是两只手，锤是锤头
 function skinBladeSeg(sk, f, L) {
   const w = L.weapon;
-  if (w === 'fists' || w === 'gourd') return null;
-  if (w === 'hammer') { const s = FLAIL.get(f); if (!s) return null; const n = s.p.length; return [s.p[n - 3], s.p[n - 1]]; }
-  if (w === 'flute' || w === 'brush') return [sk.hilt, sk.tip];
-  if (w === 'fan') { const dx = sk.tip[0] - sk.guard[0], dy = sk.tip[1] - sk.guard[1], d = Math.hypot(dx, dy) || 1; return [[sk.guard[0] + dx / d * 12, sk.guard[1] + dy / d * 12], [sk.guard[0] + dx / d * 31, sk.guard[1] + dy / d * 31]]; }
+  if (w === 'fists' || w === 'gourd' || w === 'blazegauntlet') return null;
+  if (w === 'hammer' || w === 'dyelash' || w === 'bastionshell') { const s = FLAIL.get(f); if (!s) return null; const n = s.p.length; return [s.p[n - 3], s.p[n - 1]]; }
+  if (w === 'flute' || w === 'brush' || w === 'spiritflute' || w === 'soulbrush' || w === 'vermilionbrush') return [sk.hilt, sk.tip];
+  if (w === 'fan' || w === 'jadefan' || w === 'chimefan') { const dx = sk.tip[0] - sk.guard[0], dy = sk.tip[1] - sk.guard[1], d = Math.hypot(dx, dy) || 1; return [[sk.guard[0] + dx / d * 12, sk.guard[1] + dy / d * 12], [sk.guard[0] + dx / d * 31, sk.guard[1] + dy / d * 31]]; }
   return [sk.guard, sk.tip];
 }
 const lerp2 = (a, b, k) => [a[0] + (b[0] - a[0]) * k, a[1] + (b[1] - a[1]) * k];

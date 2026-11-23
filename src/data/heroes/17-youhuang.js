@@ -10,7 +10,7 @@ defHero({
     passiveDesc: 'Q 幽篁毒针齐射三枚寒针使对手减速，R 回纹缠带从远处将对手拉近。',
     stat: { hp: 790, walk: 1.06, speed: 1.06, dmg: 0.98, reach: 1.08, swing: 1.06, jump: 1.06, weight: 0.88, defRating: 0.94, guardMax: 95, guardStab: 0.96, guardChip: 0.11, guardRegen: 30, poise: 0.92, size: 0.98 },
     hitFeel: 0.86,
-    look: { body: '#352238', shade: '#1d1024', outline: '#f4afcc', outlineA: 0.88, scarf: '#c2528c', slash: '245,137,180', blade: '#fce7cc', hair: '#121c16', head: 'ribbon', weapon: 'dyelash' },
+    look: { body: '#352238', shade: '#1d1024', outline: '#f4afcc', outlineA: 0.88, scarf: '#c2528c', slash: '245,137,180', blade: '#fce7cc', hair: '#121c16', head: 'silk-ribbon', weapon: 'dyelash' },
     ai: { range: [120, 270] },
     beats: ['tieshan', 'gouchen'], weakTo: ['feiying', 'yanling']
   },

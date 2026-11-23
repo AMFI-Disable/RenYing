@@ -9,7 +9,7 @@ defHero({
     passiveDesc: '以玉笛音律洞察先机、控场制敌；Q 灵犀音波远距扩散减速，R 余音震魄反制暗器并震晕近敌。',
     stat: { hp: 805, walk: 1.02, speed: 1.02, dmg: 0.98, reach: 1.06, swing: 1.02, jump: 1.02, weight: 0.9, defRating: 0.98, guardMax: 100, guardStab: 1.02, guardChip: 0.09, guardRegen: 30, poise: 0.96, size: 0.98 },
     hitFeel: 0.9,
-    look: { body: '#e5f5f2', shade: '#8ab8b0', outline: '#4ce6c8', outlineA: 0.9, scarf: '#2ec9aa', slash: '95,235,210', blade: '#e8fffb', hair: '#122420', head: 'jade', weapon: 'flute' },
+    look: { body: '#e5f5f2', shade: '#8ab8b0', outline: '#4ce6c8', outlineA: 0.9, scarf: '#2ec9aa', slash: '95,235,210', blade: '#e8fffb', hair: '#122420', head: 'flute-twintail', weapon: 'spiritflute' },
     ai: { range: [130, 290] },
     beats: ['feiying', 'lingque'], weakTo: ['chixiao', 'tieshan']
   },

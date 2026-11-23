@@ -10,7 +10,7 @@ defHero({
     passiveDesc: 'Q 星规流火远程压制，R 天枢重力牵引对手并削减架势，E 星宿归元用连击破阵。',
     stat: { hp: 810, walk: 1.0, speed: 1.0, dmg: 1.0, reach: 1.05, swing: 0.96, jump: 1.02, weight: 0.96, defRating: 1.0, guardMax: 102, guardStab: 1.0, guardChip: 0.09, guardRegen: 29, poise: 1.0, size: 1.0 },
     hitFeel: 0.92,
-    look: { body: '#1b2140', shade: '#0d1126', outline: '#9ea8ff', outlineA: 0.92, scarf: '#6e7bff', slash: '155,170,255', blade: '#eef0ff', hair: '#15182c', head: 'starguan', weapon: 'stargauge' },
+    look: { body: '#1b2140', shade: '#0d1126', outline: '#9ea8ff', outlineA: 0.92, scarf: '#6e7bff', slash: '155,170,255', blade: '#eef0ff', hair: '#15182c', head: 'astro-crown', weapon: 'stargauge' },
     ai: { range: [130, 290] },
     beats: ['moyu', 'yuxiao'], weakTo: ['feiying', 'chixiao']
   },
