@@ -117,6 +117,8 @@ if (xiwuCatTabsEl) {
     if (cat === 'combat') {
       const isCombat = ['cpu', 'tag3', 'watch2v2', 'chaos', 'mayhem'].includes(currentSingleTab);
       singleSec(isCombat ? currentSingleTab : 'cpu');
+    } else if (cat === 'large') {
+      singleSec(XIWU_LARGE_MODES.includes(currentSingleTab) ? currentSingleTab : 'melee');
     } else if (cat === 'training') {
       singleSec('train');
     } else if (cat === 'story') {

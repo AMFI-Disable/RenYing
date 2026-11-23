@@ -3606,6 +3606,7 @@ font-size: 13px;
             <div class="xiwu-large-bar" id="xiwuLargePanel">
               <span class="xl-lbl">团战规模</span>
               <div class="seg" id="largeSizeSeg">
+                <button type="button" data-lsize="2">2v2</button>
                 <button type="button" data-lsize="3">3v3</button>
                 <button type="button" data-lsize="5" class="sel">5v5</button>
                 <button type="button" data-lsize="8">8v8</button>
@@ -27050,6 +27051,7 @@ xiwuPresetRender(); toast('常用方案已删除');
 xiwuPresetRender();
 const SHELVED_MODES = OFFLINE_BUILD ? ['tower'] : ['stage', 'tower'];
 const modeShelved = m => SHELVED_MODES.includes(m);
+const XIWU_LARGE_MODES = ['melee', 'ctf', 'gauntlet'];
 for (const m of SHELVED_MODES) {
 const b = document.querySelector(`#singleTabs button[data-tab="${m}"]`);
 if (b) { b.style.display = 'none'; b.setAttribute('aria-hidden', 'true'); b.tabIndex = -1; }
@@ -27059,7 +27061,7 @@ if (sec && modeShelved(sec)) sec = 'saga';   // 收起来的模式（从旧链�
 const active = sec || currentSingleTab || 'cpu';
 currentSingleTab = active;
 const isStory = ['stage', 'saga', 'tower'].includes(active);
-const activeCat = active === 'train' ? 'training' : isStory ? 'story' : 'combat';
+const activeCat = active === 'train' ? 'training' : isStory ? 'story' : XIWU_LARGE_MODES.includes(active) ? 'large' : 'combat';
 for (const b of document.querySelectorAll('#xiwuCatTabs button')) {
 const on = b.dataset.cat === activeCat;
 b.classList.toggle('sel', on);
@@ -27393,12 +27395,13 @@ const szSeg = $id('largeSizeSeg');
 if (szSeg) szSeg.addEventListener('click', e => {
 const b = e.target.closest('[data-lsize]'); if (!b) return;
 largeTeamSize = +b.dataset.lsize || 5;
+$id('largeStartMelee').disabled = largeTeamSize < 3;
 szSeg.querySelectorAll('[data-lsize]').forEach(x => x.classList.toggle('sel', x === b));
 });
 if ($id('largeStartMelee')) $id('largeStartMelee').addEventListener('click', () => startMelee(largeTeamSize, menuHeroId, pickLevel || 'normal', typeof teamMutator !== 'undefined' ? teamMutator : 'normal'));
 if ($id('largeStartCtf')) $id('largeStartCtf').addEventListener('click', () => startCtf(largeTeamSize, menuHeroId, pickLevel || 'normal'));
 if ($id('largeStartGauntlet')) $id('largeStartGauntlet').addEventListener('click', () => startGauntlet(menuHeroId, pickLevel || 'normal'));
-if ($id('cardMelee')) $id('cardMelee').addEventListener('dblclick', () => startMelee(largeTeamSize, menuHeroId, pickLevel || 'normal'));
+if ($id('cardMelee')) $id('cardMelee').addEventListener('dblclick', () => $id('largeStartMelee').click());
 if ($id('cardCtf')) $id('cardCtf').addEventListener('dblclick', () => startCtf(largeTeamSize, menuHeroId, pickLevel || 'normal'));
 if ($id('cardGauntlet')) $id('cardGauntlet').addEventListener('dblclick', () => startGauntlet(menuHeroId, pickLevel || 'normal'));
 })();
@@ -30737,6 +30740,8 @@ const cat = b.dataset.cat;
 if (cat === 'combat') {
 const isCombat = ['cpu', 'tag3', 'watch2v2', 'chaos', 'mayhem'].includes(currentSingleTab);
 singleSec(isCombat ? currentSingleTab : 'cpu');
+} else if (cat === 'large') {
+singleSec(XIWU_LARGE_MODES.includes(currentSingleTab) ? currentSingleTab : 'melee');
 } else if (cat === 'training') {
 singleSec('train');
 } else if (cat === 'story') {

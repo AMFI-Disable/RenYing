@@ -119,6 +119,7 @@ xiwuPresetRender();
 // 守关在离线版里是主要内容（离线版没有联机），所以离线版照旧留着。天机乱斗、通天神决已经是对战里的「战场异变」选项，山河异境的图在联机里投票选。
 const SHELVED_MODES = OFFLINE_BUILD ? ['tower'] : ['stage', 'tower'];
 const modeShelved = m => SHELVED_MODES.includes(m);
+const XIWU_LARGE_MODES = ['melee', 'ctf', 'gauntlet'];
 for (const m of SHELVED_MODES) {
   const b = document.querySelector(`#singleTabs button[data-tab="${m}"]`);
   if (b) { b.style.display = 'none'; b.setAttribute('aria-hidden', 'true'); b.tabIndex = -1; }
@@ -130,7 +131,7 @@ function singleSec(sec) {
   currentSingleTab = active;
 
   const isStory = ['stage', 'saga', 'tower'].includes(active);
-  const activeCat = active === 'train' ? 'training' : isStory ? 'story' : 'combat';
+  const activeCat = active === 'train' ? 'training' : isStory ? 'story' : XIWU_LARGE_MODES.includes(active) ? 'large' : 'combat';
 
   for (const b of document.querySelectorAll('#xiwuCatTabs button')) {
     const on = b.dataset.cat === activeCat;

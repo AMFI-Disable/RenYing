@@ -252,12 +252,13 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
   if (szSeg) szSeg.addEventListener('click', e => {
     const b = e.target.closest('[data-lsize]'); if (!b) return;
     largeTeamSize = +b.dataset.lsize || 5;
+    $id('largeStartMelee').disabled = largeTeamSize < 3;
     szSeg.querySelectorAll('[data-lsize]').forEach(x => x.classList.toggle('sel', x === b));
   });
   if ($id('largeStartMelee')) $id('largeStartMelee').addEventListener('click', () => startMelee(largeTeamSize, menuHeroId, pickLevel || 'normal', typeof teamMutator !== 'undefined' ? teamMutator : 'normal'));
   if ($id('largeStartCtf')) $id('largeStartCtf').addEventListener('click', () => startCtf(largeTeamSize, menuHeroId, pickLevel || 'normal'));
   if ($id('largeStartGauntlet')) $id('largeStartGauntlet').addEventListener('click', () => startGauntlet(menuHeroId, pickLevel || 'normal'));
-  if ($id('cardMelee')) $id('cardMelee').addEventListener('dblclick', () => startMelee(largeTeamSize, menuHeroId, pickLevel || 'normal'));
+  if ($id('cardMelee')) $id('cardMelee').addEventListener('dblclick', () => $id('largeStartMelee').click());
   if ($id('cardCtf')) $id('cardCtf').addEventListener('dblclick', () => startCtf(largeTeamSize, menuHeroId, pickLevel || 'normal'));
   if ($id('cardGauntlet')) $id('cardGauntlet').addEventListener('dblclick', () => startGauntlet(menuHeroId, pickLevel || 'normal'));
 })();

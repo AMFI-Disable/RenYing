@@ -8,6 +8,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- The Large Battles category opens from the homepage and Mode Hall. Capture the Banner can now be launched in 2v2 from the team-size selector.
+
 - Grand Melee now counts knockouts against team tickets, Capture the Banner uses captures to determine victory and fields four fighters in 2v2, and Endless Gauntlet advances after an enemy knockout. Raid waits for the last teammate to fall, and the World Boss can enter its next phase after taking lethal damage. Rematches restart the selected mode, and both keyboard layouts control the solo fighter in Capture the Banner and Endless Gauntlet.
 
 ### Added
