@@ -18,6 +18,9 @@
   'use strict';
   const C = {};
   C.VER = 5;                                   // 5：加入武学徽记和架势进度（4：市场只剩玩家之间买卖，武器箱和货郎改成商店固定价格）
+  C.UNIVERSAL_PROMO_CODE = 'RENYINGALL';       // 全服通用全内容解锁兑换码（动态同步所有侠客、皮肤、徽记、灵宠、招式流派与资源，兼容未来更新）
+  C.UNIVERSAL_PROMO_INK = 100000;
+  C.UNIVERSAL_PROMO_CASES = 10;
   C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
   C.SEASON_DAYS = 32;
   C.INV_MAX = 1000000000, C.HIST_MAX = 40;
@@ -541,7 +544,7 @@
   C.blank = () => ({
     v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
     badgeGift: 0, badgeOwned: {}, badgeEquip: {}, badgeSigils: 0, heroKOs: {}, stances: {},
-    petOwned: {}, petEquip: {}, skillUnlocks: {}, skillLoadout: {}, appreciation2026: 0,
+    petOwned: {}, petEquip: {}, skillUnlocks: {}, skillLoadout: {}, appreciation2026: 0, promoAll: 0, promoKeys: [],
     lst: [], hist: [], od: { d: 0, n: 0 }, pd: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, zw: { w: 0, n: 0 }, zf: 0, drop: { w: 0, g: 0, n: 0, sup: 0 },
     op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
     stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
@@ -570,6 +573,8 @@
     s.v = C.VER;
     s.badgeGift = s.badgeGift ? 1 : 0;
     s.appreciation2026 = s.appreciation2026 ? 1 : 0;
+    s.promoAll = s.promoAll ? 1 : 0;
+    s.promoKeys = Array.from(new Set((Array.isArray(s.promoKeys) ? s.promoKeys : []).filter(k => C.isItem(k))));
     s.badgeOwned = Object.fromEntries(Object.entries(s.badgeOwned).filter(([id, tier]) => own(C.BADGES, id) && own(C.BADGE_TIER, tier)));
     s.badgeEquip = Object.fromEntries(Object.entries(s.badgeEquip).filter(([h, id]) => C.HERO_IDS.includes(h) && own(s.badgeOwned, id)).slice(0, C.HERO_IDS.length));
     const equippedBadges = new Set();
@@ -1388,8 +1393,64 @@
     return { ok: true };
   };
   A.sync = () => ({ ok: true });
-  // 兑换码：码在服务器上核对，里面的东西在跑这一步之前就放进存档了；本机存档没有服务器，领不了
-  A.claimCode = (s, a, env) => env.server ? { ok: true } : { err: '礼包兑换码要连上服务器才能领' };
+  // 全服全内容解锁（动态读取当前目录，不重复发放已有饰品；记录已发过的 promoKeys 以便未来新内容自动补齐而不刷旧饰品）
+  C.applyPromoAll = (s, env, opts = {}) => {
+    const first = !!opts.firstClaim || !s.promoAll;
+    s.promoAll = 1;
+    s.badgeGift = 1;
+    if (first) {
+      giveInk(env, C.UNIVERSAL_PROMO_INK);
+      for (const cid of C.CASES) s.cases[cid] = Math.min(1e6, (s.cases[cid] || 0) + C.UNIVERSAL_PROMO_CASES);
+      s.term = Math.min(1e6, (s.term || 0) + 10);
+      s.tags = Math.min(1e6, (s.tags || 0) + 10);
+      s.badgeSigils = Math.min(1e6, (s.badgeSigils || 0) + 100);
+    }
+    const seenKeys = new Set(Array.isArray(s.promoKeys) ? s.promoKeys : []);
+    const haveInv = new Set(s.inv.map(x => x.k));
+    const haveLst = new Set((s.lst || []).map(L => L && L.it && L.it.k).filter(Boolean));
+    let addedSkins = 0;
+    for (const k of Object.keys(C.ITEM)) {
+      if (!seenKeys.has(k) && !haveInv.has(k) && !haveLst.has(k) && s.inv.length < C.INV_MAX) {
+        C.addItem(s, C.mkItem(s, k, 'promo', env.rnd, { st: -1 }), env);
+        haveInv.add(k);
+        addedSkins++;
+      }
+      seenKeys.add(k);
+    }
+    s.promoKeys = Array.from(seenKeys);
+    let addedBadges = 0;
+    for (const bid of Object.keys(C.BADGES)) {
+      if (s.badgeOwned[bid] !== 'purpgold') { s.badgeOwned[bid] = 'purpgold'; addedBadges++; }
+    }
+    let addedPets = 0;
+    for (const pid of Object.keys(C.PETS)) {
+      if (s.petOwned[pid] !== 'immortal') { s.petOwned[pid] = 'immortal'; addedPets++; }
+    }
+    const nonStd = Object.keys(C.SKILL_VARIANTS).filter(v => v !== 'std');
+    let addedHeroes = 0, addedSkills = 0;
+    for (const h of C.HERO_IDS) {
+      if ((s.heroKOs[h] || 0) < 300) { s.heroKOs[h] = 300; addedHeroes++; }
+      if (!isObj(s.skillUnlocks[h])) s.skillUnlocks[h] = {};
+      for (const sl of C.SKILL_SLOTS) {
+        const cur = Array.isArray(s.skillUnlocks[h][sl]) ? s.skillUnlocks[h][sl].slice() : [];
+        for (const v of nonStd) if (!cur.includes(v)) { cur.push(v); addedSkills++; }
+        s.skillUnlocks[h][sl] = cur;
+      }
+    }
+    if (!Object.keys(s.badgeEquip || {}).length) A.badgeAutoAssign(s);
+    const changed = first || addedSkins > 0 || addedBadges > 0 || addedPets > 0 || addedHeroes > 0 || addedSkills > 0;
+    return { first, addedSkins, addedBadges, addedPets, addedHeroes, addedSkills, changed };
+  };
+  // 兑换码：码在服务器上核对，里面的东西在跑这一步之前就放进存档了；全服通用码也支持本机/离线存档
+  A.claimCode = (s, a, env) => {
+    const k = String((a && a.code) || '').trim().toUpperCase();
+    if (k === C.UNIVERSAL_PROMO_CODE && !env.server) {
+      const sum = C.applyPromoAll(s, env, { firstClaim: !s.promoAll });
+      if (!sum.changed) return { err: '这个兑换码你已经领过了' };
+      return { ok: true, promoAll: true, ...sum };
+    }
+    return env.server ? { ok: true } : { err: '礼包兑换码要连上服务器才能领' };
+  };
   A.gift = (s, a, env) => {   // 第一次进武库：送一个初刃武器箱和一台货郎
     if (s.gift) return { err: '已经领过了' };
     s.gift = 1; s.cases.c1++; s.term++;

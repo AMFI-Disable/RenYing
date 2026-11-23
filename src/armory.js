@@ -466,7 +466,13 @@
     } catch (e) {}
   }
   // 一份补偿里有什么：「500 墨锭、初刃武器箱 ×2、货郎 ×1」
-  const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `货郎 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : '', g.n ? `${g.n} 款饰品` : '', g.skin ? `星座饰品「${skinName(g.skin)}」` : ''].filter(Boolean).join('、') || '这些饰品你都已经有了';
+  const giftText = g => {
+    if (g && g.promoAll) {
+      if (g.synced) return g.n ? `已同步最新内容（新增 ${g.n} 款饰品及最新解锁）` : '已同步最新更新的全部解锁内容';
+      return `全侠客 + 全皮肤 + 全紫金徽记 + 全仙阶灵宠 + 全招式流派 + ${fmt(C.UNIVERSAL_PROMO_INK)} 墨锭 + 全武器箱各 ×${C.UNIVERSAL_PROMO_CASES} + 货郎 ×10 + 改名标签 ×10 + 徽记碎片 ×100`;
+    }
+    return [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `货郎 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : '', g.n ? `${g.n} 款饰品` : '', g.skin ? `星座饰品「${skinName(g.skin)}」` : ''].filter(Boolean).join('、') || '这些饰品你都已经有了';
+  };
   function apply(out, quiet) {
     if (!out) return;
     if (out.state) {
@@ -496,6 +502,12 @@
       for (const k of out.skinsDel || []) set.delete(k);
       PROF.skins = Array.from(set);
       own = (out.skinsAdd || []).length + (out.skinsDel || []).length > 0 || own;
+    }
+    if (Array.isArray(out.owned)) { PROF.owned = Array.from(new Set([...(PROF.owned || []), ...out.owned])); }
+    if (ST && ST.promoAll) {
+      PROF.owned = Array.from(new Set([...(PROF.owned || []), ...CHARS.map(c => c.id)]));
+      PROF.skins = Array.from(new Set([...(PROF.skins || []), ...Object.keys(SKINS)]));
+      own = true;
     }
     if (out.equip && typeof out.equip === 'object') { PROF.equip = PROF.equip || {}; for (const [c, k] of Object.entries(out.equip)) { own = true; if (k === null) delete PROF.equip[c]; else PROF.equip[c] = k; } }
     if (out.sold && out.sold.length) { MKD.at = 0; for (const x of out.sold) toast(`挂单卖给了别的玩家：${itemName({ k: x.k, st: x.st })}，到账 ${x.gain} 墨锭`); }   // 后台同步结到的也提示
@@ -1641,9 +1653,20 @@
     try { const b = document.querySelector('#topNav [data-nav="armory"]'); if (b) b.classList.toggle('tn-dot', !!dots().any); } catch (e) {}
     return r;
   };
-  // 礼包兑换码（管理后台建的）：码在服务器上核对，里面的东西直接进存档。game.js 的兑换框先认游戏里写死的几个码，认不出来才问这里
+  // 礼包兑换码（管理后台建的 + 全服通用解锁码 RENYINGALL）：码在服务器上核对，里面的东西直接进存档；全服通用码也支持本机/离线存档
   window.armoryRedeem = async function (code) {
+    const up = String(code || '').trim().toUpperCase();
+    const isUniversal = up === C.UNIVERSAL_PROMO_CODE;
     const NEED = '礼包兑换码要先登录云端账号才能领';
+    if (isUniversal && (!cloudOn() || OFFLINE_BUILD)) {
+      if (PROF.guest && !OFFLINE_BUILD) return { err: '请先登录账号再兑换全服解锁码' };
+      if (!ST) loadLocal(LOCAL_V, true);
+      const r = await act('claimCode', { code: up });
+      if (!r || !r.ok) return { err: (r && r.err) || '兑换失败' };
+      redrawLooks();
+      if ($id('armory') && $id('armory').classList.contains('on')) render();
+      return { ok: true, note: '全服全内容解锁礼', text: giftText({ promoAll: true, synced: !r.first, n: r.addedSkins }) };
+    }
     if (!cloudOn() || PROF.guest) return { err: NEED };
     if (MODE !== 'server') await connect(true);
     if (MODE !== 'server') return { err: MODE === 'none' ? NEED : MODE === 'offline' || MODE === 'wait' ? '连不上服务器，等联网了再试' : '服务器还没开兑换码，等更新以后再试' };
@@ -1651,8 +1674,10 @@
     BUSY = true; busyUi(true);
     try {
       if (FLUSH) await Promise.race([FLUSH().catch(() => {}), new Promise(r => setTimeout(r, 3000))]);   // 先把本机的存档变化报上去，免得两边对不上
-      const out = await ECON('claimCode', { code });
+      const out = await ECON('claimCode', { code: up });
       apply(out);
+      redrawLooks();
+      if ($id('armory') && $id('armory').classList.contains('on')) render();
       return out && out.code ? { ok: true, note: String(out.code.note || ''), text: giftText(out.code) } : { err: '兑换码无效或已过期' };
     } catch (e) {
       if (e && e.ban && typeof acRefresh === 'function') acRefresh();

@@ -4927,7 +4927,7 @@ gap: 6px;
           </div>
           <p class="sub" style="margin:4px 0 14px;text-align:left">输入官方发布的礼包兑换码或密令，兑换丰厚墨锭与珍稀福利。</p>
           <div class="row redeemrow">
-            <input id="rdCode" maxlength="32" placeholder="输入礼包兑换码（如 RENYING666）" autocomplete="off" spellcheck="false">
+            <input id="rdCode" maxlength="32" placeholder="输入礼包兑换码（如 RENYINGALL）" autocomplete="off" spellcheck="false">
             <button class="go" id="rdBtn">兑换</button>
           </div>
           <p class="netnote" id="tMsg" style="min-height:22px;margin-top:6px"></p>
@@ -46257,7 +46257,8 @@ toast('该兑换码已作废');
 if ($id('tMsg')) $id('tMsg').textContent = '该兑换码已作废';
 return;
 }
-if (!OFFLINE_BUILD && /^[A-Z0-9]{4,20}$/.test(up) && typeof window.armoryRedeem === 'function') {
+const isUniversal = typeof ArmoryCore !== 'undefined' && up === ArmoryCore.UNIVERSAL_PROMO_CODE;
+if ((!OFFLINE_BUILD || isUniversal) && /^[A-Z0-9]{4,20}$/.test(up) && typeof window.armoryRedeem === 'function') {
 const btn = $id('rdBtn');
 if (btn) btn.disabled = true;
 if ($id('tMsg')) $id('tMsg').textContent = '正在兑换…';
@@ -58823,6 +58824,9 @@ document.addEventListener('visibilitychange', () => { if (socVisible() && SOC.da
 'use strict';
 const C = {};
 C.VER = 5;                                   // 5：加入武学徽记和架势进度（4：市场只剩玩家之间买卖，武器箱和货郎改成商店固定价格）
+C.UNIVERSAL_PROMO_CODE = 'RENYINGALL';       // 全服通用全内容解锁兑换码（动态同步所有侠客、皮肤、徽记、灵宠、招式流派与资源，兼容未来更新）
+C.UNIVERSAL_PROMO_INK = 100000;
+C.UNIVERSAL_PROMO_CASES = 10;
 C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
 C.SEASON_DAYS = 32;
 C.INV_MAX = 1000000000, C.HIST_MAX = 40;
@@ -59291,7 +59295,7 @@ C.rwBlank = () => ({ d: 0, w: 0, dp: { games: 0, wins: 0, combo: 0, ults: 0 }, w
 C.blank = () => ({
 v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
 badgeGift: 0, badgeOwned: {}, badgeEquip: {}, badgeSigils: 0, heroKOs: {}, stances: {},
-petOwned: {}, petEquip: {}, skillUnlocks: {}, skillLoadout: {}, appreciation2026: 0,
+petOwned: {}, petEquip: {}, skillUnlocks: {}, skillLoadout: {}, appreciation2026: 0, promoAll: 0, promoKeys: [],
 lst: [], hist: [], od: { d: 0, n: 0 }, pd: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, zw: { w: 0, n: 0 }, zf: 0, drop: { w: 0, g: 0, n: 0, sup: 0 },
 op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
 stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
@@ -59316,6 +59320,8 @@ for (const k of Object.keys(s)) if (!(k in b)) delete s[k];
 s.v = C.VER;
 s.badgeGift = s.badgeGift ? 1 : 0;
 s.appreciation2026 = s.appreciation2026 ? 1 : 0;
+s.promoAll = s.promoAll ? 1 : 0;
+s.promoKeys = Array.from(new Set((Array.isArray(s.promoKeys) ? s.promoKeys : []).filter(k => C.isItem(k))));
 s.badgeOwned = Object.fromEntries(Object.entries(s.badgeOwned).filter(([id, tier]) => own(C.BADGES, id) && own(C.BADGE_TIER, tier)));
 s.badgeEquip = Object.fromEntries(Object.entries(s.badgeEquip).filter(([h, id]) => C.HERO_IDS.includes(h) && own(s.badgeOwned, id)).slice(0, C.HERO_IDS.length));
 const equippedBadges = new Set();
@@ -60106,7 +60112,62 @@ s.tk = { t0: env.now, mode };
 return { ok: true };
 };
 A.sync = () => ({ ok: true });
-A.claimCode = (s, a, env) => env.server ? { ok: true } : { err: '礼包兑换码要连上服务器才能领' };
+C.applyPromoAll = (s, env, opts = {}) => {
+const first = !!opts.firstClaim || !s.promoAll;
+s.promoAll = 1;
+s.badgeGift = 1;
+if (first) {
+giveInk(env, C.UNIVERSAL_PROMO_INK);
+for (const cid of C.CASES) s.cases[cid] = Math.min(1e6, (s.cases[cid] || 0) + C.UNIVERSAL_PROMO_CASES);
+s.term = Math.min(1e6, (s.term || 0) + 10);
+s.tags = Math.min(1e6, (s.tags || 0) + 10);
+s.badgeSigils = Math.min(1e6, (s.badgeSigils || 0) + 100);
+}
+const seenKeys = new Set(Array.isArray(s.promoKeys) ? s.promoKeys : []);
+const haveInv = new Set(s.inv.map(x => x.k));
+const haveLst = new Set((s.lst || []).map(L => L && L.it && L.it.k).filter(Boolean));
+let addedSkins = 0;
+for (const k of Object.keys(C.ITEM)) {
+if (!seenKeys.has(k) && !haveInv.has(k) && !haveLst.has(k) && s.inv.length < C.INV_MAX) {
+C.addItem(s, C.mkItem(s, k, 'promo', env.rnd, { st: -1 }), env);
+haveInv.add(k);
+addedSkins++;
+}
+seenKeys.add(k);
+}
+s.promoKeys = Array.from(seenKeys);
+let addedBadges = 0;
+for (const bid of Object.keys(C.BADGES)) {
+if (s.badgeOwned[bid] !== 'purpgold') { s.badgeOwned[bid] = 'purpgold'; addedBadges++; }
+}
+let addedPets = 0;
+for (const pid of Object.keys(C.PETS)) {
+if (s.petOwned[pid] !== 'immortal') { s.petOwned[pid] = 'immortal'; addedPets++; }
+}
+const nonStd = Object.keys(C.SKILL_VARIANTS).filter(v => v !== 'std');
+let addedHeroes = 0, addedSkills = 0;
+for (const h of C.HERO_IDS) {
+if ((s.heroKOs[h] || 0) < 300) { s.heroKOs[h] = 300; addedHeroes++; }
+if (!isObj(s.skillUnlocks[h])) s.skillUnlocks[h] = {};
+for (const sl of C.SKILL_SLOTS) {
+const cur = Array.isArray(s.skillUnlocks[h][sl]) ? s.skillUnlocks[h][sl].slice() : [];
+for (const v of nonStd) if (!cur.includes(v)) { cur.push(v); addedSkills++; }
+s.skillUnlocks[h][sl] = cur;
+}
+}
+if (!Object.keys(s.badgeEquip || {}).length) A.badgeAutoAssign(s);
+const changed = first || addedSkins > 0 || addedBadges > 0 || addedPets > 0 || addedHeroes > 0 || addedSkills > 0;
+return { first, addedSkins, addedBadges, addedPets, addedHeroes, addedSkills, changed };
+};
+A.claimCode = (s, a, env) => {
+const k = String((a && a.code) || '').trim().toUpperCase();
+if (k === C.UNIVERSAL_PROMO_CODE && !env.server) {
+const sum = C.applyPromoAll(s, env, { firstClaim: !s.promoAll });
+if (!sum.changed) return { err: '这个兑换码你已经领过了' };
+return { ok: true, promoAll: true, ...sum };
+}
+return env.server ? { ok: true } : { err: '礼包兑换码要连上服务器才能领' };
+};
 A.gift = (s, a, env) => {   // 第一次进武库：送一个初刃武器箱和一台货郎
 if (s.gift) return { err: '已经领过了' };
 s.gift = 1; s.cases.c1++; s.term++;
@@ -60619,7 +60680,13 @@ if (menuHeroId >= 0) { MENU_HERO = null; setMenuHero(menuHeroId); }
 applySkins();
 } catch (e) {}
 }
-const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `货郎 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : '', g.n ? `${g.n} 款饰品` : '', g.skin ? `星座饰品「${skinName(g.skin)}」` : ''].filter(Boolean).join('、') || '这些饰品你都已经有了';
+const giftText = g => {
+if (g && g.promoAll) {
+if (g.synced) return g.n ? `已同步最新内容（新增 ${g.n} 款饰品及最新解锁）` : '已同步最新更新的全部解锁内容';
+return `全侠客 + 全皮肤 + 全紫金徽记 + 全仙阶灵宠 + 全招式流派 + ${fmt(C.UNIVERSAL_PROMO_INK)} 墨锭 + 全武器箱各 ×${C.UNIVERSAL_PROMO_CASES} + 货郎 ×10 + 改名标签 ×10 + 徽记碎片 ×100`;
+}
+return [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `货郎 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : '', g.n ? `${g.n} 款饰品` : '', g.skin ? `星座饰品「${skinName(g.skin)}」` : ''].filter(Boolean).join('、') || '这些饰品你都已经有了';
+};
 function apply(out, quiet) {
 if (!out) return;
 if (out.state) {
@@ -60649,6 +60716,12 @@ for (const k of out.skinsAdd || []) set.add(k);
 for (const k of out.skinsDel || []) set.delete(k);
 PROF.skins = Array.from(set);
 own = (out.skinsAdd || []).length + (out.skinsDel || []).length > 0 || own;
+}
+if (Array.isArray(out.owned)) { PROF.owned = Array.from(new Set([...(PROF.owned || []), ...out.owned])); }
+if (ST && ST.promoAll) {
+PROF.owned = Array.from(new Set([...(PROF.owned || []), ...CHARS.map(c => c.id)]));
+PROF.skins = Array.from(new Set([...(PROF.skins || []), ...Object.keys(SKINS)]));
+own = true;
 }
 if (out.equip && typeof out.equip === 'object') { PROF.equip = PROF.equip || {}; for (const [c, k] of Object.entries(out.equip)) { own = true; if (k === null) delete PROF.equip[c]; else PROF.equip[c] = k; } }
 if (out.sold && out.sold.length) { MKD.at = 0; for (const x of out.sold) toast(`挂单卖给了别的玩家：${itemName({ k: x.k, st: x.st })}，到账 ${x.gain} 墨锭`); }   // 后台同步结到的也提示
@@ -61751,7 +61824,18 @@ try { const b = document.querySelector('#topNav [data-nav="armory"]'); if (b) b.
 return r;
 };
 window.armoryRedeem = async function (code) {
+const up = String(code || '').trim().toUpperCase();
+const isUniversal = up === C.UNIVERSAL_PROMO_CODE;
 const NEED = '礼包兑换码要先登录云端账号才能领';
+if (isUniversal && (!cloudOn() || OFFLINE_BUILD)) {
+if (PROF.guest && !OFFLINE_BUILD) return { err: '请先登录账号再兑换全服解锁码' };
+if (!ST) loadLocal(LOCAL_V, true);
+const r = await act('claimCode', { code: up });
+if (!r || !r.ok) return { err: (r && r.err) || '兑换失败' };
+redrawLooks();
+if ($id('armory') && $id('armory').classList.contains('on')) render();
+return { ok: true, note: '全服全内容解锁礼', text: giftText({ promoAll: true, synced: !r.first, n: r.addedSkins }) };
+}
 if (!cloudOn() || PROF.guest) return { err: NEED };
 if (MODE !== 'server') await connect(true);
 if (MODE !== 'server') return { err: MODE === 'none' ? NEED : MODE === 'offline' || MODE === 'wait' ? '连不上服务器，等联网了再试' : '服务器还没开兑换码，等更新以后再试' };
@@ -61759,8 +61843,10 @@ if (BUSY) return { err: '上一步还没做完，稍等一下' };
 BUSY = true; busyUi(true);
 try {
 if (FLUSH) await Promise.race([FLUSH().catch(() => {}), new Promise(r => setTimeout(r, 3000))]);   // 先把本机的存档变化报上去，免得两边对不上
-const out = await ECON('claimCode', { code });
+const out = await ECON('claimCode', { code: up });
 apply(out);
+redrawLooks();
+if ($id('armory') && $id('armory').classList.contains('on')) render();
 return out && out.code ? { ok: true, note: String(out.code.note || ''), text: giftText(out.code) } : { err: '兑换码无效或已过期' };
 } catch (e) {
 if (e && e.ban && typeof acRefresh === 'function') acRefresh();

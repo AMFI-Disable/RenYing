@@ -321,6 +321,70 @@ section('兑换码：管理后台建、玩家在游戏的兑换框输入；每�
   ok(au.rows.some(r => r.act === 'code_new' && r.uid === '*' && parseDetail(r.detail).code === 'SPRING2026' && parseDetail(r.detail).why === '新春活动' && parseDetail(r.detail).uses === 2) && au.rows.some(r => r.act === 'code_off' && parseDetail(r.detail).code === 'STOPME' && parseDetail(r.detail).why === '发错了'), '操作记录里有建码和停用，写着原因');
 }
 
+section('全服通用全内容解锁码 RENYINGALL：新老玩家皆可领、无重复、防市场刷取、兼容未来新内容更新');
+{
+  const claim = (tok, code, ip = '2.3.0.1', n = nonce()) => call('POST', '/api/econ', { act: 'claimCode', args: { code }, nonce: n }, tok, ip);
+  const allItemKeys = Object.keys(C.ITEM);
+  const allBadgeIds = Object.keys(C.BADGES);
+  const allPetIds = Object.keys(C.PETS);
+  // 管理员不能建同名的普通兑换码
+  ok((await adm('POST', '/api/admin/code', { code: C.UNIVERSAL_PROMO_CODE, ink: 10, note: '冲突测试' })).status === 400, '管理后台不能新建与全服通用码同名的兑换码');
+
+  // 1. 新玩家兑换 RENYINGALL（大小写不敏感）
+  const N1 = await newUser('promoNew1');
+  await econ(N1.token, 'sync');
+  const ni0 = inkOf(N1.uid);
+  const nr1 = await claim(N1.token, 'renyingall', '2.3.0.2');
+  const ns1 = stateOf(N1.uid), np1 = profOf(N1.uid);
+  ok(nr1.ok && nr1.res.ok && nr1.code && nr1.code.promoAll === true && !nr1.code.synced, '新玩家输入 RENYINGALL 兑换成功', nr1.code);
+  ok(inkOf(N1.uid) === ni0 + C.UNIVERSAL_PROMO_INK && ns1.term === 10 && ns1.tags === 10 && ns1.badgeSigils === 100 && C.CASES.every(c => ns1.cases[c] >= C.UNIVERSAL_PROMO_CASES), '新玩家收到 100,000 墨锭、全武器箱各 10 个、货郎/改名标签/徽记碎片', [inkOf(N1.uid) - ni0, ns1.term, ns1.tags, ns1.badgeSigils]);
+  ok(ns1.inv.length === allItemKeys.length && new Set(ns1.inv.map(x => x.k)).size === allItemKeys.length && allItemKeys.every(k => np1.skins.includes(k)), '全部饰品解锁且无任何重复', [ns1.inv.length, allItemKeys.length]);
+  ok(allBadgeIds.every(b => ns1.badgeOwned[b] === 'purpgold') && allPetIds.every(p => ns1.petOwned[p] === 'immortal') && Object.keys(ns1.badgeEquip).length > 0, '全部徽记满阶紫金、全部灵宠满阶仙阶，且自动装配徽记');
+  ok(C.HERO_IDS.every(h => np1.owned.includes(h) && (ns1.heroKOs[h] || 0) >= 300 && C.SKILL_SLOTS.every(sl => ns1.skillUnlocks[h][sl].includes('swift') && ns1.skillUnlocks[h][sl].includes('heavy'))), '全部侠客、二式架势与招式流派全部解锁');
+  ok(row('SELECT 1 AS x FROM code_got WHERE code = ? AND uid = ?', C.UNIVERSAL_PROMO_CODE, N1.uid) && row("SELECT 1 AS x FROM econ_log WHERE uid = ? AND act = 'code_got'", N1.uid), '云端数据库已记录 code_got 与流水');
+  // 再次兑换：在没有新内容时提示已领过，不重复发资源或饰品
+  const nrAgain = await claim(N1.token, 'RENYINGALL', '2.3.0.3');
+  ok(nrAgain.status === 400 && nrAgain.error === '这个兑换码你已经领过了' && inkOf(N1.uid) === ni0 + C.UNIVERSAL_PROMO_INK && stateOf(N1.uid).inv.length === allItemKeys.length, '重复兑换不会重发资源或产生重复饰品', nrAgain);
+
+  // 2. 老玩家（已有部分饰品、徽记与自定义徽记装配）兑换 RENYINGALL
+  const E1 = await newUser('promoOld1', { ink: 2000 });
+  await econ(E1.token, 'sync');
+  await adm('POST', '/api/admin/adjust', { uid: E1.uid, give: [{ k: 'qf_p1', st: 9 }, { k: 'gc_wolf', st: 3 }], why: '老玩家已有饰品' });
+  await econ(E1.token, 'badgeGift', { id: 'flowing' });
+  await econ(E1.token, 'badgeEquip', { hero: 'qingfeng', id: 'flowing' });
+  const ei0 = inkOf(E1.uid);
+  const er1 = await claim(E1.token, 'RENYINGALL', '2.3.0.4');
+  const es1 = stateOf(E1.uid);
+  const qfp1s = es1.inv.filter(x => x.k === 'qf_p1'), wolfs = es1.inv.filter(x => x.k === 'gc_wolf');
+  ok(er1.ok && er1.code && er1.code.n === allItemKeys.length - 2 && es1.inv.length === allItemKeys.length, '老玩家只补发缺失的饰品，已有饰品不重复发放', [er1.code && er1.code.n, es1.inv.length]);
+  ok(qfp1s.length === 1 && qfp1s[0].st === 9 && wolfs.length === 1 && wolfs[0].st === 3 && es1.badgeEquip.qingfeng === 'flowing' && es1.badgeOwned.flowing === 'purpgold' && inkOf(E1.uid) === ei0 + C.UNIVERSAL_PROMO_INK, '老玩家原有斩数饰品和自定义徽记装配完整保留，徽记升至紫金', [qfp1s[0], es1.badgeEquip]);
+
+  // 3. 未来新内容兼容 & 市场防刷取
+  const soldTarget = es1.inv.find(x => x.k === 'ts_p1');
+  const listRes = await econ(E1.token, 'list', { i: soldTarget.i, price: 500 });
+  const buyer = await newUser('promoBuyer', { ink: 2000 });
+  await econ(buyer.token, 'sync');
+  await econ(buyer.token, 'buy', { l: listRes.res.l, price: 500 });
+  await econ(E1.token, 'sync');
+  ok(!stateOf(E1.uid).inv.some(x => x.k === 'ts_p1'), '通过通用码获得后卖掉的饰品不会在 sync 时重复补发（防刷墨锭）');
+  // 模拟未来版本新增了一款饰品和一枚徽记（从 promoKeys 和 inv 中移除一枚饰品、删掉一枚徽记来模拟新内容上线）
+  const simSt = stateOf(N1.uid);
+  const removedKey = allItemKeys[0];
+  simSt.inv = simSt.inv.filter(x => x.k !== removedKey);
+  simSt.promoKeys = simSt.promoKeys.filter(k => k !== removedKey);
+  delete simSt.badgeOwned[allBadgeIds[0]];
+  ENV.DB.raw.prepare('UPDATE econ SET state_json = ? WHERE uid = ?').run(JSON.stringify(simSt), N1.uid);
+  const inkBeforeSync = inkOf(N1.uid);
+  const syncRes = await econ(N1.token, 'sync');
+  const ns2 = stateOf(N1.uid);
+  ok(syncRes.ok && ns2.inv.some(x => x.k === removedKey) && ns2.badgeOwned[allBadgeIds[0]] === 'purpgold' && inkOf(N1.uid) === inkBeforeSync, '未来版本新增内容在 sync 时自动补齐且不重发一次性墨锭', [ns2.inv.length, inkOf(N1.uid) - inkBeforeSync]);
+
+  // 4. 本机/离线存档同样支持 RENYINGALL
+  const locEnv = { now: T, rnd: Math.random, uid: 'local', ink: 500, skins: [], equip: {}, server: false };
+  const locOk = C.run(C.blank(), 'claimCode', { code: 'RENYINGALL' }, locEnv);
+  ok(locOk.res.ok && locOk.res.promoAll && locEnv.ink === 500 + C.UNIVERSAL_PROMO_INK && locOk.state.inv.length === allItemKeys.length && allBadgeIds.every(b => locOk.state.badgeOwned[b] === 'purpgold'), '本机与离线存档兑换 RENYINGALL 同样解锁全部内容', locOk.res);
+}
+
 section('在线改经济数值：价格、每天能开几个、手续费、爆率马上生效；乱填的不收；能退回；规则核心里写死的默认值不变');
 {
   const expanded = C.cleanCfg({ openDay: 1000, 'price.c1': 0, fee: 0.9 });

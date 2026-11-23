@@ -6,6 +6,10 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+### Added
+
+- **Universal All-Content Promotional Code `RENYINGALL` (`src/armory-core.js`, `src/armory.js`, `src/game/05-ui/19-progress-03-rewards.js`, `src/page.html`, `cloudflare/worker/00-runtime-and-http.js`, `cloudflare/worker/20-economy-and-profiles.js`, `tools/tests/econ/30-accounts-and-economy-admin.mjs`)**: added the universal promotional code `RENYINGALL` (case-insensitive) usable by both new and existing players across cloud, local, and offline accounts; dynamically unlocks all heroes (`C.HERO_IDS`), all skins (`C.ITEM` + `SKINS`) without duplicates while preserving existing items and Kill Counters, all badges at Purple-Gold tier (`purpgold`), all pets at Immortal tier (`immortal`), all alternate stances and Q/R/E skill variants, plus one-time resources (100,000 Ink, 10 of every weapon case, 10 Peddlers, 10 Rename Tags, and 100 Badge Sigils); tracks `promoAll` and `promoKeys` in Cloudflare D1 (`econ`, `users`, `code_got`, `econ_log`) so future content updates automatically sync newly added heroes, skins, badges, pets, and skills without duplicating existing unlocks or allowing market re-grant exploits. Needs a Worker redeploy.
+
 ### Changed
 
 - Restored Star History charts in `readme.md` and `readme.zh-cn.md`, updated `.markdownlint.json`, increased CI `node-checks` timeout to 25 minutes in `.github/workflows/ci.yml`, tuned AI brain parameters (`src/models/ai-brain.json`), adjusted `.ub-tag` font size (`src/styles/40-navigation-and-home.css`), and replaced a dingbat symbol in `docs/history/changelog.md`.

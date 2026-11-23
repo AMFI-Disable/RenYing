@@ -62,6 +62,9 @@ function overlay(prof, eco) {
   p.ink = eco.ink;
   p.skins = mergeSkins(p.skins, eco.state, eco.srv, eco.ver);
   p.equip = fixEquip(cleanEquip(p.equip), p.skins);
+  if (eco && eco.state && eco.state.promoAll) {
+    p.owned = Array.from(new Set([...(Array.isArray(p.owned) ? p.owned : []), ...C.HERO_IDS]));
+  }
   return p;
 }
 // 给客户端的账本：服务器上的墨锭、版本号、最近记过的上报编号（客户端据此把已经记过的条目划掉）
@@ -275,9 +278,11 @@ async function handleEcon(env, auth, body, now, ip) {
     if ((await peek(env, 'rdm:' + uid, now)) >= RDM_MAX || (await peek(env, 'rdmip:' + ip, now)) >= RDM_IP_MAX) return error('兑换码输错太多次了，一小时后再试', 429);
     const k = codeKey(args.code);
     if (k && CODE_BUILTIN[k]) {
-      // 每个号只领一次：领过以后卖掉、熔铸掉的不再补（不然卖了再领就是凭空变墨锭）
-      if (await env.DB.prepare('SELECT 1 FROM code_got WHERE code = ? AND uid = ?').bind(k, uid).first()) return error('这个兑换码你已经领过了');
-      code = { code: k, ink: 0, cases: {}, term: 0, tags: 0, builtin: true, ...CODE_BUILTIN[k]() };
+      // 每个号只领一次资源；全服通用解锁码若已领过，则在后续有新内容更新时自动补齐新增项（不重发资源、不补卖掉的旧饰品）
+      const alreadyGot = !!(await env.DB.prepare('SELECT 1 FROM code_got WHERE code = ? AND uid = ?').bind(k, uid).first());
+      const def = CODE_BUILTIN[k]();
+      if (alreadyGot && !def.promoAll) return error('这个兑换码你已经领过了');
+      code = { code: k, ink: 0, cases: {}, term: 0, tags: 0, builtin: true, alreadyGot, ...def };
     }
     const row = code ? null : k ? await env.DB.prepare('SELECT code, ink, items_json, note, until, uses, got, off, EXISTS (SELECT 1 FROM code_got x WHERE x.code = code.code AND x.uid = ?) AS mine FROM code WHERE code = ?').bind(uid, k).first() : null;
     if (code) { /* 游戏里自带的码，上面已经核对过 */ }
@@ -330,7 +335,7 @@ async function handleEcon(env, auth, body, now, ip) {
         if (Array.isArray(it.skins)) for (const sk of it.skins) giftSkins.push({ ...sk, src: 'gift' });
         got.push({ id: g.id, note: g.note, ink, ...it });
       }
-      if (code) {   // 兑换码里的东西也先放进去
+      if (code && !code.promoAll) {   // 普通兑换码里的东西先放进去（全服通用解锁码走下面的 C.applyPromoAll）
         ink0 += code.ink;
         for (const [c, n] of Object.entries(code.cases)) state0.cases[c] += n;
         state0.term += code.term; state0.tags += code.tags;
@@ -370,6 +375,23 @@ async function handleEcon(env, auth, body, now, ip) {
         C.addItem(state0, C.mkItem(state0, k, src, rnd, { st }), E);
       }
     }   // 全服肉鸽发的星座皮肤：放一件进库存，能卖能熔铸
+    if (code && code.promoAll) {
+      const promoRes = C.applyPromoAll(state0, E, { firstClaim: !code.alreadyGot && !state0.promoAll });
+      if (code.alreadyGot && !promoRes.changed) return error('这个兑换码你已经领过了');
+      code.n = promoRes.addedSkins;
+      code.synced = !!code.alreadyGot;
+      if (code.alreadyGot) { code.ink = 0; code.cases = {}; code.term = 0; code.tags = 0; code.sigils = 0; }
+    } else if (state0 && state0.promoAll) {
+      // 已激活全服全内容解锁的账号：后续版本新增的侠客、饰品、徽记、灵宠与招式流派自动同步补齐（不重复发放已有饰品与一次性资源）
+      const needSync = Object.keys(C.ITEM).some(k => !(state0.promoKeys || []).includes(k))
+        || Object.keys(C.BADGES).some(b => !state0.badgeOwned || state0.badgeOwned[b] !== 'purpgold')
+        || Object.keys(C.PETS).some(p => !state0.petOwned || state0.petOwned[p] !== 'immortal')
+        || C.HERO_IDS.some(h => !state0.heroKOs || (state0.heroKOs[h] || 0) < 300);
+      if (needSync) {
+        if (state0 === eco.state) state0 = C.normalize(JSON.parse(JSON.stringify(eco.state)), { now, uid });
+        C.applyPromoAll(state0, E, { firstClaim: false });
+      }
+    }
     if (code && code.items) {   // 兑换码送的饰品：库存里没有这一款的才放一件进去（普通版）
       let n = 0;
       for (const k of code.items) if (C.isItem(k) && !state0.inv.some(x => x.k === k) && state0.inv.length < C.INV_MAX) { C.addItem(state0, C.mkItem(state0, k, 'code', rnd, { st: -1 }), E); n++; }
@@ -401,6 +423,7 @@ async function handleEcon(env, auth, body, now, ip) {
     for (const k of add) delete srv.gone[k];
     pruneGone(srv, now);
     const p = { ...prof, ink: E.ink, skins: E.skins, equip: E.equip, updatedAt: now };
+    if (st.promoAll) p.owned = Array.from(new Set([...(Array.isArray(prof.owned) ? prof.owned : []), ...C.HERO_IDS]));
     delete p.armory; delete p.ledger;
     const quiet = QUIET.includes(act) && !out.sold.length && !out.back;
     // 流水里记下这一次进出库存的每一件（rm 出去的、ad 进来的，挂到市场上不算出去）：哪件饰品是哪一步没的，后台找回工具按这个查
@@ -427,9 +450,9 @@ async function handleEcon(env, auth, body, now, ip) {
     }
     stmts.push(ins(env, 'INSERT INTO econ_nonce (uid, nonce, at, res_json) SELECT ?, ?, ?, ?', [uid, nonce, now, JSON.stringify(out)], uid, ver, tx));
     if (code) {   // 兑换码：记下这个号领过了、这个码又被领走一份（领满了 CHECK 让这一批整个作废）；流水记成 code_got
-      stmts.push(ins(env, `INSERT INTO code_got (code, uid, at) SELECT ?, ?, ?`, [code.code, uid, now], uid, ver, tx));
+      if (!code.alreadyGot) stmts.push(ins(env, `INSERT INTO code_got (code, uid, at) SELECT ?, ?, ?`, [code.code, uid, now], uid, ver, tx));
       if (!code.builtin) stmts.push(guard(env, 'UPDATE code SET got = got + 1 WHERE code = ? AND', [code.code], uid, ver, tx));
-      stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'code_got', 1, null, null, JSON.stringify({ code: code.code, note: code.note, ink: code.ink || undefined, cases: Object.keys(code.cases).length ? code.cases : undefined, term: code.term || undefined, tags: code.tags || undefined })], uid, ver, tx));
+      stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'code_got', 1, null, null, JSON.stringify({ code: code.code, note: code.note, promoAll: code.promoAll || undefined, synced: code.synced || undefined, n: code.n || undefined, ink: code.ink || undefined, cases: Object.keys(code.cases).length ? code.cases : undefined, term: code.term || undefined, tags: code.tags || undefined })], uid, ver, tx));
     }
     if (voided) {   // 作废兑换码收回的挂单：还在卖的撤下来；同一刻被别人买走的不受影响，钱照常结给卖家
       for (const l of voided.lst) stmts.push(guard(env, 'UPDATE mkt SET state = 2, done_at = ? WHERE id = ? AND seller = ? AND state = 0 AND', [now, l, uid], uid, ver, tx));
@@ -452,7 +475,7 @@ async function handleEcon(env, auth, body, now, ip) {
     }
     if (!(results[results.length - 1].meta && results[results.length - 1].meta.changes === 1)) continue;   // 版本冲突：别的请求先改了，重读再算
     eco.ink = E.ink; eco.ver = ver + 1;
-    return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: add, skinsDel: del, equip: eq, cfg, gifts: got.length ? got.map(({ id, ...g }) => g) : undefined });
+    return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: add, skinsDel: del, equip: eq, owned: st.promoAll ? p.owned : undefined, cfg, gifts: got.length ? got.map(({ id, ...g }) => g) : undefined });
   }
   return error('服务器忙，请再试一次', 503);
 }

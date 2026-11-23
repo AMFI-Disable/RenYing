@@ -238,8 +238,9 @@ async function redeemCode(rawCode) {
     if ($id('tMsg')) $id('tMsg').textContent = '该兑换码已作废';
     return;
   }
-  // 管理后台建的礼包码：拿去服务器核对（armory.js 里的 armoryRedeem），领到的东西直接进存档；离线版没有服务器
-  if (!OFFLINE_BUILD && /^[A-Z0-9]{4,20}$/.test(up) && typeof window.armoryRedeem === 'function') {
+  // 管理后台建的礼包码 + 全服通用解锁码（RENYINGALL）：拿去服务器或本机武库核对，领到的东西直接进存档
+  const isUniversal = typeof ArmoryCore !== 'undefined' && up === ArmoryCore.UNIVERSAL_PROMO_CODE;
+  if ((!OFFLINE_BUILD || isUniversal) && /^[A-Z0-9]{4,20}$/.test(up) && typeof window.armoryRedeem === 'function') {
     const btn = $id('rdBtn');
     if (btn) btn.disabled = true;
     if ($id('tMsg')) $id('tMsg').textContent = '正在兑换…';
