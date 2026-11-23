@@ -654,7 +654,7 @@ Release pass for issue #11. Only changes that were implemented and then checked 
   - Introduced the 3v3 Sect Elimination continuous duel mode (`tag3`), enabling players to configure a three-hero roster across Vanguard (先锋), Anchor (中坚), and General (大将) slots.
   - Implemented continuous survival elimination rules: victorious combatants carry forward surviving HP into subsequent duels alongside an instant +25% max HP recovery bonus; defeated combatants are knocked out, passing the torch to the next lineup member until one sect is routed.
   - Added interactive 3v3 team formation interface (`#tag3Slots`) supporting real-time slot selection, roster swapping, and enemy team preview.
-  - Designed custom 3v3 HUD indicators: replaced standard round diamonds with circular 3-slot squad status badges displaying slot titles ('先', '中', '大'), highlighting active combatants with a golden ring, defeated members with a red '✕', and reserve members with semi-transparent discs.
+  - Designed custom 3v3 HUD indicators: replaced standard round diamonds with circular 3-slot squad status badges displaying slot titles ('先', '中', '大'), highlighting active combatants with a golden ring, defeated members with a red 'X', and reserve members with semi-transparent discs.
   - Added dynamic round progression announcements ('先锋战 · 开战！', '中坚战', '大将决战', '敌方中坚出阵！', '大将亲征！') and a 60 Ink bounty on match victory.
 - **Advanced Combat Mechanics (Just Guard, Blade Clash, & Tech Roll)**:
   - **Just Guard / Perfect Parry (`精准招架`)**: Blocking within 0.09s before non-projectile weapon impact negates chip damage, restores +12 guard posture, inflicts 0.18s recoil hitstun on the attacker, and triggers parry visual sparks and audio cues.
