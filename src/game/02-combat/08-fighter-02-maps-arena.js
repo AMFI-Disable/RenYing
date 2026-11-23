@@ -306,9 +306,20 @@ function mapPlatLand(f, oldY, wasAir) {
     }
   }
 }
-// 站在平台上按住 ↓ 再跳（电脑按 drop）：落下去，这一小段穿过平台
+// 只有站在可下穿的高台平台上才能下穿（最低主地面 y=0 或不可穿透的实体台面不行）
+function canDropFromPlatform(f) {
+  if (!f || f.plat < 0 || !f.onGround()) return false;
+  const ps = mapPlats();
+  const P = ps && ps[f.plat];
+  if (!P || P.solid || P.oneWay === false || P.noDrop) return false;
+  return platformY(P, f.x) < -0.5;
+}
+// 站在可下穿的高台平台上双击 ↓（或按住 ↓ 再跳 / 电脑按 drop）：落下去，这一小段穿过平台
 function mapDrop(f) {
+  if (!canDropFromPlatform(f)) return false;
   f.plat = -1; f.dropT = 0.25; f.y += 2; f.vy = Math.max(f.vy, 160); f.state = 'air';
+  f.blockT = 0;
+  return true;
 }
 
 // ---------- 地利侠客（MAPS[..].fav）、风、天雷、酒雾 ----------

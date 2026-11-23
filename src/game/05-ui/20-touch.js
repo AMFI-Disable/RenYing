@@ -1,6 +1,6 @@
 // ======================= 手机和平板：触屏操作 =======================
 const TOUCH = !!(window.matchMedia && matchMedia('(pointer: coarse)').matches);   // 主要靠手指操作的设备（手机、平板）
-const TUI = { stick: null, stickUp: false, jumpHeld: false };
+const TUI = { stick: null, stickUp: false, stickDown: false, jumpHeld: false };
 function touchHeldJump() { human[0].held.jump = TUI.stickUp || TUI.jumpHeld; }
 function touchUIUpdate() {
   if (!TOUCH) return;
@@ -51,14 +51,16 @@ if (TOUCH) {
     kn.style.transform = `translate(${dx}px, ${dy}px)`;
     const nx = dx / R0, ny = dy / R0, h = human[0].held;
     h.left = nx < -0.35; h.right = nx > 0.35; if (h.left) h.aim = -1; if (h.right) h.aim = 1;
-    h.down = ny > 0.55 && Math.abs(nx) < 0.8;
+    const downNow = ny > 0.55 && Math.abs(nx) < 0.8;
+    if (downNow && !TUI.stickDown) human[0].tapDown();
+    h.down = downNow; TUI.stickDown = downNow;
     const upNow = ny < -0.6 && Math.abs(nx) < 0.8;
     if (upNow && !TUI.stickUp) human[0].press('jump');
     TUI.stickUp = upNow; touchHeldJump();
   };
   st.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); TUI.stick = e.pointerId; try { st.setPointerCapture(e.pointerId); } catch (err) {} move(e); });
   st.addEventListener('pointermove', e => { if (e.pointerId === TUI.stick) move(e); });
-  const end = e => { if (e.pointerId !== TUI.stick) return; TUI.stick = null; kn.style.transform = ''; if (secretEnabled) return; const h = human[0].held; h.left = h.right = h.down = false; TUI.stickUp = false; touchHeldJump(); };
+  const end = e => { if (e.pointerId !== TUI.stick) return; TUI.stick = null; kn.style.transform = ''; if (secretEnabled) return; const h = human[0].held; h.left = h.right = h.down = false; TUI.stickUp = false; TUI.stickDown = false; touchHeldJump(); };
   st.addEventListener('pointerup', end); st.addEventListener('pointercancel', end);
   $id('tPause').addEventListener('click', () => { if (M.mode !== 'net' && M.phase !== 'end') { paused = true; showScreen('pause'); } });
   $id('tDummy').addEventListener('click', () => dummyBarShow(true));   // 打开对手行为栏（21-buttons-02-training.js）

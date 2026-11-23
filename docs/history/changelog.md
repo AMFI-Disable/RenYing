@@ -12,6 +12,10 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Gift Claiming Compatibility & Armory Navigation (`src/armory.js`, `src/game/05-ui/17-home-03-navigation.js`, `tools/tests/econ/20-rewards-and-abuse-controls.mjs`)**: fixed the `"不认识的操作"` error when claiming all Appreciation Event gifts (`claimAppreciation`) or using newer v5 Armory actions against an older Worker deployment by adding a per-account compatibility fallback that credits all rewards immediately, persists them across syncs, and automatically reconciles with the server once upgraded; fixed homepage shortcut buttons targeting `[data-tab="loadout"]` instead of `[data-tab="badges"]`. Needs a Worker redeploy.
+
+- **Double-Tap Down Platform Drop-Through (`src/game/01-engine/06-input-net.js`, `src/game/01-engine/25-keyboard-boot.js`, `src/game/02-combat/08-fighter-02-maps-arena.js`, `src/game/02-combat/09-actions-03-fighter.js`, `src/game/05-ui/20-touch.js`, `tools/tests/combat/60-maps-terrain-and-matchups.mjs`)**: added double-tap `S` (or bound `down` key / touch stick down-flick within 280 ms) to drop through elevated one-way platforms across all modes (Terrain Clash, King of the Hill, 8v8 layered decks/stairs, replays, and rollback netplay) while strictly blocking drop-through on the lowest main ground (`y = 0`) or solid non-traversable platforms.
+
 - Saved replay entries use the selected interface language for matchup labels, dates and results. Online 8v8 replays identify the correct battle mode. A focused Grand Melee and Capture the Banner training sweep retained Wu Ya’s existing aggression setting. Hero training can select an opponent subset for targeted runs and defaults to the full roster.
 
 - The redesigned weapons use the shared canvas rendering interface. The browser audit renders every hero in the 8v8 arena to catch drawing failures that can hide the fight.

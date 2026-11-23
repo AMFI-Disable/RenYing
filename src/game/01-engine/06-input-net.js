@@ -6,11 +6,21 @@
 // 回滚联机的核心（存档、重算）在 20-tutorial-rollback-touch.js 的 ROLL 一节，点对点连接在 src/net-p2p.js。
 // 找 bug 提示：联机两边画面不一样，先跑 node tools/tests/netplay-test.mjs，它会指出第一处不一致的字段。
 let clock = 0;
+const DROP_TAP_MS = 280;
 class Ctrl {
-  constructor() { this.held = { left: false, right: false, down: false, atk: false, jump: false }; this.atkT = 0; this.buf = {}; }
+  constructor() { this.held = { left: false, right: false, down: false, atk: false, jump: false }; this.atkT = 0; this.buf = {}; this.lastDownTap = 0; }
   press(a) { if (a === 'heavy') return; this.buf[a] = clock; if (this.rec) this.rec.push(a); }   // 重斩已取消
+  tapDown(now = (typeof performance !== 'undefined' ? performance.now() : Date.now())) {
+    if (this.lastDownTap > 0 && now - this.lastDownTap <= DROP_TAP_MS) {
+      this.lastDownTap = 0;
+      this.press('drop');
+      return true;
+    }
+    this.lastDownTap = now;
+    return false;
+  }
   consume(a) { const t = this.buf[a]; if (t !== undefined && clock - t <= BUF) { delete this.buf[a]; return true; } return false; }
-  clear() { this.buf = {}; this.held.left = this.held.right = this.held.down = this.held.atk = this.held.jump = false; this.held.aim = 0; }
+  clear() { this.buf = {}; this.held.left = this.held.right = this.held.down = this.held.atk = this.held.jump = false; this.held.aim = 0; this.lastDownTap = 0; }
 }
 // 1P 攻击用鼠标（左键攻击/蓄力，右键重斩）或者 X 键（按住蓄力），其余用键盘；2P 全键盘
 // X 不和 2P、3P、4P 的任何键重复，同一台电脑多人玩时也不打架

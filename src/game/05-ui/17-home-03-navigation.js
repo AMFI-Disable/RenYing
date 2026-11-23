@@ -221,7 +221,7 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
     ub.hidden = false;
     if ($id('ubClose')) $id('ubClose').addEventListener('click', () => { ub.hidden = true; });
     if ($id('ubGoMelee')) $id('ubGoMelee').addEventListener('click', () => { ub.hidden = true; startMelee(8, menuHeroId, pickLevel || 'normal'); });
-    if ($id('ubGoPets')) $id('ubGoPets').addEventListener('click', () => { ub.hidden = true; openScreen('armory'); setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="loadout"]'); if (t) t.click(); }, 60); });
+    if ($id('ubGoPets')) $id('ubGoPets').addEventListener('click', () => { ub.hidden = true; openScreen('armory'); setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="badges"]'); if (t) t.click(); }, 60); });
     if ($id('ubGoCodex')) $id('ubGoCodex').addEventListener('click', () => { ub.hidden = true; openScreen('codex'); });
     try {
       const apiBase = (window.CLOUD_API || '').replace(/\/+$/, '');
@@ -244,7 +244,7 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
   });
   if ($id('hubLoadoutBtn')) $id('hubLoadoutBtn').addEventListener('click', () => {
     openScreen('armory');
-    setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="loadout"]'); if (t) t.click(); }, 60);
+    setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="badges"]'); if (t) t.click(); }, 60);
   });
   if ($id('hubHeroesBtn')) $id('hubHeroesBtn').addEventListener('click', () => openScreen('codex'));
   if ($id('hubBannerBtn')) $id('hubBannerBtn').addEventListener('click', () => { if (ub) ub.hidden = false; });
@@ -254,7 +254,7 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
       if (r && r.ok && $id('ubClaimAppreciation')) $id('ubClaimAppreciation').textContent = '✓ 已领取感恩全套豪礼与紫金徽记';
     } else {
       openScreen('armory');
-      setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="loadout"]'); if (t) t.click(); }, 60);
+      setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="badges"]'); if (t) t.click(); }, 60);
     }
   });
   if ($id('ubHudCustom')) $id('ubHudCustom').addEventListener('click', () => {

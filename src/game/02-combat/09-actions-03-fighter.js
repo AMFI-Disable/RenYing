@@ -104,7 +104,8 @@ function neutral(f, foe) {
   const dir = (c.held.right ? 1 : 0) - (c.held.left ? 1 : 0);
   if (onG) {
     if (f.meter >= 100 && c.consume('special')) return startSpecial(f);
-    if (f.plat >= 0 && (c.consume('drop') || (c.held.down && c.consume('jump')))) return mapDrop(f);   // 站在平台上：↓ + 跳落下去
+    if (canDropFromPlatform(f) && (c.consume('drop') || (c.held.down && c.consume('jump')))) return mapDrop(f);   // 站在可下穿高台上：双击 ↓ 或 ↓ + 跳落下去
+    if (f.plat < 0 && c.buf.drop !== undefined) delete c.buf.drop;   // 主地面或不可下穿地面不缓冲下穿
     if (c.held.down) {
       if (c.consume('light')) return startAttack(f, 'dl');
       if (f.skill2CD <= 0 && (SKILLS[f.ch.skill2] || {}).free && c.consume('skill2')) return startSkill(f, foe, 2);   // 离影 ↓+R：换到最早的雾身

@@ -322,5 +322,82 @@ export default [
       toMenu();
       return { pass: true, error: null };
     })()`
+  },
+  {
+    name: 'Double-tap S drops through elevated platforms across all modes and never drops through main ground or solid platforms',
+    fn: `(() => {
+      const fail = error => { toMenu(); return { pass: false, error }; };
+      const run = (n, f = A) => { for (let i = 0; i < n; i++) physics(f); };
+
+      // 1. Terrain Clash (bamboo): single tap and slow double-tap (>280ms) must not drop; quick double-tap drops cleanly.
+      startMapsMode(0, 1, 'easy', true, 'bamboo'); M.phase = 'fight';
+      const P = MAPS.bamboo.plats[0];
+      A.x = P.x; mapPutOn(A, 0); toNeutral(A); A.ctrl = human[0]; human[0].clear();
+      human[0].tapDown(1000);
+      neutral(A, B);
+      if (A.plat !== 0 || A.y !== P.y) return fail('single S tap should not drop from bamboo platform');
+      human[0].tapDown(1400);
+      neutral(A, B);
+      if (A.plat !== 0 || A.y !== P.y) return fail('slow double-tap (>280ms) should not drop from bamboo platform');
+      human[0].tapDown(1550);
+      neutral(A, B);
+      if (A.plat !== -1 || !(A.dropT > 0)) return fail('quick double-tap S should initiate drop from bamboo platform');
+      run(120);
+      if (A.y !== 0 || A.plat !== -1 || !A.onGround()) return fail('double-tap S drop should land on main ground, y=' + A.y);
+
+      // 2. Lowest main ground (y = 0, plat = -1): double-tap S must never drop or buffer a drop.
+      toNeutral(A); human[0].clear();
+      human[0].tapDown(2000);
+      human[0].tapDown(2120);
+      neutral(A, B);
+      if (A.plat !== -1 || A.y !== 0 || A.dropT > 0 || human[0].buf.drop !== undefined) {
+        return fail('double-tap S on lowest main ground must not drop or keep buffered drop');
+      }
+
+      // 3. Solid / non-traversable platform guard: canDropFromPlatform and mapDrop must refuse solid/oneWay=false platforms.
+      A.x = P.x; mapPutOn(A, 0); toNeutral(A);
+      const solidP = mapPlats()[0];
+      solidP.solid = true;
+      try {
+        if (canDropFromPlatform(A) || mapDrop(A)) return fail('solid platform must not allow downward traversal');
+        human[0].clear(); human[0].tapDown(3000); human[0].tapDown(3100);
+        neutral(A, B);
+        if (A.plat !== 0 || A.y !== P.y) return fail('double-tap S must not drop through solid platform');
+      } finally { delete solidP.solid; }
+
+      // 4. KOTH mode: double-tap S drops through elevated KOTH platforms, blocked on main ground.
+      if (typeof startKoth === 'function') {
+        startKoth(0, 1, 'easy', false); M.phase = 'fight';
+        const kp = mapPlats()[0];
+        if (!kp) return fail('KOTH mode missing elevated platforms');
+        A.x = kp.x; mapPutOn(A, 0); toNeutral(A); A.ctrl = human[0]; human[0].clear();
+        human[0].tapDown(4000); human[0].tapDown(4120);
+        neutral(A, B);
+        if (A.plat !== -1 || !(A.dropT > 0)) return fail('double-tap S should drop through KOTH elevated platform');
+        run(120);
+        if (A.y !== 0 || !A.onGround()) return fail('KOTH drop should reach main ground, y=' + A.y);
+        toNeutral(A); human[0].clear();
+        human[0].tapDown(4500); human[0].tapDown(4620);
+        neutral(A, B);
+        if (A.y !== 0 || A.dropT > 0) return fail('KOTH main ground must not allow drop');
+      }
+
+      // 5. 8v8 layered arena (Grand Melee & Capture the Banner): double-tap S drops from raised deck to lower floor, blocked on y=0.
+      startMelee(8); M.phase = 'fight';
+      A.x = STAGE_W / 2; mapPutOn(A, 3); toNeutral(A); A.ctrl = human[0]; human[0].clear();
+      if (A.y !== -BATTLE_LAYER_HEIGHT) return fail('expected fighter on first raised 8v8 deck, y=' + A.y);
+      human[0].tapDown(5000); human[0].tapDown(5120);
+      neutral(A, B);
+      if (A.plat !== -1 || !(A.dropT > 0)) return fail('double-tap S should drop through 8v8 raised deck');
+      run(120);
+      if (A.y !== 0 || A.plat !== -1 || !A.onGround()) return fail('8v8 deck drop should land on main floor, y=' + A.y);
+      toNeutral(A); human[0].clear();
+      human[0].tapDown(5500); human[0].tapDown(5620);
+      neutral(A, B);
+      if (A.y !== 0 || A.dropT > 0) return fail('8v8 lowest main floor must not allow drop');
+
+      toMenu();
+      return { pass: true, error: null };
+    })()`
   }
 ];

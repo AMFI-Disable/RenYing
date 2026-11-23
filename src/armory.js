@@ -326,6 +326,7 @@
         if (!out || !out.state || out.state.v !== C.VER) { if (MODE !== 'local') loadLocal(LOCAL_V, true); return; }
         MODE = 'server'; apply(out, true);
         setTimeout(() => rewardFlush().catch(() => {}), 0);   // 上次没报上去的关卡星、列传
+        setTimeout(() => compatFlush().catch(() => {}), 0);   // 服务器升级后补交之前本机代领的盛典大礼
       } catch (e) {
         if (e && e.status === 404) { if (MODE !== 'local') loadLocal(LOCAL_V, true); }   // 服务器还没有武库：先用本机规则
         else if (e && e.status === 409) { /* 账号刚切换，等新账号的存档 */ }
@@ -333,6 +334,115 @@
       } finally { LOADING = null; }
     })();
     return LOADING;
+  }
+  // 云端服务器还是旧版 v5（尚未部署新动作如 claimAppreciation / 灵宠 / 招式流派）时，
+  // 本机先按同一套 ArmoryCore 规则结算并暂存差异，等服务器升级后自动同步，避免弹出“不认识的操作”
+  const BADGE_RANK = { silver: 1, gold: 2, purpgold: 3 };
+  const PET_RANK = { base: 1, spirit: 2, immortal: 3 };
+  const compatKey = () => 'renying-arm-compat-' + UID;
+  function compatLoad() {
+    if (!UID) return null;
+    try { const o = JSON.parse(localStorage.getItem(compatKey()) || 'null'); return o && typeof o === 'object' ? o : null; } catch (e) { return null; }
+  }
+  function compatSave(o) {
+    if (!UID) return;
+    try {
+      if (o && Object.keys(o).length) localStorage.setItem(compatKey(), JSON.stringify(o));
+      else localStorage.removeItem(compatKey());
+    } catch (e) {}
+  }
+  function mergeCompat(s) {
+    const c = compatLoad();
+    if (!c || !s) return s;
+    if (c.appreciation2026) s.appreciation2026 = 1;
+    if (c.badgeGift) s.badgeGift = 1;
+    if (c.badgeOwned) {
+      for (const [id, t] of Object.entries(c.badgeOwned)) {
+        if ((BADGE_RANK[t] || 0) > (BADGE_RANK[s.badgeOwned[id]] || 0)) s.badgeOwned[id] = t;
+      }
+    }
+    if (c.badgeEquip) {
+      for (const [h, id] of Object.entries(c.badgeEquip)) {
+        if (id) s.badgeEquip[h] = id; else delete s.badgeEquip[h];
+      }
+    }
+    if (c.petOwned) {
+      s.petOwned = s.petOwned || {};
+      for (const [id, t] of Object.entries(c.petOwned)) {
+        if ((PET_RANK[t] || 0) > (PET_RANK[s.petOwned[id]] || 0)) s.petOwned[id] = t;
+      }
+    }
+    if (c.petEquip) {
+      s.petEquip = s.petEquip || {};
+      for (const [h, id] of Object.entries(c.petEquip)) {
+        if (id) s.petEquip[h] = id; else delete s.petEquip[h];
+      }
+    }
+    if (c.heroKOs) {
+      for (const [h, n] of Object.entries(c.heroKOs)) {
+        if ((s.heroKOs[h] || 0) < n) s.heroKOs[h] = n;
+      }
+    }
+    if (c.skillUnlocks) {
+      s.skillUnlocks = s.skillUnlocks || {};
+      for (const [h, slots] of Object.entries(c.skillUnlocks)) {
+        s.skillUnlocks[h] = s.skillUnlocks[h] || {};
+        for (const [sl, list] of Object.entries(slots || {})) {
+          s.skillUnlocks[h][sl] = Array.from(new Set([...(s.skillUnlocks[h][sl] || []), ...(list || [])]));
+        }
+      }
+    }
+    if (c.skillLoadout) {
+      s.skillLoadout = s.skillLoadout || {};
+      for (const [h, slots] of Object.entries(c.skillLoadout)) {
+        s.skillLoadout[h] = Object.assign(s.skillLoadout[h] || {}, slots);
+      }
+    }
+    if (c.bonus) {
+      s.badgeSigils = (s.badgeSigils || 0) + (c.bonus.badgeSigils || 0);
+      s.term = (s.term || 0) + (c.bonus.term || 0);
+      s.tags = (s.tags || 0) + (c.bonus.tags || 0);
+      if (c.bonus.cases) {
+        for (const [cid, n] of Object.entries(c.bonus.cases)) s.cases[cid] = (s.cases[cid] || 0) + (n || 0);
+      }
+    }
+    return s;
+  }
+  function recordCompat(name, res, nextState) {
+    const c = compatLoad() || {};
+    if (name === 'claimAppreciation') {
+      c.appreciation2026 = 1;
+      c.badgeGift = 1;
+      c.pendingClaim = (res && res.badgeId) || 'flowing';
+      c.badgeOwned = Object.assign(c.badgeOwned || {}, { [c.pendingClaim]: 'purpgold' });
+      c.petOwned = Object.assign(c.petOwned || {}, nextState.petOwned || {});
+      c.heroKOs = Object.assign(c.heroKOs || {}, Object.fromEntries(C.HERO_IDS.map(h => [h, Math.max(20, (c.heroKOs && c.heroKOs[h]) || 0)])));
+      c.skillUnlocks = JSON.parse(JSON.stringify(nextState.skillUnlocks || {}));
+      c.bonus = { badgeSigils: 50, term: 10, tags: 10, cases: Object.fromEntries(C.CASES.map(cid => [cid, 10])) };
+    } else if (name === 'badgeAutoAssign' || name === 'badgeEquip') {
+      c.badgeEquip = { ...(nextState.badgeEquip || {}) };
+    } else if (name === 'petBuy' || name === 'petUpgrade') {
+      c.petOwned = { ...(nextState.petOwned || {}) };
+    } else if (name === 'petEquip') {
+      c.petEquip = { ...(nextState.petEquip || {}) };
+    } else if (name === 'skillUnlock') {
+      c.skillUnlocks = JSON.parse(JSON.stringify(nextState.skillUnlocks || {}));
+    } else if (name === 'skillSet') {
+      c.skillLoadout = JSON.parse(JSON.stringify(nextState.skillLoadout || {}));
+    }
+    compatSave(c);
+  }
+  async function compatFlush() {
+    if (MODE !== 'server' || !ST) return;
+    const c = compatLoad();
+    if (!c || !c.pendingClaim) return;
+    try {
+      const out = await ECON('claimAppreciation', { badgeId: c.pendingClaim });
+      if (out && out.state && out.state.appreciation2026) {
+        apply(out, true);
+        if ($id('armory') && $id('armory').classList.contains('on')) render();
+      }
+    } catch (e) {}   // 服务器还没更新时静默保留本机记录
   }
   // 动作结果落地：存档、墨锭、可穿的皮肤、穿着
   function redrawLooks() {   // 首页角色、头像、场上侠客按现在穿的重画一遍
@@ -346,10 +456,22 @@
   const giftText = g => [g.ink ? `${g.ink} 墨锭` : '', ...Object.entries(g.cases || {}).map(([c, n]) => C.COLS[c] ? `${C.COLS[c].name}武器箱 ×${n}` : ''), g.term ? `货郎 ×${g.term}` : '', g.tags ? `改名标签 ×${g.tags}` : '', g.n ? `${g.n} 款饰品` : '', g.skin ? `星座饰品「${skinName(g.skin)}」` : ''].filter(Boolean).join('、') || '这些饰品你都已经有了';
   function apply(out, quiet) {
     if (!out) return;
-    if (out.state) { ST = C.normalize(out.state, envBase()); SIG = sigOf(ST); }
+    if (out.state) {
+      ST = C.normalize(out.state, envBase());
+      if (MODE === 'server' && !out.compat) {
+        const c = compatLoad();
+        if (c && ST.appreciation2026 && (c.pendingClaim || c.bonus || c.appreciation2026)) {
+          delete c.pendingClaim; delete c.bonus; delete c.appreciation2026; delete c.badgeGift;
+          compatSave(c);
+        }
+        mergeCompat(ST);
+      }
+      SIG = sigOf(ST);
+    }
     const ink0 = Math.floor(PROF.ink || 0);
     let ink1 = ink0;
-    if (MODE === 'server' && out.ledger && LSYNC) ink1 = LSYNC(out.ledger, ink0);   // 服务器的账 + 本机还没报上去的
+    if (out.compat && typeof out.ink === 'number') ink1 = out.ink;
+    else if (MODE === 'server' && out.ledger && LSYNC) ink1 = LSYNC(out.ledger, ink0);   // 服务器的账 + 本机还没报上去的
     else if (MODE !== 'server' && typeof out.ink === 'number') ink1 = out.ink;
     if (ink1 > ink0) GRANT(ink1 - ink0);
     PROF.ink = ink1;
@@ -396,9 +518,16 @@
           if (FLUSH && !opt.bg) await Promise.race([FLUSH().catch(() => {}), new Promise(r => setTimeout(r, 3000))]);   // 先把本机的存档变化报上去，免得两边对不上
           out = await ECON(name, args || {});
         } catch (e) {
-          if (!opt.bg) msg(e && e.message ? e.message : '服务器出错了');
-          if (e && e.ban && typeof acRefresh === 'function') acRefresh();
-          return null;
+          if (e && e.status === 400 && e.message === '不认识的操作' && C.ACTIONS.includes(name)) {
+            const env = envBase(), skins0 = env.skins.slice(), equip0 = { ...env.equip };
+            const r = C.run(JSON.parse(JSON.stringify(ST)), name, args || {}, env);
+            if (r.res && r.res.ok) recordCompat(name, r.res, r.state);
+            out = { res: r.res, state: r.state, ink: env.ink, sold: r.sold, compat: true, ...patchOf(env, skins0, equip0) };
+          } else {
+            if (!opt.bg) msg(e && e.message ? e.message : '服务器出错了');
+            if (e && e.ban && typeof acRefresh === 'function') acRefresh();
+            return null;
+          }
         }
       } else {
         const env = envBase(), skins0 = env.skins.slice(), equip0 = { ...env.equip };
@@ -1376,6 +1505,7 @@
     if (r && r.ok) {
       SFX.gong && SFX.gong();
       toast(`🎁 感恩盛典大礼已到账！+50,000 墨锭 + 全武器箱 + 紫金徽「${cvT(C.BADGES[r.badgeId].name)}」`);
+      if ($id('armory') && $id('armory').classList.contains('on')) render();
     }
     return r;
   };

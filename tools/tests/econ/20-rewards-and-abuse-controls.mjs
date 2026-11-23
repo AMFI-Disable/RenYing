@@ -448,4 +448,28 @@ section('限速、封号、登录爆破');
   ok(regBlocked, '同一个 IP 一小时最多注册 6 个');
 }
 
+section('感恩盛典一键领取全部豪礼（claimAppreciation）：发放全套奖励且不可重复领取');
+{
+  const u = await newUser('appreciate1', { ink: 1000 });
+  const ink0 = inkOf(u.uid);
+  const s0 = (await econ(u.token, 'sync')).state;
+  const r1 = await econ(u.token, 'claimAppreciation', { badgeId: 'ironwall' });
+  ok(r1.res && r1.res.ok && r1.res.badgeId === 'ironwall', 'claimAppreciation 成功领取指定紫金徽', r1);
+  ok(inkOf(u.uid) === ink0 + 50000, '领取后墨锭准确增加 50000', [inkOf(u.uid), ink0 + 50000]);
+  const s1 = stateOf(u.uid);
+  ok(s1.appreciation2026 === 1 && s1.badgeGift === 1, '标记已领取感恩盛典与新手徽记');
+  ok(s1.badgeOwned.ironwall === 'purpgold', '指定徽记为紫金阶位', s1.badgeOwned);
+  ok(s1.badgeSigils === (s0.badgeSigils || 0) + 50 && s1.term === (s0.term || 0) + 10 && s1.tags === (s0.tags || 0) + 10, '碎片 +50、货郎 +10、改名标签 +10', [s1.badgeSigils, s1.term, s1.tags]);
+  ok(C.CASES.every(cid => (s1.cases[cid] || 0) === (s0.cases[cid] || 0) + 10), '全系列武器箱各 +10', s1.cases);
+  ok(Object.keys(C.PETS).every(pid => s1.petOwned[pid] === 'spirit'), '全部灵宠解锁至灵阶', s1.petOwned);
+  ok(C.HERO_IDS.every(h => (s1.heroKOs[h] || 0) >= 20 && ['q', 'r', 'e'].every(sl => (s1.skillUnlocks[h][sl] || []).includes('swift') && (s1.skillUnlocks[h][sl] || []).includes('heavy'))), '全侠客解锁第二架势与全部招式流派');
+
+  const r2 = await econ(u.token, 'claimAppreciation', { badgeId: 'flowing' });
+  ok(r2.res && r2.res.err && inkOf(u.uid) === ink0 + 50000, '重复领取被拒绝且不重复发墨锭', r2.res);
+
+  const u2 = await newUser('appreciate2', { ink: 200 });
+  const r3 = await econ(u2.token, 'claimAppreciation', { badgeId: 'nonexistent_badge' });
+  ok(r3.res && r3.res.ok && r3.res.badgeId === 'flowing' && stateOf(u2.uid).badgeOwned.flowing === 'purpgold', '无效徽记 ID 自动回退到默认流云徽', r3.res);
+}
+
 /* ---------- 管理后台 ---------- */

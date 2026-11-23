@@ -98,7 +98,12 @@ window.addEventListener('keydown', e => {
     if (secretEnabled && c === human[0] && !REPLAY.on) continue;
     if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
     if (act === 'jump') { c.held.jump = true; if (!e.repeat) c.press('jump'); continue; }
-    if (act === 'left' || act === 'right' || act === 'down') { c.held[act] = true; if (act !== 'down') c.held.aim = act === 'left' ? -1 : 1; continue; }
+    if (act === 'left' || act === 'right' || act === 'down') {
+      c.held[act] = true;
+      if (act === 'down') { if (!e.repeat) c.tapDown(); }
+      else c.held.aim = act === 'left' ? -1 : 1;
+      continue;
+    }
     if (!e.repeat) c.press(act);
   }
 });
