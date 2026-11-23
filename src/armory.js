@@ -1107,30 +1107,54 @@
       <h4 class="ar-h">星章兑换 <small>饰品都从普通武器箱里出，神兵、星座武器箱的换不到</small></h4><div class="ar-grid3">${shop}</div>
       <p class="ar-note">对局掉落：每局 ${Math.round(C.cv(CF(), 'dropP') * 100)}% 机会掉一件饰品或武器箱，每周最多 ${C.cv(CF(), 'dropCap')} 次（本周已掉 ${s.drop.n} 次）。</p>`;
   }
+  const BDG = { cat: 'all', state: 'all', sort: 'tier', giftPick: 'flowing' };
   function pBadges() {
     const s = blankS(), ids = Object.keys(C.BADGES), owned = Object.entries(s.badgeOwned || {}), totalKOs = Object.values(s.heroKOs || {}).reduce((n, x) => n + x, 0);
     const tierNames = ['银徽', '金徽', '紫金徽'];
+    const tierRank = t => t === 'purpgold' ? 3 : t === 'gold' ? 2 : t === 'silver' ? 1 : 0;
+    const catNames = C.BADGE_CATS || { all: '全部', offense: '进攻', defense: '防御', mobility: '身法', mastery: '绝技', team: '团队' };
     const effectLine = id => {
-      const spec = window.COMBAT_BADGES[id];
-      return `<div class="ar-badge-effect">${tierNames.map((name, i) => `<small>${cvT(name)}：${cvT(spec.tiers[i])}</small>`).join('')}</div>`;
+      const spec = window.COMBAT_BADGES && window.COMBAT_BADGES[id];
+      return spec ? `<div class="ar-badge-effect">${tierNames.map((name, i) => `<small>${cvT(name)}：${cvT(spec.tiers[i])}</small>`).join('')}</div>` : '';
     };
     const previewButton = (id, tier) => `<button type="button" class="ghost small" data-badge-preview="${id}" data-badge-tier="${tier}">${cvT('训练场试招')}</button>`;
     const badgeCard = (id, tier, giftCard = false) => {
-      const b = C.BADGES[id], currentName = tierNames[tier === 'gold' ? 1 : tier === 'purpgold' ? 2 : 0];
+      const b = C.BADGES[id], currentName = tier ? tierNames[tier === 'gold' ? 1 : tier === 'purpgold' ? 2 : 0] : '';
       const trigger = (window.COMBAT_BADGES && window.COMBAT_BADGES[id] && window.COMBAT_BADGES[id].trigger) || b.effect;
-      const up = giftCard ? null : C.BADGE_UPGRADE[tier];
+      const catTag = `<span class="badge-cat-tag">${cvT(catNames[b.cat] || '武学')}</span>`;
+      const tierCls = tier === 'purpgold' ? ' tier-pg' : tier === 'gold' ? ' tier-gd' : tier === 'silver' ? ' tier-sv' : ' tier-lk';
+      const up = (!giftCard && tier) ? C.BADGE_UPGRADE[tier] : null;
       const ready = up && totalKOs >= up.kos && s.badgeSigils >= up.sigils && PROF.ink >= up.ink;
       const requirements = up ? `<div class="ar-badge-req"><small class="${s.badgeSigils >= up.sigils ? 'met' : ''}">${cvT('碎片')} ${s.badgeSigils}/${up.sigils}</small><small class="${PROF.ink >= up.ink ? 'met' : ''}">${cvT('墨锭')} ${fmt(PROF.ink)}/${fmt(up.ink)}</small><small class="${totalKOs >= up.kos ? 'met' : ''}">${cvT('斩')} ${totalKOs}/${up.kos}</small></div>` : '';
-      const upgrade = up ? `${requirements}<button type="button" class="go small" data-badge-upgrade="${id}" ${live() && ready ? '' : 'disabled'}>${cvT('升阶')} ${cvT(up.to === 'gold' ? '金徽' : '紫金徽')}</button>` : giftCard ? '' : `<small>${cvT('已达最高阶')}</small>`;
-      return `<article class="ar-card ar-badge-card"><b>${cvT(b.name)}${giftCard ? '' : ` · ${cvT(currentName)}`}</b><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT(trigger)}</small>${effectLine(id)}<div class="ar-badge-actions">${giftCard ? `<button type="button" class="go small" data-badge-gift="${id}" ${live() ? '' : 'disabled'}>${cvT('领取银徽')}</button>` : upgrade}${previewButton(id, tier)}</div></article>`;
+      const actionBtn = giftCard
+        ? `<button type="button" class="go small" data-badge-gift="${id}" ${live() ? '' : 'disabled'}>${cvT('领取银徽')}</button>`
+        : !tier
+          ? `<button type="button" class="go small" data-badge-unlock="${id}" ${live() ? '' : 'disabled'}>${cvT('解锁银徽')} (${C.BADGE_UNLOCK_SIGILS}${cvT('碎片')}/${C.BADGE_UNLOCK_INK}${cvT('墨锭')})</button>`
+          : up
+            ? `${requirements}<button type="button" class="go small" data-badge-upgrade="${id}" ${live() && ready ? '' : 'disabled'}>${cvT('升阶')} ${cvT(up.to === 'gold' ? '金徽' : '紫金徽')}</button>`
+            : `<small style="color:#d9a6ff;font-weight:700">✦ ${cvT('紫金圆满')}</small>`;
+      const holder = Object.entries(s.badgeEquip || {}).find(([, bid]) => bid === id);
+      const holderTag = holder ? `<small style="color:#7fe0b0">${cvT('已佩戴')}: ${escapeHTML((CHARS.find(c => c.id === holder[0]) || { name: holder[0] }).name)}</small>` : '';
+      return `<article class="ar-card ar-badge-card${tierCls}"><div class="row" style="justify-content:space-between;align-items:center;gap:6px"><b>${cvT(b.name)}${currentName ? ` · ${cvT(currentName)}` : ''}</b>${catTag}</div><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT(trigger)}${b.ach ? ` · 🏆 ${cvT(b.ach)}` : ''}</small>${holderTag}${effectLine(id)}<div class="ar-badge-actions">${actionBtn}${previewButton(id, tier || 'silver')}</div></article>`;
     };
-    const gift = !s.badgeGift ? `<div class="ar-badge-gift"><div><h3>${cvT('初入武学 · 银徽赠礼')}</h3><p>${cvT('任选一枚银徽体验武学效果。徽记绑定账号，可在不同侠客之间调换。')}</p></div><div class="ar-grid3">${ids.map(id => badgeCard(id, 'silver', true)).join('')}</div></div>` : '';
-    const unownedBadges = ids.filter(id => !s.badgeOwned[id]);
-    const discoverBadges = s.badgeGift && unownedBadges.length ? `<h4 class="ar-h">${cvT('探索与解锁新徽记')}</h4><div class="ar-grid3">${unownedBadges.map(id => {
-      const b = C.BADGES[id], info = window.COMBAT_BADGES && window.COMBAT_BADGES[id];
-      return `<article class="ar-card ar-badge-card"><b>${cvT(b.name)}</b><p>${cvT(b.desc)}</p><small>${cvT('触发')}: ${cvT((info && info.trigger) || '')}</small><div class="ar-badge-actions"><button type="button" class="go small" data-badge-unlock="${id}" ${live() ? '' : 'disabled'}>${cvT('解锁银徽')} (${C.BADGE_UNLOCK_SIGILS}${cvT('碎片')}/${C.BADGE_UNLOCK_INK}${cvT('墨锭')})</button>${previewButton(id, 'silver')}</div></article>`;
-    }).join('')}</div>` : '';
-    const stock = owned.length ? `<div class="ar-grid3">${owned.map(([id, tier]) => badgeCard(id, tier)).join('')}</div>` : `<p class="ar-note">${cvT('领取一枚银徽后，会在这里查看、升阶和装备。')}</p>`;
+    const appBanner = !s.appreciation2026 ? `<div class="ar-badge-gift" style="border-color:rgba(217,166,255,.55);background:linear-gradient(135deg,rgba(82,36,120,.28),rgba(233,196,106,.14))"><div><h3 style="color:#f4d88a">🎁 ${cvT('感恩盛典 · 全员豪礼 + 免费紫金徽记')}</h3><p>${cvT('立即领取：50,000 墨锭 + 全系列武器箱各 10 个 + 50 徽记碎片 + 全部灵宠与招式流派 + 任选 1 枚最高阶「紫金徽记」！')}</p></div><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><select id="arAppBadgePick" style="max-width:260px">${ids.map(id => `<option value="${id}" ${BDG.giftPick === id ? 'selected' : ''}>✦ ${cvT(C.BADGES[id].name)}（${cvT(catNames[C.BADGES[id].cat] || '')}）</option>`).join('')}</select><button type="button" class="go" data-claim-appreciation="1" ${live() ? '' : 'disabled'}>🎁 ${cvT('一键领取全部豪礼与紫金徽记')}</button></div></div>` : '';
+    const gift = !s.badgeGift && s.appreciation2026 ? `<div class="ar-badge-gift"><div><h3>${cvT('初入武学 · 银徽赠礼')}</h3><p>${cvT('任选一枚银徽体验武学效果。徽记绑定账号，可在不同侠客之间调换。')}</p></div><div class="ar-grid3">${ids.slice(0, 6).map(id => badgeCard(id, 'silver', true)).join('')}</div></div>` : '';
+    const filteredIds = ids.filter(id => {
+      const b = C.BADGES[id], t = s.badgeOwned[id] || '';
+      if (BDG.cat !== 'all' && b.cat !== BDG.cat) return false;
+      if (BDG.state === 'owned' && !t) return false;
+      if (BDG.state === 'unowned' && t) return false;
+      if (BDG.state === 'purpgold' && t !== 'purpgold') return false;
+      if (BDG.state === 'gold' && t !== 'gold') return false;
+      if (BDG.state === 'silver' && t !== 'silver') return false;
+      return true;
+    }).sort((a, b) => {
+      if (BDG.sort === 'name') return C.BADGES[a].name.localeCompare(C.BADGES[b].name, 'zh-CN');
+      if (BDG.sort === 'cat') return (C.BADGES[a].cat || '').localeCompare(C.BADGES[b].cat || '') || tierRank(s.badgeOwned[b]) - tierRank(s.badgeOwned[a]);
+      return tierRank(s.badgeOwned[b]) - tierRank(s.badgeOwned[a]) || a.localeCompare(b);
+    });
+    const catBar = `<div class="row" style="gap:6px;flex-wrap:wrap;align-items:center;margin:10px 0">${Object.entries(catNames).map(([k, lbl]) => `<button type="button" class="${BDG.cat === k ? 'go' : 'ghost'} small" data-bdg-cat="${k}">${cvT(lbl)}</button>`).join('')}<select id="arBdgState" style="width:auto;min-width:110px"><option value="all" ${BDG.state === 'all' ? 'selected' : ''}>${cvT('全部状态')}</option><option value="owned" ${BDG.state === 'owned' ? 'selected' : ''}>${cvT('已拥有')} (${owned.length})</option><option value="unowned" ${BDG.state === 'unowned' ? 'selected' : ''}>${cvT('未拥有')} (${ids.length - owned.length})</option><option value="purpgold" ${BDG.state === 'purpgold' ? 'selected' : ''}>${cvT('紫金徽')}</option><option value="gold" ${BDG.state === 'gold' ? 'selected' : ''}>${cvT('金徽')}</option><option value="silver" ${BDG.state === 'silver' ? 'selected' : ''}>${cvT('银徽')}</option></select><select id="arBdgSort" style="width:auto;min-width:110px"><option value="tier" ${BDG.sort === 'tier' ? 'selected' : ''}>${cvT('阶位优先')}</option><option value="cat" ${BDG.sort === 'cat' ? 'selected' : ''}>${cvT('按类别')}</option><option value="name" ${BDG.sort === 'name' ? 'selected' : ''}>${cvT('按名称')}</option></select><button type="button" class="go small" data-badge-auto="1" ${live() && owned.length ? '' : 'disabled'}>⚡ ${cvT('一键自动装配')}</button></div>`;
+    const badgeGallery = filteredIds.length ? `<div class="ar-grid3">${filteredIds.map(id => badgeCard(id, s.badgeOwned[id] || '')).join('')}</div>` : `<p class="ar-note">${cvT('当前筛选条件下没有徽记')}</p>`;
     const petIds = Object.keys(C.PETS || {});
     const petOwned = s.petOwned || {};
     const petTierName = t => t === 'immortal' ? '仙阶' : t === 'spirit' ? '灵阶' : '初阶';
@@ -1167,8 +1191,8 @@
     }).join('');
     const shardProgress = totalKOs % C.BADGE_SIGIL_KOS;
     const shardBar = `<div class="ar-badge-progress"><label for="arBadgeShardProgress">${cvT('距离下一枚徽记碎片')}</label><progress id="arBadgeShardProgress" max="${C.BADGE_SIGIL_KOS}" value="${shardProgress}"></progress><small>${shardProgress} / ${C.BADGE_SIGIL_KOS} · ${C.BADGE_SIGIL_KOS - shardProgress} ${cvT('斩后获得')}</small></div>`;
-    return `<div class="ar-ophead"><div><span class="ar-k">${cvT('武学与徽记')}</span><h3>${cvT('徽记碎片')} <b>${s.badgeSigils || 0}</b> · ${cvT('累计斩获')} <b>${totalKOs}</b></h3>${shardBar}</div><p class="ar-note">${cvT('每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。')}</p></div>
-      ${gift}<h4 class="ar-h">${cvT('我的徽记')}</h4>${stock}${discoverBadges}${petGrid}<h4 class="ar-h">${cvT('侠客架势与装备')}</h4><div class="ar-grid3">${heroes}</div>`;
+    return `<div class="ar-ophead"><div><span class="ar-k">${cvT('武学与徽记')}</span><h3>${cvT('徽记碎片')} <b>${s.badgeSigils || 0}</b> · ${cvT('累计斩获')} <b>${totalKOs}</b> · ${cvT('已收集徽记')} <b>${owned.length}/${ids.length}</b></h3>${shardBar}</div><p class="ar-note">${cvT('每累计斩获 40 次可得 1 枚徽记碎片。升阶还需墨锭与斩获里程碑。')}</p></div>
+      ${appBanner}${gift}<h4 class="ar-h">${cvT('武学徽记图鉴与装配')}</h4>${catBar}${badgeGallery}${petGrid}<h4 class="ar-h">${cvT('侠客架势与装备')}</h4><div class="ar-grid3">${heroes}</div>`;
   }
   function covPick() {
     const list = C.ofTierReg('cov');   // 神兵武器箱的不能拿星章换
@@ -1193,7 +1217,8 @@
       if (id === 'arInvChar') INV.char = v; else if (id === 'arInvTier') INV.tier = v; else if (id === 'arInvStat') INV.stat = v; else if (id === 'arInvSort') INV.sort = v;
       else if (id === 'arCodexCol') CODEX.col = v; else if (id === 'arCodexChar') CODEX.char = v; else if (id === 'arCodexTier') CODEX.tier = v; else if (id === 'arCodexState') CODEX.state = v; else if (id === 'arCodexSort') CODEX.sort = v;
       else if (id === 'arMkTier') MK.tier = v; else if (id === 'arMkChar') MK.char = v; else if (id === 'arMkSort') MK.sort = v; else if (id === 'arMkOnly') MK.only = e.target.checked;
-      else if (id === 'arMyTier') { MK.mtier = v; MK.mshow = 60; } else if (id === 'arMyChar') { MK.mchar = v; MK.mshow = 60; } else if (id === 'arMySort') { MK.msort = v; MK.mshow = 60; } else return;
+      else if (id === 'arMyTier') { MK.mtier = v; MK.mshow = 60; } else if (id === 'arMyChar') { MK.mchar = v; MK.mshow = 60; } else if (id === 'arMySort') { MK.msort = v; MK.mshow = 60; }
+      else if (id === 'arBdgState') BDG.state = v; else if (id === 'arBdgSort') BDG.sort = v; else if (id === 'arAppBadgePick') { BDG.giftPick = v; return; } else return;
       render();
     });
     main.addEventListener('keydown', e => { if (e.key === 'Escape') return; e.stopPropagation(); });   // 打字时别触发游戏的快捷键
@@ -1204,6 +1229,15 @@
       const b = e.target.closest('button'); if (!b || b.disabled) return;
       const d = b.dataset;
       if (d.gotab) { TAB = d.gotab; if (d.mkv) MK.view = d.mkv; render(); return; }
+      if (d.bdgCat) { BDG.cat = d.bdgCat; render(); return; }
+      if (d.claimAppreciation) {
+        const pick = main.querySelector('#arAppBadgePick');
+        const badgeId = (pick && pick.value) || BDG.giftPick || 'flowing';
+        const r = await act('claimAppreciation', { badgeId });
+        if (r && r.ok) { SFX.gong && SFX.gong(); toast(`🎁 感恩盛典大礼已到账！获得 50,000 墨锭、全武器箱与紫金徽「${cvT(C.BADGES[r.badgeId].name)}」`); render(); }
+        return;
+      }
+      if (d.badgeAuto) { const r = await act('badgeAutoAssign', {}); if (r && r.ok) { toast(`已为 ${r.assigned} 位侠客自动装配最优徽记`); render(); } return; }
       if (d.badgePreview) { startBadgeTrainingPreview(d.badgePreview, d.badgeTier); return; }
       if (d.badgeGift) { const r = await act('badgeGift', { id: d.badgeGift }); if (r && r.ok) { toast(`获得银徽「${cvT(C.BADGES[r.id].name)}」`); render(); } return; }
       if (d.badgeUnlock) { const r = await act('badgeUnlock', { id: d.badgeUnlock }); if (r && r.ok) { toast(`已解锁徽记「${cvT(C.BADGES[r.id].name)}」`); render(); } return; }
@@ -1312,6 +1346,38 @@
       };
     }
     return out;
+  };
+  window.armoryBadgeState = function () {
+    const s = blankS();
+    return {
+      owned: { ...(s.badgeOwned || {}) },
+      equip: { ...(s.badgeEquip || {}) },
+      sigils: s.badgeSigils || 0,
+      appreciationClaimed: !!s.appreciation2026,
+      badges: C.BADGES,
+      cats: C.BADGE_CATS,
+    };
+  };
+  window.armoryQuickEquipBadge = async function (hero, id) {
+    if (!ST) await connect(false);
+    const r = await act('badgeEquip', { hero, id: id || '' });
+    if (r && r.ok) toast(id ? `已为侠客装备「${cvT(C.BADGES[id].name)}」` : '已卸下当前徽记');
+    return r;
+  };
+  window.armoryAutoAssignBadges = async function () {
+    if (!ST) await connect(false);
+    const r = await act('badgeAutoAssign', {});
+    if (r && r.ok) toast(`⚡ 已为 ${r.assigned} 位侠客自动装配最优徽记`);
+    return r;
+  };
+  window.armoryClaimAppreciation = async function (badgeId) {
+    if (!ST) await connect(false);
+    const r = await act('claimAppreciation', { badgeId: badgeId || 'flowing' });
+    if (r && r.ok) {
+      SFX.gong && SFX.gong();
+      toast(`🎁 感恩盛典大礼已到账！+50,000 墨锭 + 全武器箱 + 紫金徽「${cvT(C.BADGES[r.badgeId].name)}」`);
+    }
+    return r;
   };
   bind();
   document.addEventListener('keydown', e => {   // Esc 关掉弹窗 / 检视

@@ -357,8 +357,40 @@ function drawTabScoreboard() {
   drawCol(s1, x + 22 + colW, cvT('敌方阵营'), '#ff7878');
   ctx.restore();
 }
+function drawHUDQuiet() {
+  const s0 = isLargeTeam() || is2v2() ? sideFighters(0) : [A];
+  const s1 = isLargeTeam() || is2v2() ? sideFighters(1) : [B];
+  const hp0 = s0.reduce((n, f) => n + Math.max(0, f.hp), 0), max0 = Math.max(1, s0.reduce((n, f) => n + f.maxHp, 0));
+  const hp1 = s1.reduce((n, f) => n + Math.max(0, f.hp), 0), max1 = Math.max(1, s1.reduce((n, f) => n + f.maxHp, 0));
+  const lf = (typeof hudLocalPlayer === 'function' && hudLocalPlayer()) || A;
+  const rf = (typeof foeOf === 'function' && foeOf(lf)) || B;
+  const pCfg = typeof hudElemCfg === 'function' ? hudElemCfg('playerBar') : { visible: true, ox: 0, oy: 0, scale: 1 };
+  const eCfg = typeof hudElemCfg === 'function' ? hudElemCfg('enemyBar') : { visible: true, ox: 0, oy: 0, scale: 1 };
+  const barW = Math.min(W * 0.34, 420), bh = 12, top = Math.max(20, H * 0.032), cx = W / 2, gap = 42;
+  const drawSide = (cfg, x, ratio, fury, rev, cA, cB) => {
+    if (!cfg.visible) return;
+    ctx.save();
+    ctx.translate(x + cfg.ox, top + cfg.oy);
+    ctx.scale(cfg.scale, cfg.scale);
+    ctx.fillStyle = 'rgba(0,0,0,0.58)'; ctx.fillRect(-2, -2, barW + 4, bh + 4);
+    const g = ctx.createLinearGradient(0, 0, barW, 0);
+    g.addColorStop(0, cA); g.addColorStop(1, cB);
+    ctx.fillStyle = g;
+    const fw = barW * clamp(ratio, 0, 1);
+    ctx.fillRect(rev ? barW - fw : 0, 0, fw, bh);
+    // Fury bar
+    ctx.fillStyle = 'rgba(0,0,0,0.52)'; ctx.fillRect(-1, bh + 5, barW + 2, 6);
+    const mw = barW * clamp((fury || 0) / 100, 0, 1);
+    ctx.fillStyle = (fury || 0) >= 100 ? '#ffe066' : '#e9c46a';
+    ctx.fillRect(rev ? barW - mw : 0, bh + 6, mw, 4);
+    ctx.restore();
+  };
+  drawSide(pCfg, cx - gap - barW, hp0 / max0, lf ? lf.meter : 0, false, '#2a8fb0', '#8ff0ff');
+  drawSide(eCfg, cx + gap, hp1 / max1, rf ? rf.meter : 0, true, '#ff8a70', '#c42a45');
+}
 function drawHUD() {
   if (M.mode === 'demo') return;
+  if (typeof hudPreset === 'function' && hudPreset() === 'quiet') { drawHUDQuiet(); drawTabScoreboard(); return; }
   if (isLargeTeam()) { drawHUDLargeTeam(); drawTabScoreboard(); return; }
   if (isRaid()) { drawHUDRaid(); drawTabScoreboard(); return; }
   if (is2v2()) { drawHUD2v2(); drawTabScoreboard(); return; }

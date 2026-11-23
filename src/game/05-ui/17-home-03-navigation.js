@@ -248,6 +248,18 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
   });
   if ($id('hubHeroesBtn')) $id('hubHeroesBtn').addEventListener('click', () => openScreen('codex'));
   if ($id('hubBannerBtn')) $id('hubBannerBtn').addEventListener('click', () => { if (ub) ub.hidden = false; });
+  if ($id('ubClaimAppreciation')) $id('ubClaimAppreciation').addEventListener('click', async () => {
+    if (typeof window.armoryClaimAppreciation === 'function') {
+      const r = await window.armoryClaimAppreciation('flowing');
+      if (r && r.ok && $id('ubClaimAppreciation')) $id('ubClaimAppreciation').textContent = '✓ 已领取感恩全套豪礼与紫金徽记';
+    } else {
+      openScreen('armory');
+      setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="loadout"]'); if (t) t.click(); }, 60);
+    }
+  });
+  if ($id('ubHudCustom')) $id('ubHudCustom').addEventListener('click', () => {
+    if (typeof window.openHudCustomizer === 'function') window.openHudCustomizer();
+  });
   const szSeg = $id('largeSizeSeg');
   if (szSeg) szSeg.addEventListener('click', e => {
     const b = e.target.closest('[data-lsize]'); if (!b) return;

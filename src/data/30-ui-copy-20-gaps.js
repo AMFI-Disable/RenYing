@@ -282,7 +282,6 @@ Object.assign(UI_COPY_EN, {
   "灵阶": "Spirit",
   "仙阶": "Immortal",
   "本宗": "Classic",
-  "探索与解锁新徽记": "Discover & Unlock New Badges",
   "解锁银徽": "Unlock Silver Badge",
   "水墨灵宠 · 随行助战（V 键发动）": "Ink Pets · Combat Companions (Press V)",
   "收养灵宠": "Adopt Pet",

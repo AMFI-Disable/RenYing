@@ -25,22 +25,39 @@ function statRows(c) {
   return rows;
 }
 // 图鉴静态说明、招式数据与演示序列见 18-codex-content.js。
+const HERO_ARCH_NAMES = { all: '全部', swordsman: '剑客', assassin: '刺客', tank: '铁卫', fighter: '武师', support: '辅助', controller: '控场' };
+const HERO_ARCH_MAP = {
+  qingfeng: 'swordsman', lingshuang: 'swordsman', yuehua: 'swordsman', cangming: 'swordsman', baihe: 'swordsman', wuya: 'swordsman',
+  feiying: 'assassin', lingque: 'assassin', liying: 'assassin', youhuang: 'assassin', yinhu: 'assassin', youming: 'assassin',
+  tieshan: 'tank', gouchen: 'tank', polang: 'tank', xuanwu: 'tank', tiangang: 'tank', bawang: 'tank',
+  leiming: 'fighter', zuixian: 'fighter', chixiao: 'fighter', yanling: 'fighter', chiyan: 'fighter', jinpeng: 'fighter',
+  liuyun: 'support', yuxiao: 'support', xuanji: 'support', qingluan: 'support', yunhe: 'support', fengling: 'support',
+  moyu: 'controller', cixian: 'controller', qianji: 'controller', mojie: 'controller', lingxi: 'controller', danqing: 'controller',
+};
+let cxArch = 'all';
+function heroArchetype(id) { return HERO_ARCH_MAP[id] || 'fighter'; }
 function renderCodex() {
   const c = CHARS[cxIdx], m = CHAR_MOVES[cxIdx], S = SKILLS[c.skill], S2 = SKILLS[c.skill2], U = ULTS[c.ult];
   const skin = cxPrev !== null ? cxPrev : mySkin(c.id);
   const L = skinLook(cxIdx, skin);
   const col = `rgb(${L.slash})`;
-  $id('cxTabs').innerHTML = CHARS.map((x, i) => `<button class="${i === cxIdx ? 'sel' : ''}" data-i="${i}" style="${i === cxIdx ? '' : `color:rgb(${x.look.slash})`} ">${x.name}</button>`).join('');
+  const archBar = `<div class="arch-bar">${Object.entries(HERO_ARCH_NAMES).map(([k, lbl]) => `<button type="button" class="arch-pill${cxArch === k ? ' sel' : ''}" data-arch="${k}">${lbl}</button>`).join('')}</div>`;
+  const heroBtns = CHARS.map((x, i) => {
+    if (cxArch !== 'all' && heroArchetype(x.id) !== cxArch) return '';
+    return `<button class="${i === cxIdx ? 'sel' : ''}" data-i="${i}" style="${i === cxIdx ? '' : `color:rgb(${x.look.slash})`} ">${x.name}</button>`;
+  }).join('');
+  $id('cxTabs').innerHTML = archBar + heroBtns;
   const cv2 = $id('cxCard'), g = cv2.getContext && cv2.getContext('2d');
   if (g) { g.clearRect(0, 0, cv2.width, cv2.height); g.drawImage(makeCardArt(cxIdx, cv2.width, cv2.height, skin), 0, 0); }
   if (cv2) {
     cv2.style.boxShadow = `0 16px 48px ${col.replace('rgb', 'rgba').replace(')', ',0.35)')}`;
     cv2.style.borderColor = col;
   }
-  const rar = CHAR_RARITY[c.id], own = ownsHero(c.id), free = heroesFree() || (PROF.rotation || []).includes(c.id);
+  const rar = CHAR_RARITY[c.id] || 'rare', own = ownsHero(c.id), free = heroesFree() || (PROF.rotation || []).includes(c.id);
   const skMeta = skin && SKINS[skin], skG = skMeta && skinGrade(skin);
   const skPill = skMeta ? `<span class="pill sk-pill" style="--tc:${skG.c}">${skG.n} · ${skMeta.name}</span>` : '';
-  $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar]})">${RAR_NAME[rar]}</span><span class="pill">${own ? '已拥有' : heroesFree() ? '限时免费' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span>${balNote(c.id) ? `<span class="pill" title="按电脑对打的胜率调过强度；招式说明里写的伤害是调整前的数">平衡 · ${balNote(c.id)}</span>` : ''}</div>`;
+  const archLbl = HERO_ARCH_NAMES[heroArchetype(c.id)] || '武师';
+  $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill" style="color:var(--gold)">${archLbl}</span><span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar] || '160,210,255'})">${RAR_NAME[rar] || '珍品'}</span><span class="pill">${own ? '已拥有' : heroesFree() ? '限时免费' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span>${balNote(c.id) ? `<span class="pill" title="按电脑对打的胜率调过强度；招式说明里写的伤害是调整前的数">平衡 · ${balNote(c.id)}</span>` : ''}</div>`;
   const skList = Object.entries(SKINS).filter(([k, v]) => v.char === c.id);
   const skScn = skMeta && SCENES[skin];
   const skDesc = skMeta ? `<span style="font-size:12px;color:var(--dim);margin-left:6px">（${skMeta.rarity === 'legend' ? '✨' : '🌟'}<span>${skMeta.rarity === 'legend' ? '专属全景天象与奥义特效' : '专属灵光天色与命中特效'}</span>）</span>` : '';
@@ -55,7 +72,20 @@ function renderCodex() {
   };
 
   const defaultBtn = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>`;
-  $id('cxSkins').innerHTML = `<div class="cx-skin-row"><div class="cx-skin-row-btns">${defaultBtn}${skList.map(renderSkinBtn).join('')}</div></div>`;
+  let badgeBar = '';
+  if (typeof window.armoryBadgeState === 'function') {
+    const bs = window.armoryBadgeState(), ownedList = Object.entries(bs.owned || {});
+    const eqId = (bs.equip && bs.equip[c.id]) || '';
+    const eqMeta = eqId && bs.badges && bs.badges[eqId];
+    const tierLbl = t => t === 'purpgold' ? '✦紫金' : t === 'gold' ? '赤金' : '银徽';
+    const bBtns = ownedList.map(([bid, tier]) => {
+      const bm = bs.badges[bid]; if (!bm) return '';
+      const active = eqId === bid;
+      return `<button type="button" data-cx-badge="${bid}" class="sk-g${active ? ' sel' : ''}" style="--tc:${tier === 'purpgold' ? '217,166,255' : tier === 'gold' ? '233,196,106' : '165,200,235'}" title="${bm.desc}">${bm.name}·${tierLbl(tier)}</button>`;
+    }).join('');
+    badgeBar = `<div class="cx-badge-box" style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(239,232,216,.12)"><div class="row" style="justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px"><small style="color:var(--gold);font-weight:700">🏅 英雄徽记：${eqMeta ? `${eqMeta.name}（${tierLbl(bs.owned[eqId])}）` : '未装备'}</small><div class="row" style="gap:4px">${eqId ? `<button type="button" data-cx-badge="" class="ghost small" style="padding:2px 8px;font-size:11px">卸下</button>` : ''}<button type="button" data-cx-badge-auto="1" class="ghost small" style="padding:2px 8px;font-size:11px;color:var(--gold)">⚡ 自动装配</button>${!bs.appreciationClaimed ? `<button type="button" data-cx-app="1" class="go small" style="padding:2px 8px;font-size:11px">🎁 领紫金徽记</button>` : ''}</div></div><div class="cx-skin-row-btns">${bBtns || '<small style="color:var(--dim)">暂无已解锁徽记，可点击右上角领取感恩盛典紫金徽记或前往武库解锁。</small>'}</div>${eqMeta ? `<div style="margin-top:4px;font-size:11.5px;color:var(--dim)">${eqMeta.desc}</div>` : ''}</div>`;
+  }
+  $id('cxSkins').innerHTML = `<div class="cx-skin-row"><div class="cx-skin-row-btns">${defaultBtn}${skList.map(renderSkinBtn).join('')}</div>${badgeBar}</div>`;
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
   const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'] : c.id === 'cixian' ? ['l1', 'l2', 'l3', 'l4'] : ['l1', 'l2', 'l3', 'l4', 'l5'];   // 磁仙四段循环
   const bn = (BAL[c.id] || BAL.qingfeng).normal, dv = d => Math.round(d * bn * 10) / 10;   // 普攻、蓄力、空中按强度调整后的数
@@ -238,8 +268,29 @@ function openCodex() {
 window.openCodex = openCodex;
 $id('cxSkins').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
-  const sk = b.dataset.sk || '';
   const id = CHARS[cxIdx].id;
+  if (b.dataset.cxBadge !== undefined) {
+    if (typeof window.armoryQuickEquipBadge === 'function') {
+      await window.armoryQuickEquipBadge(id, b.dataset.cxBadge);
+      renderCodex(); SFX.slice();
+    }
+    return;
+  }
+  if (b.dataset.cxBadgeAuto) {
+    if (typeof window.armoryAutoAssignBadges === 'function') {
+      await window.armoryAutoAssignBadges();
+      renderCodex(); SFX.slice();
+    }
+    return;
+  }
+  if (b.dataset.cxApp) {
+    if (typeof window.armoryClaimAppreciation === 'function') {
+      await window.armoryClaimAppreciation('flowing');
+      renderCodex();
+    }
+    return;
+  }
+  const sk = b.dataset.sk || '';
   const has = skinOwned(sk);
   if (!has) {
     cxPrev = sk; renderCodex(); SFX.slice();
@@ -259,7 +310,16 @@ $id('cxSkins').addEventListener('click', async e => {
 });
 $id('cxTabs').addEventListener('click', e => {
   const b = e.target.closest('button');
-  if (b) {
+  if (!b) return;
+  if (b.dataset.arch) {
+    cxArch = b.dataset.arch;
+    const first = CHARS.findIndex(x => cxArch === 'all' || heroArchetype(x.id) === cxArch);
+    if (first >= 0 && (cxArch !== 'all' && heroArchetype(CHARS[cxIdx].id) !== cxArch)) cxIdx = first;
+    renderCodex();
+    SFX.slice();
+    return;
+  }
+  if (b.dataset.i !== undefined) {
     cxIdx = +b.dataset.i;
     cxPrev = null;
     cxActiveMove = 'full';

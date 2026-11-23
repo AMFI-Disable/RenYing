@@ -29,7 +29,7 @@ function skinWeight(k) {
   }
   return 10;
 }
-const CHAR_RARITY = { yuxiao: 'legend', zuixian: 'rare', gouchen: 'rare', lingque: 'rare', liying: 'rare', cixian: 'rare', qianji: 'rare', chixiao: 'rare', youhuang: 'rare', xuanji: 'legend', polang: 'rare', qingfeng: 'starter', tieshan: 'common', leiming: 'common', feiying: 'rare', liuyun: 'rare', lingshuang: 'rare', moyu: 'legend', yuehua: 'legend', yanling: 'legend' };
+const CHAR_RARITY = { yuxiao: 'legend', zuixian: 'rare', gouchen: 'rare', lingque: 'rare', liying: 'rare', cixian: 'rare', qianji: 'rare', chixiao: 'rare', youhuang: 'rare', xuanji: 'legend', polang: 'rare', cangming: 'legend', qingluan: 'rare', xuanwu: 'rare', chiyan: 'rare', yinhu: 'legend', yunhe: 'rare', tiangang: 'rare', mojie: 'legend', baihe: 'rare', jinpeng: 'legend', youming: 'rare', lingxi: 'rare', bawang: 'legend', fengling: 'rare', wuya: 'legend', danqing: 'rare', qingfeng: 'starter', tieshan: 'common', leiming: 'common', feiying: 'rare', liuyun: 'rare', lingshuang: 'rare', moyu: 'legend', yuehua: 'legend', yanling: 'legend' };
 function getWeeklyRotation() {
   const now = new Date();
   const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));

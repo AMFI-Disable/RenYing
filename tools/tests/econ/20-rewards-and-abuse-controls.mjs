@@ -161,7 +161,7 @@ section('第 3 版的武库存档：卖给系统的挂单全部退回，武器�
 
 section('不能套利：系统不定饰品的价、也不收购；墨锭只有对局、补给、星章和卖给别的玩家能拿到');
 {
-  const income = ['matchEnd', 'supply', 'star', 'sellDupes', 'task', 'comp', 'tut', 'stars', 'saga'];   // 规则里会加墨锭的动作（加上结算挂单与出售重复饰品；任务、补偿、教程、关卡星、列传每份只给一次，下面单独测）
+  const income = ['matchEnd', 'supply', 'star', 'sellDupes', 'task', 'comp', 'tut', 'stars', 'saga', 'claimAppreciation'];   // 规则里会加墨锭的动作（加上结算挂单、出售重复饰品与一次性感恩大礼）
   const R = C.rng(99), env = () => ({ now: T, rnd: R, uid: 'arb', ink: 1000, skins: [], equip: {}, server: true });
   const rich = () => { const s = C.blank(); s.cases = Object.fromEntries(C.CASES.map(c => [c, 3])); s.term = 3; s.tags = 3; s.gift = 0;
     for (let i = 1; i <= 12; i++) s.inv.push({ i, k: C.ofTier('mil')[i % 4], st: -1, n: '', t: T, src: 'case' }); s.nid = 13; return s; };

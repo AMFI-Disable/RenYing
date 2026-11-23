@@ -17,6 +17,7 @@ class Ctrl {
 const DEFAULT_1P_KEYS = {
   left: 'KeyA', right: 'KeyD', jump: 'KeyW', jump2: 'Space', down: 'KeyS',
   atk: 'KeyX', dash: 'ShiftLeft', special: 'KeyE', skill: 'KeyQ', skill2: 'KeyR',
+  heavyStrike: 'KeyU', lowKick: 'KeyI', iaido: 'KeyO', grapple: 'KeyH',
   stance: 'KeyZ', feint: 'KeyC', parry: 'KeyF', pet: 'KeyV',
   lock: 'KeyG', beacon: 'KeyB', rally: 'KeyT', scoreboard: 'Tab',
   orderFocus: 'Digit1', orderProtect: 'Digit2', orderSpread: 'Digit3'

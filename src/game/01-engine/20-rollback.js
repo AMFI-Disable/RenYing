@@ -6,7 +6,7 @@ const ROLL = { on: false, F: 0, D: 3, N: 240, MAXP: 40, snaps: [], loc: [], rem:
   rollbacks: 0, rbFrames: 0, desyncs: 0, ctrls: null };
 const EMPTY_IN = { h: 0, p: [] };
 // 只影响画面的字段不进存档
-const F_SKIP = new Set(['ch', 'moves', 'look', 'ctrl', 'trail', 'scarf', 'j', 'sk', 'move', 'ghosts', 'ghostT', 'lagHp', 'lagDelay', 'flash', 'walkPh', 'vox', 'voy', 'snap', 'rot', 'skinKey', 'target', 'flurryVictim']);
+const F_SKIP = new Set(['ch', 'moves', 'look', 'ctrl', 'trail', 'scarf', 'j', 'sk', 'move', 'ghosts', 'ghostT', 'lagHp', 'lagDelay', 'flash', 'walkPh', 'vox', 'voy', 'snap', 'rot', 'skinKey', 'target', 'flurryVictim', '_ryFx', '_ryPhys']);
 for (const k of Object.keys(SFX)) { const fn = SFX[k]; SFX[k] = (...a) => (RESIM ? undefined : fn(...a)); }
 { const m0 = metal; metal = (...a) => (RESIM ? undefined : m0(...a)); }
 function fastClone(v) {
@@ -26,14 +26,17 @@ function capF(f) {
   for (const k in f) { if (F_SKIP.has(k)) continue; const v = f[k]; if (typeof v === 'function') continue; o[k] = v && typeof v === 'object' ? jclone(v) : v; }
   o.hasMove = !!f.move;
   o.tgt = f.target ? f.target.idx : -1;   // 2v2 锁定的目标会影响打谁，也得存（存成序号）
+  if (f._ryPhys && typeof RYPhysics !== 'undefined' && RYPhysics.snapshotFighter) o._rySnap = RYPhysics.snapshotFighter(f);
   return o;
 }
 function resF(f, o) {
   if (o.chIdx !== undefined && o.chIdx !== f.chIdx) f.setChar(o.chIdx);   // 回滚跨过了换人：先换回当时的角色
   for (const k in f) if (!F_SKIP.has(k) && !(k in o)) delete f[k];
-  for (const k in o) { if (k === 'hasMove' || k === 'tgt') continue; const v = o[k]; f[k] = v && typeof v === 'object' ? jclone(v) : v; }
+  for (const k in o) { if (k === 'hasMove' || k === 'tgt' || k === '_rySnap') continue; const v = o[k]; f[k] = v && typeof v === 'object' ? jclone(v) : v; }
   f.move = o.hasMove && f.moveName ? f.moves[f.moveName] : null;
   f.target = o.tgt >= 0 ? fighterByIdx(o.tgt) : null;
+  if (o._rySnap && typeof RYPhysics !== 'undefined' && RYPhysics.restoreFighter) RYPhysics.restoreFighter(f, o._rySnap);
+  else delete f._ryPhys;
 }
 // 电脑侠客的“脑子”也得进存档（2v2 联机里有电脑）：回滚重算时它得想出和第一次一模一样的招
 // 它记着的人和飞行道具按序号存（不然存档会把整个对手连同对手的脑子一起拷一遍，还会绕圈），对位图的数字表照原样拷
@@ -87,7 +90,7 @@ function restState(st) {
 function hashState(st) {
   // sk 是画面上的骨架（残影里也带着），不算。键按名字排好再算：回滚时 resF 会删掉再补回字段，
   // 同一个状态在回滚过的一边和没回滚的一边键的先后不一样，不排序的话两边算出来不同，会被当成不同步
-  const txt = JSON.stringify(st, (k, v) => k === 'sk' ? undefined : typeof v === 'number' ? Math.round(v * 1000) / 1000
+  const txt = JSON.stringify(st, (k, v) => (k === 'sk' || k === 'motion') ? undefined : typeof v === 'number' ? Math.round(v * 1000) / 1000
     : v && typeof v === 'object' && !Array.isArray(v) ? Object.fromEntries(Object.keys(v).sort().map(q => [q, v[q]])) : v);
   let h = 2166136261; for (let i = 0; i < txt.length; i++) { h ^= txt.charCodeAt(i); h = Math.imul(h, 16777619); }
   return h >>> 0;

@@ -643,6 +643,65 @@ function tryTacticalKeys(f, foe) {
     }
     return true;
   }
+  const canMartial = ['idle', 'walk', 'air'].includes(f.state);
+  // U：重击劈斩（破防压迫，空中为下劈）
+  if (canMartial && c.consume('heavyStrike')) {
+    f.face = (c.held.right ? 1 : c.held.left ? -1 : f.face);
+    startMove(f, f.onGround() ? 'hv' : 'a2');
+    return true;
+  }
+  // I：下段扫腿（快起手下盘踢击，扰乱重心）
+  if (canMartial && f.onGround() && c.consume('lowKick')) {
+    f.face = (c.held.right ? 1 : c.held.left ? -1 : f.face);
+    startMove(f, 'dl');
+    if (typeof RYPhysics !== 'undefined' && RYPhysics.Balance && foe && Math.abs(foe.x - f.x) < 120) {
+      RYPhysics.Balance.applyTripTorque && RYPhysics.Balance.applyTripTorque(foe, f.face * 26);
+    }
+    return true;
+  }
+  // O：居合斩穴（高速拔刀突刺 + 点穴封脉）
+  if (canMartial && (f.iaidoCD || 0) <= 0 && c.consume('iaido')) {
+    f.face = (c.held.right ? 1 : c.held.left ? -1 : f.face);
+    f.iaidoCD = 3.2;
+    f.vx = f.face * 540;
+    startMove(f, f.onGround() ? 'cs1' : 'a1');
+    if (foe && Math.abs(foe.x - f.x) < 220 && Math.abs(foe.y - f.y) < 100) {
+      foe.acupointT = Math.max(foe.acupointT || 0, 2.4);
+      if (typeof RYPhysics !== 'undefined' && RYPhysics.IaidoAcupoint && RYPhysics.IaidoAcupoint.strikeAcupoint) {
+        RYPhysics.IaidoAcupoint.strikeAcupoint(f, foe, { height: c.held.up ? 'high' : c.held.down ? 'low' : 'mid' });
+      }
+    }
+    if (!RESIM) {
+      ring(f.x, f.y - 58, 96, '255,140,245', 0.32);
+      addP({ type: 'text', text: '居合斩穴!', x: f.x, y: f.y - 116, life: 0.72, max: 0.72, rgb: '255,160,245' });
+      SFX.slice && SFX.slice();
+    }
+    return true;
+  }
+  // H：擒拿投技（近身破防擒拿抛摔）
+  if (canMartial && f.onGround() && (f.grappleCD || 0) <= 0 && c.consume('grapple')) {
+    f.grappleCD = 3.5;
+    const tFoe = foe && foe.hp > 0 && Math.abs(foe.x - f.x) < 115 && Math.abs(foe.y - f.y) < 85 ? foe : null;
+    if (tFoe) {
+      const throwDir = c.held.left ? -1 : c.held.right ? 1 : f.face;
+      tFoe.vx = throwDir * 440;
+      tFoe.vy = c.held.up ? -560 : -340;
+      tFoe.state = 'launched'; tFoe.t = 0; tFoe.stun = 0.55;
+      tFoe.hp = Math.max(1, tFoe.hp - Math.round(28 * (f.ch.stat.dmg || 1)));
+      if (typeof RYPhysics !== 'undefined' && RYPhysics.Grapple && RYPhysics.Grapple.executeThrow) {
+        RYPhysics.Grapple.executeThrow(f, tFoe, c.held.up ? 'sky' : throwDir !== f.face ? 'back' : 'forward');
+      }
+      if (!RESIM) {
+        ring(tFoe.x, tFoe.y - 52, 90, '255,195,110', 0.34);
+        addP({ type: 'text', text: '擒拿破防!', x: tFoe.x, y: tFoe.y - 114, life: 0.75, max: 0.75, rgb: '255,205,120' });
+        SFX.heavy && SFX.heavy();
+      }
+    } else if (!RESIM) {
+      addP({ type: 'text', text: '擒拿', x: f.x, y: f.y - 98, life: 0.45, max: 0.45, rgb: '210,205,190' });
+    }
+    f.vx = f.face * 180;
+    return true;
+  }
   return false;
 }
 // 顿帧、大招定格、被打飞倒地这些动不了的时候按下的技能先记着，能动了马上放，不会被吞掉
@@ -663,6 +722,10 @@ function updateFighter(f, foe) {
   f.qiParryT = Math.max(0, (f.qiParryT || 0) - STEP);
   f.petCD = Math.max(0, (f.petCD || 0) - STEP);
   f.rallyCD = Math.max(0, (f.rallyCD || 0) - STEP);
+  f.iaidoCD = Math.max(0, (f.iaidoCD || 0) - STEP);
+  f.grappleCD = Math.max(0, (f.grappleCD || 0) - STEP);
+  f.acupointT = Math.max(0, (f.acupointT || 0) - STEP);
+  if (typeof RYPhysics !== 'undefined' && RYPhysics.stepFighter) RYPhysics.stepFighter(f, STEP, { foe });
   f.badgeDashT = Math.max(0, (f.badgeDashT || 0) - STEP);
   for (const key of ['badgeLinkT', 'badgePressureT', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'ballGuardBreakT']) f[key] = Math.max(0, (f[key] || 0) - STEP);
   f.breakCD = Math.max(0, f.breakCD - STEP);

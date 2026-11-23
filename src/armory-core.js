@@ -35,24 +35,39 @@
   C.DROP_P = 0.15, C.DROP_CAP = 4, C.SUPPLY_GAMES = 5;
   C.MATCH_MIN_MS = 20000, C.MATCH_MAX_MS = 45 * 60000, C.MATCH_GAP_MS = 15000, C.MATCH_DAY_CAP = 60;
   C.KO_MAX = 12;                               // 一局最多记 12 斩（三人车轮战也够了）
-  C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji', 'chixiao', 'youhuang', 'xuanji', 'polang'];
+  C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji', 'chixiao', 'youhuang', 'xuanji', 'polang', 'cangming', 'qingluan', 'xuanwu', 'chiyan', 'yinhu', 'yunhe', 'tiangang', 'mojie', 'baihe', 'jinpeng', 'youming', 'lingxi', 'bawang', 'fengling', 'wuya', 'danqing'];
   C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem', 'melee', 'ctf', 'gauntlet'];
   C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
+  C.BADGE_CATS = { all: '全部', offense: '进攻', defense: '防御', mobility: '身法', mastery: '绝技', team: '团队' };
   C.BADGES = {
-    flowing: { name: '连势', desc: '连续普攻第 3 击命中后，可在收招时冲刺追步；紫金阶可改接技能。', en: 'Flow', effect: 'normal' },
-    focus: { name: '凝锋', desc: '蓄力斩命中后，下一次格挡交锋会减少击退；紫金阶技能也可承接。', en: 'Focus', effect: 'charged' },
-    riposte: { name: '回锋', desc: '精准招架后，限时重击会向前踏进，抓住反击时机。', en: 'Riposte', effect: 'parry' },
-    breaker: { name: '破军', desc: '破防后立刻重置冲刺冷却，下一次冲刺可更快追击；紫金阶也可选重击踏进。', en: 'Breaker', effect: 'break' },
-    ascent: { name: '凌空', desc: '腾空攻击命中后可续一次空中冲刺；紫金阶可接空中技能。', en: 'Ascent', effect: 'air' },
-    pursuit: { name: '追影', desc: '闪避后命中，可在收招时冲刺退步；紫金阶退步带短暂无敌。', en: 'Pursuit', effect: 'dash' },
-    ironwall: { name: '铁壁', desc: '连续格挡 3 次后，下一次反击附带短暂霸体护身。', en: 'Ironwall', effect: 'guard' },
-    tempest: { name: '疾电', desc: 'Q/R 技能命中后，下一次普攻起手提速并延长追击窗口。', en: 'Tempest', effect: 'skill' },
-    bloodlust: { name: '血怒', desc: '气血低于 35% 时，命中回复少量气血并额外积攒真气。', en: 'Bloodlust', effect: 'lowhp' },
-    phantom: { name: '绝影', desc: '虚招翻滚（C）后 1.2 秒内首次命中伤害提升。', en: 'Phantom', effect: 'feint' },
-    resonance: { name: '共鸣', desc: '发动灵宠秘技（V）后，立刻缩短 Q/R 技能剩余冷却。', en: 'Resonance', effect: 'pet' },
-    skybreaker: { name: '破穹', desc: '空中蓄力斩命中后，重置空中跳跃与冲刺次数。', en: 'Skybreaker', effect: 'aircharge' },
-    juggernaut: { name: '镇岳', desc: '霸体硬扛受击后，下一次重击或蓄力斩威力增强。', en: 'Juggernaut', effect: 'armor' },
-    vanguard: { name: '同心', desc: '多人团战中协同命中敌人时，为己方附近队友回复真气。', en: 'Vanguard', effect: 'team' },
+    flowing: { name: '连势', cat: 'offense', desc: '连续普攻第 3 击命中后，可在收招时冲刺追步；紫金阶可改接技能。', en: 'Flow', effect: 'normal', ach: '累计完成 50 次 5 连击' },
+    focus: { name: '凝锋', cat: 'offense', desc: '蓄力斩命中后，下一次格挡交锋会减少击退；紫金阶技能也可承接。', en: 'Focus', effect: 'charged', ach: '累计蓄力斩命中 30 次' },
+    riposte: { name: '回锋', cat: 'defense', desc: '精准招架后，限时重击会向前踏进，抓住反击时机。', en: 'Riposte', effect: 'parry', ach: '累计完成 20 次精准招架' },
+    breaker: { name: '破军', cat: 'offense', desc: '破防后立刻重置冲刺冷却，下一次冲刺可更快追击；紫金阶也可选重击踏进。', en: 'Breaker', effect: 'break', ach: '累计破防对手 25 次' },
+    ascent: { name: '凌空', cat: 'mobility', desc: '腾空攻击命中后可续一次空中冲刺；紫金阶可接空中技能。', en: 'Ascent', effect: 'air', ach: '累计空中连段命中 40 次' },
+    pursuit: { name: '追影', cat: 'mobility', desc: '闪避后命中，可在收招时冲刺退步；紫金阶退步带短暂无敌。', en: 'Pursuit', effect: 'dash', ach: '累计闪避反击 30 次' },
+    ironwall: { name: '铁壁', cat: 'defense', desc: '连续格挡 3 次后，下一次反击附带短暂霸体护身。', en: 'Ironwall', effect: 'guard', ach: '单局格挡 15 次攻击' },
+    tempest: { name: '疾电', cat: 'mastery', desc: 'Q/R 技能命中后，下一次普攻起手提速并延长追击窗口。', en: 'Tempest', effect: 'skill', ach: '累计技能命中 80 次' },
+    bloodlust: { name: '血怒', cat: 'offense', desc: '气血低于 35% 时，命中回复少量气血并额外积攒真气。', en: 'Bloodlust', effect: 'lowhp', ach: '残血反杀 10 场对局' },
+    phantom: { name: '绝影', cat: 'mobility', desc: '虚招翻滚（C）后 1.2 秒内首次命中伤害提升。', en: 'Phantom', effect: 'feint', ach: '累计虚招翻滚反击 25 次' },
+    resonance: { name: '共鸣', cat: 'mastery', desc: '发动灵宠秘技（V）后，立刻缩短 Q/R 技能剩余冷却。', en: 'Resonance', effect: 'pet', ach: '累计发动灵宠秘技 30 次' },
+    skybreaker: { name: '破穹', cat: 'mobility', desc: '空中蓄力斩命中后，重置空中跳跃与冲刺次数。', en: 'Skybreaker', effect: 'aircharge', ach: '累计空中蓄力斩命中 20 次' },
+    juggernaut: { name: '镇岳', cat: 'defense', desc: '霸体硬扛受击后，下一次重击或蓄力斩威力增强。', en: 'Juggernaut', effect: 'armor', ach: '霸体承伤反击 25 次' },
+    vanguard: { name: '同心', cat: 'team', desc: '多人团战中协同命中敌人时，为己方附近队友回复真气。', en: 'Vanguard', effect: 'team', ach: '参与 10 场大型团战胜利' },
+    iaido: { name: '居合', cat: 'mastery', desc: '居合斩穴（O）瞬拔命中后，额外延长点穴封脉时长并回气。', en: 'Iaido', effect: 'iaido', ach: '累计触发 20 次居合瞬拔' },
+    meridian: { name: '点穴', cat: 'mastery', desc: '对被点穴封脉的目标追加打击时，额外削减架势并触发震气。', en: 'Meridian', effect: 'acupoint', ach: '累计点穴封脉 30 次' },
+    grapple: { name: '擒龙', cat: 'offense', desc: '擒拿投技（H）得手后，落地瞬间重置闪避冷却并提升追击伤害。', en: 'Grapple', effect: 'grapple', ach: '累计擒拿投技命中 20 次' },
+    execution: { name: '斩魄', cat: 'offense', desc: '对手气血低于 25% 时，重击与奥义额外附带斩杀破防威力。', en: 'Execution', effect: 'execute', ach: '累计完成 60 次终结击倒' },
+    aegis: { name: '玄盾', cat: 'defense', desc: '聚气弹反（F）成功后，获得短时减伤护盾并回复架势值。', en: 'Aegis', effect: 'qiparry', ach: '累计聚气弹反成功 20 次' },
+    steadfast: { name: '磐石', cat: 'defense', desc: '受击倒地起身时，震开贴身敌人并缩短起身僵直。', en: 'Steadfast', effect: 'getup', ach: '完成 30 场无破防对局' },
+    windstep: { name: '御风', cat: 'mobility', desc: '墙面蹬跳与轻功腾跃后，2 秒内移动与突进速度提升。', en: 'Windstep', effect: 'wall', ach: '累计高空滞空连招 30 次' },
+    mirage: { name: '幻步', cat: 'mobility', desc: '连续两次闪避或翻滚后，下一次轻击突进距离显著延长。', en: 'Mirage', effect: 'evade', ach: '单局无伤闪避 10 次攻击' },
+    momentum: { name: '千钧', cat: 'offense', desc: '高速冲刺或高空下坠命中时，按动量额外放大击退与伤害。', en: 'Momentum', effect: 'velocity', ach: '累计高速重击破敌 40 次' },
+    harmony: { name: '太和', cat: 'mastery', desc: '战斗中切换二式架势时，立即回复少量架势值并获得短暂加速。', en: 'Harmony', effect: 'stance', ach: '解锁 5 位侠客的第二架势' },
+    sovereign: { name: '天威', cat: 'mastery', desc: '释放奥义（E）后无论是否命中，返还部分真气并强化下一次技能。', en: 'Sovereign', effect: 'ult', ach: '累计释放奥义 50 次' },
+    warbanner: { name: '战旗', cat: 'team', desc: '发动战意号令（T）时，附近队友同步获得攻防增幅与霸体微盾。', en: 'Warbanner', effect: 'rally', ach: '在 8v8 团战中发动号令 20 次' },
+    guardian: { name: '护法', cat: 'team', desc: '在己方残血队友附近格挡或弹反成功时，为队友分担并回复气血。', en: 'Guardian', effect: 'protect', ach: '在 2v2 或 8v8 中救援队友 15 次' },
+    synergy: { name: '合击', cat: 'team', desc: '接续队友连段命中同一敌人时，触发合击破甲并大幅积攒真气。', en: 'Synergy', effect: 'assist', ach: '触发 30 次团队合击连携' },
   };
   C.BADGE_TIER = { silver: 1, gold: 2, purpgold: 3 };
   C.BADGE_UPGRADE = { silver: { to: 'gold', sigils: 3, ink: 2000, kos: 100 }, gold: { to: 'purpgold', sigils: 7, ink: 6000, kos: 300 } };
@@ -248,6 +263,10 @@
       mil: ['qf_ic1', 'my_ic1', 'yu_ic1', 'pl_ic1'], res: ['ch_ic2', 'xj_ic2', 'yh_ic2'], cla: ['yu_ic3', 'my_ic3', 'li_ic3'], cov: ['yu_ic4', 'qf_ic4'], gold: [] },
     c11: { name: '沧澜雷霆', price: 320, emblem: '澜', col: '80,210,245', themed: true, odds: { mil: 0.48, res: 0.30, cla: 0.15, cov: 0.07, gold: 0 },
       mil: ['pl_st1', 'lm_st1', 'ch_st1', 'ts_st1'], res: ['pl_st2', 'ly_st2', 'cx_st2'], cla: ['pl_st3', 'lm_st3', 'gc_st3'], cov: ['pl_st4', 'lm_st4'], gold: [] },
+    c12: { name: '九霄剑阁', price: 360, emblem: '霄', col: '245,205,110', themed: true, odds: { mil: 0.46, res: 0.31, cla: 0.16, cov: 0.07, gold: 0 },
+      mil: ['qf_jx1', 'ls_jx1', 'yl_jx1', 'yx_jx1'], res: ['ch_jx2', 'xj_jx2', 'lq_jx2'], cla: ['qf_jx3', 'ls_jx3', 'zx_jx3'], cov: ['qf_jx4', 'xj_jx4'], gold: [] },
+    c13: { name: '幽冥玄煞', price: 360, emblem: '冥', col: '185,95,255', themed: true, odds: { mil: 0.46, res: 0.31, cla: 0.16, cov: 0.07, gold: 0 },
+      mil: ['fy_ym1', 'yu_ym1', 'li_ym1', 'gc_ym1'], res: ['yu_ym2', 'fy_ym2', 'qj_ym2'], cla: ['yu_ym3', 'li_ym3', 'ts_ym3'], cov: ['yu_ym4', 'fy_ym4'], gold: [] },
   };
   C.CASES = Object.keys(C.COLS);
   C.REG = C.CASES.filter(c => !C.COLS[c].prem);   // 普通武器箱与主题套装箱
@@ -372,7 +391,7 @@
   C.ofTier = t => Object.keys(C.ITEM).filter(k => C.ITEM[k].tier === t);
   C.isPrem = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].prem;
   C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座武器箱的靠开箱、市场、货郎、熔铸
-  const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque', li: 'liying', cx: 'cixian', qj: 'qianji', ch: 'chixiao', yu: 'youhuang', xj: 'xuanji', pl: 'polang' };
+  const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque', li: 'liying', cx: 'cixian', qj: 'qianji', ch: 'chixiao', yu: 'youhuang', xj: 'xuanji', pl: 'polang', cm: 'cangming', ql: 'qingluan', xw: 'xuanwu', cy: 'chiyan', fx: 'yinhu', he: 'yunhe', tg: 'tiangang', mj: 'mojie', bh: 'baihe', jp: 'jinpeng', ym: 'youming', lx: 'lingxi', bw: 'bawang', fl: 'fengling', wy: 'wuya', dq: 'danqing' };
   C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
 
   // 星座武器箱的 36 款：按 C.ZODIAC 的配色和 C.ZOD_OF 的分配生成。
@@ -403,23 +422,98 @@
       scene: { sky: sky(0.85, 0.55), orb: 'galaxy', orbC: rgbS(mixH(m, '#ffffff', 0.4)), mist: rgbS(m), mtn: [mixH(nt, dk, 0.8), mixH(nt, dk, 0.5)], bam: [mixH(nt, dk, 0.35), nt], wx: 'gold', wxC: rgbS(GOLD), hit: 'sunburst', hitC: rgbS(GOLD), stars: 1, rays: true } };
   };
   for (const [pre, zs] of Object.entries(C.ZOD_OF)) zs.forEach((code, ti) => { C.FULL[`${pre}_z${code}`] = zodSkin(pre, C.ZODIAC.find(z => z[0] === code), ti); });
-  // 三套全新主题套装皮肤生成（山海星陨 sf、墨韵丹青 ic、沧澜雷霆 st；不含绝世单皮）
+  // 五套主题系列套装皮肤生成（山海星陨 sf、墨韵丹青 ic、沧澜雷霆 st、九霄剑阁 jx、幽冥玄煞 ym；全套专属外观、兵器、配饰、特效与全景天象）
+  const HERO_WEAP_STYLE = {
+    qf: 'renying_blade', fy: 'butterfly_daggers', ts: 'crystal_greatsword', ls: 'tianhe_spear',
+    ly: 'koi_fan', lm: 'jiuxiao_gauntlet', my: 'jade_brush', yh: 'guanghan_moon',
+    yl: 'peacock_feather', yx: 'tianlai_flute', zx: 'moon_gourd', gc: 'frost_hammer',
+    lq: 'peacock_feather', li: 'butterfly_daggers', cx: 'guanghan_moon', qj: 'frost_hammer',
+    ch: 'tianhe_spear', yu: 'frost_hammer', xj: 'guanghan_moon', pl: 'crystal_greatsword',
+  };
   const SET_THEMES = {
-    sf: { name: '星陨', body: '#1f2547', shade: '#10142a', scarf: '#8ea2ff', slash: '155,175,255', blade: '#eef2ff', outline: '#9fb2ff', trail: 'star' },
-    ic: { name: '丹青', body: '#f0e8dc', shade: '#b5a392', scarf: '#d63e32', slash: '235,95,80', blade: '#241e1c', outline: '#2a1c18', trail: 'ink' },
-    st: { name: '沧澜', body: '#183242', shade: '#0b1924', scarf: '#38c6f4', slash: '90,215,255', blade: '#e6faff', outline: '#66d8ff', trail: 'cloud' },
+    sf: {
+      name: '星陨', body: '#1c234d', shade: '#0d112b', scarf: '#9bb2ff', slash: '165,188,255', blade: '#f2f6ff', outline: '#b6c8ff',
+      breast: '#27306b', shoulder: '#36428c', cape: '#161c42', gem: '#ffd8f6',
+      heads: ['headband', 'jadepin', 'valkyrie', 'starguan'],
+      robes: ['starry', 'starry', 'celestial', 'celestial'],
+      backs: ['crescent', 'notering', 'galaxy', 'galaxy'],
+      fx: { th: 'nebula', c: '165,188,255', c2: '255,160,235' },
+      scene: { sky: ['#040512', '#0e1338', '#232864', '#0b0e28'], orb: 'galaxy', orbC: '175,195,255', mist: '165,175,255', mtn: ['#151a44', '#0b0e26'], bam: ['#080a1c', '#040510'], wx: 'twinkle', wxC: '225,230,255', hit: 'swirl', hitC: '180,190,255', stars: 1, rays: true },
+    },
+    ic: {
+      name: '丹青', body: '#f2eadc', shade: '#bda892', scarf: '#d83b30', slash: '238,88,74', blade: '#1e1917', outline: '#281814',
+      breast: '#8a2620', shoulder: '#a8342a', cape: '#2a1a16', gem: '#ff8a7a',
+      heads: ['bamboohat', 'bamboohat', 'veilhat', 'plume'],
+      robes: ['jade_master', 'jade_master', 'dusk', 'phoenix'],
+      backs: ['scroll', 'scroll', 'koi', 'flysword'],
+      fx: { th: 'ink', c: '238,88,74', c2: '24,18,16' },
+      scene: { sky: ['#140a08', '#341612', '#6a261e', '#24100d'], orb: 'bloodmoon', orbC: '255,115,92', mist: '240,140,115', mtn: ['#2e1612', '#1a0c0a'], bam: ['#120806', '#0a0404'], wx: 'ink', wxC: '60,24,20', hit: 'enso', hitC: '245,95,80', stars: 0.25, rays: true },
+    },
+    st: {
+      name: '沧澜', body: '#143248', shade: '#091a28', scarf: '#38d2ff', slash: '90,222,255', blade: '#ecfbff', outline: '#7ae4ff',
+      breast: '#1d4d6e', shoulder: '#2a6a92', cape: '#0c2638', gem: '#a8f4ff',
+      heads: ['headband', 'voidhorns', 'taotiehelm', 'starguan'],
+      robes: ['blizzard', 'thunder', 'thunder', 'heavy'],
+      backs: ['crystals', 'icewings', 'chakra', 'chakra'],
+      fx: { th: 'thunder', c: '90,222,255', c2: '220,250,255' },
+      scene: { sky: ['#04101c', '#0a263e', '#1a4f74', '#0a2034'], orb: 'rift', orbC: '120,232,255', mist: '115,215,250', mtn: ['#10324a', '#081d2e'], bam: ['#061624', '#030c14'], wx: 'spark', wxC: '150,235,255', hit: 'bolt', hitC: '95,225,255', stars: 0.45, rays: true },
+    },
+    jx: {
+      name: '九霄', body: '#f8f2e2', shade: '#c8b482', scarf: '#f5be48', slash: '255,218,125', blade: '#fffaf0', outline: '#3a280e',
+      breast: '#c6983e', shoulder: '#deb356', cape: '#5c3c16', gem: '#fff0b8',
+      heads: ['jadepin', 'plume', 'starguan', 'valkyrie'],
+      robes: ['celestial', 'celestial', 'phoenix', 'celestial'],
+      backs: ['notering', 'flysword', 'flysword', 'peacock'],
+      fx: { th: 'star', c: '255,218,125', c2: '255,248,220' },
+      scene: { sky: ['#161006', '#3d2a0e', '#8c6424', '#2e1e08'], orb: 'sun', orbC: '255,228,150', mist: '255,215,135', mtn: ['#3e2a10', '#241808'], bam: ['#181006', '#0e0904'], wx: 'gold', wxC: '255,228,145', hit: 'sunburst', hitC: '255,220,125', stars: 0.35, rays: true },
+    },
+    ym: {
+      name: '幽冥', body: '#241438', shade: '#10081c', scarf: '#c870ff', slash: '205,120,255', blade: '#f5e8ff', outline: '#b668ff',
+      breast: '#381e58', shoulder: '#4f2a7a', cape: '#180c28', gem: '#8ff6ff',
+      heads: ['foxmask', 'voidhorns', 'foxmask', 'voidhorns'],
+      robes: ['dark', 'spirit', 'spirit', 'dark'],
+      backs: ['butterflywings', 'crescent', 'butterflywings', 'galaxy'],
+      fx: { th: 'butterfly', c: '205,120,255', c2: '125,245,255', part: 'butterfly' },
+      scene: { sky: ['#080412', '#1c0c34', '#3b1866', '#140826'], orb: 'bloodmoon', orbC: '215,135,255', mist: '185,120,255', mtn: ['#22103c', '#120822'], bam: ['#0e061a', '#06030e'], wx: 'petal', wxC: '215,160,255', hit: 'crescent', hitC: '205,120,255', stars: 0.75, rays: true },
+    },
   };
   const SET_RANK = { 1: '初影', 2: '流光', 3: '玄华', 4: '赤霄' };
-  for (const cid of ['c9', 'c10', 'c11']) {
+  const SET_TRAIL = { 1: 'cloud', 2: 'spark', 3: 'gold', 4: 'gold' };
+  const SET_AURA = { 1: undefined, 2: 'cloud', 3: 'aurora', 4: 'gold' };
+  for (const cid of ['c9', 'c10', 'c11', 'c12', 'c13']) {
     for (const t of ['mil', 'res', 'cla', 'cov']) {
       for (const k of C.COLS[cid][t] || []) {
-        const [pre, tag] = k.split('_'), th = SET_THEMES[tag.slice(0, 2)], rk = SET_RANK[tag.slice(2)] || '';
+        const [pre, tag] = k.split('_'), th = SET_THEMES[tag.slice(0, 2)], rkNum = +tag.slice(2) || 1, rk = SET_RANK[rkNum] || '';
+        const head = th.heads[rkNum - 1] || th.heads[0];
+        const robe = th.robes[rkNum - 1] || th.robes[0];
+        const back = th.backs[rkNum - 1] || th.backs[0];
         C.FULL[k] = {
           char: PREFIX[pre],
           name: `${th.name}·${rk}`,
-          look: { body: th.body, shade: th.shade, scarf: th.scarf, slash: th.slash, blade: th.blade, outline: th.outline, outlineA: 0.9 },
-          deco: { trail: th.trail, aura: t === 'cov' ? 'aurora' : undefined },
-          fx: { th: th.trail, c: th.slash, c2: '240,245,255' },
+          look: { body: th.body, shade: th.shade, scarf: th.scarf, slash: th.slash, blade: th.blade, outline: th.outline, outlineA: 0.95 },
+          deco: {
+            head,
+            hideBaseHead: head === 'foxmask' || head === 'voidhorns' || head === 'taotiehelm',
+            gem: th.gem,
+            band: th.scarf,
+            hatC: th.breast,
+            veilC: 'rgba(220,200,255,0.35)',
+            mask: th.gem,
+            helmC: th.shoulder,
+            crest: th.scarf,
+            plumeC: [th.scarf, th.gem],
+            robe,
+            breastplate: th.breast,
+            shoulder: rkNum >= 2 ? th.shoulder : undefined,
+            cape: rkNum >= 3 ? th.cape : undefined,
+            back,
+            trail: SET_TRAIL[rkNum],
+            aura: SET_AURA[rkNum],
+            weapStyle: HERO_WEAP_STYLE[pre] || 'renying_blade',
+            transform: rkNum >= 3 ? 'awaken' : undefined,
+          },
+          fx: { ...th.fx },
+          scene: JSON.parse(JSON.stringify(th.scene)),
         };
       }
     }
@@ -447,7 +541,7 @@
   C.blank = () => ({
     v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
     badgeGift: 0, badgeOwned: {}, badgeEquip: {}, badgeSigils: 0, heroKOs: {}, stances: {},
-    petOwned: {}, petEquip: {}, skillUnlocks: {}, skillLoadout: {},
+    petOwned: {}, petEquip: {}, skillUnlocks: {}, skillLoadout: {}, appreciation2026: 0,
     lst: [], hist: [], od: { d: 0, n: 0 }, pd: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, zw: { w: 0, n: 0 }, zf: 0, drop: { w: 0, g: 0, n: 0, sup: 0 },
     op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
     stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
@@ -475,6 +569,7 @@
     for (const k of Object.keys(s)) if (!(k in b)) delete s[k];
     s.v = C.VER;
     s.badgeGift = s.badgeGift ? 1 : 0;
+    s.appreciation2026 = s.appreciation2026 ? 1 : 0;
     s.badgeOwned = Object.fromEntries(Object.entries(s.badgeOwned).filter(([id, tier]) => own(C.BADGES, id) && own(C.BADGE_TIER, tier)));
     s.badgeEquip = Object.fromEntries(Object.entries(s.badgeEquip).filter(([h, id]) => C.HERO_IDS.includes(h) && own(s.badgeOwned, id)).slice(0, C.HERO_IDS.length));
     const equippedBadges = new Set();
@@ -1029,6 +1124,33 @@
     giveInk(env, -C.BADGE_UNLOCK_INK);
     s.badgeOwned[id] = 'silver';
     return { ok: true, id, tier: 'silver', ink: C.BADGE_UNLOCK_INK };
+  };
+  A.claimAppreciation = (s, a, env) => {
+    if (s.appreciation2026) return { err: '已经领取过感恩盛典全员大礼了' };
+    const chosen = own(C.BADGES, String((a && a.badgeId) || '')) ? String(a.badgeId) : 'flowing';
+    s.appreciation2026 = 1;
+    s.badgeGift = 1;
+    s.badgeOwned[chosen] = 'purpgold';
+    s.badgeSigils = Math.min(1e6, (s.badgeSigils || 0) + 50);
+    s.term = Math.min(1e6, (s.term || 0) + 10);
+    s.tags = Math.min(1e6, (s.tags || 0) + 10);
+    for (const c of C.CASES) s.cases[c] = Math.min(1e6, (s.cases[c] || 0) + 10);
+    for (const pid of Object.keys(C.PETS)) if (!s.petOwned[pid]) s.petOwned[pid] = 'spirit';
+    for (const h of C.HERO_IDS) {
+      s.heroKOs[h] = Math.max(s.heroKOs[h] || 0, 20);
+      s.skillUnlocks[h] = { q: ['swift', 'heavy'], r: ['swift', 'heavy'], e: ['swift', 'heavy'] };
+    }
+    giveInk(env, 50000);
+    return { ok: true, badgeId: chosen, tier: 'purpgold', ink: 50000, sigils: 50 };
+  };
+  A.badgeAutoAssign = (s) => {
+    const owned = Object.entries(s.badgeOwned || {})
+      .sort((a, b) => (C.BADGE_TIER[b[1]] || 0) - (C.BADGE_TIER[a[1]] || 0) || a[0].localeCompare(b[0]));
+    if (!owned.length) return { err: '还没有任何武学徽记可装配' };
+    s.badgeEquip = {};
+    const count = Math.min(owned.length, C.HERO_IDS.length);
+    for (let i = 0; i < count; i++) s.badgeEquip[C.HERO_IDS[i]] = owned[i][0];
+    return { ok: true, assigned: count, badgeEquip: s.badgeEquip };
   };
   A.petBuy = (s, a, env) => {
     const id = String(a.id || '');

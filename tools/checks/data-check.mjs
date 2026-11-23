@@ -193,7 +193,7 @@ function checkHeroes(env) {
   const prefix = Object.fromEntries([...readFileSync(ROOT + 'src/armory-core.js', 'utf8').match(/const PREFIX = \{([^}]*)\}/)[1].matchAll(/([a-z]{2}): '([a-z]+)'/g)].map(m => [m[1], m[2]]));
   H.forEach((h, i) => {
     const w = `src/data/heroes/${String(i).padStart(2, '0')}-${h.id}.js`;
-    if (!shape(w, h, { id: 'str', skin: 'str', en: 'str', bal: 'obj', char: 'obj', forest: 'obj', saga: 'obj' })) return;
+    if (!shape(w, h, { id: 'str', skin: 'str', en: 'str', 'archetype?': 'str', bal: 'obj', char: 'obj', forest: 'obj', saga: 'obj' })) return;
     if (!/^[a-z]+$/.test(h.id)) err(w, `id 只能用小写英文字母，现在是 ${h.id}`);
     if (!/^[a-z]{2}$/.test(h.skin)) err(w, `skin 前缀要两个小写字母，现在是 ${h.skin}`);
     else if (prefix[h.skin] !== h.id) err(w, `skin 前缀 ${h.skin} 在 src/armory-core.js 的 PREFIX 里对应的是 ${prefix[h.skin] || '（没有）'}，应该是 ${h.id}`);

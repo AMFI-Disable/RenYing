@@ -237,6 +237,22 @@ const AI_HERO_TACTICS = {
   youhuang: { style: 'footsies', range: 1.16, schools: ['ying', 'feng'] },
   xuanji: { style: 'zoner', range: 1.18, schools: ['qi', 'mo'] },
   polang: { style: 'bulwark', range: 0.9, schools: ['jin', 'mo'] },
+  cangming: { style: 'brawler', range: 1.08, schools: ['jin', 'xue'] },
+  qingluan: { style: 'zoner', range: 1.12, schools: ['feng', 'qi'] },
+  xuanwu: { style: 'bulwark', range: 0.92, schools: ['jin', 'mo'] },
+  chiyan: { style: 'brawler', range: 0.92, schools: ['xue', 'jin'] },
+  yinhu: { style: 'assassin', range: 0.98, schools: ['ying', 'feng'] },
+  yunhe: { style: 'zoner', range: 1.16, schools: ['feng', 'qi'] },
+  tiangang: { style: 'bulwark', range: 1.1, schools: ['jin', 'feng'] },
+  mojie: { style: 'control', range: 1.14, schools: ['ying', 'mo'] },
+  baihe: { style: 'footsies', range: 1.06, schools: ['qi', 'feng'] },
+  jinpeng: { style: 'assassin', range: 1.06, schools: ['feng', 'xue'] },
+  youming: { style: 'assassin', range: 0.96, schools: ['ying', 'xue'] },
+  lingxi: { style: 'control', range: 1.16, schools: ['qi', 'feng'] },
+  bawang: { style: 'bulwark', range: 1.02, schools: ['jin', 'xue'] },
+  fengling: { style: 'zoner', range: 1.12, schools: ['feng', 'qi'] },
+  wuya: { style: 'footsies', range: 1.04, schools: ['jin', 'ying'] },
+  danqing: { style: 'control', range: 1.14, schools: ['mo', 'ying'] },
 };
 
 function aiHeroTactic(id) { return AI_HERO_TACTICS[id] || { style: 'balanced', range: 1, schools: [] }; }

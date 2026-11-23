@@ -37,9 +37,26 @@ const CHAPTERS = [
   { hero: 'liying', name: '千雾泽', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'liying', lv: 'impossible' },
   { hero: 'cixian', name: '磁石峰', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'cixian', lv: 'impossible' },
   { hero: 'qianji', name: '千机阁', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'qianji', lv: 'impossible' },
-  ...['chixiao', 'youhuang', 'xuanji', 'polang'].map(hero => ({
-    hero, name: HERO_FOREST_STORIES[hero].place, pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: hero, lv: 'impossible'
-  }))
+  { hero: 'chixiao', name: '赤焰关', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'chixiao', lv: 'impossible' },
+  { hero: 'youhuang', name: '幽篁林', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'youhuang', lv: 'impossible' },
+  { hero: 'xuanji', name: '玄机台', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'xuanji', lv: 'impossible' },
+  { hero: 'polang', name: '镇海礁', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'polang', lv: 'impossible' },
+  { hero: 'cangming', name: '寒渊崖', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'cangming', lv: 'impossible' },
+  { hero: 'qingluan', name: '翠羽谷', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'qingluan', lv: 'impossible' },
+  { hero: 'xuanwu', name: '玄武城', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'xuanwu', lv: 'impossible' },
+  { hero: 'chiyan', name: '熔火炉', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'chiyan', lv: 'impossible' },
+  { hero: 'yinhu', name: '幻月坡', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'yinhu', lv: 'impossible' },
+  { hero: 'yunhe', name: '仙鹤峰', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'yunhe', lv: 'impossible' },
+  { hero: 'tiangang', name: '天罡隘', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'tiangang', lv: 'impossible' },
+  { hero: 'mojie', name: '断魂亭', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'mojie', lv: 'impossible' },
+  { hero: 'baihe', name: '霜河渡', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'baihe', lv: 'impossible' },
+  { hero: 'jinpeng', name: '裂空巅', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'jinpeng', lv: 'impossible' },
+  { hero: 'youming', name: '幽冥渡', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'youming', lv: 'impossible' },
+  { hero: 'lingxi', name: '灵犀台', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'lingxi', lv: 'impossible' },
+  { hero: 'bawang', name: '霸王关', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'bawang', lv: 'impossible' },
+  { hero: 'fengling', name: '听风楼', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'fengling', lv: 'impossible' },
+  { hero: 'wuya', name: '归墟亭', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'wuya', lv: 'impossible' },
+  { hero: 'danqing', name: '丹青阁', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'danqing', lv: 'impossible' },
 ];
 const stageId = (c, l) => `${c + 1}.${l + 1}`;   // c 第几章、l 第几关，都从 0 开始
 // 一关的内容：妖物关每一波出哪些妖物是固定的（每次打都一样），并附上该侠客的专属剧情

@@ -10,7 +10,11 @@ export default [
         liuyun: 840, leiming: 885, moyu: 825, yuehua: 780,
         yanling: 750, yuxiao: 775, zuixian: 885, gouchen: 835,
         lingque: 790, liying: 815, cixian: 815, qianji: 830,
-        chixiao: 860, youhuang: 790, xuanji: 810, polang: 900
+        chixiao: 860, youhuang: 790, xuanji: 810, polang: 900,
+        cangming: 875, qingluan: 800, xuanwu: 920, chiyan: 860,
+        yinhu: 785, yunhe: 810, tiangang: 910, mojie: 820,
+        baihe: 835, jinpeng: 845, youming: 780, lingxi: 805,
+        bawang: 930, fengling: 795, wuya: 850, danqing: 815
       };
       for (let ci = 0; ci < CHARS.length; ci++) {
         const ch = CHARS[ci];

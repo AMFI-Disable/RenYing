@@ -1,0 +1,173 @@
+/* =====================================================================
+   80 — Apple Studio Display (5K / 2560x1440 CSS) & Overhaul UI Polish
+   Eliminates clipping, overlap, and wasted viewport space across all
+   display sizes, plus styles for Badge Gallery, Archetypes & HUD Editor.
+   ===================================================================== */
+
+/* Badge Gallery tier accents & category tags */
+.badge-cat-tag {
+  font-size: 11px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: rgba(233, 196, 106, 0.14);
+  border: 1px solid rgba(233, 196, 106, 0.35);
+  color: var(--gold);
+  white-space: nowrap;
+}
+.ar-badge-card.tier-pg {
+  border-color: rgba(217, 166, 255, 0.65);
+  box-shadow: 0 0 18px rgba(185, 110, 255, 0.18);
+}
+.ar-badge-card.tier-gd {
+  border-color: rgba(233, 196, 106, 0.55);
+}
+.ar-badge-card.tier-sv {
+  border-color: rgba(160, 200, 235, 0.42);
+}
+.ar-badge-card.tier-lk {
+  opacity: 0.86;
+}
+
+/* Archetype filter pills in Hero Codex & Draft */
+.arch-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 8px;
+}
+.arch-pill {
+  font-size: 12px;
+  padding: 4px 10px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(239, 232, 216, 0.2);
+  color: var(--dim);
+  cursor: pointer;
+}
+.arch-pill.sel {
+  background: rgba(233, 196, 106, 0.2);
+  border-color: var(--gold);
+  color: var(--gold);
+  font-weight: 700;
+}
+
+/* Per-Mode HUD Customizer Modal */
+.hud-custom-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 950;
+  display: none;
+  align-items: center;
+  justify-content: center;
+  background: rgba(6, 7, 18, 0.72);
+  backdrop-filter: blur(8px);
+  padding: 20px;
+}
+.hud-custom-modal .hc-card {
+  width: min(760px, 95vw);
+  max-height: 88vh;
+  overflow-y: auto;
+  background: linear-gradient(180deg, #161830, #0d0f22);
+  border: 1px solid rgba(233, 196, 106, 0.42);
+  border-radius: 14px;
+  padding: 18px 20px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.65);
+}
+.hud-custom-modal .hc-list {
+  display: grid;
+  gap: 8px;
+}
+.hud-custom-modal .hc-row {
+  display: grid;
+  grid-template-columns: minmax(150px, 1.2fr) repeat(3, minmax(110px, 1fr));
+  gap: 10px;
+  align-items: center;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(239, 232, 216, 0.1);
+}
+.hud-custom-modal .hc-chk {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 13px;
+  color: var(--ink);
+  cursor: pointer;
+}
+.hud-custom-modal .hc-sl {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  color: var(--dim);
+}
+.hud-custom-modal .hc-sl input[type="range"] {
+  flex: 1;
+  min-width: 50px;
+  accent-color: var(--gold);
+}
+.hud-custom-modal .hc-sl small {
+  min-width: 34px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* =====================================================================
+   Large & High-DPI Display Optimization (1920px+ & Apple Studio Display)
+   Apple Studio Display renders at 2560x1440 CSS px (5120x2880 @2x)
+   ===================================================================== */
+@media (min-width: 1680px) {
+  .ar-body, #single .xw-shell, #codex .cx-wrap, #online .ol-shell, #settings .set-shell {
+    max-width: min(1580px, 94vw);
+    margin-left: auto;
+    margin-right: auto;
+  }
+  .ar-grid3 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+  #cxTabs {
+    max-height: 220px;
+    overflow-y: auto;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+}
+
+@media (min-width: 2200px) {
+  /* Apple Studio Display (2560x1440 CSS px) & 5K/4K Displays */
+  body {
+    font-size: 15.5px;
+  }
+  .ar-body, #single .xw-shell, #codex .cx-wrap, #online .ol-shell, #settings .set-shell {
+    max-width: min(2160px, 90vw);
+  }
+  .ar-grid3 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 16px;
+  }
+  .home-hub {
+    max-width: 1160px;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .update-banner {
+    max-width: 1160px;
+  }
+  .update-banner-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  #cxBento {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 14px;
+  }
+}
+
+@media (max-width: 720px) {
+  .hud-custom-modal .hc-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}

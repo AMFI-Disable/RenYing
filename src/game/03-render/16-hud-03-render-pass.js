@@ -327,6 +327,9 @@ function render() {
       if (!pf.f.hitDone) drawFu(f.x, f.y - 150 + Math.sin(clock * 6) * 4, pf.a, pf.f.spN || 0);
     } else drawFighter(f);
   }
+  if (typeof RYPhysics !== 'undefined' && RYPhysics.drawFighterFx) {
+    for (const f of order) RYPhysics.drawFighterFx(ctx, f);
+  }
   if (typeof drawPets === 'function') drawPets(order);
   drawCujuBall();
   if (typeof drawPartyField === 'function') drawPartyField();
@@ -356,6 +359,7 @@ function render() {
   if (flashA > 0.01) { ctx.fillStyle = `rgba(${flashRGB},${flashA * 0.5})`; ctx.fillRect(0, 0, W, H); }
   drawIdentityEdges(order, sx, sy);
   drawHUD();
+  if (typeof drawPhysicsTelemetryHUD === 'function') drawPhysicsTelemetryHUD();
   if (WORLD.on) drawWorldHUD();
   drawAnnounce();
   drawCredit();

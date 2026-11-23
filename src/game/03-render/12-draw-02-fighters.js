@@ -219,6 +219,38 @@ function drawFighter(f) {
     ctx.fillText('⚡ 穿丝急袭 (R) 可解控', f.x, f.y - 120 + Math.sin(clock * 10) * 3);
     ctx.restore();
   }
+  // 套装觉醒异象（玄华/赤霄皮肤在真气 >= 50 或连击 >= 5 时绽放灵环与符纹）
+  const dco = f.skin && SKINS[f.skin] && SKINS[f.skin].deco;
+  if (dco && dco.transform === 'awaken' && f.hp > 0 && (f.meter >= 50 || f.comboHits >= 5)) {
+    const sc = (SKINS[f.skin].look && SKINS[f.skin].look.slash) || '233,196,106';
+    const pulse = 0.55 + 0.35 * Math.sin(clock * 7.5);
+    ctx.save();
+    ctx.strokeStyle = `rgba(${sc},${(0.45 * pulse).toFixed(2)})`;
+    ctx.lineWidth = 2.2;
+    ctx.beginPath(); ctx.arc(f.x, f.y - 60, 44 + 4 * Math.sin(clock * 6), 0, Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([8, 6]);
+    ctx.beginPath(); ctx.arc(f.x, f.y - 60, 52, clock * 1.8, clock * 1.8 + Math.PI * 2); ctx.stroke();
+    ctx.setLineDash([]);
+    for (let i = 0; i < 4; i++) {
+      const a = clock * 2.4 + i * Math.PI * 0.5;
+      const rx = f.x + Math.cos(a) * 48, ry = f.y - 60 + Math.sin(a) * 34;
+      ctx.fillStyle = `rgba(${sc},${(0.75 * pulse).toFixed(2)})`;
+      ctx.beginPath(); ctx.arc(rx, ry, 3.2, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.restore();
+  }
+  // 居合斩穴 · 点穴封脉视觉环
+  if (f.acupointT > 0 && f.hp > 0) {
+    ctx.save();
+    const p = 0.55 + 0.4 * Math.sin(clock * 14);
+    ctx.strokeStyle = `rgba(255,110,235,${p.toFixed(2)})`;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.ellipse(f.x, f.y - 54, 24, 38, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.font = `bold 11px ${TITLE_FONT}`; ctx.textAlign = 'center';
+    ctx.fillStyle = '#ff9ef5';
+    ctx.fillText(`封脉 ${f.acupointT.toFixed(1)}s`, f.x, f.y - 108);
+    ctx.restore();
+  }
   // 被连击且可以挣脱时，头顶提示
   if ((f.state === 'launched' || f.state === 'knockdown' || (f.state === 'hitstun' && f.comboHits >= 2)) && f.hp > 0 && f.breakCD <= 0 && M.phase === 'fight' && M.mode !== 'demo'
       && !(f.ctrl instanceof AICtrl) && !f.dummy && f.ctrl !== NET.remote) {
