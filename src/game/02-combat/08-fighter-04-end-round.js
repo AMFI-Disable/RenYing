@@ -1,3 +1,9 @@
+function scheduleEndScreen(show = () => showScreen('end')) {
+  const transition = menuTransition, phase = M.phase;
+  setTimeout(() => {
+    if (menuTransition === transition && M.phase === phase) show();
+  }, 300);
+}
 function showEnd(w) {
   if (REPLAY.on) { replayEnd(w); return; }
   if (typeof statMatchEnd === 'function') statMatchEnd(w);
@@ -48,7 +54,7 @@ function showEnd(w) {
     const again = $id('againBtn');
     again.style.display = watch ? 'none' : ''; again.disabled = false; again.textContent = '再踢一场';
     if (net && NET.open) $id('netRepickBtn').classList.remove('hidden');
-    setTimeout(() => showScreen('end'), 300);
+    scheduleEndScreen();
     return;
   }
   if (typeof kothOn === 'function' && kothOn()) {
@@ -64,13 +70,13 @@ function showEnd(w) {
     const again = $id('againBtn');
     again.style.display = watch ? 'none' : ''; again.disabled = false; again.textContent = '再来一局';
     if (net && NET.open) $id('netRepickBtn').classList.remove('hidden');
-    setTimeout(() => showScreen('end'), 300);
+    scheduleEndScreen();
     return;
   }
   if (M.stage) {
     const win = w === 0;
     M.stage = null;
-    setTimeout(() => stageShowEnd(win, win ? (M.wins[1] === 0 ? 3 : 2) : 0, `比分 ${M.wins[0]} : ${M.wins[1]}${win ? '<br><span style="font-size:13px">2 : 0 三星，2 : 1 两星</span>' : '，再磨一磨剑'}`), 300);
+    scheduleEndScreen(() => stageShowEnd(win, win ? (M.wins[1] === 0 ? 3 : 2) : 0, `比分 ${M.wins[0]} : ${M.wins[1]}${win ? '<br><span style="font-size:13px">2 : 0 三星，2 : 1 两星</span>' : '，再磨一磨剑'}`));
     return;
   }
   if (M.mode === 'watch2v2' || M.mode === '2v2') {
@@ -98,7 +104,7 @@ function showEnd(w) {
       again.disabled = false;
       again.textContent = '再战一局';
     }
-    setTimeout(() => showScreen('end'), 300);
+    scheduleEndScreen();
     return;
   }
   if (M.mode === 'tag3') {
@@ -117,7 +123,7 @@ function showEnd(w) {
     const again = document.getElementById('againBtn');
     if (isAiVsAi() || M.watchAi) { again.style.display = 'none'; }
     else { again.style.display = ''; again.disabled = false; again.textContent = cvT('原阵容再战'); }
-    setTimeout(() => showScreen('end'), 300);
+    scheduleEndScreen();
     return;
   }
   if (isRaid()) {
@@ -147,7 +153,7 @@ function showEnd(w) {
     again.style.display = '';
     again.disabled = false;
     again.textContent = M.mode === 'net' ? '再战一场' : (win ? '顿悟共享秘卷 · 迎战下一魔首' : '重整旗鼓 · 再战同袍肉鸽');   // 联机的再战是两边重新点将
-    setTimeout(() => showScreen('end'), 300);
+    scheduleEndScreen();
     return;
   }
   if (M.mode === 'tower') {
@@ -161,7 +167,7 @@ function showEnd(w) {
     $id('endRank').textContent = `最高纪录：第 ${Math.max(PROF.towerMaxFloor || 0, M.towerFloor)} 层`;
     const again = document.getElementById('againBtn');
     again.disabled = false; again.textContent = '重登剑阁';
-    setTimeout(() => showScreen('end'), 300);
+    scheduleEndScreen();
     return;
   }
   if (w >= 0) playSting(w === localTeam() ? 'victory' : 'defeat');
@@ -219,7 +225,7 @@ function showEnd(w) {
     again.disabled = false;
     again.textContent = '再战';
   }
-  setTimeout(() => showScreen('end'), 300);
+  scheduleEndScreen();
 }
 function raidPay(gain) {
   PROF.ink = (PROF.ink || 0) + gain;

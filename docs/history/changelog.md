@@ -8,6 +8,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- Delayed match results stay tied to the match that produced them, so a rematch or menu transition cannot be covered by the previous results screen. Added English copy for the expanded controls, roster and badge gallery.
+
 - Heavy Strike, Low Kick and Iaido use the normal attack entry point. Solo controls prioritize the first player’s shortcuts when bindings overlap, and the rising throw reads the jump input. Visual effect counters stay local during rollback and replay.
 
 - AI self-play uses the full roster for both training stages. A focused God-difficulty sweep across 炽霄, 幽篁, 玄机 and 破浪 accepted a lower aggression setting for 幽篁. The trainer can also evaluate 8v8 Grand Melee and Capture the Banner, which the scheduled regression runs as full self-play matches. Hero changes now run AI checks, and Pages verifies the generated builds before publishing.
