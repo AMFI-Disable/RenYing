@@ -6,6 +6,10 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+### Changed
+
+- Restored Star History charts in `readme.md` and `readme.zh-cn.md`, updated `.markdownlint.json`, increased CI `node-checks` timeout to 25 minutes in `.github/workflows/ci.yml`, tuned AI brain parameters (`src/models/ai-brain.json`), adjusted `.ub-tag` font size (`src/styles/40-navigation-and-home.css`), and replaced a dingbat symbol in `docs/history/changelog.md`.
+
 ### Fixed
 
 - Saved replay entries use the selected interface language for matchup labels, dates and results. Online 8v8 replays identify the correct battle mode. A focused Grand Melee and Capture the Banner training sweep retained Wu Ya’s existing aggression setting. Hero training can select an opponent subset for targeted runs and defaults to the full roster.
