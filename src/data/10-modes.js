@@ -44,8 +44,8 @@ const ROOM_MODES = {
   koth: { bp: 'open', slots: [[0], [1]], rule: 'koth' },   // 灵坛争锋：好友房抢坛
   party: { bp: 'open', slots: [[0], [1]], rule: 'party' },   // 江湖百戏：好友房趣味百戏
   bastion: { bp: 'open', slots: [[0], [1]], rule: 'bastion' },   // 天枢守境：随时加入传音守城与远征
-  melee: { bp: 'open', slots: [[0], [1]], rule: 'melee' },   // 群雄会战：联机大型团战
-  ctf: { bp: 'open', slots: [[0], [1]], rule: 'ctf' },   // 夺旗争锋：联机团队夺旗
+  melee: { bp: 'open', slots: [[0], [1]], rule: 'melee', teamSize: 8 },   // 群雄会战：联机大型团战
+  ctf: { bp: 'open', slots: [[0], [1]], rule: 'ctf', teamSize: 8 },   // 夺旗争锋：联机团队夺旗
   pp_cc: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true },
   pp_pp: { bp: 'duo', team: true, us: '我方战队', slots: [[0, 2], [1, 3]], four: true },
   raid: { bp: 'squadNet', team: true, us: '我方战队', slots: [[0], [2]], raid: true },   // 房主 A、好友 C、电脑同袍 D 一起打魔首 B

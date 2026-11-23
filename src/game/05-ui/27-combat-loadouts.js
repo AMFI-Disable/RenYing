@@ -95,9 +95,9 @@ function skillModFor(f, slot) {
   const v = (f && f.skillMod && f.skillMod[k]) || 'std';
   return (SKILL_MODS && SKILL_MODS[v]) || { cd: 1, dmg: 1, guard: 1, name: '本宗' };
 }
-function applyCombatLoadouts() {
+function applyCombatLoadouts(fighter = null) {
   const local = combatLoadoutMap(), maps = M.combatLoadouts;
-  for (const f of allFighters()) {
+  for (const f of fighter ? [fighter] : allFighters()) {
     if (!f || !f.ch) continue;
     let profile = local[f.ch.id] || {};
     if (M.mode === 'replay' && REPLAY.on) {

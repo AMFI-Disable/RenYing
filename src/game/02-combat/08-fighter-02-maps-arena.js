@@ -95,7 +95,52 @@ const mapsOn = () => {
   }
   return M.mode === 'maps' || (!!M.map && (M.mode === 'net' || M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2'));
 };
-const mapNow = () => (typeof kothOn === 'function' && kothOn()) ? KOTH_MAP : (typeof partyOn === 'function' && partyOn() && M.party && M.party.kind === 'sumo') ? PARTY_SUMO_MAP : ((mapsOn() && M.map && MAPS[M.map]) || null);
+const BATTLE_WIDTH = 3600;
+const BATTLE_LAYER_HEIGHT = 132;
+const BATTLE_DECKS = Array.from({ length: 4 }, (_, i) => ({
+  x: BATTLE_WIDTH / 2, y: -(4 - i) * BATTLE_LAYER_HEIGHT, w: BATTLE_WIDTH - 2 * WALL, k: 'battle'
+}));
+const BATTLE_STAIRS = Array.from({ length: 4 }, (_, layer) => [-1, 1].map(side => {
+  const left = 250 + layer * 245;
+  const bottomX = side === -1 ? left : BATTLE_WIDTH - left;
+  const topX = bottomX - side * 245;
+  const bottomY = -layer * BATTLE_LAYER_HEIGHT, topY = bottomY - BATTLE_LAYER_HEIGHT;
+  return { layer, bottomX, topX, bottomY, topY, x: (bottomX + topX) / 2, y: topY, w: 245, k: 'stairs' };
+})).flat();
+const BATTLE_MAP = { id: 'battle', w: BATTLE_WIDTH, plats: [...BATTLE_DECKS, ...BATTLE_STAIRS] };
+const battleMapOn = () => isLargeTeam() && M.teamSize === 8;
+
+function battlePerksInit() {
+  M.battlePerks = [];
+  if (!battleMapOn()) return;
+  M.battlePerks.push({ x: STAGE_W / 2, y: -2 * BATTLE_LAYER_HEIGHT, large: true, cooldown: 0 });
+  for (let layer = 0; layer < 4; layer++) {
+    const p = BATTLE_STAIRS[layer * 2 + Math.floor(grnd() * 2)];
+    M.battlePerks.push({ x: p.x, y: platformY(p, p.x), large: false, guard: grnd() < 0.5, cooldown: 0 });
+  }
+}
+
+function battlePerksTick() {
+  if (!battleMapOn()) return;
+  for (const perk of M.battlePerks) {
+    if (perk.cooldown > 0) { perk.cooldown = Math.max(0, perk.cooldown - STEP); continue; }
+    let taker = null, best = Infinity;
+    for (const f of allFighters()) {
+      if (f.hp <= 0 || Math.abs(f.y - perk.y) >= 44 || Math.abs(f.x - perk.x) >= 34) continue;
+      const eligible = perk.guard ? f.guard < f.maxGuard : f.meter < 100 || (perk.large && f.hp < f.maxHp);
+      const distance = (f.x - perk.x) ** 2 + (f.y - perk.y) ** 2;
+      if (eligible && distance < best) { taker = f; best = distance; }
+    }
+    if (!taker) continue;
+    if (perk.guard) taker.guard = Math.min(taker.maxGuard, taker.guard + 24);
+    else taker.meter = Math.min(100, taker.meter + (perk.large ? 35 : 12));
+    if (perk.large) taker.hp = Math.min(taker.maxHp, taker.hp + taker.maxHp * 0.12);
+    perk.cooldown = perk.large ? 22 : 15;
+    if (!RESIM) ring(perk.x, perk.y - 30, perk.large ? 90 : 48, perk.large ? '255,216,121' : '141,228,227', 0.35);
+  }
+}
+
+const mapNow = () => battleMapOn() ? BATTLE_MAP : (typeof kothOn === 'function' && kothOn()) ? KOTH_MAP : (typeof partyOn === 'function' && partyOn() && M.party && M.party.kind === 'sumo') ? PARTY_SUMO_MAP : ((mapsOn() && M.map && MAPS[M.map]) || null);
 // 按票数选图：votes 是每位玩家投的地图 id（没投是 null），r 是 0~1 的随机数。没人投票时每张图一样
 function mapOdds(votes) {
   const n = MAP_POOL.map(id => (votes || []).filter(v => v === id).length), sum = n.reduce((a, b) => a + b, 0);
@@ -179,32 +224,82 @@ const mapPlats = () => {
   }
   return mapPlatCache.plats;
 };
-function gndY(f) { const P = f.plat >= 0 && (mapPlats() || [])[f.plat]; return P ? P.y : 0; }
+function platformY(p, x) {
+  return p.k === 'stairs'
+    ? lerp(p.bottomY, p.topY, clamp((x - p.bottomX) / (p.topX - p.bottomX), 0, 1))
+    : p.y;
+}
+function gndY(f) { const P = f.plat >= 0 && (mapPlats() || [])[f.plat]; return P ? platformY(P, f.x) : 0; }
+
+function enterBattleStair(f, oldX) {
+  if (!battleMapOn() || f.plat >= BATTLE_DECKS.length || !['walk', 'idle'].includes(f.state) || !f.onGround()) return false;
+  const dir = Math.sign(f.x - oldX);
+  if (!dir) return false;
+  for (let i = 0; i < BATTLE_STAIRS.length; i++) {
+    const p = BATTLE_STAIRS[i];
+    const up = dir === Math.sign(p.topX - p.bottomX);
+    const x = up ? p.bottomX : p.topX, y = up ? p.bottomY : p.topY;
+    if (Math.abs(f.y - y) > 0.5 || (oldX - x) * dir > 0 || (f.x - x) * dir <= 0) continue;
+    f.plat = BATTLE_DECKS.length + i;
+    f.y = platformY(p, f.x);
+    return true;
+  }
+  return false;
+}
+
+function battleStairTarget(f, targetY) {
+  if (!battleMapOn() || !f.onGround()) return null;
+  const support = (mapPlats() || [])[f.plat];
+  if (support?.k === 'stairs') {
+    const up = targetY <= (support.topY + support.bottomY) / 2;
+    const dir = Math.sign(support.topX - support.bottomX);
+    return up ? support.topX + dir * 12 : support.bottomX - dir * 12;
+  }
+  if (Math.abs(f.y - targetY) < BATTLE_LAYER_HEIGHT * 0.75) return null;
+  const layer = Math.round(-f.y / BATTLE_LAYER_HEIGHT);
+  const up = targetY < f.y;
+  const stairs = BATTLE_STAIRS.filter(p => p.layer === (up ? layer : layer - 1));
+  if (!stairs.length) return null;
+  const entry = p => up ? p.bottomX : p.topX;
+  const p = stairs.reduce((a, b) => Math.abs(f.x - entry(a)) <= Math.abs(f.x - entry(b)) ? a : b);
+  const dir = Math.sign(p.topX - p.bottomX) * (up ? 1 : -1);
+  const x = entry(p);
+  // Approach the stair from its landing side before committing to travel.
+  return (f.x - x) * dir > 0 ? x - dir * 8 : x + dir * 30;
+}
 const airH = f => gndY(f) - f.y;
 // 把人放到他现在的 x 上：plat 那个平台在脚下就站上去，不然回到地面（瞬移、被吸过来以后用）
 function mapPutOn(f, plat) {
   const P = plat >= 0 && (mapPlats() || [])[plat];
-  if (P && Math.abs(f.x - P.x) <= P.w / 2) { f.y = P.y; f.plat = plat; } else { f.y = 0; f.plat = -1; }
+  if (P && Math.abs(f.x - P.x) <= P.w / 2) { f.y = platformY(P, f.x); f.plat = plat; } else { f.y = 0; f.plat = -1; }
 }
 // 物理开头：往上跳了、被挪走了（y 对不上），就不算站在平台上了
 function mapPlatKeep(f) {
   if (f.plat < 0) return;
   const P = (mapPlats() || [])[f.plat];
-  if (!P || f.vy < 0 || Math.abs(f.y - P.y) > 0.5) f.plat = -1;
+  if (!P || f.vy < 0 || Math.abs(f.y - platformY(P, f.x)) > (P.k === 'stairs' ? 42 : 0.5)) f.plat = -1;
 }
 // 物理移动以后：走出台边就掉下去；往下落经过台面就站上去（从下往上跳是穿过去的，刚按 ↓ + 跳落下的那一小段也穿过去）
 function mapPlatLand(f, oldY, wasAir) {
   const ps = mapPlats(); if (!ps) return;
   if (f.plat >= 0) {
     const P = ps[f.plat];
-    if (Math.abs(f.x - P.x) > P.w / 2) f.plat = -1; else { f.y = P.y; if (f.vy > 0) f.vy = 0; }
+    if (Math.abs(f.x - P.x) > P.w / 2) {
+      if (P.k === 'stairs') {
+        const atTop = Math.abs(f.x - P.topX) < Math.abs(f.x - P.bottomX);
+        const layer = P.layer + Number(atTop);
+        mapPutOn(f, layer ? 4 - layer : -1);
+        if (f.vy > 0) f.vy = 0;
+      } else f.plat = -1;
+    } else { f.y = platformY(P, f.x); if (f.vy > 0) f.vy = 0; }
     return;
   }
   if (f.vy <= 0 || f.dropT > 0 || f.state === 'held') return;
   for (let i = 0; i < ps.length; i++) {
     const P = ps[i];
-    if (Math.abs(f.x - P.x) <= P.w / 2 && oldY <= P.y && f.y >= P.y) {
-      f.y = P.y; f.plat = i;
+    const y = platformY(P, f.x);
+    if (Math.abs(f.x - P.x) <= P.w / 2 && oldY <= y && f.y >= y) {
+      f.y = y; f.plat = i;
       if (wasAir) onLand(f);
       if (f.vy > 0) f.vy = 0;
       return;
@@ -346,7 +441,7 @@ let shakeDirX = 0, shakeDirY = 0; // 方向性屏幕震动向量 (Directional sc
 let debugHitbox = false;          // 仅训练场：判定框与帧优势实时透视 (F1 切换)
 let announce = null;
 const announceQueue = [];
-const comboUI = [{ n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }, { n: 0, dmg: 0, t: 0 }];
+const comboUI = Array.from({ length: MAX_FIGHTERS }, () => ({ n: 0, dmg: 0, t: 0 }));
 
 // 开场署名（停留时长 CREDIT 在 01-core.js）
 let creditT = 0, creditPending = false;

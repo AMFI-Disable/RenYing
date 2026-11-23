@@ -8,6 +8,7 @@ export default [
       const fail = error => ({ pass: false, error });
       const down = (att, def) => {
         M.phase = 'fight';
+        def.reset(def.x);
         def.invul = 0;
         def.hp = 1;
         applyHit(att, def, { dmg: 50, kb: [200, -200], stun: 0.3, hs: 0.06 }, [def.x, def.y - 40]);
@@ -25,8 +26,9 @@ export default [
       if (M.phase !== 'end') return fail('Melee restarted after its objective was met');
 
       if (typeof MouseEvent === 'function') {
+        paused = true;
         $id('againBtn').click();
-        if (M.mode !== 'melee' || M.teamSize !== 8 || M.phase !== 'intro') return fail('Rematch did not restart 8v8 melee');
+        if (M.mode !== 'melee' || M.teamSize !== 8 || M.phase !== 'intro' || paused) return fail('Rematch did not restart 8v8 melee');
       }
 
       startCtf(2);
@@ -40,6 +42,10 @@ export default [
       updateMatch();
       if (M.phase !== 'ko' || M.koWinner !== 0) return fail('CTF ignored the winning capture');
 
+      startCtf(2);
+      M.phase = 'fight'; M.timer = STEP / 2;
+      updateMatch();
+      if (M.phase !== 'ko' || M.koWinner !== -1) return fail('An even flag score awarded a victory on timeout');
       startGauntlet();
       if (!down(A, B)) return fail('Gauntlet ended on the enemy knockout');
       updateMatch();
@@ -51,7 +57,8 @@ export default [
       if (M.phase !== 'ko' || M.koWinner !== 1) return fail('Gauntlet ignored player defeat');
 
       startRaidMatch([0, 2, 3], 3);
-      if (!down(B, A) || !down(B, C)) return fail('Raid ended while an ally was alive');
+      if (!down(B, A)) return fail('Raid first knockout: ' + JSON.stringify({hp: A.hp, phase: M.phase}));
+      if (!down(B, C)) return fail('Raid second knockout: ' + JSON.stringify({hp: C.hp, phase: M.phase, ally: D.hp}));
       D.invul = 0; D.hp = 1;
       applyHit(B, D, { dmg: 50, kb: [200, -200], stun: 0.3, hs: 0.06 }, [D.x, D.y - 40]);
       if (M.phase !== 'ko' || M.koWinner !== 1) return fail('Raid did not settle the final team knockout');

@@ -9,7 +9,6 @@ function meleeRoundInit() {
     tickets: [sz * 3, sz * 3],
     maxTickets: sz * 3,
     respawn: new Array(MAX_FIGHTERS).fill(0),
-    kos: [0, 0],
   };
   M.timer = 180;
 }
@@ -26,41 +25,28 @@ function meleeMatch() {
       if (S.respawn[f.idx] <= 0) {
         const team = fighterTeam(f);
         S.tickets[team] = Math.max(0, S.tickets[team] - 1);
-        S.kos[1 - team]++;
         S.respawn[f.idx] = 3.2;
         if (!RESIM && f.idx === localIdx()) say('即将重返战场…', 1.1, 'go');
       } else {
         S.respawn[f.idx] -= STEP;
         if (S.respawn[f.idx] <= 0 && S.tickets[fighterTeam(f)] > 0) {
           const team = fighterTeam(f);
-          const rx = team === 0 ? WALL + 120 + (f.idx % 4) * 55 : STAGE_W - WALL - 120 - (f.idx % 4) * 55;
+          const offset = WALL + 120 + Math.floor(f.idx / 2) * 56;
+          const rx = team === 0 ? offset : STAGE_W - offset;
           f.reset(rx);
           f.face = team === 0 ? 1 : -1;
           f.invul = 1.1;
           if (f.idx === localIdx()) { f.beaconT = 1.4; camFocusPingT = 0.9; }
-          if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts();
+          if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
         }
       }
     }
   }
   if (S.tickets[0] <= 0 || S.tickets[1] <= 0 || M.timer <= 0) {
-    const winner = S.tickets[0] > S.tickets[1] ? 0 : S.tickets[1] > S.tickets[0] ? 1 : (S.kos[0] >= S.kos[1] ? 0 : 1);
+    const winner = S.tickets[0] > S.tickets[1] ? 0 : S.tickets[1] > S.tickets[0] ? 1 : -1;
     M.phase = 'ko'; M.t = 0; M.koWinner = winner;
-    sayNet(winner === localTeam() ? '大军凯旋！' : '惜败收兵', 1.4, 'big', 'gong');
+    sayNet(winner < 0 ? '平手' : winner === localTeam() ? '大军凯旋！' : '惜败收兵', 1.4, 'big', 'gong');
   }
-}
-
-function drawMeleeField() {
-  if (!meleeOn() || !M.melee) return;
-  const S = M.melee;
-  ctx.save();
-  ctx.font = `bold 13px ${BODY_FONT}`;
-  ctx.textAlign = 'center';
-  ctx.fillStyle = '#6fe0ff';
-  ctx.fillText(`${cvT('我方兵力')} ${S.tickets[0]}/${S.maxTickets}`, W / 2 - 140, 12);
-  ctx.fillStyle = '#ff7878';
-  ctx.fillText(`${cvT('敌方兵力')} ${S.tickets[1]}/${S.maxTickets}`, W / 2 + 140, 12);
-  ctx.restore();
 }
 
 function startMelee(teamSize = 5, heroIdx = 0, level = 'normal', mut = 'normal') {
@@ -72,7 +58,6 @@ function startMelee(teamSize = 5, heroIdx = 0, level = 'normal', mut = 'normal')
   M.teamSize = sz;
   M.level = level || 'normal';
   M.teamMutator = ['chaos', 'mayhem'].includes(mut) ? mut : 'normal';
-  M.squadOrder = 'auto';
   M.wins = [0, 0]; M.round = 1; M.watchAi = false;
   const total = sz * 2;
   for (let i = 0; i < total; i++) {
@@ -84,6 +69,7 @@ function startMelee(teamSize = 5, heroIdx = 0, level = 'normal', mut = 'normal')
   }
   for (let i = total; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
   human[0].clear();
+  paused = false;
   showScreen(null);
   startRound();
   say(`群雄会战 · ${sz}v${sz}`, 1.4);

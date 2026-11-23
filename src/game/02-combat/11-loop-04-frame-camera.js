@@ -123,9 +123,10 @@ function updateCamera(dt) {
     const minY = Math.min(...pool.map(f => f.y));
     const d = maxX - minX;
     let focus = camFocusPingT > 0 ? anchor.x : lerp(anchor.x, (minX + maxX) / 2, 0.35);
-    const wantZoom = camFocusPingT > 0 ? 0.82 : clamp(0.84 - d / 2600, 0.54, 0.80);
+    const baseZoom = camFocusPingT > 0 ? 0.82 : clamp(0.84 - d / 2600, 0.54, 0.80);
+    const wantZoom = battleMapOn() ? Math.min(baseZoom, 0.66) : baseZoom;
     cam.zoom = damp(cam.zoom, wantZoom, camFocusPingT > 0 ? 10 : 4, dt);
-    cam.y = damp(cam.y, Math.min(0, minY * 0.32), 5, dt);
+    cam.y = damp(cam.y, battleMapOn() ? -75 : Math.min(0, minY * 0.32), 5, dt);
     cam.x = damp(cam.x, focus, camFocusPingT > 0 ? 14 : 7, dt);
     const vw = W / worldScale();
     cam.x = vw >= STAGE_W + 200 ? STAGE_W / 2 : clamp(cam.x, vw / 2 - 100, STAGE_W + 100 - vw / 2);

@@ -81,7 +81,7 @@ class Fighter {
   onGround() { return (this.y >= 0 || this.plat >= 0) && this.vy >= 0; }
 }
 // ======================= 比赛流程 =======================
-const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {}, bans: [], teamSize: 0, squadOrder: 'auto' };
+const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {}, bans: [], teamSize: 0, squadOrders: ['auto', 'auto'] };
 const MAX_FIGHTERS = 16;   // 最多支持 8v8 同屏大混战（16 名侠客）
 const FIGHTERS = Array.from({ length: MAX_FIGHTERS }, (_, i) => new Fighter(i));
 let A = FIGHTERS[0], B = FIGHTERS[1], C = FIGHTERS[2], D = FIGHTERS[3];
@@ -148,47 +148,50 @@ const foeOf = f => {
     }
     f.lockIdx = -1;
   }
+  const layered = battleMapOn();
+  const distance = (a, b) => layered ? Math.abs(a.x - b.x) + Math.abs(a.y - b.y) * 2 : Math.abs(a.x - b.x);
   // 电脑侠客的团队意识：支持 1/2/3 战术指令（集火 / 掩护 / 散开）
   if (!isRaid() && cpuTeamwork(f)) {
     const myTeam = fighterTeam(f);
-    if (myTeam === localTeam() && M.squadOrder && M.squadOrder !== 'auto') {
-      const playerF = fighterByIdx(localIdx());
-      if (M.squadOrder === 'focus' && playerF && playerF.target && list.includes(playerF.target) && playerF.target.hp > 0) {
+    const order = M.squadOrders?.[myTeam] || 'auto';
+    if (order !== 'auto') {
+      const playerF = fighterByIdx(myTeam);
+      if (order === 'focus' && playerF && playerF.target && list.includes(playerF.target) && playerF.target.hp > 0) {
         f.target = playerF.target; return playerF.target;
       }
-      if (M.squadOrder === 'protect' && playerF && !playerF.hidden && playerF.hp > 0) {
-        let nearP = list[0], minD = Math.abs(nearP.x - playerF.x);
-        for (let i = 1; i < list.length; i++) { const d = Math.abs(list[i].x - playerF.x); if (d < minD) { nearP = list[i]; minD = d; } }
+      if (order === 'protect' && playerF && !playerF.hidden && playerF.hp > 0) {
+        let nearP = list[0], minD = distance(nearP, playerF);
+        for (let i = 1; i < list.length; i++) { const d = distance(list[i], playerF); if (d < minD) { nearP = list[i]; minD = d; } }
         f.target = nearP; return nearP;
       }
-      if (M.squadOrder === 'spread') {
+      if (order === 'spread') {
         const pick = list[(Math.floor(f.idx / 2)) % list.length];
         if (pick) { f.target = pick; return pick; }
       }
     }
     const mate = is2v2() ? fighterByIdx(f.idx ^ 2) : sideFighters(myTeam).find(m => m !== f && m.hp > 0 && m.hp < m.maxHp * 0.3);
-    const low = list.find(e => e.hp < e.maxHp * 0.25 && Math.abs(e.x - f.x) < 700);
+    const low = list.find(e => e.hp < e.maxHp * 0.25 && distance(e, f) < 700);
     if (low) { f.target = low; return low; }
     if (mate && mate !== f && !mate.hidden && mate.hp > 0 && mate.hp < mate.maxHp * 0.3) {
-      const bully = list.find(e => Math.abs(e.x - mate.x) < 260);
+      const bully = list.find(e => distance(e, mate) < 260);
       if (bully) { f.target = bully; return bully; }
     }
   }
   let cur = f.target && !f.target.hidden && f.target.hp > 0 && list.includes(f.target) ? f.target : null;
   if (cur) {
-    const curDist = Math.abs(cur.x - f.x);
+    const curDist = distance(cur, f);
     let closest = cur, minDist = curDist;
     for (const e of list) {
       if (e === cur) continue;
-      const d = Math.abs(e.x - f.x);
+      const d = distance(e, f);
       if (d < minDist - 85) { closest = e; minDist = d; }
     }
     f.target = closest;
     return closest;
   }
-  let best = list[0], minDist = Math.abs(best.x - f.x);
+  let best = list[0], minDist = distance(best, f);
   for (let i = 1; i < list.length; i++) {
-    const dist = Math.abs(list[i].x - f.x);
+    const dist = distance(list[i], f);
     if (dist < minDist) { best = list[i]; minDist = dist; }
   }
   f.target = best;

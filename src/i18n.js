@@ -404,7 +404,9 @@
     if (Object.prototype.hasOwnProperty.call(dict, text) && dict[text]) return dict[text];
     for (let i = 0; i < PATTERNS_EN.length; i++) {
       const re = PATTERNS_EN[i][0];
-      if (re.test(text)) return text.replace(re, PATTERNS_EN[i][1]);
+      if (!re.test(text)) continue;
+      const translated = text.replace(re, PATTERNS_EN[i][1]);
+      if (translated !== text) return translated;
     }
     return joined(text);
   }

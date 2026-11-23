@@ -37,14 +37,14 @@ def main():
     # 每一组：改到列出的目录（第一个元组）或文件（第二个元组），就要跑这一组测试
     groups = {
         "all": "tools/tests/test.mjs" in paths,
-        "game": any(matches(path, ("src/data/", "src/game/", "tools/checks/"), (
+        "game": any(matches(path, ("src/data/", "src/game/", "tools/checks/", "tools/tests/combat/"), (
             "src/ai.js", "src/anticheat.js", "src/net-p2p.js", "src/models/ai-brain.json",
             "tools/tests/combat-test.mjs", "tools/tests/rollback-test.mjs",
             "tools/tests/netplay-test.mjs", "tools/tests/anticheat-test.mjs",
             "tools/tests/ai-lingque-test.mjs", "tools/tests/test.mjs",
         )) for path in paths),
-        "ai": any(matches(path, ("tools/ai/", "src/models/"), (
-            "src/ai.js", "tools/tests/test-ai.mjs",
+        "ai": any(matches(path, ("tools/ai/", "src/models/", "src/data/heroes/"), (
+            "src/ai.js", "tools/tests/test-ai.mjs", "tools/tests/ai-tactics-test.mjs",
         )) for path in paths),
         "cloud": any(matches(path, ("cloudflare/", "src/game/05-ui/24-account", "src/game/05-ui/19-progress-02-", "src/game/24-account", "src/game/19-progress-02-"), (
             "src/cloud.js", "tools/tests/cloud-test.mjs", "tools/tests/sync-test.mjs",

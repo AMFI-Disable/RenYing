@@ -6,7 +6,7 @@ const ROLL = { on: false, F: 0, D: 3, N: 240, MAXP: 40, snaps: [], loc: [], rem:
   rollbacks: 0, rbFrames: 0, desyncs: 0, ctrls: null };
 const EMPTY_IN = { h: 0, p: [] };
 // 只影响画面的字段不进存档
-const F_SKIP = new Set(['ch', 'moves', 'look', 'ctrl', 'trail', 'scarf', 'j', 'sk', 'move', 'ghosts', 'ghostT', 'lagHp', 'lagDelay', 'flash', 'walkPh', 'vox', 'voy', 'snap', 'rot', 'skinKey', 'target', 'flurryVictim', '_ryFx', '_ryPhys']);
+const F_SKIP = new Set(['ch', 'moves', 'look', 'ctrl', 'trail', 'scarf', 'j', 'sk', 'move', 'ghosts', 'ghostT', 'lagHp', 'lagDelay', 'flash', 'walkPh', 'vox', 'voy', 'snap', 'rot', 'skinKey', 'target', 'flurryVictim', '_ryFx', '_ryPhys', 'beaconT']);
 for (const k of Object.keys(SFX)) { const fn = SFX[k]; SFX[k] = (...a) => (RESIM ? undefined : fn(...a)); }
 { const m0 = metal; metal = (...a) => (RESIM ? undefined : m0(...a)); }
 function fastClone(v) {

@@ -2,13 +2,14 @@
 // 人机强度测试场：在无画面的沙盒里跑电脑对电脑，统计胜率。
 //   node tools/ai/ai-arena.mjs --a god --b impossible --n 4          每对角色各打 n 场（双方左右各一半）
 //   node tools/ai/ai-arena.mjs --ladder --n 4                         各难度两两对打
+//   node tools/ai/ai-arena.mjs --mode ctf --heroes 16 --opponent 19 --n 2
 //   AI_BAL=bal.json node tools/ai/ai-arena.mjs --a hard --b hard       先按文件改平衡系数再打（调平衡用）
 // 也被 tools/ai/ai-train.mjs 当作库使用（runPool）。
 import { readFileSync, existsSync } from 'node:fs';
 import os from 'node:os';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
-import { gameJs } from './ai-code.mjs';
+import { gameJs, heroData } from './ai-code.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
@@ -54,7 +55,7 @@ export async function makeEnv(tuneFile) {
   // 另一版 AI 的快照（AI_SNAP=文件路径，'snap:god' 这样写），用来对比改动前后
   if (process.env.AI_SNAP) new vm.Script('window.SnapBrain = (function () {\n' + readFileSync(process.env.AI_SNAP, 'utf8') + '\nreturn AIBrain; })();', { filename: 'snap.js' }).runInContext(w);
   const env = new vm.Script(`({ CHARS, CHAR_MOVES, SKILLS, ULTS, M, AICtrl, LEVELS, Ctrl, projs, decoys, STEP, get clock() { return clock; }, get A() { return A; }, get B() { return B; },
-    startMatch: (...a) => startMatch(...a), get SnapBrain() { return window.SnapBrain; }, step: () => step(), setTune: t => { window.RENYING_AI_TUNE = t; if (typeof aiTuneReload === 'function') aiTuneReload(); } })`).runInContext(w);
+    startMatch, startMelee, startCtf, startRound, allFighters, get SnapBrain() { return window.SnapBrain; }, step: () => step(), setTune: t => { window.RENYING_AI_TUNE = t; if (typeof aiTuneReload === 'function') aiTuneReload(); } })`).runInContext(w);
   for (const k of ['addP', 'ring', 'dust', 'spark', 'say', 'smoke']) if (typeof w[k] === 'function') w[k] = noop;
   env.run = code => new vm.Script(code).runInContext(w);
   env.window = w;
@@ -80,13 +81,34 @@ function makeCtrl(env, lv) {
   return new env.AICtrl(lv);
 }
 // 一场三局两胜：返回 0（左赢）/1（右赢）/-1（平）及耗时
-function playMatch(env, ha, hb, la, lb, seed) {
+export const ARENA_MODES = ['duel', 'melee', 'ctf'];
+function playMatch(env, ha, hb, la, lb, seed, mode = 'duel') {
   env.seed(seed);
-  env.startMatch('cpu', 'normal', [ha, hb], true);
-  env.A.ctrl = makeCtrl(env, la); env.B.ctrl = makeCtrl(env, lb);
+  const teams = mode !== 'duel';
+  if (teams) {
+    if (mode === 'melee') env.startMelee(8, ha);
+    else env.startCtf(8, ha);
+    env.M.watchAi = true;
+    for (const f of env.allFighters()) {
+      const right = f.idx % 2 === 1;
+      f.setChar(((right ? hb : ha) + 3 * Math.floor(f.idx / 2)) % env.CHARS.length);
+      const policy = right ? lb : la;
+      f.ctrl = makeCtrl(env, f.idx > 1 && typeof policy === 'object' ? policy.base : policy);
+    }
+    env.startRound();
+  } else {
+    env.startMatch('cpu', 'normal', [ha, hb], true);
+    env.A.ctrl = makeCtrl(env, la); env.B.ctrl = makeCtrl(env, lb);
+  }
   let steps = 0;
   const max = 120 * 60 * 6;
   while (env.M.phase !== 'end' && steps < max) { env.step(); steps++; }
+  if (teams) {
+    if (env.M.phase !== 'end') throw new Error(`${mode} match did not reach a result (seed ${seed})`);
+    const [a, b] = mode === 'melee' ? env.M.melee.tickets : env.M.ctf.score;
+    const scale = mode === 'melee' ? env.M.melee.maxTickets : env.M.ctf.target;
+    return { w: env.M.koWinner, steps, margin: (a - b) / scale };
+  }
   const [w0, w1] = env.M.wins;
   // margin：左边视角的净胜（局数差 + 最后一局剩余血量比差），给训练当连续的打分
   const margin = (w0 - w1) / 2 + (Math.max(0, env.A.hp) / env.A.maxHp - Math.max(0, env.B.hp) / env.B.maxHp) / 2;
@@ -99,7 +121,7 @@ if (!isMainThread) {
     if (job.tune !== undefined) env.setTune(job.tune);
     const res = [];
     for (const g of job.games) {
-      const r = playMatch(env, g.a, g.b, g.la, g.lb, g.seed);
+      const r = playMatch(env, g.a, g.b, g.la, g.lb, g.seed, g.mode);
       res.push({ ...g, w: r.w, steps: r.steps, margin: r.margin });
     }
     parentPort.postMessage({ id: job.id, res });
@@ -128,8 +150,9 @@ export class Pool {
 
 // ---------- 4. 侠客名单和统计小工具 ----------
 // 顺序要和 src/data/heroes/ 的编号一致（下标就是 CHARS 里的下标）
-export const HEROES = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji', 'chixiao', 'youhuang', 'xuanji', 'polang', 'cangming', 'qingluan', 'xuanwu', 'chiyan', 'yinhu', 'yunhe', 'tiangang', 'mojie', 'baihe', 'jinpeng', 'youming', 'lingxi', 'bawang', 'fengling', 'wuya', 'danqing'];
-export const NAMES = ['青锋', '绯影', '铁山', '凌霜', '流云', '雷鸣', '墨羽', '月华', '燕翎', '玉箫', '醉翁', '勾陈', '凌雀', '离影', '磁仙', '千机', '炽霄', '幽篁', '玄机', '破浪', '苍冥', '青鸾', '玄武', '赤焰', '银狐', '云鹤', '天罡', '墨绝', '白河', '金鹏', '幽冥', '灵犀', '霸王', '风铃', '无涯', '丹青'];
+const roster = heroData();
+export const HEROES = roster.map(hero => hero.id);
+export const NAMES = roster.map(hero => hero.char.name);
 
 // 每个角色对每个角色：la 用 a 角色、lb 用 b 角色，左右互换各一半
 export function matchupGames(la, lb, n, heroes = HEROES.map((_, i) => i)) {
@@ -151,18 +174,24 @@ export function byHero(res) {
 const isMain = isMainThread && process.argv[1] && fileURLToPath(import.meta.url) === process.argv[1];
 if (isMain) {
   const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
+  const mode = arg('mode', 'duel');
+  if (!ARENA_MODES.includes(mode)) throw new Error('Invalid arena mode');
+  const opponent = arg('opponent');
+  const games = (la, lb, n, heroes) => matchupGames(la, lb, n, heroes)
+    .filter(g => opponent === undefined || g.hb === +opponent)
+    .map((game, i) => ({ ...game, mode, seed: mode === 'duel' ? game.seed : i + 1 }));
   const n = +arg('n', 2), pool = new Pool(+arg('workers', os.cpus().length), arg('tune'));
   const t0 = Date.now();
   if (args.includes('--ladder')) {
     const lv = (arg('levels', 'easy,normal,hard,impossible,god')).split(',');
     for (let i = 0; i < lv.length; i++) for (let j = i + 1; j < lv.length; j++) {
-      const res = await pool.run(matchupGames(lv[j], lv[i], n));
+      const res = await pool.run(games(lv[j], lv[i], n));
       console.log(`${lv[j]} vs ${lv[i]}: ${(score(res) * 100).toFixed(1)}%  (${res.length} 场)`);
     }
   } else {
     const la = arg('a', 'god'), lb = arg('b', 'impossible');
     const only = arg('heroes') ? arg('heroes').split(',').map(Number) : undefined;
-    const res = await pool.run(matchupGames(la, lb, n, only));
+    const res = await pool.run(games(la, lb, n, only));
     const steps = res.reduce((s, r) => s + r.steps, 0);
     console.log(`${la} vs ${lb}: ${(score(res) * 100).toFixed(1)}%  (${res.length} 场, 平均 ${(steps / res.length / 120).toFixed(0)} 秒/场)`);
     byHero(res).forEach((v, i) => { if (!isNaN(v)) console.log(`  ${NAMES[i]} ${(v * 100).toFixed(0)}%`); });

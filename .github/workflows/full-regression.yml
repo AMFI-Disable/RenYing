@@ -17,7 +17,7 @@ jobs:
   full-suite:
     name: Full Game, Cloud, And Economy Suite
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 60
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -29,6 +29,11 @@ jobs:
 
       - name: Run Full Regression Suite
         run: node tools/tests/test.mjs
+
+      - name: Run Layered Arena Self-Play
+        run: |
+          node tools/ai/ai-arena.mjs --mode melee --heroes 16 --opponent 19 --n 2 --workers 2
+          node tools/ai/ai-arena.mjs --mode ctf --heroes 17 --opponent 18 --n 2 --workers 2
 
       - name: Live Worker Health Probe (Non-Fatal)
         run: curl -sf --max-time 10 https://renying.evengao6688.workers.dev/api/health || echo "Health probe skipped or unreachable"

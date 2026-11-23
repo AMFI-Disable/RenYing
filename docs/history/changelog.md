@@ -8,11 +8,15 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
-- The Large Battles category opens from the homepage and Mode Hall. Capture the Banner can now be launched in 2v2 from the team-size selector.
+- AI self-play uses the full roster for both training stages. A focused God-difficulty sweep across 炽霄, 幽篁, 玄机 and 破浪 accepted a lower aggression setting for 幽篁. The trainer can also evaluate 8v8 Grand Melee and Capture the Banner, which the scheduled regression runs as full self-play matches. Hero changes now run AI checks, and Pages verifies the generated builds before publishing.
 
-- Grand Melee now counts knockouts against team tickets, Capture the Banner uses captures to determine victory and fields four fighters in 2v2, and Endless Gauntlet advances after an enemy knockout. Raid waits for the last teammate to fall, and the World Boss can enter its next phase after taking lethal damage. Rematches restart the selected mode, and both keyboard layouts control the solo fighter in Capture the Banner and Endless Gauntlet.
+- The Large Battles category opens from the homepage and Mode Hall. Capture the Banner can now be launched in 2v2 from the team-size selector. Computer-controlled fighters pursue exposed banners, bring captured banners home and intercept enemies carrying their own banner.
+
+- Grand Melee now counts knockouts against team tickets, Capture the Banner uses captures to determine victory and fields four fighters in 2v2, and Endless Gauntlet advances after an enemy knockout. Raid waits for the last teammate to fall, and the World Boss can enter its next phase after taking lethal damage. Rematches restart the selected mode with combat unpaused, and both keyboard layouts control the solo fighter in Capture the Banner and Endless Gauntlet.
 
 ### Added
+
+- Grand Melee and Capture the Banner at 8v8 share an arena with five vertical levels, a staircase on either side of every landing, and regenerating pickups. The central pickup restores health and meter. Smaller guard or meter pickups appear on one stair per level. Walk into a stair from its landing or jump between platforms. The minimap shows which layer each fighter is on. Online rooms support one human per team and fill the remaining slots with AI.
 
 - **Pure Chaos Martial Arts Overhaul — 36 Heroes, 15,700-Line Physics Engine, 居合斩穴, 60 Redesigned Themed Skins, 28 Categorized Badges, Appreciation Event, Per-Mode HUD Customizer & Apple Studio Display Optimization (`src/game/02-combat/07-physics/`, `src/data/heroes/20-cangming.js`–`35-danqing.js`, `src/game/03-render/16-hud-04-customizer.js`, `src/styles/80-studio-display-and-overhaul.css`, `src/armory-core.js`, `src/armory.js`, `src/game/05-ui/18-codex.js`, `cloudflare/admin.html`)**:
   - **Appreciation Event & Purple-Gold Badge Gift**: added one-click `claimAppreciation` gifting 50,000 Ink, +10 of every weapon case, +10 Peddlers, +10 Rename Tags, +50 Badge Sigils, all 8 Pets at Spirit tier, all alt stances/Q-R-E variants, and 1 player-selected **Purple-Gold (`purpgold`)** badge.

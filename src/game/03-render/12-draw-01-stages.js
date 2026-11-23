@@ -297,7 +297,20 @@ function drawMapGround() {
   // 平台：竹台、石坛、木檐
   for (const P of mp.plats || []) {
     const left = P.x - P.w / 2, top = P.y, w = P.w, h = 12;
-    if (P.k === 'bamboo') {
+    if (P.k === 'battle') {
+      ctx.fillStyle = '#1c2733'; ctx.fillRect(left, top, w, h);
+      ctx.fillStyle = '#7091a0'; ctx.fillRect(left, top, w, 2);
+    } else if (P.k === 'stairs') {
+      ctx.strokeStyle = '#c2ac80'; ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(P.bottomX, P.bottomY);
+      for (let step = 1; step <= 12; step++) {
+        const x = lerp(P.bottomX, P.topX, step / 12);
+        ctx.lineTo(x, lerp(P.bottomY, P.topY, (step - 1) / 12));
+        ctx.lineTo(x, lerp(P.bottomY, P.topY, step / 12));
+      }
+      ctx.stroke();
+    } else if (P.k === 'bamboo') {
       ctx.fillStyle = '#212d1b'; ctx.fillRect(left + 28, top + h, 8, -top - h); ctx.fillRect(left + w - 36, top + h, 8, -top - h);
       ctx.fillStyle = '#2d3b26'; ctx.fillRect(left, top, w, h);
       ctx.fillStyle = '#415735'; ctx.fillRect(left, top + 2, w, h - 4);
@@ -317,6 +330,17 @@ function drawMapGround() {
       ctx.moveTo(left - 8, top - 4); ctx.quadraticCurveTo(left, top + 3, left + 14, top + 3);
       ctx.moveTo(left + w + 8, top - 4); ctx.quadraticCurveTo(left + w, top + 3, left + w - 14, top + 3);
       ctx.stroke();
+    }
+  }
+  if (mp === BATTLE_MAP) {
+    for (const perk of M.battlePerks || []) {
+      if (perk.cooldown > 0) continue;
+      const y = perk.y - 30, r = perk.large ? 15 : 9;
+      ctx.fillStyle = perk.large ? '#ffd879' : perk.guard ? '#9ae7a0' : '#8de4e3';
+      ctx.strokeStyle = '#182635'; ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(perk.x, y - r); ctx.lineTo(perk.x + r, y);
+      ctx.lineTo(perk.x, y + r); ctx.lineTo(perk.x - r, y); ctx.closePath();
+      ctx.fill(); ctx.stroke();
     }
   }
   const E = M.mapEnv;

@@ -64,6 +64,7 @@ function startGauntlet(heroIdx = 0, level = 'normal') {
   A.ctrl = human[0];
   B.ctrl = new AICtrl(M.level);
   human[0].clear();
+  paused = false;
   showScreen(null);
   startRound();
   say('无尽试炼 · 第 1 波', 1.3);

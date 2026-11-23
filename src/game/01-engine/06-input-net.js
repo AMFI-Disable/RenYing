@@ -445,6 +445,21 @@ function netTick(dt) {
 const r2 = v => typeof v === 'number' ? Math.round(v * 100) / 100 : v;
 function setupNetMatch() {
   M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; M.duo = null; M.map = null; A.meter = B.meter = 0; NET.solo = false;
+  M.teamSize = roomDef().teamSize || 0;
+  if (M.teamSize) {
+    M.level = 'normal';
+    M.watchAi = false;
+    const total = M.teamSize * 2;
+    for (let i = 0; i < MAX_FIGHTERS; i++) {
+      const f = FIGHTERS[i];
+      f.hidden = i >= total;
+      if (i >= 2 && i < total) {
+        const lead = i % 2 === 0 ? A : B;
+        f.setChar((lead.chIdx + 3 * Math.floor(i / 2)) % CHARS.length);
+        f.ctrl = new AICtrl(M.level);
+      }
+    }
+  }
   human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
   NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
   if (netRoomMode === 'pp_cc' || netRoomMode === 'raid') {

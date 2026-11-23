@@ -26,7 +26,7 @@ function startMatch(mode, level, chars, isWatch = false) {
   setChars(chars[0], chars[1]);
   if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
   const keepMap = M.map;
-  M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false; M.map = keepMap || null; M.teamSize = 0; M.squadOrder = 'auto';
+  M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false; M.map = keepMap || null; M.teamSize = 0;
   M.watchAi = !!isWatch;
   A.meter = B.meter = 0;
   A.ctrl = (mode === 'demo' || isWatch) ? new AICtrl(level || 'god') : human[0];
@@ -41,6 +41,7 @@ function startMatch(mode, level, chars, isWatch = false) {
 // 磁仙每回合开局抽正极或负极：只在这里抽、只用对局随机数，联机两边和回放抽到的一样（预览用的角色 reset 不碰随机数）
 function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet') f.pol = grnd() < 0.5 ? 1 : -1; }
 function startRound() {
+  M.squadOrders = ['auto', 'auto'];
   M.reviewReady = false;
   CLONE_FADES.length = 0;
   if (typeof statMatch === 'function') statMatch();   // 匿名统计：一局的第一回合记一次模式
@@ -127,6 +128,7 @@ function startRound() {
   if (typeof meleeOn === 'function' && meleeOn()) meleeRoundInit();
   if (typeof ctfOn === 'function' && ctfOn()) ctfRoundInit();
   if (typeof gauntletOn === 'function' && gauntletOn()) gauntletRoundInit();
+  battlePerksInit();
   hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
   for (const cu of comboUI) cu.t = 0;
   if (M.mode !== 'demo' && M.mode !== 'train') {
@@ -161,6 +163,7 @@ function updateMatch() {
     if (M.t > go && !M.flags.go) { M.flags.go = true; if (M.mode !== 'demo' && M.mode !== 'train') sayNet('开战', 0.7, 'go', 'heavy'); }
     if (M.t > go + 0.35) { M.phase = 'fight'; M.t = 0; }
   } else if (M.phase === 'fight') {
+    if (battleMapOn()) battlePerksTick();
     if (FOREST.on) return;   // 斩妖波次由 forestUpdate 独立推进，清完群妖再衔接六技魔首或结算
     if (cujuOn()) { cujuMatch(); return; }   // 墨球蹴鞠：按进球判胜负（22-modes-09-cuju/）
     if (typeof kothOn === 'function' && kothOn()) { kothMatch(); return; }

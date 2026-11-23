@@ -313,6 +313,8 @@ Object.assign(UI_COPY_EN, {
   "大型团战": "Large-Scale",
   "3v3–8v8 混战、夺旗与无尽": "3v3–8v8 Melee, CTF & Endless",
   "群雄会战": "Grand Melee",
+  "群雄会战 · 8v8": "Grand Melee · 8v8",
+  "夺旗争锋 · 8v8": "Capture the Banner · 8v8",
   "3v3 / 5v5 / 8v8 同屏大混战": "3v3 / 5v5 / 8v8 simultaneous team clash",
   "夺旗争锋": "Capture the Banner",
   "2v2–8v8 护旗夺分战": "2v2–8v8 team banner capture",

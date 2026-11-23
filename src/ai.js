@@ -423,6 +423,14 @@ class AIBrain {
       if (me.plat >= 0 && foe.plat !== me.plat && foe.y > me.y + 40 && dx < 360 && this.chance(0.05)) this.press('drop');
       else if (foe.plat >= 0 && foe.plat !== me.plat && foe.y < me.y - 40 && dx < 240 && this.chance(0.04)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
     }
+    if (typeof ctfObjective === 'function' && AI_FREE.includes(me.state) && !this.queue.length) {
+      const central = M.battlePerks?.[0];
+      const seekPerk = !ctfOn() && central && central.cooldown <= 0 && d > 320 && me.meter < 75;
+      const goal = ctfObjective(me, foe) || (seekPerk ? central : null);
+      const stair = battleStairTarget(me, goal ? goal.y : foe.y);
+      if (stair !== null && !this.holdDown && !this.holdAtk) this.dir = Math.sign(stair - me.x);
+      else if (goal && !this.holdDown && !this.holdAtk && Math.abs(goal.x - me.x) > 35) this.dir = Math.sign(goal.x - me.x);
+    }
     if (me.state === 'special' && me.ch.ult === 'avalanche') this.steerAvalanche(me, foe);
     if (this.holdAtk > 0 && me.state !== 'charge' && clock - (this.chargeT0 || 0) > 0.42) this.holdAtk = 0;   // 蓄力被打断了：松手
     c.held.down = this.holdDown > 0;

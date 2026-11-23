@@ -181,18 +181,27 @@ function showEnd(w) {
       hits,
       qualifying: isQualifying
     });
-    send({ report: w === 0 ? 'host' : 'client' });
+    if (w >= 0) send({ report: w === 0 ? 'host' : 'client' });
   }
-  if (M.mode === 'cpu' || M.mode === 'net') adaptRecord(w === localTeam());
-  $id('endRank').textContent = NET.forfeitResult || (M.mode === 'net' && !ACC.name ? '登录后，胜负会计入排行榜' : '');
-  reportProgress(w);
+  if (w >= 0 && (M.mode === 'cpu' || M.mode === 'net')) adaptRecord(w === localTeam());
+  $id('endRank').textContent = NET.forfeitResult || (w >= 0 && M.mode === 'net' && !ACC.name ? '登录后，胜负会计入排行榜' : '');
+  if (w >= 0) reportProgress(w);
   const t = document.getElementById('endTitle');
   const wf = [A, B][w];
   const lost = w >= 0 && w !== localTeam() && !(M.mode === 'pvp' || isAiVsAi() || M.watchAi);
   if (w < 0) { t.textContent = '平手'; t.className = ''; t.style.color = ''; }
   else inkTitle(wf.look.name, lost);
-  document.getElementById('endSub').textContent = M.mode === 'cpu' ? (w === 0 ? '月下无敌手' : '再磨一磨剑')
-    : M.mode === 'net' ? `${w === localTeam() ? '你赢了' : '你输了'}，比分 ${M.wins[0]} : ${M.wins[1]}` : `比分 ${M.wins[0]} : ${M.wins[1]}`;
+  const endSub = document.getElementById('endSub');
+  if (meleeOn() && M.melee) {
+    const team = localTeam();
+    endSub.textContent = `${cvT('我方兵力')} ${M.melee.tickets[team]} · ${cvT('敌方兵力')} ${M.melee.tickets[1 - team]}`;
+  } else if (ctfOn() && M.ctf) {
+    endSub.textContent = `比分 ${M.ctf.score[0]} : ${M.ctf.score[1]}`;
+  } else if (M.mode === 'cpu') {
+    endSub.textContent = w < 0 ? '平手' : w === 0 ? '月下无敌手' : '再磨一磨剑';
+  } else if (M.mode === 'net' && w >= 0) {
+    endSub.textContent = `${w === localTeam() ? '你赢了' : '你输了'}，比分 ${M.wins[0]} : ${M.wins[1]}`;
+  } else endSub.textContent = `比分 ${M.wins[0]} : ${M.wins[1]}`;
   const again = document.getElementById('againBtn');
   const repickBtn = document.getElementById('netRepickBtn');
   if (repickBtn) repickBtn.classList.toggle('hidden', M.mode !== 'net');
@@ -204,7 +213,7 @@ function showEnd(w) {
   } else if (M.mode === 'net') {
     again.style.display = '';
     again.disabled = false;
-    again.textContent = '再战一局 (BO3)';
+    again.textContent = meleeOn() || ctfOn() ? '再战' : '再战一局 (BO3)';
   } else {
     again.style.display = '';
     again.disabled = false;

@@ -3,6 +3,44 @@
 // 找 bug 提示：测试失败时报的是 name，在本文件里搜这个 name 就能找到它的代码。
 export default [
   {
+    name: '8v8 arena joins five layers with two reversible stair routes and synchronized perks',
+    fn: `(() => {
+      const fail = error => ({ pass: false, error });
+      startMelee(8);
+      if (!battleMapOn() || BATTLE_DECKS.length !== 4 || BATTLE_STAIRS.length !== 8) return fail('Arena geometry is incomplete');
+      for (const [i, p] of BATTLE_STAIRS.entries()) {
+        for (const up of [true, false]) {
+          const layer = p.layer + Number(!up), endLayer = p.layer + Number(up);
+          const entry = up ? p.bottomX : p.topX, end = up ? p.topX : p.bottomX;
+          const dir = Math.sign(end - entry);
+          A.state = 'walk'; A.vy = 0; A.vx = dir * 240; A.x = entry - dir;
+          mapPutOn(A, layer ? 4 - layer : -1);
+          physics(A);
+          if (A.plat !== BATTLE_DECKS.length + i) return fail('Could not enter stair ' + i + ' up=' + up);
+          for (let j = 0; j < 150 && A.plat >= BATTLE_DECKS.length; j++) physics(A);
+          if (A.y !== -endLayer * BATTLE_LAYER_HEIGHT || !A.onGround()) return fail('Could not exit stair ' + i + ' up=' + up);
+        }
+      }
+      A.reset(STAGE_W / 2);
+      doJump(A, 0);
+      for (let i = 0; i < 120 && !A.onGround(); i++) physics(A);
+      if (A.y !== -BATTLE_LAYER_HEIGHT || !A.onGround()) return fail('Jump could not land on the first raised deck');
+      mapDrop(A);
+      for (let i = 0; i < 120 && !A.onGround(); i++) physics(A);
+      if (A.y !== 0 || !A.onGround()) return fail('Drop did not pass through the raised deck');
+      const central = M.battlePerks.find(p => p.large);
+      if (M.battlePerks.length !== 5 || central.y !== -2 * BATTLE_LAYER_HEIGHT) return fail('Perks were placed on the wrong layers');
+      A.x = central.x; mapPutOn(A, 2); A.meter = 0; A.hp = A.maxHp / 2;
+      battlePerksTick();
+      if (A.meter !== 35 || A.hp <= A.maxHp / 2 || central.cooldown <= 0) return fail('Central perk did not award its benefits');
+      startCtf(8);
+      if (!battleMapOn()) return fail('Banner room did not load the layered arena');
+      startMatch('train');
+      if (battleMapOn() || M.battlePerks.length) return fail('8v8 map leaked into training');
+      return { pass: true };
+    })()`
+  },
+  {
     name: 'Map vote odds follow the vote count',
     fn: `(() => {
       const near = (a, b) => Math.abs(a - b) < 1e-9;

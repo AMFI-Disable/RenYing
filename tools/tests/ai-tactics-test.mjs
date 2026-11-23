@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 // Focused coverage for hero profiles, scroll drafting, health tactics and mode adaptation.
-import { makeEnv } from '../ai/ai-arena.mjs';
+import { HEROES, makeEnv } from '../ai/ai-arena.mjs';
 
 const env = await makeEnv();
 const result = JSON.parse(env.run(`JSON.stringify((() => {
@@ -24,11 +24,22 @@ const result = JSON.parse(env.run(`JSON.stringify((() => {
   const bigFoe = { maxHp: 3000, hp: 500, invul: 0, needleMark: 0 };
   const normalFoe = { maxHp: 800, hp: 500, invul: 0, needleMark: 0 };
   const mayhemThreshold = AI_ULT.needlestorm.sure(bigMe, bigFoe) && !AI_ULT.needlestorm.sure(bigMe, normalFoe);
-  return { heroCount: ids.length, profiles, signature, build, hpTactic, chaosAdaptation, mayhemThreshold };
+  startCtf(2);
+  M.phase = 'fight';
+  const flagAI = M.ctf.flags;
+  const seeksEnemyFlag = ctfObjective(C, B)?.x === flagAI[1].x;
+  flagAI[1].carrier = C.idx;
+  const takesFlagHome = ctfObjective(C, B)?.x === flagAI[0].baseX;
+  flagAI[1].carrier = -1;
+  flagAI[0].dropped = true;
+  flagAI[0].x = C.x + 80;
+  const returnsOwnFlag = ctfObjective(C, B)?.x === flagAI[0].x;
+  return { ids, profiles, signature, build, hpTactic, chaosAdaptation, mayhemThreshold, seeksEnemyFlag, takesFlagHome, returnsOwnFlag };
 })())`));
 
 const checks = [
-  ['all 16 heroes have tactical profiles', result.heroCount === 16 && result.profiles],
+  ['all heroes have tactical profiles and the trainer uses roster order', result.profiles && JSON.stringify(result.ids) === JSON.stringify(HEROES)],
+  ['CTF AI seeks, captures and returns flags', result.seeksEnemyFlag && result.takesFlagHome && result.returnsOwnFlag],
   ['tower AI favors its hero signature scroll', result.signature],
   ['tower AI builds around owned scroll synergies', result.build],
   ['low health reduces commitment to slow risky attacks', result.hpTactic],

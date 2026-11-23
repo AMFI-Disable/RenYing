@@ -30,7 +30,11 @@ function recBegin(kind) {
   }
 }
 // 本地回放要记的人：1v1 是 A、B，2v2 四个人都记（顺序 A B C D，和 fighterByIdx 一样）
-const rpFighters = m => (m && (m.four || m.raid)) ? [A, B, C, D] : [A, B];   // 同袍肉鸽：A、C、D 打魔首 B（两人队时 D 藏着）
+const rpFighters = m => {
+  const size = m?.kind === 'net' ? m.st0?.M?.teamSize : 0;
+  if (size > 2) return FIGHTERS.slice(0, size * 2);
+  return m && (m.four || m.raid) ? [A, B, C, D] : [A, B];
+};   // 同袍肉鸽：A、C、D 打魔首 B（两人队时 D 藏着）
 // 本地对战：在角色读操作之前记下双方控制器的状态（只记变化）
 function rpPoint() {
   if (REC.on && REC.kind === 'loc') {

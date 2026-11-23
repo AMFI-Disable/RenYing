@@ -29,6 +29,7 @@ const sleep = ms => new Promise(r => setTimeout(r, ms));
 const PANELS = [
   ['menu', `backToMenu()`],
   ['single', `openScreen('single')`, '#single [data-tab]'],
+  ['large', `openScreen('single'); document.querySelector('#xiwuCatTabs [data-cat="large"]').click();`],
   ['netp', `openScreen('netp')`],
   ['help', `openScreen('help')`],
   ['codex', `openScreen('codex')`, '#cxTabs button'],
@@ -131,6 +132,7 @@ const loaded = cdp.once('Page.loadEventFired');
 await cdp.send('Page.reload', {}, S);
 await Promise.race([loaded, sleep(12000)]);
 await sleep(2800);
+await cdp.send('Runtime.evaluate', { expression: "I18N.setLang('en'); if ($id('langPrompt').classList.contains('on')) $id('lpPickEn').click();" }, S);
 const lang = (await cdp.send('Runtime.evaluate', { expression: `I18N.getLang()`, returnByValue: true }, S)).result.value;
 if (lang !== 'en') { console.error(`English interface did not come up (lang=${lang})`); chrome.kill(); process.exit(1); }
 
@@ -138,23 +140,27 @@ const ev = async js => (await cdp.send('Runtime.evaluate', { expression: js, ret
 const found = new Map();   // 文本 → 第一次在哪个面板看到
 const note = (where, list) => { for (const t of list || []) if (!found.has(t)) found.set(t, where); };
 const armoryReady = () => ev(`Boolean(document.querySelector('#armory.on #arMain')?.textContent.trim()) && !document.querySelector('[data-armory-retry]')`);
-const armoryFailure = message => {
+const auditFailure = message => {
   console.error(message);
   chrome.kill();
   process.exit(1);
 };
 for (const [name, js, tabs] of PANELS) {
   const err = await ev(`(async () => { try { ${js}; return ''; } catch (e) { return String(e && e.message || e); } })()`);
-  if (err && name === 'armory') armoryFailure(`Armory could not open: ${err}`);
+  if (err && name === 'large') auditFailure(`Large Battles could not open: ${err}`);
+  if (err && name === 'armory') auditFailure(`Armory could not open: ${err}`);
   if (err) { console.log(`${name}: could not open (${err})`); continue; }
   await sleep(700);
+  if (name === 'large' && !(await ev(`$id('largeStartMelee').checkVisibility() && $id('largeStartCtf').checkVisibility() && $id('largeStartGauntlet').checkVisibility()`))) {
+    auditFailure('Large Battles opened without its launch buttons');
+  }
   note(name, await ev(PROBE));
   const n = tabs ? await ev(`document.querySelectorAll(${JSON.stringify(tabs)}).length`) : 0;
-  if (name === 'armory' && (!n || !(await armoryReady()))) armoryFailure('Armory opened without content or tabs');
+  if (name === 'armory' && (!n || !(await armoryReady()))) auditFailure('Armory opened without content or tabs');
   for (let i = 0; i < n; i++) {
     await ev(`(() => { const b = document.querySelectorAll(${JSON.stringify(tabs)})[${i}]; if (b) b.click(); })()`);
     await sleep(450);
-    if (name === 'armory' && !(await armoryReady())) armoryFailure(`Armory tab ${i + 1} did not render`);
+    if (name === 'armory' && !(await armoryReady())) auditFailure(`Armory tab ${i + 1} did not render`);
     note(`${name} tab ${i + 1}`, await ev(PROBE));
   }
 }

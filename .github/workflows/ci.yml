@@ -110,6 +110,7 @@ jobs:
         if: needs.preflight.outputs.game == 'true' || needs.preflight.outputs.all == 'true'
         run: |
           node tools/checks/data-check.mjs --strict-copy
+          node tools/checks/frame-data.mjs --check
           node tools/tests/combat-test.mjs --sim
           node tools/tests/rollback-test.mjs --rollback
           node tools/tests/netplay-test.mjs
@@ -151,7 +152,7 @@ jobs:
     needs: preflight
     if: needs.preflight.outputs.ai == 'true' || needs.preflight.outputs.all == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 35
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7

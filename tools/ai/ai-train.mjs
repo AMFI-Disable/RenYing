@@ -2,20 +2,21 @@
 // 天道训练：自我对弈调打法基因（AI 训练 AI）。
 // 一局胜负的随机性很大，单个基因对胜率的影响通常只有几个百分点，所以每次比较都用几百上千场、
 // 同一组随机种子（对局条件相同），并且要复核通过才接受。分两段：
-//   1. 共用段（--stage global）：一组基因所有角色共用。候选和现任冠军用全部 12 个角色对打（左右各半），
-//      数据量是单个角色的 12 倍，先把大方向（主动程度、蓄力多少、骗闪……）定下来。
-//   2. 角色段（--stage hero）：每个角色在共用结果上单独微调。候选用这个角色、对手是全部 12 个角色的现任冠军，
+//   1. 共用段（--stage global）：一组基因所有角色共用。候选和现任冠军用全部角色对打（左右各半），
+//      数据量是单个角色的数据量乘以角色数量，先把大方向（主动程度、蓄力多少、骗闪……）定下来。
+//   2. 角色段（--stage hero）：每个角色在共用结果上单独微调。候选用这个角色、对手是全部角色的现任冠军，
 //      和“冠军用这个角色”在同一批种子上比。
 // 搜索方法：逐个基因往上、往下各试一步；变好了（且复核通过）就留下并保持步长，否则步长减半。
 //   node tools/ai/ai-train.mjs --stage global --sweeps 2
 //   node tools/ai/ai-train.mjs --stage hero --sweeps 1 --heroes qingfeng,feiying --genes aggr,charge
+//   node tools/ai/ai-train.mjs --stage hero --modes duel,melee,ctf --heroes chixiao --genes aggr
 // 只给一个难度单独调（--lvkey，和 --level 一样写难度名）：结果存在 lvGenes[难度][角色]，只有那个难度用，共用基因不动
 //   node tools/ai/ai-train.mjs --stage hero --level god --lvkey god --heroes tieshan --genes aggr,charge
 // 角色段的对手默认和自己同一难度；--opp 换成别的难度（比如天道的铁山专门练“打绝顶的随机角色”）
 //   node tools/ai/ai-train.mjs --stage hero --level god --lvkey god --opp impossible --heroes tieshan
 import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'node:fs';
 import os from 'node:os';
-import { Pool, HEROES, NAMES, score } from './ai-arena.mjs';
+import { ARENA_MODES, Pool, HEROES, NAMES, score } from './ai-arena.mjs';
 
 import { fileURLToPath } from 'node:url';
 // 文件结构：1. 参数和读入冠军基因  2. 存档和日志  3. 评估一组基因（全局 / 单个侠客，冠军和挑战者用同一串随机数）  4. 主循环
@@ -26,6 +27,7 @@ const BRAIN = ROOT + 'src/models/ai-brain.json';
 const LOG = ROOT + 'src/models/ai-train-log.txt';
 const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
 const STAGE = arg('stage', 'global'), SWEEPS = +arg('sweeps', 2), LEVEL = arg('level', 'god');
+const MODES = arg('modes', 'duel').split(',');
 const ONLY = arg('heroes') ? arg('heroes').split(',') : HEROES;
 // 每次比较的场数（每对角色左右各 REP 场）与接受门槛（胜率差）
 const REP = +arg('rep', STAGE === 'global' ? 4 : 12), GAIN = +arg('gain', STAGE === 'global' ? 0.02 : 0.03);
@@ -34,6 +36,9 @@ const REP = +arg('rep', STAGE === 'global' ? 4 : 12), GAIN = +arg('gain', STAGE 
 const src = readFileSync(ROOT + 'src/ai.js', 'utf8'), i0 = src.indexOf('const AI_GENE_DEF = {');
 const DEF = Function('"use strict";return (' + src.slice(i0 + 'const AI_GENE_DEF = '.length, src.indexOf('};', i0) + 1) + ')')();
 const KEYS = arg('genes') ? arg('genes').split(',') : Object.keys(DEF);
+if (!['global', 'hero'].includes(STAGE) || MODES.some(mode => !ARENA_MODES.includes(mode)) || ONLY.some(hero => !HEROES.includes(hero)) || KEYS.some(key => !Object.hasOwn(DEF, key))) {
+  throw new Error('Invalid training stage, hero or gene');
+}
 const brain = existsSync(BRAIN) ? JSON.parse(readFileSync(BRAIN, 'utf8')) : {};
 const LVKEY = arg('lvkey', '');
 const champ = {}, lvOf = h => (LVKEY && brain.lvGenes && brain.lvGenes[LVKEY] && brain.lvGenes[LVKEY][h]) || {};
@@ -51,7 +56,8 @@ const save = () => {
   brain.trainedAt = new Date().toISOString(); delete brain.sigma; writeFileSync(BRAIN, JSON.stringify(brain));
 };
 const log = line => { console.log(line); appendFileSync(LOG, line + '\n'); };
-const pool = new Pool(os.cpus().length);
+const pool = new Pool(+arg('workers', os.availableParallelism()));
+const runModes = games => pool.run(MODES.flatMap(mode => games.map(game => ({ ...game, mode }))));
 const lv = genes => ({ base: LEVEL, genes });
 const OPP = arg('opp', '');
 // 对手（--opp）用那个难度自己的基因：共用基因，加上那个难度单独训练过的几项
@@ -68,16 +74,16 @@ let seedBase = +arg('seed', 1);
 // ---------- 3. 评估一组基因 ----------
 async function evalGlobal(k, v, rep) {
   const g = [], s0 = (seedBase += 100000);
-  for (let a = 0; a < 12; a++) for (let b = 0; b < 12; b++) for (let r = 0; r < rep; r++) {
+  for (let a = 0; a < HEROES.length; a++) for (let b = 0; b < HEROES.length; b++) for (let r = 0; r < rep; r++) {
     const ca = lv({ ...champ[HEROES[a]], [k]: v }), cb = lv(champ[HEROES[b]]), s = s0 + a * 1000 + b * 20 + r;
     g.push(r % 2 ? { a: b, b: a, la: cb, lb: ca, flip: 1, seed: s } : { a, b, la: ca, lb: cb, flip: 0, seed: s });
   }
-  return score(await pool.run(g));
+  return score(await runModes(g));
 }
-// 角色段：这个角色用 genes，对全部 12 个角色的冠军，左右各 rep 场；同一批种子
+// 角色段：这个角色用 genes，对全部角色的冠军，左右各 rep 场；同一批种子
 function heroGames(hi, genes, rep, s0) {
   const g = [];
-  for (let o = 0; o < 12; o++) for (let r = 0; r < rep; r++) {
+  for (let o = 0; o < HEROES.length; o++) for (let r = 0; r < rep; r++) {
     const s = s0 + o * 100 + r * 2;
     g.push({ a: hi, b: o, la: lv(genes), lb: foe(o), flip: 0, seed: s });
     g.push({ a: o, b: hi, la: foe(o), lb: lv(genes), flip: 1, seed: s + 1 });
@@ -86,11 +92,11 @@ function heroGames(hi, genes, rep, s0) {
 }
 async function evalHeroPair(hi, cand, rep) {   // 返回 [候选胜率, 冠军胜率]，同一批种子
   const s0 = (seedBase += 100000);
-  const [rc, rb] = await Promise.all([pool.run(heroGames(hi, cand, rep, s0)), pool.run(heroGames(hi, champ[HEROES[hi]], rep, s0))]);
+  const [rc, rb] = await Promise.all([runModes(heroGames(hi, cand, rep, s0)), runModes(heroGames(hi, champ[HEROES[hi]], rep, s0))]);
   return [score(rc), score(rb)];
 }
 
-log(`\n== 训练 ${new Date().toISOString()}  阶段 ${STAGE}${LVKEY ? `（只调 ${LVKEY}）` : ''}  难度 ${LEVEL}${OPP ? `  对手 ${OPP}` : ''}  角色 ${ONLY.join(',')}  轮数 ${SWEEPS}  每次 ${STAGE === 'global' ? 144 * REP : 24 * REP} 场  门槛 +${(GAIN * 100).toFixed(1)}% ==`);
+log(`\n== 训练 ${new Date().toISOString()}  模式 ${MODES.join(',')}  阶段 ${STAGE}${LVKEY ? `（只调 ${LVKEY}）` : ''}  难度 ${LEVEL}${OPP ? `  对手 ${OPP}` : ''}  角色 ${ONLY.join(',')}  轮数 ${SWEEPS}  每次 ${MODES.length * (STAGE === 'global' ? HEROES.length ** 2 * REP : HEROES.length * 2 * REP)} 场  门槛 +${(GAIN * 100).toFixed(1)}% ==`);
 const step = {}; for (const k of KEYS) step[k] = (DEF[k][1] - DEF[k][0]) * 0.25;
 for (let sw = 1; sw <= SWEEPS; sw++) {
   for (const k of KEYS) {

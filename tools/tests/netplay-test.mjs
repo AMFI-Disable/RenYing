@@ -83,7 +83,7 @@ function replayDiff(m, checks) {
 function rng(s) { return () => { s = (Math.imul(s ^ (s >>> 15), 0x2c1b3c6d) + 0x6d2b79f5) | 0; return ((s >>> 0) % 1e6) / 1e6; }; }
 
 // 这几种房间的联机录像要能原样放出来（以前神决和同袍肉鸽回放时不认房间规则：神决的十倍气血、魔首都没了）
-const REPLAY_OK = ['normal', 'chaos', 'mayhem', 'maps', 'pp_cc', 'pp_pp', 'raid'];
+const REPLAY_OK = ['normal', 'chaos', 'mayhem', 'maps', 'pp_cc', 'pp_pp', 'raid', 'melee', 'ctf'];
 const STJSON = st => JSON.stringify(st, (k, v) => k === 'sk' ? undefined : typeof v === 'number' ? Math.round(v * 1000) / 1000 : v);
 // ---------- 2. 一局联机对打 ----------
 function runCase(mode, chars, seed, frames, lag, duo, mv, map) {
@@ -99,6 +99,7 @@ function runCase(mode, chars, seed, frames, lag, duo, mv, map) {
   for (const w of P) vm.runInContext(`rollStart(${JSON.stringify(chars)}, ${seed}, ${JSON.stringify(duo || null)}, ${JSON.stringify(mv || null)}, ${JSON.stringify(map || null)});`, w);   // mv：山河异境两边的票；map：点将台上房主选好的图
   const wire = [[], []], checks = [];
   const PRESS = ['light', 'jump', 'dash', 'skill', 'skill2', 'special'];
+  if (['melee', 'ctf'].includes(mode)) PRESS.push('orderFocus', 'orderProtect', 'orderSpread', 'beacon', 'lock');
   for (let t = 0; t < frames + 600; t++) {
     now += 1000 / 60;
     for (let i = 0; i < 2; i++) {
@@ -135,6 +136,9 @@ function runCase(mode, chars, seed, frames, lag, duo, mv, map) {
   // 中途校验对不上也算失败：游戏会让房主发存档纠正，玩家看到的是角色突然一闪
   if (info[0].desyncs || info[1].desyncs) diff.push(`对局中校验对不上 ${info[0].desyncs}/${info[1].desyncs} 次`);
   if (rp) diff.push('回放和原局不一样：' + rp);
+  if (['melee', 'ctf'].includes(mode)) {
+    if (info.some(peer => peer.n !== 16) || !h?.M?.battlePerks?.length) diff.push('8v8 roster or arena perks missing');
+  }
   // 天机乱斗：两边都抽到了同一条异变，而且两边都在生效（以前只有房主抽，效果只认本地模式）
   if (mode === 'chaos') {
     const on = P.map(w => vm.runInContext('JSON.stringify({ i: M.chaos ? M.chaos.i : -1, live: typeof chaosNow === "function" ? !!chaosNow() : false })', w)).map(JSON.parse);
@@ -329,9 +333,13 @@ const CASES = [
   ['maps', [3, 8], null, ['cliff', null]], ['maps', [9, 2], null, ['ice', 'ice']], ['maps', [6, 1], null, ['cliff', 'ice']],   // 山河异境：两边的票随开局发
   ['maps', [13, 14], null, null, 'bamboo'], ['maps', [14, 5], null, null, 'thunder'], ['maps', [13, 1], null, null, 'pagoda'], ['maps', [10, 6], null, null, 'wine'],   // 点将台上选好的图：平台、风、天雷、酒雾，离影和磁仙在平台上
   ['pp_cc', [0, 3, 5, 9]], ['pp_cc', [13, 3, 5, 13]], ['pp_pp', [2, 7, 4, 6]],
+  ['melee', [16, 19]], ['ctf', [17, 18]],
   ['raid', [1, 1, 4, 8]], ['raid', [11, 11, 6, 2]],   // 同袍肉鸽：房主 A、好友 C、电脑同袍 D 打魔首 B（魔首和秘卷两边按种子抽）
 ];
-for (const [mode, ch, duo, mv, map] of CASES) for (const lag of [1, 6]) {
+const argMode = process.argv.indexOf('--mode');
+const cases = argMode > 0 ? CASES.filter(([mode]) => mode === process.argv[argMode + 1]) : CASES;
+if (!cases.length) throw new Error('No netplay cases selected');
+for (const [mode, ch, duo, mv, map] of cases) for (const lag of [1, 6]) {
   const r = runCase(mode, ch, SEED0 + ch[0] * 31 + lag, FRAMES, lag, duo, mv, map);
   const ok = !r.errs.length && !r.diff.length;
   if (!ok) fail++;

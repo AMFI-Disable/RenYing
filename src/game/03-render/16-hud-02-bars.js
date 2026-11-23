@@ -131,6 +131,7 @@ function drawHUD2v2() {
     else if (M.mode === 'net' && netRoomMode === 'pp_cc') bTitle = '🌐 2v2 双人联机共斗 (抗击双天道)';
     else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 四人对决 (全员切磋)';
   }
+  if (ctfOn() && M.ctf) bTitle = `${cvT('夺旗争锋')} · ${M.ctf.score.join(' : ')} / ${M.ctf.target}`;
   if (chaosOn()) bTitle += ' · 天机乱斗';
   if (chaosOn()) drawChaosHUD(cx, H - 48, true);
   ctx.fillText(window.I18N ? I18N.t(bTitle) : bTitle, cx, H - 10);
@@ -260,7 +261,8 @@ function drawHUDRaid() {
 }
 function drawHUDLargeTeam() {
   const top = Math.max(16, Math.round(H * 0.025)), cx = W / 2;
-  const s0 = sideFighters(0), s1 = sideFighters(1);
+  const allyTeam = localTeam(), enemyTeam = 1 - allyTeam;
+  const s0 = sideFighters(allyTeam), s1 = sideFighters(enemyTeam);
   const alive0 = s0.filter(f => f.hp > 0).length, alive1 = s1.filter(f => f.hp > 0).length;
   const hp0 = s0.reduce((a, f) => a + Math.max(0, f.hp), 0), max0 = Math.max(1, s0.reduce((a, f) => a + f.maxHp, 0));
   const hp1 = s1.reduce((a, f) => a + Math.max(0, f.hp), 0), max1 = Math.max(1, s1.reduce((a, f) => a + f.maxHp, 0));
@@ -286,19 +288,40 @@ function drawHUDLargeTeam() {
   ctx.font = `700 26px ${BODY_FONT}`; ctx.fillStyle = M.timer < 15 ? '#ff7868' : '#efe8d8';
   ctx.fillText(Math.ceil(M.timer), cx, top + 12);
   ctx.font = `600 11px ${BODY_FONT}`; ctx.fillStyle = '#e9c46a';
+  const objective = ctfOn() ? M.ctf : meleeOn() ? M.melee : null;
+  const score = objective?.score || objective?.tickets;
+  const target = objective?.target || objective?.maxTickets;
+  if (score) {
+    const ally = meleeOn() ? `${cvT('我方兵力')} ` : '';
+    const enemy = meleeOn() ? `${cvT('敌方兵力')} ` : '';
+    ctx.fillStyle = '#6fe0ff'; ctx.fillText(`${ally}${score[allyTeam]}/${target}`, cx - gap - bw / 2, top + bh + 24);
+    ctx.fillStyle = '#ff7878'; ctx.fillText(`${enemy}${score[enemyTeam]}/${target}`, cx + gap + bw / 2, top + bh + 24);
+    ctx.fillStyle = '#e9c46a';
+  }
   ctx.fillText(`${sz}v${sz}`, cx, top + 30);
   // 顶部战场小地图条（一眼定位自己、队友与敌人）
-  const mw = Math.min(380, Math.round(W * 0.34)), mh = 12, mx = cx - mw / 2, my = top + 40;
+  const layered = battleMapOn();
+  const mw = Math.min(380, Math.round(W * 0.34)), mh = layered ? 42 : 12, mx = cx - mw / 2, my = top + 40;
+  const mapY = y => layered ? my + 4 + clamp(1 + y / (4 * BATTLE_LAYER_HEIGHT), 0, 1) * (mh - 8) : my + mh / 2;
   ctx.fillStyle = 'rgba(8,10,22,0.78)'; ctx.fillRect(mx, my, mw, mh);
   ctx.strokeStyle = 'rgba(233,196,106,0.38)'; ctx.lineWidth = 1; ctx.strokeRect(mx, my, mw, mh);
+  if (layered) {
+    ctx.strokeStyle = 'rgba(170,205,205,0.35)';
+    for (let layer = 0; layer < 5; layer++) {
+      const y = mapY(-layer * BATTLE_LAYER_HEIGHT);
+      ctx.beginPath(); ctx.moveTo(mx, y); ctx.lineTo(mx + mw, y); ctx.stroke();
+    }
+  }
   const lf = fighterByIdx(localIdx());
-  for (const f of allFighters()) {
+  const fighters = allFighters().filter(f => f !== lf);
+  if (lf) fighters.push(lf);
+  for (const f of fighters) {
     if (f.hidden || f.hp <= 0) continue;
     const rx = mx + clamp(f.x / Math.max(1, STAGE_W), 0, 1) * mw;
     const isSelf = lf && f.idx === lf.idx;
     const isAlly = fighterTeam(f) === localTeam();
     ctx.beginPath();
-    ctx.arc(rx, my + mh / 2, isSelf ? 4.5 : 2.8, 0, Math.PI * 2);
+    ctx.arc(rx, mapY(f.y), isSelf ? 4.5 : 2.8, 0, Math.PI * 2);
     ctx.fillStyle = isSelf ? '#ffe066' : isAlly ? '#6fe0ff' : '#ff6470';
     ctx.fill();
     if (isSelf) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2; ctx.stroke(); }
@@ -322,7 +345,7 @@ function drawHUDLargeTeam() {
     ctx.fillText(`${cd('Q', lf.skillCD)} ${cd('R', lf.skill2CD)} ${cd('C', lf.feintCD || 0)} ${cd('F', lf.qiParryCD || 0)} ${cd('V', lf.petCD || 0)}  [B${cvT('自标')} G${cvT('锁定')} Tab]`, px + 8, py + 47);
     const ordMap = { auto: '自由作战', focus: '全军集火', protect: '回防掩护', spread: '分散游击' };
     ctx.fillStyle = '#e9c46a';
-    ctx.fillText(`${cvT('指令')}: ${cvT(ordMap[M.squadOrder || 'auto'])} [1/2/3]`, px + 8, py + 61);
+    ctx.fillText(`${cvT('指令')}: ${cvT(ordMap[M.squadOrders?.[localTeam()] || 'auto'])} [1/2/3]`, px + 8, py + 61);
   }
   ctx.restore();
 }

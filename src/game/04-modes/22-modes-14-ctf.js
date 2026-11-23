@@ -16,6 +16,17 @@ function ctfRoundInit() {
   M.timer = 180;
 }
 
+function ctfObjective(f, foe) {
+  if (!ctfOn() || !M.ctf || M.phase !== 'fight') return null;
+  const team = fighterTeam(f);
+  const home = M.ctf.flags[team], away = M.ctf.flags[1 - team];
+  if (away.carrier === f.idx) return { x: home.baseX, y: 0 };
+  if (Math.abs(f.x - foe.x) < 220 && foe.hp > 0) return null;
+  if (home.dropped) return home;
+  if (home.carrier >= 0) return fighterByIdx(home.carrier);
+  return away.carrier < 0 ? away : null;
+}
+
 function ctfMatch() {
   const S = M.ctf;
   if (!S) return;
@@ -25,16 +36,18 @@ function ctfMatch() {
   for (const f of fs) {
     if (f.hidden) continue;
     if (f.hp <= 0) {
-      for (const fl of S.flags) if (fl.carrier === f.idx) { fl.carrier = -1; fl.dropped = true; fl.x = f.x; }
+      for (const fl of S.flags) if (fl.carrier === f.idx) { fl.carrier = -1; fl.dropped = true; fl.x = f.x;
+        fl.y = battleMapOn() ? Math.min(0, Math.ceil(f.y / BATTLE_LAYER_HEIGHT) * BATTLE_LAYER_HEIGHT) : 0; }
       if (S.respawn[f.idx] <= 0) S.respawn[f.idx] = 3.0;
       else {
         S.respawn[f.idx] -= STEP;
         if (S.respawn[f.idx] <= 0) {
           const team = fighterTeam(f);
-          f.reset(S.flags[team].baseX + (team === 0 ? 40 : -40));
+          const offset = 45 + Math.floor(f.idx / 2) * 55;
+          f.reset(S.flags[team].baseX + (team === 0 ? offset : -offset));
           f.face = team === 0 ? 1 : -1;
           f.invul = 1.0;
-          if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts();
+          if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
           if (f.idx === localIdx()) { f.beaconT = 1.2; camFocusPingT = 0.8; }
         }
       }
@@ -43,19 +56,19 @@ function ctfMatch() {
     const myTeam = fighterTeam(f), enTeam = 1 - myTeam;
     const enFlag = S.flags[enTeam], myFlag = S.flags[myTeam];
     // 拾取敌旗
-    if (enFlag.carrier < 0 && Math.abs(f.x - enFlag.x) < 62 && Math.abs(f.y) < 110) {
+    if (enFlag.carrier < 0 && Math.abs(f.x - enFlag.x) < 62 && Math.abs(f.y - enFlag.y) < 80) {
       enFlag.carrier = f.idx; enFlag.dropped = false;
       if (!RESIM) { ring(f.x, f.y - 60, 110, '255,215,90', 0.36); addP({ type: 'text', text: '夺旗成功!', x: f.x, y: f.y - 120, life: 0.9, max: 0.9, rgb: '255,220,100' }); }
     }
     // 归还掉落的己旗
-    if (myFlag.dropped && myFlag.carrier < 0 && Math.abs(f.x - myFlag.x) < 62) {
-      myFlag.x = myFlag.baseX; myFlag.dropped = false;
+    if (myFlag.dropped && myFlag.carrier < 0 && Math.abs(f.x - myFlag.x) < 62 && Math.abs(f.y - myFlag.y) < 80) {
+      myFlag.x = myFlag.baseX; myFlag.y = 0; myFlag.dropped = false;
       if (!RESIM) addP({ type: 'text', text: '战旗归位', x: f.x, y: f.y - 115, life: 0.8, max: 0.8, rgb: '120,230,255' });
     }
     // 护旗回基地得分
     if (enFlag.carrier === f.idx) {
       enFlag.x = f.x; enFlag.y = f.y;
-      if (Math.abs(f.x - myFlag.baseX) < 88) {
+      if (Math.abs(f.x - myFlag.baseX) < 88 && Math.abs(f.y) < 80) {
         S.score[myTeam]++;
         enFlag.carrier = -1; enFlag.dropped = false; enFlag.x = enFlag.baseX; enFlag.y = 0;
         if (!RESIM) { say(myTeam === 0 ? '我方夺旗得分！' : '敌方夺旗得分！', 1.2, 'big'); SFX.gong(); }
@@ -67,7 +80,7 @@ function ctfMatch() {
     }
   }
   if (M.timer <= 0) {
-    const winner = S.score[0] >= S.score[1] ? 0 : 1;
+    const winner = S.score[0] > S.score[1] ? 0 : S.score[1] > S.score[0] ? 1 : -1;
     M.phase = 'ko'; M.t = 0; M.koWinner = winner;
     sayNet('时辰已到', 1.3, 'big', 'gong');
   }
@@ -76,13 +89,13 @@ function ctfMatch() {
 function drawCtfField() {
   if (!ctfOn() || !M.ctf) return;
   for (const fl of M.ctf.flags) {
-    const col = fl.team === 0 ? '#46d3ea' : '#ff5e6c';
+    const col = fl.team === localTeam() ? '#46d3ea' : '#ff5e6c';
     ctx.save();
     // 基地标记
     ctx.strokeStyle = col; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.ellipse(fl.baseX, 0, 52, 12, 0, 0, Math.PI * 2); ctx.stroke();
     // 战旗
-    const fx = fl.x, fy = fl.carrier >= 0 ? (fighterByIdx(fl.carrier).y - 145) : 0;
+    const fx = fl.x, fy = fl.carrier >= 0 ? (fighterByIdx(fl.carrier).y - 145) : fl.y;
     ctx.strokeStyle = '#e9c46a'; ctx.lineWidth = 3.2;
     ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx, fy - 110); ctx.stroke();
     ctx.fillStyle = col;
@@ -99,7 +112,6 @@ function startCtf(teamSize = 4, heroIdx = 0, level = 'normal') {
   M.mode = 'ctf';
   M.teamSize = sz;
   M.level = level || 'normal';
-  M.squadOrder = 'auto';
   M.wins = [0, 0]; M.round = 1; M.watchAi = false;
   const total = sz * 2;
   for (let i = 0; i < total; i++) {
@@ -110,6 +122,7 @@ function startCtf(teamSize = 4, heroIdx = 0, level = 'normal') {
   }
   for (let i = total; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
   human[0].clear();
+  paused = false;
   showScreen(null);
   startRound();
   say(`夺旗争锋 · ${sz}v${sz}`, 1.4);

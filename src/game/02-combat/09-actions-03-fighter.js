@@ -583,15 +583,15 @@ function tryTacticalKeys(f, foe) {
       }
     }
   }
-  if (isMulti() && f.idx === localIdx()) {
+  if (isMulti() && f.idx < 2 && !cpuTeamwork(f)) {
     if (c.consume('orderFocus')) {
-      M.squadOrder = 'focus';
+      M.squadOrders[fighterTeam(f)] = 'focus';
       if (!RESIM) addP({ type: 'text', text: '令 · 全军集火', x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '255,165,100' });
     } else if (c.consume('orderProtect')) {
-      M.squadOrder = 'protect';
+      M.squadOrders[fighterTeam(f)] = 'protect';
       if (!RESIM) addP({ type: 'text', text: '令 · 回防掩护', x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '130,220,255' });
     } else if (c.consume('orderSpread')) {
-      M.squadOrder = 'spread';
+      M.squadOrders[fighterTeam(f)] = 'spread';
       if (!RESIM) addP({ type: 'text', text: '令 · 分散游击', x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '140,240,180' });
     }
   }
@@ -932,8 +932,9 @@ function physics(f) {
   const chaosGrav = (chaosNow('grav') || { val: 1 }).val;
   if (wasAir) f.vy += g * chaosGrav * STEP;
   if (f.state === 'held') { f.vx = 0; f.vy = 0; }
-  const oldY = f.y;
+  const oldX = f.x, oldY = f.y;
   f.x += f.vx * STEP; f.y += f.vy * STEP;
+  if (enterBattleStair(f, oldX)) f.vy = 0;
   if (f.y >= 0) { f.y = 0; f.plat = -1; if (wasAir) onLand(f); if (f.vy > 0) f.vy = 0; }
   else mapPlatLand(f, oldY, wasAir);   // 山河异境的平台
   const onG = f.y >= 0 || f.plat >= 0;
