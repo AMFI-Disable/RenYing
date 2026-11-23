@@ -268,8 +268,17 @@ function renderBP() {
     for (const b of keep) el.appendChild(b);
   }
 
+  if (typeof window._bpArch !== 'string') window._bpArch = 'all';
+  const bpArchEl = document.getElementById('bpArchBar');
+  if (bpArchEl && typeof HERO_ARCH_NAMES !== 'undefined' && typeof heroArchetype === 'function') {
+    bpArchEl.innerHTML = Object.entries(HERO_ARCH_NAMES).map(([k, lbl]) => {
+      const cnt = k === 'all' ? CHARS.length : CHARS.filter(x => heroArchetype(x.id) === k).length;
+      return `<button type="button" class="arch-pill${window._bpArch === k ? ' sel' : ''}" data-bparch="${k}">${lbl}<small>${cnt}</small></button>`;
+    }).join('');
+  }
   const focusI = document.activeElement && document.activeElement.closest && document.activeElement.closest('#bpGrid .bpcard') ? +document.activeElement.dataset.i : -1;   // 重画后键盘选中框留在同一张卡上
   document.getElementById('bpGrid').innerHTML = CHARS.map((c, i) => {
+    if (window._bpArch !== 'all' && typeof heroArchetype === 'function' && heroArchetype(c.id) !== window._bpArch) return '';
     let banned = false, pickedBy = -1;
     if (Array.isArray(BP.bans)) banned = BP.bans.includes(i);
     if (multiPick) {
@@ -303,6 +312,16 @@ function renderBP() {
     goB.disabled = !(myTurn && bpValid(bpSel));
     goB.textContent = myTurn ? (bpSel >= 0 ? `${type === 'ban' ? '禁用' : '选择'} ${CHARS[bpSel].name}` : (type === 'ban' ? '选一个禁用' : '选一个角色')) : (done ? '开战在即' : '等待对方');
   }
+}
+const bpArchBarEl = document.getElementById('bpArchBar');
+if (bpArchBarEl) {
+  bpArchBarEl.addEventListener('click', e => {
+    const b = e.target.closest('button[data-bparch]');
+    if (!b) return;
+    window._bpArch = b.dataset.bparch;
+    SFX.slice && SFX.slice();
+    renderBP();
+  });
 }
 document.getElementById('bpGrid').addEventListener('click', e => {
   const b = e.target.closest('.bpcard'); if (!b || !BP || BP.step >= bpSteps().length) return;

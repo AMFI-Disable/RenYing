@@ -398,6 +398,9 @@
         s.skillLoadout[h] = Object.assign(s.skillLoadout[h] || {}, slots);
       }
     }
+    if (c.stances) {
+      s.stances = Object.assign(s.stances || {}, c.stances);
+    }
     if (c.bonus) {
       s.badgeSigils = (s.badgeSigils || 0) + (c.bonus.badgeSigils || 0);
       s.term = (s.term || 0) + (c.bonus.term || 0);
@@ -419,12 +422,22 @@
       c.heroKOs = Object.assign(c.heroKOs || {}, Object.fromEntries(C.HERO_IDS.map(h => [h, Math.max(20, (c.heroKOs && c.heroKOs[h]) || 0)])));
       c.skillUnlocks = JSON.parse(JSON.stringify(nextState.skillUnlocks || {}));
       c.bonus = { badgeSigils: 50, term: 10, tags: 10, cases: Object.fromEntries(C.CASES.map(cid => [cid, 10])) };
+    } else if (name === 'badgeGift') {
+      c.badgeGift = 1;
+      c.badgeOwned = Object.assign(c.badgeOwned || {}, nextState.badgeOwned || {});
+    } else if (name === 'badgeUnlock' || name === 'badgeUpgrade') {
+      c.badgeOwned = Object.assign(c.badgeOwned || {}, nextState.badgeOwned || {});
+      if (c.bonus && typeof c.bonus.badgeSigils === 'number' && res && res.usedSigils) c.bonus.badgeSigils = Math.max(0, c.bonus.badgeSigils - res.usedSigils);
     } else if (name === 'badgeAutoAssign' || name === 'badgeEquip') {
-      c.badgeEquip = { ...(nextState.badgeEquip || {}) };
+      c.badgeEquip = {};
+      for (const h of C.HERO_IDS) c.badgeEquip[h] = (nextState.badgeEquip && nextState.badgeEquip[h]) || '';
+    } else if (name === 'stanceSet') {
+      c.stances = Object.assign(c.stances || {}, nextState.stances || {});
     } else if (name === 'petBuy' || name === 'petUpgrade') {
       c.petOwned = { ...(nextState.petOwned || {}) };
     } else if (name === 'petEquip') {
-      c.petEquip = { ...(nextState.petEquip || {}) };
+      c.petEquip = {};
+      for (const h of C.HERO_IDS) c.petEquip[h] = (nextState.petEquip && nextState.petEquip[h]) || '';
     } else if (name === 'skillUnlock') {
       c.skillUnlocks = JSON.parse(JSON.stringify(nextState.skillUnlocks || {}));
     } else if (name === 'skillSet') {
@@ -1487,16 +1500,26 @@
       cats: C.BADGE_CATS,
     };
   };
+  window.armoryEnsureReady = async function () {
+    if (!ST && !PROF.guest) await connect(false);
+    return ST;
+  };
   window.armoryQuickEquipBadge = async function (hero, id) {
     if (!ST) await connect(false);
     const r = await act('badgeEquip', { hero, id: id || '' });
-    if (r && r.ok) toast(id ? `已为侠客装备「${cvT(C.BADGES[id].name)}」` : '已卸下当前徽记');
+    if (r && r.ok) {
+      toast(id ? `已为侠客装备「${cvT(C.BADGES[id].name)}」` : '已卸下当前徽记');
+      if ($id('armory') && $id('armory').classList.contains('on')) render();
+    }
     return r;
   };
   window.armoryAutoAssignBadges = async function () {
     if (!ST) await connect(false);
     const r = await act('badgeAutoAssign', {});
-    if (r && r.ok) toast(`⚡ 已为 ${r.assigned} 位侠客自动装配最优徽记`);
+    if (r && r.ok) {
+      toast(`⚡ 已为 ${r.assigned} 位侠客智能装配最优徽记`);
+      if ($id('armory') && $id('armory').classList.contains('on')) render();
+    }
     return r;
   };
   window.armoryClaimAppreciation = async function (badgeId) {

@@ -41,12 +41,19 @@ function renderCodex() {
   const skin = cxPrev !== null ? cxPrev : mySkin(c.id);
   const L = skinLook(cxIdx, skin);
   const col = `rgb(${L.slash})`;
-  const archBar = `<div class="arch-bar">${Object.entries(HERO_ARCH_NAMES).map(([k, lbl]) => `<button type="button" class="arch-pill${cxArch === k ? ' sel' : ''}" data-arch="${k}">${lbl}</button>`).join('')}</div>`;
+  const bsTop = typeof window.armoryBadgeState === 'function' ? window.armoryBadgeState() : null;
+  const ownedCount = bsTop ? Object.keys(bsTop.owned || {}).length : 0;
+  const archCounts = Object.fromEntries(Object.keys(HERO_ARCH_NAMES).map(k => [k, k === 'all' ? CHARS.length : CHARS.filter(x => heroArchetype(x.id) === k).length]));
+  const archBar = `<div class="arch-bar">${Object.entries(HERO_ARCH_NAMES).map(([k, lbl]) => `<button type="button" class="arch-pill${cxArch === k ? ' sel' : ''}" data-arch="${k}">${lbl}<small>${archCounts[k]}</small></button>`).join('')}</div>`;
+  const globalActions = bsTop ? `<div class="cx-global-actions"><button type="button" class="go small cx-global-auto" data-cx-global-auto="1" title="根据侠客流派与徽记阶位，一键智能装配全部已拥有徽记">⚡ 一键智能装配徽记${ownedCount ? ` (${ownedCount})` : ''}</button>${!bsTop.appreciationClaimed ? '<button type="button" class="ghost small cx-global-app" data-cx-global-app="1">🎁 领紫金豪礼</button>' : ''}</div>` : '';
+  const topRow = `<div class="cx-top-bar">${archBar}${globalActions}</div>`;
   const heroBtns = CHARS.map((x, i) => {
     if (cxArch !== 'all' && heroArchetype(x.id) !== cxArch) return '';
-    return `<button class="${i === cxIdx ? 'sel' : ''}" data-i="${i}" style="${i === cxIdx ? '' : `color:rgb(${x.look.slash})`} ">${x.name}</button>`;
+    const eqB = bsTop && bsTop.equip && bsTop.equip[x.id];
+    const eqDot = eqB ? '<i class="cx-eq-dot" title="已装配徽记"></i>' : '';
+    return `<button type="button" class="cx-hero-btn${i === cxIdx ? ' sel' : ''}" data-i="${i}" style="${i === cxIdx ? '' : `color:rgb(${x.look.slash})`}">${x.name}${eqDot}</button>`;
   }).join('');
-  $id('cxTabs').innerHTML = archBar + heroBtns;
+  $id('cxTabs').innerHTML = `${topRow}<div class="cx-hero-list" role="tablist" aria-label="侠客列表">${heroBtns}</div>`;
   const cv2 = $id('cxCard'), g = cv2.getContext && cv2.getContext('2d');
   if (g) { g.clearRect(0, 0, cv2.width, cv2.height); g.drawImage(makeCardArt(cxIdx, cv2.width, cv2.height, skin), 0, 0); }
   if (cv2) {
@@ -78,12 +85,18 @@ function renderCodex() {
     const eqId = (bs.equip && bs.equip[c.id]) || '';
     const eqMeta = eqId && bs.badges && bs.badges[eqId];
     const tierLbl = t => t === 'purpgold' ? '✦紫金' : t === 'gold' ? '赤金' : '银徽';
+    const holderOf = bid => {
+      const ent = Object.entries(bs.equip || {}).find(([, id]) => id === bid);
+      if (!ent || ent[0] === c.id) return '';
+      const h = CHARS.find(x => x.id === ent[0]);
+      return h ? ` (${h.name})` : '';
+    };
     const bBtns = ownedList.map(([bid, tier]) => {
       const bm = bs.badges[bid]; if (!bm) return '';
       const active = eqId === bid;
-      return `<button type="button" data-cx-badge="${bid}" class="sk-g${active ? ' sel' : ''}" style="--tc:${tier === 'purpgold' ? '217,166,255' : tier === 'gold' ? '233,196,106' : '165,200,235'}" title="${bm.desc}">${bm.name}·${tierLbl(tier)}</button>`;
+      return `<button type="button" data-cx-badge="${active ? '' : bid}" class="sk-g${active ? ' sel' : ''}" style="--tc:${tier === 'purpgold' ? '217,166,255' : tier === 'gold' ? '233,196,106' : '165,200,235'}" title="${bm.desc}">${bm.name}·${tierLbl(tier)}${holderOf(bid)}</button>`;
     }).join('');
-    badgeBar = `<div class="cx-badge-box" style="margin-top:10px;padding-top:8px;border-top:1px solid rgba(239,232,216,.12)"><div class="row" style="justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px"><small style="color:var(--gold);font-weight:700">🏅 英雄徽记：${eqMeta ? `${eqMeta.name}（${tierLbl(bs.owned[eqId])}）` : '未装备'}</small><div class="row" style="gap:4px">${eqId ? `<button type="button" data-cx-badge="" class="ghost small" style="padding:2px 8px;font-size:11px">卸下</button>` : ''}<button type="button" data-cx-badge-auto="1" class="ghost small" style="padding:2px 8px;font-size:11px;color:var(--gold)">⚡ 自动装配</button>${!bs.appreciationClaimed ? `<button type="button" data-cx-app="1" class="go small" style="padding:2px 8px;font-size:11px">🎁 领紫金徽记</button>` : ''}</div></div><div class="cx-skin-row-btns">${bBtns || '<small style="color:var(--dim)">暂无已解锁徽记，可点击右上角领取感恩盛典紫金徽记或前往武库解锁。</small>'}</div>${eqMeta ? `<div style="margin-top:4px;font-size:11.5px;color:var(--dim)">${eqMeta.desc}</div>` : ''}</div>`;
+    badgeBar = `<div class="cx-badge-box"><div class="cx-badge-head"><small class="cx-badge-cur">🏅 当前徽记：${eqMeta ? `${eqMeta.name}（${tierLbl(bs.owned[eqId])}）` : '未装备'}</small>${eqId ? '<button type="button" data-cx-badge="" class="ghost small cx-badge-clear">卸下</button>' : ''}</div><div class="cx-skin-row-btns">${bBtns || '<small style="color:var(--dim)">暂无已解锁徽记，可点击顶部「领紫金豪礼」或前往武库解锁。</small>'}</div>${eqMeta ? `<div class="cx-badge-desc">${eqMeta.desc}</div>` : ''}</div>`;
   }
   $id('cxSkins').innerHTML = `<div class="cx-skin-row"><div class="cx-skin-row-btns">${defaultBtn}${skList.map(renderSkinBtn).join('')}</div>${badgeBar}</div>`;
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
@@ -264,6 +277,11 @@ function openCodex() {
     for (const b of $id('cxDemoTabs').querySelectorAll('button')) b.classList.toggle('sel', b.dataset.m === 'full' || b.dataset.m === 'all');
   }
   renderCodex();
+  if (typeof window.armoryEnsureReady === 'function') {
+    window.armoryEnsureReady().then(() => {
+      if ($id('codex') && $id('codex').classList.contains('on')) renderCodex();
+    }).catch(() => {});
+  }
 }
 window.openCodex = openCodex;
 $id('cxSkins').addEventListener('click', async e => {
@@ -273,20 +291,6 @@ $id('cxSkins').addEventListener('click', async e => {
     if (typeof window.armoryQuickEquipBadge === 'function') {
       await window.armoryQuickEquipBadge(id, b.dataset.cxBadge);
       renderCodex(); SFX.slice();
-    }
-    return;
-  }
-  if (b.dataset.cxBadgeAuto) {
-    if (typeof window.armoryAutoAssignBadges === 'function') {
-      await window.armoryAutoAssignBadges();
-      renderCodex(); SFX.slice();
-    }
-    return;
-  }
-  if (b.dataset.cxApp) {
-    if (typeof window.armoryClaimAppreciation === 'function') {
-      await window.armoryClaimAppreciation('flowing');
-      renderCodex();
     }
     return;
   }
@@ -308,9 +312,23 @@ $id('cxSkins').addEventListener('click', async e => {
   SFX.slice();
   toast(sk ? `已装配「${SKINS[sk].name}」` : '已换回原本装束');
 });
-$id('cxTabs').addEventListener('click', e => {
+$id('cxTabs').addEventListener('click', async e => {
   const b = e.target.closest('button');
   if (!b) return;
+  if (b.dataset.cxGlobalAuto) {
+    if (typeof window.armoryAutoAssignBadges === 'function') {
+      await window.armoryAutoAssignBadges();
+      renderCodex(); SFX.slice();
+    }
+    return;
+  }
+  if (b.dataset.cxGlobalApp) {
+    if (typeof window.armoryClaimAppreciation === 'function') {
+      await window.armoryClaimAppreciation('flowing');
+      renderCodex();
+    }
+    return;
+  }
   if (b.dataset.arch) {
     cxArch = b.dataset.arch;
     const first = CHARS.findIndex(x => cxArch === 'all' || heroArchetype(x.id) === cxArch);

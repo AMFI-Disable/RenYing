@@ -726,7 +726,7 @@ function updateFighter(f, foe) {
   f.iaidoCD = Math.max(0, (f.iaidoCD || 0) - STEP);
   f.grappleCD = Math.max(0, (f.grappleCD || 0) - STEP);
   f.acupointT = Math.max(0, (f.acupointT || 0) - STEP);
-  if (typeof RYPhysics !== 'undefined' && RYPhysics.stepFighter) RYPhysics.stepFighter(f, STEP, { foe });
+  if (typeof RYPhysics !== 'undefined' && RYPhysics.stepFighter) RYPhysics.stepFighter(f, STEP, { foe, fighters: allFighters(), isPrimaryFighter: f === A });
   f.badgeDashT = Math.max(0, (f.badgeDashT || 0) - STEP);
   for (const key of ['badgeLinkT', 'badgePressureT', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'ballGuardBreakT']) f[key] = Math.max(0, (f[key] || 0) - STEP);
   f.breakCD = Math.max(0, f.breakCD - STEP);

@@ -1145,12 +1145,43 @@
   };
   A.badgeAutoAssign = (s) => {
     const owned = Object.entries(s.badgeOwned || {})
+      .filter(([id]) => own(C.BADGES, id))
       .sort((a, b) => (C.BADGE_TIER[b[1]] || 0) - (C.BADGE_TIER[a[1]] || 0) || a[0].localeCompare(b[0]));
     if (!owned.length) return { err: '还没有任何武学徽记可装配' };
+    const ARCH = {
+      qingfeng: 'swordsman', lingshuang: 'swordsman', yuehua: 'swordsman', cangming: 'swordsman', baihe: 'swordsman', wuya: 'swordsman',
+      feiying: 'assassin', lingque: 'assassin', liying: 'assassin', youhuang: 'assassin', yinhu: 'assassin', youming: 'assassin',
+      tieshan: 'tank', gouchen: 'tank', polang: 'tank', xuanwu: 'tank', tiangang: 'tank', bawang: 'tank',
+      leiming: 'fighter', zuixian: 'fighter', chixiao: 'fighter', yanling: 'fighter', chiyan: 'fighter', jinpeng: 'fighter',
+      liuyun: 'support', yuxiao: 'support', xuanji: 'support', qingluan: 'support', yunhe: 'support', fengling: 'support',
+      moyu: 'controller', cixian: 'controller', qianji: 'controller', mojie: 'controller', lingxi: 'controller', danqing: 'controller',
+    };
+    const PREF = {
+      offense: ['swordsman', 'fighter', 'assassin', 'tank', 'controller', 'support'],
+      defense: ['tank', 'fighter', 'swordsman', 'support', 'controller', 'assassin'],
+      mobility: ['assassin', 'swordsman', 'fighter', 'support', 'controller', 'tank'],
+      mastery: ['controller', 'swordsman', 'support', 'assassin', 'fighter', 'tank'],
+      team: ['support', 'controller', 'tank', 'fighter', 'swordsman', 'assassin'],
+    };
     s.badgeEquip = {};
-    const count = Math.min(owned.length, C.HERO_IDS.length);
-    for (let i = 0; i < count; i++) s.badgeEquip[C.HERO_IDS[i]] = owned[i][0];
-    return { ok: true, assigned: count, badgeEquip: s.badgeEquip };
+    const usedHeroes = new Set();
+    let assigned = 0;
+    for (const [bid] of owned) {
+      if (usedHeroes.size >= C.HERO_IDS.length) break;
+      const cat = (C.BADGES[bid] && C.BADGES[bid].cat) || 'offense';
+      const order = PREF[cat] || PREF.offense;
+      let chosenHero = '';
+      for (const arch of order) {
+        chosenHero = C.HERO_IDS.find(h => !usedHeroes.has(h) && (ARCH[h] || 'fighter') === arch) || '';
+        if (chosenHero) break;
+      }
+      if (!chosenHero) chosenHero = C.HERO_IDS.find(h => !usedHeroes.has(h)) || '';
+      if (!chosenHero) break;
+      s.badgeEquip[chosenHero] = bid;
+      usedHeroes.add(chosenHero);
+      assigned++;
+    }
+    return { ok: true, assigned, badgeEquip: s.badgeEquip };
   };
   A.petBuy = (s, a, env) => {
     const id = String(a.id || '');

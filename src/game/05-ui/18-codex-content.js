@@ -1208,6 +1208,18 @@ const HERO_FULL_DEMO = {
     { p: 'idle', d: 0.25, reset: true },
     { p: 'yl_wings', d: 0.18, lab: 'E · 万羽' }, { p: 'a1a', d: 0.46, fx: 'featherstorm', hit: 3, launch: true, badge: '🪶 凌霄破虚' },
     { p: 'victory', d: 0.55, reset: true }
+  ],
+  qianji: [
+    { p: 'idle', d: 0.2, reset: true },
+    { p: 'l1s', d: 0.07, lab: '铜手连推' }, { p: 'l1a', d: 0.11, dx: 10, hit: 1 },
+    { p: 'l2s', d: 0.07 }, { p: 'l3a', d: 0.18, dx: 16, hit: 2, launch: true },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'qf_charge', d: 0.15, lab: 'Q · 金丝回环' }, { p: 'l1a', d: 0.3, fx: 'proj', hit: 1, badge: '限距往返' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'fy_seal', d: 0.2, lab: 'R · 穿丝急袭' }, { p: 'hva', d: 0.25, fx: 'ironwall', hit: 1, launch: true, badge: '傀丸穿击' },
+    { p: 'idle', d: 0.25, reset: true },
+    { p: 'fy_seal', d: 0.2, lab: 'E · 机轮三穿' }, { p: 'victory', d: 0.48, fx: 'geartriple', hit: 3, badge: '三穿回手' },
+    { p: 'victory', d: 0.5, reset: true }
   ]
 };
 
@@ -1229,5 +1241,202 @@ const SKILL_FUN = {
   cixian: { passive: '一会儿正极一会儿负极，脾气说变就变。', light: '负极一掌一吸，越打越近。', charge: '蓄满一掌，磁力把格挡都推开。', air: '跳起来拍一掌，像拍苍蝇。', skill: '红圈变蓝圈，R 也跟着刷新。', ranged: '正极弹飞，负极吸回，来回都是我说了算。', ult: '天一块地一块，中间夹着你。', esc: '磁力一托，人就飘起来了。' },
   lingque: { passive: '飞梭织悬丝，碰一下就留下印记。', light: '子母飞梭刺得比针还快。', charge: '蓄力一梭子，隔着衣服都疼。', air: '凌波踏空，身法灵巧似惊雀。', skill: '飞梭脱手，丝线连着千里之外。', ranged: '印记一亮，瞬身穿刺直接清空CD！', ult: '万线归宗，漫天悬丝罗网避无可避。', esc: '悬丝一荡，人已在数丈之外。' }
 };
+
+// ======================= 扩展 20 位侠客专属图鉴内容与全套动画脚本 =======================
+Object.assign(PASSIVE_SHORT, {
+  chixiao: '重击蓄力霸体 · 烈焰突刺与炎轮点燃对手(860血)',
+  youhuang: '移速灵巧 · 毒针迟缓与回纹绞带拉拽控制(790血)',
+  xuanji: '三臂星规控距 · 星火压制与重力场削减架势(810血)',
+  polang: '沧澜重锚霸体 · 震锚削防与冲锋撞飞(920血)',
+  cangming: '寒渊重剑霸体 · 霜气迟缓与裂魂破防挑空(875血)',
+  qingluan: '翠羽济世回春 · 清风击退迟缓与近身护体(805血)',
+  xuanwu: '玄甲不动霸体 · 冲撞削防与镇岳壁垒回势(940血)',
+  chiyan: '焚心烈拳连打 · 冲拳升龙附带持续烈焰灼烧(845血)',
+  yinhu: '幻月狐踪极速 · 穿身强化与空中十字双刃连切(785血)',
+  yunhe: '仙鹤凌云御风 · 展翅齐射仙羽与云岚回血(800血)',
+  tiangang: '天罡铁壁长枪 · 霸体长驱破阵与震枪横扫(915血)',
+  mojie: '断魂墨敕控场 · 墨阵禁锢与追踪墨符压制(810血)',
+  baihe: '霜华映剑凝霜 · 寒江贯刺减速与霜镜弹反(830血)',
+  jinpeng: '扶摇金翼制空 · 俯冲罡风与三道裂空金羽(825血)',
+  youming: '噬影潜行突袭 · 暗影掠杀与幽影锁链拘魂(790血)',
+  lingxi: '心有灵犀音律 · 扩张音环减速与余音弹反震晕(805血)',
+  bawang: '霸王重甲撼岳 · 霸体裂地破防与楚歌气浪减速(935血)',
+  fengling: '听风铃语轻灵 · 双风刃压制与风铃回血弹反(795血)',
+  wuya: '无涯剑意居合 · 按鞘瞬闪拔刀与踏虚无敌斩影(835血)',
+  danqing: '丹青妙笔绘卷 · 朱砂远波迟缓与青绿画阵定身(815血)',
+});
+
+Object.assign(ADV_SHORT, {
+  chixiao: 'Q 烈焰突刺近身点燃后，立刻接 R 炎轮扫荡挑空追击',
+  youhuang: '先用 Q 毒针减速，再甩 R 回纹缠带将对手拽回身前打连段',
+  xuanji: 'R 天枢重力把敌人拉进中距削防后，接 Q 星规流火精准补伤',
+  polang: '先用 R 破浪霸体突进贴脸，落地立刻接 Q 怒涛震锚破防挑飞',
+  cangming: 'Q 寒渊斩近身重斩并挂寒霜迟缓，再以 R 裂魂斩蓄势破防浮空',
+  qingluan: '中距用 Q 翠羽清风控场拉扯，被贴身时用 R 鸾羽回春震退回血',
+  xuanwu: '先开 R 镇岳壁垒拿霸体与架势回复，再用 Q 玄甲冲撞顶飞对手',
+  chiyan: 'Q 烈焰冲拳突入点燃后，顺势接 R 烬火升龙勾拳追空连打',
+  yinhu: 'Q 狐步幻移穿身绕后强化下一击，立刻接 R 幻月双斩打出爆发',
+  yunhe: '利用 Q 鹤翼凌空齐射仙羽抢先手，被反打时开 R 云岚沐羽稳血线',
+  tiangang: 'Q 破阵长驱远端削防，对手反扑时用 R 铁壁震枪霸体横扫挑飞',
+  mojie: '先用 Q 断魂墨缚禁锢走位，再用 R 镇魂敕符远程追踪压制',
+  baihe: 'R 霜华凝镜弹反暗器并震退减速，再接 Q 寒江贯虹极速穿刺',
+  jinpeng: '中远距用 R 扶摇罡风压制跳跃，抓住破绽以 Q 金鹏裂空俯冲收割',
+  youming: 'R 幽冥拘魂把远敌拉至身前减速，立刻接 Q 噬影掠杀十字穿斩',
+  lingxi: 'Q 灵犀音波远距扩张减速，对手近身或出暗器时用 R 余音震魄反制',
+  bawang: '先用 R 楚歌震军震退减速，再接 Q 霸王裂地霸体劈落瓦解防线',
+  fengling: 'Q 清铃拂风双风刃保持安全距离，被压制时用 R 和风祈愿回血反推',
+  wuya: 'R 踏虚斩影借短暂无敌躲招挑空，再以 Q 无涯居合瞬闪收尾',
+  danqing: '先用 R 青绿封卷定身困敌，接 Q 朱砂画弧远程气波连环压制',
+});
+
+Object.assign(HERO_METER_EXPLAIN, {
+  chixiao: '【火耙炙魂 · 灼烧积怒】三齿火耙重击霸体换血与持续点燃稳定攒气；奥义「炽霄焚天」六连火星连斩接跃起火耙重劈。',
+  youhuang: '【绞带控距 · 连抽蓄势】毒针远程牵制与回纹绞带拉拽连击快速充能；奥义「千缕重叠」七连绞带鞭抽接坠锤终结。',
+  xuanji: '【星枢牵引 · 刻线聚元】星规流火与重力力场持续削防攒气；奥义「星宿归元」循星轨六连斩后合拢三臂重击。',
+  polang: '【重锚抗压 · 破浪蓄怒】高体量重锚霸体承伤与震锚破防高效聚气；奥义「沧海倾覆」五记重锚连砸接双钩覆海。',
+  cangming: '【寒渊重剑 · 断渊蓄威】重剑霸体硬扛与寒波减速稳步蓄能；奥义「冥蚀断渊」五道幽蓝霜剑连环破防并裂地终结。',
+  qingluan: '【翠羽灵风 · 绵延聚气】远程清风拉扯与回春续航持久作战；奥义「鸾鸣九霄」六道清风扇影连扫接鸾鸣风爆。',
+  xuanwu: '【玄甲承伤 · 镇岳积威】顶级气血与玄甲壁垒承伤攒气极快；奥义「玄武镇岳」四记撼岳重锤连震后泰山压顶。',
+  chiyan: '【烈焰连拳 · 灼心暴怒】高频烈拳与灼烧伤害迅速拉满怒气；奥义「焚天乱舞」八记疾风烈焰连拳接赤焰爆裂冲拳。',
+  yinhu: '【狐步瞬影 · 疾刃充能】极速连段与穿身背袭高速攒气；奥义「九尾绝影」九道银月残影疾斩接交叉封喉。',
+  yunhe: '【御风仙羽 · 凌云蓄势】制空仙羽穿透与云岚续航稳健充能；奥义「鹤舞九天」六道云岚羽芒凌空连击接九天俯冲。',
+  tiangang: '【长驱破阵 · 铁壁蓄锋】超长枪芒贯穿与霸体抗压高效攒气；奥义「天罡破军」五道金戈枪芒贯杀接天罡坠世。',
+  mojie: '【断魂敕墨 · 阵法聚元】墨缚禁锢与追踪墨符持续压制积怒；奥义「绝墨魂卷」六道玄墨剑意展卷封杀接绝墨印镇压。',
+  baihe: '【霜镜凝华 · 寒江聚锋】霜镜弹反暗器与寒江贯刺灵动攒气；奥义「冰河奔涌」六道清霜剑影连斩接冰封江面。',
+  jinpeng: '【裂空金羽 · 扶摇蓄势】三羽远程消耗与俯冲突袭迅猛积怒；奥义「鹏程万里」七道裂空罡风撕扯接大鹏压顶。',
+  youming: '【暗影锁魂 · 永夜积煞】拘魂拉拽接双镰掠杀极速充能；奥义「永夜绝斩」八道幽冥双镰瞬息交错接噬影断魂。',
+  lingxi: '【灵犀音环 · 余音聚气】音环远程穿透与余音弹反稳步蓄能；奥义「心音幻境」六道清音气浪震荡接破魂重音。',
+  bawang: '【霸王悍勇 · 裂地积威】重甲霸体换血与震军气浪高效充能；奥义「力拔山兮」五记雷霆重劈接力拔山河压垮敌军。',
+  fengling: '【清铃和风 · 轻灵充能】双风刃安全消耗与风铃回血弹反稳健攒气；奥义「万铃和鸣」六道和风刃影连斩接万铃共振。',
+  wuya: '【无涯剑心 · 居合积势】踏虚闪避与疾闪居合节奏明快；奥义「剑气无涯」七道银月居合连闪接万道剑气爆发。',
+  danqing: '【丹青点墨 · 画卷聚意】远程朱砂气波与青绿封卷控场攒气；奥义「千里江山」六道丹青画气连斩接点睛镇入画卷。',
+});
+
+(() => {
+  const EXP_HEROES = [
+    ['chixiao', 'rk', '三齿火耙连挑', '烈焰重耙', '凌空火耙', '烈焰突刺', '炎轮扫荡', '炽霄焚天', '火耙腾跃', 'dash', 'mid', 'gale', 'quake', 'avalanche', '点燃灼烧', '炎轮挑空', '六连火耙重劈', '火耙不是农具，烧起来比刀还烫。', '三齿齐出，火星子能点亮整条街。'],
+    ['youhuang', 'dl', '绞带连抽', '坠锤重甩', '空甩绞带', '幽篁毒针', '回纹缠带', '千缕重叠', '绞带借力', 'ranged', 'ranged', 'kunai', 'proj', 'shadows', '淬药减速', '绞带拉拽', '七连抽击重砸', '染坊出来的带子，甩在身上顺带染色。', '别躲，三枚细针总有一枚认得你。'],
+    ['xuanji', 'sg', '星规弧斩', '三臂合击', '凌空测影', '星规流火', '天枢重力', '星宿归元', '星轨撤步', 'ranged', 'trap', 'proj', 'inktrap', 'timestop', '星火穿刺', '重力削防', '六连星轨合击', '他打架前先量距离，误差不超过半寸。', '星规一合，重力场里谁都跑不快。'],
+    ['polang', 'an', '重锚沉砸', '沧澜蓄锚', '高空坠锚', '怒涛震锚', '破浪突进', '沧海倾覆', '锚链腾跃', 'mid', 'dash', 'quake', 'ironwall', 'avalanche', '震锚挑飞', '霸体撞飞', '五连重锚覆海', '两百斤的救生锚，救船也顺便救对手清醒。', '别跳了，浪打过来站都站不稳。'],
+    ['cangming', 'ab', '寒渊重剑五斩', '霜渊蓄劈', '凌空霜斩', '寒渊斩', '裂魂斩', '冥蚀断渊', '渊雪撤步', 'mid', 'melee', 'swordqi', 'quake', 'crescent', '寒波迟缓', '破防挑空', '五道幽蓝断渊', '重剑无锋，但寒气已经透进骨头里了。', '接完寒渊斩再接裂魂斩，脚都不沾地。'],
+    ['qingluan', 'jf', '翠羽扇舞', '青鸾蓄风', '御风轻扇', '翠羽清风', '鸾羽回春', '鸾鸣九霄', '翠羽腾空', 'ranged', 'counter', 'windblade', 'moonflow', 'tornado', '清风迟缓', '回春震退', '六道鸾风扫荡', '医扇既能救人，也能把人扇出三丈远。', '别急着贴脸，回春扇一震你就飞了。'],
+    ['xuanwu', 'bs', '玄甲重盾砸', '镇岳蓄撞', '凌空龟甲压', '玄甲冲撞', '镇岳壁垒', '玄武镇岳', '玄甲腾跃', 'dash', 'counter', 'ironwall', 'mirror', 'avalanche', '霸体撞飞', '壁垒回势', '四记撼岳重锤', '玄武龟甲敲起来咚咚响，震麻的是你的手。', '开起镇岳壁垒，你先打完一套我再动。'],
+    ['chiyan', 'bg', '烈焰连拳', '赤焰重炮', '空坠火拳', '烈焰冲拳', '烬火升龙', '焚天乱舞', '炎步后撤', 'dash', 'melee', 'thunderfist', 'quake', 'thunder', '烈焰灼烧', '升龙挑空', '八连赤焰轰击', '拳套自带火炉，冬天打架最暖和。', '先冲拳再升龙，火候刚刚好。'],
+    ['yinhu', 'fd', '银狐双匕连刺', '幻月蓄刺', '空翻狐刃', '狐步幻移', '幻月双斩', '九尾绝影', '狐步遁影', 'dash', 'melee', 'blink', 'shadows', 'shadows', '穿身强化', '十字连切', '九道银月绝影', '银狐出手前，你看到的只是上一秒的影子。', '九尾残影齐出，数清之前胜负已分。'],
+    ['yunhe', 'cw', '仙羽清拂', '云翼蓄掠', '凌云翔击', '鹤翼凌空', '云岚沐羽', '鹤舞九天', '鹤翼腾空', 'dash', 'counter', 'feather', 'moonflow', 'featherstorm', '双羽穿刺', '云岚回血', '六道羽芒俯冲', '云鹤在天上盘旋，地面上的招式全扑空。', '打完一套顺手回口血，优雅得很。'],
+    ['tiangang', 'gp', '天罡长枪连刺', '金戈蓄刺', '凌空点枪', '破阵长驱', '铁壁震枪', '天罡破军', '持枪退步', 'dash', 'counter', 'backthrust', 'spin', 'timestop', '霸体破防', '铁壁挑飞', '五道金戈贯杀', '一杆天罡枪立在阵前，千军万马都得绕道。', '红缨一抖，枪尖已经抵到眉心。'],
+    ['mojie', 'sb', '断魂墨毫五式', '魂笔重印', '凌空书敕', '断魂墨缚', '镇魂敕符', '绝墨魂卷', '墨影撤步', 'trap', 'ranged', 'inktrap', 'inkblob', 'inkdragon', '墨阵禁锢', '追踪墨符', '六道绝墨封杀', '一笔定生死，画完这卷就送你上路。', '脚下的墨圈别乱踩，踩进去可拔不出脚。'],
+    ['baihe', 'fr', '霜华细剑连刺', '寒芒蓄刺', '冰河空刺', '寒江贯虹', '霜华凝镜', '冰河奔涌', '踏霜撤步', 'dash', 'counter', 'gale', 'mirror', 'timestop', '贯刺减速', '霜镜弹反', '六道清霜冰封', '剑身细如冰棱，出手快得连霜花都追不上。', '暗器飞过来？霜镜原路奉还。'],
+    ['jinpeng', 'rw', '金翼疾掠连击', '金爪蓄扑', '苍穹展翅', '金鹏裂空', '扶摇罡风', '鹏程万里', '振翼腾空', 'dash', 'ranged', 'dive', 'feather', 'featherstorm', '俯冲罡风', '三羽裂空', '七道罡风压顶', '大鹏一日同风起，俯冲下来地都抖三抖。', '三道金羽封走位，天上地下无处可逃。'],
+    ['youming', 'rs', '幽冥双镰连割', '噬魂蓄镰', '空旋冥镰', '噬影掠杀', '幽冥拘魂', '永夜绝斩', '幽雾遁身', 'dash', 'ranged', 'blink', 'proj', 'shadows', '暗影穿斩', '锁链拘魂', '八道永夜绝斩', '双镰划过不留血，只留一团散不去的幽雾。', '跑远了？幽影锁链把你乖乖请回来。'],
+    ['lingxi', 'sf', '灵犀玉笛连点', '清音蓄扫', '凌空吹笛', '灵犀音波', '余音震魄', '心音幻境', '踏音后撤', 'ranged', 'counter', 'note', 'mirror', 'guangling', '音环减速', '余音震晕', '六道清音破魂', '一曲灵犀吹罢，对手连招式节拍都乱了。', '笛声听着柔和，震在架势上可一点不客气。'],
+    ['bawang', 'ob', '霸王重刃连劈', '撼山蓄劈', '凌空断岳', '霸王裂地', '楚歌震军', '力拔山兮', '重甲后撤', 'mid', 'mid', 'quake', 'ironwall', 'avalanche', '裂地挑飞', '怒吼减速', '五记雷霆重劈', '力拔山兮气盖世，重刃落下谁敢硬接？', '一声楚歌震军，方圆三丈都得矮三分。'],
+    ['fengling', 'cf', '素扇清铃舞', '和风蓄扇', '踏风轻掠', '清铃拂风', '和风祈愿', '万铃和鸣', '听风撤步', 'ranged', 'counter', 'windblade', 'moonflow', 'tornado', '双风刃击退', '祈愿回血', '六道和风共振', '风铃叮当一响，双道清风已经吹到脸上。', '别看扇子小，吹退强敌顺带回血两不误。'],
+    ['wuya', 'ib', '无涯快刀五斩', '纳鞘蓄居合', '凌空拔刀', '无涯居合', '踏虚斩影', '剑气无涯', '踏虚瞬撤', 'dash', 'dash', 'gale', 'swordqi', 'crescent', '瞬闪居合', '无敌弯月', '七道银月剑气', '刀未出鞘，胜负已在按鞘的一瞬注定。', '踏虚闪过你的大招，反手就是一道弯月。'],
+    ['danqing', 'vb', '丹青五韵连画', '朱砂重笔', '凌空点彩', '朱砂画弧', '青绿封卷', '千里江山', '踏墨退避', 'ranged', 'trap', 'inkblob', 'inktrap', 'shanshui', '朱砂减速', '画阵定身', '六道山河点睛', '挥毫泼出千里江山，顺便把对手裱进画里。', '朱砂勾轮廓，青绿封退路，妥妥一幅名画。'],
+  ];
+  for (const [id, pfx, lName, cName, aName, qName, rName, eName, escName, qType, rType, qFx, rFx, eFx, qTag, rTag, eTag, fun1, fun2] of EXP_HEROES) {
+    const s1 = pfx + '_l1s', a1 = pfx + '_l1a', s2 = pfx + '_l2s', a2 = pfx + '_l2a';
+    HERO_MOVE_TYPES[id] = {
+      light: { type: 'melee', label: '近战连招', rng: 'melee' },
+      charge: { type: 'melee', label: '蓄力破防', rng: 'melee' },
+      air: { type: 'air', label: '空中连击', rng: 'air' },
+      skill: { type: qType, label: qTag, rng: qType === 'ranged' ? 'ranged' : 'mid', icon: qType === 'ranged' ? 'ranged' : qType === 'trap' ? 'magic_trap' : 'melee' },
+      ranged: { type: rType, label: rTag, rng: rType === 'ranged' ? 'ranged' : 'mid', icon: rType === 'counter' ? 'shield_bash' : rType === 'trap' ? 'magic_trap' : rType === 'ranged' ? 'ranged' : 'melee' },
+      ult: { type: 'fullscreen', label: eTag, rng: 'screen' },
+      esc: { type: 'esc', label: '身法' }
+    };
+    HERO_HIT_DETAILS[id] = {
+      light: { name: lName, badge: '✦ 专属兵器连段', badgeCls: 'badge-buff', dmg: '5段连击', desc: `${lName}，以专属兵器轨迹连环压制，末段击飞。` },
+      charge: { name: cName, badge: '💥 破防打倒', badgeCls: 'badge-break', dmg: '满蓄破防', desc: `长按蓄力施展${cName}，正面击穿防御并打倒对手。` },
+      air: { name: aName, badge: '🌪️ 空中压制', badgeCls: 'badge-buff', dmg: '空中2段', desc: `跃起施展${aName}，灵活衔接空中追击与下压。` },
+      skill: { name: qName, badge: `⚡ ${qTag}`, badgeCls: 'badge-stun', dmg: 'Q 技能', desc: `施展${qName}，${qTag}并创造连段节奏。` },
+      ranged: { name: rName, badge: `✦ ${rTag}`, badgeCls: 'badge-break', dmg: 'R 绝技', desc: `施展${rName}，${rTag}扭转战局。` },
+      ult: { name: eName, badge: `✦ ${eTag}`, badgeCls: 'badge-stun', dmg: '终极奥义', desc: `气满爆发「${eName}」，${eTag}重创对手。` },
+      esc: { name: escName, badge: '🛡️ 霸体解控', badgeCls: 'badge-break', dmg: '—', desc: '强解受击硬直，腾空后撤位移，落地前无敌。' }
+    };
+    HERO_MOVE_SEQS[id] = {
+      light: [
+        { p: 'idle', d: 0.1, reset: true },
+        { p: s1, d: 0.08, lab: lName }, { p: a1, d: 0.13, dx: 12, hit: 1 },
+        { p: s2, d: 0.08 }, { p: a2, d: 0.13, dx: 14, hit: 1 },
+        { p: s1, d: 0.08 }, { p: a2, d: 0.22, dx: 18, hit: 2, launch: true, badge: '末段击飞' },
+        { p: 'idle', d: 0.32, reset: true }
+      ],
+      charge: [
+        { p: 'idle', d: 0.1, reset: true },
+        { p: 'charge', d: 0.42, lab: cName },
+        { p: a2, d: 0.3, dx: 34, hit: 3, launch: true, badge: '💥 破防打倒' },
+        { p: 'idle', d: 0.32, reset: true }
+      ],
+      air: [
+        { p: 'idle', d: 0.1, reset: true },
+        { p: 'jump', d: 0.16, dy: -46, lab: aName },
+        { p: a1, d: 0.16, dy: -42, hit: 1 },
+        { p: a2, d: 0.24, dy: 0, hit: 2, launch: true },
+        { p: 'idle', d: 0.32, reset: true }
+      ],
+      skill: [
+        { p: 'idle', d: 0.1, reset: true },
+        { p: s1, d: 0.14, lab: `Q · ${qName}` },
+        { p: a1, d: 0.34, dx: qType === 'dash' ? 48 : 18, hit: 2, fx: qFx, launch: qType === 'mid', badge: qTag },
+        { p: 'idle', d: 0.32, reset: true }
+      ],
+      ranged: [
+        { p: 'idle', d: 0.1, reset: true },
+        { p: s2, d: 0.14, lab: `R · ${rName}` },
+        { p: a2, d: 0.36, dx: rType === 'dash' ? 44 : 14, hit: 2, fx: rFx, launch: true, badge: rTag },
+        { p: 'idle', d: 0.32, reset: true }
+      ],
+      ult: [
+        { p: 'idle', d: 0.1, reset: true },
+        { p: s1, d: 0.2, lab: `E · ${eName}` },
+        { p: a1, d: 0.16, dx: 42, hit: 1, fx: eFx },
+        { p: a2, d: 0.14, hit: 1 },
+        { p: a1, d: 0.14, hit: 1 },
+        { p: a2, d: 0.32, hit: 3, launch: true, fx: eFx, badge: eTag },
+        { p: 'victory', d: 0.45, reset: true }
+      ],
+      esc: [
+        { p: 'idle', d: 0.1, reset: true },
+        { p: 'jump', d: 0.14, lab: `右键 · ${escName}` },
+        { p: 'bdash', d: 0.3, dx: -36, badge: escName },
+        { p: 'idle', d: 0.32, reset: true }
+      ]
+    };
+    HERO_ULT_REPLAYS[id] = [
+      { p: s1, d: 0.36, lab: `${eName} · 蓄势` },
+      { p: 'dash', d: 0.22, dx: 54, fx: eFx, badge: '疾驰突进' },
+      { p: a1, d: 0.12, hit: 1 }, { p: a2, d: 0.12, hit: 1 },
+      { p: a1, d: 0.12, hit: 1 }, { p: a2, d: 0.12, hit: 1 },
+      { p: s2, d: 0.16, dy: -32, lab: `${eTag} · 终结` },
+      { p: a2, d: 0.32, dy: 0, hit: 3, launch: true, fx: eFx, badge: eTag },
+      { p: 'victory', d: 0.42, reset: true, lab: `${eName} · 收势` }
+    ];
+    HERO_FULL_DEMO[id] = [
+      { p: 'idle', d: 0.18, reset: true },
+      { p: s1, d: 0.08, lab: lName }, { p: a1, d: 0.12, dx: 12, hit: 1 },
+      { p: s2, d: 0.08 }, { p: a2, d: 0.2, dx: 16, hit: 2, launch: true },
+      { p: 'idle', d: 0.22, reset: true },
+      { p: s1, d: 0.14, lab: `Q · ${qName}` }, { p: a1, d: 0.32, dx: qType === 'dash' ? 44 : 16, hit: 2, fx: qFx, badge: qTag },
+      { p: 'idle', d: 0.22, reset: true },
+      { p: s2, d: 0.14, lab: `R · ${rName}` }, { p: a2, d: 0.34, dx: rType === 'dash' ? 40 : 14, hit: 2, fx: rFx, launch: true, badge: rTag },
+      { p: 'idle', d: 0.22, reset: true },
+      { p: s1, d: 0.2, lab: `E · ${eName}` }, { p: a1, d: 0.14, dx: 42, hit: 1, fx: eFx },
+      { p: a2, d: 0.12, hit: 1 }, { p: a2, d: 0.32, hit: 3, launch: true, fx: eFx, badge: eTag },
+      { p: 'victory', d: 0.5, reset: true }
+    ];
+    SKILL_FUN[id] = {
+      passive: fun1,
+      light: `${lName}，每一式都带着独门兵器的劲道。`,
+      charge: `蓄满${cName}，格挡在它面前像纸一样薄。`,
+      air: `凌空使出${aName}，制空追击一气呵成。`,
+      skill: fun2,
+      ranged: `${rName}一出，${rTag}让对手措手不及。`,
+      ult: `气满施展「${eName}」，${eTag}定乾坤。`,
+      esc: `${escName}顺势抽身，化险为夷。`
+    };
+  }
+})();
 
 let cxPrev = null;   // 正在预览的皮肤（null = 用自己装备的）
