@@ -61,7 +61,7 @@
 
 ## 游戏截图
 
-以下截图展示了中文界面的战斗、点将台和武库。可以在[截图说明](docs/media/screenshots/readme.md)里查看完整截图集。
+以下截图展示了中文界面的战斗、点将台、武库和 16v16 团战。可以在[截图说明](docs/media/screenshots/readme.md)里查看完整截图集。
 
 <p align="center">
   <a href="docs/media/screenshots/zh/01-home.jpg"><img src="docs/media/screenshots/zh/01-home.jpg" width="48%" alt="刃影中文主界面" /></a>
@@ -72,17 +72,24 @@
 
 <p align="center">
   <a href="docs/media/screenshots/zh/04-thousand-shadows.jpg"><img src="docs/media/screenshots/zh/04-thousand-shadows.jpg" width="48%" alt="绯影的千影大招命中" /></a>
-  <a href="docs/media/screenshots/zh/06-2v2.jpg"><img src="docs/media/screenshots/zh/06-2v2.jpg" width="48%" alt="血月下的二对二战斗" /></a>
+  <a href="docs/media/screenshots/zh/06-2v2.jpg"><img src="docs/media/screenshots/zh/06-2v2.jpg" width="48%" alt="天雷之下的二对二战斗" /></a>
 </p>
 
 <p align="center"><strong>千影大招</strong> · <strong>二对二战斗</strong></p>
 
 <p align="center">
-  <a href="docs/media/screenshots/zh/07-hero-draft.jpg"><img src="docs/media/screenshots/zh/07-hero-draft.jpg" width="48%" alt="展示青锋招式详情的点将台" /></a>
-  <a href="docs/media/screenshots/zh/11-skin-preview.jpg"><img src="docs/media/screenshots/zh/11-skin-preview.jpg" width="48%" alt="带招式动画的皮肤预览" /></a>
+  <a href="docs/media/screenshots/zh/07-hero-draft.jpg"><img src="docs/media/screenshots/zh/07-hero-draft.jpg" width="48%" alt="带招式详情的点将台" /></a>
+  <a href="docs/media/screenshots/zh/10-skin-preview.jpg"><img src="docs/media/screenshots/zh/10-skin-preview.jpg" width="48%" alt="带招式动画的皮肤预览" /></a>
 </p>
 
 <p align="center"><strong>点将台</strong> · <strong>皮肤与招式预览</strong></p>
+
+<p align="center">
+  <a href="docs/media/screenshots/zh/11-16v16-command.jpg"><img src="docs/media/screenshots/zh/11-16v16-command.jpg" width="48%" alt="每队有统帅的 16v16 团战" /></a>
+  <a href="docs/media/screenshots/zh/12-quad-clash.jpg"><img src="docs/media/screenshots/zh/12-quad-clash.jpg" width="48%" alt="多层擂台上的四队混战" /></a>
+</p>
+
+<p align="center"><strong>16v16 与将令</strong> · <strong>四象争锋</strong></p>
 
 ---
 

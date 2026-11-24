@@ -21,6 +21,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Refreshed README And Screenshot Set (`docs/media/screenshots/`, `readme.md`, `readme.zh-cn.md`)**: retook all English and Chinese screenshots from build 34e1a81 (v1.0.12) at 1920×1080, added the 16v16 commander view, the four-team clash, Training mode and the loading screen, replaced `zh/10-open-all.jpg` and `zh/11-skin-preview.jpg` with `zh/10-skin-preview.jpg`, and updated the screenshot table and known-gaps list. No Worker change.
+
 - **New Boot Screen, Shared Loading Veil & AI Watch Tab in Training (`src/page.html`, `src/game/05-ui/21-buttons-04-loading.js`, `src/game/05-ui/21-buttons-02-training.js`, `tools/build.py`)**: The page now draws an ink-style boot screen right away, with a progress bar that follows the real script loading steps and fades out after the first frame. A shared loading veil (`RYLoad`) covers the Qingfeng Run frame while it loads. All AI vs AI entry buttons (duel, 3v3, 2v2, chaos, cuju, maps, mayhem) moved from their mode panels into one new AI Watch page under Training. No Worker redeploy needed.
 
 - **Separated GitHub Pages Build And Deploy Workflow (`.github/workflows/pages.yml`)**: split `pages.yml` into dedicated `build` and `deploy` jobs with least-privilege permissions, added `.github/actions/setup-ci/**` and `renying-offline.html` path triggers, staged `renying-offline.html` alongside `index.html`, `renying.html`, and `assets/` into `_site/`, and parameterized artifact names by `GITHUB_RUN_ATTEMPT`.
