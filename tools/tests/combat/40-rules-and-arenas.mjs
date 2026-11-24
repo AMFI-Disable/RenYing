@@ -461,8 +461,8 @@ export default [
       if (!drawHUD2v2.toString().includes('drawChaosHUD') || !drawHUD2v2.toString().includes('qText') || !drawHUD2v2.toString().includes('rText') || !drawHUD.toString().includes('drawChaosHUD')) {
         return { pass: false, error: '2v2 HUD omitted the chaos overlay or local Q/R cooldown display' };
       }
-      const variant = replayModeTag({ mode: '2v2', sub: 'pp_cc', st0: { M: { teamMutator: 'chaos' } } });
-      if (!variant.includes('双人共斗') || !variant.includes('天机乱斗')) return { pass: false, error: 'replay list does not label the 2v2 variant and mutator' };
+      const variant = replayModeTag({ mode: '2v2', sub: 'pp_cc', st0: { M: { teamMutator: 'mayhem' } } });
+      if (!variant.includes('双人共斗') || !variant.includes('通天神决')) return { pass: false, error: 'replay list does not label the 2v2 variant and mutator' };
       const parts = [
         { mode: 'tower', towerFloor: 1, frames: 120, st0: { start: 1 }, trStart: 6, tr: [[1]], stats: [{ damage: 30 }, { damage: 10 }] },
         { mode: 'tower', towerFloor: 2, frames: 240, st0: { start: 2 }, trStart: 12, tr: [[2]], stats: [{ damage: 40 }, { damage: 15 }] }

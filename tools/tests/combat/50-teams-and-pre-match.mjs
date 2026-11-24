@@ -211,13 +211,15 @@ export default [
     name: 'Team mutators apply to both team formats and reset between matches',
     fn: `(() => {
       teamMutator = 'mayhem'; startTag3Match([0,2,4], [1,3,5], 'normal');
-      if (!mayhemOn() || A.maxHp < 5000 || B.maxHp < 5000) return { pass: false, error: 'tag mayhem did not initialize' };
-      teamMutator = 'chaos'; start2v2LocalCoop(0,2,1,3,'normal', true);
-      if (!chaosOn() || mayhemOn() || !M.chaos) return { pass: false, error: '2v2 chaos did not initialize' };
+      if (!mayhemOn() || chaosOn() || A.maxHp < 5000 || B.maxHp < 5000) return { pass: false, error: 'tag mayhem did not initialize' };
+      teamMutator = 'normal'; start2v2LocalCoop(0,2,1,3,'normal', true);
+      if (!chaosOn() || mayhemOn() || !M.chaos) return { pass: false, error: '2v2 unified standard (常规标准) did not initialize rolling omens' };
       teamMutator = 'mayhem'; start2v2LocalCoop(0,2,1,3,'normal', true);
       if (![A,B,C,D].every(f => f.maxHp > 5000)) return { pass: false, error: 'mayhem did not initialize all four fighters' };
       teamMutator = 'normal'; startTag3Match([0,2,4], [1,3,5], 'normal');
-      if (mayhemOn() || chaosOn()) return { pass: false, error: 'mutator leaked' };
+      if (mayhemOn() || !chaosOn()) return { pass: false, error: 'unified standard mutator state mismatch in tag3' };
+      startMatch('train', 'stand', [0, 1]);
+      if (mayhemOn() || chaosOn()) return { pass: false, error: 'mutator leaked into train mode' };
       toMenu(); return { pass: true, error: null };
     })()`
   },

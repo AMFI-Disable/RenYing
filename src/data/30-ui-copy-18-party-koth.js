@@ -44,7 +44,6 @@ Object.assign(UI_COPY_EN, {
   "玩法说明": "Mode Guide",
   "关闭说明": "Close Guide",
   "对战电脑 · 玩法说明": "vs AI · Mode Guide",
-  "标准三局两胜（BO3）1v1 对决。先在上方选好电脑境界与战场异变，点击「进入选人」或「即刻开战」即可开打；也可观战 AI 对决或开启新手教学。": "Best-of-3 1v1 duel. Pick AI level and battlefield mutators above, then click Draft or Quick Start—or watch AI vs AI / open the Tutorial.",
   "3v3 车轮战 · 玩法说明": "3v3 Relay · Mode Guide",
   "双方各选三名侠客并排定先锋、中坚、大将顺序。每局胜者保留残血小幅调息迎战下一位对手，先把对方三将全数击破的一方获胜。": "Each side drafts 3 heroes in Vanguard / Anchor order. Round winners carry remaining HP into the next opponent until one squad falls.",
   "2v2 组队 · 玩法说明": "2v2 Team · Mode Guide",

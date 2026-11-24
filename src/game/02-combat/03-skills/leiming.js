@@ -8,8 +8,8 @@ Object.assign(SKILLS, {
         if (strike(f, foe, { box: [-20, -110, 75, -10], dmg: 40, kb: [80, 0], stun: 0.38, hs: 0.08 })) {
           f.skill2CD = 0;
           if (typeof lightningArc === 'function') lightningArc(f.x, f.y - 60, foe.x, foe.y - 60, '255,245,150', 3.4, 0.24);
-          // 跨层链式电弧（大团战自动跳电至周围 2 名敌人）
-          if (isMulti() && !isClient()) {
+          // 跨层链式电弧（全模式一致：自动跳电至周围最多 2 名敌人）
+          if (!isClient()) {
             const chainList = findTargetsInRadius(f, foe.x, foe.y - 55, 320, 240, { exclude: [foe.idx] }).slice(0, 2);
             for (const cf of chainList) {
               if (typeof lightningArc === 'function') lightningArc(foe.x, foe.y - 58, cf.x, cf.y - 58, '255,240,145', 2.8, 0.24);

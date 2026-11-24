@@ -225,7 +225,6 @@ Object.assign(UI_COPY_EN, {
   "对阵编制": "Team Setup",
   "点将": "Draft",
   "双方各禁 1 人 + 蛇形选 2 人": "each side bans 1, then snake-picks 2",
-  "开始选角 (BP)": "Start Draft (BP)",
   "开战": "Fight",
   "随机阵容": "Random Lineup",
   "观战 4 天道 AI 对决": "Watch 4 Transcendent AIs Fight",

@@ -39,9 +39,5 @@ Object.assign(UI_COPY_EN, {
   "双人共斗 (双人破阵 vs AI)": "Duo Co-op (2 players vs AI)",
   "2v2 双人共斗同袍已就位！": "2v2 Duo Co-op: your teammate is ready!",
   "2v2 对手已找到！": "2v2 opponents found!",
-  "2v2 双人共斗 · 正在全服寻找同袍队友与天道对手": "2v2 Duo Co-op · Looking for a teammate online",
-  "2v2 组队切磋 · 正在全服匹配队友与对手": "2v2 Team Match · Looking for a teammate and opponents",
-  "2v2 双人共斗：正在全服寻找队友与对手…": "2v2 Duo Co-op: looking for a teammate…",
-  "2v2 组队切磋：正在全服匹配一位对手（双方各带一名电脑队友）…": "2v2 Team Match: looking for one opponent (each side gets an AI teammate)…",
 
 });

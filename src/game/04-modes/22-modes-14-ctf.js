@@ -49,6 +49,7 @@ function ctfMatch() {
           f.face = team === 0 ? 1 : -1;
           f.invul = 1.0;
           if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
+          if (mayhemOn()) applyMayhemStats(f);
           if (f.idx === localIdx()) { f.beaconT = 1.2; camFocusPingT = 0.8; }
         }
       }
@@ -105,7 +106,7 @@ function drawCtfField() {
   }
 }
 
-function startCtf(teamSize = 4, heroIdx = 0, level = 'normal', drafted = null) {
+function startCtf(teamSize = 4, heroIdx = 0, level = 'normal', drafted = null, mut = 'normal') {
   const sz = clamp(teamSize | 0, 2, 8);
   debugHitbox = false;
   refocusGame();
@@ -113,6 +114,7 @@ function startCtf(teamSize = 4, heroIdx = 0, level = 'normal', drafted = null) {
   M.mode = 'ctf';
   M.teamSize = sz;
   M.level = level || 'normal';
+  M.teamMutator = mut === 'mayhem' ? 'mayhem' : 'normal';
   M.wins = [0, 0]; M.round = 1; M.watchAi = false;
   const total = sz * 2;
   const hasDraft = Array.isArray(drafted) && Array.isArray(drafted[0]) && Array.isArray(drafted[1]);

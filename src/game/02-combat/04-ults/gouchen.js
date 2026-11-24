@@ -16,7 +16,7 @@ Object.assign(ULTS, {
           if (f.plat >= 0 && typeof mapPutOn === 'function') mapPutOn(foe, f.plat);
           else { foe.y = f.y; foe.plat = f.plat; }
           applyHit(f, foe, { dmg: 80, kb: [420, -820], stun: 0.6, hs: 0.2, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 60]);
-          if (isMulti()) strikeAoE(f, foe.x, foe.y - 55, 190, 130, { dmg: 48, kb: [320, -560], stun: 0.45, hs: 0.1, launch: true, ult: true, noScale: true }, [foe.idx]);
+          if (!isClient() && typeof strikeAoE === 'function') strikeAoE(f, foe.x, foe.y - 55, 190, 130, { dmg: 48, kb: [320, -560], stun: 0.45, hs: 0.1, launch: true, ult: true, noScale: true }, [foe.idx]);
           foe.hookedT = 1.2; f.skillCD = 0;
           shake = Math.max(shake, 16); SFX.heavy();
           if (!RESIM && typeof debrisBurst === 'function') debrisBurst(foe.x, foe.y, 12, '145,125,95');

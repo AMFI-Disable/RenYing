@@ -139,7 +139,7 @@ function drawHUD2v2() {
     else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 四人对决 (全员切磋)';
   }
   if (ctfOn()) bTitle = '夺旗争锋';
-  if (chaosOn()) bTitle += ' · 天机乱斗';
+  if (mayhemOn()) bTitle += ' · 通天神决';
   if (chaosOn()) drawChaosHUD(cx, H - 48, true);
   ctx.fillText(window.I18N ? I18N.t(bTitle) : bTitle, cx, H - 10);
   ctx.restore();
@@ -357,6 +357,7 @@ function drawHUDLargeTeam() {
     ctx.fillStyle = '#e9c46a';
     ctx.fillText(`${cvT('指令')}: ${cvT(ordMap[M.squadOrders?.[localTeam()] || 'auto'])} [1/2/3]`, px + 8, py + 61);
   }
+  if (chaosOn()) drawChaosHUD(cx, H - 22, true);
   ctx.restore();
 }
 function drawTabScoreboard() {

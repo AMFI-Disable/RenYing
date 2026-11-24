@@ -174,7 +174,7 @@ function onSys(m) {
     netMapVoteRecv(m.v);
   } else if (m.sys === 'room_rule') {
     if (NET.role !== 'client') return;
-    teamMutator = ['chaos', 'mayhem'].includes(m.mut) ? m.mut : 'normal';
+    teamMutator = m.mut === 'mayhem' ? 'mayhem' : 'normal';
     setRoomModeUI(m.rule);
     toast(`擂主已设定切磋规则：${ROOM_RULE_NAMES[m.rule] || ROOM_RULE_NAMES.normal}`);
   } else if (m.sys === 'rematch') {

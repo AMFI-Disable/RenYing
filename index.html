@@ -3031,7 +3031,7 @@ body.offline #mMatch { display: none !important; }
 .tag-portal .tp-head .mm-kicker { grid-column: 1 / -1; justify-self: start; margin-bottom: 4px; }
 .tag-portal .tp-title { margin: 0; font: 400 clamp(30px, 3.4vw, 44px) var(--title); letter-spacing: .08em; color: var(--ink); }
 .tag-portal .tp-desc { grid-column: 1 / -1; margin: 6px 0 0; font-size: 13px; color: var(--dim); line-height: 1.5; }
-.tag-portal .tp-cards { grid-template-columns: 1fr 1.1fr 1.2fr; }
+.tag-portal .tp-cards { grid-template-columns: 1fr 1.15fr; }
 .tag-portal .mm-card { min-height: 0; padding: 16px 18px 18px; }
 .tag-portal .mm-card .mm-title { font-size: clamp(26px, 2.6vw, 34px); }
 .mm-friend .mm-card-bg { background: repeating-linear-gradient(115deg, rgba(236,232,225,.035) 0 2px, transparent 2px 14px), radial-gradient(ellipse at 100% 0%, rgba(70,211,234,.22), transparent 60%); }
@@ -3968,6 +3968,45 @@ margin-bottom: 8px;
 font-size: 12px;
 padding: 4px 10px;
 }
+.xiwu-preset-strip {
+display: flex;
+flex-wrap: wrap;
+align-items: center;
+justify-content: space-between;
+gap: 8px 14px;
+padding: 10px 14px;
+margin-bottom: 10px;
+border-radius: 10px;
+background: rgba(255, 255, 255, 0.035);
+border: 1px solid rgba(233, 196, 106, 0.22);
+}
+.xiwu-preset-meta {
+display: flex;
+align-items: center;
+gap: 8px;
+font-size: 13px;
+color: var(--ink);
+}
+.xiwu-preset-lbl {
+font-size: 11.5px;
+font-weight: 700;
+padding: 2px 8px;
+border-radius: 99px;
+background: rgba(233, 196, 106, 0.16);
+color: var(--gold);
+white-space: nowrap;
+}
+.mutator-hint {
+font-size: 12px;
+color: var(--dim);
+margin-left: 6px;
+}
+#single .single-sec-pane {
+padding: 16px 18px;
+border-radius: 12px;
+background: rgba(14, 17, 32, 0.56);
+border: 1px solid rgba(239, 232, 216, 0.12);
+}
 </style>
 </head>
 <body>
@@ -4087,18 +4126,18 @@ padding: 4px 10px;
         <span class="hc-txt"><b id="homeReplayTitle">查看战绩与回放</b><small id="homeReplaySub">最近 10 场保存在本机</small></span>
       </button>
       <details class="home-card home-news">
-        <summary><span class="hc-kicker">版本动态</span><span class="hn-line">刃影武库 · 匹配对战 · 排位赛 · 技能重做</span></summary>
+        <summary><span class="hc-kicker">版本动态</span><span class="hn-line">刃影武库 · 排位赛 · 好友约战 · 技能升级</span></summary>
         <ul>
           <li><b>刃影武库</b>武器箱、玩家市场、熔铸契</li>
-          <li><b>匹配对战</b>全服随机对手，开局即打</li>
+          <li><b>联机对战</b>排位天梯与好友约战，毫秒回滚</li>
           <li><b>排位赛</b>D 到 S 五段，定级 3 场</li>
-          <li><b>流云 · 墨羽</b>技能重做</li>
+          <li><b>常规标准</b>融合动态天机异变，全模式统一技能</li>
         </ul>
       </details>
     </div>
-    <!-- 首页两个入口：大的「匹配对战」直接去联机，下面小一点的「习武」进对战电脑和其他模式；换侠客在正中侠客脚下 -->
+    <!-- 首页两个入口：大的「联机对战」直接去联机，下面小一点的「习武」进对战电脑和其他模式；换侠客在正中侠客脚下 -->
     <div class="home-entries" id="homeEntries">
-      <button class="mcard right" id="mMatch" data-go="netp" data-kb-default><span class="mk">匹配对战</span><span class="ms">3v3 车轮战 · 全服随机对手</span></button>
+      <button class="mcard right" id="mMatch" data-go="netp" data-kb-default><span class="mk">联机对战</span><span class="ms">3v3 车轮战 · 排位与好友约战</span></button>
       <button class="mcard left" id="mPlay" data-go="single"><span class="mk">习武</span><span class="ms">人机切磋 · 8v8 团战 · 历练闯关</span></button>
     </div>
     <div class="home-hub" id="homeHub">
@@ -4166,23 +4205,9 @@ padding: 4px 10px;
           <!-- 大型团战与新玩法分区 -->
           <div class="xiwu-cat-group" data-cat-group="large" style="display:none">
             <div class="xiwu-cards-row">
-              <button data-tab="melee" type="button" id="cardMelee"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">群雄会战</b><span class="pt-d">3v3 / 5v5 / 8v8 同屏大混战</span></button>
-              <button data-tab="ctf" type="button" id="cardCtf"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">夺旗争锋</b><span class="pt-d">2v2–8v8 护旗夺分战</span></button>
-              <button data-tab="gauntlet" type="button" id="cardGauntlet"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">无尽试炼</b><span class="pt-d">逐波递增车轮生存战</span></button>
-            </div>
-            <div class="xiwu-large-bar" id="xiwuLargePanel">
-              <span class="xl-lbl">团战规模</span>
-              <div class="seg" id="largeSizeSeg">
-                <button type="button" data-lsize="2">2v2</button>
-                <button type="button" data-lsize="3">3v3</button>
-                <button type="button" data-lsize="5" class="sel">5v5</button>
-                <button type="button" data-lsize="8">8v8</button>
-              </div>
-              <button type="button" class="go small" id="largeStartMelee">禁选 BP · 群雄会战</button>
-              <button type="button" class="go small alt" id="largeStartCtf">禁选 BP · 夺旗争锋</button>
-              <button type="button" class="ghost small" id="largeQuickMelee">快速会战</button>
-              <button type="button" class="ghost small" id="largeQuickCtf">快速夺旗</button>
-              <button type="button" class="ghost small" id="largeStartGauntlet">无尽试炼</button>
+              <button data-tab="melee" type="button" id="cardMelee"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">群雄会战</b><span class="pt-d">3v3 / 5v5 / 8v8 同屏大混战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="melee" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="ctf" type="button" id="cardCtf"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">夺旗争锋</b><span class="pt-d">2v2–8v8 护旗夺分战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="ctf" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="gauntlet" type="button" id="cardGauntlet"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">无尽试炼</b><span class="pt-d">逐波递增车轮生存战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="gauntlet" title="玩法说明" aria-label="玩法说明">i</span></button>
             </div>
           </div>
 
@@ -4247,15 +4272,18 @@ padding: 4px 10px;
         </div>
       </div>
 
-            <div class="xiwu-quick-card" id="xiwuQuickCard"><div><b>即刻开战</b><p id="xiwuQuickInfo"></p><div class="xiwu-presets"><label for="xiwuPresetSelect">常用方案</label><select id="xiwuPresetSelect"><option value="">读取或保存方案</option></select><button class="ghost small" id="xiwuPresetSave" type="button">保存当前</button><button class="ghost small" id="xiwuPresetDelete" type="button" disabled>删除方案</button></div></div><button class="go" id="xiwuQuickGo" type="button">即刻开战</button></div>
-            <!-- 战场异变印章 -->
+            <div class="xiwu-preset-strip" id="xiwuPresetBar">
+              <div class="xiwu-preset-meta"><span class="xiwu-preset-lbl">当前配置</span><span id="xiwuQuickInfo"></span></div>
+              <div class="xiwu-presets"><label for="xiwuPresetSelect">常用方案</label><select id="xiwuPresetSelect"><option value="">读取或保存方案</option></select><button class="ghost small" id="xiwuPresetSave" type="button">保存当前</button><button class="ghost small" id="xiwuPresetDelete" type="button" disabled>删除方案</button></div>
+            </div>
+            <!-- 战场规则变式：常规标准（融合动态天机异变） / 通天神决 -->
             <div class="xiwu-mutator-row">
-              <span class="mutator-label">战场异变：</span>
-              <div class="mutator-pills seal-group" id="mutatorPills" role="group" aria-label="战场异变">
+              <span class="mutator-label">战场规则：</span>
+              <div class="mutator-pills seal-group" id="mutatorPills" role="group" aria-label="战场规则">
                 <button type="button" class="mut-pill seal-stamp sel" data-mut="normal"><span class="stamp-border"><b>常规标准</b></span></button>
-                <button type="button" class="mut-pill seal-stamp" data-mut="chaos"><span class="stamp-border"><b>天机乱斗</b></span></button>
                 <button type="button" class="mut-pill seal-stamp" data-mut="mayhem"><span class="stamp-border"><b>通天神决</b></span></button>
               </div>
+              <span class="mutator-hint">常规标准已融合动态天机异变，全模式同步生效</span>
             </div>
 
 
@@ -4294,8 +4322,6 @@ padding: 4px 10px;
           <span class="sub-badge">接力对决 · 胜者守擂</span>
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">排定【先锋】、【中坚】与【大将】三名侠客出阵。单局击破敌将后保留残血调息，迎战敌方下一名侠客，直至一方三人全灭！</p>
-        <div class="single-action-row"><button class="go" id="tag3QuickBtn" type="button">快速车轮 · 自选三将</button></div>
-        <p class="sub">快速车轮免禁选，电脑自动选将，双方使用推荐密卷；完整点将保留禁选与密卷选择。</p>
 
         <div class="bp-rule-banner">
           <span class="bp-rule-seal">禁选</span>
@@ -4305,10 +4331,9 @@ padding: 4px 10px;
           </div>
         </div>
 
-
         <div class="single-action-row">
-          <button class="go" id="tag3StartBtn">擂台接力 · 开启车轮战</button>
-          <button class="go alt" id="tag3WatchBtn" type="button">3v3 AI群英观战</button>
+          <button class="go" id="tag3StartBtn">进入点将台 (BP) · 开启车轮战</button>
+          <button class="go alt" id="tag3WatchBtn" type="button">3v3 AI 群英观战</button>
         </div>
       </div>
 
@@ -4336,9 +4361,78 @@ padding: 4px 10px;
         </div>
 
         <div class="single-action-row" style="margin-top:14px">
-          <button class="go" id="xiwu2v2StartBtn" type="button">开始选角 (BP) · 开战</button>
-          <button class="go alt" id="xiwu2v2QuickBtn" type="button">即刻开战 · 随机阵容</button>
+          <button class="go" id="xiwu2v2StartBtn" type="button">进入点将台 (BP) · 开战</button>
           <button class="ghost" id="xiwu2v2WatchBtn" type="button">观战 4 天道 AI 对决</button>
+        </div>
+      </div>
+
+      <!-- 群雄会战 · 3v3 / 5v5 / 8v8 -->
+      <div data-sec="melee" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">群雄会战 · 大型同屏混战</h3>
+          <span class="sub-badge">3v3 / 5v5 / 8v8 · 多层立体战场</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">支持 3v3、5v5（三层演武楼阁）与 8v8（五层飞檐战场）同屏大混战！配备兵力积分、战损复活、战队指令与滚轮镜头缩放。</p>
+        <div class="sec-sub-label" style="text-align:left;margin-top:6px">团战规模</div>
+        <div class="seg m2-seg" id="meleeSizeSeg" style="margin-bottom:12px">
+          <button type="button" data-lsize="3">3v3 小队战</button>
+          <button type="button" data-lsize="5" class="sel">5v5 演武楼阁</button>
+          <button type="button" data-lsize="8">8v8 五层大战场</button>
+        </div>
+        <div class="bp-rule-banner">
+          <span class="bp-rule-seal">禁选</span>
+          <div class="bp-rule-txt">
+            <b>点将台规则 · 完整战略禁选（不自动补全阵容）</b>
+            <span>按所选规模进入点将台亲自禁选排兵布阵，打造专属大型团战阵容。</span>
+          </div>
+        </div>
+        <div class="single-action-row">
+          <button class="go" id="largeStartMelee" type="button">进入点将台 (BP) · 开启群雄会战</button>
+        </div>
+      </div>
+
+      <!-- 夺旗争锋 · 2v2–8v8 -->
+      <div data-sec="ctf" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">夺旗争锋 · 团队护旗战</h3>
+          <span class="sub-badge">2v2–8v8 · 先夺三旗胜</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">双方阵地各立战旗，深入敌阵夺取敌旗并护送回己方阵地即得 1 分，率先夺得 3 旗的一方获胜！</p>
+        <div class="sec-sub-label" style="text-align:left;margin-top:6px">团战规模</div>
+        <div class="seg m2-seg" id="ctfSizeSeg" style="margin-bottom:12px">
+          <button type="button" data-lsize="2">2v2 轻骑夺旗</button>
+          <button type="button" data-lsize="3">3v3 小队夺旗</button>
+          <button type="button" data-lsize="5" class="sel">5v5 楼阁夺旗</button>
+          <button type="button" data-lsize="8">8v8 全军夺旗</button>
+        </div>
+        <div class="bp-rule-banner">
+          <span class="bp-rule-seal">禁选</span>
+          <div class="bp-rule-txt">
+            <b>点将台规则 · 完整战略禁选（不自动补全阵容）</b>
+            <span>按所选规模进入点将台亲自搭配突进、控场与护旗阵容。</span>
+          </div>
+        </div>
+        <div class="single-action-row">
+          <button class="go" id="largeStartCtf" type="button">进入点将台 (BP) · 开启夺旗争锋</button>
+        </div>
+      </div>
+
+      <!-- 无尽试炼 · 逐波递增生存战 -->
+      <div data-sec="gauntlet" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">无尽试炼 · 车轮生存战</h3>
+          <span class="sub-badge">逐波递增 · 考验耐力</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">单骑迎战源源不断的江湖群雄，每击破一波恢复部分气血并迎战更高境界强敌，挑战个人极限连胜！</p>
+        <div class="bp-rule-banner">
+          <span class="bp-rule-seal pick-only">直选</span>
+          <div class="bp-rule-txt">
+            <b>点将台规则 · 免禁用自选本命侠客</b>
+            <span>进入点将台挑选最擅长的侠客单枪匹马迎战无尽车轮试炼。</span>
+          </div>
+        </div>
+        <div class="single-action-row">
+          <button class="go" id="largeStartGauntlet" type="button">进入点将台 · 开启无尽试炼</button>
         </div>
       </div>
 
@@ -4350,11 +4444,7 @@ padding: 4px 10px;
         </div>
         <p class="sub" style="margin:2px 0 8px;text-align:left">十三位侠客各有一卷斩妖除魔的专属故事！前四幕迎战刀鬼、弓妖、缚灵、咒师、夜枭并感悟共享秘卷，终幕决战三侠六技融魂魔首！</p>
         <div class="st-story-box" id="stStoryBox"></div>
-      </div>
-
-      <!-- 关卡选择 -->
-      <div data-sec="stage" style="display:none">
-        <div class="sec-sub-label">选择侠客剧情篇章与关卡（点击关卡即刻携同袍出征）</div>
+        <div class="sec-sub-label" style="margin-top:12px">选择侠客剧情篇章与关卡（点击关卡即刻携同袍出征）</div>
         <div class="seg sttabs" id="stTabs"></div>
         <div class="stgrid" id="stGrid"></div>
         <p class="netnote" id="stNote"></p>
@@ -4606,13 +4696,6 @@ padding: 4px 10px;
             <p class="tp-desc">两边各禁 1 名侠客，再轮流各选 3 人；输掉一回合就换下一位上场，三人都倒下的一方输。</p>
           </div>
           <div class="mm-cards tp-cards">
-            <div class="mm-card mm-quick" id="mmQuickCard">
-              <div class="mm-card-bg" aria-hidden="true"></div>
-              <span class="mm-title">快速匹配</span>
-              <span class="mm-en">QUICK MATCH</span>
-              <span class="mm-desc">全服随机对手 · 不影响段位</span>
-              <button class="mm-go" id="mmQuickBtn" type="button">开始匹配</button>
-            </div>
             <div class="mm-card mm-ranked" id="mmRankCard">
               <div class="mm-card-bg" aria-hidden="true"></div>
               <div class="mm-rank-row">
@@ -4661,7 +4744,6 @@ padding: 4px 10px;
                   <button class="ghost small" data-mode="pp_cc" type="button">2v2 · 两人打两电脑</button>
                   <button class="ghost small" data-mode="pp_pp" type="button">2v2 · 两人对两人</button>
                   <button class="ghost small" data-mode="raid" type="button">联机打魔首</button>
-                  <button class="ghost small" data-mode="chaos" type="button">天机乱斗</button>
                   <button class="ghost small" data-mode="mayhem" type="button">通天神决</button>
                   <button class="ghost small" data-mode="cuju" type="button">墨球蹴鞠</button>
                   <button class="ghost small" data-mode="koth" type="button">灵坛争锋</button>
@@ -4669,7 +4751,7 @@ padding: 4px 10px;
                   <button class="ghost small" data-mode="melee" type="button">群雄会战 · 8v8</button>
                   <button class="ghost small" data-mode="ctf" type="button">夺旗争锋 · 8v8</button>
                 </div>
-                <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。2v2 的全服匹配和同一台电脑对战在「开始演武」的 2v2 组队里。</p>
+                <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。常规标准已融合动态天机异变。</p>
               </details>
             </div>
           </div>
@@ -4678,16 +4760,6 @@ padding: 4px 10px;
           <span class="mm-spin" aria-hidden="true"></span>
           <div class="mm-search-txt"><b id="mmSearchTitle">正在寻找对手</b><span id="mmSearchSub">0:00</span></div>
           <button class="mm-cancel" id="mmCancelBtn" type="button">取消</button>
-        </div>
-        <!-- 排队 20 秒还没配到人：人少的时候别让人干等。快速匹配 10 秒后自动先打一局电脑；排位只给按钮。见 24-account-02-lobby.js 的 mmFallback -->
-        <div class="mm-fallback hidden" id="mmFallback" role="status">
-          <p class="mm-fb-txt" id="mmFbTxt">现在排队的人少。先和电脑打一局 3v3 车轮战吧，打完再回来匹配。</p>
-          <p class="mm-fb-count" id="mmFbCount"><span>自动开始倒计时</span> <b id="mmFbLeft">10</b></p>
-          <div class="mm-fb-btns">
-            <button class="mm-go" id="mmFbCpu" type="button">现在就打电脑</button>
-            <button class="mm-cancel" id="mmFbWait" type="button">继续等对手</button>
-            <button class="mm-cancel" id="mmFbRoom" type="button">建房叫同学</button>
-          </div>
         </div>
       </div>
 
@@ -4757,7 +4829,7 @@ padding: 4px 10px;
             </div>
           </div>
 
-          <div id="lobbyMutator" class="mutator-pills" role="group" aria-label="战场异变"><span>战场异变：</span><button type="button" data-mut="normal">常规标准</button><button type="button" data-mut="chaos">天机乱斗</button><button type="button" data-mut="mayhem">通天神决</button></div>
+          <div id="lobbyMutator" class="mutator-pills" role="group" aria-label="战场规则"><span>战场规则：</span><button type="button" data-mut="normal">常规标准</button><button type="button" data-mut="mayhem">通天神决</button></div>
           <!-- 山河异境：两边各投一票 -->
           <div class="lobby-map-vote hidden" id="lobbyMapVote">
             <div class="sec-sub-label">地图投票：双方各一票，按票数决定选到哪张图</div>
@@ -4994,7 +5066,7 @@ padding: 4px 10px;
           </div>
         </div>
       </div>
-      <div class="bpact"><button class="ghost" id="bpQuit">返回菜单</button><button class="ghost" id="bpUndo" type="button" hidden>撤销上一名</button><button class="ghost" id="bpSwap" type="button" hidden>交换先锋与中坚</button><button class="ghost" id="bpRotate" type="button" hidden>轮换三人顺序</button><button class="ghost" id="bpAutoFill" type="button" hidden>⚡ 一键智能补全阵容</button><button class="go" id="bpGo" disabled>确认</button></div>
+      <div class="bpact"><button class="ghost" id="bpQuit">返回菜单</button><button class="ghost" id="bpUndo" type="button" hidden>撤销上一名</button><button class="ghost" id="bpSwap" type="button" hidden>交换先锋与中坚</button><button class="ghost" id="bpRotate" type="button" hidden>轮换三人顺序</button><button class="go" id="bpGo" disabled>确认</button></div>
       <div class="bpchat hidden" id="bpChat">
         <div class="chatlog" id="chatLog"></div>
         <div class="chatside">
@@ -5310,16 +5382,14 @@ padding: 4px 10px;
           <button data-m="pp_pp" type="button">两人 vs 两人</button>
         </div>
         <p class="sub m2-desc" id="modal2v2Desc"></p>
-        <div class="sec-sub-label">战场异变</div><div class="mutator-pills" id="m2Mutator" role="group" aria-label="战场异变"><button type="button" data-mut="normal">常规标准</button><button type="button" data-mut="chaos">天机乱斗</button><button type="button" data-mut="mayhem">通天神决</button></div>
+        <div class="sec-sub-label">战场规则</div><div class="mutator-pills" id="m2Mutator" role="group" aria-label="战场规则"><button type="button" data-mut="normal">常规标准</button><button type="button" data-mut="mayhem">通天神决</button></div>
         <div id="m2LvWrap">
           <div class="sec-sub-label">电脑的境界</div>
           <!-- 弹窗开着时，模式大厅那一条电脑境界（#levels）会挪到这里，关了再放回去：全游戏只有一条 -->
         </div>
         <div class="sec-sub-label">在哪打</div>
         <div class="m2-ways" id="modal2v2Options">
-          <button class="m2-way" id="btn2v2Quick" type="button"><b>即刻开战</b><span>当前侠客与随机阵容</span></button>
           <button class="m2-way" id="btn2v2GoLocal" type="button" data-kb-default><b>同一台电脑</b><span id="modal2v2LocalDesc"></span></button>
-          <button class="m2-way tn-online" id="btn2v2GoMatch" type="button"><b>全服匹配</b><span id="modal2v2MatchDesc"></span></button>
           <button class="m2-way tn-online" id="btn2v2GoOnline" type="button"><b>好友房间</b><span>建房拿到房间号，发给朋友加入</span></button>
         </div>
         <div class="m2-foot"><button class="mm-link" id="btn2v2GoWatch" type="button">旁观四个天道电脑打 2v2</button></div>
@@ -9311,7 +9381,6 @@ Object.assign(UI_COPY_EN, {
 "全服 1 人在线": "1 warrior online globally",
 "全服在线侠士": "Warriors Online",
 "全服待命中": "Standby Globally",
-"全服随机对手，开局即打": "Global random matchmaking, instant duel",
 "全系神经策略 · 算无遗策": "Neural AI · Perfect Predictions",
 "关": "Stage",
 "关卡列表": "Stage List",
@@ -9447,7 +9516,6 @@ Object.assign(UI_COPY_EN, {
 "开启通天神决": "Start Overpowered Mayhem",
 "开天一锤": "Heavensplitter",
 "开始人机对战": "Start AI Battle",
-"开始匹配": "Find Match",
 "开始排位": "Start Ranked",
 "开扇": "Fan Flourish",
 "开箱": "Open Case",
@@ -9462,7 +9530,6 @@ Object.assign(UI_COPY_EN, {
 "战绩榜": "Win Leaderboard",
 "打通青锋行三章，可领刃影奖励": "Clear 3 chapters of QingFengXing for RenYing rewards",
 "技能": "Skill",
-"技能重做": "Skills reworked",
 "按 A / D 决定": "Manual by A / D",
 "按住": "Hold",
 "按我选的穿": "Keep selected",
@@ -9473,7 +9540,6 @@ Object.assign(UI_COPY_EN, {
 "摩羯·星冕": "Capricorn · Star Crown",
 "摩羯·星焰": "Capricorn · Starflame",
 "摩羯·星辉": "Capricorn · Starglow",
-"擂台接力 · 开启车轮战": "Start 3v3 Tag Battle",
 "操作说明": "Controls",
 "攻击": "Attack",
 "攻击距离": "Attack Reach",
@@ -9857,7 +9923,6 @@ Object.assign(UI_COPY_EN, {
 "联机同袍肉鸽": "Online Co-op Roguelike",
 "联机通天神决": "Online Celestial Trial",
 "联机": "Online",
-"标准对战": "Standard Match",
 "人机": "CPU Match",
 "本地双人": "Local Versus",
 "本地对战": "Local Match",
@@ -10108,7 +10173,6 @@ Object.assign(UI_COPY_EN, {
 "点开任务页领取": "Open the task page to claim",
 "今天的都做完了": "All done for today",
 "点开任务页看看": "Open the task page",
-"刃影武库 · 匹配对战 · 排位赛 · 技能重做": "Armory · Matchmaking · Ranked · Skill reworks",
 "开放世界 · 江湖共斗": "Open World · Shared Map",
 "一张大地图，谁都能随时加入，人数不设上限。先在点将台选好侠客，再进分线。": "One big map anyone can join at any time, with no player limit. Pick your hero first, then enter a line.",
 "直接进入": "Enter Now",
@@ -10183,10 +10247,6 @@ Object.assign(UI_COPY_EN, {
 "双人共斗 (双人破阵 vs AI)": "Duo Co-op (2 players vs AI)",
 "2v2 双人共斗同袍已就位！": "2v2 Duo Co-op: your teammate is ready!",
 "2v2 对手已找到！": "2v2 opponents found!",
-"2v2 双人共斗 · 正在全服寻找同袍队友与天道对手": "2v2 Duo Co-op · Looking for a teammate online",
-"2v2 组队切磋 · 正在全服匹配队友与对手": "2v2 Team Match · Looking for a teammate and opponents",
-"2v2 双人共斗：正在全服寻找队友与对手…": "2v2 Duo Co-op: looking for a teammate…",
-"2v2 组队切磋：正在全服匹配一位对手（双方各带一名电脑队友）…": "2v2 Team Match: looking for one opponent (each side gets an AI teammate)…",
 });
 Object.assign(UI_COPY_EN, {
 "你": "You",
@@ -10246,16 +10306,8 @@ Object.assign(UI_COPY_EN, {
 "天下无双": "Peerless",
 "匹配对战 · 正在寻找对手": "Quick Match · Searching for an opponent",
 "排位赛 · 正在寻找对手": "Competitive · Searching for an opponent",
-"匹配对战：正在全服寻找对手…": "Quick Match: searching for an opponent…",
 "排位中…": "In queue…",
 "排位中": "In queue",
-"现在排队的人少。先和电脑打一局 3v3 车轮战吧，打完再回来匹配。": "Not many players are queuing right now. Play a 3v3 relay against the AI first, then come back to queue.",
-"现在排队的人少。可以先和电脑练一局 3v3 车轮战，或者建房叫同学来打。": "Not many players are queuing right now. Warm up with a 3v3 relay against the AI, or open a room and invite friends.",
-"自动开始倒计时": "Auto start in",
-"现在就打电脑": "Play the AI now",
-"继续等对手": "Keep waiting",
-"建房叫同学": "Open a room for friends",
-"有人正在等对手 · 现在点就能开打": "Someone is waiting for an opponent · Join now",
 "点击「开启新试炼」后进入水墨点将台，自由检视十六位侠客武学并钦点本命试炼侠客登阁。": "Click \"Start New Trial\" to enter the hero draft, browse all 16 heroes and pick the one who will climb the tower.",
 "匹配中": "Searching",
 "排位赛需先登录（右上角）": "Sign in to play Competitive (top right)",
@@ -11141,7 +11193,6 @@ Object.assign(UI_COPY_EN, {
 Object.assign(UI_COPY_EN, {
 "3V3 RELAY": "3V3 RELAY",
 "两边各禁 1 名侠客，再轮流各选 3 人；输掉一回合就换下一位上场，三人都倒下的一方输。": "Each side bans 1 hero, then both take turns picking 3. Lose a round and your next hero steps in; the side whose three all fall loses.",
-"全服随机对手 · 不影响段位": "Random opponent from anywhere · Rank unaffected",
 "好友约战": "Friend Room",
 "FRIEND ROOM": "FRIEND ROOM",
 "段位与分数保存在账号里": "Your rank and points are saved to your account",
@@ -11154,8 +11205,6 @@ Object.assign(UI_COPY_EN, {
 "2v2 · 两人打两电脑": "2v2 · Two players vs two AI",
 "2v2 · 两人对两人": "2v2 · Two vs two players",
 "联机打魔首": "Online Boss Raid",
-"建房前选好；进了房间以后房主还能改，对面会跟着变。2v2 的全服匹配和同一台电脑对战在「开始演武」的 2v2 组队里。": "Pick before you create the room; inside the room the host can still change it and the other side follows. 2v2 matchmaking and same-computer 2v2 are under 2v2 Team in Play.",
-"快速车轮 · 自选三将": "Quick Relay · Choose Three",
 "撤销上一名": "Undo Last Pick",
 "交换先锋与中坚": "Swap First Two",
 "轮换三人顺序": "Rotate Team Order",
@@ -11165,12 +11214,9 @@ Object.assign(UI_COPY_EN, {
 "更换队伍再战": "Choose a New Team",
 "原阵容再战": "Rematch Same Teams",
 "（已击败）": " (defeated)",
-"快速车轮免禁选，电脑自动选将，双方使用推荐密卷；完整点将保留禁选与密卷选择。": "Quick Relay skips bans, chooses the opposing team automatically, and equips recommended scrolls for both sides. Full draft keeps bans and scroll selection.",
 });
 Object.assign(UI_COPY_EN, {
-"开始演武": "Play",
 "习武": "Practice",
-"3v3 车轮战 · 全服随机对手": "3v3 relay · Random opponents worldwide",
 "人机切磋 · 历练闯关 · 木人试剑": "PvC Combat · Story Trials · Training Dummy",
 "对战电脑 · 肉鸽 · 开放世界": "Vs AI · Roguelike · Open World",
 "演武": "Play",
@@ -11568,7 +11614,6 @@ Object.assign(UI_COPY_EN, {
 "玩法说明": "Mode Guide",
 "关闭说明": "Close Guide",
 "对战电脑 · 玩法说明": "vs AI · Mode Guide",
-"标准三局两胜（BO3）1v1 对决。先在上方选好电脑境界与战场异变，点击「进入选人」或「即刻开战」即可开打；也可观战 AI 对决或开启新手教学。": "Best-of-3 1v1 duel. Pick AI level and battlefield mutators above, then click Draft or Quick Start—or watch AI vs AI / open the Tutorial.",
 "3v3 车轮战 · 玩法说明": "3v3 Relay · Mode Guide",
 "双方各选三名侠客并排定先锋、中坚、大将顺序。每局胜者保留残血小幅调息迎战下一位对手，先把对方三将全数击破的一方获胜。": "Each side drafts 3 heroes in Vanguard / Anchor order. Round winners carry remaining HP into the next opponent until one squad falls.",
 "2v2 组队 · 玩法说明": "2v2 Team · Mode Guide",
@@ -11824,7 +11869,6 @@ Object.assign(UI_COPY_EN, {
 "对阵编制": "Team Setup",
 "点将": "Draft",
 "双方各禁 1 人 + 蛇形选 2 人": "each side bans 1, then snake-picks 2",
-"开始选角 (BP)": "Start Draft (BP)",
 "开战": "Fight",
 "随机阵容": "Random Lineup",
 "观战 4 天道 AI 对决": "Watch 4 Transcendent AIs Fight",
@@ -12049,7 +12093,6 @@ Object.assign(UI_COPY_EN, {
 "团队": "Team",
 "禁选 BP · 群雄会战": "Draft BP · Grand Melee",
 "禁选 BP · 夺旗争锋": "Draft BP · Capture the Banner",
-"⚡ 一键智能补全阵容": "⚡ Auto-Fill Remaining Roster",
 "玄盾": "Aegis",
 "聚气弹反（F）成功后，获得短时减伤护盾并回复架势值。": "A successful Qi Parry (F) grants a brief damage-reduction shield and restores Guard.",
 "聚气弹反（F）成功": "Land a Qi Parry (F)",
@@ -12191,8 +12234,6 @@ Object.assign(UI_COPY_EN, {
 "控场连携更强，单击略轻。": "Stronger crowd control in combos with slightly lighter individual hits.",
 "泼彩式": "Splashed Ink",
 "3v3–8v8 大型同屏混战：支持完整禁选（BP）排兵布阵与五层立体战场！": "3v3–8v8 battles with a full ban-and-pick draft and a five-level arena.",
-"快速会战": "Quick Melee",
-"快速夺旗": "Quick Capture the Banner",
 "2v2–8v8 团队夺旗争锋：支持战略禁选（BP），护送敌旗归阵先得三分胜！": "2v2–8v8 capture the banner with a full draft. Bring the enemy banner home three times to win.",
 "无尽车轮生存试炼：逐波迎战递增境界的江湖群雄！": "Survive waves of increasingly tough challengers in the endless gauntlet.",
 "根据侠客流派与徽记阶位，一键智能装配全部已拥有徽记": "Auto-equip owned badges based on hero archetype and badge tier",
@@ -12250,7 +12291,6 @@ Object.assign(UI_COPY_EN, {
 "上一页": "Previous",
 "下一页": "Next",
 "分页": "Pagination",
-"一键智能补全阵容": "Auto-Fill Draft",
 "侠客流派筛选": "Filter by hero archetype",
 "【断魂敕墨 · 阵法聚元】墨缚禁锢与追踪墨符持续压制积怒；奥义「绝墨魂卷」在目标所在层布阵，先定身削减架势，再引爆画阵。": "Build meter with bindings and homing ink talismans. Abyssal Ink Scroll roots foes and drains their guard before detonating the circle on the target’s level.",
 "【灵犀音环 · 余音聚气】音环远程穿透与余音弹反稳步蓄能；奥义「心音幻境」四圈音波粉碎敌方飞行物、削减架势并迟缓敌人，同时为附近队友充能。": "Build meter with piercing sound rings and counters. Realm of Echoes destroys projectiles, weakens and slows enemies, and gives nearby allies meter.",
@@ -16293,7 +16333,7 @@ slashLine(foe.x, foe.y - 60, 0.5, '255,95,115'); slashLine(foe.x, foe.y - 60, -0
 if (foe.invul <= 0 && foe.hp > 0) {
 applyHit(f, foe, { dmg: 45, kb: [0, 0], stun: 0, hs: 0.06, noScale: true, noStun: true, dir: foe.x >= f.x ? 1 : -1 }, [foe.x, foe.y - 60]);
 }
-if (isMulti()) {
+if (!isClient() && typeof strikeAoE === 'function') {
 strikeAoE(f, foe.x, foe.y - 55, 130, 110, { dmg: 26, kb: [0, 0], stun: 0, hs: 0.04, noScale: true, noStun: true }, [foe.idx]);
 }
 }
@@ -16427,7 +16467,7 @@ if (f.skPh === 1) {
 if (strike(f, foe, { box: [-20, -110, 75, -10], dmg: 40, kb: [80, 0], stun: 0.38, hs: 0.08 })) {
 f.skill2CD = 0;
 if (typeof lightningArc === 'function') lightningArc(f.x, f.y - 60, foe.x, foe.y - 60, '255,245,150', 3.4, 0.24);
-if (isMulti() && !isClient()) {
+if (!isClient()) {
 const chainList = findTargetsInRadius(f, foe.x, foe.y - 55, 320, 240, { exclude: [foe.idx] }).slice(0, 2);
 for (const cf of chainList) {
 if (typeof lightningArc === 'function') lightningArc(foe.x, foe.y - 58, cf.x, cf.y - 58, '255,240,145', 2.8, 0.24);
@@ -16822,7 +16862,7 @@ const execSpec = { dmg: execDmg, kb: [160, 0], stun: 0.85, hs: 0.14, big: true, 
 if (targetAlive && Math.abs(tg.x - f.x) <= 135 && Math.abs(tg.y - f.y) <= 130) {
 applyHit(f, tg, { ...execSpec, dir: Math.sign(tg.x - f.x) || f.face, srcX: f.x }, [tg.x, tg.y - 58]);
 }
-if (isMulti()) {
+if (!isClient() && typeof strikeAoE === 'function') {
 strikeAoE(f, f.x, f.y - 45, 130, 110, { dmg: Math.round(execDmg * 0.55), kb: [200, -240], stun: 0.4, hs: 0.08, big: true, skill: true }, targetAlive ? [tg.idx] : []);
 }
 if (!RESIM) {
@@ -17053,14 +17093,12 @@ if (f.skPh === 0 && f.t >= 0.14) {
 f.skPh = 1; f.t = 0; SFX.swing();
 const heal = Math.round(92 * HERO_HP_SCALE);
 f.hp = Math.min(f.maxHp, f.hp + heal);
-if (isMulti()) {
 const allyHeal = Math.round(heal * 0.6);
 for (const ally of allFighters()) {
-if (ally === f || ally.team !== f.team || ally.hp <= 0) continue;
+if (ally === f || ally.hidden || ally.team !== f.team || ally.hp <= 0) continue;
 if (Math.hypot(ally.x - f.x, ally.y - f.y) <= 280) {
 ally.hp = Math.min(ally.maxHp, ally.hp + allyHeal);
 if (!RESIM) { ring(ally.x, ally.y - 60, 92, '82,240,200', 0.36); addP({ type: 'text', text: `+${allyHeal}`, x: ally.x, y: ally.y - 118, life: 0.8, max: 0.8, rgb: '110,245,195' }); }
-}
 }
 }
 if (!RESIM) {
@@ -17441,14 +17479,12 @@ if (f.skPh === 0 && f.t >= 0.13) {
 f.skPh = 1; f.t = 0; SFX.swing();
 const heal = Math.round(86 * HERO_HP_SCALE);
 f.hp = Math.min(f.maxHp, f.hp + heal);
-if (isMulti()) {
 const allyHeal = Math.round(heal * 0.55);
 for (const ally of allFighters()) {
-if (ally === f || ally.team !== f.team || ally.hp <= 0) continue;
+if (ally === f || ally.hidden || ally.team !== f.team || ally.hp <= 0) continue;
 if (Math.hypot(ally.x - f.x, ally.y - f.y) <= 280) {
 ally.hp = Math.min(ally.maxHp, ally.hp + allyHeal);
 if (!RESIM) { ring(ally.x, ally.y - 60, 88, '168,230,255', 0.35); addP({ type: 'text', text: `+${allyHeal}`, x: ally.x, y: ally.y - 118, life: 0.8, max: 0.8, rgb: '168,230,255' }); }
-}
 }
 }
 if (!RESIM) {
@@ -17740,8 +17776,8 @@ if (foe.state === 'held') toNeutral(foe);
 foe.squashT = 1.0;
 addP({ type: 'text', text: '天地磁合 · 夹成肉饼', x: S.x, y: baseY - 200, life: 1.1, max: 1.1, rgb: '255,220,200' });
 }
-if (isMulti() && !isClient() && typeof strikeAoE === 'function') {
-strikeAoE(f, S.x, baseY - 60, 175, 130, { dmg: 55, kb: [260, -340], stun: 0.45, hs: 0.06, launch: true, unblockable: true, ult: true, noScale: true }, caught ? foe : null);
+if (!isClient() && typeof strikeAoE === 'function') {
+strikeAoE(f, S.x, baseY - 60, 175, 130, { dmg: 55, kb: [260, -340], stun: 0.45, hs: 0.06, launch: true, unblockable: true, ult: true, noScale: true }, caught ? [foe.idx] : []);
 }
 }
 }
@@ -17831,7 +17867,7 @@ foe.x = clamp(f.x + f.face * 70, WALL, STAGE_W - WALL);
 if (f.plat >= 0 && typeof mapPutOn === 'function') mapPutOn(foe, f.plat);
 else { foe.y = f.y; foe.plat = f.plat; }
 applyHit(f, foe, { dmg: 80, kb: [420, -820], stun: 0.6, hs: 0.2, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 60]);
-if (isMulti()) strikeAoE(f, foe.x, foe.y - 55, 190, 130, { dmg: 48, kb: [320, -560], stun: 0.45, hs: 0.1, launch: true, ult: true, noScale: true }, [foe.idx]);
+if (!isClient() && typeof strikeAoE === 'function') strikeAoE(f, foe.x, foe.y - 55, 190, 130, { dmg: 48, kb: [320, -560], stun: 0.45, hs: 0.1, launch: true, ult: true, noScale: true }, [foe.idx]);
 foe.hookedT = 1.2; f.skillCD = 0;
 shake = Math.max(shake, 16); SFX.heavy();
 if (!RESIM && typeof debrisBurst === 'function') debrisBurst(foe.x, foe.y, 12, '145,125,95');
@@ -19175,7 +19211,7 @@ onNetOpen();
 netMapVoteRecv(m.v);
 } else if (m.sys === 'room_rule') {
 if (NET.role !== 'client') return;
-teamMutator = ['chaos', 'mayhem'].includes(m.mut) ? m.mut : 'normal';
+teamMutator = m.mut === 'mayhem' ? 'mayhem' : 'normal';
 setRoomModeUI(m.rule);
 toast(`擂主已设定切磋规则：${ROOM_RULE_NAMES[m.rule] || ROOM_RULE_NAMES.normal}`);
 } else if (m.sys === 'rematch') {
@@ -33684,7 +33720,7 @@ spawnProj(foeSetter, { kind: 'bolt', x: hx, y: -360, vx: 0, w: 68, h: 720, life:
 }
 }
 }
-const mayhemOn = () => M.mode === 'mayhem' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'mayhem') || ((M.mode === 'tag3' || M.mode === 'melee' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
+const mayhemOn = () => M.mode === 'mayhem' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'mayhem') || ((['cpu', 'pvp', 'maps', 'tag3', 'melee', 'ctf', '2v2', 'watch2v2', 'replay', 'net'].includes(M.mode)) && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
 const mapsOn = () => {
 if (M.mode === 'replay' && REPLAY.on) {
 const m = REPLAY.m || {};
@@ -34105,6 +34141,7 @@ setChars(chars[0], chars[1]);
 if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
 const keepMap = M.map;
 M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false; M.map = keepMap || null; M.teamSize = 0;
+M.teamMutator = (['cpu', 'pvp', 'maps'].includes(mode) && typeof teamMutator !== 'undefined' && teamMutator === 'mayhem') ? 'mayhem' : 'normal';
 M.watchAi = !!isWatch;
 A.meter = B.meter = 0;
 A.ctrl = (mode === 'demo' || isWatch) ? new AICtrl(level || 'god') : human[0];
@@ -38231,17 +38268,17 @@ return `${date} ${pad(d.getHours())}:${pad(d.getMinutes())} · ${replayModeTag(m
 }
 function replayModeTag(m) {
 const mutator = m.st0 && m.st0.M && m.st0.M.teamMutator;
-const mutatorTag = mutator === 'chaos' ? ` · ${cvT('天机乱斗')}` : mutator === 'mayhem' ? ` · ${cvT('通天神决')}` : '';
+const mutatorTag = mutator === 'mayhem' ? ` · ${cvT('通天神决')}` : '';
 if (m.raid) return `${cvT(m.kind === 'net' ? '联机同袍肉鸽' : '本地同袍肉鸽')} · ${cvT('第')} ${m.raidWave || 1}${m.runId ? ` · ${cvT('全程')} ${m.segments.length} ${cvT('劫')}` : ''}`;
 if (m.mode === 'mayhem' || m.room === 'mayhem') return cvT(m.mode === 'net' ? '联机通天神决' : '通天神决');
-if (m.room === 'melee' || m.room === 'ctf') return `${cvT('联机')} · ${cvT(m.room === 'melee' ? '群雄会战 · 8v8' : '夺旗争锋 · 8v8')}`;
-if (m.mode === 'net') return m.ranked ? cvT('排位赛') : m.four ? `${cvT('联机2v2')} · ${cvT(m.sub === 'pp_pp' ? '四人对决' : m.sub === 'pp_cc' ? '双人共斗' : '携手共斗')}` : `${cvT('联机')} · ${cvT(m.room === 'chaos' ? '天机乱斗' : m.room === 'mayhem' ? '通天神决' : '标准对战')}`;
-if (m.mode === 'cpu') return `${cvT('人机')} · ${cvT(LV_NAME[m.level] || m.level || '')}`;
-if (m.mode === 'pvp') return cvT('本地双人');
+if (m.room === 'melee' || m.room === 'ctf') return `${cvT('联机')} · ${cvT(m.room === 'melee' ? '群雄会战 · 8v8' : '夺旗争锋 · 8v8')}${mutatorTag}`;
+if (m.mode === 'net') return m.ranked ? cvT('排位赛') : m.four ? `${cvT('联机2v2')} · ${cvT(m.sub === 'pp_pp' ? '四人对决' : m.sub === 'pp_cc' ? '双人共斗' : '携手共斗')}${mutatorTag}` : `${cvT('联机')} · ${cvT(m.room === 'mayhem' ? '通天神决' : '常规标准')}`;
+if (m.mode === 'cpu') return `${cvT('人机')} · ${cvT(LV_NAME[m.level] || m.level || '')}${mutatorTag}`;
+if (m.mode === 'pvp') return cvT('本地双人') + mutatorTag;
 if (m.mode === '2v2') return `${cvT('2v2')} · ${cvT({ p_cc: '携手共斗', pp_cc: '双人共斗', pp_pp: '四人对决' }[m.sub] || '组队')}${mutatorTag}`;
-if (m.mode === 'maps') return `${cvT('山河异境')} · ${cvT((MAPS[m.st0 && m.st0.M && m.st0.M.map] || {}).n || '')}`;
+if (m.mode === 'maps') return `${cvT('山河异境')} · ${cvT((MAPS[m.st0 && m.st0.M && m.st0.M.map] || {}).n || '')}${mutatorTag}`;
 if (m.mode === 'tag3') return `${cvT('门派车轮战')} · ${m.runId ? `${m.segments.length} ${cvT('局全程')}` : `${cvT('第')} ${m.round || 1}`}${mutatorTag}`;
-if (m.mode === 'chaos') return cvT('天机乱斗');
+if (m.mode === 'chaos') return cvT('常规标准');
 if (m.mode === 'tower') return `${cvT('万仞剑阁')} · ${cvT('第')} ${m.towerFloor || 1}${m.runId ? ` · ${cvT('全程')} ${m.segments.length} ${cvT('层')}` : ''}`;
 if (m.mode === 'saga') return `${cvT('侠客列传')} · ${cvT(CHARS.find(c => c.id === m.chapter)?.name || '')} · ${cvT('第')} ${(m.chapterNode || 0) + 1}`;
 return cvT('本地对战');
@@ -43649,7 +43686,7 @@ else if (M.mode === 'net' && netRoomMode === 'pp_cc') bTitle = '🌐 2v2 双人�
 else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 四人对决 (全员切磋)';
 }
 if (ctfOn()) bTitle = '夺旗争锋';
-if (chaosOn()) bTitle += ' · 天机乱斗';
+if (mayhemOn()) bTitle += ' · 通天神决';
 if (chaosOn()) drawChaosHUD(cx, H - 48, true);
 ctx.fillText(window.I18N ? I18N.t(bTitle) : bTitle, cx, H - 10);
 ctx.restore();
@@ -43863,6 +43900,7 @@ const ordMap = { auto: '自由作战', focus: '全军集火', protect: '回防�
 ctx.fillStyle = '#e9c46a';
 ctx.fillText(`${cvT('指令')}: ${cvT(ordMap[M.squadOrders?.[localTeam()] || 'auto'])} [1/2/3]`, px + 8, py + 61);
 }
+if (chaosOn()) drawChaosHUD(cx, H - 22, true);
 ctx.restore();
 }
 function drawTabScoreboard() {
@@ -45035,7 +45073,7 @@ const p = xiwuPresetList().find(x => x.id === id); if (!p) return;
 const hero = CHARS.findIndex(c => c.id === p.hero);
 if (hero >= 0 && typeof setMenuHero === 'function') setMenuHero(hero);
 if (typeof setPickLevel === 'function') setPickLevel(p.level);
-teamMutator = p.mutator;
+teamMutator = p.mutator === 'mayhem' ? 'mayhem' : 'normal';
 if (typeof setMapVote === 'function') setMapVote(p.map || null);
 singleSec(p.mode);
 if (p.mode === 'maps' && typeof renderMaps === 'function') renderMaps();
@@ -45075,19 +45113,21 @@ g.style.display = g.dataset.catGroup === activeCat ? '' : 'none';
 for (const b of document.querySelectorAll('#singleTabs button[data-tab]')) {
 b.classList.toggle('sel', b.dataset.tab === active);
 }
+const normMut = teamMutator === 'mayhem' ? 'mayhem' : 'normal';
+teamMutator = normMut;
 for (const p of document.querySelectorAll('#mutatorPills button')) {
-const on = p.dataset.mut === (teamMutator || 'normal');
+const on = p.dataset.mut === normMut;
 p.classList.toggle('sel', on); p.setAttribute('aria-pressed', String(on));
 }
 for (const el of document.querySelectorAll('#single [data-sec]')) {
 const secs = el.dataset.sec.split(' ');
 el.style.display = secs.includes(active) ? '' : 'none';
 }
-const duel = ['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2'].includes(active);
+const supportsMutator = ['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'melee', 'ctf', 'maps'].includes(active);
 if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju', 'koth', 'party', 'melee', 'ctf', 'gauntlet'].includes(active);
-if ($id('xiwuQuickCard')) $id('xiwuQuickCard').hidden = !duel;
+if ($id('xiwuPresetBar')) $id('xiwuPresetBar').hidden = !supportsMutator;
 const mutators = $id('mutatorPills');
-if (mutators && mutators.parentElement) mutators.parentElement.hidden = !duel;
+if (mutators && mutators.parentElement) mutators.parentElement.hidden = !supportsMutator;
 updateXiwuSummary();
 const scr = $id('single');
 if (scr && !sec) scr.scrollTop = 0;
@@ -45126,9 +45166,12 @@ else if (active === 'maps') renderMaps();
 else if (active === 'cpu') updateAIBrief();
 }
 const XIWU_MODE_INFO = {
-cpu: { title: '对战电脑 · 玩法说明', body: '标准三局两胜（BO3）1v1 对决。先在上方选好电脑境界与战场异变，点击「进入选人」或「即刻开战」即可开打；也可观战 AI 对决或开启新手教学。' },
+cpu: { title: '对战电脑 · 玩法说明', body: '标准三局两胜（BO3）1v1 对决。先在上方选好电脑境界与战场规则（常规标准已融合动态天机异变），点击「进入选人 · 开战」即可开打；也可观战 AI 对决或开启新手教学。' },
 tag3: { title: '3v3 车轮战 · 玩法说明', body: '双方各选三名侠客并排定先锋、中坚、大将顺序。每局胜者保留残血小幅调息迎战下一位对手，先把对方三将全数击破的一方获胜。' },
 watch2v2: { title: '2v2 组队 · 玩法说明', body: '四人同屏大场地混战（2600px 宽）。支持「你 + 电脑队友」、本地双人打两电脑、本地四人互打，以及全 AI 天道演武观战。' },
+melee: { title: '群雄会战 · 玩法说明', body: '3v3 / 5v5（专属三层演武楼阁）/ 8v8（五层立体战场）大型同屏混战。支持完整战略禁选（BP）、兵力积分、战损复活与滚轮镜头缩放。' },
+ctf: { title: '夺旗争锋 · 玩法说明', body: '2v2–8v8 团队夺旗战。深入敌阵夺取敌旗并护送回己方阵地得分，率先夺得 3 旗的一方获胜。' },
+gauntlet: { title: '无尽试炼 · 玩法说明', body: '单骑迎战逐波递增的江湖群雄，每波获胜小幅调息并迎战更高境界强敌，挑战个人极限连胜。' },
 cuju: { title: '墨球蹴鞠 · 玩法说明', body: '双方不扣气血，比谁先把墨球打进对方球门（默认先 3 球，可选 5/7 球）。普攻与技能可抽射/挑射墨球，格挡可扑救，精准格挡触发神扑！' },
 koth: { title: '灵坛争锋 · 玩法说明', body: '三层断崖高台上每 18 秒轮流激活灵坛。站入无人争抢的灵坛即可累积占领进度，先达 100% 获胜；阵亡或被打落悬崖后 2.5 秒重返战场。' },
 party: { title: '江湖百戏 · 玩法说明', body: '五局三胜趣味小游戏轮换：第一局「传火折」（击中对手把 9 秒火折传出去，归零即炸）、第二局「断崖推手」（0 伤害但 2.6 倍击退，推落悬崖即胜）、第三局「飞球乱舞」（格挡弹反飞球，砸中即出局）。' },
@@ -45161,9 +45204,9 @@ btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') t
 function updateXiwuSummary() {
 const info = $id('xiwuQuickInfo'); if (!info) return;
 const active = currentSingleTab;
-const mode = active === 'tag3' ? '3v3 车轮战' : '对战电脑';
-const rule = active === 'tag3' ? teamMutator : active;
-const ruleName = rule === 'chaos' ? '天机乱斗' : rule === 'mayhem' ? '通天神决' : '常规标准';
+const modeNames = { cpu: '对战电脑', tag3: '3v3 车轮战', watch2v2: '2v2 组队', melee: '群雄会战', ctf: '夺旗争锋', maps: '山河异境' };
+const mode = modeNames[active] || '对战电脑';
+const ruleName = (teamMutator === 'mayhem' || active === 'mayhem') ? '通天神决' : '常规标准';
 const pieces = [CHARS[menuHeroPick()].name, LV_NAME[pickLevel] || pickLevel, mode, ruleName];
 info.textContent = pieces.map(x => typeof cvT === 'function' ? cvT(x) : x).join(' · ');
 }
@@ -45363,7 +45406,7 @@ menuGo(b.dataset.go);
 }   // 悬停不再把镜头甩到两边：场景只跟着鼠标轻轻晃（见 renderMenu 里的 MENU_M）
 for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', backToMenu);
 (function initExpansionHome() {
-let largeTeamSize = 5;
+let meleeTeamSize = 5, ctfTeamSize = 5;
 if ($id('hubLargeBtn')) $id('hubLargeBtn').addEventListener('click', () => {
 openScreen('single');
 const tab = document.querySelector('#xiwuCatTabs [data-cat="large"]');
@@ -45374,22 +45417,26 @@ openScreen('armory');
 setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="badges"]'); if (t) t.click(); }, 60);
 });
 if ($id('hubHeroesBtn')) $id('hubHeroesBtn').addEventListener('click', () => openScreen('codex'));
-const szSeg = $id('largeSizeSeg');
-if (szSeg) szSeg.addEventListener('click', e => {
+const meleeSeg = $id('meleeSizeSeg');
+if (meleeSeg) meleeSeg.addEventListener('click', e => {
 const b = e.target.closest('[data-lsize]'); if (!b) return;
-largeTeamSize = +b.dataset.lsize || 5;
-$id('largeStartMelee').disabled = largeTeamSize < 3;
-if ($id('largeQuickMelee')) $id('largeQuickMelee').disabled = largeTeamSize < 3;
-szSeg.querySelectorAll('[data-lsize]').forEach(x => x.classList.toggle('sel', x === b));
+meleeTeamSize = Math.max(3, +b.dataset.lsize || 5);
+meleeSeg.querySelectorAll('[data-lsize]').forEach(x => x.classList.toggle('sel', x === b));
+SFX.slice && SFX.slice();
 });
-if ($id('largeStartMelee')) $id('largeStartMelee').addEventListener('click', () => bpStart('melee', { teamSize: Math.max(3, largeTeamSize), level: pickLevel || 'normal', mut: typeof teamMutator !== 'undefined' ? teamMutator : 'normal' }));
-if ($id('largeStartCtf')) $id('largeStartCtf').addEventListener('click', () => bpStart('ctf', { teamSize: largeTeamSize, level: pickLevel || 'normal' }));
-if ($id('largeQuickMelee')) $id('largeQuickMelee').addEventListener('click', () => startMelee(largeTeamSize, menuHeroId, pickLevel || 'normal', typeof teamMutator !== 'undefined' ? teamMutator : 'normal'));
-if ($id('largeQuickCtf')) $id('largeQuickCtf').addEventListener('click', () => startCtf(largeTeamSize, menuHeroId, pickLevel || 'normal'));
-if ($id('largeStartGauntlet')) $id('largeStartGauntlet').addEventListener('click', () => startGauntlet(menuHeroId, pickLevel || 'normal'));
-if ($id('cardMelee')) $id('cardMelee').addEventListener('dblclick', () => $id('largeStartMelee').click());
-if ($id('cardCtf')) $id('cardCtf').addEventListener('dblclick', () => $id('largeStartCtf').click());
-if ($id('cardGauntlet')) $id('cardGauntlet').addEventListener('dblclick', () => startGauntlet(menuHeroId, pickLevel || 'normal'));
+const ctfSeg = $id('ctfSizeSeg');
+if (ctfSeg) ctfSeg.addEventListener('click', e => {
+const b = e.target.closest('[data-lsize]'); if (!b) return;
+ctfTeamSize = Math.max(2, +b.dataset.lsize || 5);
+ctfSeg.querySelectorAll('[data-lsize]').forEach(x => x.classList.toggle('sel', x === b));
+SFX.slice && SFX.slice();
+});
+if ($id('largeStartMelee')) $id('largeStartMelee').addEventListener('click', () => bpStart('melee', { teamSize: meleeTeamSize, level: pickLevel || 'normal', mut: typeof teamMutator !== 'undefined' ? teamMutator : 'normal' }));
+if ($id('largeStartCtf')) $id('largeStartCtf').addEventListener('click', () => bpStart('ctf', { teamSize: ctfTeamSize, level: pickLevel || 'normal', mut: typeof teamMutator !== 'undefined' ? teamMutator : 'normal' }));
+if ($id('largeStartGauntlet')) $id('largeStartGauntlet').addEventListener('click', () => bpStart('gauntlet', { level: pickLevel || 'normal' }));
+if ($id('cardMelee')) $id('cardMelee').addEventListener('dblclick', () => $id('largeStartMelee') && $id('largeStartMelee').click());
+if ($id('cardCtf')) $id('cardCtf').addEventListener('dblclick', () => $id('largeStartCtf') && $id('largeStartCtf').click());
+if ($id('cardGauntlet')) $id('cardGauntlet').addEventListener('dblclick', () => $id('largeStartGauntlet') && $id('largeStartGauntlet').click());
 })();
 let settingsBack = 'menu';
 const SETTING_ROWS = [
@@ -48552,7 +48599,7 @@ setupNetMatch();
 M.combatLoadouts = Array.isArray(loadouts) ? loadouts : [combatLoadoutMap(), NET.peerLoadout || {}];
 M.competitiveScrolls = competitiveScrolls && typeof competitiveScrolls === 'object' ? competitiveScrolls : null;
 M.hasBuffs = !!(M.competitiveScrolls && Object.values(M.competitiveScrolls).some(team => Object.keys(team || {}).length));
-M.teamMutator = !NET.isRanked && ['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode) && ['chaos', 'mayhem'].includes(mut) ? mut : 'normal';
+M.teamMutator = !NET.isRanked && ['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'maps'].includes(netRoomMode) && mut === 'mayhem' ? 'mayhem' : 'normal';
 if (MAPS[map]) M.map = map;
 else if (Array.isArray(mv) || roomDef().rule === 'maps') M.map = mapPick(mv, mapSeedRand(seed));
 if (Array.isArray(duo) && Array.isArray(duo[0]) && Array.isArray(duo[1])) M.duo = [duo[0].slice(0, 3), duo[1].slice(0, 3)];   // 各选 3 人（或 2 人），输一回合换下一人
@@ -49034,7 +49081,7 @@ const xiwuMutatorEl = $id('mutatorPills');
 if (xiwuMutatorEl) xiwuMutatorEl.addEventListener('click', e => {
 const b = e.target.closest('button[data-mut]'); if (!b) return;
 SFX.slice();
-teamMutator = b.dataset.mut;
+teamMutator = b.dataset.mut === 'mayhem' ? 'mayhem' : 'normal';
 singleSec(currentSingleTab || 'cpu');
 });
 const singleTabsEl = document.getElementById('singleTabs');
@@ -49068,7 +49115,6 @@ if (scr) scr.scrollTop = 0;
 SFX.slice();
 });
 }
-if ($id('xiwuQuickGo')) $id('xiwuQuickGo').addEventListener('click', () => { if (menuHeroId < 0) setMenuHero(menuHeroPick()); heroQuickFight(); });
 function xiwuTrainingTab(name) {
 const tabs = document.querySelectorAll('#xiwuTrainingTabs [data-training-tab]');
 const panes = document.querySelectorAll('#single [data-training-pane]');
@@ -50036,21 +50082,43 @@ const CHAOS_MUTATIONS = [
 { id: "chaos_120", name: "「破军·离火」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 炽火焚天，烽烟万里" },
 ];
 let chaosP1 = 0, chaosP2 = 1;
-const chaosOn = () => M.mode === 'chaos' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'chaos') || ((M.mode === 'tag3' || M.mode === 'melee' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'chaos') || (netRoom() || {}).rule === 'chaos';
+const normalizeMutator = mut => mut === 'mayhem' ? 'mayhem' : 'normal';
+const UNIFIED_STANDARD_MODES = ['cpu', 'pvp', 'chaos', 'tag3', 'melee', 'ctf', '2v2', 'watch2v2', 'maps'];
+const chaosOn = () => {
+if (typeof mayhemOn === 'function' && mayhemOn()) return false;
+if (M.mode === 'replay' && REPLAY.on && REPLAY.m) {
+if (REPLAY.m.mode === 'mayhem' || M.teamMutator === 'mayhem') return false;
+if (REPLAY.m.mode === 'chaos') return true;
+if (REPLAY.m.mode === 'net') {
+if (REPLAY.m.ranked) return false;
+const rm = typeof netRoom === 'function' ? netRoom() : null;
+if (rm && ['cuju', 'koth', 'party', 'bastion', 'raid', 'mayhem'].includes(rm.rule)) return false;
+return M.teamMutator !== 'mayhem';
+}
+return UNIFIED_STANDARD_MODES.includes(REPLAY.m.mode) && M.teamMutator !== 'mayhem';
+}
+if (M.mode === 'net') {
+if (typeof NET !== 'undefined' && NET.isRanked) return false;
+const rm = typeof netRoom === 'function' ? netRoom() : null;
+if (rm && ['cuju', 'koth', 'party', 'bastion', 'raid', 'mayhem'].includes(rm.rule)) return false;
+return M.teamMutator !== 'mayhem';
+}
+return UNIFIED_STANDARD_MODES.includes(M.mode) && M.teamMutator !== 'mayhem';
+};
 function chaosNow(type) {
 const c = chaosOn() && M.chaos, mut = c && c.i >= 0 ? CHAOS_MUTATIONS[c.i] : null;
 return mut && (!type || mut.type === type) ? mut : null;
 }
 const chaosLeft = () => Math.max(0, Math.ceil(CHAOS_INTERVAL - ((M.chaos && M.chaos.t) || 0)));   // 这条还剩几秒
 function rollChaosMutation() {
-const i = Math.floor((netSim() ? grnd() : Math.random()) * CHAOS_MUTATIONS.length) % CHAOS_MUTATIONS.length, mut = CHAOS_MUTATIONS[i];
+const i = Math.floor(grnd() * CHAOS_MUTATIONS.length) % CHAOS_MUTATIONS.length, mut = CHAOS_MUTATIONS[i];
 M.chaos = { i, t: 0 };
 if (RESIM) return mut;   // 回滚重算时只改状态，提示已经出过了
 flashA = Math.max(flashA, 0.3);
 flashRGB = '233,196,106';
 shake = Math.max(shake, 8);
 SFX.gong();
-say('天机异变 · ' + mut.name, 1.8, 'big', mut.desc);
+say('常规标准 · ' + mut.name, 1.8, 'big', mut.desc);
 if (typeof addP === 'function' && typeof A !== 'undefined') {
 addP({ type: 'text', text: mut.icon + ' ' + cvT(mut.name), x: STAGE_W / 2, y: -160, life: 1.8, max: 1.8, rgb: '233,196,106' });
 }
@@ -50069,6 +50137,7 @@ paused = false;
 chaosP1 = p1 !== undefined ? p1 : chaosP1;
 chaosP2 = p2 !== undefined ? p2 : chaosP2;
 M.mode = 'chaos';
+M.teamMutator = 'normal';
 M.level = lv || pickLevel;   // 这局用的境界；不改玩家选好的那一条
 M.round = 1;
 M.wins = [0, 0];
@@ -50083,7 +50152,7 @@ human[0].clear(); human[1].clear();
 showScreen(null);
 if (!isWatch) recBegin('loc');
 startRound();
-say(isWatch ? '天机乱斗 · 乾坤异变观战' : '天机乱斗 · 乾坤异变', 1.4);
+say(isWatch ? '常规标准 · 乾坤异变观战' : '常规标准 · 乾坤异变', 1.4);
 rollChaosMutation();
 }
 const towerStartBtn = document.getElementById('towerStartBtn');
@@ -50458,13 +50527,14 @@ function render2v2Modal() {
 render2v2Inline();
 const mode = active2v2ModalMode, tx = M2_TEXT[mode];
 if (!tx) return;
-for (const b of document.querySelectorAll('#m2Mutator button')) { b.classList.toggle('sel', b.dataset.mut === teamMutator); b.setAttribute('aria-pressed', String(b.dataset.mut === teamMutator)); }
+const normMut = teamMutator === 'mayhem' ? 'mayhem' : 'normal';
+teamMutator = normMut;
+for (const b of document.querySelectorAll('#m2Mutator button')) { b.classList.toggle('sel', b.dataset.mut === normMut); b.setAttribute('aria-pressed', String(b.dataset.mut === normMut)); }
 for (const b of document.querySelectorAll('#modal2v2Seg button')) b.classList.toggle('sel', b.dataset.m === mode);
 if ($id('m2LvWrap')) $id('m2LvWrap').hidden = mode === 'pp_pp';
-for (const id of ['btn2v2GoMatch', 'btn2v2GoOnline']) { if ($id(id)) $id(id).style.display = mode === 'p_cc' ? 'none' : ''; }
+if ($id('btn2v2GoOnline')) $id('btn2v2GoOnline').style.display = mode === 'p_cc' ? 'none' : '';
 if ($id('modal2v2Desc')) $id('modal2v2Desc').textContent = tx.desc;
 if ($id('modal2v2LocalDesc')) $id('modal2v2LocalDesc').textContent = tx.local;
-if ($id('modal2v2MatchDesc')) $id('modal2v2MatchDesc').textContent = tx.match;
 }
 if ($id('xiwu2v2Seg')) {
 $id('xiwu2v2Seg').addEventListener('click', e => {
@@ -50475,16 +50545,6 @@ active2v2ModalMode = b.dataset.m; SFX.slice(); render2v2Inline();
 if ($id('xiwu2v2StartBtn')) {
 $id('xiwu2v2StartBtn').addEventListener('click', () => {
 bpStart('2v2', { subMode: active2v2ModalMode, level: pickLevel });
-});
-}
-if ($id('xiwu2v2QuickBtn')) {
-$id('xiwu2v2QuickBtn').addEventListener('click', () => {
-const hero = menuHeroPick();
-const pool = CHARS.map((c, i) => i).filter(i => i !== hero);
-for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-if (active2v2ModalMode === 'pp_pp') start2v2LocalVs(hero, pool[0], pool[1], pool[2]);
-else start2v2LocalCoop(hero, pool[0], pool[1], pool[2], pickLevel, active2v2ModalMode === 'p_cc');
-applySkins();
 });
 }
 if ($id('xiwu2v2WatchBtn')) {
@@ -50504,29 +50564,15 @@ open2v2Modal(mode);
 return scr;
 }
 function close2v2Modal() { $id('modal2v2').classList.add('hidden'); levelBarTo(null); }
-if ($id('m2Mutator')) $id('m2Mutator').addEventListener('click', e => { const b = e.target.closest('button[data-mut]'); if (b) { teamMutator = b.dataset.mut; render2v2Modal(); } });
+if ($id('m2Mutator')) $id('m2Mutator').addEventListener('click', e => { const b = e.target.closest('button[data-mut]'); if (b) { teamMutator = b.dataset.mut === 'mayhem' ? 'mayhem' : 'normal'; render2v2Modal(); } });
 $id('modal2v2Seg').addEventListener('click', e => {
 const b = e.target.closest('button[data-m]'); if (!b) return;
 active2v2ModalMode = b.dataset.m; SFX.slice(); render2v2Modal();
 });
 $id('modal2v2Close').addEventListener('click', close2v2Modal);
-if ($id('btn2v2Quick')) $id('btn2v2Quick').addEventListener('click', () => {
-const hero = menuHeroPick();
-const pool = CHARS.map((c, i) => i).filter(i => i !== hero);
-for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-close2v2Modal();
-if (active2v2ModalMode === 'pp_pp') start2v2LocalVs(hero, pool[0], pool[1], pool[2]);
-else start2v2LocalCoop(hero, pool[0], pool[1], pool[2], pickLevel, active2v2ModalMode === 'p_cc');
-applySkins();
-});
 $id('btn2v2GoLocal').addEventListener('click', () => {
 close2v2Modal();
 bpStart('2v2', { subMode: active2v2ModalMode, level: pickLevel });
-});
-$id('btn2v2GoMatch').addEventListener('click', () => {
-close2v2Modal();
-if (!$id('netp').classList.contains('on')) openScreen('netp');
-mmGo(active2v2ModalMode === 'pp_cc' ? '2v2_coop' : '2v2_vs');
 });
 $id('btn2v2GoOnline').addEventListener('click', () => {
 close2v2Modal();
@@ -54131,7 +54177,7 @@ netDropWaiting();
 M.mode = 'melee';
 M.teamSize = sz;
 M.level = level || 'normal';
-M.teamMutator = ['chaos', 'mayhem'].includes(mut) ? mut : 'normal';
+M.teamMutator = mut === 'mayhem' ? 'mayhem' : 'normal';
 M.wins = [0, 0]; M.round = 1; M.watchAi = false;
 const total = sz * 2;
 const hasDraft = Array.isArray(drafted) && Array.isArray(drafted[0]) && Array.isArray(drafted[1]);
@@ -54197,6 +54243,7 @@ f.reset(S.flags[team].baseX + (team === 0 ? offset : -offset));
 f.face = team === 0 ? 1 : -1;
 f.invul = 1.0;
 if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
+if (mayhemOn()) applyMayhemStats(f);
 if (f.idx === localIdx()) { f.beaconT = 1.2; camFocusPingT = 0.8; }
 }
 }
@@ -54246,7 +54293,7 @@ ctx.beginPath(); ctx.moveTo(fx, fy - 110); ctx.lineTo(fx + 44, fy - 92); ctx.lin
 ctx.restore();
 }
 }
-function startCtf(teamSize = 4, heroIdx = 0, level = 'normal', drafted = null) {
+function startCtf(teamSize = 4, heroIdx = 0, level = 'normal', drafted = null, mut = 'normal') {
 const sz = clamp(teamSize | 0, 2, 8);
 debugHitbox = false;
 refocusGame();
@@ -54254,6 +54301,7 @@ netDropWaiting();
 M.mode = 'ctf';
 M.teamSize = sz;
 M.level = level || 'normal';
+M.teamMutator = mut === 'mayhem' ? 'mayhem' : 'normal';
 M.wins = [0, 0]; M.round = 1; M.watchAi = false;
 const total = sz * 2;
 const hasDraft = Array.isArray(drafted) && Array.isArray(drafted[0]) && Array.isArray(drafted[1]);
@@ -57003,11 +57051,7 @@ renderBP();
 return true;
 }
 function bpAutoFillLarge() {
-if (currentScreen !== 'bp' || !BP || (bpMode !== 'melee' && bpMode !== 'ctf')) return false;
-while (BP && BP.step < bpSteps().length && bpValidList().length) {
-bpApply(bpCpuChoice());
-}
-return true;
+return false;
 }
 function bpApply(i) {
 if (!BP || BP.step >= bpSteps().length) return;
@@ -57135,8 +57179,10 @@ startMelee(sz, Array.isArray(picks[0]) ? picks[0][0] : picks[0], opts.level || p
 M.bans = bans;
 } else if (mode === 'ctf') {
 const sz = opts.teamSize || (Array.isArray(picks[0]) ? picks[0].length : 5);
-startCtf(sz, Array.isArray(picks[0]) ? picks[0][0] : picks[0], opts.level || pickLevel, picks);
+startCtf(sz, Array.isArray(picks[0]) ? picks[0][0] : picks[0], opts.level || pickLevel, picks, opts.mut || (typeof teamMutator !== 'undefined' ? teamMutator : 'normal'));
 M.bans = bans;
+} else if (mode === 'gauntlet') {
+startGauntlet(Array.isArray(picks) ? picks[0] : picks, opts.level || pickLevel);
 } else if (mode === 'maps') {
 startMapsMode(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch, mapId);
 } else if (mode === 'tag3') {
@@ -57371,7 +57417,7 @@ let modePrefix = '';
 if (bpMode === 'net' && NET.isRanked) modePrefix = '排位赛 · ';
 else if (bpMode === 'net' && roomDef().four) modePrefix = '联机2v2 · ';
 else if (bpMode === 'cpu' || bpMode === 'cpuWatch') modePrefix = '论剑点将 · ';
-else if (bpMode === 'chaos') modePrefix = '天机乱斗 · ';
+else if (bpMode === 'chaos') modePrefix = '常规标准 · ';
 else if (bpMode === 'maps') modePrefix = '山河异境 · ';
 else if (bpMode === 'cuju' || bpMode === 'cuju2v2') modePrefix = bpMode === 'cuju2v2' ? '2v2 墨球蹴鞠 · ' : '墨球蹴鞠 · ';
 else if (bpMode === 'koth' || bpMode === 'koth2v2') modePrefix = bpMode === 'koth2v2' ? '2v2 灵坛争锋 · ' : '灵坛争锋 · ';
@@ -57536,7 +57582,6 @@ const goB = document.getElementById('bpGo');
 $id('bpUndo').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step > 0 && BP.step < 3);
 $id('bpSwap').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step === 2);
 $id('bpRotate').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step === 2 && bpValid(bpSel));
-if ($id('bpAutoFill')) $id('bpAutoFill').hidden = !(isLargeBP && !done && !isWatch);
 if (isWatch) {
 goB.disabled = true;
 goB.textContent = done ? '即将开战 · 演武观战' : 'AI 演武禁选中…';
@@ -57625,7 +57670,6 @@ document.getElementById('bpGo').addEventListener('click', bpConfirm);
 document.getElementById('bpUndo').addEventListener('click', bpUndoQuickPick);
 document.getElementById('bpSwap').addEventListener('click', bpSwapQuickPicks);
 document.getElementById('bpRotate').addEventListener('click', bpRotateQuickPicks);
-if (document.getElementById('bpAutoFill')) document.getElementById('bpAutoFill').addEventListener('click', bpAutoFillLarge);
 document.getElementById('bpQuit').addEventListener('click', () => toMenu());
 function $id(id) { return document.getElementById(id); }
 const ACC = { token: '', name: '', wins: 0, losses: 0 };
@@ -58355,9 +58399,9 @@ $id('lobbyPeerState').style.color = peerReady ? '#2bd49a' : 'var(--dim)';
 }
 window.updateNetLobby = updateNetLobby;
 function roomWrapShow() { const w = $id('roomWrap'); if (w) w.classList.remove('hidden'); }
-const netTeamMutator = () => !NET.isRanked && ['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode) && ['chaos', 'mayhem'].includes(teamMutator) ? teamMutator : 'normal';
-let netRoomMode = 'normal';   // 好友房的规则，见 src/data/10-modes.js 的 ROOM_MODES；快速匹配和排位固定 normal（3v3 车轮战）
-const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '天机乱斗', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏', bastion: '天枢守境', melee: '群雄会战 · 8v8', ctf: '夺旗争锋 · 8v8' };
+const netTeamMutator = () => !NET.isRanked && ['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'maps'].includes(netRoomMode) && teamMutator === 'mayhem' ? 'mayhem' : 'normal';
+let netRoomMode = 'normal';   // 好友房的规则，见 src/data/10-modes.js 的 ROOM_MODES；排位固定 normal（3v3 车轮战）
+const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '常规标准', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏', bastion: '天枢守境', melee: '群雄会战 · 8v8', ctf: '夺旗争锋 · 8v8' };
 const lobbyModesSegEl = $id('lobbyModesSeg');
 if (lobbyModesSegEl) {
 lobbyModesSegEl.addEventListener('click', e => {
@@ -58389,12 +58433,12 @@ renderLobbyMutator();
 }
 function renderLobbyMutator() {
 const el = $id('lobbyMutator'); if (!el) return;
-el.hidden = NET.isRanked || !['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode);
+el.hidden = NET.isRanked || !['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'maps'].includes(netRoomMode);
 for (const b of el.querySelectorAll('button')) { b.disabled = NET.role === 'client' && NET.open; b.classList.toggle('sel', b.dataset.mut === netTeamMutator()); b.setAttribute('aria-pressed', String(b.dataset.mut === netTeamMutator())); }
 }
 if ($id('lobbyMutator')) $id('lobbyMutator').addEventListener('click', e => {
 const b = e.target.closest('button[data-mut]'); if (!b || (NET.role === 'client' && NET.open)) return;
-teamMutator = ['chaos', 'mayhem'].includes(b.dataset.mut) ? b.dataset.mut : 'normal';
+teamMutator = b.dataset.mut === 'mayhem' ? 'mayhem' : 'normal';
 renderLobbyMutator(); if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator() });
 });
 const NET_MAPV = { host: null, client: null };
@@ -58468,25 +58512,18 @@ $id('hostBtn').addEventListener('click', () => { initAudio(); roomWrapShow(); ne
 let mmKind = null;
 function mmUI(kind) {
 mmKind = kind || null;
-mmFbHide(); MMFB.snooze = 0;
 const box = $id('mmSearch');
 if (!box) return;
 box.classList.toggle('hidden', !kind);
-$id('mmQuickBtn').textContent = kind === 'quick' ? '匹配中…' : '开始匹配';
+if ($id('mmRankBtn')) {
 $id('mmRankBtn').textContent = kind === 'ranked' ? '排位中…' : '开始排位';
-$id('mmQuickBtn').disabled = $id('mmRankBtn').disabled = !!kind;
-$id('mmQuickCard').classList.toggle('searching', kind === 'quick');
-$id('mmRankCard').classList.toggle('searching', kind === 'ranked');
-const c2v2 = $id('mm2v2Card');
-if (c2v2) c2v2.classList.toggle('searching', kind === '2v2_coop' || kind === '2v2_vs');
+$id('mmRankBtn').disabled = !!kind;
+}
+if ($id('mmRankCard')) $id('mmRankCard').classList.toggle('searching', kind === 'ranked');
 const tp = document.querySelector('#topNav .tn-play');
-if (tp) { tp.classList.toggle('searching', !!kind); tp.textContent = kind ? (kind === 'ranked' ? '排位中' : '匹配中') : '对战'; }
+if (tp) { tp.classList.toggle('searching', !!kind); tp.textContent = kind ? '排位中' : '对战'; }
 if (kind) {
-let title = '匹配对战 · 正在寻找对手';
-if (kind === 'ranked') title = '排位赛 · 正在寻找对手';
-else if (kind === '2v2_coop') title = '2v2 双人共斗 · 正在全服寻找同袍队友与天道对手';
-else if (kind === '2v2_vs') title = '2v2 组队切磋 · 正在全服匹配队友与对手';
-$id('mmSearchTitle').textContent = title;
+$id('mmSearchTitle').textContent = '排位赛 · 正在寻找真实对手';
 mmTick();
 }
 }
@@ -58498,75 +58535,21 @@ if (mmKind === 'ranked') {
 const span = mmSpan(), L = RK_TIERS.map(x => x.l), b = MM.band;
 const lo = L[Math.max(0, b - span)], hi = L[Math.min(4, b + span)];
 sub += ` · 匹配范围 ${lo === hi ? lo + ' 段' : lo + '–' + hi + ' 段'}`;
-} else sub += ' · 全服随机';
+}
 $id('mmSearchSub').textContent = sub;
-mmFallback(t);
 }
-const MMFB_AFTER = 20, MMFB_AUTO = 10, MMFB_SNOOZE = 60;
-const MMFB = { shown: 0, snooze: 0 };
-function mmFbHide() {
-MMFB.shown = 0;
-const box = $id('mmFallback');
-if (box) box.classList.add('hidden');
-}
-function mmFallback(t) {
-const box = $id('mmFallback');
-if (!box) return;
-const solo = mmKind === 'quick' || mmKind === 'ranked';
-const here = $id('netp').classList.contains('on') && !(typeof document !== 'undefined' && document.hidden);
-if (!solo || !here || NET.open || t < MMFB_AFTER || t < MMFB.snooze) { if (MMFB.shown) mmFbHide(); return; }
-const auto = mmKind === 'quick';
-if (!MMFB.shown) {
-MMFB.shown = t;
-$id('mmFbTxt').textContent = auto
-? '现在排队的人少。先和电脑打一局 3v3 车轮战吧，打完再回来匹配。'
-: '现在排队的人少。可以先和电脑练一局 3v3 车轮战，或者建房叫同学来打。';
-$id('mmFbCount').classList.toggle('hidden', !auto);
-box.classList.remove('hidden');
-}
-if (!auto) return;
-const left = Math.max(0, MMFB_AUTO - (t - MMFB.shown));
-$id('mmFbLeft').textContent = String(left);
-if (left <= 0) mmFbCpu();
-}
-function mmFbCpu() {
-initAudio();
-statQueueResult(false);
-netReset();
-paused = false;
-bpStart('tag3', { level: pickLevel, quickRelay: true });
-}
-$id('mmFbCpu').addEventListener('click', mmFbCpu);
-$id('mmFbWait').addEventListener('click', () => {
-if (typeof MM === 'undefined' || !MM.on) return mmFbHide();
-MMFB.snooze = Math.floor((Date.now() - MM.t0) / 1000) + MMFB_SNOOZE;
-mmFbHide();
-});
-$id('mmFbRoom').addEventListener('click', () => {
-initAudio();
-statQueueResult(false);
-netReset();
-roomWrapShow();
-netConnect(true);
-const card = $id('mmFriendCard');
-if (card && card.scrollIntoView) card.scrollIntoView({ block: 'center', behavior: 'smooth' });
-});
 setInterval(mmTick, 1000);
 setInterval(() => { if ($id('netp').classList.contains('on') && !mmKind) renderLobby(); }, 30000);
 function mmGo(kind) {
+if (kind !== 'ranked') { toast('已移除快速匹配，请使用排位赛或好友约战'); return; }
 initAudio();
-if (kind === 'ranked' && !rkOwner()) { netStatus('排位赛需先登录（右上角）'); toast('排位赛需先登录'); return; }
-if (kind === 'ranked') rkCheckPending();
+if (!rkOwner()) { netStatus('排位赛需先登录（右上角）'); toast('排位赛需先登录'); return; }
+rkCheckPending();
 STATQ.queueStarted = Date.now();
-mmStart(kind);
-let statusTxt = '匹配对战：正在全服寻找对手…';
-if (kind === 'ranked') statusTxt = `排位赛：${rkLabel()}`;
-else if (kind === '2v2_coop') statusTxt = '2v2 双人共斗：正在全服寻找队友与对手…';
-else if (kind === '2v2_vs') statusTxt = '2v2 组队切磋：正在全服匹配一位对手（双方各带一名电脑队友）…';
-netStatus(statusTxt);
+mmStart('ranked');
+netStatus(`排位赛：${rkLabel()}`);
 }
-$id('mmQuickBtn').addEventListener('click', () => mmGo('quick'));
-$id('mmRankBtn').addEventListener('click', () => mmGo('ranked'));
+if ($id('mmRankBtn')) $id('mmRankBtn').addEventListener('click', () => mmGo('ranked'));
 $id('mmCancelBtn').addEventListener('click', () => { statQueueResult(false); netReset(); netStatus('已取消'); });
 $id('mmRankInfoBtn').addEventListener('click', () => {
 renderRankInfo();
@@ -58773,7 +58756,7 @@ set('homeOnlineCount', `全服 ${o.total} 人在线`);
 const others = o.waiting - (mmKind ? 1 : 0);
 const card = $id('mMatch'), ms = card && card.querySelector('.ms');
 if (card) card.classList.toggle('mm-hot', others > 0);
-if (ms) set2(ms, others > 0 ? '有人正在等对手 · 现在点就能开打' : '3v3 车轮战 · 全服随机对手');
+if (ms) set2(ms, others > 0 ? '有人正在排位等对手 · 现在点就能开打' : '3v3 车轮战 · 排位与好友约战');
 }
 function set2(el, t) { if (el.textContent !== t && el.textContent !== (window.t ? window.t(t) : t)) el.textContent = t; }
 setInterval(refreshOnline, 1000);

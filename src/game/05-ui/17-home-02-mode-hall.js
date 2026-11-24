@@ -99,7 +99,7 @@ function xiwuPresetLoad(id) {
   const hero = CHARS.findIndex(c => c.id === p.hero);
   if (hero >= 0 && typeof setMenuHero === 'function') setMenuHero(hero);
   if (typeof setPickLevel === 'function') setPickLevel(p.level);
-  teamMutator = p.mutator;
+  teamMutator = p.mutator === 'mayhem' ? 'mayhem' : 'normal';
   if (typeof setMapVote === 'function') setMapVote(p.map || null);
   singleSec(p.mode);
   if (p.mode === 'maps' && typeof renderMaps === 'function') renderMaps();
@@ -145,19 +145,21 @@ function singleSec(sec) {
   for (const b of document.querySelectorAll('#singleTabs button[data-tab]')) {
     b.classList.toggle('sel', b.dataset.tab === active);
   }
+  const normMut = teamMutator === 'mayhem' ? 'mayhem' : 'normal';
+  teamMutator = normMut;
   for (const p of document.querySelectorAll('#mutatorPills button')) {
-    const on = p.dataset.mut === (teamMutator || 'normal');
+    const on = p.dataset.mut === normMut;
     p.classList.toggle('sel', on); p.setAttribute('aria-pressed', String(on));
   }
   for (const el of document.querySelectorAll('#single [data-sec]')) {
     const secs = el.dataset.sec.split(' ');
     el.style.display = secs.includes(active) ? '' : 'none';
   }
-  const duel = ['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2'].includes(active);
+  const supportsMutator = ['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'melee', 'ctf', 'maps'].includes(active);
   if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju', 'koth', 'party', 'melee', 'ctf', 'gauntlet'].includes(active);
-  if ($id('xiwuQuickCard')) $id('xiwuQuickCard').hidden = !duel;
+  if ($id('xiwuPresetBar')) $id('xiwuPresetBar').hidden = !supportsMutator;
   const mutators = $id('mutatorPills');
-  if (mutators && mutators.parentElement) mutators.parentElement.hidden = !duel;
+  if (mutators && mutators.parentElement) mutators.parentElement.hidden = !supportsMutator;
   updateXiwuSummary();
   const scr = $id('single');
   if (scr && !sec) scr.scrollTop = 0;
@@ -197,9 +199,12 @@ function singleSec(sec) {
 }
 
 const XIWU_MODE_INFO = {
-  cpu: { title: '对战电脑 · 玩法说明', body: '标准三局两胜（BO3）1v1 对决。先在上方选好电脑境界与战场异变，点击「进入选人」或「即刻开战」即可开打；也可观战 AI 对决或开启新手教学。' },
+  cpu: { title: '对战电脑 · 玩法说明', body: '标准三局两胜（BO3）1v1 对决。先在上方选好电脑境界与战场规则（常规标准已融合动态天机异变），点击「进入选人 · 开战」即可开打；也可观战 AI 对决或开启新手教学。' },
   tag3: { title: '3v3 车轮战 · 玩法说明', body: '双方各选三名侠客并排定先锋、中坚、大将顺序。每局胜者保留残血小幅调息迎战下一位对手，先把对方三将全数击破的一方获胜。' },
   watch2v2: { title: '2v2 组队 · 玩法说明', body: '四人同屏大场地混战（2600px 宽）。支持「你 + 电脑队友」、本地双人打两电脑、本地四人互打，以及全 AI 天道演武观战。' },
+  melee: { title: '群雄会战 · 玩法说明', body: '3v3 / 5v5（专属三层演武楼阁）/ 8v8（五层立体战场）大型同屏混战。支持完整战略禁选（BP）、兵力积分、战损复活与滚轮镜头缩放。' },
+  ctf: { title: '夺旗争锋 · 玩法说明', body: '2v2–8v8 团队夺旗战。深入敌阵夺取敌旗并护送回己方阵地得分，率先夺得 3 旗的一方获胜。' },
+  gauntlet: { title: '无尽试炼 · 玩法说明', body: '单骑迎战逐波递增的江湖群雄，每波获胜小幅调息并迎战更高境界强敌，挑战个人极限连胜。' },
   cuju: { title: '墨球蹴鞠 · 玩法说明', body: '双方不扣气血，比谁先把墨球打进对方球门（默认先 3 球，可选 5/7 球）。普攻与技能可抽射/挑射墨球，格挡可扑救，精准格挡触发神扑！' },
   koth: { title: '灵坛争锋 · 玩法说明', body: '三层断崖高台上每 18 秒轮流激活灵坛。站入无人争抢的灵坛即可累积占领进度，先达 100% 获胜；阵亡或被打落悬崖后 2.5 秒重返战场。' },
   party: { title: '江湖百戏 · 玩法说明', body: '五局三胜趣味小游戏轮换：第一局「传火折」（击中对手把 9 秒火折传出去，归零即炸）、第二局「断崖推手」（0 伤害但 2.6 倍击退，推落悬崖即胜）、第三局「飞球乱舞」（格挡弹反飞球，砸中即出局）。' },

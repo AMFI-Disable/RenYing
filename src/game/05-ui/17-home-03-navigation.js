@@ -3,9 +3,9 @@
 function updateXiwuSummary() {
   const info = $id('xiwuQuickInfo'); if (!info) return;
   const active = currentSingleTab;
-  const mode = active === 'tag3' ? '3v3 车轮战' : '对战电脑';
-  const rule = active === 'tag3' ? teamMutator : active;
-  const ruleName = rule === 'chaos' ? '天机乱斗' : rule === 'mayhem' ? '通天神决' : '常规标准';
+  const modeNames = { cpu: '对战电脑', tag3: '3v3 车轮战', watch2v2: '2v2 组队', melee: '群雄会战', ctf: '夺旗争锋', maps: '山河异境' };
+  const mode = modeNames[active] || '对战电脑';
+  const ruleName = (teamMutator === 'mayhem' || active === 'mayhem') ? '通天神决' : '常规标准';
   const pieces = [CHARS[menuHeroPick()].name, LV_NAME[pickLevel] || pickLevel, mode, ruleName];
   info.textContent = pieces.map(x => typeof cvT === 'function' ? cvT(x) : x).join(' · ');
 }
@@ -214,7 +214,7 @@ for (const b of document.querySelectorAll('#menu [data-go]')) {
 for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', backToMenu);
 // ---------- 首页快捷入口与大型团战启动 ----------
 (function initExpansionHome() {
-  let largeTeamSize = 5;
+  let meleeTeamSize = 5, ctfTeamSize = 5;
   if ($id('hubLargeBtn')) $id('hubLargeBtn').addEventListener('click', () => {
     openScreen('single');
     const tab = document.querySelector('#xiwuCatTabs [data-cat="large"]');
@@ -225,21 +225,25 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
     setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="badges"]'); if (t) t.click(); }, 60);
   });
   if ($id('hubHeroesBtn')) $id('hubHeroesBtn').addEventListener('click', () => openScreen('codex'));
-  const szSeg = $id('largeSizeSeg');
-  if (szSeg) szSeg.addEventListener('click', e => {
+  const meleeSeg = $id('meleeSizeSeg');
+  if (meleeSeg) meleeSeg.addEventListener('click', e => {
     const b = e.target.closest('[data-lsize]'); if (!b) return;
-    largeTeamSize = +b.dataset.lsize || 5;
-    $id('largeStartMelee').disabled = largeTeamSize < 3;
-    if ($id('largeQuickMelee')) $id('largeQuickMelee').disabled = largeTeamSize < 3;
-    szSeg.querySelectorAll('[data-lsize]').forEach(x => x.classList.toggle('sel', x === b));
+    meleeTeamSize = Math.max(3, +b.dataset.lsize || 5);
+    meleeSeg.querySelectorAll('[data-lsize]').forEach(x => x.classList.toggle('sel', x === b));
+    SFX.slice && SFX.slice();
   });
-  if ($id('largeStartMelee')) $id('largeStartMelee').addEventListener('click', () => bpStart('melee', { teamSize: Math.max(3, largeTeamSize), level: pickLevel || 'normal', mut: typeof teamMutator !== 'undefined' ? teamMutator : 'normal' }));
-  if ($id('largeStartCtf')) $id('largeStartCtf').addEventListener('click', () => bpStart('ctf', { teamSize: largeTeamSize, level: pickLevel || 'normal' }));
-  if ($id('largeQuickMelee')) $id('largeQuickMelee').addEventListener('click', () => startMelee(largeTeamSize, menuHeroId, pickLevel || 'normal', typeof teamMutator !== 'undefined' ? teamMutator : 'normal'));
-  if ($id('largeQuickCtf')) $id('largeQuickCtf').addEventListener('click', () => startCtf(largeTeamSize, menuHeroId, pickLevel || 'normal'));
-  if ($id('largeStartGauntlet')) $id('largeStartGauntlet').addEventListener('click', () => startGauntlet(menuHeroId, pickLevel || 'normal'));
-  if ($id('cardMelee')) $id('cardMelee').addEventListener('dblclick', () => $id('largeStartMelee').click());
-  if ($id('cardCtf')) $id('cardCtf').addEventListener('dblclick', () => $id('largeStartCtf').click());
-  if ($id('cardGauntlet')) $id('cardGauntlet').addEventListener('dblclick', () => startGauntlet(menuHeroId, pickLevel || 'normal'));
+  const ctfSeg = $id('ctfSizeSeg');
+  if (ctfSeg) ctfSeg.addEventListener('click', e => {
+    const b = e.target.closest('[data-lsize]'); if (!b) return;
+    ctfTeamSize = Math.max(2, +b.dataset.lsize || 5);
+    ctfSeg.querySelectorAll('[data-lsize]').forEach(x => x.classList.toggle('sel', x === b));
+    SFX.slice && SFX.slice();
+  });
+  if ($id('largeStartMelee')) $id('largeStartMelee').addEventListener('click', () => bpStart('melee', { teamSize: meleeTeamSize, level: pickLevel || 'normal', mut: typeof teamMutator !== 'undefined' ? teamMutator : 'normal' }));
+  if ($id('largeStartCtf')) $id('largeStartCtf').addEventListener('click', () => bpStart('ctf', { teamSize: ctfTeamSize, level: pickLevel || 'normal', mut: typeof teamMutator !== 'undefined' ? teamMutator : 'normal' }));
+  if ($id('largeStartGauntlet')) $id('largeStartGauntlet').addEventListener('click', () => bpStart('gauntlet', { level: pickLevel || 'normal' }));
+  if ($id('cardMelee')) $id('cardMelee').addEventListener('dblclick', () => $id('largeStartMelee') && $id('largeStartMelee').click());
+  if ($id('cardCtf')) $id('cardCtf').addEventListener('dblclick', () => $id('largeStartCtf') && $id('largeStartCtf').click());
+  if ($id('cardGauntlet')) $id('cardGauntlet').addEventListener('dblclick', () => $id('largeStartGauntlet') && $id('largeStartGauntlet').click());
 })();
 

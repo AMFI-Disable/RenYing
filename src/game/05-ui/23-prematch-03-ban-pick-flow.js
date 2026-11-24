@@ -101,11 +101,8 @@ function bpRotateQuickPicks() {
   return true;
 }
 function bpAutoFillLarge() {
-  if (currentScreen !== 'bp' || !BP || (bpMode !== 'melee' && bpMode !== 'ctf')) return false;
-  while (BP && BP.step < bpSteps().length && bpValidList().length) {
-    bpApply(bpCpuChoice());
-  }
-  return true;
+  // 已禁用自动补全阵容：保持真实禁选与自主组队体验
+  return false;
 }
 function bpApply(i) {
   if (!BP || BP.step >= bpSteps().length) return;
@@ -234,8 +231,10 @@ function launchBpMatch(mode, opts, picks, bans, mapId, preMatch) {
     M.bans = bans;
   } else if (mode === 'ctf') {
     const sz = opts.teamSize || (Array.isArray(picks[0]) ? picks[0].length : 5);
-    startCtf(sz, Array.isArray(picks[0]) ? picks[0][0] : picks[0], opts.level || pickLevel, picks);
+    startCtf(sz, Array.isArray(picks[0]) ? picks[0][0] : picks[0], opts.level || pickLevel, picks, opts.mut || (typeof teamMutator !== 'undefined' ? teamMutator : 'normal'));
     M.bans = bans;
+  } else if (mode === 'gauntlet') {
+    startGauntlet(Array.isArray(picks) ? picks[0] : picks, opts.level || pickLevel);
   } else if (mode === 'maps') {
     startMapsMode(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch, mapId);
   } else if (mode === 'tag3') {

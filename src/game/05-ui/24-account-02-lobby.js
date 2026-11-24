@@ -76,9 +76,9 @@ window.updateNetLobby = updateNetLobby;
 // 建房、加入、进了房间：露出下面的候战厅、状态和网络情况（平时收着，对战页只有那张 3v3 卡）
 function roomWrapShow() { const w = $id('roomWrap'); if (w) w.classList.remove('hidden'); }
 
-const netTeamMutator = () => !NET.isRanked && ['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode) && ['chaos', 'mayhem'].includes(teamMutator) ? teamMutator : 'normal';
-let netRoomMode = 'normal';   // 好友房的规则，见 src/data/10-modes.js 的 ROOM_MODES；快速匹配和排位固定 normal（3v3 车轮战）
-const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '天机乱斗', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏', bastion: '天枢守境', melee: '群雄会战 · 8v8', ctf: '夺旗争锋 · 8v8' };
+const netTeamMutator = () => !NET.isRanked && ['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'maps'].includes(netRoomMode) && teamMutator === 'mayhem' ? 'mayhem' : 'normal';
+let netRoomMode = 'normal';   // 好友房的规则，见 src/data/10-modes.js 的 ROOM_MODES；排位固定 normal（3v3 车轮战）
+const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '常规标准', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏', bastion: '天枢守境', melee: '群雄会战 · 8v8', ctf: '夺旗争锋 · 8v8' };
 
 const lobbyModesSegEl = $id('lobbyModesSeg');
 if (lobbyModesSegEl) {
@@ -112,12 +112,12 @@ function setRoomModeUI(rule) {
 }
 function renderLobbyMutator() {
   const el = $id('lobbyMutator'); if (!el) return;
-  el.hidden = NET.isRanked || !['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode);
+  el.hidden = NET.isRanked || !['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'maps'].includes(netRoomMode);
   for (const b of el.querySelectorAll('button')) { b.disabled = NET.role === 'client' && NET.open; b.classList.toggle('sel', b.dataset.mut === netTeamMutator()); b.setAttribute('aria-pressed', String(b.dataset.mut === netTeamMutator())); }
 }
 if ($id('lobbyMutator')) $id('lobbyMutator').addEventListener('click', e => {
   const b = e.target.closest('button[data-mut]'); if (!b || (NET.role === 'client' && NET.open)) return;
-  teamMutator = ['chaos', 'mayhem'].includes(b.dataset.mut) ? b.dataset.mut : 'normal';
+  teamMutator = b.dataset.mut === 'mayhem' ? 'mayhem' : 'normal';
   renderLobbyMutator(); if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator() });
 });
 // 山河异境的联机投票：两边各一票（默认是自己在单人页上投的那张），改票时发给对面；房主开局时把两票一起发出去
@@ -192,29 +192,22 @@ function copyRoomInvite() {
 if ($id('copyCodeBtn')) $id('copyCodeBtn').addEventListener('click', copyRoomInvite);
 if ($id('roomCode')) $id('roomCode').addEventListener('click', copyRoomInvite);
 $id('hostBtn').addEventListener('click', () => { initAudio(); roomWrapShow(); netConnect(true); });
-// ---------- 对战大厅：匹配对战 / 排位赛（免服务器） ----------
+// ---------- 对战大厅：排位赛与好友约战（已移除快速匹配与自动电脑补位） ----------
 let mmKind = null;
 function mmUI(kind) {
   mmKind = kind || null;
-  mmFbHide(); MMFB.snooze = 0;
   const box = $id('mmSearch');
   if (!box) return;
   box.classList.toggle('hidden', !kind);
-  $id('mmQuickBtn').textContent = kind === 'quick' ? '匹配中…' : '开始匹配';
-  $id('mmRankBtn').textContent = kind === 'ranked' ? '排位中…' : '开始排位';
-  $id('mmQuickBtn').disabled = $id('mmRankBtn').disabled = !!kind;
-  $id('mmQuickCard').classList.toggle('searching', kind === 'quick');
-  $id('mmRankCard').classList.toggle('searching', kind === 'ranked');
-  const c2v2 = $id('mm2v2Card');
-  if (c2v2) c2v2.classList.toggle('searching', kind === '2v2_coop' || kind === '2v2_vs');
+  if ($id('mmRankBtn')) {
+    $id('mmRankBtn').textContent = kind === 'ranked' ? '排位中…' : '开始排位';
+    $id('mmRankBtn').disabled = !!kind;
+  }
+  if ($id('mmRankCard')) $id('mmRankCard').classList.toggle('searching', kind === 'ranked');
   const tp = document.querySelector('#topNav .tn-play');
-  if (tp) { tp.classList.toggle('searching', !!kind); tp.textContent = kind ? (kind === 'ranked' ? '排位中' : '匹配中') : '对战'; }
+  if (tp) { tp.classList.toggle('searching', !!kind); tp.textContent = kind ? '排位中' : '对战'; }
   if (kind) {
-    let title = '匹配对战 · 正在寻找对手';
-    if (kind === 'ranked') title = '排位赛 · 正在寻找对手';
-    else if (kind === '2v2_coop') title = '2v2 双人共斗 · 正在全服寻找同袍队友与天道对手';
-    else if (kind === '2v2_vs') title = '2v2 组队切磋 · 正在全服匹配队友与对手';
-    $id('mmSearchTitle').textContent = title;
+    $id('mmSearchTitle').textContent = '排位赛 · 正在寻找真实对手';
     mmTick();
   }
 }
@@ -226,81 +219,21 @@ function mmTick() {
     const span = mmSpan(), L = RK_TIERS.map(x => x.l), b = MM.band;
     const lo = L[Math.max(0, b - span)], hi = L[Math.min(4, b + span)];
     sub += ` · 匹配范围 ${lo === hi ? lo + ' 段' : lo + '–' + hi + ' 段'}`;
-  } else sub += ' · 全服随机';
-  $id('mmSearchSub').textContent = sub;
-  mmFallback(t);
-}
-// ---------- 排队太久：人少的时候别让人干等 ----------
-// 3v3 快速匹配和排位排了 MMFB_AFTER 秒还没配到人，搜索条下面露出一张小卡：现在就打电脑 / 继续等 / 建房叫同学。
-// 快速匹配再等 MMFB_AUTO 秒没人点，就自动停掉排队、先开一局 3v3 车轮战打电脑（和习武里的车轮战一样，先进点将台）。
-// 排位不自动跳走（排位是自己选的，不替人做主），只给按钮。点「继续等对手」就收起来，再等 MMFB_SNOOZE 秒才会再出来。
-const MMFB_AFTER = 20, MMFB_AUTO = 10, MMFB_SNOOZE = 60;
-const MMFB = { shown: 0, snooze: 0 };
-function mmFbHide() {
-  MMFB.shown = 0;
-  const box = $id('mmFallback');
-  if (box) box.classList.add('hidden');
-}
-function mmFallback(t) {
-  const box = $id('mmFallback');
-  if (!box) return;
-  const solo = mmKind === 'quick' || mmKind === 'ranked';
-  // 只在对战页开着、网页在前台时出：排着队去逛武库、切到别的窗口时不替人跳进对局
-  const here = $id('netp').classList.contains('on') && !(typeof document !== 'undefined' && document.hidden);
-  if (!solo || !here || NET.open || t < MMFB_AFTER || t < MMFB.snooze) { if (MMFB.shown) mmFbHide(); return; }
-  const auto = mmKind === 'quick';
-  if (!MMFB.shown) {
-    MMFB.shown = t;
-    $id('mmFbTxt').textContent = auto
-      ? '现在排队的人少。先和电脑打一局 3v3 车轮战吧，打完再回来匹配。'
-      : '现在排队的人少。可以先和电脑练一局 3v3 车轮战，或者建房叫同学来打。';
-    $id('mmFbCount').classList.toggle('hidden', !auto);
-    box.classList.remove('hidden');
   }
-  if (!auto) return;
-  const left = Math.max(0, MMFB_AUTO - (t - MMFB.shown));
-  $id('mmFbLeft').textContent = String(left);
-  if (left <= 0) mmFbCpu();
+  $id('mmSearchSub').textContent = sub;
 }
-// 停掉排队，先打一局电脑：和习武里 3v3 车轮战的「快速开局」一样进点将台，电脑境界用习武页记住的那一档
-function mmFbCpu() {
-  initAudio();
-  statQueueResult(false);
-  netReset();
-  paused = false;
-  bpStart('tag3', { level: pickLevel, quickRelay: true });
-}
-$id('mmFbCpu').addEventListener('click', mmFbCpu);
-$id('mmFbWait').addEventListener('click', () => {
-  if (typeof MM === 'undefined' || !MM.on) return mmFbHide();
-  MMFB.snooze = Math.floor((Date.now() - MM.t0) / 1000) + MMFB_SNOOZE;
-  mmFbHide();
-});
-$id('mmFbRoom').addEventListener('click', () => {
-  initAudio();
-  statQueueResult(false);
-  netReset();
-  roomWrapShow();
-  netConnect(true);
-  const card = $id('mmFriendCard');
-  if (card && card.scrollIntoView) card.scrollIntoView({ block: 'center', behavior: 'smooth' });
-});
 setInterval(mmTick, 1000);
 setInterval(() => { if ($id('netp').classList.contains('on') && !mmKind) renderLobby(); }, 30000);
 function mmGo(kind) {
+  if (kind !== 'ranked') { toast('已移除快速匹配，请使用排位赛或好友约战'); return; }
   initAudio();
-  if (kind === 'ranked' && !rkOwner()) { netStatus('排位赛需先登录（右上角）'); toast('排位赛需先登录'); return; }
-  if (kind === 'ranked') rkCheckPending();
+  if (!rkOwner()) { netStatus('排位赛需先登录（右上角）'); toast('排位赛需先登录'); return; }
+  rkCheckPending();
   STATQ.queueStarted = Date.now();
-  mmStart(kind);
-  let statusTxt = '匹配对战：正在全服寻找对手…';
-  if (kind === 'ranked') statusTxt = `排位赛：${rkLabel()}`;
-  else if (kind === '2v2_coop') statusTxt = '2v2 双人共斗：正在全服寻找队友与对手…';
-  else if (kind === '2v2_vs') statusTxt = '2v2 组队切磋：正在全服匹配一位对手（双方各带一名电脑队友）…';
-  netStatus(statusTxt);
+  mmStart('ranked');
+  netStatus(`排位赛：${rkLabel()}`);
 }
-$id('mmQuickBtn').addEventListener('click', () => mmGo('quick'));
-$id('mmRankBtn').addEventListener('click', () => mmGo('ranked'));
+if ($id('mmRankBtn')) $id('mmRankBtn').addEventListener('click', () => mmGo('ranked'));
 $id('mmCancelBtn').addEventListener('click', () => { statQueueResult(false); netReset(); netStatus('已取消'); });
 $id('mmRankInfoBtn').addEventListener('click', () => {
   renderRankInfo();
@@ -533,7 +466,7 @@ function refreshOnline() {
   const others = o.waiting - (mmKind ? 1 : 0);
   const card = $id('mMatch'), ms = card && card.querySelector('.ms');
   if (card) card.classList.toggle('mm-hot', others > 0);
-  if (ms) set2(ms, others > 0 ? '有人正在等对手 · 现在点就能开打' : '3v3 车轮战 · 全服随机对手');
+  if (ms) set2(ms, others > 0 ? '有人正在排位等对手 · 现在点就能开打' : '3v3 车轮战 · 排位与好友约战');
 }
 function set2(el, t) { if (el.textContent !== t && el.textContent !== (window.t ? window.t(t) : t)) el.textContent = t; }
 setInterval(refreshOnline, 1000);

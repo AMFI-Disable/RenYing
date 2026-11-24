@@ -222,7 +222,7 @@ body.offline #mMatch { display: none !important; }
 .tag-portal .tp-head .mm-kicker { grid-column: 1 / -1; justify-self: start; margin-bottom: 4px; }
 .tag-portal .tp-title { margin: 0; font: 400 clamp(30px, 3.4vw, 44px) var(--title); letter-spacing: .08em; color: var(--ink); }
 .tag-portal .tp-desc { grid-column: 1 / -1; margin: 6px 0 0; font-size: 13px; color: var(--dim); line-height: 1.5; }
-.tag-portal .tp-cards { grid-template-columns: 1fr 1.1fr 1.2fr; }
+.tag-portal .tp-cards { grid-template-columns: 1fr 1.15fr; }
 .tag-portal .mm-card { min-height: 0; padding: 16px 18px 18px; }
 .tag-portal .mm-card .mm-title { font-size: clamp(26px, 2.6vw, 34px); }
 .mm-friend .mm-card-bg { background: repeating-linear-gradient(115deg, rgba(236,232,225,.035) 0 2px, transparent 2px 14px), radial-gradient(ellipse at 100% 0%, rgba(70,211,234,.22), transparent 60%); }

@@ -3,9 +3,7 @@
 // 后写的会悄悄盖掉先写的（tools/checks/data-check.mjs 会查重、查过期）。
 Object.assign(UI_COPY_EN, {
   // 首页「开始演武」和模式大厅（src/page.html 的 #homeEntries、#single）
-  "开始演武": "Play",
   "习武": "Practice",
-  "3v3 车轮战 · 全服随机对手": "3v3 relay · Random opponents worldwide",
   "人机切磋 · 历练闯关 · 木人试剑": "PvC Combat · Story Trials · Training Dummy",
   "对战电脑 · 肉鸽 · 开放世界": "Vs AI · Roguelike · Open World",
   "演武": "Play",

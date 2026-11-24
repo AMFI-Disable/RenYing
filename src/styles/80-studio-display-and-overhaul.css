@@ -624,3 +624,44 @@
   padding: 4px 10px;
 }
 
+/* Unified 习武 Mode Hall & Preset Strip */
+.xiwu-preset-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  padding: 10px 14px;
+  margin-bottom: 10px;
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(233, 196, 106, 0.22);
+}
+.xiwu-preset-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink);
+}
+.xiwu-preset-lbl {
+  font-size: 11.5px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: rgba(233, 196, 106, 0.16);
+  color: var(--gold);
+  white-space: nowrap;
+}
+.mutator-hint {
+  font-size: 12px;
+  color: var(--dim);
+  margin-left: 6px;
+}
+#single .single-sec-pane {
+  padding: 16px 18px;
+  border-radius: 12px;
+  background: rgba(14, 17, 32, 0.56);
+  border: 1px solid rgba(239, 232, 216, 0.12);
+}
+

@@ -249,7 +249,7 @@ export default [
     })()`
   },
   {
-    name: 'Large Battle BP screen supports 5v5 and 8v8 multi-ban drafting, auto-fill, and launches drafted teams into melee/ctf',
+    name: 'Large Battle BP screen supports 5v5 and 8v8 multi-ban drafting with auto-fill disabled and launches drafted teams into melee/ctf',
     fn: `(() => {
       bpStart('melee', { teamSize: 5, level: 'normal' });
       if (bpMode !== 'melee' || !BP) return { pass: false, error: 'bpStart(melee) failed' };
@@ -259,10 +259,10 @@ export default [
       if (!Array.isArray(BP.picks[0]) || BP.picks[0].length !== 5 || BP.picks[1].length !== 5) {
         return { pass: false, error: 'Expected 5 picks per side in 5v5 melee BP' };
       }
-      // Player picks first ban manually, then uses bpAutoFillLarge
+      if (bpAutoFillLarge() !== false) return { pass: false, error: 'Expected bpAutoFillLarge() to be disabled' };
       bpApply(0);
       if (BP.bansBySide[0][0] !== 0) return { pass: false, error: 'First ban not recorded in bansBySide[0][0]' };
-      bpAutoFillLarge();
+      while (BP && BP.step < bpSteps().length) bpApply(bpCpuChoice());
       const expectedTeam0 = BP.picks[0].slice();
       const expectedTeam1 = BP.picks[1].slice();
       const allUsed = [...BP.bans, ...expectedTeam0, ...expectedTeam1];
@@ -283,7 +283,7 @@ export default [
       if (BP.picks[0].length !== 8 || BP.picks[1].length !== 8 || BP.bansBySide[0].length !== 2) {
         return { pass: false, error: '8v8 CTF BP structure mismatch' };
       }
-      bpAutoFillLarge();
+      while (BP && BP.step < bpSteps().length) bpApply(bpCpuChoice());
       const ctfTeams = BP.picks.map(team => team.slice());
       bpFinish();
       if (M.mode !== 'ctf' || M.teamSize !== 8) return { pass: false, error: '8v8 CTF did not start' };
@@ -442,6 +442,44 @@ export default [
       if (!entered || A.plat < BATTLE5_DECKS.length) return { pass: false, error: 'Failed to enter 5v5 ground-to-mid stair' };
       startCtf(5, 0, 'normal');
       if (mapNow() !== BATTLE5_MAP || STAGE_W !== 2800) return { pass: false, error: '5v5 CTF did not activate BATTLE5_MAP' };
+      toMenu();
+      return { pass: true };
+    })()`
+  },
+  {
+    name: 'Unified 常规标准 merges 天机乱斗 across all combat modes, 习武 panes are unified, and Quick Match / auto-fill are removed',
+    fn: `(() => {
+      teamMutator = 'normal';
+      startMatch('cpu', 'normal', [0, 1]); M.phase = 'fight'; updateChaos(STEP);
+      if (!chaosOn() || mayhemOn() || !M.chaos || M.chaos.i < 0) return { pass: false, error: 'Unified 常规标准 omens did not activate in cpu' };
+      startCtf(5, 0, 'normal', null, 'normal'); M.phase = 'fight'; updateChaos(STEP);
+      if (!chaosOn() || mayhemOn() || M.chaos.i < 0) return { pass: false, error: 'Unified 常规标准 omens did not activate in ctf' };
+      startCtf(5, 0, 'normal', null, 'mayhem');
+      if (!mayhemOn() || chaosOn()) return { pass: false, error: 'Mayhem did not override 常规标准 in ctf' };
+      if (normalizeMutator('chaos') !== 'normal' || normalizeMutator('normal') !== 'normal' || normalizeMutator('mayhem') !== 'mayhem') {
+        return { pass: false, error: 'normalizeMutator did not map legacy chaos -> normal' };
+      }
+      startMatch('cpu', 'normal', [0, 1]); M.teamMutator = 'mayhem';
+      if (!mayhemOn() || chaosOn()) return { pass: false, error: 'Mayhem did not override 常规标准 in cpu' };
+      startTraining('dummy', false);
+      if (chaosOn()) return { pass: false, error: 'Chaos omens should stay off in train mode' };
+      if (bpAutoFillLarge() !== false) return { pass: false, error: 'Expected bpAutoFillLarge() to return false' };
+      mmKind = null;
+      mmGo('quick');
+      if (mmKind === 'quick') return { pass: false, error: 'Expected mmGo(quick) to be blocked' };
+      for (const sec of ['cpu', 'tag3', 'watch2v2', 'melee', 'ctf', 'gauntlet', 'cuju', 'koth', 'party', 'train']) {
+        if (!XIWU_MODE_INFO || !XIWU_MODE_INFO[sec]) {
+          return { pass: false, error: 'Missing unified XIWU_MODE_INFO entry for: ' + sec };
+        }
+      }
+      const cxIdx = CHARS.findIndex(c => c.id === 'cixian');
+      const lmIdx = CHARS.findIndex(c => c.id === 'leiming');
+      startMatch('cpu', 'normal', [cxIdx, lmIdx]); M.phase = 'fight';
+      A.reset(STAGE_W / 2 - 90); B.reset(STAGE_W / 2 + 90); A.face = 1; B.face = -1; A.meter = 100;
+      B.ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
+      startSpecial(A);
+      for (let t = 0; t < 120; t++) step();
+      if (!Number.isFinite(A.x) || !Number.isFinite(B.hp)) return { pass: false, error: 'Cixian 1v1 ult produced invalid state' };
       toMenu();
       return { pass: true };
     })()`

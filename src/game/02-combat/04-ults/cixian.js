@@ -42,8 +42,8 @@ Object.assign(ULTS, {
             foe.squashT = 1.0;
             addP({ type: 'text', text: '天地磁合 · 夹成肉饼', x: S.x, y: baseY - 200, life: 1.1, max: 1.1, rgb: '255,220,200' });
           }
-          if (isMulti() && !isClient() && typeof strikeAoE === 'function') {
-            strikeAoE(f, S.x, baseY - 60, 175, 130, { dmg: 55, kb: [260, -340], stun: 0.45, hs: 0.06, launch: true, unblockable: true, ult: true, noScale: true }, caught ? foe : null);
+          if (!isClient() && typeof strikeAoE === 'function') {
+            strikeAoE(f, S.x, baseY - 60, 175, 130, { dmg: 55, kb: [260, -340], stun: 0.45, hs: 0.06, launch: true, unblockable: true, ult: true, noScale: true }, caught ? [foe.idx] : []);
           }
         }
       }

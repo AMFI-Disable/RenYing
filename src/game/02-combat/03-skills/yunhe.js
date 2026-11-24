@@ -25,14 +25,12 @@ Object.assign(SKILLS, {
         f.skPh = 1; f.t = 0; SFX.swing();
         const heal = Math.round(86 * HERO_HP_SCALE);
         f.hp = Math.min(f.maxHp, f.hp + heal);
-        if (isMulti()) {
-          const allyHeal = Math.round(heal * 0.55);
-          for (const ally of allFighters()) {
-            if (ally === f || ally.team !== f.team || ally.hp <= 0) continue;
-            if (Math.hypot(ally.x - f.x, ally.y - f.y) <= 280) {
-              ally.hp = Math.min(ally.maxHp, ally.hp + allyHeal);
-              if (!RESIM) { ring(ally.x, ally.y - 60, 88, '168,230,255', 0.35); addP({ type: 'text', text: `+${allyHeal}`, x: ally.x, y: ally.y - 118, life: 0.8, max: 0.8, rgb: '168,230,255' }); }
-            }
+        const allyHeal = Math.round(heal * 0.55);
+        for (const ally of allFighters()) {
+          if (ally === f || ally.hidden || ally.team !== f.team || ally.hp <= 0) continue;
+          if (Math.hypot(ally.x - f.x, ally.y - f.y) <= 280) {
+            ally.hp = Math.min(ally.maxHp, ally.hp + allyHeal);
+            if (!RESIM) { ring(ally.x, ally.y - 60, 88, '168,230,255', 0.35); addP({ type: 'text', text: `+${allyHeal}`, x: ally.x, y: ally.y - 118, life: 0.8, max: 0.8, rgb: '168,230,255' }); }
           }
         }
         if (!RESIM) {

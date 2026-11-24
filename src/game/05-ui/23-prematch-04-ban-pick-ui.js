@@ -166,7 +166,7 @@ function renderBP() {
   if (bpMode === 'net' && NET.isRanked) modePrefix = '排位赛 · ';
   else if (bpMode === 'net' && roomDef().four) modePrefix = '联机2v2 · ';
   else if (bpMode === 'cpu' || bpMode === 'cpuWatch') modePrefix = '论剑点将 · ';
-  else if (bpMode === 'chaos') modePrefix = '天机乱斗 · ';
+  else if (bpMode === 'chaos') modePrefix = '常规标准 · ';
   else if (bpMode === 'maps') modePrefix = '山河异境 · ';
   else if (bpMode === 'cuju' || bpMode === 'cuju2v2') modePrefix = bpMode === 'cuju2v2' ? '2v2 墨球蹴鞠 · ' : '墨球蹴鞠 · ';
   else if (bpMode === 'koth' || bpMode === 'koth2v2') modePrefix = bpMode === 'koth2v2' ? '2v2 灵坛争锋 · ' : '灵坛争锋 · ';
@@ -340,7 +340,6 @@ function renderBP() {
   $id('bpUndo').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step > 0 && BP.step < 3);
   $id('bpSwap').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step === 2);
   $id('bpRotate').hidden = !(bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay && myTurn && BP.step === 2 && bpValid(bpSel));
-  if ($id('bpAutoFill')) $id('bpAutoFill').hidden = !(isLargeBP && !done && !isWatch);
   if (isWatch) {
     goB.disabled = true;
     goB.textContent = done ? '即将开战 · 演武观战' : 'AI 演武禁选中…';
@@ -432,5 +431,4 @@ document.getElementById('bpGo').addEventListener('click', bpConfirm);
 document.getElementById('bpUndo').addEventListener('click', bpUndoQuickPick);
 document.getElementById('bpSwap').addEventListener('click', bpSwapQuickPicks);
 document.getElementById('bpRotate').addEventListener('click', bpRotateQuickPicks);
-if (document.getElementById('bpAutoFill')) document.getElementById('bpAutoFill').addEventListener('click', bpAutoFillLarge);
 document.getElementById('bpQuit').addEventListener('click', () => toMenu());

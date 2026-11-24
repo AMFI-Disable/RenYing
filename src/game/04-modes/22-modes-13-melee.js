@@ -58,7 +58,7 @@ function startMelee(teamSize = 5, heroIdx = 0, level = 'normal', mut = 'normal',
   M.mode = 'melee';
   M.teamSize = sz;
   M.level = level || 'normal';
-  M.teamMutator = ['chaos', 'mayhem'].includes(mut) ? mut : 'normal';
+  M.teamMutator = mut === 'mayhem' ? 'mayhem' : 'normal';
   M.wins = [0, 0]; M.round = 1; M.watchAi = false;
   const total = sz * 2;
   const hasDraft = Array.isArray(drafted) && Array.isArray(drafted[0]) && Array.isArray(drafted[1]);

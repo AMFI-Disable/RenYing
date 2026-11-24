@@ -74,13 +74,14 @@ function render2v2Modal() {
   render2v2Inline();
   const mode = active2v2ModalMode, tx = M2_TEXT[mode];
   if (!tx) return;
-  for (const b of document.querySelectorAll('#m2Mutator button')) { b.classList.toggle('sel', b.dataset.mut === teamMutator); b.setAttribute('aria-pressed', String(b.dataset.mut === teamMutator)); }
+  const normMut = teamMutator === 'mayhem' ? 'mayhem' : 'normal';
+  teamMutator = normMut;
+  for (const b of document.querySelectorAll('#m2Mutator button')) { b.classList.toggle('sel', b.dataset.mut === normMut); b.setAttribute('aria-pressed', String(b.dataset.mut === normMut)); }
   for (const b of document.querySelectorAll('#modal2v2Seg button')) b.classList.toggle('sel', b.dataset.m === mode);
   if ($id('m2LvWrap')) $id('m2LvWrap').hidden = mode === 'pp_pp';
-  for (const id of ['btn2v2GoMatch', 'btn2v2GoOnline']) { if ($id(id)) $id(id).style.display = mode === 'p_cc' ? 'none' : ''; }
+  if ($id('btn2v2GoOnline')) $id('btn2v2GoOnline').style.display = mode === 'p_cc' ? 'none' : '';
   if ($id('modal2v2Desc')) $id('modal2v2Desc').textContent = tx.desc;
   if ($id('modal2v2LocalDesc')) $id('modal2v2LocalDesc').textContent = tx.local;
-  if ($id('modal2v2MatchDesc')) $id('modal2v2MatchDesc').textContent = tx.match;
 }
 if ($id('xiwu2v2Seg')) {
   $id('xiwu2v2Seg').addEventListener('click', e => {
@@ -93,16 +94,7 @@ if ($id('xiwu2v2StartBtn')) {
     bpStart('2v2', { subMode: active2v2ModalMode, level: pickLevel });
   });
 }
-if ($id('xiwu2v2QuickBtn')) {
-  $id('xiwu2v2QuickBtn').addEventListener('click', () => {
-    const hero = menuHeroPick();
-    const pool = CHARS.map((c, i) => i).filter(i => i !== hero);
-    for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-    if (active2v2ModalMode === 'pp_pp') start2v2LocalVs(hero, pool[0], pool[1], pool[2]);
-    else start2v2LocalCoop(hero, pool[0], pool[1], pool[2], pickLevel, active2v2ModalMode === 'p_cc');
-    applySkins();
-  });
-}
+// 已移除随机阵容即刻开战，统一经由点将台自主选人
 if ($id('xiwu2v2WatchBtn')) {
   $id('xiwu2v2WatchBtn').addEventListener('click', () => {
     startWatch2v2Draft();
@@ -120,29 +112,15 @@ function open2v2Hub(mode, reveal = true) {   // 先回到放 2v2 卡片的那一
   return scr;
 }
 function close2v2Modal() { $id('modal2v2').classList.add('hidden'); levelBarTo(null); }
-if ($id('m2Mutator')) $id('m2Mutator').addEventListener('click', e => { const b = e.target.closest('button[data-mut]'); if (b) { teamMutator = b.dataset.mut; render2v2Modal(); } });
+if ($id('m2Mutator')) $id('m2Mutator').addEventListener('click', e => { const b = e.target.closest('button[data-mut]'); if (b) { teamMutator = b.dataset.mut === 'mayhem' ? 'mayhem' : 'normal'; render2v2Modal(); } });
 $id('modal2v2Seg').addEventListener('click', e => {
   const b = e.target.closest('button[data-m]'); if (!b) return;
   active2v2ModalMode = b.dataset.m; SFX.slice(); render2v2Modal();
 });
 $id('modal2v2Close').addEventListener('click', close2v2Modal);
-if ($id('btn2v2Quick')) $id('btn2v2Quick').addEventListener('click', () => {
-  const hero = menuHeroPick();
-  const pool = CHARS.map((c, i) => i).filter(i => i !== hero);
-  for (let i = pool.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [pool[i], pool[j]] = [pool[j], pool[i]]; }
-  close2v2Modal();
-  if (active2v2ModalMode === 'pp_pp') start2v2LocalVs(hero, pool[0], pool[1], pool[2]);
-  else start2v2LocalCoop(hero, pool[0], pool[1], pool[2], pickLevel, active2v2ModalMode === 'p_cc');
-  applySkins();
-});
 $id('btn2v2GoLocal').addEventListener('click', () => {
   close2v2Modal();
   bpStart('2v2', { subMode: active2v2ModalMode, level: pickLevel });
-});
-$id('btn2v2GoMatch').addEventListener('click', () => {
-  close2v2Modal();
-  if (!$id('netp').classList.contains('on')) openScreen('netp');
-  mmGo(active2v2ModalMode === 'pp_cc' ? '2v2_coop' : '2v2_vs');
 });
 $id('btn2v2GoOnline').addEventListener('click', () => {
   close2v2Modal();

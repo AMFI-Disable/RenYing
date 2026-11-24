@@ -446,17 +446,17 @@ function rpSub(m) {
 }
 function replayModeTag(m) {
   const mutator = m.st0 && m.st0.M && m.st0.M.teamMutator;
-  const mutatorTag = mutator === 'chaos' ? ` · ${cvT('天机乱斗')}` : mutator === 'mayhem' ? ` · ${cvT('通天神决')}` : '';
+  const mutatorTag = mutator === 'mayhem' ? ` · ${cvT('通天神决')}` : '';
   if (m.raid) return `${cvT(m.kind === 'net' ? '联机同袍肉鸽' : '本地同袍肉鸽')} · ${cvT('第')} ${m.raidWave || 1}${m.runId ? ` · ${cvT('全程')} ${m.segments.length} ${cvT('劫')}` : ''}`;
   if (m.mode === 'mayhem' || m.room === 'mayhem') return cvT(m.mode === 'net' ? '联机通天神决' : '通天神决');
-  if (m.room === 'melee' || m.room === 'ctf') return `${cvT('联机')} · ${cvT(m.room === 'melee' ? '群雄会战 · 8v8' : '夺旗争锋 · 8v8')}`;
-  if (m.mode === 'net') return m.ranked ? cvT('排位赛') : m.four ? `${cvT('联机2v2')} · ${cvT(m.sub === 'pp_pp' ? '四人对决' : m.sub === 'pp_cc' ? '双人共斗' : '携手共斗')}` : `${cvT('联机')} · ${cvT(m.room === 'chaos' ? '天机乱斗' : m.room === 'mayhem' ? '通天神决' : '标准对战')}`;
-  if (m.mode === 'cpu') return `${cvT('人机')} · ${cvT(LV_NAME[m.level] || m.level || '')}`;
-  if (m.mode === 'pvp') return cvT('本地双人');
+  if (m.room === 'melee' || m.room === 'ctf') return `${cvT('联机')} · ${cvT(m.room === 'melee' ? '群雄会战 · 8v8' : '夺旗争锋 · 8v8')}${mutatorTag}`;
+  if (m.mode === 'net') return m.ranked ? cvT('排位赛') : m.four ? `${cvT('联机2v2')} · ${cvT(m.sub === 'pp_pp' ? '四人对决' : m.sub === 'pp_cc' ? '双人共斗' : '携手共斗')}${mutatorTag}` : `${cvT('联机')} · ${cvT(m.room === 'mayhem' ? '通天神决' : '常规标准')}`;
+  if (m.mode === 'cpu') return `${cvT('人机')} · ${cvT(LV_NAME[m.level] || m.level || '')}${mutatorTag}`;
+  if (m.mode === 'pvp') return cvT('本地双人') + mutatorTag;
   if (m.mode === '2v2') return `${cvT('2v2')} · ${cvT({ p_cc: '携手共斗', pp_cc: '双人共斗', pp_pp: '四人对决' }[m.sub] || '组队')}${mutatorTag}`;
-  if (m.mode === 'maps') return `${cvT('山河异境')} · ${cvT((MAPS[m.st0 && m.st0.M && m.st0.M.map] || {}).n || '')}`;
+  if (m.mode === 'maps') return `${cvT('山河异境')} · ${cvT((MAPS[m.st0 && m.st0.M && m.st0.M.map] || {}).n || '')}${mutatorTag}`;
   if (m.mode === 'tag3') return `${cvT('门派车轮战')} · ${m.runId ? `${m.segments.length} ${cvT('局全程')}` : `${cvT('第')} ${m.round || 1}`}${mutatorTag}`;
-  if (m.mode === 'chaos') return cvT('天机乱斗');
+  if (m.mode === 'chaos') return cvT('常规标准');
   if (m.mode === 'tower') return `${cvT('万仞剑阁')} · ${cvT('第')} ${m.towerFloor || 1}${m.runId ? ` · ${cvT('全程')} ${m.segments.length} ${cvT('层')}` : ''}`;
   if (m.mode === 'saga') return `${cvT('侠客列传')} · ${cvT(CHARS.find(c => c.id === m.chapter)?.name || '')} · ${cvT('第')} ${(m.chapterNode || 0) + 1}`;
   return cvT('本地对战');

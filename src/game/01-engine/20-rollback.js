@@ -130,7 +130,7 @@ function rollStart(ch, seed, duo, mv, map, mut, competitiveScrolls = null, loado
   M.combatLoadouts = Array.isArray(loadouts) ? loadouts : [combatLoadoutMap(), NET.peerLoadout || {}];
   M.competitiveScrolls = competitiveScrolls && typeof competitiveScrolls === 'object' ? competitiveScrolls : null;
   M.hasBuffs = !!(M.competitiveScrolls && Object.values(M.competitiveScrolls).some(team => Object.keys(team || {}).length));
-  M.teamMutator = !NET.isRanked && ['normal', 'pp_cc', 'pp_pp'].includes(netRoomMode) && ['chaos', 'mayhem'].includes(mut) ? mut : 'normal';
+  M.teamMutator = !NET.isRanked && ['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'maps'].includes(netRoomMode) && mut === 'mayhem' ? 'mayhem' : 'normal';
   // 山河异境：房主在点将台上选好的图随开局发来（map）；同阵容再战没有点将台，就按两边的票和种子选
   if (MAPS[map]) M.map = map;
   else if (Array.isArray(mv) || roomDef().rule === 'maps') M.map = mapPick(mv, mapSeedRand(seed));

@@ -92,7 +92,7 @@ Object.assign(SKILLS, {
           if (targetAlive && Math.abs(tg.x - f.x) <= 135 && Math.abs(tg.y - f.y) <= 130) {
             applyHit(f, tg, { ...execSpec, dir: Math.sign(tg.x - f.x) || f.face, srcX: f.x }, [tg.x, tg.y - 58]);
           }
-          if (isMulti()) {
+          if (!isClient() && typeof strikeAoE === 'function') {
             strikeAoE(f, f.x, f.y - 45, 130, 110, { dmg: Math.round(execDmg * 0.55), kb: [200, -240], stun: 0.4, hs: 0.08, big: true, skill: true }, targetAlive ? [tg.idx] : []);
           }
           if (!RESIM) {

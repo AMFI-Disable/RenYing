@@ -26,7 +26,7 @@ Object.assign(SKILLS, {
         if (foe.invul <= 0 && foe.hp > 0) {
           applyHit(f, foe, { dmg: 45, kb: [0, 0], stun: 0, hs: 0.06, noScale: true, noStun: true, dir: foe.x >= f.x ? 1 : -1 }, [foe.x, foe.y - 60]);
         }
-        if (isMulti()) {
+        if (!isClient() && typeof strikeAoE === 'function') {
           strikeAoE(f, foe.x, foe.y - 55, 130, 110, { dmg: 26, kb: [0, 0], stun: 0, hs: 0.04, noScale: true, noStun: true }, [foe.idx]);
         }
       }

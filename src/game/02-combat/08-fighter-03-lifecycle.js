@@ -27,6 +27,7 @@ function startMatch(mode, level, chars, isWatch = false) {
   if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
   const keepMap = M.map;
   M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false; M.map = keepMap || null; M.teamSize = 0;
+  M.teamMutator = (['cpu', 'pvp', 'maps'].includes(mode) && typeof teamMutator !== 'undefined' && teamMutator === 'mayhem') ? 'mayhem' : 'normal';
   M.watchAi = !!isWatch;
   A.meter = B.meter = 0;
   A.ctrl = (mode === 'demo' || isWatch) ? new AICtrl(level || 'god') : human[0];

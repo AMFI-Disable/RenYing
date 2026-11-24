@@ -126,9 +126,31 @@ const CHAOS_MUTATIONS = [
 ];
 
 let chaosP1 = 0, chaosP2 = 1;
-// 天机乱斗正在生效的异变记在 M.chaos：{ i: CHAOS_MUTATIONS 里第几条（-1 还没抽）, t: 这条生效了几秒 }。
-// 放在 M 里，联机回滚的存档、录像都带着它；联机时两边（和放录像时）用对局随机数抽，抽到的是同一条，两边都生效
-const chaosOn = () => M.mode === 'chaos' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'chaos') || ((M.mode === 'tag3' || M.mode === 'melee' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'chaos') || (netRoom() || {}).rule === 'chaos';
+const normalizeMutator = mut => mut === 'mayhem' ? 'mayhem' : 'normal';
+const UNIFIED_STANDARD_MODES = ['cpu', 'pvp', 'chaos', 'tag3', 'melee', 'ctf', '2v2', 'watch2v2', 'maps'];
+// 常规标准已融合原天机乱斗的动态乾坤异变，记在 M.chaos：{ i: CHAOS_MUTATIONS 里第几条（-1 还没抽）, t: 这条生效了几秒 }。
+// 放在 M 里，联机回滚的存档、录像都带着它；联机时两边（和放录像时）用对局随机数抽，抽到的是同一条，两边都生效。
+const chaosOn = () => {
+  if (typeof mayhemOn === 'function' && mayhemOn()) return false;
+  if (M.mode === 'replay' && REPLAY.on && REPLAY.m) {
+    if (REPLAY.m.mode === 'mayhem' || M.teamMutator === 'mayhem') return false;
+    if (REPLAY.m.mode === 'chaos') return true;
+    if (REPLAY.m.mode === 'net') {
+      if (REPLAY.m.ranked) return false;
+      const rm = typeof netRoom === 'function' ? netRoom() : null;
+      if (rm && ['cuju', 'koth', 'party', 'bastion', 'raid', 'mayhem'].includes(rm.rule)) return false;
+      return M.teamMutator !== 'mayhem';
+    }
+    return UNIFIED_STANDARD_MODES.includes(REPLAY.m.mode) && M.teamMutator !== 'mayhem';
+  }
+  if (M.mode === 'net') {
+    if (typeof NET !== 'undefined' && NET.isRanked) return false;
+    const rm = typeof netRoom === 'function' ? netRoom() : null;
+    if (rm && ['cuju', 'koth', 'party', 'bastion', 'raid', 'mayhem'].includes(rm.rule)) return false;
+    return M.teamMutator !== 'mayhem';
+  }
+  return UNIFIED_STANDARD_MODES.includes(M.mode) && M.teamMutator !== 'mayhem';
+};
 // 现在生效的异变；给了 type 就只在是这一种时返回
 function chaosNow(type) {
   const c = chaosOn() && M.chaos, mut = c && c.i >= 0 ? CHAOS_MUTATIONS[c.i] : null;
@@ -137,14 +159,14 @@ function chaosNow(type) {
 const chaosLeft = () => Math.max(0, Math.ceil(CHAOS_INTERVAL - ((M.chaos && M.chaos.t) || 0)));   // 这条还剩几秒
 
 function rollChaosMutation() {
-  const i = Math.floor((netSim() ? grnd() : Math.random()) * CHAOS_MUTATIONS.length) % CHAOS_MUTATIONS.length, mut = CHAOS_MUTATIONS[i];
+  const i = Math.floor(grnd() * CHAOS_MUTATIONS.length) % CHAOS_MUTATIONS.length, mut = CHAOS_MUTATIONS[i];
   M.chaos = { i, t: 0 };
   if (RESIM) return mut;   // 回滚重算时只改状态，提示已经出过了
   flashA = Math.max(flashA, 0.3);
   flashRGB = '233,196,106';
   shake = Math.max(shake, 8);
   SFX.gong();
-  say('天机异变 · ' + mut.name, 1.8, 'big', mut.desc);
+  say('常规标准 · ' + mut.name, 1.8, 'big', mut.desc);
   if (typeof addP === 'function' && typeof A !== 'undefined') {
     addP({ type: 'text', text: mut.icon + ' ' + cvT(mut.name), x: STAGE_W / 2, y: -160, life: 1.8, max: 1.8, rgb: '233,196,106' });
   }
@@ -166,6 +188,7 @@ function startChaos(p1, p2, lv, isWatch = false) {
   chaosP1 = p1 !== undefined ? p1 : chaosP1;
   chaosP2 = p2 !== undefined ? p2 : chaosP2;
   M.mode = 'chaos';
+  M.teamMutator = 'normal';
   M.level = lv || pickLevel;   // 这局用的境界；不改玩家选好的那一条
   M.round = 1;
   M.wins = [0, 0];
@@ -180,7 +203,7 @@ function startChaos(p1, p2, lv, isWatch = false) {
   showScreen(null);
   if (!isWatch) recBegin('loc');
   startRound();
-  say(isWatch ? '天机乱斗 · 乾坤异变观战' : '天机乱斗 · 乾坤异变', 1.4);
+  say(isWatch ? '常规标准 · 乾坤异变观战' : '常规标准 · 乾坤异变', 1.4);
   rollChaosMutation();
 }
 

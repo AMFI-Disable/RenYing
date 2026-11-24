@@ -132,7 +132,7 @@ const xiwuMutatorEl = $id('mutatorPills');
 if (xiwuMutatorEl) xiwuMutatorEl.addEventListener('click', e => {
   const b = e.target.closest('button[data-mut]'); if (!b) return;
   SFX.slice();
-  teamMutator = b.dataset.mut;
+  teamMutator = b.dataset.mut === 'mayhem' ? 'mayhem' : 'normal';
   singleSec(currentSingleTab || 'cpu');
 });
 const singleTabsEl = document.getElementById('singleTabs');
@@ -168,4 +168,4 @@ if (taskTabsEl) {
   });
 }
 
-if ($id('xiwuQuickGo')) $id('xiwuQuickGo').addEventListener('click', () => { if (menuHeroId < 0) setMenuHero(menuHeroPick()); heroQuickFight(); });
+// 已移除随机对手即刻开战，所有对战统一经由点将台自主选人

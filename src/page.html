@@ -135,18 +135,18 @@
         <span class="hc-txt"><b id="homeReplayTitle">查看战绩与回放</b><small id="homeReplaySub">最近 10 场保存在本机</small></span>
       </button>
       <details class="home-card home-news">
-        <summary><span class="hc-kicker">版本动态</span><span class="hn-line">刃影武库 · 匹配对战 · 排位赛 · 技能重做</span></summary>
+        <summary><span class="hc-kicker">版本动态</span><span class="hn-line">刃影武库 · 排位赛 · 好友约战 · 技能升级</span></summary>
         <ul>
           <li><b>刃影武库</b>武器箱、玩家市场、熔铸契</li>
-          <li><b>匹配对战</b>全服随机对手，开局即打</li>
+          <li><b>联机对战</b>排位天梯与好友约战，毫秒回滚</li>
           <li><b>排位赛</b>D 到 S 五段，定级 3 场</li>
-          <li><b>流云 · 墨羽</b>技能重做</li>
+          <li><b>常规标准</b>融合动态天机异变，全模式统一技能</li>
         </ul>
       </details>
     </div>
-    <!-- 首页两个入口：大的「匹配对战」直接去联机，下面小一点的「习武」进对战电脑和其他模式；换侠客在正中侠客脚下 -->
+    <!-- 首页两个入口：大的「联机对战」直接去联机，下面小一点的「习武」进对战电脑和其他模式；换侠客在正中侠客脚下 -->
     <div class="home-entries" id="homeEntries">
-      <button class="mcard right" id="mMatch" data-go="netp" data-kb-default><span class="mk">匹配对战</span><span class="ms">3v3 车轮战 · 全服随机对手</span></button>
+      <button class="mcard right" id="mMatch" data-go="netp" data-kb-default><span class="mk">联机对战</span><span class="ms">3v3 车轮战 · 排位与好友约战</span></button>
       <button class="mcard left" id="mPlay" data-go="single"><span class="mk">习武</span><span class="ms">人机切磋 · 8v8 团战 · 历练闯关</span></button>
     </div>
     <div class="home-hub" id="homeHub">
@@ -214,23 +214,9 @@
           <!-- 大型团战与新玩法分区 -->
           <div class="xiwu-cat-group" data-cat-group="large" style="display:none">
             <div class="xiwu-cards-row">
-              <button data-tab="melee" type="button" id="cardMelee"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">群雄会战</b><span class="pt-d">3v3 / 5v5 / 8v8 同屏大混战</span></button>
-              <button data-tab="ctf" type="button" id="cardCtf"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">夺旗争锋</b><span class="pt-d">2v2–8v8 护旗夺分战</span></button>
-              <button data-tab="gauntlet" type="button" id="cardGauntlet"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">无尽试炼</b><span class="pt-d">逐波递增车轮生存战</span></button>
-            </div>
-            <div class="xiwu-large-bar" id="xiwuLargePanel">
-              <span class="xl-lbl">团战规模</span>
-              <div class="seg" id="largeSizeSeg">
-                <button type="button" data-lsize="2">2v2</button>
-                <button type="button" data-lsize="3">3v3</button>
-                <button type="button" data-lsize="5" class="sel">5v5</button>
-                <button type="button" data-lsize="8">8v8</button>
-              </div>
-              <button type="button" class="go small" id="largeStartMelee">禁选 BP · 群雄会战</button>
-              <button type="button" class="go small alt" id="largeStartCtf">禁选 BP · 夺旗争锋</button>
-              <button type="button" class="ghost small" id="largeQuickMelee">快速会战</button>
-              <button type="button" class="ghost small" id="largeQuickCtf">快速夺旗</button>
-              <button type="button" class="ghost small" id="largeStartGauntlet">无尽试炼</button>
+              <button data-tab="melee" type="button" id="cardMelee"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">群雄会战</b><span class="pt-d">3v3 / 5v5 / 8v8 同屏大混战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="melee" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="ctf" type="button" id="cardCtf"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">夺旗争锋</b><span class="pt-d">2v2–8v8 护旗夺分战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="ctf" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="gauntlet" type="button" id="cardGauntlet"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">无尽试炼</b><span class="pt-d">逐波递增车轮生存战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="gauntlet" title="玩法说明" aria-label="玩法说明">i</span></button>
             </div>
           </div>
 
@@ -295,15 +281,18 @@
         </div>
       </div>
 
-            <div class="xiwu-quick-card" id="xiwuQuickCard"><div><b>即刻开战</b><p id="xiwuQuickInfo"></p><div class="xiwu-presets"><label for="xiwuPresetSelect">常用方案</label><select id="xiwuPresetSelect"><option value="">读取或保存方案</option></select><button class="ghost small" id="xiwuPresetSave" type="button">保存当前</button><button class="ghost small" id="xiwuPresetDelete" type="button" disabled>删除方案</button></div></div><button class="go" id="xiwuQuickGo" type="button">即刻开战</button></div>
-            <!-- 战场异变印章 -->
+            <div class="xiwu-preset-strip" id="xiwuPresetBar">
+              <div class="xiwu-preset-meta"><span class="xiwu-preset-lbl">当前配置</span><span id="xiwuQuickInfo"></span></div>
+              <div class="xiwu-presets"><label for="xiwuPresetSelect">常用方案</label><select id="xiwuPresetSelect"><option value="">读取或保存方案</option></select><button class="ghost small" id="xiwuPresetSave" type="button">保存当前</button><button class="ghost small" id="xiwuPresetDelete" type="button" disabled>删除方案</button></div>
+            </div>
+            <!-- 战场规则变式：常规标准（融合动态天机异变） / 通天神决 -->
             <div class="xiwu-mutator-row">
-              <span class="mutator-label">战场异变：</span>
-              <div class="mutator-pills seal-group" id="mutatorPills" role="group" aria-label="战场异变">
+              <span class="mutator-label">战场规则：</span>
+              <div class="mutator-pills seal-group" id="mutatorPills" role="group" aria-label="战场规则">
                 <button type="button" class="mut-pill seal-stamp sel" data-mut="normal"><span class="stamp-border"><b>常规标准</b></span></button>
-                <button type="button" class="mut-pill seal-stamp" data-mut="chaos"><span class="stamp-border"><b>天机乱斗</b></span></button>
                 <button type="button" class="mut-pill seal-stamp" data-mut="mayhem"><span class="stamp-border"><b>通天神决</b></span></button>
               </div>
+              <span class="mutator-hint">常规标准已融合动态天机异变，全模式同步生效</span>
             </div>
 
 
@@ -342,8 +331,6 @@
           <span class="sub-badge">接力对决 · 胜者守擂</span>
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">排定【先锋】、【中坚】与【大将】三名侠客出阵。单局击破敌将后保留残血调息，迎战敌方下一名侠客，直至一方三人全灭！</p>
-        <div class="single-action-row"><button class="go" id="tag3QuickBtn" type="button">快速车轮 · 自选三将</button></div>
-        <p class="sub">快速车轮免禁选，电脑自动选将，双方使用推荐密卷；完整点将保留禁选与密卷选择。</p>
 
         <div class="bp-rule-banner">
           <span class="bp-rule-seal">禁选</span>
@@ -353,10 +340,9 @@
           </div>
         </div>
 
-
         <div class="single-action-row">
-          <button class="go" id="tag3StartBtn">擂台接力 · 开启车轮战</button>
-          <button class="go alt" id="tag3WatchBtn" type="button">3v3 AI群英观战</button>
+          <button class="go" id="tag3StartBtn">进入点将台 (BP) · 开启车轮战</button>
+          <button class="go alt" id="tag3WatchBtn" type="button">3v3 AI 群英观战</button>
         </div>
       </div>
 
@@ -384,9 +370,78 @@
         </div>
 
         <div class="single-action-row" style="margin-top:14px">
-          <button class="go" id="xiwu2v2StartBtn" type="button">开始选角 (BP) · 开战</button>
-          <button class="go alt" id="xiwu2v2QuickBtn" type="button">即刻开战 · 随机阵容</button>
+          <button class="go" id="xiwu2v2StartBtn" type="button">进入点将台 (BP) · 开战</button>
           <button class="ghost" id="xiwu2v2WatchBtn" type="button">观战 4 天道 AI 对决</button>
+        </div>
+      </div>
+
+      <!-- 群雄会战 · 3v3 / 5v5 / 8v8 -->
+      <div data-sec="melee" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">群雄会战 · 大型同屏混战</h3>
+          <span class="sub-badge">3v3 / 5v5 / 8v8 · 多层立体战场</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">支持 3v3、5v5（三层演武楼阁）与 8v8（五层飞檐战场）同屏大混战！配备兵力积分、战损复活、战队指令与滚轮镜头缩放。</p>
+        <div class="sec-sub-label" style="text-align:left;margin-top:6px">团战规模</div>
+        <div class="seg m2-seg" id="meleeSizeSeg" style="margin-bottom:12px">
+          <button type="button" data-lsize="3">3v3 小队战</button>
+          <button type="button" data-lsize="5" class="sel">5v5 演武楼阁</button>
+          <button type="button" data-lsize="8">8v8 五层大战场</button>
+        </div>
+        <div class="bp-rule-banner">
+          <span class="bp-rule-seal">禁选</span>
+          <div class="bp-rule-txt">
+            <b>点将台规则 · 完整战略禁选（不自动补全阵容）</b>
+            <span>按所选规模进入点将台亲自禁选排兵布阵，打造专属大型团战阵容。</span>
+          </div>
+        </div>
+        <div class="single-action-row">
+          <button class="go" id="largeStartMelee" type="button">进入点将台 (BP) · 开启群雄会战</button>
+        </div>
+      </div>
+
+      <!-- 夺旗争锋 · 2v2–8v8 -->
+      <div data-sec="ctf" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">夺旗争锋 · 团队护旗战</h3>
+          <span class="sub-badge">2v2–8v8 · 先夺三旗胜</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">双方阵地各立战旗，深入敌阵夺取敌旗并护送回己方阵地即得 1 分，率先夺得 3 旗的一方获胜！</p>
+        <div class="sec-sub-label" style="text-align:left;margin-top:6px">团战规模</div>
+        <div class="seg m2-seg" id="ctfSizeSeg" style="margin-bottom:12px">
+          <button type="button" data-lsize="2">2v2 轻骑夺旗</button>
+          <button type="button" data-lsize="3">3v3 小队夺旗</button>
+          <button type="button" data-lsize="5" class="sel">5v5 楼阁夺旗</button>
+          <button type="button" data-lsize="8">8v8 全军夺旗</button>
+        </div>
+        <div class="bp-rule-banner">
+          <span class="bp-rule-seal">禁选</span>
+          <div class="bp-rule-txt">
+            <b>点将台规则 · 完整战略禁选（不自动补全阵容）</b>
+            <span>按所选规模进入点将台亲自搭配突进、控场与护旗阵容。</span>
+          </div>
+        </div>
+        <div class="single-action-row">
+          <button class="go" id="largeStartCtf" type="button">进入点将台 (BP) · 开启夺旗争锋</button>
+        </div>
+      </div>
+
+      <!-- 无尽试炼 · 逐波递增生存战 -->
+      <div data-sec="gauntlet" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">无尽试炼 · 车轮生存战</h3>
+          <span class="sub-badge">逐波递增 · 考验耐力</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">单骑迎战源源不断的江湖群雄，每击破一波恢复部分气血并迎战更高境界强敌，挑战个人极限连胜！</p>
+        <div class="bp-rule-banner">
+          <span class="bp-rule-seal pick-only">直选</span>
+          <div class="bp-rule-txt">
+            <b>点将台规则 · 免禁用自选本命侠客</b>
+            <span>进入点将台挑选最擅长的侠客单枪匹马迎战无尽车轮试炼。</span>
+          </div>
+        </div>
+        <div class="single-action-row">
+          <button class="go" id="largeStartGauntlet" type="button">进入点将台 · 开启无尽试炼</button>
         </div>
       </div>
 
@@ -398,11 +453,7 @@
         </div>
         <p class="sub" style="margin:2px 0 8px;text-align:left">十三位侠客各有一卷斩妖除魔的专属故事！前四幕迎战刀鬼、弓妖、缚灵、咒师、夜枭并感悟共享秘卷，终幕决战三侠六技融魂魔首！</p>
         <div class="st-story-box" id="stStoryBox"></div>
-      </div>
-
-      <!-- 关卡选择 -->
-      <div data-sec="stage" style="display:none">
-        <div class="sec-sub-label">选择侠客剧情篇章与关卡（点击关卡即刻携同袍出征）</div>
+        <div class="sec-sub-label" style="margin-top:12px">选择侠客剧情篇章与关卡（点击关卡即刻携同袍出征）</div>
         <div class="seg sttabs" id="stTabs"></div>
         <div class="stgrid" id="stGrid"></div>
         <p class="netnote" id="stNote"></p>
@@ -654,13 +705,6 @@
             <p class="tp-desc">两边各禁 1 名侠客，再轮流各选 3 人；输掉一回合就换下一位上场，三人都倒下的一方输。</p>
           </div>
           <div class="mm-cards tp-cards">
-            <div class="mm-card mm-quick" id="mmQuickCard">
-              <div class="mm-card-bg" aria-hidden="true"></div>
-              <span class="mm-title">快速匹配</span>
-              <span class="mm-en">QUICK MATCH</span>
-              <span class="mm-desc">全服随机对手 · 不影响段位</span>
-              <button class="mm-go" id="mmQuickBtn" type="button">开始匹配</button>
-            </div>
             <div class="mm-card mm-ranked" id="mmRankCard">
               <div class="mm-card-bg" aria-hidden="true"></div>
               <div class="mm-rank-row">
@@ -709,7 +753,6 @@
                   <button class="ghost small" data-mode="pp_cc" type="button">2v2 · 两人打两电脑</button>
                   <button class="ghost small" data-mode="pp_pp" type="button">2v2 · 两人对两人</button>
                   <button class="ghost small" data-mode="raid" type="button">联机打魔首</button>
-                  <button class="ghost small" data-mode="chaos" type="button">天机乱斗</button>
                   <button class="ghost small" data-mode="mayhem" type="button">通天神决</button>
                   <button class="ghost small" data-mode="cuju" type="button">墨球蹴鞠</button>
                   <button class="ghost small" data-mode="koth" type="button">灵坛争锋</button>
@@ -717,7 +760,7 @@
                   <button class="ghost small" data-mode="melee" type="button">群雄会战 · 8v8</button>
                   <button class="ghost small" data-mode="ctf" type="button">夺旗争锋 · 8v8</button>
                 </div>
-                <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。2v2 的全服匹配和同一台电脑对战在「开始演武」的 2v2 组队里。</p>
+                <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。常规标准已融合动态天机异变。</p>
               </details>
             </div>
           </div>
@@ -726,16 +769,6 @@
           <span class="mm-spin" aria-hidden="true"></span>
           <div class="mm-search-txt"><b id="mmSearchTitle">正在寻找对手</b><span id="mmSearchSub">0:00</span></div>
           <button class="mm-cancel" id="mmCancelBtn" type="button">取消</button>
-        </div>
-        <!-- 排队 20 秒还没配到人：人少的时候别让人干等。快速匹配 10 秒后自动先打一局电脑；排位只给按钮。见 24-account-02-lobby.js 的 mmFallback -->
-        <div class="mm-fallback hidden" id="mmFallback" role="status">
-          <p class="mm-fb-txt" id="mmFbTxt">现在排队的人少。先和电脑打一局 3v3 车轮战吧，打完再回来匹配。</p>
-          <p class="mm-fb-count" id="mmFbCount"><span>自动开始倒计时</span> <b id="mmFbLeft">10</b></p>
-          <div class="mm-fb-btns">
-            <button class="mm-go" id="mmFbCpu" type="button">现在就打电脑</button>
-            <button class="mm-cancel" id="mmFbWait" type="button">继续等对手</button>
-            <button class="mm-cancel" id="mmFbRoom" type="button">建房叫同学</button>
-          </div>
         </div>
       </div>
 
@@ -805,7 +838,7 @@
             </div>
           </div>
 
-          <div id="lobbyMutator" class="mutator-pills" role="group" aria-label="战场异变"><span>战场异变：</span><button type="button" data-mut="normal">常规标准</button><button type="button" data-mut="chaos">天机乱斗</button><button type="button" data-mut="mayhem">通天神决</button></div>
+          <div id="lobbyMutator" class="mutator-pills" role="group" aria-label="战场规则"><span>战场规则：</span><button type="button" data-mut="normal">常规标准</button><button type="button" data-mut="mayhem">通天神决</button></div>
           <!-- 山河异境：两边各投一票 -->
           <div class="lobby-map-vote hidden" id="lobbyMapVote">
             <div class="sec-sub-label">地图投票：双方各一票，按票数决定选到哪张图</div>
@@ -1042,7 +1075,7 @@
           </div>
         </div>
       </div>
-      <div class="bpact"><button class="ghost" id="bpQuit">返回菜单</button><button class="ghost" id="bpUndo" type="button" hidden>撤销上一名</button><button class="ghost" id="bpSwap" type="button" hidden>交换先锋与中坚</button><button class="ghost" id="bpRotate" type="button" hidden>轮换三人顺序</button><button class="ghost" id="bpAutoFill" type="button" hidden>⚡ 一键智能补全阵容</button><button class="go" id="bpGo" disabled>确认</button></div>
+      <div class="bpact"><button class="ghost" id="bpQuit">返回菜单</button><button class="ghost" id="bpUndo" type="button" hidden>撤销上一名</button><button class="ghost" id="bpSwap" type="button" hidden>交换先锋与中坚</button><button class="ghost" id="bpRotate" type="button" hidden>轮换三人顺序</button><button class="go" id="bpGo" disabled>确认</button></div>
       <div class="bpchat hidden" id="bpChat">
         <div class="chatlog" id="chatLog"></div>
         <div class="chatside">
@@ -1358,16 +1391,14 @@
           <button data-m="pp_pp" type="button">两人 vs 两人</button>
         </div>
         <p class="sub m2-desc" id="modal2v2Desc"></p>
-        <div class="sec-sub-label">战场异变</div><div class="mutator-pills" id="m2Mutator" role="group" aria-label="战场异变"><button type="button" data-mut="normal">常规标准</button><button type="button" data-mut="chaos">天机乱斗</button><button type="button" data-mut="mayhem">通天神决</button></div>
+        <div class="sec-sub-label">战场规则</div><div class="mutator-pills" id="m2Mutator" role="group" aria-label="战场规则"><button type="button" data-mut="normal">常规标准</button><button type="button" data-mut="mayhem">通天神决</button></div>
         <div id="m2LvWrap">
           <div class="sec-sub-label">电脑的境界</div>
           <!-- 弹窗开着时，模式大厅那一条电脑境界（#levels）会挪到这里，关了再放回去：全游戏只有一条 -->
         </div>
         <div class="sec-sub-label">在哪打</div>
         <div class="m2-ways" id="modal2v2Options">
-          <button class="m2-way" id="btn2v2Quick" type="button"><b>即刻开战</b><span>当前侠客与随机阵容</span></button>
           <button class="m2-way" id="btn2v2GoLocal" type="button" data-kb-default><b>同一台电脑</b><span id="modal2v2LocalDesc"></span></button>
-          <button class="m2-way tn-online" id="btn2v2GoMatch" type="button"><b>全服匹配</b><span id="modal2v2MatchDesc"></span></button>
           <button class="m2-way tn-online" id="btn2v2GoOnline" type="button"><b>好友房间</b><span>建房拿到房间号，发给朋友加入</span></button>
         </div>
         <div class="m2-foot"><button class="mm-link" id="btn2v2GoWatch" type="button">旁观四个天道电脑打 2v2</button></div>
