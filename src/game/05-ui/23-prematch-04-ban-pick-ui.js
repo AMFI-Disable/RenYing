@@ -188,6 +188,13 @@ function renderBP() {
   const LARGE_ROLES = ['主将', '副将', '左翼', '右翼', '先锋', '奇兵', '策应', '殿军'];
 
   const isLargeBP = bpMode === 'melee' || bpMode === 'ctf';
+  const largeTeamN = isLargeBP ? ((bpCustomOpts && bpCustomOpts.teamSize) || (BP.picks[0] ? BP.picks[0].length : 5)) : 0;
+  const bpScrEl = $id('bp');
+  if (bpScrEl) {
+    bpScrEl.classList.toggle('bp-large', isLargeBP && largeTeamN >= 5);
+    bpScrEl.classList.toggle('bp-large-5', isLargeBP && largeTeamN === 5);
+    bpScrEl.classList.toggle('bp-large-8', isLargeBP && largeTeamN >= 6);
+  }
   const isTag3BP = !isLargeBP && (bpMode === 'tag3' || !!(multiPick && BP.picks[0] && BP.picks[0].length === 3));
 
   let stepTitle = '';
@@ -249,13 +256,25 @@ function renderBP() {
       }
     } else if (isLargeBP) {
       const picks = BP.picks[sd] || [];
-      const slotsHtml = picks.map((idx, slotIdx) => {
-        const isActive = !done && side === sd && type === 'pick' && (picks.filter(x => x >= 0).length === slotIdx);
-        const role = LARGE_ROLES[slotIdx] || `${slotIdx + 1}将`;
-        return `<div class="slot2 pick${isActive ? ' on' : ''}">${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${role} ${CHARS[idx].name}</span>` : role}</div>`;
+      const pickedCnt = picks.filter(x => x >= 0).length;
+      const bansStrip = sideBans.map((bIdx, bSlot) => {
+        const bActive = !done && side === sd && type === 'ban' && sideBans.filter(x => x >= 0).length === bSlot;
+        return `<div class="bpl-ban-chip${bActive ? ' on' : ''}${bIdx >= 0 ? ' filled' : ''}">${bIdx >= 0 ? `<img src="${PORTRAITS[bIdx] || ''}" alt=""><span>禁 ${CHARS[bIdx].name}</span>` : `<span>禁位 ${bSlot + 1}</span>`}</div>`;
       }).join('');
-      el.innerHTML = `<div class="who" style="color:${sd === 0 ? 'var(--p1)' : 'var(--p2)'}">${escapeHTML(bpSideName(sd))} (${picks.filter(x => x >= 0).length}/${picks.length})</div>
-        <div class="slots${picks.length > 3 ? ' slots-large' : ''}">${banSlotHtml}${slotsHtml}</div>`;
+      const slotsHtml = picks.map((idx, slotIdx) => {
+        const isActive = !done && side === sd && type === 'pick' && (pickedCnt === slotIdx);
+        const role = LARGE_ROLES[slotIdx] || `${slotIdx + 1}将`;
+        return `<div class="slot2 pick bpl-slot${isActive ? ' on' : ''}${idx >= 0 ? ' filled' : ''}"><span class="bpl-role">${role}</span>${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${CHARS[idx].name}</span>` : `<span class="bpl-empty">待选</span>`}</div>`;
+      }).join('');
+      const colCls = picks.length <= 5 ? 'cols-5' : 'cols-4';
+      el.innerHTML = `<div class="bpl-panel side-${sd}">
+        <div class="bpl-head">
+          <span class="who" style="color:${sd === 0 ? 'var(--p1)' : 'var(--p2)'}">${escapeHTML(bpSideName(sd))}</span>
+          <span class="bpl-count">${pickedCnt} / ${picks.length}</span>
+          ${bansStrip ? `<div class="bpl-bans">${bansStrip}</div>` : ''}
+        </div>
+        <div class="slots slots-large bpl-picks ${colCls}">${slotsHtml}</div>
+      </div>`;
     } else if (isTag3BP) {
       const picks = BP.picks[sd] || [-1, -1, -1];
       const slotsHtml = [0, 1, 2].map(slotIdx => {

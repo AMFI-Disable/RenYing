@@ -37,7 +37,8 @@ function ctfMatch() {
     if (f.hidden) continue;
     if (f.hp <= 0) {
       for (const fl of S.flags) if (fl.carrier === f.idx) { fl.carrier = -1; fl.dropped = true; fl.x = f.x;
-        fl.y = battleMapOn() ? Math.min(0, Math.ceil(f.y / BATTLE_LAYER_HEIGHT) * BATTLE_LAYER_HEIGHT) : 0; }
+        const bm = typeof battleMapDef === 'function' ? battleMapDef() : null;
+        fl.y = bm ? Math.min(0, Math.ceil(f.y / bm.layerH) * bm.layerH) : 0; }
       if (S.respawn[f.idx] <= 0) S.respawn[f.idx] = 3.0;
       else {
         S.respawn[f.idx] -= STEP;

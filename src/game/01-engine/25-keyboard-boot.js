@@ -164,7 +164,20 @@ cv.addEventListener('mousedown', e => {
 });
 cv.addEventListener('pointerdown', () => refocusGame());
 window.addEventListener('mouseup', e => { if (e.button === 0 && !secretEnabled) human[0].held.atk = false; });
-cv.addEventListener('auxclick', e => e.preventDefault());
+cv.addEventListener('wheel', e => {
+  if (M.mode === 'demo' || paused || EXT.on || (typeof bastion2dActive === 'function' && bastion2dActive())) return;
+  if (document.querySelector('.scr.on')) return;
+  e.preventDefault();
+  const scale = e.deltaMode === 1 ? 0.05 : (e.deltaMode === 2 ? 0.16 : 0.0014);
+  const delta = clamp(-e.deltaY * scale, -0.18, 0.18);
+  if (Math.abs(delta) > 0.001 && typeof adjustCamZoom === 'function') adjustCamZoom(delta);
+}, { passive: false });
+cv.addEventListener('auxclick', e => {
+  e.preventDefault();
+  if (e.button === 1 && M.mode !== 'demo' && !paused && !document.querySelector('.scr.on') && typeof resetCamZoom === 'function') {
+    resetCamZoom(false);
+  }
+});
 cv.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('beforeunload', () => { if (!loggingOut) saveTowerRun(); });   // 退出账号刷新时不能把上一个人的爬塔又存回去
 function shouldPauseOnBlur() {

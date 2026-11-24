@@ -35,6 +35,15 @@ const AIR_SKILL_POSE = {
   spindle: { du_l1s: 'ak_spindle0', du_l1a: 'ak_spindle1' },
   shadowdash: { du_l1s: 'ak_shadowdash0', dash: 'ak_shadowdash1' }
 };
+const CHARGE_POSES = {
+  qingfeng: 'qf_charge', feiying: 'fy_seal', tieshan: 'ts_lift', lingshuang: 'ls_stance', liuyun: 'ly_fanswipe', leiming: 'lm_boxer', moyu: 'my_stroke', yuehua: 'yh_lotus', yanling: 'yl_wings', yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_wind', cixian: 'lm_boxer', qianji: 'qf_charge',
+  chixiao: 'rk_l2s', youhuang: 'dl_l1s', xuanji: 'sg_l1s', polang: 'an_l1s',
+  cangming: 'ab_l1s', qingluan: 'jf_l2s', xuanwu: 'bs_l1s', chiyan: 'bg_l1s',
+  yinhu: 'fd_l1s', yunhe: 'cw_l2s', tiangang: 'gp_l1s', mojie: 'sb_l1s',
+  baihe: 'fr_l1s', jinpeng: 'rw_l2s', youming: 'rs_l1s', lingxi: 'sf_l1s',
+  bawang: 'ob_l1s', fengling: 'cf_l2s', wuya: 'ib_l1s', danqing: 'vb_l1s'
+};
+const _TP_OUT = { sw: 0, k: 16, hip: [0, 0], neck: [0, 0], hf: [0, 0], hb: [0, 0], ff: [0, 0], fb: [0, 0] };
 function targetPose(f) {
   const s = f.state;
   let p, k = 16, atkOvershoot = 0;
@@ -54,15 +63,7 @@ function targetPose(f) {
     }
   } else if (s === 'special') {
     if (f.sp === 'charge') {
-      const chargePoses = {
-        qingfeng: 'qf_charge', feiying: 'fy_seal', tieshan: 'ts_lift', lingshuang: 'ls_stance', liuyun: 'ly_fanswipe', leiming: 'lm_boxer', moyu: 'my_stroke', yuehua: 'yh_lotus', yanling: 'yl_wings', yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_wind', cixian: 'lm_boxer', qianji: 'qf_charge',
-        chixiao: 'rk_l2s', youhuang: 'dl_l1s', xuanji: 'sg_l1s', polang: 'an_l1s',
-        cangming: 'ab_l1s', qingluan: 'jf_l2s', xuanwu: 'bs_l1s', chiyan: 'bg_l1s',
-        yinhu: 'fd_l1s', yunhe: 'cw_l2s', tiangang: 'gp_l1s', mojie: 'sb_l1s',
-        baihe: 'fr_l1s', jinpeng: 'rw_l2s', youming: 'rs_l1s', lingxi: 'sf_l1s',
-        bawang: 'ob_l1s', fengling: 'cf_l2s', wuya: 'ib_l1s', danqing: 'vb_l1s'
-      };
-      p = POSES[chargePoses[f.ch.id] || 'sps']; k = 16;
+      p = POSES[CHARGE_POSES[f.ch.id] || 'sps']; k = 16;
     } else if (f.ch.ult === 'crescent') {
       const m = { dash: 'qf_thrust', miss: 'l3a', flurry: f.slashN % 2 ? 'l3a' : 'hva', final: 'a2a' };
       p = POSES[m[f.sp] || 'qf_thrust'] || POSES.spa; k = 60;
@@ -90,9 +91,14 @@ function targetPose(f) {
   else if (s === 'victory') { p = POSES.victory; k = 6; }
   else if (s === 'charge' || s === 'aircharge') { p = POSES.charge; k = 18; }
   else p = POSES.idle;
-  // 复制一份，再加上呼吸、走步与三段攻击弹性超调动画
-  const out = { sw: p.sw + atkOvershoot * 0.85, k };
-  for (const j of JOINTS) out[j] = [p[j][0], p[j][1]];
+  // 复用模块级缓冲区，避免 16 人 × 120Hz 每秒数万次短命数组分配
+  const out = _TP_OUT;
+  out.sw = p.sw + atkOvershoot * 0.85;
+  out.k = k;
+  for (let ji = 0; ji < JOINTS.length; ji++) {
+    const j = JOINTS[ji], pj = p[j], oj = out[j];
+    oj[0] = pj[0]; oj[1] = pj[1];
+  }
   if (atkOvershoot !== 0) {
     out.hf[0] += (out.hf[0] - out.neck[0]) * atkOvershoot;
     out.hf[1] += (out.hf[1] - out.neck[1]) * atkOvershoot * 0.6;

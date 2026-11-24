@@ -29,21 +29,38 @@ function drawDistantPagoda(px, py, sc) {
   ctx.fillRect(-1.5, -18, 3, 4);
   ctx.restore();
 }
+let _inkCloudSprite = null;
+function getInkCloudSprite() {
+  if (_inkCloudSprite || typeof document === 'undefined') return _inkCloudSprite;
+  const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+  const x = c.getContext && c.getContext('2d');
+  if (!x) return null;
+  const g = x.createRadialGradient(64, 64, 6, 64, 64, 64);
+  g.addColorStop(0, 'rgba(225, 220, 235, 0.09)');
+  g.addColorStop(0.55, 'rgba(160, 155, 185, 0.04)');
+  g.addColorStop(1, 'rgba(20, 22, 36, 0)');
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  _inkCloudSprite = c;
+  return c;
+}
 function drawInkClouds(gy, sc) {
+  const spr = getInkCloudSprite();
   ctx.save();
   for (let i = 0; i < 6; i++) {
     const sp = 14 + (i % 3) * 6;
     const cx = ((hash(i * 19 + 3) * W * 1.5 + clock * sp - cam.x * (0.06 + i * 0.02) * sc) % (W + 420) + (W + 420)) % (W + 420) - 210;
     const cy = gy - H * (0.14 + (i % 3) * 0.09);
     const rw = (130 + hash(i * 7) * 90) * sc, rh = (18 + hash(i * 13) * 12) * sc;
-    const g = ctx.createRadialGradient(cx, cy, rh * 0.2, cx, cy, rw);
-    g.addColorStop(0, 'rgba(225, 220, 235, 0.09)');
-    g.addColorStop(0.55, 'rgba(160, 155, 185, 0.04)');
-    g.addColorStop(1, 'rgba(20, 22, 36, 0)');
-    ctx.fillStyle = g;
-    ctx.beginPath();
-    ctx.ellipse(cx, cy, rw, rh, 0, 0, Math.PI * 2);
-    ctx.fill();
+    if (spr) {
+      ctx.drawImage(spr, cx - rw, cy - rh, rw * 2, rh * 2);
+    } else {
+      const g = ctx.createRadialGradient(cx, cy, rh * 0.2, cx, cy, rw);
+      g.addColorStop(0, 'rgba(225, 220, 235, 0.09)');
+      g.addColorStop(0.55, 'rgba(160, 155, 185, 0.04)');
+      g.addColorStop(1, 'rgba(20, 22, 36, 0)');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.ellipse(cx, cy, rw, rh, 0, 0, Math.PI * 2); ctx.fill();
+    }
   }
   ctx.restore();
 }
@@ -300,6 +317,25 @@ function drawMapGround() {
     if (P.k === 'battle') {
       ctx.fillStyle = '#1c2733'; ctx.fillRect(left, top, w, h);
       ctx.fillStyle = '#7091a0'; ctx.fillRect(left, top, w, 2);
+    } else if (P.k === 'battle5') {
+      // 5v5 中型三层演武楼阁：朱漆鎏金梁柱与飞檐
+      ctx.fillStyle = P.topCitadel ? '#341922' : '#261a28';
+      ctx.fillRect(left, top, w, h + 2);
+      ctx.fillStyle = P.topCitadel ? '#e9c46a' : '#b86852';
+      ctx.fillRect(left, top, w, 2.5);
+      ctx.fillStyle = 'rgba(233,196,106,0.28)';
+      ctx.fillRect(left, top + h, w, 1.5);
+      if (P.topCitadel) {
+        // 凌云阁两侧飞檐挑角与朱红立柱
+        ctx.strokeStyle = 'rgba(233,196,106,0.85)'; ctx.lineWidth = 2.2;
+        ctx.beginPath();
+        ctx.moveTo(left - 14, top - 6); ctx.quadraticCurveTo(left - 2, top + 3, left + 22, top + 3);
+        ctx.moveTo(left + w + 14, top - 6); ctx.quadraticCurveTo(left + w + 2, top + 3, left + w - 22, top + 3);
+        ctx.stroke();
+        ctx.fillStyle = 'rgba(72,24,34,0.65)';
+        ctx.fillRect(left + 32, top + h + 2, 10, BATTLE5_LAYER_HEIGHT - h - 2);
+        ctx.fillRect(left + w - 42, top + h + 2, 10, BATTLE5_LAYER_HEIGHT - h - 2);
+      }
     } else if (P.k === 'stairs') {
       ctx.strokeStyle = '#c2ac80'; ctx.lineWidth = 4;
       ctx.beginPath();
@@ -332,7 +368,7 @@ function drawMapGround() {
       ctx.stroke();
     }
   }
-  if (mp === BATTLE_MAP) {
+  if (mp === BATTLE_MAP || mp === BATTLE5_MAP) {
     for (const perk of M.battlePerks || []) {
       if (perk.cooldown > 0) continue;
       const y = perk.y - 30, r = perk.large ? 15 : 9;
@@ -364,10 +400,28 @@ function drawMapGround() {
     ctx.restore();
   }
 }
+const GROUND_GRAD = new WeakMap();
+let _lanternGlowSprite = null;
+function getLanternGlowSprite() {
+  if (_lanternGlowSprite || typeof document === 'undefined') return _lanternGlowSprite;
+  const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+  const x = c.getContext && c.getContext('2d');
+  if (!x) return null;
+  const g = x.createRadialGradient(64, 64, 2, 64, 64, 64);
+  g.addColorStop(0, 'rgba(255,170,90,0.35)');
+  g.addColorStop(1, 'rgba(255,170,90,0)');
+  x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+  _lanternGlowSprite = c;
+  return c;
+}
 function drawGround() {
   // 世界坐标里画地面、柱子、灯笼
-  const g = ctx.createLinearGradient(0, 0, 0, 260);
-  g.addColorStop(0, '#221c38'); g.addColorStop(1, '#0a0816');
+  let g = GROUND_GRAD.get(ctx);
+  if (!g) {
+    g = ctx.createLinearGradient(0, 0, 0, 260);
+    g.addColorStop(0, '#221c38'); g.addColorStop(1, '#0a0816');
+    GROUND_GRAD.set(ctx, g);
+  }
   ctx.fillStyle = g; ctx.fillRect(-3000, 0, STAGE_W + 6000, 800);
   ctx.strokeStyle = 'rgba(200,180,255,0.35)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-3000, 0); ctx.lineTo(STAGE_W + 3000, 0); ctx.stroke();
   ctx.strokeStyle = 'rgba(200,180,255,0.07)'; ctx.lineWidth = 1;
@@ -467,9 +521,17 @@ function drawGround() {
 }
 function lantern(x, y) {
   const flick = 0.85 + Math.sin(clock * 9 + x) * 0.08 + Math.sin(clock * 23 + x) * 0.05;
-  const rg = ctx.createRadialGradient(x, y - 70, 2, x, y - 70, 110);
-  rg.addColorStop(0, `rgba(255,170,90,${0.35 * flick})`); rg.addColorStop(1, 'rgba(255,170,90,0)');
-  ctx.fillStyle = rg; ctx.fillRect(x - 110, y - 180, 220, 220);
+  const spr = getLanternGlowSprite();
+  if (spr) {
+    const prevA = ctx.globalAlpha;
+    ctx.globalAlpha = prevA * flick;
+    ctx.drawImage(spr, x - 110, y - 180, 220, 220);
+    ctx.globalAlpha = prevA;
+  } else {
+    const rg = ctx.createRadialGradient(x, y - 70, 2, x, y - 70, 110);
+    rg.addColorStop(0, `rgba(255,170,90,${0.35 * flick})`); rg.addColorStop(1, 'rgba(255,170,90,0)');
+    ctx.fillStyle = rg; ctx.fillRect(x - 110, y - 180, 220, 220);
+  }
   ctx.fillStyle = '#16121f';
   ctx.fillRect(x - 5, y - 50, 10, 50); ctx.fillRect(x - 16, y - 8, 32, 8);
   ctx.fillRect(x - 14, y - 58, 28, 8);

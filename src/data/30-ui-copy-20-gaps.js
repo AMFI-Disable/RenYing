@@ -375,5 +375,7 @@ Object.assign(UI_COPY_EN, {
   "闪避无敌略微延长": "Dodge invulnerability lasts slightly longer",
   "跃渊清心：驱散减速灼烧并疾行": "Clearwater Leap (clear slows and burns and move faster)",
   "Q/R 技能冷却略减": "Q/R skills have slightly shorter cooldowns",
-  "连弩齐发：齐射三枚追踪机矢": "Repeating Volley (fire three homing bolts)"
+  "连弩齐发：齐射三枚追踪机矢": "Repeating Volley (fire three homing bolts)",
+  "镜头": "Zoom",
+  "待选": "Open"
 });

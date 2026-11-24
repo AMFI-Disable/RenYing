@@ -406,24 +406,184 @@
   }
 }
 
-/* Large Battle BP compact slot grid (5v5 / 8v8) */
-.slots.slots-large {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(66px, 1fr));
-  gap: 5px;
-  max-height: 112px;
-  overflow-y: auto;
-  padding-right: 2px;
-  scrollbar-width: thin;
+/* Redesigned Large Battle BP (5v5 & 8v8) — clean two-zone team boards with zero clipping */
+.bpscr.bp-large .bph {
+  grid-template-columns: minmax(0, 1fr) minmax(170px, auto) minmax(0, 1fr);
+  gap: clamp(8px, 1.2vw, 16px);
+  align-items: stretch;
 }
-.slots.slots-large .slot2 {
+.bpscr.bp-large .bps {
+  display: block;
   min-width: 0;
-  height: 48px;
-  font-size: 11px;
 }
-.slots.slots-large .slot2 .lab {
-  font-size: 10px;
-  padding: 1px 3px;
+.bpscr.bp-large .bps.right {
+  text-align: right;
+}
+.bpscr.bp-large .bpc0 {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 6px 12px;
+  border-radius: 10px;
+  background: rgba(14, 16, 32, 0.72);
+  border: 1px solid rgba(233, 196, 106, 0.24);
+}
+.bpscr.bp-large .bpstep {
+  font-size: clamp(16px, 1.5vw, 22px);
+  line-height: 1.25;
+}
+.bpscr.bp-large .bpcount {
+  display: block;
+  margin: 2px 0 0;
+  font-size: 12px;
+}
+.bpl-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  background: linear-gradient(165deg, rgba(16, 20, 38, 0.84), rgba(10, 12, 24, 0.72));
+  border: 1px solid rgba(239, 232, 216, 0.14);
+}
+.bpl-panel.side-0 {
+  border-color: rgba(70, 211, 234, 0.34);
+}
+.bpl-panel.side-1 {
+  border-color: rgba(255, 106, 90, 0.34);
+}
+.bpl-head {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px 8px;
+}
+.bpl-panel.side-1 .bpl-head {
+  flex-direction: row-reverse;
+}
+.bpl-head .who {
+  font-size: clamp(15px, 1.25vw, 19px);
+  line-height: 1.1;
+}
+.bpl-count {
+  font-size: 12px;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--ink);
+}
+.bpl-bans {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-left: auto;
+}
+.bpl-panel.side-1 .bpl-bans {
+  margin-left: 0;
+  margin-right: auto;
+  flex-direction: row-reverse;
+}
+.bpl-ban-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 24px;
+  padding: 0 7px 0 4px;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #ffb8b0;
+  background: rgba(184, 57, 46, 0.16);
+  border: 1px dashed rgba(214, 80, 64, 0.55);
+  white-space: nowrap;
+}
+.bpl-ban-chip.filled {
+  border-style: solid;
+  background: rgba(184, 57, 46, 0.28);
+}
+.bpl-ban-chip.on {
+  border-style: solid;
+  border-color: var(--gold);
+  box-shadow: 0 0 0 1px rgba(233, 196, 106, 0.45);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+.bpl-ban-chip img {
+  width: 18px;
+  height: 18px;
+  border-radius: 3px;
+  object-fit: cover;
+  filter: grayscale(0.85) brightness(0.8);
+}
+.slots.slots-large.bpl-picks {
+  display: grid;
+  gap: 6px;
+  max-height: none;
+  overflow: visible;
+  padding-right: 0;
+}
+.slots.slots-large.bpl-picks.cols-5 {
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.slots.slots-large.bpl-picks.cols-4 {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.bps.right .slots.slots-large.bpl-picks {
+  flex-direction: unset;
+}
+.slots.slots-large .slot2.bpl-slot {
+  width: 100%;
+  min-width: 0;
+  height: 58px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.035);
+}
+.bpscr.bp-large-8 .slots.slots-large .slot2.bpl-slot {
+  height: 48px;
+}
+.slot2.bpl-slot.filled {
+  border-style: solid;
+  border-color: rgba(233, 196, 106, 0.48);
+}
+.slot2.bpl-slot .bpl-role {
+  position: absolute;
+  top: 2px;
+  left: 3px;
+  z-index: 2;
+  font-size: 10.5px;
+  line-height: 1;
+  padding: 1px 4px;
+  border-radius: 3px;
+  background: rgba(8, 10, 22, 0.78);
+  color: var(--gold);
+}
+.slot2.bpl-slot .bpl-empty {
+  font-size: 11.5px;
+  color: var(--dim);
+  opacity: 0.72;
+  margin-top: 8px;
+}
+.slot2.bpl-slot .lab {
+  font-size: 11px;
+  padding: 1px 2px;
+  bottom: 1px;
+  background: linear-gradient(transparent, rgba(6, 7, 16, 0.85));
+}
+.bpscr.bp-large .bpgrid {
+  max-height: clamp(160px, 29vh, 290px);
+}
+.bpscr.bp-large .bpbot {
+  max-height: clamp(150px, 24vh, 230px);
+}
+@media (max-width: 1080px) {
+  .bpscr.bp-large .bph {
+    grid-template-columns: 1fr;
+  }
+  .slots.slots-large.bpl-picks.cols-5 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
 }
 
 /* Redesigned Training Controls & AI Difficulty Sparring */

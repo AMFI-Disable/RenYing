@@ -165,11 +165,12 @@ export default [
       const ylIdx = CHARS.findIndex(c => c.id === 'yanling');
       startMelee(8, ylIdx, 'normal', 'normal');
       M.phase = 'fight';
+      for (const f of allFighters()) f.ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
       A.reset(lx - 150); A.y = -132; A.plat = 3; A.face = 1; A.meter = 100;
       const ylFoes = sideFighters(1);
       const ylHp = [];
       for (let i = 0; i < 3; i++) {
-        ylFoes[i].reset(lx + 40 + i * 90); ylFoes[i].y = -132; ylFoes[i].invul = 0;
+        ylFoes[i].reset(lx + 40 + i * 90); ylFoes[i].y = -132; ylFoes[i].plat = 3; ylFoes[i].invul = 0;
         ylFoes[i].ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
         ylHp.push(ylFoes[i].hp);
       }
@@ -395,6 +396,52 @@ export default [
       if (Math.abs(A.x - foe2.x) > 5 || A.y >= foe2.y - 80) return { pass: false, error: 'Liying did not teleport directly above foe2: A=(' + A.x + ',' + A.y + ') foe2=(' + foe2.x + ',' + foe2.y + ')' };
       for (let t = 0; t < 80; t++) step();
       if (foe2.guard !== 0) return { pass: false, error: 'Overhead follow-up strike did not completely deplete foe2 guard: ' + foe2.guard };
+      toMenu();
+      return { pass: true };
+    })()`
+  },
+  {
+    name: 'Mouse scroll wheel camera zoom adjusts smoothly within bounds across modes and resets cleanly',
+    fn: `(() => {
+      startMatch('cpu', 'normal', [0, 1]);
+      M.phase = 'fight';
+      resetCamZoom(true);
+      for (let i = 0; i < 30; i++) updateCamera(1 / 60);
+      const baseZoom = cam.zoom;
+      adjustCamZoom(0.35);
+      for (let i = 0; i < 45; i++) updateCamera(1 / 60);
+      const zoomedIn = cam.zoom;
+      if (zoomedIn <= baseZoom * 1.15) return { pass: false, error: 'Expected camera to zoom in: base=' + baseZoom + ' zoomedIn=' + zoomedIn };
+      for (let i = 0; i < 20; i++) adjustCamZoom(0.2);
+      if (cam.userZoomTarget > 1.851) return { pass: false, error: 'Zoom target exceeded max bound: ' + cam.userZoomTarget };
+      for (let i = 0; i < 30; i++) adjustCamZoom(-0.2);
+      if (cam.userZoomTarget < 0.549) return { pass: false, error: 'Zoom target fell below min bound: ' + cam.userZoomTarget };
+      for (let i = 0; i < 45; i++) updateCamera(1 / 60);
+      if (cam.zoom >= baseZoom) return { pass: false, error: 'Expected camera to zoom out below base: base=' + baseZoom + ' out=' + cam.zoom };
+      resetCamZoom(true);
+      if (cam.userZoom !== 1 || cam.userZoomTarget !== 1) return { pass: false, error: 'resetCamZoom did not restore 1.0' };
+      toMenu();
+      return { pass: true };
+    })()`
+  },
+  {
+    name: 'Dedicated 5v5 citadel arena (BATTLE5_MAP) provides 3 layers, 4 stairs, 3 perks, and 2800px width in 5v5 melee and CTF',
+    fn: `(() => {
+      startMelee(5, 0, 'normal', 'normal');
+      M.phase = 'fight';
+      if (!battleMapOn() || mapNow() !== BATTLE5_MAP) return { pass: false, error: 'Expected BATTLE5_MAP active in 5v5 melee' };
+      if (STAGE_W !== 2800) return { pass: false, error: 'Expected 5v5 arena width 2800, got ' + STAGE_W };
+      const layers = arenaLayersAt(STAGE_W / 2);
+      if (layers.length !== 3 || layers[0] !== -276 || layers[1] !== -138 || layers[2] !== 0) {
+        return { pass: false, error: 'Expected 3 layers [-276,-138,0] at center, got ' + JSON.stringify(layers) };
+      }
+      if ((M.battlePerks || []).length !== 3) return { pass: false, error: 'Expected 3 tactical perks in 5v5 arena, got ' + (M.battlePerks || []).length };
+      A.reset(330); A.y = 0; A.plat = -1; A.face = 1; A.state = 'walk';
+      const oldX = A.x; A.x = 355;
+      const entered = enterBattleStair(A, oldX);
+      if (!entered || A.plat < BATTLE5_DECKS.length) return { pass: false, error: 'Failed to enter 5v5 ground-to-mid stair' };
+      startCtf(5, 0, 'normal');
+      if (mapNow() !== BATTLE5_MAP || STAGE_W !== 2800) return { pass: false, error: '5v5 CTF did not activate BATTLE5_MAP' };
       toMenu();
       return { pass: true };
     })()`

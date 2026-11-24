@@ -5,12 +5,19 @@ function drawStats() {
   ctx.fillStyle = 'rgba(239,232,216,0.55)';
   let t = `${cvT('帧率')} ${FPS}`;
   ctx.fillText(t, x, y);
+  let cursorX = x + ctx.measureText(t + '   ').width;
   if (M.mode === 'net' && NET.rtt) {
     // 到对手的一个来回（点对点，没有服务器这一段）
-    const ms = Math.round(NET.rtt), w = ctx.measureText(t + '   ').width;
+    const ms = Math.round(NET.rtt);
     ctx.fillStyle = ms < 80 ? '#8fe0a0' : ms < 160 ? '#e9c46a' : '#ff8a78';
     const tx = `${cvT('延迟 对手')} ${ms}ms`;
-    ctx.fillText(tx, x + w, y);
+    ctx.fillText(tx, cursorX, y);
+    cursorX += ctx.measureText(tx + '   ').width;
+  }
+  const uz = cam.userZoom || 1;
+  if ((cam.userZoomT || 0) > 0 || Math.abs(uz - 1) > 0.03) {
+    ctx.fillStyle = (cam.userZoomT || 0) > 0 ? 'rgba(233,196,106,0.92)' : 'rgba(239,232,216,0.55)';
+    ctx.fillText(`${cvT('镜头')} ${Math.round(uz * 100)}%`, cursorX, y);
   }
   // 回滚与联机遥测 HUD (按 ~ 或 F2 切换)
   if (NET_HUD) {
@@ -284,6 +291,20 @@ function drawBackdrop(sc) {
   }
   drawBackground(sc);
 }
+const _renderOrder = [];
+function buildRenderOrder() {
+  if (!isMulti()) {
+    _renderOrder.length = 2;
+    if (A.state === 'attack' || A.state === 'special') { _renderOrder[0] = B; _renderOrder[1] = A; }
+    else { _renderOrder[0] = A; _renderOrder[1] = B; }
+    return _renderOrder;
+  }
+  const fs = allFighters();
+  _renderOrder.length = fs.length;
+  for (let i = 0; i < fs.length; i++) _renderOrder[i] = fs[i];
+  _renderOrder.sort((a, b) => ((a.state === 'attack' || a.state === 'special') ? 1 : 0) - ((b.state === 'attack' || b.state === 'special') ? 1 : 0));
+  return _renderOrder;
+}
 function render() {
   if (M.mode === 'demo') return renderMenu();
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -309,9 +330,7 @@ function render() {
   if (pf) drawXuanzhi(pf.a);
   ctx.save();
   ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
-  const order = isMulti()
-    ? allFighters().slice().sort((a, b) => ((a.state === 'attack' || a.state === 'special') ? 1 : 0) - ((b.state === 'attack' || b.state === 'special') ? 1 : 0))
-    : ((A.state === 'attack' || A.state === 'special') ? [B, A] : [A, B]);
+  const order = buildRenderOrder();
   drawDecoys();
   drawClones();
   drawCujuField();

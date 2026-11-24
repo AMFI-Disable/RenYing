@@ -307,15 +307,18 @@ function drawHUDLargeTeam() {
   }
   ctx.fillText(`${sz}v${sz}`, cx, top + 30);
   // 顶部战场小地图条（一眼定位自己、队友与敌人）
-  const layered = battleMapOn();
-  const mw = Math.min(380, Math.round(W * 0.34)), mh = layered ? 42 : 12, mx = cx - mw / 2, my = top + 40;
-  const mapY = y => layered ? my + 4 + clamp(1 + y / (4 * BATTLE_LAYER_HEIGHT), 0, 1) * (mh - 8) : my + mh / 2;
+  const bm = typeof battleMapDef === 'function' ? battleMapDef() : null;
+  const layered = !!bm;
+  const layerCnt = bm ? bm.layers : 1;
+  const layerSpan = bm ? (bm.layers - 1) * bm.layerH : 1;
+  const mw = Math.min(380, Math.round(W * 0.34)), mh = layered ? (layerCnt >= 5 ? 42 : 30) : 12, mx = cx - mw / 2, my = top + 40;
+  const mapY = y => layered ? my + 4 + clamp(1 + y / layerSpan, 0, 1) * (mh - 8) : my + mh / 2;
   ctx.fillStyle = 'rgba(8,10,22,0.78)'; ctx.fillRect(mx, my, mw, mh);
   ctx.strokeStyle = 'rgba(233,196,106,0.38)'; ctx.lineWidth = 1; ctx.strokeRect(mx, my, mw, mh);
   if (layered) {
     ctx.strokeStyle = 'rgba(170,205,205,0.35)';
-    for (let layer = 0; layer < 5; layer++) {
-      const y = mapY(-layer * BATTLE_LAYER_HEIGHT);
+    for (let layer = 0; layer < layerCnt; layer++) {
+      const y = mapY(-layer * bm.layerH);
       ctx.beginPath(); ctx.moveTo(mx, y); ctx.lineTo(mx + mw, y); ctx.stroke();
     }
   }

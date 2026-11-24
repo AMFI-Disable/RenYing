@@ -54,7 +54,19 @@ function step() {
   }
   if (!RESIM) for (const c of comboUI) c.t -= STEP;
 }
-const cam = { x: STAGE_W / 2, y: 0, zoom: 1 };
+const cam = { x: STAGE_W / 2, y: 0, zoom: 1, userZoom: 1, userZoomTarget: 1, userZoomT: 0 };
+const CAM_USER_ZOOM_MIN = 0.55;
+const CAM_USER_ZOOM_MAX = 1.85;
+function adjustCamZoom(delta) {
+  const next = clamp((cam.userZoomTarget || 1) * (1 + delta), CAM_USER_ZOOM_MIN, CAM_USER_ZOOM_MAX);
+  cam.userZoomTarget = Math.abs(next - 1) < 0.025 ? 1 : next;
+  cam.userZoomT = 1.8;
+}
+function resetCamZoom(silent) {
+  cam.userZoom = 1;
+  cam.userZoomTarget = 1;
+  cam.userZoomT = silent ? 0 : 1.2;
+}
 let camPunch = { zoom: 0, x: STAGE_W / 2, y: 0, t: 0, maxT: 0 };
 let camFocusPingT = 0;
 function camImpact(x, y, zoomBoost, duration) {

@@ -107,12 +107,39 @@ const BATTLE_STAIRS = Array.from({ length: 4 }, (_, layer) => [-1, 1].map(side =
   const bottomY = -layer * BATTLE_LAYER_HEIGHT, topY = bottomY - BATTLE_LAYER_HEIGHT;
   return { layer, bottomX, topX, bottomY, topY, x: (bottomX + topX) / 2, y: topY, w: 245, k: 'stairs' };
 })).flat();
-const BATTLE_MAP = { id: 'battle', w: BATTLE_WIDTH, plats: [...BATTLE_DECKS, ...BATTLE_STAIRS] };
-const battleMapOn = () => isLargeTeam() && M.teamSize === 8;
+const BATTLE_MAP = { id: 'battle', w: BATTLE_WIDTH, layers: 5, layerH: BATTLE_LAYER_HEIGHT, decks: BATTLE_DECKS, stairs: BATTLE_STAIRS, plats: [...BATTLE_DECKS, ...BATTLE_STAIRS] };
+
+// 5v5 中型团战专属三层演武楼阁：底层演武场（0）、中层回廊（-138）、顶层凌云阁（-276）与四座对称飞梯
+const BATTLE5_WIDTH = 2800;
+const BATTLE5_LAYER_HEIGHT = 138;
+const BATTLE5_DECKS = [
+  { x: BATTLE5_WIDTH / 2, y: -2 * BATTLE5_LAYER_HEIGHT, w: 1480, k: 'battle5', topCitadel: true },
+  { x: BATTLE5_WIDTH / 2, y: -BATTLE5_LAYER_HEIGHT, w: BATTLE5_WIDTH - 2 * WALL, k: 'battle5' }
+];
+const BATTLE5_STAIRS = [
+  // Ground (layer 0) -> Mid Gallery (layer 1)
+  { layer: 0, bottomX: 340, topX: 580, bottomY: 0, topY: -BATTLE5_LAYER_HEIGHT, x: 460, y: -BATTLE5_LAYER_HEIGHT, w: 240, k: 'stairs' },
+  { layer: 0, bottomX: BATTLE5_WIDTH - 340, topX: BATTLE5_WIDTH - 580, bottomY: 0, topY: -BATTLE5_LAYER_HEIGHT, x: BATTLE5_WIDTH - 460, y: -BATTLE5_LAYER_HEIGHT, w: 240, k: 'stairs' },
+  // Mid Gallery (layer 1) -> High Sky Pavilion (layer 2)
+  { layer: 1, bottomX: 680, topX: 920, bottomY: -BATTLE5_LAYER_HEIGHT, topY: -2 * BATTLE5_LAYER_HEIGHT, x: 800, y: -2 * BATTLE5_LAYER_HEIGHT, w: 240, k: 'stairs' },
+  { layer: 1, bottomX: BATTLE5_WIDTH - 680, topX: BATTLE5_WIDTH - 920, bottomY: -BATTLE5_LAYER_HEIGHT, topY: -2 * BATTLE5_LAYER_HEIGHT, x: BATTLE5_WIDTH - 800, y: -2 * BATTLE5_LAYER_HEIGHT, w: 240, k: 'stairs' }
+];
+const BATTLE5_MAP = { id: 'battle5', w: BATTLE5_WIDTH, layers: 3, layerH: BATTLE5_LAYER_HEIGHT, decks: BATTLE5_DECKS, stairs: BATTLE5_STAIRS, plats: [...BATTLE5_DECKS, ...BATTLE5_STAIRS] };
+
+const battleMapDef = () => !isLargeTeam() ? null : (M.teamSize === 8 ? BATTLE_MAP : M.teamSize === 5 ? BATTLE5_MAP : null);
+const battleMapOn = () => !!battleMapDef();
 
 function battlePerksInit() {
   M.battlePerks = [];
-  if (!battleMapOn()) return;
+  const bm = battleMapDef();
+  if (!bm) return;
+  if (bm === BATTLE5_MAP) {
+    // 5v5 中央凌云阁主灵珠 + 左右中层回廊双补给珠
+    M.battlePerks.push({ x: STAGE_W / 2, y: -2 * BATTLE5_LAYER_HEIGHT, large: true, cooldown: 0 });
+    M.battlePerks.push({ x: 580, y: -BATTLE5_LAYER_HEIGHT, large: false, guard: grnd() < 0.5, cooldown: 0 });
+    M.battlePerks.push({ x: STAGE_W - 580, y: -BATTLE5_LAYER_HEIGHT, large: false, guard: grnd() < 0.5, cooldown: 0 });
+    return;
+  }
   M.battlePerks.push({ x: STAGE_W / 2, y: -2 * BATTLE_LAYER_HEIGHT, large: true, cooldown: 0 });
   for (let layer = 0; layer < 4; layer++) {
     const p = BATTLE_STAIRS[layer * 2 + Math.floor(grnd() * 2)];
@@ -140,7 +167,7 @@ function battlePerksTick() {
   }
 }
 
-const mapNow = () => battleMapOn() ? BATTLE_MAP : (typeof kothOn === 'function' && kothOn()) ? KOTH_MAP : (typeof partyOn === 'function' && partyOn() && M.party && M.party.kind === 'sumo') ? PARTY_SUMO_MAP : ((mapsOn() && M.map && MAPS[M.map]) || null);
+const mapNow = () => battleMapDef() || ((typeof kothOn === 'function' && kothOn()) ? KOTH_MAP : (typeof partyOn === 'function' && partyOn() && M.party && M.party.kind === 'sumo') ? PARTY_SUMO_MAP : ((mapsOn() && M.map && MAPS[M.map]) || null));
 // 按票数选图：votes 是每位玩家投的地图 id（没投是 null），r 是 0~1 的随机数。没人投票时每张图一样
 function mapOdds(votes) {
   const n = MAP_POOL.map(id => (votes || []).filter(v => v === id).length), sum = n.reduce((a, b) => a + b, 0);
@@ -232,15 +259,17 @@ function platformY(p, x) {
 function gndY(f) { const P = f.plat >= 0 && (mapPlats() || [])[f.plat]; return P ? platformY(P, f.x) : 0; }
 
 function enterBattleStair(f, oldX) {
-  if (!battleMapOn() || f.plat >= BATTLE_DECKS.length || !['walk', 'idle'].includes(f.state) || !f.onGround()) return false;
+  const bm = battleMapDef();
+  if (!bm || f.plat >= bm.decks.length || !['walk', 'idle'].includes(f.state) || !f.onGround()) return false;
   const dir = Math.sign(f.x - oldX);
   if (!dir) return false;
-  for (let i = 0; i < BATTLE_STAIRS.length; i++) {
-    const p = BATTLE_STAIRS[i];
+  const stairs = bm.stairs;
+  for (let i = 0; i < stairs.length; i++) {
+    const p = stairs[i];
     const up = dir === Math.sign(p.topX - p.bottomX);
     const x = up ? p.bottomX : p.topX, y = up ? p.bottomY : p.topY;
     if (Math.abs(f.y - y) > 0.5 || (oldX - x) * dir > 0 || (f.x - x) * dir <= 0) continue;
-    f.plat = BATTLE_DECKS.length + i;
+    f.plat = bm.decks.length + i;
     f.y = platformY(p, f.x);
     return true;
   }
@@ -248,17 +277,18 @@ function enterBattleStair(f, oldX) {
 }
 
 function battleStairTarget(f, targetY) {
-  if (!battleMapOn() || !f.onGround()) return null;
+  const bm = battleMapDef();
+  if (!bm || !f.onGround()) return null;
   const support = (mapPlats() || [])[f.plat];
   if (support?.k === 'stairs') {
     const up = targetY <= (support.topY + support.bottomY) / 2;
     const dir = Math.sign(support.topX - support.bottomX);
     return up ? support.topX + dir * 12 : support.bottomX - dir * 12;
   }
-  if (Math.abs(f.y - targetY) < BATTLE_LAYER_HEIGHT * 0.75) return null;
-  const layer = Math.round(-f.y / BATTLE_LAYER_HEIGHT);
+  if (Math.abs(f.y - targetY) < bm.layerH * 0.75) return null;
+  const layer = Math.round(-f.y / bm.layerH);
   const up = targetY < f.y;
-  const stairs = BATTLE_STAIRS.filter(p => p.layer === (up ? layer : layer - 1));
+  const stairs = bm.stairs.filter(p => p.layer === (up ? layer : layer - 1));
   if (!stairs.length) return null;
   const entry = p => up ? p.bottomX : p.topX;
   const p = stairs.reduce((a, b) => Math.abs(f.x - entry(a)) <= Math.abs(f.x - entry(b)) ? a : b);
@@ -323,7 +353,9 @@ function mapPlatLand(f, oldY, wasAir) {
       if (P.k === 'stairs') {
         const atTop = Math.abs(f.x - P.topX) < Math.abs(f.x - P.bottomX);
         const layer = P.layer + Number(atTop);
-        mapPutOn(f, layer ? 4 - layer : -1);
+        const bm = battleMapDef();
+        const deckCount = bm ? bm.decks.length : BATTLE_DECKS.length;
+        mapPutOn(f, layer ? deckCount - layer : -1);
         if (f.vy > 0) f.vy = 0;
       } else f.plat = -1;
     } else { f.y = platformY(P, f.x); if (f.vy > 0) f.vy = 0; }

@@ -98,18 +98,40 @@ const is2v2 = () => !isLargeTeam() && (M.mode === 'watch2v2' || M.mode === '2v2'
 const isRaid = () => M.mode === 'raid' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.raid)) || !!(netRoom() && netRoom().raid);
 const isMulti = () => is2v2() || isRaid() || isLargeTeam();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : ((is2v2() || isLargeTeam()) ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
-const sideFighters = side => {
-  if (isLargeTeam()) return FIGHTERS.filter(f => !f.hidden && (f.idx % 2) === side);
-  if (isRaid()) return side === 0 ? [A, C, D].filter(f => !f.hidden) : [B];
-  if (is2v2()) return side === 0 ? [A, C] : [B, D];
-  return [[A, B][side]];
-};
-const allFighters = () => {
-  if (isLargeTeam()) return FIGHTERS.filter(f => !f.hidden);
-  if (isRaid()) return [A, B, C, D].filter(f => !f.hidden);
-  if (is2v2()) return [A, B, C, D];
-  return [A, B];
-};
+let _afMask = -1, _afMode = '', _afAll = [A, B], _afS0 = [A], _afS1 = [B];
+function _syncFighterCache() {
+  const large = isLargeTeam(), raid = !large && isRaid(), two = !large && !raid && is2v2();
+  const modeKey = large ? 'L' : raid ? 'R' : two ? '2' : '1';
+  let mask = 0;
+  if (large) {
+    for (let i = 0; i < MAX_FIGHTERS; i++) if (!FIGHTERS[i].hidden) mask |= (1 << i);
+  } else if (raid) {
+    for (let i = 0; i < 4; i++) if (!FIGHTERS[i].hidden) mask |= (1 << i);
+  }
+  if (modeKey === _afMode && mask === _afMask) return;
+  _afMode = modeKey; _afMask = mask;
+  if (large) {
+    _afAll = []; _afS0 = []; _afS1 = [];
+    for (let i = 0; i < MAX_FIGHTERS; i++) {
+      const f = FIGHTERS[i];
+      if (f.hidden) continue;
+      _afAll.push(f);
+      if ((f.idx & 1) === 0) _afS0.push(f); else _afS1.push(f);
+    }
+  } else if (raid) {
+    _afAll = []; _afS0 = []; _afS1 = [B];
+    for (let i = 0; i < 4; i++) {
+      const f = FIGHTERS[i];
+      if (!f.hidden) { _afAll.push(f); if (i !== 1) _afS0.push(f); }
+    }
+  } else if (two) {
+    _afAll = [A, B, C, D]; _afS0 = [A, C]; _afS1 = [B, D];
+  } else {
+    _afAll = [A, B]; _afS0 = [A]; _afS1 = [B];
+  }
+}
+const sideFighters = side => { _syncFighterCache(); return side === 0 ? _afS0 : _afS1; };
+const allFighters = () => { _syncFighterCache(); return _afAll; };
 const isAiVsAi = () => !!(M.watchAi || (M.mode === 'watch2v2' && M.watchAi) || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && !isMulti() && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
 const fighterByIdx = idx => FIGHTERS[idx] || A;
 const foesOf = f => {

@@ -219,6 +219,7 @@
   // --------------------------------------------------------------------------
   // 4. Spring-Damper Solver & Squash-and-Stretch Impulse Engine
   // --------------------------------------------------------------------------
+  var _SP_OUT = { p: 0, v: 0 };
   function stepSpring(pos, vel, target, k, c, dt) {
     var safeDt = clamp(dt, 0, 0.033);
     var acc = -k * (pos - target) - c * vel;
@@ -228,7 +229,9 @@
       pos = target;
       vel = 0;
     }
-    return { p: quantize(pos), v: quantize(vel) };
+    _SP_OUT.p = quantize(pos);
+    _SP_OUT.v = quantize(vel);
+    return _SP_OUT;
   }
 
   function applyRecoilImpulse(f, impulse) {
@@ -388,31 +391,32 @@
 
     var st = f.state || 'idle';
     var swinging = st === 'attack' || st === 'skill' || st === 'special' || st === 'throw_exec';
+    if (!swinging) {
+      fx.activeSwing = false;
+      fx.hasLastTip = false;
+      return;
+    }
     var seg = sampleWeaponSegment(f);
 
-    if (swinging) {
-      var distSq = fx.hasLastTip
-        ? ((seg.tipX - fx.lastTipX) * (seg.tipX - fx.lastTipX) + (seg.tipY - fx.lastTipY) * (seg.tipY - fx.lastTipY))
-        : CONFIG.ribbonMinSpeedSq + 1;
+    var distSq = fx.hasLastTip
+      ? ((seg.tipX - fx.lastTipX) * (seg.tipX - fx.lastTipX) + (seg.tipY - fx.lastTipY) * (seg.tipY - fx.lastTipY))
+      : CONFIG.ribbonMinSpeedSq + 1;
 
-      if (distSq >= CONFIG.ribbonMinSpeedSq * 0.25 || fx.ribbon.length === 0) {
-        fx.ribbon.push({
-          tipX: seg.tipX,
-          tipY: seg.tipY,
-          baseX: seg.baseX,
-          baseY: seg.baseY,
-          age: 0,
-          maxAge: st === 'special' ? CONFIG.ribbonPointLifeSec * 1.45 : CONFIG.ribbonPointLifeSec,
-          intensity: st === 'special' ? 1.35 : (st === 'skill' ? 1.15 : 0.9)
-        });
-        if (fx.ribbon.length > CONFIG.ribbonMaxPoints) {
-          fx.ribbon.shift();
-        }
+    if (distSq >= CONFIG.ribbonMinSpeedSq * 0.25 || fx.ribbon.length === 0) {
+      fx.ribbon.push({
+        tipX: seg.tipX,
+        tipY: seg.tipY,
+        baseX: seg.baseX,
+        baseY: seg.baseY,
+        age: 0,
+        maxAge: st === 'special' ? CONFIG.ribbonPointLifeSec * 1.45 : CONFIG.ribbonPointLifeSec,
+        intensity: st === 'special' ? 1.35 : (st === 'skill' ? 1.15 : 0.9)
+      });
+      if (fx.ribbon.length > CONFIG.ribbonMaxPoints) {
+        fx.ribbon.shift();
       }
-      fx.activeSwing = true;
-    } else {
-      fx.activeSwing = false;
     }
+    fx.activeSwing = true;
 
     fx.lastTipX = seg.tipX;
     fx.lastTipY = seg.tipY;

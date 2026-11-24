@@ -3754,23 +3754,183 @@ grid-template-columns: 1fr;
 gap: 6px;
 }
 }
-.slots.slots-large {
-display: grid;
-grid-template-columns: repeat(auto-fill, minmax(66px, 1fr));
-gap: 5px;
-max-height: 112px;
-overflow-y: auto;
-padding-right: 2px;
-scrollbar-width: thin;
+.bpscr.bp-large .bph {
+grid-template-columns: minmax(0, 1fr) minmax(170px, auto) minmax(0, 1fr);
+gap: clamp(8px, 1.2vw, 16px);
+align-items: stretch;
 }
-.slots.slots-large .slot2 {
+.bpscr.bp-large .bps {
+display: block;
 min-width: 0;
-height: 48px;
-font-size: 11px;
 }
-.slots.slots-large .slot2 .lab {
-font-size: 10px;
-padding: 1px 3px;
+.bpscr.bp-large .bps.right {
+text-align: right;
+}
+.bpscr.bp-large .bpc0 {
+display: flex;
+flex-direction: column;
+justify-content: center;
+align-items: center;
+padding: 6px 12px;
+border-radius: 10px;
+background: rgba(14, 16, 32, 0.72);
+border: 1px solid rgba(233, 196, 106, 0.24);
+}
+.bpscr.bp-large .bpstep {
+font-size: clamp(16px, 1.5vw, 22px);
+line-height: 1.25;
+}
+.bpscr.bp-large .bpcount {
+display: block;
+margin: 2px 0 0;
+font-size: 12px;
+}
+.bpl-panel {
+display: flex;
+flex-direction: column;
+gap: 6px;
+padding: 8px 10px;
+border-radius: 10px;
+background: linear-gradient(165deg, rgba(16, 20, 38, 0.84), rgba(10, 12, 24, 0.72));
+border: 1px solid rgba(239, 232, 216, 0.14);
+}
+.bpl-panel.side-0 {
+border-color: rgba(70, 211, 234, 0.34);
+}
+.bpl-panel.side-1 {
+border-color: rgba(255, 106, 90, 0.34);
+}
+.bpl-head {
+display: flex;
+align-items: center;
+flex-wrap: wrap;
+gap: 6px 8px;
+}
+.bpl-panel.side-1 .bpl-head {
+flex-direction: row-reverse;
+}
+.bpl-head .who {
+font-size: clamp(15px, 1.25vw, 19px);
+line-height: 1.1;
+}
+.bpl-count {
+font-size: 12px;
+font-weight: 700;
+font-variant-numeric: tabular-nums;
+padding: 1px 7px;
+border-radius: 99px;
+background: rgba(255, 255, 255, 0.08);
+color: var(--ink);
+}
+.bpl-bans {
+display: flex;
+align-items: center;
+flex-wrap: wrap;
+gap: 5px;
+margin-left: auto;
+}
+.bpl-panel.side-1 .bpl-bans {
+margin-left: 0;
+margin-right: auto;
+flex-direction: row-reverse;
+}
+.bpl-ban-chip {
+display: inline-flex;
+align-items: center;
+gap: 4px;
+height: 24px;
+padding: 0 7px 0 4px;
+border-radius: 6px;
+font-size: 12px;
+color: #ffb8b0;
+background: rgba(184, 57, 46, 0.16);
+border: 1px dashed rgba(214, 80, 64, 0.55);
+white-space: nowrap;
+}
+.bpl-ban-chip.filled {
+border-style: solid;
+background: rgba(184, 57, 46, 0.28);
+}
+.bpl-ban-chip.on {
+border-style: solid;
+border-color: var(--gold);
+box-shadow: 0 0 0 1px rgba(233, 196, 106, 0.45);
+animation: pulse 1.2s ease-in-out infinite;
+}
+.bpl-ban-chip img {
+width: 18px;
+height: 18px;
+border-radius: 3px;
+object-fit: cover;
+filter: grayscale(0.85) brightness(0.8);
+}
+.slots.slots-large.bpl-picks {
+display: grid;
+gap: 6px;
+max-height: none;
+overflow: visible;
+padding-right: 0;
+}
+.slots.slots-large.bpl-picks.cols-5 {
+grid-template-columns: repeat(5, minmax(0, 1fr));
+}
+.slots.slots-large.bpl-picks.cols-4 {
+grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+.bps.right .slots.slots-large.bpl-picks {
+flex-direction: unset;
+}
+.slots.slots-large .slot2.bpl-slot {
+width: 100%;
+min-width: 0;
+height: 58px;
+border-radius: 8px;
+background: rgba(255, 255, 255, 0.035);
+}
+.bpscr.bp-large-8 .slots.slots-large .slot2.bpl-slot {
+height: 48px;
+}
+.slot2.bpl-slot.filled {
+border-style: solid;
+border-color: rgba(233, 196, 106, 0.48);
+}
+.slot2.bpl-slot .bpl-role {
+position: absolute;
+top: 2px;
+left: 3px;
+z-index: 2;
+font-size: 10.5px;
+line-height: 1;
+padding: 1px 4px;
+border-radius: 3px;
+background: rgba(8, 10, 22, 0.78);
+color: var(--gold);
+}
+.slot2.bpl-slot .bpl-empty {
+font-size: 11.5px;
+color: var(--dim);
+opacity: 0.72;
+margin-top: 8px;
+}
+.slot2.bpl-slot .lab {
+font-size: 11px;
+padding: 1px 2px;
+bottom: 1px;
+background: linear-gradient(transparent, rgba(6, 7, 16, 0.85));
+}
+.bpscr.bp-large .bpgrid {
+max-height: clamp(160px, 29vh, 290px);
+}
+.bpscr.bp-large .bpbot {
+max-height: clamp(150px, 24vh, 230px);
+}
+@media (max-width: 1080px) {
+.bpscr.bp-large .bph {
+grid-template-columns: 1fr;
+}
+.slots.slots-large.bpl-picks.cols-5 {
+grid-template-columns: repeat(5, minmax(0, 1fr));
+}
 }
 .xiwu-train-controls {
 display: flex;
@@ -11811,7 +11971,9 @@ Object.assign(UI_COPY_EN, {
 "闪避无敌略微延长": "Dodge invulnerability lasts slightly longer",
 "跃渊清心：驱散减速灼烧并疾行": "Clearwater Leap (clear slows and burns and move faster)",
 "Q/R 技能冷却略减": "Q/R skills have slightly shorter cooldowns",
-"连弩齐发：齐射三枚追踪机矢": "Repeating Volley (fire three homing bolts)"
+"连弩齐发：齐射三枚追踪机矢": "Repeating Volley (fire three homing bolts)",
+"镜头": "Zoom",
+"待选": "Open"
 });
 Object.assign(UI_COPY_EN, {
 "旧版本录的，可能对不上": "Recorded with an older version. Playback may differ.",
@@ -31957,6 +32119,7 @@ m[k] = snap[k];
 }
 }
 }
+var _SP_OUT = { p: 0, v: 0 };
 function stepSpring(pos, vel, target, k, c, dt) {
 var safeDt = clamp(dt, 0, 0.033);
 var acc = -k * (pos - target) - c * vel;
@@ -31966,7 +32129,9 @@ if (Math.abs(pos - target) < 1e-4 && Math.abs(vel) < 1e-4) {
 pos = target;
 vel = 0;
 }
-return { p: quantize(pos), v: quantize(vel) };
+_SP_OUT.p = quantize(pos);
+_SP_OUT.v = quantize(vel);
+return _SP_OUT;
 }
 function applyRecoilImpulse(f, impulse) {
 var m = ensureMotionState(f);
@@ -32094,8 +32259,12 @@ fx.ribbon[writeIdx++] = pt;
 fx.ribbon.length = writeIdx;
 var st = f.state || 'idle';
 var swinging = st === 'attack' || st === 'skill' || st === 'special' || st === 'throw_exec';
+if (!swinging) {
+fx.activeSwing = false;
+fx.hasLastTip = false;
+return;
+}
 var seg = sampleWeaponSegment(f);
-if (swinging) {
 var distSq = fx.hasLastTip
 ? ((seg.tipX - fx.lastTipX) * (seg.tipX - fx.lastTipX) + (seg.tipY - fx.lastTipY) * (seg.tipY - fx.lastTipY))
 : CONFIG.ribbonMinSpeedSq + 1;
@@ -32114,9 +32283,6 @@ fx.ribbon.shift();
 }
 }
 fx.activeSwing = true;
-} else {
-fx.activeSwing = false;
-}
 fx.lastTipX = seg.tipX;
 fx.lastTipY = seg.tipY;
 fx.hasLastTip = true;
@@ -33305,18 +33471,40 @@ const is2v2 = () => !isLargeTeam() && (M.mode === 'watch2v2' || M.mode === '2v2'
 const isRaid = () => M.mode === 'raid' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.raid)) || !!(netRoom() && netRoom().raid);
 const isMulti = () => is2v2() || isRaid() || isLargeTeam();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : ((is2v2() || isLargeTeam()) ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
-const sideFighters = side => {
-if (isLargeTeam()) return FIGHTERS.filter(f => !f.hidden && (f.idx % 2) === side);
-if (isRaid()) return side === 0 ? [A, C, D].filter(f => !f.hidden) : [B];
-if (is2v2()) return side === 0 ? [A, C] : [B, D];
-return [[A, B][side]];
-};
-const allFighters = () => {
-if (isLargeTeam()) return FIGHTERS.filter(f => !f.hidden);
-if (isRaid()) return [A, B, C, D].filter(f => !f.hidden);
-if (is2v2()) return [A, B, C, D];
-return [A, B];
-};
+let _afMask = -1, _afMode = '', _afAll = [A, B], _afS0 = [A], _afS1 = [B];
+function _syncFighterCache() {
+const large = isLargeTeam(), raid = !large && isRaid(), two = !large && !raid && is2v2();
+const modeKey = large ? 'L' : raid ? 'R' : two ? '2' : '1';
+let mask = 0;
+if (large) {
+for (let i = 0; i < MAX_FIGHTERS; i++) if (!FIGHTERS[i].hidden) mask |= (1 << i);
+} else if (raid) {
+for (let i = 0; i < 4; i++) if (!FIGHTERS[i].hidden) mask |= (1 << i);
+}
+if (modeKey === _afMode && mask === _afMask) return;
+_afMode = modeKey; _afMask = mask;
+if (large) {
+_afAll = []; _afS0 = []; _afS1 = [];
+for (let i = 0; i < MAX_FIGHTERS; i++) {
+const f = FIGHTERS[i];
+if (f.hidden) continue;
+_afAll.push(f);
+if ((f.idx & 1) === 0) _afS0.push(f); else _afS1.push(f);
+}
+} else if (raid) {
+_afAll = []; _afS0 = []; _afS1 = [B];
+for (let i = 0; i < 4; i++) {
+const f = FIGHTERS[i];
+if (!f.hidden) { _afAll.push(f); if (i !== 1) _afS0.push(f); }
+}
+} else if (two) {
+_afAll = [A, B, C, D]; _afS0 = [A, C]; _afS1 = [B, D];
+} else {
+_afAll = [A, B]; _afS0 = [A]; _afS1 = [B];
+}
+}
+const sideFighters = side => { _syncFighterCache(); return side === 0 ? _afS0 : _afS1; };
+const allFighters = () => { _syncFighterCache(); return _afAll; };
 const isAiVsAi = () => !!(M.watchAi || (M.mode === 'watch2v2' && M.watchAi) || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && !isMulti() && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
 const fighterByIdx = idx => FIGHTERS[idx] || A;
 const foesOf = f => {
@@ -33516,11 +33704,32 @@ const topX = bottomX - side * 245;
 const bottomY = -layer * BATTLE_LAYER_HEIGHT, topY = bottomY - BATTLE_LAYER_HEIGHT;
 return { layer, bottomX, topX, bottomY, topY, x: (bottomX + topX) / 2, y: topY, w: 245, k: 'stairs' };
 })).flat();
-const BATTLE_MAP = { id: 'battle', w: BATTLE_WIDTH, plats: [...BATTLE_DECKS, ...BATTLE_STAIRS] };
-const battleMapOn = () => isLargeTeam() && M.teamSize === 8;
+const BATTLE_MAP = { id: 'battle', w: BATTLE_WIDTH, layers: 5, layerH: BATTLE_LAYER_HEIGHT, decks: BATTLE_DECKS, stairs: BATTLE_STAIRS, plats: [...BATTLE_DECKS, ...BATTLE_STAIRS] };
+const BATTLE5_WIDTH = 2800;
+const BATTLE5_LAYER_HEIGHT = 138;
+const BATTLE5_DECKS = [
+{ x: BATTLE5_WIDTH / 2, y: -2 * BATTLE5_LAYER_HEIGHT, w: 1480, k: 'battle5', topCitadel: true },
+{ x: BATTLE5_WIDTH / 2, y: -BATTLE5_LAYER_HEIGHT, w: BATTLE5_WIDTH - 2 * WALL, k: 'battle5' }
+];
+const BATTLE5_STAIRS = [
+{ layer: 0, bottomX: 340, topX: 580, bottomY: 0, topY: -BATTLE5_LAYER_HEIGHT, x: 460, y: -BATTLE5_LAYER_HEIGHT, w: 240, k: 'stairs' },
+{ layer: 0, bottomX: BATTLE5_WIDTH - 340, topX: BATTLE5_WIDTH - 580, bottomY: 0, topY: -BATTLE5_LAYER_HEIGHT, x: BATTLE5_WIDTH - 460, y: -BATTLE5_LAYER_HEIGHT, w: 240, k: 'stairs' },
+{ layer: 1, bottomX: 680, topX: 920, bottomY: -BATTLE5_LAYER_HEIGHT, topY: -2 * BATTLE5_LAYER_HEIGHT, x: 800, y: -2 * BATTLE5_LAYER_HEIGHT, w: 240, k: 'stairs' },
+{ layer: 1, bottomX: BATTLE5_WIDTH - 680, topX: BATTLE5_WIDTH - 920, bottomY: -BATTLE5_LAYER_HEIGHT, topY: -2 * BATTLE5_LAYER_HEIGHT, x: BATTLE5_WIDTH - 800, y: -2 * BATTLE5_LAYER_HEIGHT, w: 240, k: 'stairs' }
+];
+const BATTLE5_MAP = { id: 'battle5', w: BATTLE5_WIDTH, layers: 3, layerH: BATTLE5_LAYER_HEIGHT, decks: BATTLE5_DECKS, stairs: BATTLE5_STAIRS, plats: [...BATTLE5_DECKS, ...BATTLE5_STAIRS] };
+const battleMapDef = () => !isLargeTeam() ? null : (M.teamSize === 8 ? BATTLE_MAP : M.teamSize === 5 ? BATTLE5_MAP : null);
+const battleMapOn = () => !!battleMapDef();
 function battlePerksInit() {
 M.battlePerks = [];
-if (!battleMapOn()) return;
+const bm = battleMapDef();
+if (!bm) return;
+if (bm === BATTLE5_MAP) {
+M.battlePerks.push({ x: STAGE_W / 2, y: -2 * BATTLE5_LAYER_HEIGHT, large: true, cooldown: 0 });
+M.battlePerks.push({ x: 580, y: -BATTLE5_LAYER_HEIGHT, large: false, guard: grnd() < 0.5, cooldown: 0 });
+M.battlePerks.push({ x: STAGE_W - 580, y: -BATTLE5_LAYER_HEIGHT, large: false, guard: grnd() < 0.5, cooldown: 0 });
+return;
+}
 M.battlePerks.push({ x: STAGE_W / 2, y: -2 * BATTLE_LAYER_HEIGHT, large: true, cooldown: 0 });
 for (let layer = 0; layer < 4; layer++) {
 const p = BATTLE_STAIRS[layer * 2 + Math.floor(grnd() * 2)];
@@ -33546,7 +33755,7 @@ perk.cooldown = perk.large ? 22 : 15;
 if (!RESIM) ring(perk.x, perk.y - 30, perk.large ? 90 : 48, perk.large ? '255,216,121' : '141,228,227', 0.35);
 }
 }
-const mapNow = () => battleMapOn() ? BATTLE_MAP : (typeof kothOn === 'function' && kothOn()) ? KOTH_MAP : (typeof partyOn === 'function' && partyOn() && M.party && M.party.kind === 'sumo') ? PARTY_SUMO_MAP : ((mapsOn() && M.map && MAPS[M.map]) || null);
+const mapNow = () => battleMapDef() || ((typeof kothOn === 'function' && kothOn()) ? KOTH_MAP : (typeof partyOn === 'function' && partyOn() && M.party && M.party.kind === 'sumo') ? PARTY_SUMO_MAP : ((mapsOn() && M.map && MAPS[M.map]) || null));
 function mapOdds(votes) {
 const n = MAP_POOL.map(id => (votes || []).filter(v => v === id).length), sum = n.reduce((a, b) => a + b, 0);
 return MAP_POOL.map((id, i) => sum ? n[i] / sum : 1 / MAP_POOL.length);
@@ -33627,32 +33836,35 @@ return p.k === 'stairs'
 }
 function gndY(f) { const P = f.plat >= 0 && (mapPlats() || [])[f.plat]; return P ? platformY(P, f.x) : 0; }
 function enterBattleStair(f, oldX) {
-if (!battleMapOn() || f.plat >= BATTLE_DECKS.length || !['walk', 'idle'].includes(f.state) || !f.onGround()) return false;
+const bm = battleMapDef();
+if (!bm || f.plat >= bm.decks.length || !['walk', 'idle'].includes(f.state) || !f.onGround()) return false;
 const dir = Math.sign(f.x - oldX);
 if (!dir) return false;
-for (let i = 0; i < BATTLE_STAIRS.length; i++) {
-const p = BATTLE_STAIRS[i];
+const stairs = bm.stairs;
+for (let i = 0; i < stairs.length; i++) {
+const p = stairs[i];
 const up = dir === Math.sign(p.topX - p.bottomX);
 const x = up ? p.bottomX : p.topX, y = up ? p.bottomY : p.topY;
 if (Math.abs(f.y - y) > 0.5 || (oldX - x) * dir > 0 || (f.x - x) * dir <= 0) continue;
-f.plat = BATTLE_DECKS.length + i;
+f.plat = bm.decks.length + i;
 f.y = platformY(p, f.x);
 return true;
 }
 return false;
 }
 function battleStairTarget(f, targetY) {
-if (!battleMapOn() || !f.onGround()) return null;
+const bm = battleMapDef();
+if (!bm || !f.onGround()) return null;
 const support = (mapPlats() || [])[f.plat];
 if (support?.k === 'stairs') {
 const up = targetY <= (support.topY + support.bottomY) / 2;
 const dir = Math.sign(support.topX - support.bottomX);
 return up ? support.topX + dir * 12 : support.bottomX - dir * 12;
 }
-if (Math.abs(f.y - targetY) < BATTLE_LAYER_HEIGHT * 0.75) return null;
-const layer = Math.round(-f.y / BATTLE_LAYER_HEIGHT);
+if (Math.abs(f.y - targetY) < bm.layerH * 0.75) return null;
+const layer = Math.round(-f.y / bm.layerH);
 const up = targetY < f.y;
-const stairs = BATTLE_STAIRS.filter(p => p.layer === (up ? layer : layer - 1));
+const stairs = bm.stairs.filter(p => p.layer === (up ? layer : layer - 1));
 if (!stairs.length) return null;
 const entry = p => up ? p.bottomX : p.topX;
 const p = stairs.reduce((a, b) => Math.abs(f.x - entry(a)) <= Math.abs(f.x - entry(b)) ? a : b);
@@ -33710,7 +33922,9 @@ if (Math.abs(f.x - P.x) > P.w / 2) {
 if (P.k === 'stairs') {
 const atTop = Math.abs(f.x - P.topX) < Math.abs(f.x - P.bottomX);
 const layer = P.layer + Number(atTop);
-mapPutOn(f, layer ? 4 - layer : -1);
+const bm = battleMapDef();
+const deckCount = bm ? bm.decks.length : BATTLE_DECKS.length;
+mapPutOn(f, layer ? deckCount - layer : -1);
 if (f.vy > 0) f.vy = 0;
 } else f.plat = -1;
 } else { f.y = platformY(P, f.x); if (f.vy > 0) f.vy = 0; }
@@ -33916,7 +34130,8 @@ announce = null;
 announceQueue.length = 0;
 secretRound();
 const largeN = isLargeTeam() ? clamp(M.teamSize || 5, 3, 8) : 0;
-STAGE_W = M.mode === 'world' ? WORLD_W : largeN ? (largeN >= 6 ? 3600 : 3000) : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图，8v8 大团战 3600 宽
+STAGE_W = M.mode === 'world' ? WORLD_W : largeN ? (largeN >= 8 ? BATTLE_WIDTH : largeN === 5 ? BATTLE5_WIDTH : largeN >= 6 ? 3400 : 2600) : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);   // 开放世界 8000，8v8 3600，5v5 专属三层演武楼阁 2800
+if (M.round === 1 && typeof resetCamZoom === 'function') resetCamZoom(true);
 const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
 M.mapEnv = mp ? { wT: mp.wind ? mp.wind.every : 0, wOn: 0, wDir: 1, wN: 0, tT: mp.thunder ? mp.thunder.every : 0, tWarn: 0 } : null;   // 风、天雷的计时：每回合从头算
 if (typeof applySkins === 'function') applySkins();
@@ -37137,6 +37352,15 @@ whirl: { gc_spin: 'ak_whirl0', gc_throw: 'ak_whirl1' },
 spindle: { du_l1s: 'ak_spindle0', du_l1a: 'ak_spindle1' },
 shadowdash: { du_l1s: 'ak_shadowdash0', dash: 'ak_shadowdash1' }
 };
+const CHARGE_POSES = {
+qingfeng: 'qf_charge', feiying: 'fy_seal', tieshan: 'ts_lift', lingshuang: 'ls_stance', liuyun: 'ly_fanswipe', leiming: 'lm_boxer', moyu: 'my_stroke', yuehua: 'yh_lotus', yanling: 'yl_wings', yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_wind', cixian: 'lm_boxer', qianji: 'qf_charge',
+chixiao: 'rk_l2s', youhuang: 'dl_l1s', xuanji: 'sg_l1s', polang: 'an_l1s',
+cangming: 'ab_l1s', qingluan: 'jf_l2s', xuanwu: 'bs_l1s', chiyan: 'bg_l1s',
+yinhu: 'fd_l1s', yunhe: 'cw_l2s', tiangang: 'gp_l1s', mojie: 'sb_l1s',
+baihe: 'fr_l1s', jinpeng: 'rw_l2s', youming: 'rs_l1s', lingxi: 'sf_l1s',
+bawang: 'ob_l1s', fengling: 'cf_l2s', wuya: 'ib_l1s', danqing: 'vb_l1s'
+};
+const _TP_OUT = { sw: 0, k: 16, hip: [0, 0], neck: [0, 0], hf: [0, 0], hb: [0, 0], ff: [0, 0], fb: [0, 0] };
 function targetPose(f) {
 const s = f.state;
 let p, k = 16, atkOvershoot = 0;
@@ -37156,15 +37380,7 @@ atkOvershoot = -0.04; // 收招余韵缓冲（Follow-through settle）
 }
 } else if (s === 'special') {
 if (f.sp === 'charge') {
-const chargePoses = {
-qingfeng: 'qf_charge', feiying: 'fy_seal', tieshan: 'ts_lift', lingshuang: 'ls_stance', liuyun: 'ly_fanswipe', leiming: 'lm_boxer', moyu: 'my_stroke', yuehua: 'yh_lotus', yanling: 'yl_wings', yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_wind', cixian: 'lm_boxer', qianji: 'qf_charge',
-chixiao: 'rk_l2s', youhuang: 'dl_l1s', xuanji: 'sg_l1s', polang: 'an_l1s',
-cangming: 'ab_l1s', qingluan: 'jf_l2s', xuanwu: 'bs_l1s', chiyan: 'bg_l1s',
-yinhu: 'fd_l1s', yunhe: 'cw_l2s', tiangang: 'gp_l1s', mojie: 'sb_l1s',
-baihe: 'fr_l1s', jinpeng: 'rw_l2s', youming: 'rs_l1s', lingxi: 'sf_l1s',
-bawang: 'ob_l1s', fengling: 'cf_l2s', wuya: 'ib_l1s', danqing: 'vb_l1s'
-};
-p = POSES[chargePoses[f.ch.id] || 'sps']; k = 16;
+p = POSES[CHARGE_POSES[f.ch.id] || 'sps']; k = 16;
 } else if (f.ch.ult === 'crescent') {
 const m = { dash: 'qf_thrust', miss: 'l3a', flurry: f.slashN % 2 ? 'l3a' : 'hva', final: 'a2a' };
 p = POSES[m[f.sp] || 'qf_thrust'] || POSES.spa; k = 60;
@@ -37192,8 +37408,13 @@ else if (s === 'getup') { p = POSES.getup; k = 14; }
 else if (s === 'victory') { p = POSES.victory; k = 6; }
 else if (s === 'charge' || s === 'aircharge') { p = POSES.charge; k = 18; }
 else p = POSES.idle;
-const out = { sw: p.sw + atkOvershoot * 0.85, k };
-for (const j of JOINTS) out[j] = [p[j][0], p[j][1]];
+const out = _TP_OUT;
+out.sw = p.sw + atkOvershoot * 0.85;
+out.k = k;
+for (let ji = 0; ji < JOINTS.length; ji++) {
+const j = JOINTS[ji], pj = p[j], oj = out[j];
+oj[0] = pj[0]; oj[1] = pj[1];
+}
 if (atkOvershoot !== 0) {
 out.hf[0] += (out.hf[0] - out.neck[0]) * atkOvershoot;
 out.hf[1] += (out.hf[1] - out.neck[1]) * atkOvershoot * 0.6;
@@ -37464,7 +37685,19 @@ if (p.y > 30) { p.y = rand(-800, -500); p.x = rand(cam.x - 900, cam.x + 900); }
 }
 if (!RESIM) for (const c of comboUI) c.t -= STEP;
 }
-const cam = { x: STAGE_W / 2, y: 0, zoom: 1 };
+const cam = { x: STAGE_W / 2, y: 0, zoom: 1, userZoom: 1, userZoomTarget: 1, userZoomT: 0 };
+const CAM_USER_ZOOM_MIN = 0.55;
+const CAM_USER_ZOOM_MAX = 1.85;
+function adjustCamZoom(delta) {
+const next = clamp((cam.userZoomTarget || 1) * (1 + delta), CAM_USER_ZOOM_MIN, CAM_USER_ZOOM_MAX);
+cam.userZoomTarget = Math.abs(next - 1) < 0.025 ? 1 : next;
+cam.userZoomT = 1.8;
+}
+function resetCamZoom(silent) {
+cam.userZoom = 1;
+cam.userZoomTarget = 1;
+cam.userZoomT = silent ? 0 : 1.2;
+}
 let camPunch = { zoom: 0, x: STAGE_W / 2, y: 0, t: 0, maxT: 0 };
 let camFocusPingT = 0;
 function camImpact(x, y, zoomBoost, duration) {
@@ -38342,6 +38575,9 @@ dummyBarUpdate();
 trainInspectUpdate();
 }
 function updateCamera(dt) {
+cam.userZoom = damp(cam.userZoom || 1, cam.userZoomTarget || 1, 10, dt);
+if (cam.userZoomT > 0) cam.userZoomT = Math.max(0, cam.userZoomT - dt);
+const uz = cam.userZoom || 1;
 if (WORLD.on) { worldCamera(dt); return; }
 if (camFocusPingT > 0) camFocusPingT = Math.max(0, camFocusPingT - dt);
 if (FOREST.on) {   // 闯关打妖物：镜头框住同袍小队与附近的妖物
@@ -38350,23 +38586,34 @@ const allyXs = allies.length ? allies.map(f => f.x) : [A.x];
 const near = FOREST.mons.filter(m => Math.abs(m.x - A.x) < 750);
 const xs = [...allyXs, ...near.map(m => m.x)], lo = Math.min(...xs), hi = Math.max(...xs);
 const fx = clamp((lo + hi) / 2, A.x - 320, A.x + 320);
-cam.x = damp(cam.x, fx, 6, dt); cam.zoom = damp(cam.zoom, clamp(1.12 - (hi - lo) / 1600, 0.64, 1.05), 3, dt);
+cam.x = damp(cam.x, fx, 6, dt); cam.zoom = damp(cam.zoom, clamp(clamp(1.12 - (hi - lo) / 1600, 0.64, 1.05) * uz, 0.42, 1.65), 3, dt);
 cam.y = damp(cam.y, Math.min(0, A.y * 0.4), 6, dt);
 return;
 }
 if (isLargeTeam()) {
 const lf = fighterByIdx(localIdx());
-const anchor = (lf && !lf.hidden && lf.hp > 0) ? lf : (allFighters().find(f => !f.hidden && f.hp > 0) || A);
-const nearby = allFighters().filter(f => !f.hidden && f.hp > 0 && Math.abs(f.x - anchor.x) < 950);
-const pool = nearby.length >= 2 ? nearby : [anchor];
-const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
-const minY = Math.min(...pool.map(f => f.y));
+const fs = allFighters();
+let anchor = (lf && !lf.hidden && lf.hp > 0) ? lf : null;
+if (!anchor) {
+for (let i = 0; i < fs.length; i++) if (!fs[i].hidden && fs[i].hp > 0) { anchor = fs[i]; break; }
+if (!anchor) anchor = A;
+}
+let minX = anchor.x, maxX = anchor.x, minY = anchor.y;
+for (let i = 0; i < fs.length; i++) {
+const f = fs[i];
+if (f.hidden || f.hp <= 0 || Math.abs(f.x - anchor.x) >= 950) continue;
+if (f.x < minX) minX = f.x;
+if (f.x > maxX) maxX = f.x;
+if (f.y < minY) minY = f.y;
+}
 const d = maxX - minX;
 let focus = camFocusPingT > 0 ? anchor.x : lerp(anchor.x, (minX + maxX) / 2, 0.35);
 const baseZoom = camFocusPingT > 0 ? 0.82 : clamp(0.84 - d / 2600, 0.54, 0.80);
-const wantZoom = battleMapOn() ? Math.min(baseZoom, 0.66) : baseZoom;
-cam.zoom = damp(cam.zoom, wantZoom, camFocusPingT > 0 ? 10 : 4, dt);
-cam.y = damp(cam.y, battleMapOn() ? -75 : Math.min(0, minY * 0.32), 5, dt);
+const layeredCap = battleMapOn() ? (M.teamSize === 5 ? 0.74 : 0.66) : baseZoom;
+const wantZoom = clamp(Math.min(baseZoom, layeredCap) * uz, 0.36, 1.5);
+cam.zoom = damp(cam.zoom, wantZoom, camFocusPingT > 0 ? 10 : 5, dt);
+const wantY = battleMapOn() ? (M.teamSize === 5 ? Math.min(-42, anchor.y * 0.46 - 26) : Math.min(-75, anchor.y * 0.42 - 42)) : Math.min(0, minY * 0.32);
+cam.y = damp(cam.y, wantY, 5, dt);
 cam.x = damp(cam.x, focus, camFocusPingT > 0 ? 14 : 7, dt);
 const vw = W / worldScale();
 cam.x = vw >= STAGE_W + 200 ? STAGE_W / 2 : clamp(cam.x, vw / 2 - 100, STAGE_W + 100 - vw / 2);
@@ -38374,8 +38621,13 @@ return;
 }
 const tracked = isMulti() ? allFighters().filter(f => !f.hidden && f.hp > 0) : [A, B];
 const pool = cujuOn() && M.cuju && M.cuju.ball ? [...allFighters(), M.cuju.ball] : (tracked.length >= 2 ? tracked : [A, B]);   // 墨球蹴鞠：镜头也框住墨球
-const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
-const minY = Math.min(...pool.map(f => f.y));
+let minX = Infinity, maxX = -Infinity, minY = 0;
+for (let i = 0; i < pool.length; i++) {
+const f = pool[i];
+if (f.x < minX) minX = f.x;
+if (f.x > maxX) maxX = f.x;
+if (f.y < minY) minY = f.y;
+}
 const mid = (minX + maxX) / 2, d = maxX - minX, base = H / 560;
 const padW = isMulti() ? 680 : 340;
 const fitW = W / ((d + padW) * base);
@@ -38400,17 +38652,22 @@ if (ce > 0 && cine.owner) { zoomMul *= 1 + 0.4 * ce; focus = lerp(focus, cine.ow
 const minZoom = is2v2() ? 0.4 : cujuOn() ? 0.5 : 0.6;
 const wantBase = is2v2() ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
 const maxZoom = is2v2() ? 0.70 : Infinity;
-let want = Math.min(wantBase * zoomMul, fit, maxZoom);
+const userZoomedIn = uz > 1.01;
+let want = clamp(Math.min(wantBase * zoomMul, fit, maxZoom) * uz, 0.32, userZoomedIn ? 1.85 : maxZoom);
 const pf = paperFX();
 if (pf) { want = lerp(want, W / ((STAGE_W + 220) * base), pf.a); focus = lerp(focus, STAGE_W / 2, pf.a); }   // 宣纸：镜头拉远，整张图一览无余
-cam.zoom = damp(cam.zoom, want, want < cam.zoom ? 12 : (ce > 0 ? 9 : 3), dt);
-cam.zoom = Math.min(cam.zoom, fit, maxZoom);
+cam.zoom = damp(cam.zoom, want, want < cam.zoom ? 12 : (ce > 0 ? 9 : 4), dt);
+if (!userZoomedIn) cam.zoom = Math.min(cam.zoom, fit, maxZoom);
 cam.y = damp(cam.y, Math.min(0, minY * 0.35), 4, dt);
 cam.x = damp(cam.x, focus, 8, dt);
 const vw = W / worldScale();
 cam.x = vw >= STAGE_W + 200 ? STAGE_W / 2 : clamp(cam.x, vw / 2 - 100, STAGE_W + 100 - vw / 2);
+if (!userZoomedIn) {
 const lo = maxX - vw / 2 + 60, hi = minX + vw / 2 - 60;
 if (lo <= hi) cam.x = clamp(cam.x, lo, hi); else cam.x = mid;
+} else if (lf && !lf.hidden && lf.hp > 0 && d > vw - 120) {
+cam.x = clamp(lerp(cam.x, lf.x, 0.35), vw / 2 - 100, STAGE_W + 100 - vw / 2);
+}
 }
 const worldScale = () => (H / 560) * cam.zoom;
 function paperFX() {
@@ -38439,21 +38696,38 @@ ctx.fillStyle = 'rgba(255, 200, 110, 0.55)';
 ctx.fillRect(-1.5, -18, 3, 4);
 ctx.restore();
 }
+let _inkCloudSprite = null;
+function getInkCloudSprite() {
+if (_inkCloudSprite || typeof document === 'undefined') return _inkCloudSprite;
+const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+const x = c.getContext && c.getContext('2d');
+if (!x) return null;
+const g = x.createRadialGradient(64, 64, 6, 64, 64, 64);
+g.addColorStop(0, 'rgba(225, 220, 235, 0.09)');
+g.addColorStop(0.55, 'rgba(160, 155, 185, 0.04)');
+g.addColorStop(1, 'rgba(20, 22, 36, 0)');
+x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+_inkCloudSprite = c;
+return c;
+}
 function drawInkClouds(gy, sc) {
+const spr = getInkCloudSprite();
 ctx.save();
 for (let i = 0; i < 6; i++) {
 const sp = 14 + (i % 3) * 6;
 const cx = ((hash(i * 19 + 3) * W * 1.5 + clock * sp - cam.x * (0.06 + i * 0.02) * sc) % (W + 420) + (W + 420)) % (W + 420) - 210;
 const cy = gy - H * (0.14 + (i % 3) * 0.09);
 const rw = (130 + hash(i * 7) * 90) * sc, rh = (18 + hash(i * 13) * 12) * sc;
+if (spr) {
+ctx.drawImage(spr, cx - rw, cy - rh, rw * 2, rh * 2);
+} else {
 const g = ctx.createRadialGradient(cx, cy, rh * 0.2, cx, cy, rw);
 g.addColorStop(0, 'rgba(225, 220, 235, 0.09)');
 g.addColorStop(0.55, 'rgba(160, 155, 185, 0.04)');
 g.addColorStop(1, 'rgba(20, 22, 36, 0)');
 ctx.fillStyle = g;
-ctx.beginPath();
-ctx.ellipse(cx, cy, rw, rh, 0, 0, Math.PI * 2);
-ctx.fill();
+ctx.beginPath(); ctx.ellipse(cx, cy, rw, rh, 0, 0, Math.PI * 2); ctx.fill();
+}
 }
 ctx.restore();
 }
@@ -38692,6 +38966,23 @@ const left = P.x - P.w / 2, top = P.y, w = P.w, h = 12;
 if (P.k === 'battle') {
 ctx.fillStyle = '#1c2733'; ctx.fillRect(left, top, w, h);
 ctx.fillStyle = '#7091a0'; ctx.fillRect(left, top, w, 2);
+} else if (P.k === 'battle5') {
+ctx.fillStyle = P.topCitadel ? '#341922' : '#261a28';
+ctx.fillRect(left, top, w, h + 2);
+ctx.fillStyle = P.topCitadel ? '#e9c46a' : '#b86852';
+ctx.fillRect(left, top, w, 2.5);
+ctx.fillStyle = 'rgba(233,196,106,0.28)';
+ctx.fillRect(left, top + h, w, 1.5);
+if (P.topCitadel) {
+ctx.strokeStyle = 'rgba(233,196,106,0.85)'; ctx.lineWidth = 2.2;
+ctx.beginPath();
+ctx.moveTo(left - 14, top - 6); ctx.quadraticCurveTo(left - 2, top + 3, left + 22, top + 3);
+ctx.moveTo(left + w + 14, top - 6); ctx.quadraticCurveTo(left + w + 2, top + 3, left + w - 22, top + 3);
+ctx.stroke();
+ctx.fillStyle = 'rgba(72,24,34,0.65)';
+ctx.fillRect(left + 32, top + h + 2, 10, BATTLE5_LAYER_HEIGHT - h - 2);
+ctx.fillRect(left + w - 42, top + h + 2, 10, BATTLE5_LAYER_HEIGHT - h - 2);
+}
 } else if (P.k === 'stairs') {
 ctx.strokeStyle = '#c2ac80'; ctx.lineWidth = 4;
 ctx.beginPath();
@@ -38724,7 +39015,7 @@ ctx.moveTo(left + w + 8, top - 4); ctx.quadraticCurveTo(left + w, top + 3, left 
 ctx.stroke();
 }
 }
-if (mp === BATTLE_MAP) {
+if (mp === BATTLE_MAP || mp === BATTLE5_MAP) {
 for (const perk of M.battlePerks || []) {
 if (perk.cooldown > 0) continue;
 const y = perk.y - 30, r = perk.large ? 15 : 9;
@@ -38754,9 +39045,27 @@ ctx.beginPath(); ctx.moveTo(tx, -500); ctx.lineTo(tx, -120); ctx.stroke();
 ctx.restore();
 }
 }
+const GROUND_GRAD = new WeakMap();
+let _lanternGlowSprite = null;
+function getLanternGlowSprite() {
+if (_lanternGlowSprite || typeof document === 'undefined') return _lanternGlowSprite;
+const c = document.createElement('canvas'); c.width = 128; c.height = 128;
+const x = c.getContext && c.getContext('2d');
+if (!x) return null;
+const g = x.createRadialGradient(64, 64, 2, 64, 64, 64);
+g.addColorStop(0, 'rgba(255,170,90,0.35)');
+g.addColorStop(1, 'rgba(255,170,90,0)');
+x.fillStyle = g; x.fillRect(0, 0, 128, 128);
+_lanternGlowSprite = c;
+return c;
+}
 function drawGround() {
-const g = ctx.createLinearGradient(0, 0, 0, 260);
+let g = GROUND_GRAD.get(ctx);
+if (!g) {
+g = ctx.createLinearGradient(0, 0, 0, 260);
 g.addColorStop(0, '#221c38'); g.addColorStop(1, '#0a0816');
+GROUND_GRAD.set(ctx, g);
+}
 ctx.fillStyle = g; ctx.fillRect(-3000, 0, STAGE_W + 6000, 800);
 ctx.strokeStyle = 'rgba(200,180,255,0.35)'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(-3000, 0); ctx.lineTo(STAGE_W + 3000, 0); ctx.stroke();
 ctx.strokeStyle = 'rgba(200,180,255,0.07)'; ctx.lineWidth = 1;
@@ -38850,9 +39159,17 @@ ctx.restore();
 }
 function lantern(x, y) {
 const flick = 0.85 + Math.sin(clock * 9 + x) * 0.08 + Math.sin(clock * 23 + x) * 0.05;
+const spr = getLanternGlowSprite();
+if (spr) {
+const prevA = ctx.globalAlpha;
+ctx.globalAlpha = prevA * flick;
+ctx.drawImage(spr, x - 110, y - 180, 220, 220);
+ctx.globalAlpha = prevA;
+} else {
 const rg = ctx.createRadialGradient(x, y - 70, 2, x, y - 70, 110);
 rg.addColorStop(0, `rgba(255,170,90,${0.35 * flick})`); rg.addColorStop(1, 'rgba(255,170,90,0)');
 ctx.fillStyle = rg; ctx.fillRect(x - 110, y - 180, 220, 220);
+}
 ctx.fillStyle = '#16121f';
 ctx.fillRect(x - 5, y - 50, 10, 50); ctx.fillRect(x - 16, y - 8, 32, 8);
 ctx.fillRect(x - 14, y - 58, 28, 8);
@@ -43497,15 +43814,18 @@ ctx.fillStyle = '#ff7878'; ctx.fillText(`${enemy}${score[enemyTeam]}/${target}`,
 ctx.fillStyle = '#e9c46a';
 }
 ctx.fillText(`${sz}v${sz}`, cx, top + 30);
-const layered = battleMapOn();
-const mw = Math.min(380, Math.round(W * 0.34)), mh = layered ? 42 : 12, mx = cx - mw / 2, my = top + 40;
-const mapY = y => layered ? my + 4 + clamp(1 + y / (4 * BATTLE_LAYER_HEIGHT), 0, 1) * (mh - 8) : my + mh / 2;
+const bm = typeof battleMapDef === 'function' ? battleMapDef() : null;
+const layered = !!bm;
+const layerCnt = bm ? bm.layers : 1;
+const layerSpan = bm ? (bm.layers - 1) * bm.layerH : 1;
+const mw = Math.min(380, Math.round(W * 0.34)), mh = layered ? (layerCnt >= 5 ? 42 : 30) : 12, mx = cx - mw / 2, my = top + 40;
+const mapY = y => layered ? my + 4 + clamp(1 + y / layerSpan, 0, 1) * (mh - 8) : my + mh / 2;
 ctx.fillStyle = 'rgba(8,10,22,0.78)'; ctx.fillRect(mx, my, mw, mh);
 ctx.strokeStyle = 'rgba(233,196,106,0.38)'; ctx.lineWidth = 1; ctx.strokeRect(mx, my, mw, mh);
 if (layered) {
 ctx.strokeStyle = 'rgba(170,205,205,0.35)';
-for (let layer = 0; layer < 5; layer++) {
-const y = mapY(-layer * BATTLE_LAYER_HEIGHT);
+for (let layer = 0; layer < layerCnt; layer++) {
+const y = mapY(-layer * bm.layerH);
 ctx.beginPath(); ctx.moveTo(mx, y); ctx.lineTo(mx + mw, y); ctx.stroke();
 }
 }
@@ -43894,11 +44214,18 @@ ctx.save(); ctx.font = `${fs}px ${BODY_FONT}`; ctx.textAlign = 'left'; ctx.textB
 ctx.fillStyle = 'rgba(239,232,216,0.55)';
 let t = `${cvT('帧率')} ${FPS}`;
 ctx.fillText(t, x, y);
+let cursorX = x + ctx.measureText(t + '   ').width;
 if (M.mode === 'net' && NET.rtt) {
-const ms = Math.round(NET.rtt), w = ctx.measureText(t + '   ').width;
+const ms = Math.round(NET.rtt);
 ctx.fillStyle = ms < 80 ? '#8fe0a0' : ms < 160 ? '#e9c46a' : '#ff8a78';
 const tx = `${cvT('延迟 对手')} ${ms}ms`;
-ctx.fillText(tx, x + w, y);
+ctx.fillText(tx, cursorX, y);
+cursorX += ctx.measureText(tx + '   ').width;
+}
+const uz = cam.userZoom || 1;
+if ((cam.userZoomT || 0) > 0 || Math.abs(uz - 1) > 0.03) {
+ctx.fillStyle = (cam.userZoomT || 0) > 0 ? 'rgba(233,196,106,0.92)' : 'rgba(239,232,216,0.55)';
+ctx.fillText(`${cvT('镜头')} ${Math.round(uz * 100)}%`, cursorX, y);
 }
 if (NET_HUD) {
 const hudFs = Math.max(12, Math.round(H * 0.015));
@@ -44147,6 +44474,20 @@ return;
 }
 drawBackground(sc);
 }
+const _renderOrder = [];
+function buildRenderOrder() {
+if (!isMulti()) {
+_renderOrder.length = 2;
+if (A.state === 'attack' || A.state === 'special') { _renderOrder[0] = B; _renderOrder[1] = A; }
+else { _renderOrder[0] = A; _renderOrder[1] = B; }
+return _renderOrder;
+}
+const fs = allFighters();
+_renderOrder.length = fs.length;
+for (let i = 0; i < fs.length; i++) _renderOrder[i] = fs[i];
+_renderOrder.sort((a, b) => ((a.state === 'attack' || a.state === 'special') ? 1 : 0) - ((b.state === 'attack' || b.state === 'special') ? 1 : 0));
+return _renderOrder;
+}
 function render() {
 if (M.mode === 'demo') return renderMenu();
 ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
@@ -44172,9 +44513,7 @@ const pf = paperFX();
 if (pf) drawXuanzhi(pf.a);
 ctx.save();
 ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
-const order = isMulti()
-? allFighters().slice().sort((a, b) => ((a.state === 'attack' || a.state === 'special') ? 1 : 0) - ((b.state === 'attack' || b.state === 'special') ? 1 : 0))
-: ((A.state === 'attack' || A.state === 'special') ? [B, A] : [A, B]);
+const order = buildRenderOrder();
 drawDecoys();
 drawClones();
 drawCujuField();
@@ -53846,7 +54185,8 @@ for (const f of fs) {
 if (f.hidden) continue;
 if (f.hp <= 0) {
 for (const fl of S.flags) if (fl.carrier === f.idx) { fl.carrier = -1; fl.dropped = true; fl.x = f.x;
-fl.y = battleMapOn() ? Math.min(0, Math.ceil(f.y / BATTLE_LAYER_HEIGHT) * BATTLE_LAYER_HEIGHT) : 0; }
+const bm = typeof battleMapDef === 'function' ? battleMapDef() : null;
+fl.y = bm ? Math.min(0, Math.ceil(f.y / bm.layerH) * bm.layerH) : 0; }
 if (S.respawn[f.idx] <= 0) S.respawn[f.idx] = 3.0;
 else {
 S.respawn[f.idx] -= STEP;
@@ -57051,6 +57391,13 @@ const TAG3_ROLES = ['先锋', '中坚', '大将'];
 const TEAM2_ROLES = ['先锋', '次锋'];
 const LARGE_ROLES = ['主将', '副将', '左翼', '右翼', '先锋', '奇兵', '策应', '殿军'];
 const isLargeBP = bpMode === 'melee' || bpMode === 'ctf';
+const largeTeamN = isLargeBP ? ((bpCustomOpts && bpCustomOpts.teamSize) || (BP.picks[0] ? BP.picks[0].length : 5)) : 0;
+const bpScrEl = $id('bp');
+if (bpScrEl) {
+bpScrEl.classList.toggle('bp-large', isLargeBP && largeTeamN >= 5);
+bpScrEl.classList.toggle('bp-large-5', isLargeBP && largeTeamN === 5);
+bpScrEl.classList.toggle('bp-large-8', isLargeBP && largeTeamN >= 6);
+}
 const isTag3BP = !isLargeBP && (bpMode === 'tag3' || !!(multiPick && BP.picks[0] && BP.picks[0].length === 3));
 let stepTitle = '';
 if (done) {
@@ -57106,13 +57453,25 @@ el.innerHTML = `<div class="who" style="color:var(--p1)">出战大侠</div>
 }
 } else if (isLargeBP) {
 const picks = BP.picks[sd] || [];
-const slotsHtml = picks.map((idx, slotIdx) => {
-const isActive = !done && side === sd && type === 'pick' && (picks.filter(x => x >= 0).length === slotIdx);
-const role = LARGE_ROLES[slotIdx] || `${slotIdx + 1}将`;
-return `<div class="slot2 pick${isActive ? ' on' : ''}">${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${role} ${CHARS[idx].name}</span>` : role}</div>`;
+const pickedCnt = picks.filter(x => x >= 0).length;
+const bansStrip = sideBans.map((bIdx, bSlot) => {
+const bActive = !done && side === sd && type === 'ban' && sideBans.filter(x => x >= 0).length === bSlot;
+return `<div class="bpl-ban-chip${bActive ? ' on' : ''}${bIdx >= 0 ? ' filled' : ''}">${bIdx >= 0 ? `<img src="${PORTRAITS[bIdx] || ''}" alt=""><span>禁 ${CHARS[bIdx].name}</span>` : `<span>禁位 ${bSlot + 1}</span>`}</div>`;
 }).join('');
-el.innerHTML = `<div class="who" style="color:${sd === 0 ? 'var(--p1)' : 'var(--p2)'}">${escapeHTML(bpSideName(sd))} (${picks.filter(x => x >= 0).length}/${picks.length})</div>
-<div class="slots${picks.length > 3 ? ' slots-large' : ''}">${banSlotHtml}${slotsHtml}</div>`;
+const slotsHtml = picks.map((idx, slotIdx) => {
+const isActive = !done && side === sd && type === 'pick' && (pickedCnt === slotIdx);
+const role = LARGE_ROLES[slotIdx] || `${slotIdx + 1}将`;
+return `<div class="slot2 pick bpl-slot${isActive ? ' on' : ''}${idx >= 0 ? ' filled' : ''}"><span class="bpl-role">${role}</span>${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${CHARS[idx].name}</span>` : `<span class="bpl-empty">待选</span>`}</div>`;
+}).join('');
+const colCls = picks.length <= 5 ? 'cols-5' : 'cols-4';
+el.innerHTML = `<div class="bpl-panel side-${sd}">
+<div class="bpl-head">
+<span class="who" style="color:${sd === 0 ? 'var(--p1)' : 'var(--p2)'}">${escapeHTML(bpSideName(sd))}</span>
+<span class="bpl-count">${pickedCnt} / ${picks.length}</span>
+${bansStrip ? `<div class="bpl-bans">${bansStrip}</div>` : ''}
+</div>
+<div class="slots slots-large bpl-picks ${colCls}">${slotsHtml}</div>
+</div>`;
 } else if (isTag3BP) {
 const picks = BP.picks[sd] || [-1, -1, -1];
 const slotsHtml = [0, 1, 2].map(slotIdx => {
@@ -58619,7 +58978,20 @@ if (c.held.atk) { c.press('skill2'); c.atkT = clock + 1e6; delete c.buf.light; }
 });
 cv.addEventListener('pointerdown', () => refocusGame());
 window.addEventListener('mouseup', e => { if (e.button === 0 && !secretEnabled) human[0].held.atk = false; });
-cv.addEventListener('auxclick', e => e.preventDefault());
+cv.addEventListener('wheel', e => {
+if (M.mode === 'demo' || paused || EXT.on || (typeof bastion2dActive === 'function' && bastion2dActive())) return;
+if (document.querySelector('.scr.on')) return;
+e.preventDefault();
+const scale = e.deltaMode === 1 ? 0.05 : (e.deltaMode === 2 ? 0.16 : 0.0014);
+const delta = clamp(-e.deltaY * scale, -0.18, 0.18);
+if (Math.abs(delta) > 0.001 && typeof adjustCamZoom === 'function') adjustCamZoom(delta);
+}, { passive: false });
+cv.addEventListener('auxclick', e => {
+e.preventDefault();
+if (e.button === 1 && M.mode !== 'demo' && !paused && !document.querySelector('.scr.on') && typeof resetCamZoom === 'function') {
+resetCamZoom(false);
+}
+});
 cv.addEventListener('contextmenu', e => e.preventDefault());
 window.addEventListener('beforeunload', () => { if (!loggingOut) saveTowerRun(); });   // 退出账号刷新时不能把上一个人的爬塔又存回去
 function shouldPauseOnBlur() {

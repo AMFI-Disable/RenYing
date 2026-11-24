@@ -101,6 +101,9 @@ function frameBody(now) {
   trainInspectUpdate();
 }
 function updateCamera(dt) {
+  cam.userZoom = damp(cam.userZoom || 1, cam.userZoomTarget || 1, 10, dt);
+  if (cam.userZoomT > 0) cam.userZoomT = Math.max(0, cam.userZoomT - dt);
+  const uz = cam.userZoom || 1;
   if (WORLD.on) { worldCamera(dt); return; }
   if (camFocusPingT > 0) camFocusPingT = Math.max(0, camFocusPingT - dt);
   if (FOREST.on) {   // 闯关打妖物：镜头框住同袍小队与附近的妖物
@@ -109,24 +112,35 @@ function updateCamera(dt) {
     const near = FOREST.mons.filter(m => Math.abs(m.x - A.x) < 750);
     const xs = [...allyXs, ...near.map(m => m.x)], lo = Math.min(...xs), hi = Math.max(...xs);
     const fx = clamp((lo + hi) / 2, A.x - 320, A.x + 320);
-    cam.x = damp(cam.x, fx, 6, dt); cam.zoom = damp(cam.zoom, clamp(1.12 - (hi - lo) / 1600, 0.64, 1.05), 3, dt);
+    cam.x = damp(cam.x, fx, 6, dt); cam.zoom = damp(cam.zoom, clamp(clamp(1.12 - (hi - lo) / 1600, 0.64, 1.05) * uz, 0.42, 1.65), 3, dt);
     cam.y = damp(cam.y, Math.min(0, A.y * 0.4), 6, dt);
     return;
   }
   // 大型团战（3v3 ~ 8v8）：以玩家自己和附近 950px 内的战友/敌人为中心取景，不把人物缩成蚂蚁
   if (isLargeTeam()) {
     const lf = fighterByIdx(localIdx());
-    const anchor = (lf && !lf.hidden && lf.hp > 0) ? lf : (allFighters().find(f => !f.hidden && f.hp > 0) || A);
-    const nearby = allFighters().filter(f => !f.hidden && f.hp > 0 && Math.abs(f.x - anchor.x) < 950);
-    const pool = nearby.length >= 2 ? nearby : [anchor];
-    const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
-    const minY = Math.min(...pool.map(f => f.y));
+    const fs = allFighters();
+    let anchor = (lf && !lf.hidden && lf.hp > 0) ? lf : null;
+    if (!anchor) {
+      for (let i = 0; i < fs.length; i++) if (!fs[i].hidden && fs[i].hp > 0) { anchor = fs[i]; break; }
+      if (!anchor) anchor = A;
+    }
+    let minX = anchor.x, maxX = anchor.x, minY = anchor.y;
+    for (let i = 0; i < fs.length; i++) {
+      const f = fs[i];
+      if (f.hidden || f.hp <= 0 || Math.abs(f.x - anchor.x) >= 950) continue;
+      if (f.x < minX) minX = f.x;
+      if (f.x > maxX) maxX = f.x;
+      if (f.y < minY) minY = f.y;
+    }
     const d = maxX - minX;
     let focus = camFocusPingT > 0 ? anchor.x : lerp(anchor.x, (minX + maxX) / 2, 0.35);
     const baseZoom = camFocusPingT > 0 ? 0.82 : clamp(0.84 - d / 2600, 0.54, 0.80);
-    const wantZoom = battleMapOn() ? Math.min(baseZoom, 0.66) : baseZoom;
-    cam.zoom = damp(cam.zoom, wantZoom, camFocusPingT > 0 ? 10 : 4, dt);
-    cam.y = damp(cam.y, battleMapOn() ? -75 : Math.min(0, minY * 0.32), 5, dt);
+    const layeredCap = battleMapOn() ? (M.teamSize === 5 ? 0.74 : 0.66) : baseZoom;
+    const wantZoom = clamp(Math.min(baseZoom, layeredCap) * uz, 0.36, 1.5);
+    cam.zoom = damp(cam.zoom, wantZoom, camFocusPingT > 0 ? 10 : 5, dt);
+    const wantY = battleMapOn() ? (M.teamSize === 5 ? Math.min(-42, anchor.y * 0.46 - 26) : Math.min(-75, anchor.y * 0.42 - 42)) : Math.min(0, minY * 0.32);
+    cam.y = damp(cam.y, wantY, 5, dt);
     cam.x = damp(cam.x, focus, camFocusPingT > 0 ? 14 : 7, dt);
     const vw = W / worldScale();
     cam.x = vw >= STAGE_W + 200 ? STAGE_W / 2 : clamp(cam.x, vw / 2 - 100, STAGE_W + 100 - vw / 2);
@@ -134,8 +148,13 @@ function updateCamera(dt) {
   }
   const tracked = isMulti() ? allFighters().filter(f => !f.hidden && f.hp > 0) : [A, B];
   const pool = cujuOn() && M.cuju && M.cuju.ball ? [...allFighters(), M.cuju.ball] : (tracked.length >= 2 ? tracked : [A, B]);   // 墨球蹴鞠：镜头也框住墨球
-  const minX = Math.min(...pool.map(f => f.x)), maxX = Math.max(...pool.map(f => f.x));
-  const minY = Math.min(...pool.map(f => f.y));
+  let minX = Infinity, maxX = -Infinity, minY = 0;
+  for (let i = 0; i < pool.length; i++) {
+    const f = pool[i];
+    if (f.x < minX) minX = f.x;
+    if (f.x > maxX) maxX = f.x;
+    if (f.y < minY) minY = f.y;
+  }
   const mid = (minX + maxX) / 2, d = maxX - minX, base = H / 560;
   // 2v2 / 同袍肉鸽：多名侠客同台，镜头退一档，把 2600 宽的奇阵擂台框得舒服些
   const padW = isMulti() ? 680 : 340;
@@ -163,17 +182,22 @@ function updateCamera(dt) {
   const wantBase = is2v2() ? clamp(1.08 - d / 2600, minZoom, 1.0) : clamp(1.42 - d / 1000, minZoom, 1.35);
   // 2v2 再压一个上限，近身缠斗时也不回到 1.0+ 的贴脸视角（1v1 不设上限，保持原曲线）
   const maxZoom = is2v2() ? 0.70 : Infinity;
-  let want = Math.min(wantBase * zoomMul, fit, maxZoom);
+  const userZoomedIn = uz > 1.01;
+  let want = clamp(Math.min(wantBase * zoomMul, fit, maxZoom) * uz, 0.32, userZoomedIn ? 1.85 : maxZoom);
   const pf = paperFX();
   if (pf) { want = lerp(want, W / ((STAGE_W + 220) * base), pf.a); focus = lerp(focus, STAGE_W / 2, pf.a); }   // 宣纸：镜头拉远，整张图一览无余
-  cam.zoom = damp(cam.zoom, want, want < cam.zoom ? 12 : (ce > 0 ? 9 : 3), dt);
-  cam.zoom = Math.min(cam.zoom, fit, maxZoom);
+  cam.zoom = damp(cam.zoom, want, want < cam.zoom ? 12 : (ce > 0 ? 9 : 4), dt);
+  if (!userZoomedIn) cam.zoom = Math.min(cam.zoom, fit, maxZoom);
   cam.y = damp(cam.y, Math.min(0, minY * 0.35), 4, dt);
   cam.x = damp(cam.x, focus, 8, dt);
   const vw = W / worldScale();
   cam.x = vw >= STAGE_W + 200 ? STAGE_W / 2 : clamp(cam.x, vw / 2 - 100, STAGE_W + 100 - vw / 2);
-  const lo = maxX - vw / 2 + 60, hi = minX + vw / 2 - 60;
-  if (lo <= hi) cam.x = clamp(cam.x, lo, hi); else cam.x = mid;
+  if (!userZoomedIn) {
+    const lo = maxX - vw / 2 + 60, hi = minX + vw / 2 - 60;
+    if (lo <= hi) cam.x = clamp(cam.x, lo, hi); else cam.x = mid;
+  } else if (lf && !lf.hidden && lf.hp > 0 && d > vw - 120) {
+    cam.x = clamp(lerp(cam.x, lf.x, 0.35), vw / 2 - 100, STAGE_W + 100 - vw / 2);
+  }
 }
 const worldScale = () => (H / 560) * cam.zoom;
 // 墨羽大招「符阵」：整张图化作宣纸。返回放符的人和 0~1 的浓淡

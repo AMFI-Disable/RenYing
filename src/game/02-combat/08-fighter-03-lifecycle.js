@@ -53,7 +53,8 @@ function startRound() {
   announceQueue.length = 0;
   secretRound();
   const largeN = isLargeTeam() ? clamp(M.teamSize || 5, 3, 8) : 0;
-  STAGE_W = M.mode === 'world' ? WORLD_W : largeN ? (largeN >= 6 ? 3600 : 3000) : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);   // 开放世界是 8000 宽的大地图，8v8 大团战 3600 宽
+  STAGE_W = M.mode === 'world' ? WORLD_W : largeN ? (largeN >= 8 ? BATTLE_WIDTH : largeN === 5 ? BATTLE5_WIDTH : largeN >= 6 ? 3400 : 2600) : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);   // 开放世界 8000，8v8 3600，5v5 专属三层演武楼阁 2800
+  if (M.round === 1 && typeof resetCamZoom === 'function') resetCamZoom(true);
   const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
   M.mapEnv = mp ? { wT: mp.wind ? mp.wind.every : 0, wOn: 0, wDir: 1, wN: 0, tT: mp.thunder ? mp.thunder.every : 0, tWarn: 0 } : null;   // 风、天雷的计时：每回合从头算
   if (typeof applySkins === 'function') applySkins();
