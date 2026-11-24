@@ -8,6 +8,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **Rollback State Cloning Stack Overflow (#47) (`src/game/02-combat/04-ults/bawang.js`, `src/game/02-combat/09-actions-03-fighter.js`, `src/game/02-combat/04-ults/tieshan.js`, `src/game/01-engine/20-rollback.js`, `tools/tests/rollback-test.mjs`, `tools/tests/netplay-test.mjs`)**: replaced Ba Wang's direct `Fighter` reference `f.bwVictim` with the integer index `f.bwVictimIdx` (releasing held victims in `endSpecial`) so 8v8 CTF and Raid rollbacks no longer recurse infinitely through circular fighter graphs; switched Tie Shan's `f.avaSlammedLayers` from `Set` to a plain array so rollback snapshots preserve it intact; hardened `fastClone` and `brainOut` with `WeakMap` cycle tracking, `Fighter` index guards, and `Set`/`Map`/TypedArray handling; serialized `flurryVictim` by fighter index in `capF`/`resF`; and added regression coverage in `rollback-test.mjs`. No Worker change.
+
 - **Gang-Up Hits Now Count (#29) (`src/game/02-combat/10-hits-01-collision.js`, `src/game/02-combat/10-hits-02-effects.js`, `src/game/02-combat/04-ults/`, `src/game/02-combat/09-actions-01-projectiles.js`)**: when several fighters attacked one target in a multi-fighter match, only one of them did damage, because the short invulnerability a launch or knockdown gives the target blocked everyone. That invulnerability now only blocks the fighter who caused it (`markHitInvul` and `invulVs`), so each attacker's hit is resolved on its own. Dodge and ultimate invulnerability still blocks everyone. No Worker change.
 
 ### Added

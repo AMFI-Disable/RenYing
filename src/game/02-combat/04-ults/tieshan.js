@@ -19,7 +19,7 @@ Object.assign(ULTS, {
       f.avaHitSet = [];
       f.avaTriggered = false;
       f.avaFull = false;
-      f.avaSlammedLayers = new Set();
+      f.avaSlammedLayers = [];
       if (!RESIM) {
         ring(f.x, f.y, 170, '255,210,130', 0.38);
         dust(f.x, f.y, 18);
@@ -32,7 +32,7 @@ Object.assign(ULTS, {
         const keyY = Math.round(layerY);
         if (f.avaLayers.includes(keyY)) return;
         f.avaLayers.push(keyY);
-        if (f.avaSlammedLayers && f.avaSlammedLayers.add) f.avaSlammedLayers.add(keyY);
+        if (Array.isArray(f.avaSlammedLayers) && !f.avaSlammedLayers.includes(keyY)) f.avaSlammedLayers.push(keyY);
         if (!RESIM) {
           shake = Math.max(shake, finalGround ? 30 : 21);
           flashA = Math.max(flashA, finalGround ? 0.45 : 0.24);

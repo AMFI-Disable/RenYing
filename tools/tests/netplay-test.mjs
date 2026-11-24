@@ -253,7 +253,7 @@ let fail = 0;
   const w = makePeer([]);
   const r = JSON.parse(vm.runInContext(`(() => { startChaos(0, 1, 'normal', true); M.phase = 'fight'; let rolls = M.chaos.i >= 0 ? 1 : 0;
     for (let i = 0; i < Math.round(31 / STEP); i++) { updateChaos(STEP); if (M.chaos.t === 0) rolls++; }
-    const live = !!chaosNow(); M.mode = 'cpu'; const off = !chaosNow();
+    const live = !!chaosNow(); M.mode = 'train'; const off = !chaosNow();
     return JSON.stringify({ rolls, live, off }); })()`, w));
   const ok = r.rolls === 3 && r.live && r.off;
   if (!ok) fail++;

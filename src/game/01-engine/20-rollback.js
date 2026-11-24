@@ -9,15 +9,33 @@ const EMPTY_IN = { h: 0, p: [] };
 const F_SKIP = new Set(['ch', 'moves', 'look', 'ctrl', 'trail', 'scarf', 'j', 'sk', 'move', 'ghosts', 'ghostT', 'lagHp', 'lagDelay', 'flash', 'walkPh', 'vox', 'voy', 'snap', 'rot', 'skinKey', 'target', 'flurryVictim', '_ryFx', '_ryPhys', 'beaconT']);
 for (const k of Object.keys(SFX)) { const fn = SFX[k]; SFX[k] = (...a) => (RESIM ? undefined : fn(...a)); }
 { const m0 = metal; metal = (...a) => (RESIM ? undefined : m0(...a)); }
-function fastClone(v) {
+function fastClone(v, seen) {
   if (v === null || typeof v !== 'object') return v;
+  if (typeof Fighter !== 'undefined' && v instanceof Fighter) return { __f: v.idx };
+  if (ArrayBuffer.isView(v)) return new v.constructor(v);
+  if (!seen) seen = new WeakMap();
+  if (seen.has(v)) return seen.get(v);
   if (Array.isArray(v)) {
     const len = v.length, out = new Array(len);
-    for (let i = 0; i < len; i++) { const item = v[i]; out[i] = (item && typeof item === 'object') ? fastClone(item) : item; }
+    seen.set(v, out);
+    for (let i = 0; i < len; i++) { const item = v[i]; out[i] = (item && typeof item === 'object') ? fastClone(item, seen) : item; }
+    return out;
+  }
+  if (v instanceof Set) {
+    const out = new Set();
+    seen.set(v, out);
+    for (const item of v) out.add((item && typeof item === 'object') ? fastClone(item, seen) : item);
+    return out;
+  }
+  if (v instanceof Map) {
+    const out = new Map();
+    seen.set(v, out);
+    for (const [mk, mv] of v) out.set(mk, (mv && typeof mv === 'object') ? fastClone(mv, seen) : mv);
     return out;
   }
   const out = {};
-  for (const k in v) { const val = v[k]; out[k] = (val && typeof val === 'object') ? fastClone(val) : val; }
+  seen.set(v, out);
+  for (const k in v) { const val = v[k]; out[k] = (val && typeof val === 'object') ? fastClone(val, seen) : val; }
   return out;
 }
 const jclone = v => fastClone(v);
@@ -26,28 +44,40 @@ function capF(f) {
   for (const k in f) { if (F_SKIP.has(k)) continue; const v = f[k]; if (typeof v === 'function') continue; o[k] = v && typeof v === 'object' ? jclone(v) : v; }
   o.hasMove = !!f.move;
   o.tgt = f.target ? f.target.idx : -1;   // 2v2 锁定的目标会影响打谁，也得存（存成序号）
+  o.fv = f.flurryVictim ? f.flurryVictim.idx : -1;
   if (f._ryPhys && typeof RYPhysics !== 'undefined' && RYPhysics.snapshotFighter) o._rySnap = RYPhysics.snapshotFighter(f);
   return o;
 }
 function resF(f, o) {
   if (o.chIdx !== undefined && o.chIdx !== f.chIdx) f.setChar(o.chIdx);   // 回滚跨过了换人：先换回当时的角色
   for (const k in f) if (!F_SKIP.has(k) && !(k in o)) delete f[k];
-  for (const k in o) { if (k === 'hasMove' || k === 'tgt' || k === '_rySnap') continue; const v = o[k]; f[k] = v && typeof v === 'object' ? jclone(v) : v; }
+  for (const k in o) { if (k === 'hasMove' || k === 'tgt' || k === 'fv' || k === '_rySnap') continue; const v = o[k]; f[k] = v && typeof v === 'object' ? jclone(v) : v; }
   f.move = o.hasMove && f.moveName ? f.moves[f.moveName] : null;
   f.target = o.tgt >= 0 ? fighterByIdx(o.tgt) : null;
+  f.flurryVictim = o.fv >= 0 ? fighterByIdx(o.fv) : null;
   if (o._rySnap && typeof RYPhysics !== 'undefined' && RYPhysics.restoreFighter) RYPhysics.restoreFighter(f, o._rySnap);
   else delete f._ryPhys;
 }
 // 电脑侠客的“脑子”也得进存档（2v2 联机里有电脑）：回滚重算时它得想出和第一次一模一样的招
 // 它记着的人和飞行道具按序号存（不然存档会把整个对手连同对手的脑子一起拷一遍，还会绕圈），对位图的数字表照原样拷
 const BRAIN_SKIP = new Set(['c', 'me', 'foe', 'L', 'debug', 'geneOverride']);
-function brainOut(v) {
+function brainOut(v, seen) {
   if (v === null || typeof v !== 'object') return v;
   if (v instanceof Fighter) return { __f: v.idx };
   if (v.isProj) return { __p: v.id };
   if (ArrayBuffer.isView(v)) return { __ta: Array.from(v) };
-  if (Array.isArray(v)) return v.map(brainOut);
-  const o = {}; for (const k in v) if (typeof v[k] !== 'function') o[k] = brainOut(v[k]); return o;
+  if (!seen) seen = new WeakMap();
+  if (seen.has(v)) return seen.get(v);
+  if (Array.isArray(v)) {
+    const out = [];
+    seen.set(v, out);
+    for (let i = 0; i < v.length; i++) out[i] = brainOut(v[i], seen);
+    return out;
+  }
+  const o = {};
+  seen.set(v, o);
+  for (const k in v) if (typeof v[k] !== 'function') o[k] = brainOut(v[k], seen);
+  return o;
 }
 function brainIn(v) {
   if (v === null || typeof v !== 'object') return v;

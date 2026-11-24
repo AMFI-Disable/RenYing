@@ -273,6 +273,11 @@ function attackUpdate(f, foe) {
 function endSpecial(f) {
   if (f.flurryVictim && f.flurryVictim.state === 'held') toNeutral(f.flurryVictim);
   f.flurryVictim = null;
+  if (f.bwVictimIdx >= 0) {
+    const bv = fighterByIdx(f.bwVictimIdx);
+    if (bv && bv.state === 'held') toNeutral(bv);
+    f.bwVictimIdx = -1;
+  }
   f.invul = 0;
   toNeutral(f);
 }

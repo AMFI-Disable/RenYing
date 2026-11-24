@@ -17823,20 +17823,20 @@ if (f.t >= 0.26) endSpecial(f);
 Object.assign(ULTS, {
 conquerorslam: { name: '力拔山兮', desc: '披甲悍然冲阵擒拿敌手高举过顶，再以万钧之势反身重摔贯地，引发当前层巨震波破防击飞周身全部敌军！',
 begin(f) {
-f.sp = 'rush'; f.vx = f.face * 1120; f.vy = 0; f.spPose = 'ts_shoulder'; f.invul = 0.6; f.bwVictim = null;
+f.sp = 'rush'; f.vx = f.face * 1120; f.vy = 0; f.spPose = 'ts_shoulder'; f.invul = 0.6; f.bwVictimIdx = -1;
 SFX.dash();
 },
 update(f, foe) {
 if (f.sp === 'rush') {
 for (const tf of isMulti() ? foesOf(f) : [foe]) {
 if (!tf || tf.hp <= 0 || invulVs(tf, f) || Math.abs(tf.x - f.x) > 105 || Math.abs(tf.y - f.y) > 95) continue;
-f.sp = 'hoist'; f.t = 0; f.vx = 0; f.bwVictim = tf; f.spPose = 'ts_lift';
+f.sp = 'hoist'; f.t = 0; f.vx = 0; f.bwVictimIdx = tf.idx; f.spPose = 'ts_lift';
 tf.state = 'held'; tf.t = 0; tf.vx = 0; tf.vy = 0; tf.move = null; tf.skill = null; tf.sp = null;
 SFX.heavy(); return;
 }
 if (f.t >= 0.34) { f.sp = 'slam_empty'; f.t = 0; f.vx = 0; f.spPose = 'ts_slam'; }
 } else if (f.sp === 'hoist') {
-const v = f.bwVictim;
+const v = f.bwVictimIdx >= 0 ? fighterByIdx(f.bwVictimIdx) : null;
 if (v && v.hp > 0 && v.state === 'held') { v.x = f.x + f.face * 18; v.y = f.y - 98; }
 if (f.t >= 0.34) {
 f.sp = 'slam'; f.t = 0; f.spPose = 'ts_slam';
@@ -17856,7 +17856,7 @@ applyHit(f, tf, { dmg: Math.max(1, Math.round(85 * sc)), kb: [380, -520], stun: 
 } else if (f.sp === 'slam_empty' && f.t >= 0.28) {
 endSpecial(f);
 } else if (f.sp === 'slam' && f.t >= 0.42) {
-f.bwVictim = null; endSpecial(f);
+f.bwVictimIdx = -1; endSpecial(f);
 }
 } },
 });
@@ -18515,7 +18515,7 @@ f.avaLayers = [];
 f.avaHitSet = [];
 f.avaTriggered = false;
 f.avaFull = false;
-f.avaSlammedLayers = new Set();
+f.avaSlammedLayers = [];
 if (!RESIM) {
 ring(f.x, f.y, 170, '255,210,130', 0.38);
 dust(f.x, f.y, 18);
@@ -18528,7 +18528,7 @@ const slamLayer = (layerY, finalGround) => {
 const keyY = Math.round(layerY);
 if (f.avaLayers.includes(keyY)) return;
 f.avaLayers.push(keyY);
-if (f.avaSlammedLayers && f.avaSlammedLayers.add) f.avaSlammedLayers.add(keyY);
+if (Array.isArray(f.avaSlammedLayers) && !f.avaSlammedLayers.includes(keyY)) f.avaSlammedLayers.push(keyY);
 if (!RESIM) {
 shake = Math.max(shake, finalGround ? 30 : 21);
 flashA = Math.max(flashA, finalGround ? 0.45 : 0.24);
@@ -36060,6 +36060,11 @@ if (c.held.down && f.onGround()) { f.state = 'block'; f.face = blockFace(f, foe)
 function endSpecial(f) {
 if (f.flurryVictim && f.flurryVictim.state === 'held') toNeutral(f.flurryVictim);
 f.flurryVictim = null;
+if (f.bwVictimIdx >= 0) {
+const bv = fighterByIdx(f.bwVictimIdx);
+if (bv && bv.state === 'held') toNeutral(bv);
+f.bwVictimIdx = -1;
+}
 f.invul = 0;
 toNeutral(f);
 }
@@ -48784,15 +48789,33 @@ const EMPTY_IN = { h: 0, p: [] };
 const F_SKIP = new Set(['ch', 'moves', 'look', 'ctrl', 'trail', 'scarf', 'j', 'sk', 'move', 'ghosts', 'ghostT', 'lagHp', 'lagDelay', 'flash', 'walkPh', 'vox', 'voy', 'snap', 'rot', 'skinKey', 'target', 'flurryVictim', '_ryFx', '_ryPhys', 'beaconT']);
 for (const k of Object.keys(SFX)) { const fn = SFX[k]; SFX[k] = (...a) => (RESIM ? undefined : fn(...a)); }
 { const m0 = metal; metal = (...a) => (RESIM ? undefined : m0(...a)); }
-function fastClone(v) {
+function fastClone(v, seen) {
 if (v === null || typeof v !== 'object') return v;
+if (typeof Fighter !== 'undefined' && v instanceof Fighter) return { __f: v.idx };
+if (ArrayBuffer.isView(v)) return new v.constructor(v);
+if (!seen) seen = new WeakMap();
+if (seen.has(v)) return seen.get(v);
 if (Array.isArray(v)) {
 const len = v.length, out = new Array(len);
-for (let i = 0; i < len; i++) { const item = v[i]; out[i] = (item && typeof item === 'object') ? fastClone(item) : item; }
+seen.set(v, out);
+for (let i = 0; i < len; i++) { const item = v[i]; out[i] = (item && typeof item === 'object') ? fastClone(item, seen) : item; }
+return out;
+}
+if (v instanceof Set) {
+const out = new Set();
+seen.set(v, out);
+for (const item of v) out.add((item && typeof item === 'object') ? fastClone(item, seen) : item);
+return out;
+}
+if (v instanceof Map) {
+const out = new Map();
+seen.set(v, out);
+for (const [mk, mv] of v) out.set(mk, (mv && typeof mv === 'object') ? fastClone(mv, seen) : mv);
 return out;
 }
 const out = {};
-for (const k in v) { const val = v[k]; out[k] = (val && typeof val === 'object') ? fastClone(val) : val; }
+seen.set(v, out);
+for (const k in v) { const val = v[k]; out[k] = (val && typeof val === 'object') ? fastClone(val, seen) : val; }
 return out;
 }
 const jclone = v => fastClone(v);
@@ -48801,26 +48824,38 @@ const o = {};
 for (const k in f) { if (F_SKIP.has(k)) continue; const v = f[k]; if (typeof v === 'function') continue; o[k] = v && typeof v === 'object' ? jclone(v) : v; }
 o.hasMove = !!f.move;
 o.tgt = f.target ? f.target.idx : -1;   // 2v2 锁定的目标会影响打谁，也得存（存成序号）
+o.fv = f.flurryVictim ? f.flurryVictim.idx : -1;
 if (f._ryPhys && typeof RYPhysics !== 'undefined' && RYPhysics.snapshotFighter) o._rySnap = RYPhysics.snapshotFighter(f);
 return o;
 }
 function resF(f, o) {
 if (o.chIdx !== undefined && o.chIdx !== f.chIdx) f.setChar(o.chIdx);   // 回滚跨过了换人：先换回当时的角色
 for (const k in f) if (!F_SKIP.has(k) && !(k in o)) delete f[k];
-for (const k in o) { if (k === 'hasMove' || k === 'tgt' || k === '_rySnap') continue; const v = o[k]; f[k] = v && typeof v === 'object' ? jclone(v) : v; }
+for (const k in o) { if (k === 'hasMove' || k === 'tgt' || k === 'fv' || k === '_rySnap') continue; const v = o[k]; f[k] = v && typeof v === 'object' ? jclone(v) : v; }
 f.move = o.hasMove && f.moveName ? f.moves[f.moveName] : null;
 f.target = o.tgt >= 0 ? fighterByIdx(o.tgt) : null;
+f.flurryVictim = o.fv >= 0 ? fighterByIdx(o.fv) : null;
 if (o._rySnap && typeof RYPhysics !== 'undefined' && RYPhysics.restoreFighter) RYPhysics.restoreFighter(f, o._rySnap);
 else delete f._ryPhys;
 }
 const BRAIN_SKIP = new Set(['c', 'me', 'foe', 'L', 'debug', 'geneOverride']);
-function brainOut(v) {
+function brainOut(v, seen) {
 if (v === null || typeof v !== 'object') return v;
 if (v instanceof Fighter) return { __f: v.idx };
 if (v.isProj) return { __p: v.id };
 if (ArrayBuffer.isView(v)) return { __ta: Array.from(v) };
-if (Array.isArray(v)) return v.map(brainOut);
-const o = {}; for (const k in v) if (typeof v[k] !== 'function') o[k] = brainOut(v[k]); return o;
+if (!seen) seen = new WeakMap();
+if (seen.has(v)) return seen.get(v);
+if (Array.isArray(v)) {
+const out = [];
+seen.set(v, out);
+for (let i = 0; i < v.length; i++) out[i] = brainOut(v[i], seen);
+return out;
+}
+const o = {};
+seen.set(v, o);
+for (const k in v) if (typeof v[k] !== 'function') o[k] = brainOut(v[k], seen);
+return o;
 }
 function brainIn(v) {
 if (v === null || typeof v !== 'object') return v;
