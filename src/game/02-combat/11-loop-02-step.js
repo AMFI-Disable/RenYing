@@ -166,12 +166,15 @@ function openQfx() {
     }
   }
   const fr = $id('extFrame');
-  fr.src = EXT.url; $id('extGame').classList.remove('hidden'); EXT.on = true;
+  const host = $id('extGame');
+  host.classList.remove('hidden'); EXT.on = true;
+  RYLoad.show(host, '正在载入青锋行');   // iframe 加载完之前盖一层水墨幕，不再是一片黑
+  fr.onload = () => { RYLoad.hide(host); try { fr.focus(); fr.contentWindow.focus(); } catch (e) {} };
+  fr.src = EXT.url;
   try { if (AC) AC.suspend(); } catch (e) {}
-  fr.onload = () => { try { fr.focus(); fr.contentWindow.focus(); } catch (e) {} };
 }
 function closeQfx() {
-  EXT.on = false; $id('extFrame').src = 'about:blank'; $id('extGame').classList.add('hidden');
+  EXT.on = false; RYLoad.hide($id('extGame'), true); $id('extFrame').onload = null; $id('extFrame').src = 'about:blank'; $id('extGame').classList.add('hidden');
   try { if (AC) AC.resume(); } catch (e) {}
 }
 $id('extBack').addEventListener('click', closeQfx);

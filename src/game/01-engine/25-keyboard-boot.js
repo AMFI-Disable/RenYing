@@ -260,6 +260,6 @@ resize();
 setMenuHero(menuHeroPick());
 startMatch('demo');
 for (let i = 0; i < 4; i++) { animFighter(A); animFighter(B); }
-requestAnimationFrame(t => { last = t; requestAnimationFrame(frame); });
+requestAnimationFrame(t => { last = t; requestAnimationFrame(ft => { frame(ft); requestAnimationFrame(() => { if (window.RYBoot) window.RYBoot.done(); }); }); });   // 第一帧画好再收起启动画面（src/page.html 的 #boot）
 refocusGame();
 window.addEventListener('load', () => refocusGame());

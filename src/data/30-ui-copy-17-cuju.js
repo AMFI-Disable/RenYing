@@ -17,7 +17,6 @@ Object.assign(UI_COPY_EN, {
   "2v2 组队对踢": "2v2 Team Match",
   "对战电脑 · 开球": "vs AI · Kick Off",
   "本地双人对踢": "Local 2-Player",
-  "电脑对踢观战": "Watch AI vs AI",
   "本地双人：1P 用 WASD + X 或鼠标，2P 用方向键 + K 攻击、U 和 O 放技能、I 放大招。": "Local 2-Player: 1P uses WASD + X or the mouse; 2P uses the arrow keys, K to attack, U and O for skills and I for the ultimate.",
   "不比气血比进球：用普攻和技能把墨球打进对方球门，先进三球获胜": "Goals, not health: knock the ink ball into the other goal with attacks and skills. First to three wins",
   // 对局里（src/game/04-modes/22-modes-09-cuju.js）

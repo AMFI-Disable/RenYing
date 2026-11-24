@@ -16,9 +16,67 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600..700&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400..700&family=Oswald:wght@500;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">   <!-- 后台加载：连不上 Google 也不会卡住页面 -->
+<style id="bootCss">
+/* 启动画面和通用加载幕（#boot 在 body 最前面，网页一到就画；加载幕 .ry-veil 由 src/game/05-ui/21-buttons-04-loading.js 按需放进某个容器）。
+   只用 transform / opacity 做动画：主线程忙着解析脚本时，这些动画仍然由合成线程继续播，不会停住。 */
+#boot, .ry-veil { background: radial-gradient(ellipse 70% 55% at 50% 42%, #1b1d3d 0%, #0e1026 55%, #070812 100%); color: #efe8d8; display: grid; place-items: center; overflow: hidden; }
+#boot { position: fixed; inset: 0; z-index: 100000; transition: opacity .45s ease, visibility 0s linear .45s; }
+#boot.out { opacity: 0; visibility: hidden; pointer-events: none; }
+.ry-veil { position: absolute; inset: 0; z-index: 3; transition: opacity .3s ease, visibility 0s linear .3s; }
+.ry-veil.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+.ry-moon { position: absolute; width: min(34vmin, 260px); aspect-ratio: 1; border-radius: 50%; right: 14%; top: 12%; background: radial-gradient(circle at 38% 36%, rgba(255,244,222,.5), rgba(220,205,235,.16) 60%, rgba(220,205,235,0) 72%); opacity: .8; }
+.ry-mist { position: absolute; left: -10%; right: -10%; bottom: -8%; height: 38%; background: linear-gradient(0deg, rgba(120,110,170,.22), rgba(120,110,170,0)); }
+.ry-core { position: relative; display: grid; justify-items: center; gap: 10px; padding: 0 24px; text-align: center; }
+.ry-seal { width: 46px; height: 46px; display: grid; place-items: center; background: #b5282d; color: #f6e9d0; font: 700 26px/1 "Ma Shan Zheng", "Noto Serif SC", serif; border-radius: 4px; transform: rotate(-4deg); box-shadow: 0 0 22px rgba(181,40,45,.45); }
+.ry-title { margin: 6px 0 0; font: 400 clamp(44px, 9vmin, 76px)/1.05 "Ma Shan Zheng", "Noto Serif SC", "Songti SC", serif; letter-spacing: .18em; padding-left: .18em; background: linear-gradient(180deg, #fbefcf, #e0b35a 70%, #a9782a); -webkit-background-clip: text; background-clip: text; color: transparent; filter: drop-shadow(0 4px 18px rgba(0,0,0,.55)); }
+.ry-sub { font: 600 11px/1 Cinzel, serif; letter-spacing: .5em; padding-left: .5em; color: rgba(239,232,216,.5); }
+.ry-bar { position: relative; width: min(280px, 64vw); height: 3px; margin-top: 18px; border-radius: 2px; background: rgba(239,232,216,.12); overflow: hidden; }
+.ry-fill { position: absolute; inset: 0; transform-origin: left center; transform: scaleX(.04); background: linear-gradient(90deg, #b5282d, #e0b35a); transition: transform .35s cubic-bezier(.2,.7,.2,1); }
+.ry-bar::after { content: ""; position: absolute; top: 0; bottom: 0; left: 0; width: 38%; background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,.85), rgba(255,255,255,0)); animation: ryGlint 1.5s ease-in-out infinite; }
+@keyframes ryGlint { from { transform: translateX(-120%); } to { transform: translateX(300%); } }
+.ry-msg { margin: 2px 0 0; min-height: 1.4em; font: 400 13px/1.4 "Noto Serif SC", serif; letter-spacing: .12em; color: rgba(239,232,216,.62); }
+.ry-hint { margin: 0; font-size: 12px; color: #e0b35a; max-width: 320px; }
+.ry-hint[hidden] { display: none; }
+.ry-fly { position: absolute; width: 4px; height: 4px; border-radius: 50%; background: #f3d98a; box-shadow: 0 0 10px 3px rgba(243,217,138,.55); opacity: 0; animation: ryFly 6s ease-in-out infinite; }
+.ry-fly:nth-of-type(1) { left: 18%; top: 62%; animation-delay: -1s; } .ry-fly:nth-of-type(2) { left: 32%; top: 74%; animation-delay: -3s; }
+.ry-fly:nth-of-type(3) { left: 66%; top: 68%; animation-delay: -2s; } .ry-fly:nth-of-type(4) { left: 80%; top: 78%; animation-delay: -4.5s; } .ry-fly:nth-of-type(5) { left: 48%; top: 82%; animation-delay: -0.5s; }
+@keyframes ryFly { 0%, 100% { opacity: 0; transform: translate(0, 0); } 30%, 70% { opacity: .9; } 50% { transform: translate(14px, -46px); } }
+#boot .en, .ry-veil .en { display: none; }
+html.boot-en #boot .zh { display: none; } html.boot-en #boot .en { display: inline; }
+@media (prefers-reduced-motion: reduce) { .ry-bar::after, .ry-fly { animation: none; } .ry-fill, #boot, .ry-veil { transition: none; } }
+</style>
 <!--@style-->
 </head>
 <body>
+<div id="boot" role="status" aria-live="polite">
+  <i class="ry-moon"></i><i class="ry-mist"></i><i class="ry-fly"></i><i class="ry-fly"></i><i class="ry-fly"></i><i class="ry-fly"></i><i class="ry-fly"></i>
+  <div class="ry-core">
+    <div class="ry-seal">刃</div>
+    <div class="ry-title">刃影</div>
+    <div class="ry-sub">RENYING</div>
+    <div class="ry-bar"><i class="ry-fill" id="bootFill"></i></div>
+    <p class="ry-msg"><span class="zh">研墨磨刃中……</span><span class="en">Sharpening the blade…</span></p>
+    <p class="ry-hint" id="bootHint" hidden><span class="zh">载入太久？检查一下网络，再刷新页面。</span><span class="en">Taking long? Check your connection, then refresh the page.</span></p>
+  </div>
+</div>
+<script>
+/* 启动画面的小控制器：build.py 在每一段脚本之间插一句 RYBoot.p(进度)，游戏画出第一帧后 src/game/01-engine/25-keyboard-boot.js 调 RYBoot.done() 收起画面。
+   不依赖任何游戏代码，所以脚本出错时画面也能提示用户刷新。 */
+window.RYBoot = (function () {
+  var el = document.getElementById('boot'), fill = document.getElementById('bootFill'), hint = document.getElementById('bootHint'), cur = 0, ended = false, t0 = Date.now();
+  function showHint() { if (!ended && hint) hint.hidden = false; }
+  var slow = setTimeout(showHint, 12000);
+  window.addEventListener('error', function () { setTimeout(showHint, 1500); });
+  return {
+    p: function (v) { if (ended || v <= cur) return; cur = v; if (fill) fill.style.transform = 'scaleX(' + v + ')'; },
+    done: function () {
+      if (ended) return; ended = true; clearTimeout(slow);
+      if (fill) fill.style.transform = 'scaleX(1)';
+      setTimeout(function () { if (!el) return; el.classList.add('out'); setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); el = null; }, 700); }, Math.max(120, 450 - (Date.now() - t0)));
+    }
+  };
+})();
+</script>
 <svg style="display:none" aria-hidden="true">
   <defs>
     <g id="ic-swords"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/><path d="M9.5 17.5L21 6V3h-3L6.5 14.5M11 19l-6-6M8 16l-4 4M5 21l-2-2"/></g>
@@ -316,7 +374,6 @@
 
         <div class="single-action-row">
           <button class="go" id="goBtn">进入选人 · 开战</button>
-          <button class="go alt" id="cpuWatchBtn" type="button">AI 对决 · 演武观战</button>
           <button class="ghost" id="cpuTutBtn" type="button" style="border-color:rgba(233,196,106,0.5);color:var(--gold)"><span class="tab-ic" style="margin-right:4px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4M12 8h.01"/></svg></span>新手演练·招式教学</button>
         </div>
       </div>
@@ -339,7 +396,6 @@
 
         <div class="single-action-row">
           <button class="go" id="tag3StartBtn">进入点将台 (BP) · 开启车轮战</button>
-          <button class="go alt" id="tag3WatchBtn" type="button">3v3 AI 群英观战</button>
         </div>
       </div>
 
@@ -368,7 +424,6 @@
 
         <div class="single-action-row" style="margin-top:14px">
           <button class="go" id="xiwu2v2StartBtn" type="button">进入点将台 (BP) · 开战</button>
-          <button class="ghost" id="xiwu2v2WatchBtn" type="button">观战 4 天道 AI 对决</button>
         </div>
       </div>
 
@@ -497,6 +552,7 @@
           <button type="button" role="tab" id="xiwuTabFree" aria-controls="xiwuPaneFree" aria-selected="false" data-training-tab="free">自由训练</button>
           <button type="button" role="tab" id="xiwuTabScenario" aria-controls="xiwuPaneScenario" aria-selected="false" data-training-tab="scenario">情景训练</button>
           <button type="button" role="tab" id="xiwuTabMatch" aria-controls="xiwuPaneMatch" aria-selected="false" data-training-tab="match">实战演练</button>
+          <button type="button" role="tab" id="xiwuTabWatch" aria-controls="xiwuPaneWatch" aria-selected="false" data-training-tab="watch">AI 观战</button>
         </div>
         <div class="xiwu-training-content">
           <section class="xiwu-training-card" id="xiwuPaneLesson" role="tabpanel" aria-labelledby="xiwuTabLesson" data-training-pane="lesson">
@@ -550,6 +606,19 @@
             <p>用当前选择的电脑境界开始一场完整对局，检验训练成果。</p>
             <button class="go small" id="xiwuTrainingCpuBtn" type="button">前往对战电脑</button>
           </section>
+          <section class="xiwu-training-card xiwu-watch-card" id="xiwuPaneWatch" role="tabpanel" aria-labelledby="xiwuTabWatch" data-training-pane="watch" hidden>
+            <h4>AI 观战 · 电脑对电脑</h4>
+            <p>所有模式的 AI 对决都收在这里：用上方「AI 境界」选电脑强弱，挑一个模式坐下来看，研究出招、站位和战术。</p>
+            <div class="xiwu-watch-list">
+              <button type="button" id="cpuWatchBtn"><b>1v1 演武</b><span>两位电脑侠客单挑，可跟随山河异境投票的地图</span></button>
+              <button type="button" id="tag3WatchBtn"><b>3v3 车轮</b><span>三人接力车轮战，看谁先倒下</span></button>
+              <button type="button" id="xiwu2v2WatchBtn"><b>2v2 组队</b><span>四位天道电脑两两组队对决</span></button>
+              <button type="button" id="chaosWatchBtn"><b>天机乱斗</b><span>每隔数秒降下随机异象，电脑见招拆招</span></button>
+              <button type="button" id="cujuWatchBtn"><b>墨球蹴鞠</b><span>电脑队伍对踢，观察传球与射门</span></button>
+              <button type="button" id="mapsWatchBtn"><b>山河异境</b><span>在地利各异的地图上看电脑借势作战</span></button>
+              <button type="button" id="mayhemWatchBtn"><b>通天神决</b><span>真元暴涨、技能免冷却的神魔大战</span></button>
+            </div>
+          </section>
         </div>
       </div>
 
@@ -589,7 +658,6 @@
         </div>
         <div class="single-action-row">
           <button class="go" id="chaosStartBtn" type="button">开启天机乱斗</button>
-          <button class="go alt" id="chaosWatchBtn" type="button">天机 AI 观战</button>
         </div>
       </div>
 
@@ -621,7 +689,6 @@
           <button class="go" id="cujuStartBtn" type="button">对战电脑 · 开球</button>
           <button class="go alt" id="cuju2v2Btn" type="button">2v2 组队对踢</button>
           <button class="go alt" id="cujuPvpBtn" type="button">本地双人对踢</button>
-          <button class="go alt" id="cujuWatchBtn" type="button">电脑对踢观战</button>
         </div>
         <p class="netnote" style="text-align:left">本地双人：1P 用 WASD + X 或鼠标，2P 用方向键 + K 攻击、U 和 O 放技能、I 放大招。</p>
       </div>
@@ -664,7 +731,6 @@
         <div class="map-vote" id="mapVote"></div>
         <div class="single-action-row">
           <button class="go" id="mapsStartBtn" type="button">开启山河异境</button>
-          <button class="go alt" id="mapsWatchBtn" type="button">异境 AI 观战</button>
         </div>
       </div>
 
@@ -684,7 +750,6 @@
         </div>
         <div class="single-action-row">
           <button class="go" id="mayhemStartBtn" type="button">开启通天神决</button>
-          <button class="go alt" id="mayhemWatchBtn" type="button">通天 AI 观战</button>
         </div>
       </div>
 

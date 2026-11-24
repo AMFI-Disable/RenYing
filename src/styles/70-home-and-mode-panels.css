@@ -298,7 +298,7 @@ body.offline #mMatch { display: none !important; }
 #single .single-action-row { justify-content: flex-start; gap: 10px; }
 #single .single-action-row .go, #single .single-action-row .go.alt { font-size: 16px !important; letter-spacing: .08em !important; padding: 0 42px 0 18px !important; min-height: 42px !important; height: 42px !important; }
 #single .single-action-row .ghost { font-size: 14px !important; padding: 0 16px !important; min-height: 42px !important; height: 42px !important; }
-#single .xiwu-training-tabs { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; margin: 0 0 12px; }
+#single .xiwu-training-tabs { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin: 0 0 12px; }
 #single .xiwu-training-tabs button { min-width: 0; min-height: 38px; padding: 6px 8px; border: 1px solid rgba(233,196,106,.18); border-radius: 5px; background: rgba(15,16,29,.45); color: rgba(255,255,255,.76); font: 600 12px var(--body); cursor: pointer; }
 #single .xiwu-training-tabs button.sel, #single .xiwu-training-tabs button[aria-selected="true"] { border-color: rgba(233,196,106,.55); background: rgba(233,196,106,.12); color: #f4d987; }
 #single .xiwu-training-content { min-width: 0; }
@@ -310,6 +310,11 @@ body.offline #mMatch { display: none !important; }
 #single .xiwu-drill-list button { display: grid; gap: 3px; padding: 9px 10px; border: 1px solid rgba(233,196,106,.15); border-radius: 5px; background: rgba(8,10,18,.55); color: #fff; text-align: left; cursor: pointer; }
 #single .xiwu-drill-list button:hover { border-color: rgba(233,196,106,.5); background: rgba(233,196,106,.08); }
 #single .xiwu-drill-list button b { font-size: 13px; }
+#single .xiwu-watch-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px; margin-top: 8px; }
+#single .xiwu-watch-list button { display: grid; gap: 3px; padding: 10px 12px; border: 1px solid rgba(233,196,106,.15); border-radius: 5px; background: rgba(8,10,18,.55); color: #fff; text-align: left; cursor: pointer; }
+#single .xiwu-watch-list button:hover, #single .xiwu-watch-list button:focus-visible { border-color: rgba(233,196,106,.5); background: rgba(233,196,106,.08); }
+#single .xiwu-watch-list button b { font-size: 13px; color: var(--gold); }
+#single .xiwu-watch-list button span { font-size: 12px; line-height: 1.45; color: rgba(255,255,255,.66); }
 #single .xiwu-drill-list button span { color: rgba(255,255,255,.62); font-size: 12px; line-height: 1.4; }
 #single .xiwu-match-card { display: flex; align-items: center; justify-content: space-between; gap: 18px; padding: 12px 16px; background: linear-gradient(100deg, rgba(233,196,106,.09), rgba(15,16,29,.38) 55%); }
 #single .xiwu-match-card h4 { margin-bottom: 3px; }

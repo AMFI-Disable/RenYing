@@ -1,6 +1,8 @@
 // ======================= 木人训练与对手行为栏 =======================
 // 本文件：木人桩：练哪位侠客、木人的特性开关、对手行为栏（稻草人做什么，见 src/data/14-dummy.js）、几种练习的开局。
+let trainSubTab = 'lesson';   // 训练场当前在哪一页（AI 观战页要借用顶上的「AI 境界」条）
 function xiwuTrainingTab(name) {
+  trainSubTab = name;
   const tabs = document.querySelectorAll('#xiwuTrainingTabs [data-training-tab]');
   const panes = document.querySelectorAll('#single [data-training-pane]');
   for (const tab of tabs) {
@@ -10,6 +12,7 @@ function xiwuTrainingTab(name) {
     tab.tabIndex = selected ? 0 : -1;
   }
   for (const pane of panes) pane.hidden = pane.dataset.trainingPane !== name;
+  if ($id('aiLvHome') && currentSingleTab === 'train') $id('aiLvHome').hidden = name !== 'watch';
 }
 if ($id('xiwuTrainingTabs')) {
   $id('xiwuTrainingTabs').addEventListener('click', e => {

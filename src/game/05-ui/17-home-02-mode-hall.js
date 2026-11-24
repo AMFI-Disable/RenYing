@@ -156,7 +156,7 @@ function singleSec(sec) {
     el.style.display = secs.includes(active) ? '' : 'none';
   }
   const supportsMutator = ['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'melee', 'ctf', 'maps'].includes(active);
-  if ($id('aiLvHome')) $id('aiLvHome').hidden = !['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju', 'koth', 'party', 'melee', 'ctf', 'quad', 'gauntlet'].includes(active);
+  if ($id('aiLvHome')) $id('aiLvHome').hidden = !(['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju', 'koth', 'party', 'melee', 'ctf', 'quad', 'gauntlet'].includes(active) || (active === 'train' && trainSubTab === 'watch'));
   if ($id('xiwuPresetBar')) $id('xiwuPresetBar').hidden = !supportsMutator;
   const mutators = $id('mutatorPills');
   if (mutators && mutators.parentElement) mutators.parentElement.hidden = !supportsMutator;

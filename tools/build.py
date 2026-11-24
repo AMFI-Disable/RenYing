@@ -161,6 +161,11 @@ def game_parts():
     return data_parts() + [p for _, p in items]
 
 
+def boot_step(p):
+    """启动画面的进度：每段脚本跑完后插一句，让进度条跟着真实的加载走（见 src/page.html 的 RYBoot）"""
+    return "<script>window.RYBoot&&RYBoot.p(%s)</script>\n" % p
+
+
 def game_source():
     return "".join(read(SRC, *p) for p in game_parts())
 
@@ -259,17 +264,23 @@ def page(offline):
         "<!--@music-->\n": ("<script>window.MUSIC_DATA=" + json.dumps(music_data(), separators=(",", ":")) + ";</script>\n") if offline else "",
         "<!--@scripts-->\n": (
             "<script>window.RENYING_BUILD=" + json.dumps(build, separators=(",", ":")) + ";window.RENYING_AI_BRAIN=" + json.dumps(ai_brain_data(), separators=(",", ":")) + ";</script>\n"
+            + boot_step(0.12)
             + "<script>\n" + compact_js(read(SRC, "errlog.js")) + "\n</script>\n"
             + "<script>\n" + read(ASSETS, "peerjs.min.js") + "\n</script>\n"
+            + boot_step(0.2)
             + "<script>\n" + compact_js(read(SRC, "cloud.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "i18n.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "ai.js")) + "\n</script>\n"
+            + boot_step(0.3)
             + "<script>\n" + compact_js(game_source()) + "\n</script>\n"
+            + boot_step(0.86)
             + "<script>\n" + compact_js(read(SRC, "net-p2p.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "social.js")) + "\n</script>\n"
+            + boot_step(0.92)
             + "<script>\n" + compact_js(read(SRC, "armory-core.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "armory.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "anticheat.js")) + "\n</script>\n"
+            + boot_step(0.97)
         ),
         "<!--@qfx-->\n": '<script id="qfxData" type="application/octet-stream">' + qfx_b64 + "</script>\n",
     }
