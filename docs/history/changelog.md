@@ -22,6 +22,9 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- Filled English copy gaps in the mode hall, codex, Armory and draft. Updated Mo Jie, Ling Xi and Dan Qing's codex ultimate summaries to match their current combat behavior.
+- The keyboard walkthrough derives its timeout from current round rules and uses the ultimate key at full meter.
+
 - Grand Melee applies the selected Chaos or Mayhem rules, including Mayhem bonuses after respawn. Grand Melee and Capture the Banner keep both drafted lineups on rematch, and 2v2 Capture the Banner shows both objective scores by the match timer.
 - Hero archetype filter counts meet the panel audit’s minimum font size in the codex and draft screens.
 - The combat runner now executes the overhaul regression group against the current Armory and combat APIs. The AI Ink Ball smoke test uses fixed random seeds for repeatable results.

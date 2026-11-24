@@ -1271,7 +1271,7 @@
       <p class="ar-note">对局掉落：每局 ${Math.round(C.cv(CF(), 'dropP') * 100)}% 机会掉一件饰品或武器箱，每周最多 ${C.cv(CF(), 'dropCap')} 次（本周已掉 ${s.drop.n} 次）。</p>`;
   }
   const BDG = { sub: 'badges', cat: 'all', rarity: 'all', state: 'all', sort: 'tier', page: 1, giftPick: 'flowing', petCat: 'all', petRarity: 'all', petState: 'all', petSort: 'rarity', petPage: 1, heroArch: 'all', heroPage: 1 };
-  const pagerHtml = (kind, page, totalPages, totalItems) => totalPages <= 1 ? '' : `<div class="ar-pager" role="navigation" aria-label="分页"><button type="button" class="ghost small" data-page-${kind}="${Math.max(1, page - 1)}" ${page <= 1 ? 'disabled' : ''}>‹ ${cvT('上一页')}</button><span class="ar-pager-info">${page} / ${totalPages}（${cvT('共')} ${totalItems}）</span><button type="button" class="ghost small" data-page-${kind}="${Math.min(totalPages, page + 1)}" ${page >= totalPages ? 'disabled' : ''}>${cvT('下一页')} ›</button></div>`;
+  const pagerHtml = (kind, page, totalPages, totalItems) => totalPages <= 1 ? '' : `<div class="ar-pager" role="navigation" aria-label="分页"><button type="button" class="ghost small" data-page-${kind}="${Math.max(1, page - 1)}" ${page <= 1 ? 'disabled' : ''}>‹ ${cvT('上一页')}</button><span class="ar-pager-info">${page} / ${totalPages} (${cvT('总计')}: ${totalItems})</span><button type="button" class="ghost small" data-page-${kind}="${Math.min(totalPages, page + 1)}" ${page >= totalPages ? 'disabled' : ''}>${cvT('下一页')} ›</button></div>`;
   function pBadges() {
     const s = blankS(), ids = Object.keys(C.BADGES), owned = Object.entries(s.badgeOwned || {}), totalKOs = Object.values(s.heroKOs || {}).reduce((n, x) => n + x, 0);
     const petIds = Object.keys(C.PETS || {}), petOwned = s.petOwned || {}, ownedPetList = Object.entries(petOwned);
@@ -1297,7 +1297,7 @@
       const actionBtn = giftCard
         ? `<button type="button" class="go small" data-badge-gift="${id}" ${live() ? '' : 'disabled'}>${cvT('领取银徽')}</button>`
         : !tier
-          ? `<button type="button" class="go small" data-badge-unlock="${id}" ${live() ? '' : 'disabled'}>${cvT('解锁')} (${C.BADGE_UNLOCK_SIGILS}${cvT('碎')}/${C.BADGE_UNLOCK_INK}${cvT('墨')})</button>`
+          ? `<button type="button" class="go small" data-badge-unlock="${id}" ${live() ? '' : 'disabled'}>${cvT('解锁')} (${C.BADGE_UNLOCK_SIGILS} ${cvT('碎片')} / ${C.BADGE_UNLOCK_INK} ${cvT('墨锭')})</button>`
           : up
             ? `${requirements}<button type="button" class="go small" data-badge-upgrade="${id}" ${live() && ready ? '' : 'disabled'}>${cvT('升阶')} ${cvT(up.to === 'gold' ? '金徽' : '紫金徽')}</button>`
             : `<small style="color:#d9a6ff;font-weight:700">✦ ${cvT('紫金圆满')}</small>`;
