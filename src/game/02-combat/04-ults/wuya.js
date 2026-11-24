@@ -13,12 +13,15 @@ Object.assign(ULTS, {
         f.x = endX;
         const lo = Math.min(f.wyStartX, endX) - 35, hi = Math.max(f.wyStartX, endX) + 35;
         if (!RESIM) {
+          addP({ type: 'beam', x: f.wyStartX, y: f.wyY - 58, x2: endX, y2: f.wyY - 58, w: 20, life: 0.28, max: 0.28, rgb: '235,248,255' });
           for (let k = 0; k < 5; k++) slashLine(lerp(f.wyStartX, endX, k / 4), f.wyY - 58, 0, '235,248,255');
           flashA = 0.34; flashRGB = '235,248,255'; SFX.slice();
         }
+        let hitIdx = 0;
         for (const tf of isMulti() ? foesOf(f) : [foe]) {
           if (!tf || tf.hp <= 0 || tf.invul > 0 || tf.x < lo || tf.x > hi || Math.abs(tf.y - f.wyY) > 105) continue;
-          applyHit(f, tf, { dmg: 55, kb: [0, 0], stun: 0.55, hs: 0.1, root: true, unblockable: true, ult: true, noScale: true, dir: f.face }, [tf.x, tf.y - 58]);
+          const sc = typeof multiTargetScale === 'function' ? multiTargetScale(hitIdx++) : 1;
+          applyHit(f, tf, { dmg: Math.max(1, Math.round(55 * sc)), kb: [0, 0], stun: 0.55, hs: hitIdx === 1 ? 0.1 : 0.03, root: true, unblockable: true, ult: true, noScale: true, dir: f.face }, [tf.x, tf.y - 58]);
         }
       } else if (f.sp === 'flash' && f.t >= 0.24 && !f.wyBurst) {
         f.wyBurst = true; f.snap = false;
@@ -32,9 +35,11 @@ Object.assign(ULTS, {
           }
           SFX.ko();
         }
+        let hitIdx = 0;
         for (const tf of isMulti() ? foesOf(f) : [foe]) {
           if (!tf || tf.hp <= 0 || tf.invul > 0 || tf.x < lo || tf.x > hi || Math.abs(tf.y - f.wyY) > 120) continue;
-          applyHit(f, tf, { dmg: 105, kb: [440, -620], stun: 0.72, hs: 0.2, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [tf.x, tf.y - 58]);
+          const sc = typeof multiTargetScale === 'function' ? multiTargetScale(hitIdx++) : 1;
+          applyHit(f, tf, { dmg: Math.max(1, Math.round(105 * sc)), kb: [440, -620], stun: 0.72, hs: hitIdx === 1 ? 0.2 : 0.05, launch: true, unblockable: true, ult: true, noScale: true, big: hitIdx === 1, dir: f.face }, [tf.x, tf.y - 58]);
         }
       } else if (f.sp === 'flash' && f.t >= 0.56) endSpecial(f);
     } },

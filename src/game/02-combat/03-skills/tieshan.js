@@ -37,13 +37,13 @@ Object.assign(SKILLS, {
         if (!RESIM) {
           const wx = f.x + f.face * 55;
           for (let h = 0; h < 6; h++) {
-            const wy = -h * 170 - rand(10, 60);
+            const wy = f.y - h * 170 - rand(10, 60);
             ring(wx + rand(-20, 20), wy, 60 + h * 16, waveRGB, 0.25);
             if (Math.random() < 0.5) {
               addP({ type: 'spark', x: wx, y: wy, vx: f.face * rand(140, 360), vy: rand(-180, 180), rgb: waveRGB, w: 3, life: 0.2, max: 0.2 });
             }
           }
-          dust(f.x + f.face * 35, 0, 4);
+          dust(f.x + f.face * 35, f.y, 4);
         }
 
         // 通天巨浪判定：高度直贯云霄（-2200px），封杀一切空中与腾空位移

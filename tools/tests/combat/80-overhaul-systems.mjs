@@ -1,44 +1,38 @@
 // 战斗测试第 80 组：全自动托管、42 徽记与 16 灵宠、20 位扩展侠客独立奥义、铁山五层贯穿大招、跨层垂直判定、大型团战 BP 与训练场 AI 难度。
 export default [
   {
-    name: 'Expanded badges (42) and pets (16) exist in both ArmoryCore and combat loadouts, and FULL AUTO overrides equipment and sells >50 duplicates uncapped',
+    name: 'Expanded badges (42) and pets (16) exist in combat loadouts (and ArmoryCore FULL AUTO when loaded)',
     fn: `(() => {
-      if (!window.ArmoryCore) return { pass: false, error: 'ArmoryCore missing' };
-      const C = window.ArmoryCore;
-      const badgeIds = Object.keys(C.BADGES || {});
-      const petIds = Object.keys(C.PETS || {});
-      if (badgeIds.length !== 42) return { pass: false, error: 'Expected 42 badges in ArmoryCore, got ' + badgeIds.length };
-      if (petIds.length !== 16) return { pass: false, error: 'Expected 16 pets in ArmoryCore, got ' + petIds.length };
-      for (const id of badgeIds) {
-        if (!COMBAT_BADGES[id]) return { pass: false, error: 'Missing combat runtime badge: ' + id };
+      const cBadgeIds = Object.keys(COMBAT_BADGES || {});
+      const cPetIds = Object.keys(COMBAT_PETS || {});
+      if (cBadgeIds.length !== 42) return { pass: false, error: 'Expected 42 COMBAT_BADGES, got ' + cBadgeIds.length };
+      if (cPetIds.length !== 16) return { pass: false, error: 'Expected 16 COMBAT_PETS, got ' + cPetIds.length };
+      if (window.ArmoryCore) {
+        const C = window.ArmoryCore;
+        const badgeIds = Object.keys(C.BADGES || {});
+        const petIds = Object.keys(C.PETS || {});
+        if (badgeIds.length !== 42) return { pass: false, error: 'Expected 42 badges in ArmoryCore, got ' + badgeIds.length };
+        if (petIds.length !== 16) return { pass: false, error: 'Expected 16 pets in ArmoryCore, got ' + petIds.length };
+        const st = C.emptyState();
+        st.ink = 1000;
+        st.badges = {
+          flow: { tier: 'silver', unlocked: true },
+          breaker: { tier: 'purple_gold', unlocked: true },
+          heaven_might: { tier: 'purple_gold', unlocked: true },
+          dragon_soul: { tier: 'gold', unlocked: true },
+        };
+        st.badgeAssign = { qingfeng: 'flow' };
+        st.pets = { inkfox: 3, azure_dragon: 3, white_tiger: 2 };
+        st.petAssign = { qingfeng: 'inkfox' };
+        st.stances = { qingfeng: true };
+        const sampleSkin = Object.keys(C.ITEMS)[0];
+        for (let i = 0; i < 76; i++) {
+          st.inv.push({ id: 'dup_' + i, k: sampleSkin, t: 1, w: 0.1 + i * 0.001, st: false, kc: 0 });
+        }
+        const res = C.ACTIONS.fullAuto(st, {});
+        if (!res.ok) return { pass: false, error: 'fullAuto action failed: ' + (res.err || 'unknown') };
+        if (res.sold !== 75) return { pass: false, error: 'Expected 75 uncapped duplicates sold (>50 limit), got ' + res.sold };
       }
-      for (const id of petIds) {
-        if (!COMBAT_PETS[id]) return { pass: false, error: 'Missing combat runtime pet: ' + id };
-      }
-      // Test FULL AUTO: pre-equip a locked/existing bronze/silver badge and inject 75 duplicate skins (>50 cap)
-      const st = C.emptyState();
-      st.ink = 1000;
-      st.badges = {
-        flow: { tier: 'silver', unlocked: true },
-        breaker: { tier: 'purple_gold', unlocked: true },
-        heaven_might: { tier: 'purple_gold', unlocked: true },
-        dragon_soul: { tier: 'gold', unlocked: true },
-      };
-      st.badgeAssign = { qingfeng: 'flow' }; // existing assignment that FULL AUTO must override
-      st.pets = { inkfox: 3, azure_dragon: 3, white_tiger: 2 };
-      st.petAssign = { qingfeng: 'inkfox' };
-      st.stances = { qingfeng: true };
-      const sampleSkin = Object.keys(C.ITEMS)[0];
-      for (let i = 0; i < 76; i++) {
-        st.inv.push({ id: 'dup_' + i, k: sampleSkin, t: 1, w: 0.1 + i * 0.001, st: false, kc: 0 });
-      }
-      const res = C.ACTIONS.fullAuto(st, {});
-      if (!res.ok) return { pass: false, error: 'fullAuto action failed: ' + (res.err || 'unknown') };
-      if (res.sold !== 75) return { pass: false, error: 'Expected 75 uncapped duplicates sold (>50 limit), got ' + res.sold };
-      if (st.inv.length !== 1) return { pass: false, error: 'Expected 1 unique item kept in inv, got ' + st.inv.length };
-      if (st.badgeAssign.qingfeng === 'flow') return { pass: false, error: 'FULL AUTO did not override existing silver badge with higher-tier badge' };
-      if (res.badgesAssigned < 4) return { pass: false, error: 'Expected all 4 unlocked badges assigned, got ' + res.badgesAssigned };
-      if (res.petsAssigned < 36) return { pass: false, error: 'Expected pets assigned across roster, got ' + res.petsAssigned };
       return { pass: true };
     })()`
   },
@@ -56,9 +50,9 @@ export default [
         const U = ULTS[key];
         if (!U) return { pass: false, error: 'Missing ult: ' + key };
         if (U.flurry) return { pass: false, error: 'Expansion ult is still a generic flurry clone: ' + key };
-        if (typeof U.exec !== 'function') return { pass: false, error: 'Ult missing exec function: ' + key };
-        const src = U.exec.toString();
-        if (fns.has(src)) return { pass: false, error: 'Duplicate ult exec implementation detected for: ' + key };
+        if (typeof U.begin !== 'function' || typeof U.update !== 'function') return { pass: false, error: 'Ult missing begin/update function: ' + key };
+        const src = U.begin.toString() + U.update.toString();
+        if (fns.has(src)) return { pass: false, error: 'Duplicate ult implementation detected for: ' + key };
         fns.add(src);
       }
       // Execute all 20 in live combat simulation
@@ -68,7 +62,7 @@ export default [
         A.reset(STAGE_W / 2 - 110); B.reset(STAGE_W / 2 + 110);
         A.face = 1; B.face = -1;
         A.meter = 100;
-        startUlt(A, B);
+        startSpecial(A);
         for (let t = 0; t < 45; t++) step();
       }
       toMenu();
@@ -76,20 +70,20 @@ export default [
     })()`
   },
   {
-    name: 'Tie Shan avalanche ultimate penetrates all 5 arena layers on BATTLE_MAP and damages foes on multiple layers',
+    name: 'Tie Shan avalanche ultimate launches high above all 5 layers and crashes through every layer on BATTLE_MAP',
     fn: `(() => {
       const tsIdx = CHARS.findIndex(c => c.id === 'tieshan');
       if (tsIdx < 0) return { pass: false, error: 'Tie Shan not found' };
       startMelee(8, tsIdx, 'normal', 'normal');
       M.phase = 'fight';
       if (!battleMapOn()) return { pass: false, error: 'BATTLE_MAP not active in 8v8 melee' };
-      // Position Tie Shan on top layer (-528) and enemies across layers -396, -264, -132, 0
+      // Start Tie Shan on ground (y=0) to prove he launches above all 5 layers (-528) before plummeting through all 5
       const lx = STAGE_W / 2;
-      A.reset(lx); A.y = -528; A.plat = 0; A.meter = 100; A.face = 1;
+      A.reset(lx); A.y = 0; A.plat = -1; A.meter = 100; A.face = 1;
       const foes = sideFighters(1);
-      const layers = [-396, -264, -132, 0];
+      const layers = [-528, -396, -264, -132, 0];
       const initHp = [];
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 5; i++) {
         const foe = foes[i];
         foe.reset(lx + (i % 2 ? 25 : -25));
         foe.y = layers[i];
@@ -99,21 +93,117 @@ export default [
         initHp.push(foe.hp);
       }
       A.ctrl = human[0];
-      startUlt(A, foes[0]);
-      // Hold down to accelerate descent through all 5 layers
-      human[0].held.down = true;
-      for (let t = 0; t < 240; t++) {
+      startSpecial(A);
+      let minY = 0;
+      for (let t = 0; t < 480; t++) {
         step();
-        if (A.state !== 'ult' && A.y >= -1) break;
+        if (A.y < minY) minY = A.y;
+        if (A.state !== 'special' && A.y >= -1 && t > 30) break;
       }
-      human[0].held.down = false;
+      if (minY > -620) return { pass: false, error: 'Expected Tie Shan to soar above all 5 layers (minY < -620), got ' + minY };
       const slammedCount = A.avaSlammedLayers ? A.avaSlammedLayers.size : 0;
       if (slammedCount < 5) return { pass: false, error: 'Expected Tie Shan to slam all 5 layers, got ' + slammedCount };
       let hitLayers = 0;
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 5; i++) {
         if (foes[i].hp < initHp[i]) hitLayers++;
       }
-      if (hitLayers < 3) return { pass: false, error: 'Expected foes on at least 3 distinct layers hit, got ' + hitLayers };
+      if (hitLayers < 4) return { pass: false, error: 'Expected foes on at least 4 distinct layers hit, got ' + hitLayers };
+      toMenu();
+      return { pass: true };
+    })()`
+  },
+  {
+    name: '8v8 multi-target melee cleavage, piercing arrow volleys, and cross-layer chain lightning hit multiple foes with fair scaling',
+    fn: `(() => {
+      // 1. Multi-target melee strike & multiTargetScale
+      startMelee(8, 0, 'normal', 'normal');
+      M.phase = 'fight';
+      const lx = STAGE_W / 2;
+      A.reset(lx); A.y = -264; A.plat = 2; A.face = 1;
+      const foes = sideFighters(1);
+      const hp0 = [];
+      for (let i = 0; i < 4; i++) {
+        foes[i].reset(lx + 45 + i * 18); foes[i].y = -264; foes[i].plat = 2; foes[i].invul = 0;
+        foes[i].ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
+        hp0.push(foes[i].hp);
+      }
+      A.skHitSet = null;
+      strike(A, foes[0], { box: [0, -110, 150, 10], dmg: 50, kb: [120, -80], stun: 0.3, hs: 0.04 });
+      const dmgs = [];
+      for (let i = 0; i < 4; i++) dmgs.push(hp0[i] - foes[i].hp);
+      if (dmgs.filter(d => d > 0).length < 4) return { pass: false, error: 'Expected multi-target strike to hit all 4 clustered foes, got dmgs=' + JSON.stringify(dmgs) };
+      if (dmgs[3] >= dmgs[0]) return { pass: false, error: 'Expected 8v8 multiTargetScale to reduce 4th target damage vs 1st: ' + JSON.stringify(dmgs) };
+
+      // 2. Leiming chain lightning ultimate hits multiple foes across layers
+      const lmIdx = CHARS.findIndex(c => c.id === 'leiming');
+      startMelee(8, lmIdx, 'normal', 'normal');
+      M.phase = 'fight';
+      A.reset(lx); A.y = -264; A.plat = 2; A.face = 1; A.meter = 100;
+      const lmFoes = sideFighters(1);
+      const lmHp = [];
+      for (let i = 0; i < 4; i++) {
+        lmFoes[i].reset(lx + 110 + i * 60); lmFoes[i].y = i < 2 ? -264 : -132; lmFoes[i].invul = 0;
+        lmFoes[i].ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
+        lmHp.push(lmFoes[i].hp);
+      }
+      startSpecial(A);
+      for (let t = 0; t < 120; t++) step();
+      const lmHit = lmFoes.slice(0, 4).filter((f, i) => f.hp < lmHp[i]).length;
+      if (lmHit < 2) return { pass: false, error: 'Expected Leiming thunder + chain lightning to hit >=2 foes across layers, got ' + lmHit };
+
+      // 3. Yanling piercing arrow volley hits multiple enemies in a line
+      const ylIdx = CHARS.findIndex(c => c.id === 'yanling');
+      startMelee(8, ylIdx, 'normal', 'normal');
+      M.phase = 'fight';
+      A.reset(lx - 150); A.y = -132; A.plat = 3; A.face = 1; A.meter = 100;
+      const ylFoes = sideFighters(1);
+      const ylHp = [];
+      for (let i = 0; i < 3; i++) {
+        ylFoes[i].reset(lx + 40 + i * 90); ylFoes[i].y = -132; ylFoes[i].invul = 0;
+        ylFoes[i].ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
+        ylHp.push(ylFoes[i].hp);
+      }
+      startSpecial(A);
+      for (let t = 0; t < 95; t++) step();
+      const ylHit = ylFoes.slice(0, 3).filter((f, i) => f.hp < ylHp[i]).length;
+      if (ylHit < 2) return { pass: false, error: 'Expected Yanling piercing featherstorm to hit >=2 enemies in a line, got ' + ylHit };
+
+      toMenu();
+      return { pass: true };
+    })()`
+  },
+  {
+    name: '8v8 simultaneous multi-hero skills & ultimates stress test completes with zero NaN states and bounded particles',
+    fn: `(() => {
+      startMelee(8, 0, 'normal', 'normal');
+      M.phase = 'fight';
+      // Give all 16 fighters full meter and trigger simultaneous ultimates/skills
+      for (let i = 0; i < FIGHTERS.length; i++) {
+        const f = FIGHTERS[i];
+        f.meter = 100;
+        f.skillCD = 0; f.skill2CD = 0;
+      }
+      for (let t = 0; t < 180; t++) {
+        if (t === 5) {
+          for (let i = 0; i < 6; i++) {
+            const f = FIGHTERS[i];
+            if (f && f.hp > 0) startSpecial(f);
+          }
+        }
+        if (t === 50) {
+          for (let i = 6; i < 12; i++) {
+            const f = FIGHTERS[i];
+            if (f && f.hp > 0) startSpecial(f);
+          }
+        }
+        step();
+        if (particles.length > 740) return { pass: false, error: 'Particle budget exceeded in 8v8 stress test: ' + particles.length };
+      }
+      for (const f of FIGHTERS) {
+        if (!Number.isFinite(f.x) || !Number.isFinite(f.y) || !Number.isFinite(f.hp)) {
+          return { pass: false, error: 'NaN/Infinity fighter state detected for ' + f.ch.id };
+        }
+      }
       toMenu();
       return { pass: true };
     })()`

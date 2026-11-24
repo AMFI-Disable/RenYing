@@ -23,7 +23,7 @@ function spawnProj(f, o) {
   }
   const projectile = Object.assign({ id: ++projSeq, owner: f.idx, vy: 0, life: 1, age: 0, hits: 0, hitCD: 0, delay: 0, isProj: true }, o);
   if (projectile.autoAim) {
-    const target = foeOf(f), speed = Math.hypot(projectile.vx || 0, projectile.vy || 0);
+    const target = typeof nearestFoe2D === 'function' ? nearestFoe2D(f) : foeOf(f), speed = Math.hypot(projectile.vx || 0, projectile.vy || 0);
     if (target && speed > 0) {
       const authored = Math.atan2(projectile.vy || 0, projectile.vx || 0), base = f.face < 0 ? Math.PI : 0;
       const spread = Math.atan2(Math.sin(authored - base), Math.cos(authored - base));
@@ -74,7 +74,7 @@ function updateProjs() {
     p.age += STEP; p.life -= STEP; p.hitCD -= STEP;
     const wasDelay = p.delay > 0;
     if (p.autoAim && p.delay <= 0) {
-      const owner = fighterByIdx(p.owner), target = owner && foeOf(owner), speed = Math.hypot(p.vx || 0, p.vy || 0);
+      const owner = fighterByIdx(p.owner), target = owner && (typeof nearestFoe2D === 'function' ? nearestFoe2D(owner) : foeOf(owner)), speed = Math.hypot(p.vx || 0, p.vy || 0);
       if (target && target.hp > 0 && speed > 0) {
         const desired = Math.atan2(target.y - 62 - p.y, target.x - p.x), current = Math.atan2(p.vy || 0, p.vx || 0);
         let turn = Math.atan2(Math.sin(desired - current), Math.cos(desired - current));
@@ -84,7 +84,8 @@ function updateProjs() {
       }
     }
     if (p.track || p.home || p.stick) {
-      const tg = foeOf(fighterByIdx(p.owner));
+      const owner = fighterByIdx(p.owner);
+      const tg = owner && (typeof nearestFoe2D === 'function' ? nearestFoe2D(owner) : foeOf(owner));
       if (tg && tg.hp > 0) {
         if (p.track && p.delay > (p.trackEnd || 0)) p.x = clamp(damp(p.x, tg.x, p.track, STEP), WALL, STAGE_W - WALL);
         if (p.home && p.delay <= 0) p.vx = damp(p.vx, clamp((tg.x - p.x) * 2, -p.homeV, p.homeV), p.home, STEP);
@@ -92,7 +93,7 @@ function updateProjs() {
         else if (p.stick && p.stuck && !overlap(projBox(p), hurtbox(tg))) { p.vx /= p.stick; p.stuck = false; }
       }
     }
-    if (p.delay > 0) { p.delay -= STEP; if (p.delay <= 0 && p.kind === 'net') { shake = Math.max(shake, 18); dust(p.x, 0, 22); SFX.thud(); } if (p.delay <= 0 && p.kind === 'popcorn') { SFX.poof(); for (let k = 0; k < 9; k++) { const a = rand(0, 6.28), v = rand(80, 260); addP({ type: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, life: 0.35, max: 0.35, rgb: k % 3 ? '255,240,200' : '255,200,90', w: 2.2, drag: 2 }); } } if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, 0, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
+    if (p.delay > 0) { const gy = p.groundY !== undefined ? p.groundY : 0; p.delay -= STEP; if (p.delay <= 0 && p.kind === 'net') { shake = Math.max(shake, 18); dust(p.x, gy, 22); SFX.thud(); } if (p.delay <= 0 && p.kind === 'popcorn') { SFX.poof(); for (let k = 0; k < 9; k++) { const a = rand(0, 6.28), v = rand(80, 260); addP({ type: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, life: 0.35, max: 0.35, rgb: k % 3 ? '255,240,200' : '255,200,90', w: 2.2, drag: 2 }); } } if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, gy, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
     // Moving enemy projectiles bend gently in Ci Xian's magnetic field.
     if (p.vx && !p.fx) for (const f of allFighters()) {
       if (f.hidden || f.hp <= 0 || !f.ch || f.ch.passive !== 'magnet' || f.idx % 2 === p.owner % 2) continue;
@@ -236,90 +237,140 @@ function updateProjs() {
     const owner = fighterByIdx(p.owner), box = projBox(p);
     if (p.kind === 'ironball' && p.yoyo) { resolveYoyoBallHits(p, owner, box); hitClones(box, p.owner, p.dmg); continue; }
     const candidates = isMulti() ? foesOf(owner) : [foeOf(owner)];
-    let foe = candidates.find(ef => ef.hp > 0 && overlap(box, hurtbox(ef))) || candidates[0];
     // 斩弹：对手的刀砍中飞行道具就把它打散
-    if (!p.unbreakable && foe.state === 'attack' && foe.move && foe.t >= foe.move.su && foe.t < foe.move.su + foe.move.ac && overlap(hitbox(foe, foe.move.box), box)) {
-      p.dead = true; blockFX(p.x, p.y, foe.face); SFX.block();
-      foe.meter = Math.min(100, foe.meter + 1.5);
-      addP({ type: 'text', text: '斩', x: p.x, y: p.y - 30, life: 0.5, max: 0.5, rgb: foe.look.slash }); continue;
+    if (!p.unbreakable) {
+      let cut = false;
+      for (const ef of candidates) {
+        if (ef && ef.hp > 0 && ef.state === 'attack' && ef.move && ef.t >= ef.move.su && ef.t < ef.move.su + ef.move.ac && overlap(hitbox(ef, ef.move.box), box)) {
+          p.dead = true; blockFX(p.x, p.y, ef.face); SFX.block();
+          ef.meter = Math.min(100, ef.meter + 1.5);
+          addP({ type: 'text', text: '斩', x: p.x, y: p.y - 30, life: 0.5, max: 0.5, rgb: ef.look.slash });
+          cut = true; break;
+        }
+      }
+      if (cut) continue;
     }
     hitClones(box, p.owner, p.dmg);
     if (hitDecoyBox(box, p.owner)) { if (!p.pierce) p.dead = true; continue; }
-    if (p.hitCD > 0 || (p.kind === 'ironball' ? ironBallInvulnerable(foe) : foe.invul > 0) || foe.hp <= 0) continue;
-    if (p.groundOnly || p.kind === 'quake') {
-      const refY = p.groundY !== undefined ? p.groundY : 0;
-      if (airH(foe) > 22 || foe.flying || Math.abs(foe.y - refY) > 68) continue;
-    }
-    if (!overlap(box, hurtbox(foe))) continue;
-    if (p.feast) {   // 与民同乐：砸中就得陪着喝
-      p.dead = true;
-      if (!isClient()) {
-        foe.hp = Math.min(foe.maxHp, foe.hp + Math.round(85 * HERO_HP_SCALE));
-        foe.state = 'hitstun'; foe.t = 0; foe.stun = 1.0; foe.drinkT = 1.0; foe.vx = 0; foe.move = null; foe.skill = null; foe.sp = null; foe.rooted = true;
+    p.hitAt = p.hitAt || {};
+    let hitThisStep = 0;
+    for (const foe of candidates) {
+      if (p.dead) break;
+      if (!foe || foe.hidden || foe.hp <= 0) continue;
+      if (p.kind === 'ironball' ? ironBallInvulnerable(foe) : foe.invul > 0) continue;
+      const lastHit = p.hitAt[foe.idx];
+      if (lastHit !== undefined && (p.age - lastHit) < (p.rehit || 99)) continue;
+      if (p.groundOnly || p.kind === 'quake') {
+        const refY = p.groundY !== undefined ? p.groundY : 0;
+        if (airH(foe) > 28 || foe.flying || Math.abs(foe.y - refY) > 74) continue;
       }
-      SFX.drink(); addP({ type: 'text', text: '与民同乐 · 干！', x: foe.x, y: foe.y - 130, life: 1.0, max: 1.0, rgb: '255,190,90' });
-      addP({ type: 'text', text: `+${Math.round(85 * HERO_HP_SCALE)}`, x: foe.x, y: foe.y - 105, life: 0.8, max: 0.8, rgb: '130,230,140' });
-      continue;
-    }
-    // 玉箫回音壁：把飞行道具原路弹回去
-    if (foe.reflectT > 0 && !p.ult && !p.groundOnly && !['trap', 'bolt', 'quake', 'dragon', 'tornado', 'net', 'chord', 'pavilion', 'popcorn'].includes(p.kind)) {
-      p.owner = foe.idx; p.vx = -p.vx || foe.face * 700; p.vy = -p.vy * 0.4; p.hits = 0; p.hitCD = 0.05; p.life = Math.max(p.life, 0.8);
-      p.boomer = false; p.lob = false; p.g = 0; p.sk = true; p.hook = false;
-      foe.notes = Math.min(3, (foe.notes || 0) + 1);
-      ring(p.x, p.y, 60, foe.look.slash, 0.25); SFX.parry();
-      addP({ type: 'text', text: '回音', x: p.x, y: p.y - 30, life: 0.6, max: 0.6, rgb: foe.look.slash }); continue;
-    }
-    // 霸体吃掉飞行道具
-    if (foe.armorT > 0 && !p.ult) {
-      p.dead = true; ring(p.x, p.y, 50, '255,215,120', 0.25); SFX.block();
-      if (foe.ch.passive === 'armor') {
-        foe.meter = Math.min(100, foe.meter + 3);
-        foe.skillCD = Math.max(0, foe.skillCD - 0.3);
-        foe.skill2CD = Math.max(0, foe.skill2CD - 0.3);
+      if (!overlap(box, hurtbox(foe))) continue;
+      if (p.feast) {
+        p.dead = true;
+        if (!isClient()) {
+          foe.hp = Math.min(foe.maxHp, foe.hp + Math.round(85 * HERO_HP_SCALE));
+          foe.state = 'hitstun'; foe.t = 0; foe.stun = 1.0; foe.drinkT = 1.0; foe.vx = 0; foe.move = null; foe.skill = null; foe.sp = null; foe.rooted = true;
+        }
+        SFX.drink(); addP({ type: 'text', text: '与民同乐 · 干！', x: foe.x, y: foe.y - 130, life: 1.0, max: 1.0, rgb: '255,190,90' });
+        addP({ type: 'text', text: `+${Math.round(85 * HERO_HP_SCALE)}`, x: foe.x, y: foe.y - 105, life: 0.8, max: 0.8, rgb: '130,230,140' });
+        break;
       }
-      addP({ type: 'text', text: '霸体', x: foe.x, y: foe.y - 130, life: 0.6, max: 0.6, rgb: '255,215,120' }); continue;
-    }
-    p.dir = p.vx !== 0 ? Math.sign(p.vx) : (foe.x >= p.x ? 1 : -1); p.srcX = p.x - p.dir * 10;
-    let hitM = p.lastBig && p.hits === (p.maxHits || 1) - 1 ? { ...p, kb: [420, -780], hs: 0.14, big: true } : p;
-    if (p.kind === 'moonring') {
-      const returning = p.boomer && p.age > p.turn;
-      if (returning) {
-        hitM = { ...p, dmg: 38, stun: 0.78, hs: 0.12, launch: true, kb: [180, -580], big: true };
-        addP({ type: 'text', text: '背袭破防', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '230,200,255' });
-      } else {
-        hitM = { ...p, dmg: 28, stun: 0.25, hs: 0.04, launch: false, kb: [100, 0] };
+      if (foe.reflectT > 0 && !p.ult && !p.groundOnly && !['trap', 'bolt', 'quake', 'dragon', 'tornado', 'net', 'chord', 'pavilion', 'popcorn'].includes(p.kind)) {
+        p.owner = foe.idx; p.vx = -p.vx || foe.face * 700; p.vy = -p.vy * 0.4; p.hits = 0; p.hitAt = {}; p.hitCD = 0.05; p.life = Math.max(p.life, 0.8);
+        p.boomer = false; p.lob = false; p.g = 0; p.sk = true; p.hook = false;
+        foe.notes = Math.min(3, (foe.notes || 0) + 1);
+        ring(p.x, p.y, 60, foe.look.slash, 0.25); SFX.parry();
+        addP({ type: 'text', text: '回音', x: p.x, y: p.y - 30, life: 0.6, max: 0.6, rgb: foe.look.slash });
+        break;
       }
-    } else if (p.kind === 'inkblob') {
-      foe.slowT = 2.5;
-      addP({ type: 'text', text: '墨迹遮目', x: foe.x, y: foe.y - 100, life: 0.9, max: 0.9, rgb: '160,160,190' });
-    } else if (p.kind === 'note' && p.notes >= 3) {
-      foe.slowT = 2.2;
-      addP({ type: 'text', text: '绕梁 · 失律', x: foe.x, y: foe.y - 100, life: 0.9, max: 0.9, rgb: '150,240,200' });
-    } else if (p.kind === 'spindle' || p.mark) {
-      addNeedleMark(foe, 1);
+      if (foe.armorT > 0 && !p.ult && !p.pierce) {
+        p.dead = true; ring(p.x, p.y, 50, '255,215,120', 0.25); SFX.block();
+        if (foe.ch.passive === 'armor') {
+          foe.meter = Math.min(100, foe.meter + 3);
+          foe.skillCD = Math.max(0, foe.skillCD - 0.3);
+          foe.skill2CD = Math.max(0, foe.skill2CD - 0.3);
+        }
+        addP({ type: 'text', text: '霸体', x: foe.x, y: foe.y - 130, life: 0.6, max: 0.6, rgb: '255,215,120' });
+        break;
+      }
+      p.dir = p.vx !== 0 ? Math.sign(p.vx) : (foe.x >= p.x ? 1 : -1); p.srcX = p.x - p.dir * 10;
+      let hitM = p.lastBig && p.hits === (p.maxHits || 1) - 1 ? { ...p, kb: [420, -780], hs: 0.14, big: true } : p;
+      if (p.kind === 'moonring') {
+        const returning = p.boomer && p.age > p.turn;
+        if (returning) {
+          hitM = { ...p, dmg: 38, stun: 0.78, hs: 0.12, launch: true, kb: [180, -580], big: true };
+          addP({ type: 'text', text: '背袭破防', x: foe.x, y: foe.y - 100, life: 0.8, max: 0.8, rgb: '230,200,255' });
+        } else {
+          hitM = { ...p, dmg: 28, stun: 0.25, hs: 0.04, launch: false, kb: [100, 0] };
+        }
+      } else if (p.kind === 'inkblob') {
+        foe.slowT = 2.5;
+        addP({ type: 'text', text: '墨迹遮目', x: foe.x, y: foe.y - 100, life: 0.9, max: 0.9, rgb: '160,160,190' });
+      } else if (p.kind === 'note' && p.notes >= 3) {
+        foe.slowT = 2.2;
+        addP({ type: 'text', text: '绕梁 · 失律', x: foe.x, y: foe.y - 100, life: 0.9, max: 0.9, rgb: '150,240,200' });
+      } else if (p.kind === 'spindle' || p.mark) {
+        addNeedleMark(foe, 1);
+      }
+      const scaleMul = typeof multiTargetScale === 'function' ? multiTargetScale(hitThisStep) : 1;
+      if (scaleMul < 1) hitM = { ...hitM, dmg: Math.round(hitM.dmg * scaleMul * 10) / 10 };
+      const hitPt = [clamp(foe.x, box[0], box[2]), clamp(foe.y - 60, box[1], box[3])];
+      applyHit(owner, foe, hitM, hitPt);
+      p.hitAt[foe.idx] = p.age;
+      hitThisStep++;
+      const struck = foe.hp > 0 && (foe.state === 'hitstun' || foe.state === 'launched');
+      if (p.burn && struck) { foe.burnT = 2; addP({ type: 'text', text: '酒火灼身', x: foe.x, y: foe.y - 110, life: 0.8, max: 0.8, rgb: '255,150,60' }); }
+      if (p.jail && foe.hp > 0 && !isClient()) {
+        foe.jailT = 1.0; foe.jailX = clamp(foe.x, WALL + 30, STAGE_W - WALL - 30); foe.jailY = foe.y; foe.jailPlat = foe.plat;
+        shake = Math.max(shake, 12); dust(foe.x, foe.y, 16); SFX.thud();
+        addP({ type: 'text', text: '醉翁亭 · 留客片刻', x: foe.x, y: foe.y - 290, life: 1.1, max: 1.1, rgb: '255,190,90' });
+      }
+      if (p.hook && struck && !isClient()) {
+        foe.x = clamp(owner.x + owner.face * 72, WALL, STAGE_W - WALL);
+        if (owner.plat >= 0 && typeof mapPutOn === 'function') mapPutOn(foe, owner.plat);
+        else { foe.y = owner.y; foe.plat = owner.plat; }
+        foe.vx = 0; foe.vy = 0;
+        foe.state = 'hitstun'; foe.t = 0; foe.stun = Math.max(foe.stun || 0, 0.42); foe.hookedT = 1.2;
+        dust(foe.x, foe.y, 6); SFX.heavy();
+      }
+      // 连锁闪电传导（跨层跳电，适配雷系与大团战）
+      if (p.chain > 0 && !isClient()) {
+        let cur = foe;
+        const chained = [foe.idx];
+        const range = p.chainRange || 340;
+        for (let ci = 0; ci < p.chain; ci++) {
+          const next = candidates.find(ef => ef && !ef.hidden && ef.hp > 0 && ef.invul <= 0 && !chained.includes(ef.idx) && Math.hypot(ef.x - cur.x, (ef.y - 55) - (cur.y - 55)) <= range);
+          if (!next) break;
+          chained.push(next.idx);
+          const cDmg = Math.max(6, Math.round(p.dmg * Math.pow(0.75, ci + 1)));
+          if (!RESIM) {
+            addP({ type: 'lightning', x: cur.x, y: cur.y - 58, x2: next.x, y2: next.y - 58, life: 0.24, max: 0.24, rgb: p.chainRGB || '255,240,140', w: 3 });
+            ring(next.x, next.y - 58, 52, p.chainRGB || '255,240,140', 0.2);
+          }
+          applyHit(owner, next, { dmg: cDmg, kb: [Math.sign(next.x - cur.x || 1) * 120, -240], stun: 0.3, hs: 0.04, isProj: true, ult: !!p.ult, noScale: true }, [next.x, next.y - 58]);
+          cur = next;
+        }
+      }
+      // 范围溅射（箭矢爆炸、陨火、寒冰裂片等）
+      if (p.aoeR > 0 && !isClient()) {
+        const splash = findTargetsInRadius(owner, hitPt[0], hitPt[1], p.aoeR, p.aoeY || p.aoeR * 0.85, { exclude: [foe.idx] });
+        if (!RESIM) ring(hitPt[0], hitPt[1], p.aoeR, owner.look.slash || '255,210,120', 0.26);
+        for (let si = 0; si < splash.length; si++) {
+          const sf = splash[si];
+          const sDmg = Math.max(5, Math.round(p.dmg * (p.aoeMul || 0.65) * multiTargetScale(si + 1)));
+          applyHit(owner, sf, { dmg: sDmg, kb: [Math.sign(sf.x - hitPt[0] || 1) * 140, -180], stun: 0.25, hs: 0.03, isProj: true, ult: !!p.ult, noScale: true }, [sf.x, sf.y - 55]);
+        }
+      }
+      p.hits++; p.hitCD = p.rehit || 99;
+      if (p.kind === 'ironball') {
+        // 玄铁傀丸永不消散
+      } else if (!p.pierce) {
+        p.dead = true; break;
+      } else if (p.maxHits && p.hits >= p.maxHits && !isMulti()) {
+        p.dead = true; break;
+      }
     }
-    applyHit(owner, foe, hitM, [clamp(foe.x, box[0], box[2]), clamp(foe.y - 60, box[1], box[3])]);
-    const struck = foe.hp > 0 && (foe.state === 'hitstun' || foe.state === 'launched');
-    if (p.burn && struck) { foe.burnT = 2; addP({ type: 'text', text: '酒火灼身', x: foe.x, y: foe.y - 110, life: 0.8, max: 0.8, rgb: '255,150,60' }); }
-    if (p.jail && foe.hp > 0 && !isClient()) {   // 醉翁亭落下：留客 1 秒（保留所在平台层高）
-      foe.jailT = 1.0; foe.jailX = clamp(foe.x, WALL + 30, STAGE_W - WALL - 30); foe.jailY = foe.y; foe.jailPlat = foe.plat;
-      shake = Math.max(shake, 12); dust(foe.x, foe.y, 16); SFX.thud();
-      addP({ type: 'text', text: '醉翁亭 · 留客片刻', x: foe.x, y: foe.y - 290, life: 1.1, max: 1.1, rgb: '255,190,90' });
-    }
-    if (p.hook && struck && !isClient()) {   // 勾陈飞锤：扯链拽到身前（保持施法者所在平台/层高）
-      foe.x = clamp(owner.x + owner.face * 72, WALL, STAGE_W - WALL);
-      if (owner.plat >= 0 && typeof mapPutOn === 'function') mapPutOn(foe, owner.plat);
-      else { foe.y = owner.y; foe.plat = owner.plat; }
-      foe.vx = 0; foe.vy = 0;
-      foe.state = 'hitstun'; foe.t = 0; foe.stun = Math.max(foe.stun || 0, 0.42); foe.hookedT = 1.2;
-      dust(foe.x, foe.y, 6); SFX.heavy();
-    }
-    p.hits++; p.hitCD = p.rehit || 99;
-    if (p.kind === 'ironball') {
-      // 玄铁傀丸永不消散（只有千机大招收回时才销毁）
-    } else if (!p.pierce || p.hits >= (p.maxHits || 1)) p.dead = true;
   }
-  // 双方远程弹道相撞相抵（Projectile Clashing）：两方飞射物在空中交错时互相抵消消散（排除地面震波、落雷、陷阱与结构物）
   const NO_CLASH = ['quake', 'bolt', 'trap', 'pavilion', 'chord', 'net', 'popcorn'];
   for (let i = 0; i < projs.length; i++) {
     const p1 = projs[i];
@@ -328,9 +379,9 @@ function updateProjs() {
     for (let j = i + 1; j < projs.length; j++) {
       const p2 = projs[j];
       if (p2.dead || p2.dmg <= 0 || p1.owner === p2.owner || p2.groundOnly || NO_CLASH.includes(p2.kind)) continue;
+      if (isMulti() && fighterTeam(fighterByIdx(p1.owner)) === fighterTeam(fighterByIdx(p2.owner))) continue;
       const b2 = projBox(p2);
       if (overlap(b1, b2)) {
-        // 高速玄铁傀丸撞碎普通飞行道具
         if (p1.kind === 'ironball' && p1.speedTier >= 2 && !p2.ult && !p2.unbreakable) {
           p2.dead = true;
           const cx = p2.x, cy = p2.y;
@@ -360,4 +411,14 @@ function updateProjs() {
   }
   for (let i = projs.length - 1; i >= 0; i--) if (projs[i].dead) projs.splice(i, 1);
 }
-function boltFX(p) { shake = Math.max(shake, 10); flashA = Math.max(flashA, 0.35); flashRGB = '255,245,200'; dust(p.x, 0, 12); ring(p.x, 0, 90, '255,240,150', 0.3); SFX.thunder(); }
+function boltFX(p) {
+  const gy = p.groundY !== undefined ? p.groundY : 0;
+  shake = Math.max(shake, 10); flashA = Math.max(flashA, 0.35); flashRGB = '255,245,200';
+  dust(p.x, gy, 12); ring(p.x, gy, 95, '255,240,150', 0.3);
+  if (!RESIM) {
+    for (let k = 0; k < 2; k++) {
+      addP({ type: 'lightning', x: p.x + rand(-22, 22), y: gy - (p.h || 540) * 0.55, x2: p.x + (k ? 75 : -75), y2: gy - rand(20, 140), life: 0.22, max: 0.22, rgb: '255,240,160', w: 2.2 });
+    }
+  }
+  SFX.thunder();
+}

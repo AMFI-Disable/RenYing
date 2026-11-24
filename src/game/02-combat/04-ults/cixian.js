@@ -29,7 +29,11 @@ Object.assign(ULTS, {
         if (u >= 1) {
           f.spN = 2; S.top = baseY - 120;
           shake = Math.max(shake, 20); flashA = Math.max(flashA, 0.3); flashRGB = '255,255,255'; SFX.heavy(); SFX.thud();
-          dust(S.x, baseY, 18); ring(S.x, baseY - 60, 150, magRGB(1), 0.4); ring(S.x, baseY - 60, 110, magRGB(-1), 0.4);
+          dust(S.x, baseY, 18); ring(S.x, baseY - 60, 165, magRGB(1), 0.42); ring(S.x, baseY - 60, 120, magRGB(-1), 0.42);
+          if (!RESIM && typeof lightningArc === 'function') {
+            lightningArc(S.x - 45, baseY - 220, S.x - 20, baseY, magRGB(1), 5, 0.32, 2.8);
+            lightningArc(S.x + 45, baseY - 220, S.x + 20, baseY, magRGB(-1), 5, 0.32, 2.8);
+          }
           const caught = S.hit ? foe.state === 'held' : (foe.hp > 0 && foe.invul <= 0 && Math.abs(foe.x - S.x) < 90 && Math.abs(foe.y - baseY) < 170);
           if (caught && !isClient()) {
             magMove(foe, S.x); foe.y = baseY; foe.plat = S.basePlat !== undefined ? S.basePlat : foe.plat;
@@ -37,6 +41,9 @@ Object.assign(ULTS, {
             if (foe.state === 'held') toNeutral(foe);
             foe.squashT = 1.0;
             addP({ type: 'text', text: '天地磁合 · 夹成肉饼', x: S.x, y: baseY - 200, life: 1.1, max: 1.1, rgb: '255,220,200' });
+          }
+          if (isMulti() && !isClient() && typeof strikeAoE === 'function') {
+            strikeAoE(f, S.x, baseY - 60, 175, 130, { dmg: 55, kb: [260, -340], stun: 0.45, hs: 0.06, launch: true, unblockable: true, ult: true, noScale: true }, caught ? foe : null);
           }
         }
       }

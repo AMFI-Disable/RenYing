@@ -5,7 +5,7 @@ Object.assign(SKILLS, {
     update(f) {
       if (f.skPh === 0 && f.t >= 0.1) {
         f.skPh = 1; f.t = 0; SFX.swing();
-        spawnProj(f, { kind: 'qi', x: f.x + f.face * 42, y: f.y - 68, vx: f.face * 900, autoAim: true, w: 72, h: 72, life: 0.65, dmg: 46, kb: [210, -240], stun: 0.4, hs: 0.08 });
+        spawnProj(f, { kind: 'star', x: f.x + f.face * 42, y: f.y - 68, vx: f.face * 920, autoAim: true, w: 68, h: 68, life: 0.72, dmg: 46, aoeR: 65, pierce: true, maxHits: 1, kb: [210, -240], stun: 0.4, hs: 0.08 });
       }
       if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
     },

@@ -6,7 +6,8 @@
 // 找 bug 提示：训练场里按 F1 打开判定框透视（debugHitbox）能直接看到框；伤害数字不对就在 applyHit 里按顺序看各个倍率。
 function hitbox(f, b) {
   const x0 = f.x + f.face * b[0], x1 = f.x + f.face * b[2];
-  return [Math.min(x0, x1), f.y + b[1], Math.max(x0, x1), f.y + b[3]];
+  const y0 = f.y + b[1], y1 = f.y + b[3];
+  return [Math.min(x0, x1), Math.min(y0, y1), Math.max(x0, x1), Math.max(y0, y1)];
 }
 function hurtbox(f) {
   const s = f.size || 1;
@@ -16,6 +17,49 @@ function hurtbox(f) {
   return [f.x - 18 * s, f.y - 112 * s, f.x + 18 * s, f.y];
 }
 const overlap = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
+
+// 多目标伤害衰减：1v1 与 2v2 保持 100% 原始平衡；大型团战（>=6人）同时命中多敌时平滑递减避免瞬间团灭
+function multiTargetScale(hitIndex) {
+  if (hitIndex <= 0) return 1;
+  const total = typeof allFighters === 'function' ? allFighters().length : 2;
+  if (total < 6) return 1;
+  return Math.max(0.68, 1 - hitIndex * 0.1);
+}
+
+// 统一矩形判定框多目标检索（支持 1v1 / 2v2 / 3v3 / 5v5 / 8v8 及跨层垂直判定）
+function findTargetsInBox(f, hb, opts) {
+  const o = opts || {};
+  const list = isMulti() ? foesOf(f) : [foeOf(f)];
+  const out = [];
+  for (const ef of list) {
+    if (!ef || ef.hidden || ef.hp <= 0) continue;
+    if (!o.ignoreInvul && ef.invul > 0) continue;
+    if (o.exclude && o.exclude.includes(ef.idx)) continue;
+    if (!overlap(hb, hurtbox(ef))) continue;
+    out.push(ef);
+  }
+  out.sort((a, b) => Math.hypot(a.x - f.x, a.y - f.y) - Math.hypot(b.x - f.x, b.y - f.y));
+  return out;
+}
+
+// 统一椭圆/圆形范围多目标检索（适配震波、雷暴、箭雨爆炸等五层战场 AoE）
+function findTargetsInRadius(f, cx, cy, rx, ry, opts) {
+  const o = opts || {};
+  const rY = ry || rx;
+  const list = isMulti() ? foesOf(f) : [foeOf(f)];
+  const out = [];
+  for (const ef of list) {
+    if (!ef || ef.hidden || ef.hp <= 0) continue;
+    if (!o.ignoreInvul && ef.invul > 0) continue;
+    if (o.exclude && o.exclude.includes(ef.idx)) continue;
+    const hu = hurtbox(ef);
+    const nx = clamp(cx, hu[0], hu[2]), ny = clamp(cy, hu[1], hu[3]);
+    const dx = (nx - cx) / Math.max(1, rx), dy = (ny - cy) / Math.max(1, rY);
+    if (dx * dx + dy * dy <= 1) out.push(ef);
+  }
+  out.sort((a, b) => Math.hypot(a.x - cx, (a.y - 55) - cy) - Math.hypot(b.x - cx, (b.y - 55) - cy));
+  return out;
+}
 
 // 调试模式判定框与帧优势透视 (Hitbox & Frame Advantage Overlay)
 function drawHitboxOverlay(fighters) {
@@ -35,14 +79,12 @@ function drawHitboxOverlay(fighters) {
       const su = f.move.su || 0.04, ac = f.move.ac || 0.08, rec = (f.move.rec !== undefined ? f.move.rec : 0.18);
       const isStart = f.t < su;
       const isAct = f.t >= su && f.t < su + ac;
-      const isRec = f.t >= su + ac;
       const hb = hitbox(f, f.move.box);
       ctx.strokeStyle = isAct ? 'rgba(255, 45, 65, 0.95)' : isStart ? 'rgba(255, 195, 50, 0.85)' : 'rgba(80, 160, 255, 0.75)';
       ctx.fillStyle = isAct ? 'rgba(255, 45, 65, 0.28)' : isStart ? 'rgba(255, 195, 50, 0.12)' : 'rgba(80, 160, 255, 0.12)';
       ctx.fillRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
       ctx.strokeRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
 
-      // 实时帧数据显示与阶段标识
       ctx.font = 'bold 11px monospace';
       ctx.fillStyle = isAct ? '#ff4055' : isStart ? '#ffc040' : '#60b0ff';
       ctx.textAlign = 'center';
@@ -50,7 +92,6 @@ function drawHitboxOverlay(fighters) {
       ctx.fillText(frameTxt, (hb[0] + hb[2]) / 2, hb[1] - 8);
     }
 
-    // 角色状态、硬直与帧优势实时透视 (Frame Advantage)
     ctx.font = 'bold 11px monospace';
     ctx.textAlign = 'center';
     let advText = '';
@@ -70,39 +111,36 @@ function drawHitboxOverlay(fighters) {
 function tryHit(f, foe, m) {
   const hb = hitbox(f, m.box);
   if (hitBall(f, hb, m)) return;
-  cujuHit(f, hb, m);   // 墨球蹴鞠：顺路把墨球打出去（22-modes-09-cuju.js），同一招还能接着打到人
+  cujuHit(f, hb, m);
   hitClones(hb, f.idx, m.dmg);
   if (hitDecoy(f, hb)) return;
   echoCloneAttack(f, hb, m, 'basic');
-  if (isMulti()) {
-    const matchTarget = foesOf(f).find(ef => ef.invul <= 0 && ef.hp > 0 && overlap(hb, hurtbox(ef)));
-    if (matchTarget) foe = matchTarget;
-  }
-  if (foe.invul > 0 || foe.hp <= 0) return;
-  const hu = hurtbox(foe);
-  if (!overlap(hb, hu)) return;
+  const hitSet = f.hitTargets || (f.hitTargets = []);
+  const targets = isMulti()
+    ? findTargetsInBox(f, hb, { exclude: hitSet })
+    : (foe && foe.invul <= 0 && foe.hp > 0 && !hitSet.includes(foe.idx) && overlap(hb, hurtbox(foe)) ? [foe] : []);
+  if (!targets.length) return;
+  const primary = targets[0];
 
   // 真实物理拼刀截击机制（Dynamic Blade Clash）：活跃攻击帧相撞，按两方武器动能与体量动态判定弹刀与压制
-  if (!m.isProj && !m.ult && !m.unblockable && foe.state === 'attack' && foe.move && foe.move.box && !foe.hitDone) {
-    const foeSu = foe.move.su || 0.04, foeAc = foe.move.ac || 0.08;
-    if (foe.t >= foeSu && foe.t <= foeSu + foeAc) {
-      const foeHb = hitbox(foe, foe.move.box);
+  if (!m.isProj && !m.ult && !m.unblockable && primary.state === 'attack' && primary.move && primary.move.box && !primary.hitDone) {
+    const foeSu = primary.move.su || 0.04, foeAc = primary.move.ac || 0.08;
+    if (primary.t >= foeSu && primary.t <= foeSu + foeAc) {
+      const foeHb = hitbox(primary, primary.move.box);
       if (overlap(hb, foeHb)) {
         const cx = (hb[0] + hb[2] + foeHb[0] + foeHb[2]) / 4;
         const cy = (hb[1] + hb[3] + foeHb[1] + foeHb[3]) / 4;
         const fWeight = (f.ch && f.ch.stat && f.ch.stat.weight) || 1;
-        const foeWeight = (foe.ch && foe.ch.stat && foe.ch.stat.weight) || 1;
-        // 招式冲击动能 E = 0.5 * Mass * (Dmg / Speed)^1.2
+        const foeWeight = (primary.ch && primary.ch.stat && primary.ch.stat.weight) || 1;
         const fSpeed = (f.ch && f.ch.stat && f.ch.stat.speed) || 1;
-        const foeSpeed = (foe.ch && foe.ch.stat && foe.ch.stat.speed) || 1;
+        const foeSpeed = (primary.ch && primary.ch.stat && primary.ch.stat.speed) || 1;
         const e1 = fWeight * Math.pow((m.dmg || 15) / Math.max(0.5, fSpeed), 1.15);
-        const e2 = foeWeight * Math.pow((foe.move.dmg || 15) / Math.max(0.5, foeSpeed), 1.15);
+        const e2 = foeWeight * Math.pow((primary.move.dmg || 15) / Math.max(0.5, foeSpeed), 1.15);
         const eRatio = e1 / Math.max(0.1, e2);
 
         if (eRatio >= 2.2) {
-          // 重武器完全压制轻武器：轻武器被强力荡开，重攻击完成穿透
-          foe.hitDone = true;
-          foe.state = 'hitstun'; foe.t = 0; foe.stun = 0.32; foe.vx = -foe.face * 260;
+          primary.hitDone = true;
+          primary.state = 'hitstun'; primary.t = 0; primary.stun = 0.32; primary.vx = -primary.face * 260;
           f.vx *= 0.5;
           shake = Math.max(shake, 12); SFX.heavy(); SFX.parry(); haptic([20, 30, 20]);
           ring(cx, cy, 170, '255,200,90', 0.45);
@@ -110,22 +148,20 @@ function tryHit(f, foe, m) {
           addP({ type: 'text', text: '⚡ 破势荡刃', x: cx, y: cy - 40, life: 0.7, max: 0.7, rgb: '255,210,100' });
           return;
         } else if (eRatio <= 0.45) {
-          // 对手重武器完全压制我方轻武器
           f.hitDone = true;
           f.state = 'hitstun'; f.t = 0; f.stun = 0.32; f.vx = -f.face * 260;
-          foe.vx *= 0.5;
+          primary.vx *= 0.5;
           shake = Math.max(shake, 12); SFX.heavy(); SFX.parry(); haptic([20, 30, 20]);
           ring(cx, cy, 170, '255,200,90', 0.45);
           for (let i = 0; i < 9; i++) addP({ type: 'spark', x: cx, y: cy, vx: rand(-320, 320), vy: rand(-320, 320), rgb: '255,200,90', life: 0.25, max: 0.25 });
           addP({ type: 'text', text: '⚡ 破势荡刃', x: cx, y: cy - 40, life: 0.7, max: 0.7, rgb: '255,210,100' });
           return;
         } else {
-          // 均势拼刀：基于冲量定理按质量反弹
-          f.hitDone = true; foe.hitDone = true;
+          f.hitDone = true; primary.hitDone = true;
           f.vx = -f.face * clamp(210 / Math.sqrt(fWeight), 130, 280);
-          foe.vx = -foe.face * clamp(210 / Math.sqrt(foeWeight), 130, 280);
-          f.t = Math.max(f.t, (m.su || 0.04) + (m.ac || 0.08));   // 各自按自己的招式时长收招，别用对手的
-          foe.t = Math.max(foe.t, foeSu + foeAc);
+          primary.vx = -primary.face * clamp(210 / Math.sqrt(foeWeight), 130, 280);
+          f.t = Math.max(f.t, (m.su || 0.04) + (m.ac || 0.08));
+          primary.t = Math.max(primary.t, foeSu + foeAc);
           SFX.parry(); haptic([15, 25, 15]);
           shake = Math.max(shake, 8);
           ring(cx, cy, 140, '255,225,120', 0.35);
@@ -137,21 +173,16 @@ function tryHit(f, foe, m) {
     }
   }
 
-  f.hitDone = true;
-  if (isMulti()) {
-    let hitAny = false;
-    for (const tf of foesOf(f)) {
-      if (!tf || tf.invul > 0 || tf.hp <= 0) continue;
-      const thu = hurtbox(tf);
-      if (!overlap(hb, thu)) continue;
-      hitAny = true;
-      const px = (Math.max(hb[0], thu[0]) + Math.min(hb[2], thu[2])) / 2, py = (Math.max(hb[1], thu[1]) + Math.min(hb[3], thu[3])) / 2;
-      applyHit(f, tf, m, [px, py]);
-    }
-    if (hitAny) return;
+  for (let i = 0; i < targets.length; i++) {
+    const tf = targets[i];
+    hitSet.push(tf.idx);
+    const hu = hurtbox(tf);
+    const px = (Math.max(hb[0], hu[0]) + Math.min(hb[2], hu[2])) / 2, py = (Math.max(hb[1], hu[1]) + Math.min(hb[3], hu[3])) / 2;
+    const mul = multiTargetScale(hitSet.length - 1);
+    const hitM = mul < 1 ? { ...m, dmg: Math.round(m.dmg * mul * 10) / 10 } : m;
+    applyHit(f, tf, hitM, [px, py]);
   }
-  const px = (Math.max(hb[0], hu[0]) + Math.min(hb[2], hu[2])) / 2, py = (Math.max(hb[1], hu[1]) + Math.min(hb[3], hu[3])) / 2;
-  applyHit(f, foe, m, [px, py]);
+  if (!isMulti()) f.hitDone = true;
 }
 const predicted = [];
 function predictHit(att, def, m, pt) {
@@ -159,7 +190,7 @@ function predictHit(att, def, m, pt) {
   const holdingBlock = !!(def.ctrl && def.ctrl.held && def.ctrl.held.down);
   const wasBlocking = ((def.state === 'block' || def.state === 'blockstun') || (holdingBlock && ['idle', 'walk'].includes(def.state))) && def.onGround();
   const sx = m.srcX !== undefined ? m.srcX : att.x, fx = m.dir || att.face;
-  const isCs2 = !!(m && m.name === 'cs2');   // 只认这一招本身：moveName 收招后不清，之后的技能、暗器、大招不能被当成蓄力斩
+  const isCs2 = !!(m && m.name === 'cs2');
   if (wasBlocking && (!m.unblockable || isCs2)) {
     const atkDir = Math.sign(sx - def.x) || -fx || def.face;
     def.face = atkDir;

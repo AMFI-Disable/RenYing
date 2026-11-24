@@ -11,7 +11,9 @@ Object.assign(ULTS, {
       }
       if (f.spN === 6 && f.t >= 1.0) {
         f.spN = 7; f.spPose = 'yx_push';
-        spawnProj(f, { kind: 'chord', vx: 0, x: foe.x, y: -100, delay: 0.12, track: 8, trackEnd: 0.03, w: 190, h: 200, life: 0.42, dmg: 60 + 15 * Math.min(3, f.notes || 0), kb: [300, -760], stun: 0.6, hs: 0.18, launch: true, unblockable: true, ult: true, noScale: true, big: true, unbreakable: true });
+        const cy = foe ? gndY(foe) : f.y;
+        spawnProj(f, { kind: 'chord', vx: 0, x: foe.x, y: cy - 100, groundY: cy, delay: 0.12, track: 8, trackEnd: 0.03, w: 200, h: 210, life: 0.42, dmg: 60 + 15 * Math.min(3, f.notes || 0), pierce: true, maxHits: 1, kb: [300, -760], stun: 0.6, hs: 0.18, launch: true, unblockable: true, ult: true, noScale: true, big: true, unbreakable: true });
+        if (!RESIM) addP({ type: 'beam', x: foe.x, y: cy - 260, x2: foe.x, y2: cy, w: 24, life: 0.34, max: 0.34, rgb: '150,240,200' });
         f.notes = 3; f.skillCD = 0;
         addP({ type: 'text', text: '曲终绝响 · 音律回满', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '150,240,200' });
       }

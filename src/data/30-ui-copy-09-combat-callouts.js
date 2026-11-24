@@ -85,7 +85,7 @@ Object.assign(UI_COPY_EN, {
   "🔥 朱雀战魂 · 狂暴破招": "🔥 Vermilion Spirit · Fury Break",
   "🗡️ 影遁无形 · 苦无重置": "🗡️ Shadow Vanish · Kunai reset",
   "🛡️ 精准招架": "🛡️ Perfect Parry",
-  "🪶 凌霄破虚 · 俯冲重置": "🪶 Sky Breaker · Dive reset",
+  "🪶 凌霄破虚 · 万箭齐发": "🪶 Sky Breaker · Arrow Barrage",
   "🔥 朱雀神火 · 破军": "🔥 Vermilion Fire · Breaker",
   "🌕 太阴灵丹 · 固本": "🌕 Moon Elixir · Fortify",
   "⚡ 紫微星魄 · 满怒": "⚡ Purple Star Soul · Full Rage",

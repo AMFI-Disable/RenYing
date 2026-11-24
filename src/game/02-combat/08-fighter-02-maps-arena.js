@@ -268,6 +268,41 @@ function battleStairTarget(f, targetY) {
   return (f.x - x) * dir > 0 ? x - dir * 8 : x + dir * 30;
 }
 const airH = f => gndY(f) - f.y;
+// 返回当前场地在 x 处的全部可站立层高（由高到低，含最底层地面 0）
+function arenaLayersAt(x) {
+  const ys = [];
+  const ps = mapPlats() || [];
+  for (const P of ps) {
+    if (!P || P.k === 'stairs') continue;
+    if (Math.abs(x - P.x) > P.w / 2) continue;
+    const py = Math.round(platformY(P, x));
+    if (py < -1 && !ys.includes(py)) ys.push(py);
+  }
+  ys.sort((a, b) => a - b);
+  ys.push(0);
+  return ys;
+}
+// 返回当前场地最高平台层高（五层大型战场为 -528，平地为 0）
+function arenaTopY() {
+  const ps = mapPlats() || [];
+  let top = 0;
+  for (const P of ps) {
+    if (!P || P.k === 'stairs') continue;
+    if (P.y < top) top = P.y;
+  }
+  return top;
+}
+// 按二维距离（含垂直层高差）挑选最近的存活敌方目标
+function nearestFoe2D(f, maxRange) {
+  const foes = isMulti() ? foesOf(f) : [foeOf(f)];
+  let best = null, bestD = maxRange || Infinity;
+  for (const ef of foes) {
+    if (!ef || ef.hidden || ef.hp <= 0) continue;
+    const d = Math.hypot(ef.x - f.x, (ef.y - 55) - (f.y - 55));
+    if (d < bestD) { bestD = d; best = ef; }
+  }
+  return best || (typeof foeOf === 'function' ? foeOf(f) : null);
+}
 // 把人放到他现在的 x 上：plat 那个平台在脚下就站上去，不然回到地面（瞬移、被吸过来以后用）
 function mapPutOn(f, plat) {
   const P = plat >= 0 && (mapPlats() || [])[plat];

@@ -9,10 +9,10 @@
 const SD_SPD = 3525, SD_TURN = 20, SD_DRIFT_MAX = 360, SD_DRIFT_SPD = 1900;
 // 迂回：第一次近身从对手头顶翻过去（横向速度、起跳速度、下落加速度），对手身后至少要留这么多地方
 const SD_OVER_VX = 1450, SD_OVER_VY = -950, SD_OVER_G = 3800, SD_OVER_ROOM = 170;
-function sdTarget(f, foe) {   // 2v2 追最近的那个还站着的对手
-  if (typeof is2v2 === 'function' && is2v2()) {
+function sdTarget(f, foe) {   // 多人模式追二维距离最近且存活的对手
+  if (typeof isMulti === 'function' && isMulti()) {
     let best = null, bd = Infinity;
-    for (const o of foesOf(f)) { if (o.hp <= 0) continue; const d = Math.hypot(o.x - f.x, o.y - f.y); if (d < bd) { bd = d; best = o; } }
+    for (const o of foesOf(f)) { if (!o || o.hidden || o.hp <= 0) continue; const d = Math.hypot(o.x - f.x, o.y - f.y); if (d < bd) { bd = d; best = o; } }
     if (best) return best;
   }
   return foe || (typeof foeOf === 'function' ? foeOf(f) : null);

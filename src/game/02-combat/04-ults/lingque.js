@@ -2,7 +2,7 @@ Object.assign(ULTS, {
   // ---- 凌雀 · 大招 E：万线归宗（needlestorm） ----
   needlestorm: { name: '万线归宗', desc: '凌雀跃至半空织就漫天悬丝罗网，子母梭如疾风暴雨全屏交错绞杀敌人（7 段 12 伤害 + 终结 56 伤害），附加【雀芒】印记并重置换影冷却。',
     begin(f, foe) {
-      f.sp = 'cast'; f.spN = 0; f.spPose = 'du_l1s'; f.invul = 0.40; f.vx = 0; f.vy = -360; f.y = -1; SFX.superOn();
+      f.sp = 'cast'; f.spN = 0; f.spPose = 'du_l1s'; f.invul = 0.40; f.vx = 0; f.vy = -360; f.plat = -1; f.y -= 1; SFX.superOn();
     },
     update(f, foe) {
       f.vx = 0; f.vy = damp(f.vy, 0, 8, STEP);
@@ -13,19 +13,27 @@ Object.assign(ULTS, {
         const ang = (f.spN * 0.6) % 3.14;
         slashLine(foe.x + rand(-40, 40), foe.y - 50 + rand(-30, 30), ang, '235,110,210');
         ring(foe.x, foe.y - 50, 70 + f.spN * 10, '235,110,210', 0.25);
-        if (foe.hp > 0 && foe.invul <= 0) {
-          applyHit(f, foe, { dmg: 12, exact: true, kb: [60, -40], stun: 0.26, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: sd }, [foe.x, foe.y - 50]);
-          addNeedleMark(foe, 1);
+        const targets = isMulti() ? foesOf(f).filter(tf => tf && tf.hp > 0 && tf.invul <= 0 && Math.hypot(tf.x - foe.x, tf.y - foe.y) <= 210) : (foe && foe.hp > 0 && foe.invul <= 0 ? [foe] : []);
+        for (let i = 0; i < targets.length; i++) {
+          const tf = targets[i];
+          const sc = typeof multiTargetScale === 'function' ? multiTargetScale(i) : 1;
+          applyHit(f, tf, { dmg: Math.max(1, Math.round(12 * sc)), exact: true, kb: [60, -40], stun: 0.26, hs: i === 0 ? 0.03 : 0, unblockable: true, ult: true, noScale: true, dir: sd }, [tf.x, tf.y - 50]);
+          addNeedleMark(tf, 1);
         }
       }
       if (f.spN === 7 && f.t >= 0.78) {
         f.spN = 8;
-        f.y = 0; f.vy = 0;
+        f.y = gndY(f); f.vy = 0;
         shake = Math.max(shake, 16); SFX.heavy(); SFX.slice();
-        ring(foe.x, foe.y - 50, 150, '255,140,225', 0.45);
-        if (foe.hp > 0 && foe.invul <= 0) {
-          applyHit(f, foe, { dmg: 56, kb: [300, -700], stun: 0.55, hs: 0.16, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 50]);   // kb 只写大小，方向由 dir 带
-          addNeedleMark(foe, 1);
+        ring(foe.x, foe.y - 50, 165, '255,140,225', 0.45);
+        const targets = isMulti() ? foesOf(f).filter(tf => tf && tf.hp > 0 && tf.invul <= 0 && Math.hypot(tf.x - foe.x, tf.y - foe.y) <= 230) : (foe && foe.hp > 0 && foe.invul <= 0 ? [foe] : []);
+        for (let i = 0; i < targets.length; i++) {
+          const tf = targets[i];
+          const sc = typeof multiTargetScale === 'function' ? multiTargetScale(i) : 1;
+          applyHit(f, tf, { dmg: Math.max(1, Math.round(56 * sc)), kb: [300, -700], stun: 0.55, hs: i === 0 ? 0.16 : 0.04, launch: true, unblockable: true, ult: true, noScale: true, big: i === 0, dir: f.face }, [tf.x, tf.y - 50]);   // kb 只写大小，方向由 dir 带
+          addNeedleMark(tf, 1);
+        }
+        if (targets.length) {
           f.skill2CD = 0;
           addP({ type: 'text', text: '✦ 雀芒入魂 · 悬丝归宗 ✦', x: f.x, y: f.y - 120, life: 1.1, max: 1.1, rgb: '255,140,225' });
         }

@@ -23,7 +23,7 @@ function startAttack(f, name) {
   f.state = 'attack'; f.move = typeof stanceMove === 'function' ? stanceMove(f, name) : f.moves[name]; f.moveName = name; f.t = 0;
   if (f.ch.passive === 'armor' && HEAVY_MOVES.includes(name)) { f.armorT = f.move.su + f.move.ac; f.armorHits = 1; }
   if (chaosNow('armor')) { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.move.ac || 0.15)); f.armorHits = Math.max(f.armorHits, 1); }
-  f.lunged = false; f.hitDone = false; f.hitConfirmed = false;
+  f.lunged = false; f.hitDone = false; f.hitTargets = []; f.hitConfirmed = false;
   const foe = foeOf(f), h = f.ctrl && f.ctrl.held, dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0, a = dir || (h && h.aim);
   f.face = f.onGround() ? faceDir(f, foe) : ((a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl))) ? a : f.face);
   const heavy = name === 'hv' || name === 'cs1' || name === 'cs2';
@@ -42,7 +42,7 @@ function doJump(f, dir) {
   f.vx = dir ? dir * wk(f) * 1.15 : f.vx * 0.5;
   f.state = 'air'; f.y = Math.min(f.y, -1);
   if (f.jumps >= 2) ring(f.x, f.y - 20, 36, f.look.slash, 0.35);
-  dust(f.x, 0, 6); SFX.jump();
+  dust(f.x, f.y, 6); SFX.jump();
   if (scOn()) scFire(f, 'jump', foeOf(f));
 }
 function startDash(f, dir) {
@@ -50,7 +50,7 @@ function startDash(f, dir) {
   if (f.badgeId === 'breaker' && f.badgeBreakT > 0) { f.badgeBreakT = 0; showBadgeCue(f, 'breakerDash', true); }
   if (f.badgeId === 'pursuit') f.badgeDashT = 1.0;
   f.invul = 0.13; f.dashCD = DODGE_CD;
-  if (f.onGround()) dust(f.x - dir * 20, 0, 8);
+  if (f.onGround()) dust(f.x - dir * 20, f.y, 8);
   SFX.dash();
   if (scOn()) scFire(f, 'dash', foeOf(f));
 }
@@ -326,10 +326,12 @@ function specialUpdate(f, foe) {
     } else {
       if (Math.abs(foe.x - f.x) > 20) f.vx = damp(f.vx, (foe.x >= f.x ? 1 : -1) * spd, 10, STEP);
     }
-    const hitAir = (f.ch.ult === 'shadows' || U.airTrack) && inAir && Math.hypot(foe.x - f.x, (foe.y - 35) - f.y) <= 120;
-    const hit = overlap(hitbox(f, [-10, -135, 100, 0]), hurtbox(foe)) || hitAir;
-    if (!isClient() && foe.hp > 0 && foe.invul <= 0 && hit) {
-      f.sp = 'flurry'; f.t = 0; f.slashN = 0; f.vx = 0; f.vy = 0; f.flurryVictim = foe;
+    const dashHb = hitbox(f, [-14, -135, 106, 0]);
+    const multiFoes = isMulti() ? foesOf(f) : [foe];
+    const catchFoe = multiFoes.find(ef => ef && !ef.hidden && ef.hp > 0 && ef.invul <= 0 && (overlap(dashHb, hurtbox(ef)) || ((f.ch.ult === 'shadows' || U.airTrack) && (!ef.onGround() || airH(ef) > 15 || ef.y < -15) && Math.hypot(ef.x - f.x, (ef.y - 35) - f.y) <= 125)));
+    if (!isClient() && catchFoe) {
+      f.sp = 'flurry'; f.t = 0; f.slashN = 0; f.vx = 0; f.vy = 0; f.flurryVictim = catchFoe;
+      foe = catchFoe;
       foe.state = 'held'; foe.t = 0; foe.vx = 0; foe.vy = 0; foe.move = null; foe.skill = null; foe.sp = null; foe.y = Math.min(foe.y, -50);
       const ev = { e: 'hit', a: f.idx, d: foe.idx, x: foe.x, y: foe.y - 60, dmg: 9, hs: 0.12, nc: true };
       hitVisual(ev); netEmit(ev);
@@ -369,6 +371,9 @@ function specialUpdate(f, foe) {
       // 残月：最后一击把对手就近打倒，落回当前层高，不能再追击
       if (U.land) { f.y = gndY(f); f.vy = 0; applyHit(f, victim, { ...FINAL, dmg: U.fin, kb: [260, 0], knock: true }, [victim.x, victim.y - 60]); }
       else applyHit(f, victim, { ...FINAL, dmg: U.fin }, [victim.x, victim.y - 60]);
+      if (isMulti()) {
+        strikeAoE(f, victim.x, victim.y - 55, 220, 150, { dmg: Math.round(U.fin * 0.72), kb: [280, -420], stun: 0.45, hs: 0.1, launch: true, ult: true, noScale: true, big: true }, [victim.idx]);
+      }
       flashA = 0.6; flashRGB = f.ch.ult === 'shadows' ? '255,95,115' : '255,255,255'; shake = 22;
       for (let i = 0; i < (f.ch.ult === 'shadows' ? 4 : 3); i++) slashLine(victim.x, victim.y - 55, rand(-0.4, 0.4), f.look.slash);
       if (f.ch.ult === 'crescent') {
@@ -400,7 +405,7 @@ function startSkill(f, foe, slot) {
   if (S.can && !S.can(f)) { if (f.idx === localIdx()) addP({ type: 'text', text: S.lack ? S.lack(f) : '还不能用', x: f.x, y: f.y - 120, life: 0.6, max: 0.6, rgb: '255,190,90' }); return; }
   endEscape(f);
   if (f.ch.passive === 'drunk' && !S.can) f.drunk = Math.min(100, (f.drunk || 0) + 30);   // 醉翁：放技能添酒
-  f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.move = null; f.skAir = !f.onGround();
+  f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.skHitSet = []; f.move = null; f.skAir = !f.onGround();
   const smod = typeof skillModFor === 'function' ? skillModFor(f, slot) : { cd: 1 };
   const petCdMul = f.petId === 'mechfinch' ? (1 - 0.08 * (PET_TIER_MUL[f.petTier] || 1)) : 1;
   const cd = S.cd * (balOf(f).cd || 1) * smod.cd * petCdMul;
@@ -447,7 +452,7 @@ function windDive(f, foe) {
     }
   } else if (f.t >= 0.24) toNeutral(f);
 }
-// 技能的一次近身判定（每个阶段只会打中一次）
+// 技能近身判定（支持 1v1 / 2v2 / 8v8 多目标同时命中与跨层垂直判定）
 function strike(f, foe, spec) {
   if (f.hitDone) return false;
   const rangeScale = 1.15 * (typeof mapSkillReach === 'function' ? mapSkillReach(f) : 1);
@@ -459,15 +464,33 @@ function strike(f, foe, spec) {
   hitClones(hb, f.idx, spec.dmg);
   if (hitDecoy(f, hb)) return false;
   echoCloneAttack(f, hb, { ...spec, skill: true }, 'skill');
-  const targets = is2v2() ? foesOf(f) : [foe];
-  for (const tf of targets) {
-    if (tf.invul > 0 || tf.hp <= 0 || !overlap(hb, hurtbox(tf))) continue;
-    f.hitDone = true;
+  const targets = isMulti()
+    ? findTargetsInBox(f, hb, { ignoreInvul: !!spec.ignoreInvul })
+    : (foe && (!foe.invul || spec.ignoreInvul) && foe.hp > 0 && overlap(hb, hurtbox(foe)) ? [foe] : []);
+  if (!targets.length) return false;
+  f.hitDone = true;
+  const limit = spec.single ? 1 : targets.length;
+  for (let i = 0; i < limit; i++) {
+    const tf = targets[i];
     const hu = hurtbox(tf);
-    applyHit(f, tf, spec, [(Math.max(hb[0], hu[0]) + Math.min(hb[2], hu[2])) / 2, (Math.max(hb[1], hu[1]) + Math.min(hb[3], hu[3])) / 2]);
-    return true;
+    const mul = multiTargetScale(i);
+    const hitSpec = mul < 1 ? { ...spec, dmg: Math.round(spec.dmg * mul * 10) / 10 } : spec;
+    applyHit(f, tf, hitSpec, [(Math.max(hb[0], hu[0]) + Math.min(hb[2], hu[2])) / 2, (Math.max(hb[1], hu[1]) + Math.min(hb[3], hu[3])) / 2]);
   }
-  return false;
+  return true;
+}
+// 统一范围（圆形/椭圆）技能与奥义判定（自动适配五层垂直高度与 8v8 多目标衰减）
+function strikeAoE(f, cx, cy, rx, ry, spec, exclude) {
+  const targets = findTargetsInRadius(f, cx, cy, rx, ry || rx, { ignoreInvul: !!spec.ignoreInvul, exclude });
+  if (!targets.length) return 0;
+  for (let i = 0; i < targets.length; i++) {
+    const tf = targets[i];
+    const mul = multiTargetScale(i);
+    const dir = tf.x >= cx ? 1 : -1;
+    const hitSpec = { ...spec, dir, srcX: cx, dmg: mul < 1 ? Math.round(spec.dmg * mul * 10) / 10 : spec.dmg };
+    applyHit(f, tf, hitSpec, [tf.x, tf.y - 55]);
+  }
+  return targets.length;
 }
 // 月镜格开：对手硬直，自己准备反斩
 function parry(def, att, pt) {
@@ -495,13 +518,13 @@ function thunderGuardCounter(def, att, pt) {
   shake = Math.max(shake, 14); flashA = Math.max(flashA, 0.28); flashRGB = '255,240,150';
   ring(def.x, def.y - 60, 130, '255,230,120', 0.4);
   ring(def.x, def.y - 60, 65, '255,255,255', 0.3);
-  dust(def.x, 0, 16);
+  dust(def.x, def.y, 16);
   camImpact(def.x, def.y - 60, 0.32, 0.50);
   SFX.parry(); SFX.thunder(); SFX.thunderHit(1.2);
   addP({ type: 'text', text: '⚡ 金刚雷铠 · 引雷天罚', x: def.x, y: def.y - 120, life: 0.85, max: 0.85, rgb: '255,230,120' });
   addP({ type: 'callout', text: '雷', x: def.x, y: def.y - 70, life: 0.75, max: 0.75, rgb: '255,230,120', scale: 2.2 });
-  const strikeX = clamp(target.x, WALL + 20, STAGE_W - WALL - 20);
-  spawnProj(def, { kind: 'bolt', x: strikeX, y: -210, vx: 0, w: 90, h: 460, life: 0.42, delay: 0.04, dmg: 50, kb: [0, -720], stun: 0.50, hs: 0.12, launch: true, quickGetup: true, unbreakable: true, small: true });
+  const strikeX = clamp(target.x, WALL + 20, STAGE_W - WALL - 20), gy = target.y;
+  spawnProj(def, { kind: 'bolt', x: strikeX, y: gy - 210, groundY: gy, vx: 0, w: 96, h: 460, life: 0.42, delay: 0.04, dmg: 50, kb: [0, -720], stun: 0.50, hs: 0.12, launch: true, quickGetup: true, unbreakable: true, small: true, chain: 2, chainRange: 320 });
   const ev = { e: 'thunder_counter', a: def.idx, x: def.x, y: def.y - 60, tx: strikeX };
   netEmit(ev);
 }
@@ -995,16 +1018,16 @@ function onLand(f) {
     f.airRecover = false;
     f.state = 'getup'; f.t = 0.15; f.vx *= 0.2; f.invul = 0.35; f.comboHits = 0; f.juggle = 0;
     f.beaconT = 0.5;
-    dust(f.x, 0, 10); SFX.land();
+    dust(f.x, f.y, 10); SFX.land();
     return;
   }
   if (f.escInvul) {   // 腾空闪落地：无敌结束，短暂落地硬直
     endEscape(f); f.jumps = 0; f.airDash = 1;
-    f.state = 'getup'; f.t = ESC.landLag; f.vx *= 0.3; dust(f.x, 0, 6); SFX.land();
+    f.state = 'getup'; f.t = ESC.landLag; f.vx *= 0.3; dust(f.x, f.y, 6); SFX.land();
     return;
   }
   if (f.state === 'launched') {
-    if (f.spiked && !f.bounced) { f.vy = -560; f.bounced = true; f.y = gndY(f) - 1; shake = Math.max(shake, 8); dust(f.x, 0, 14); ring(f.x, 0, 70, '255,255,255', 0.35); SFX.thud(); return; }
+    if (f.spiked && !f.bounced) { const ly = gndY(f); f.vy = -560; f.bounced = true; f.y = ly - 1; shake = Math.max(shake, 8); dust(f.x, ly, 14); ring(f.x, ly, 70, '255,255,255', 0.35); SFX.thud(); return; }
 
     // 落地受身翻滚判定（Tech Roll / Ukemi）：按闪避或跳跃瞬间滚身脱困
     const c = f.ctrl;
@@ -1014,33 +1037,32 @@ function onLand(f) {
       f.state = 'dash'; f.t = 0; f.face = -dir; f.vx = dir * 560;
       f.invul = 0.28; f.comboHits = 0; f.juggle = 0;
       f.beaconT = 0.5;
-      dust(f.x, 0, 12); SFX.dash();
+      dust(f.x, f.y, 12); SFX.dash();
       addP({ type: 'text', text: '受身', x: f.x, y: f.y - 70, life: 0.55, max: 0.55, rgb: '170,230,255' });
       return;
     }
 
     f.state = 'knockdown'; f.t = 0; f.vx *= 0.3; f.invul = 99; f.rot = 0;
-    dust(f.x, 0, 12); shake = Math.max(shake, 5); SFX.thud();
+    dust(f.x, f.y, 12); shake = Math.max(shake, 5); SFX.thud();
     return;
   }
   if (f.state === 'held') return;
   f.jumps = 0; f.airDash = 1; f.airCharged = false;
   if (f.state === 'aircharge') {
     f.state = 'charge';
-    dust(f.x, 0, 5); SFX.land();
+    dust(f.x, f.y, 5); SFX.land();
     return;
   }
   if (f.state === 'air' || (f.state === 'attack' && f.move.air)) {
     const isPlunge = f.state === 'attack' && (f.moveName === 'a2' || f.moveName === 'cs2') && !f.hitConfirmed;
     toNeutral(f);
     if (isPlunge) {
-      // 真实格斗落地破绽（Whiff Landing Recovery）：重型千钧下砸落空时，有 0.12s 落地缓冲破绽
       f.vx *= 0.35;
-      dust(f.x, 0, 10); SFX.land();
+      dust(f.x, f.y, 10); SFX.land();
       shake = Math.max(shake, 4);
     } else {
       if (f.ctrl && f.ctrl.held && f.ctrl.held.down) { f.state = 'block'; f.face = Math.abs(foeOf(f).x - f.x) > 6 ? (foeOf(f).x >= f.x ? 1 : -1) : f.face; }
-      dust(f.x, 0, 4); SFX.land();
+      dust(f.x, f.y, 4); SFX.land();
     }
   }
   else if (f.state === 'dash') { /* 地面冲刺结束会自己转状态 */ }

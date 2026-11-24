@@ -21,6 +21,9 @@ Object.assign(SKILLS, {
         if (plus) {
           for (let k = 0; k < 8; k++) { const a = k / 8 * Math.PI * 2; addP({ type: 'mag', pol: 1, x: f.x + Math.cos(a) * 40, y: f.y - 60 + Math.sin(a) * 30, vx: Math.cos(a) * 520, vy: Math.sin(a) * 300, rot: a, r: 11, life: 0.32, max: 0.32, drag: 3 }); }
           ring(f.x, f.y - 60, plusRange, rgb, 0.35); shake = Math.max(shake, 10); SFX.heavy();
+          if (!RESIM && typeof lightningArc === 'function') {
+            for (let k = 0; k < 4; k++) { const a = k / 4 * Math.PI * 2; lightningArc(f.x, f.y - 60, f.x + Math.cos(a) * plusRange * 0.85, f.y - 60 + Math.sin(a) * 80, rgb, 4, 0.24, 2.4); }
+          }
           const d = Math.hypot(tg.x - f.x, tg.y - f.y), near = clamp(1 - d / plusRange, 0, 1);   // 越近越大
           const dir = (Math.sign(tg.x - f.x) || f.face) * MAG.rPlusDir;
           strike(f, tg, { box: [-plusRange, -150, plusRange, 20], dmg: MAG.rPlusDmg, kb: [MAG.rPlusKb[0] + MAG.rPlusKb[1] * near, -360 - 260 * near], stun: 0.5, hs: 0.1, launch: true, big: true, dir });
@@ -30,6 +33,7 @@ Object.assign(SKILLS, {
           const dx = tg.x - f.x;
           if (!isClient() && tg.hp > 0 && tg.invul <= 0 && Math.abs(dx) <= minusRange && Math.abs(tg.y - f.y) < 310) {
             f.face = Math.sign(dx) || f.face; f.magTg = tg.idx; f.hitDone = true;
+            if (!RESIM && typeof lightningArc === 'function') lightningArc(f.x + f.face * 34, f.y - 62, tg.x, tg.y - 60, rgb, 5, 0.28, 2.6);
             tg.state = 'held'; tg.t = 0; tg.vx = 0; tg.vy = 0; tg.move = null; tg.skill = null; tg.sp = null;
           }
         }

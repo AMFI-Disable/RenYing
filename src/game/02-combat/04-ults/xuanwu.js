@@ -10,11 +10,13 @@ Object.assign(ULTS, {
       if (f.spN < 3 && f.t >= 0.24 + f.spN * 0.16) {
         const rad = 155 + f.spN * 52;
         f.spPose = 'ts_slam';
-        if (!RESIM) { shake = Math.max(shake, 16 + f.spN * 4); ring(f.x, f.y - 24, rad, '110,205,255', 0.42); dust(f.x, f.y, 16); SFX.thud(); }
+        if (!RESIM) { shake = Math.max(shake, 16 + f.spN * 4); ring(f.x, f.y - 24, rad, '110,205,255', 0.42); dust(f.x, f.y, 16); if (typeof debrisBurst === 'function') debrisBurst(f.x, f.y, 10, '110,205,255'); SFX.thud(); }
+        let hitIdx = 0;
         for (const tf of isMulti() ? foesOf(f) : [foe]) {
           if (!tf || tf.hp <= 0 || tf.invul > 0 || Math.abs(tf.x - f.x) > rad || Math.abs(tf.y - f.y) > 120) continue;
           const last = f.spN === 2;
-          applyHit(f, tf, { dmg: last ? 68 : 38, kb: [last ? 420 : 180, last ? -640 : -220], stun: last ? 0.65 : 0.35, hs: last ? 0.16 : 0.07, launch: last, unblockable: last, ult: true, noScale: true, big: last, dir: tf.x >= f.x ? 1 : -1 }, [tf.x, tf.y - 50]);
+          const sc = typeof multiTargetScale === 'function' ? multiTargetScale(hitIdx++) : 1;
+          applyHit(f, tf, { dmg: Math.max(1, Math.round((last ? 68 : 38) * sc)), kb: [last ? 420 : 180, last ? -640 : -220], stun: last ? 0.65 : 0.35, hs: hitIdx === 1 ? (last ? 0.16 : 0.07) : 0.03, launch: last, unblockable: last, ult: true, noScale: true, big: last && hitIdx === 1, dir: tf.x >= f.x ? 1 : -1 }, [tf.x, tf.y - 50]);
         }
         f.spN++;
       }

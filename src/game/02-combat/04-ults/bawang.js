@@ -19,15 +19,17 @@ Object.assign(ULTS, {
         if (v && v.hp > 0 && v.state === 'held') { v.x = f.x + f.face * 18; v.y = f.y - 98; }
         if (f.t >= 0.34) {
           f.sp = 'slam'; f.t = 0; f.spPose = 'ts_slam';
-          if (!RESIM) { shake = Math.max(shake, 26); flashA = 0.38; flashRGB = '255,195,85'; ring(f.x + f.face * 48, f.y - 16, 225, '255,195,85', 0.5); dust(f.x + f.face * 48, f.y, 26); SFX.ko(); }
+          if (!RESIM) { shake = Math.max(shake, 26); flashA = 0.38; flashRGB = '255,195,85'; ring(f.x + f.face * 48, f.y - 16, 225, '255,195,85', 0.5); dust(f.x + f.face * 48, f.y, 26); if (typeof debrisBurst === 'function') debrisBurst(f.x + f.face * 48, f.y, 14, '255,195,85'); SFX.ko(); }
           if (v && v.hp > 0) {
             v.x = clamp(f.x + f.face * 56, WALL + 20, STAGE_W - WALL - 20);
             if (f.plat >= 0 && typeof mapPutOn === 'function') mapPutOn(v, f.plat); else { v.y = f.y; v.plat = f.plat; }
             applyHit(f, v, { dmg: 165, kb: [420, -680], stun: 0.78, hs: 0.22, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [v.x, v.y - 40]);
           }
+          let splashIdx = 1;
           for (const tf of isMulti() ? foesOf(f) : [foe]) {
             if (!tf || tf === v || tf.hp <= 0 || tf.invul > 0 || Math.abs(tf.x - f.x) > 225 || Math.abs(tf.y - f.y) > 120) continue;
-            applyHit(f, tf, { dmg: 85, kb: [380, -520], stun: 0.55, hs: 0.14, launch: true, unblockable: true, ult: true, noScale: true, dir: tf.x >= f.x ? 1 : -1 }, [tf.x, tf.y - 45]);
+            const sc = typeof multiTargetScale === 'function' ? multiTargetScale(splashIdx++) : 1;
+            applyHit(f, tf, { dmg: Math.max(1, Math.round(85 * sc)), kb: [380, -520], stun: 0.55, hs: 0.08, launch: true, unblockable: true, ult: true, noScale: true, dir: tf.x >= f.x ? 1 : -1 }, [tf.x, tf.y - 45]);
           }
         }
       } else if (f.sp === 'slam_empty' && f.t >= 0.28) {

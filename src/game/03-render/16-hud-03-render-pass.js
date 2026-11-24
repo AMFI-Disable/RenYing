@@ -183,13 +183,16 @@ function drawEmissive(sc, sx, sy) {
   for (const lx of [260, STAGE_W / 2, STAGE_W - 260]) { ctx.fillStyle = 'rgba(255,170,90,0.5)'; circle([lx, -72], 13); }
   drawFireflies(true);
   drawProjs(true);
-  for (const f of [A, B]) {
-    if (f.state === 'special' || (f.state === 'charge' && f.t >= CHARGE_FULL) || f.buffT > 0) {
+  const emitFighters = typeof allFighters === 'function' ? allFighters() : [A, B];
+  const crowded = emitFighters.length >= 8;
+  for (const f of emitFighters) {
+    if (!f || f.hidden || f.hp <= 0) continue;
+    if (f.state === 'special' || (!crowded && ((f.state === 'charge' && f.t >= CHARGE_FULL) || f.buffT > 0))) {
       const g = ctx.createRadialGradient(f.x, f.y - 60, 4, f.x, f.y - 60, 90);
       g.addColorStop(0, `rgba(${f.look.slash},0.8)`); g.addColorStop(1, `rgba(${f.look.slash},0)`);
       ctx.fillStyle = g; ctx.fillRect(f.x - 90, f.y - 150, 180, 180);
     }
-    skinEmissive(f);
+    if (!crowded) skinEmissive(f);
     drawTrail(f);
   }
   drawParticles(true);

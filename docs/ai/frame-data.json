@@ -228,8 +228,8 @@
    },
    "ult": {
     "id": "avalanche",
-    "hit": 86,
-    "total": 146
+    "hit": 44,
+    "total": 104
    }
   }
  },
@@ -467,8 +467,8 @@
    },
    "ult": {
     "id": "thunder",
-    "hit": 54,
-    "total": 136
+    "hit": 49,
+    "total": 150
    }
   }
  },
@@ -696,13 +696,13 @@
    },
    "skill2": {
     "id": "darts",
-    "hit": 16,
+    "hit": 15,
     "total": 29
    },
    "ult": {
     "id": "featherstorm",
-    "hit": 61,
-    "total": 130
+    "hit": 5,
+    "total": 133
    }
   }
  },
@@ -1313,7 +1313,7 @@
    },
    "ult": {
     "id": "skyfall",
-    "hit": 30,
+    "hit": 26,
     "total": 121
    }
   }
@@ -1391,7 +1391,7 @@
    },
    "ult": {
     "id": "thicket",
-    "hit": 37,
+    "hit": 19,
     "total": 94
    }
   }
@@ -1469,8 +1469,8 @@
    },
    "ult": {
     "id": "celestial",
-    "hit": 23,
-    "total": 106
+    "hit": 21,
+    "total": 109
    }
   }
  },
@@ -1703,8 +1703,8 @@
    },
    "ult": {
     "id": "phoenixchorus",
-    "hit": 10,
-    "total": 90
+    "hit": 8,
+    "total": 92
    }
   }
  },
@@ -2015,8 +2015,8 @@
    },
    "ult": {
     "id": "skywarddance",
-    "hit": 35,
-    "total": 97
+    "hit": 32,
+    "total": 100
    }
   }
  },
@@ -2249,7 +2249,7 @@
    },
    "ult": {
     "id": "wintertorrent",
-    "hit": 14,
+    "hit": 1,
     "total": 67
    }
   }
@@ -2322,13 +2322,13 @@
    },
    "skill2": {
     "id": "galestrike",
-    "hit": 16,
-    "total": 42
+    "hit": 17,
+    "total": 40
    },
    "ult": {
     "id": "roctempest",
-    "hit": 43,
-    "total": 87
+    "hit": 15,
+    "total": 91
    }
   }
  },

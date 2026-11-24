@@ -49,13 +49,13 @@
 | --- | --- | --- | --- |
 | 青锋 | gale 10 / 59 | swordqi 15 / 39 | crescent 0 / 132 |
 | 绯影 | blink 54 / 69 | kunai 15 / 31 | shadows 0 / 133 |
-| 铁山 | quake 29 / 77 | ironwall 20 / 85 | avalanche 86 / 146 |
+| 铁山 | quake 29 / 77 | ironwall 20 / 85 | avalanche 44 / 104 |
 | 凌霜 | backthrust 29 / 70 | spin 1 / 241 | timestop 0 / 24 |
 | 流云 | windblade 7 / 14 | windstep -1 / 48 | tornado 1 / 94 |
-| 雷鸣 | thunderfist 17 / 62 | stomp -1 / 91 | thunder 54 / 136 |
+| 雷鸣 | thunderfist 17 / 62 | stomp -1 / 91 | thunder 49 / 150 |
 | 墨羽 | inktrap -1 / 27 | inksplash -1 / 48 | inkdragon 106 / 167 |
 | 月华 | mirror -1 / 96 | moonring 18 / 34 | moonflow 4 / 57 |
-| 燕翎 | dive 25 / 70 | darts 16 / 29 | featherstorm 61 / 130 |
+| 燕翎 | dive 25 / 70 | darts 15 / 29 | featherstorm 5 / 133 |
 | 玉箫 | soundwave 16 / 25 | echowall 10 / 54 | guangling 52 / 154 |
 | 醉翁 | pavilion -1 / 33 | feast -1 / 127 | shanshui 33 / 226 |
 | 勾陈 | hook 18 / 44 | whirl 18 / 145 | skynet 40 / 148 |
@@ -63,20 +63,20 @@
 | 离影 | mistmark 15 / 57 | - | mistarray 27 / 88 |
 | 磁仙 | - | magfield 23 / 49 | sandwich 66 / 130 |
 | 千机 | throwball 17 / 42 | - | recallball 2 / 79 |
-| 炽霄 | flamehalberd 11 / 63 | blazering 14 / 48 | skyfall 30 / 121 |
-| 幽篁 | venomfan 15 / 42 | whiplash 13 / 45 | thicket 37 / 94 |
-| 玄机 | starorb 16 / 47 | gravwell 15 / 51 | celestial 23 / 106 |
+| 炽霄 | flamehalberd 11 / 63 | blazering 14 / 48 | skyfall 26 / 121 |
+| 幽篁 | venomfan 15 / 42 | whiplash 13 / 45 | thicket 19 / 94 |
+| 玄机 | starorb 16 / 47 | gravwell 15 / 51 | celestial 21 / 109 |
 | 破浪 | tidalslam 20 / 59 | undertow 10 / 68 | maelstrom 18 / 78 |
 | 苍冥 | abyssslash 17 / 53 | soulrift 18 / 57 | eclipsecleave 32 / 83 |
-| 青鸾 | jadebreeze 13 / 43 | luanheal 17 / 53 | phoenixchorus 10 / 90 |
+| 青鸾 | jadebreeze 13 / 43 | luanheal 17 / 53 | phoenixchorus 8 / 92 |
 | 玄武 | shellbash 13 / 73 | earthfort 20 / 59 | tortoiseslam 20 / 97 |
 | 赤焰 | blazefist 9 / 57 | emberupper 11 / 47 | infernorush 0 / 82 |
 | 银狐 | foxstep 10 / 54 | miragecut 8 / 46 | ninestrike 8 / 85 |
-| 云鹤 | craneglide 10 / 62 | cloudmend 16 / 50 | skywarddance 35 / 97 |
+| 云鹤 | craneglide 10 / 62 | cloudmend 16 / 50 | skywarddance 32 / 100 |
 | 天罡 | gangthrust 13 / 69 | ironbulwark 17 / 53 | heavenbreaker 20 / 78 |
 | 墨绝 | inkbind 42 / 46 | sealscript 16 / 47 | abyssscroll 16 / 102 |
-| 白河 | riverpierce 10 / 60 | frostparry 17 / 51 | wintertorrent 14 / 67 |
-| 金鹏 | talondive 13 / 44 | galestrike 16 / 42 | roctempest 43 / 87 |
+| 白河 | riverpierce 10 / 60 | frostparry 17 / 51 | wintertorrent 1 / 67 |
+| 金鹏 | talondive 13 / 44 | galestrike 17 / 40 | roctempest 15 / 91 |
 | 幽冥 | reapdash 9 / 56 | soulpull 13 / 44 | nightmarecut 25 / 76 |
 | 灵犀 | mindwave 16 / 46 | echostun 15 / 49 | spiritdomain 8 / 102 |
 | 霸王 | overlordchop 20 / 59 | warroar 15 / 51 | conquerorslam 34 / 85 |

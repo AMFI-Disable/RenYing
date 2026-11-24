@@ -250,35 +250,62 @@ function updateScarf(f) {
 
 // ======================= 特效 =======================
 const particles = [];
-function addP(p) { if (!RESIM && particles.length < 600) particles.push(p); }
+const ESSENTIAL_P = { dmg: 1, callout: 1, text: 1, ring: 1, slash: 1, lightning: 1, beam: 1, flash: 1 };
+function addP(p) {
+  if (RESIM) return;
+  const essential = !!ESSENTIAL_P[p.type];
+  const crowd = typeof allFighters === 'function' ? allFighters().length : 2;
+  if (!essential) {
+    const softCap = crowd >= 10 ? 220 : crowd >= 6 ? 320 : 480;
+    if (particles.length >= softCap) return;
+    if (crowd >= 10 && particles.length > 140 && Math.random() < 0.45) return;
+  }
+  if (particles.length < 720) particles.push(p);
+}
 function hitFX(x, y, power, rgb, face) {
   addP({ type: 'flash', x, y, r: 26 * power, life: 0.1, max: 0.1, rgb: '255,255,255' });
   ring(x, y, 46 * power, rgb, 0.22);
-  const n = Math.round(10 + 8 * power);
+  const crowd = typeof allFighters === 'function' ? allFighters().length : 2;
+  const density = crowd >= 10 ? 0.55 : crowd >= 6 ? 0.75 : 1;
+  const n = Math.max(4, Math.round((10 + 8 * power) * density));
   for (let i = 0; i < n; i++) {
     const a = (face > 0 ? 0 : Math.PI) + rand(-1.1, 1.1) + (Math.random() < 0.25 ? Math.PI : 0), s = rand(350, 1000) * power;
     addP({ type: 'spark', x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, life: rand(0.12, 0.3), max: 0.3, rgb: Math.random() < 0.4 ? '255,255,255' : rgb, w: rand(1.5, 3) * power, drag: 6 });
   }
-  for (let i = 0; i < 6 * power; i++) {
+  const inkN = Math.max(2, Math.round(6 * power * density));
+  for (let i = 0; i < inkN; i++) {
     const a = rand(-Math.PI, 0), s = rand(80, 300);
     addP({ type: 'ink', x, y, vx: Math.cos(a) * s + face * 120, vy: Math.sin(a) * s, g: 1400, life: rand(0.4, 0.8), max: 0.8, r: rand(2, 4.5), rgb });
   }
 }
 function blockFX(x, y, face) {
   ring(x, y, 34, '160,200,255', 0.18);
-  for (let i = 0; i < 12; i++) {
+  for (let i = 0; i < 10; i++) {
     const a = (face > 0 ? Math.PI : 0) + rand(-1.3, 1.3), s = rand(250, 700);
     addP({ type: 'spark', x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s - 100, g: 900, life: rand(0.15, 0.35), max: 0.35, rgb: Math.random() < 0.5 ? '255,240,200' : '170,210,255', w: 1.6, drag: 3 });
   }
 }
 function ring(x, y, r, rgb, life) { addP({ type: 'ring', x, y, r, life, max: life, rgb }); }
 function dust(x, y, n) {
-  for (let i = 0; i < n; i++) addP({ type: 'dust', x: x + rand(-16, 16), y: y - rand(0, 6), vx: rand(-140, 140), vy: rand(-80, -10), life: rand(0.3, 0.6), max: 0.6, r: rand(6, 14), drag: 4 });
+  const crowd = typeof allFighters === 'function' ? allFighters().length : 2;
+  const count = crowd >= 10 ? Math.max(2, Math.round(n * 0.55)) : n;
+  for (let i = 0; i < count; i++) addP({ type: 'dust', x: x + rand(-16, 16), y: y - rand(0, 6), vx: rand(-140, 140), vy: rand(-80, -10), life: rand(0.3, 0.6), max: 0.6, r: rand(6, 14), drag: 4 });
 }
 function slashLine(x, y, ang, rgb) { addP({ type: 'slash', x, y, ang, len: 420, life: 0.28, max: 0.28, rgb }); }
+function lightningArc(x1, y1, x2, y2, rgb = '255,240,150', w = 2.8, life = 0.24) {
+  addP({ type: 'lightning', x: x1, y: y1, x2, y2, rgb, w, life, max: life });
+}
+function debrisBurst(x, y, n = 10, rgb = '135,115,98') {
+  const crowd = typeof allFighters === 'function' ? allFighters().length : 2;
+  const count = crowd >= 10 ? Math.max(4, Math.round(n * 0.65)) : n;
+  for (let i = 0; i < count; i++) {
+    addP({ type: 'debris', x: x + rand(-36, 36), y: y - rand(4, 24), vx: rand(-340, 340), vy: rand(-540, -140), g: 1650, rot: rand(0, 6.28), vr: rand(-12, 12), r: rand(4, 10), life: rand(0.45, 0.85), max: 0.85, rgb });
+  }
+}
 function updateFX(dt) {
   for (const p of particles) {
     p.life -= dt;
+    if (p.vr) p.rot = (p.rot || 0) + p.vr * dt;
     if (p.vx !== undefined) {
       if (p.drag) { p.vx *= Math.exp(-p.drag * dt); p.vy *= Math.exp(-p.drag * dt); }
       if (p.g) p.vy += p.g * dt;

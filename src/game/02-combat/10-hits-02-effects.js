@@ -321,13 +321,13 @@ function applyHit(att, def, m, pt) {
   if (typeof applyCombatBadgeHit === 'function') applyCombatBadgeHit(att, def, m, ev);
   if (!m.noStun || def.hp <= 0) def.move = null;
   if (isBlockedCs2 && def.hp > 0) {
-    // 格挡满蓄力斩：强制被压倒在地（带来击倒），但伤害减轻且快速起身
+    // 格挡满蓄力斩：强制被压倒在地（保留当前层高），伤害减轻且快速起身
     def.state = 'knockdown';
     def.t = 0;
     def.vx = fx * 280 * Math.sqrt(massRatio);
-      if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
+    if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def);
     def.vy = 0;
-    def.y = 0;
+    def.y = gndY(def);
     def.rot = 0;
     def.invul = 0.45;
     def.spiked = false;
@@ -335,13 +335,13 @@ function applyHit(att, def, m, pt) {
     def.comboHits = 0;
     def.quickGetup = true;
     def.knockdownDur = 0.22;
-    dust(def.x, 0, 12);
+    dust(def.x, def.y, 12);
     shake = Math.max(shake, 12);
     SFX.thud();
     addP({ type: 'text', text: '格挡卸力 · 快速起身', x: def.x, y: def.y - 110, life: 0.85, max: 0.85, rgb: '170,220,255' });
   }
   else if (m.noStun && def.hp > 0) { /* 不僵直：只掉血，对手手上的动作照常 */ }
-  else if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.y = Math.min(def.y, -1); def.invul = 1.5; def.spiked = false; def.juggle = 0; ev.knock = true; }
+  else if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.plat = -1; def.y = Math.min(def.y - 1, -1); def.invul = 1.5; def.spiked = false; def.juggle = 0; ev.knock = true; }
   else if (m.root && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = m.stun; def.vx = 0; def.rooted = true; ev.root = true; }
   else if (m.hold) { def.state = 'held'; }
   else {
@@ -349,10 +349,10 @@ function applyHit(att, def, m, pt) {
     if (m.launch || air || def.hp <= 0) {
       def.juggle++;
       if (def.juggle >= 3 && def.hp > 0) {
-        // 空中连段平衡：连续浮空受击最多 3 次，随后震飞受身脱离以安全重立
         def.state = 'launched'; def.t = 0;
         def.vx = fx * 560 * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio)));
         def.vy = -180;
+        def.plat = -1;
         def.invul = 0.65;
         def.spiked = false;
         def.airRecover = true;
@@ -367,7 +367,8 @@ function applyHit(att, def, m, pt) {
         const baseVy = m.spike ? m.kb[1] : (m.kb[1] === 0 ? -320 * js : m.kb[1] * js);
         def.vy = baseVy * (m.spike ? 1 : Math.min(1.25, Math.max(0.82, 1 / Math.cbrt(defWeight))));
         def.spiked = !!m.spike; if (!m.spike) def.bounced = def.bounced && air;
-        def.y = Math.min(def.y, -1);
+        def.plat = -1;
+        def.y = Math.min(def.y - 1, -1);
       }
     } else {
       const comboDecay = m.noScale ? 1 : Math.max(0.48, 1 - 0.075 * (def.comboHits - 1));
@@ -377,11 +378,11 @@ function applyHit(att, def, m, pt) {
       def.state = 'hitstun'; def.t = 0; def.stun = hitStunDur; def.vx = m.kb[0] * fx * kbMul * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio))) * chaosKb;
     }
   }
-  if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.fixed : def.ctrl.mode === 'fixed') && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = 0.2; def.vx = 0; def.vy = 0; def.y = 0; def.juggle = 0; def.invul = 0; }
+  if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.fixed : def.ctrl.mode === 'fixed') && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = 0.2; def.vx = 0; def.vy = 0; def.y = gndY(def); def.juggle = 0; def.invul = 0; }
   if (airH(att) > 2 && att.state === 'attack') att.vy = Math.min(att.vy, -170);
   ev.cn = def.comboHits; ev.dd = dmg;
   if (def.hp <= 0 && M.phase === 'fight') {
-    def.vx = fx * 480; def.vy = Math.min(def.vy, -520); def.state = 'launched'; def.y = Math.min(def.y, -1);
+    def.vx = fx * 480; def.vy = Math.min(def.vy, -520); def.state = 'launched'; def.plat = -1; def.y = Math.min(def.y - 1, -1);
     fighterDown(def, att, ev);
   }
   hitVisual(ev); netEmit(ev);
