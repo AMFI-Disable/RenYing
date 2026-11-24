@@ -1533,9 +1533,6 @@ body.has-nav .scr:not(.menuscr) > .panel { margin: auto; }
 .ad-dev-row b { color: #fff; font-weight: 600; }
 .ad-dev-row span { flex: 1; color: rgba(236,232,225,.62); }
 .ad-dev-row .ad-dev-me { color: #7fe0a8; font-style: normal; }
-.home-hub { position: relative; z-index: 6; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 10px auto 0; max-width: 720px; }
-.hub-pill { padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(233,196,106,.38); background: rgba(12,16,32,.78); color: #efe8d8; font-size: 12.5px; cursor: pointer; transition: border-color .2s, background .2s, transform .15s; }
-.hub-pill:hover { border-color: #e9c46a; background: rgba(233,196,106,.16); transform: translateY(-1px); }
 .xiwu-large-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(233,196,106,.24); }
 .xl-lbl { font-size: 12.5px; color: #e9c46a; font-weight: 600; }
 #endTitle.ink-title { font-family: var(--title); font-weight: 400; letter-spacing: .04em; white-space: nowrap; font-size: clamp(44px, 7vw, 92px); line-height: 1.1; margin: 4px 0 6px; color: #efe6d6; text-shadow: 0 2px 0 rgba(0,0,0,.35), 0 0 26px rgba(0,0,0,.45); display: flex; align-items: center; justify-content: center; gap: .02em; }
@@ -3704,11 +3701,6 @@ max-width: min(2200px, 90vw);
 grid-template-columns: repeat(5, minmax(0, 1fr));
 gap: 16px;
 }
-.home-hub {
-max-width: 1220px;
-grid-template-columns: repeat(3, minmax(0, 1fr));
-gap: 14px;
-}
 .cx-hero-list {
 max-height: 180px;
 gap: 8px;
@@ -4007,6 +3999,228 @@ border-radius: 12px;
 background: rgba(14, 17, 32, 0.56);
 border: 1px solid rgba(239, 232, 216, 0.12);
 }
+.train-lab {
+position: fixed;
+right: calc(14px + env(safe-area-inset-right));
+top: calc(108px + env(safe-area-inset-top));
+bottom: calc(64px + env(safe-area-inset-bottom));
+width: min(352px, 32vw);
+min-width: 268px;
+z-index: 16;
+display: flex;
+flex-direction: column;
+background: rgba(9, 12, 24, 0.84);
+border: 1px solid rgba(233, 196, 106, 0.36);
+border-radius: 10px;
+box-shadow: 0 12px 34px rgba(0, 0, 0, 0.45);
+backdrop-filter: blur(8px);
+-webkit-backdrop-filter: blur(8px);
+color: #efe8d8;
+font-size: 12.5px;
+overflow: hidden;
+}
+.train-lab.hidden { display: none; }
+.tlab-head {
+display: flex;
+align-items: center;
+gap: 8px;
+padding: 8px 11px;
+background: linear-gradient(90deg, rgba(233, 196, 106, 0.14), rgba(14, 18, 34, 0.4));
+border-bottom: 1px solid rgba(233, 196, 106, 0.22);
+}
+.tlab-head b {
+font-family: var(--title);
+font-size: 16px;
+color: #e9c46a;
+letter-spacing: 0.04em;
+}
+.tlab-opp {
+font-size: 11.5px;
+padding: 1px 7px;
+border-radius: 99px;
+background: rgba(255, 255, 255, 0.08);
+color: rgba(239, 232, 216, 0.82);
+margin-right: auto;
+}
+.tlab-min {
+width: 24px;
+height: 24px;
+border: 1px solid rgba(255, 255, 255, 0.2);
+border-radius: 5px;
+background: rgba(255, 255, 255, 0.06);
+color: #efe8d8;
+font-size: 15px;
+line-height: 1;
+cursor: pointer;
+}
+.tlab-min:hover { border-color: #e9c46a; color: #e9c46a; }
+.tlab-tabs {
+display: grid;
+grid-template-columns: repeat(4, minmax(0, 1fr));
+gap: 4px;
+padding: 6px 8px;
+border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+background: rgba(0, 0, 0, 0.22);
+}
+.tlab-tabs button {
+padding: 5px 4px;
+border: 1px solid rgba(255, 255, 255, 0.12);
+border-radius: 6px;
+background: rgba(255, 255, 255, 0.04);
+color: rgba(239, 232, 216, 0.72);
+font-size: 12px;
+cursor: pointer;
+white-space: nowrap;
+}
+.tlab-tabs button.sel {
+border-color: #e9c46a;
+background: rgba(233, 196, 106, 0.2);
+color: #fff2c8;
+font-weight: 700;
+}
+.tlab-body {
+flex: 1;
+overflow-y: auto;
+padding: 9px 11px 11px;
+display: flex;
+flex-direction: column;
+gap: 8px;
+scrollbar-width: thin;
+}
+.tlab-sec {
+padding: 7px 9px;
+border-radius: 8px;
+background: rgba(255, 255, 255, 0.035);
+border: 1px solid rgba(255, 255, 255, 0.09);
+display: flex;
+flex-direction: column;
+gap: 5px;
+}
+.tlab-sec.is-live {
+border-color: rgba(233, 196, 106, 0.85);
+box-shadow: 0 0 14px rgba(233, 196, 106, 0.26);
+background: rgba(233, 196, 106, 0.1);
+}
+.tlab-sec-h {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 6px;
+font-size: 12px;
+font-weight: 700;
+color: #e9c46a;
+}
+.tlab-bar-row { display: flex; flex-direction: column; gap: 2px; }
+.tlab-bar-meta {
+display: flex;
+justify-content: space-between;
+font-size: 11.5px;
+font-variant-numeric: tabular-nums;
+}
+.tlab-bar-meta span { color: rgba(239, 232, 216, 0.72); }
+.tlab-bar-meta b { color: #efe8d8; }
+.tlab-bar {
+height: 6px;
+border-radius: 99px;
+background: rgba(255, 255, 255, 0.1);
+overflow: hidden;
+}
+.tlab-bar i {
+display: block;
+height: 100%;
+border-radius: 99px;
+transition: width 0.08s linear;
+}
+.tlab-bar.hp i { background: linear-gradient(90deg, #32c987, #6ef2b8); }
+.tlab-bar.fury i { background: linear-gradient(90deg, #e09f3e, #ffe08a); }
+.tlab-bar.guard i { background: linear-gradient(90deg, #48b8f0, #9be7ff); }
+.tlab-bar.res i { background: linear-gradient(90deg, #a78bfa, #e0c3ff); }
+.tlab-cd-grid {
+display: grid;
+grid-template-columns: repeat(4, minmax(0, 1fr));
+gap: 4px;
+}
+.tlab-cd {
+padding: 4px 5px;
+border-radius: 6px;
+background: rgba(0, 0, 0, 0.28);
+border: 1px solid rgba(255, 255, 255, 0.1);
+text-align: center;
+font-variant-numeric: tabular-nums;
+}
+.tlab-cd.ready { border-color: rgba(94, 230, 176, 0.45); }
+.tlab-cd.ready b { color: #6ef2b8; }
+.tlab-cd.cool b { color: #ffd166; }
+.tlab-cd span { display: block; font-size: 10.5px; color: rgba(239, 232, 216, 0.68); }
+.tlab-cd b { display: block; font-size: 11.5px; margin-top: 1px; }
+.tlab-chips { display: flex; flex-wrap: wrap; gap: 4px; }
+.tlab-chip {
+font-size: 11px;
+padding: 2px 7px;
+border-radius: 99px;
+background: rgba(255, 255, 255, 0.07);
+border: 1px solid rgba(255, 255, 255, 0.16);
+color: #efe8d8;
+}
+.tlab-chip.buff { background: rgba(70, 211, 234, 0.16); border-color: rgba(70, 211, 234, 0.48); color: #9ff2ff; }
+.tlab-chip.debuff { background: rgba(255, 90, 95, 0.18); border-color: rgba(255, 90, 95, 0.52); color: #ffb3b6; }
+.tlab-chip.badge { background: rgba(233, 196, 106, 0.2); border-color: rgba(233, 196, 106, 0.6); color: #ffe799; }
+.tlab-chip.dim { color: rgba(239, 232, 216, 0.5); border-style: dashed; }
+.tlab-kv {
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 8px;
+font-size: 12px;
+font-variant-numeric: tabular-nums;
+}
+.tlab-kv span { color: rgba(239, 232, 216, 0.68); }
+.tlab-kv b { color: #efe8d8; }
+.tlab-desc {
+margin: 0;
+font-size: 11.5px;
+line-height: 1.45;
+color: rgba(239, 232, 216, 0.82);
+}
+.tlab-desc strong { color: #e9c46a; font-weight: 600; }
+.tlab-pill {
+font-size: 10.5px;
+padding: 1px 6px;
+border-radius: 99px;
+background: rgba(233, 196, 106, 0.16);
+border: 1px solid rgba(233, 196, 106, 0.4);
+color: #ffe799;
+}
+.tlab-pill.live {
+background: rgba(94, 230, 176, 0.22);
+border-color: rgba(94, 230, 176, 0.7);
+color: #84ffca;
+}
+.tlab-log { display: flex; flex-direction: column; gap: 4px; }
+.tlab-log-row {
+display: flex;
+flex-direction: column;
+gap: 1px;
+padding: 4px 6px;
+border-radius: 5px;
+background: rgba(0, 0, 0, 0.26);
+border-left: 2px solid #e9c46a;
+font-size: 11px;
+}
+.tlab-log-row.k-pet { border-left-color: #78ebcd; }
+.tlab-log-row.k-parry { border-left-color: #78e6ff; }
+.tlab-log-row.k-break { border-left-color: #ff7850; }
+.tlab-log-row.k-stance { border-left-color: #c79cff; }
+.tlab-log-row b { color: #efe8d8; }
+.tlab-log-row span { color: rgba(239, 232, 216, 0.68); }
+.tlab-attr-grid {
+display: grid;
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: 5px 10px;
+}
+@media (max-width: 760px) {
+.train-lab { width: min(310px, calc(100vw - 24px)); top: 84px; bottom: 72px; }
+}
 </style>
 </head>
 <body>
@@ -4140,11 +4354,7 @@ border: 1px solid rgba(239, 232, 216, 0.12);
       <button class="mcard right" id="mMatch" data-go="netp" data-kb-default><span class="mk">联机对战</span><span class="ms">3v3 车轮战 · 排位与好友约战</span></button>
       <button class="mcard left" id="mPlay" data-go="single"><span class="mk">习武</span><span class="ms">人机切磋 · 8v8 团战 · 历练闯关</span></button>
     </div>
-    <div class="home-hub" id="homeHub">
-      <button type="button" class="hub-pill" id="hubLargeBtn">大型团战 8v8</button>
-      <button type="button" class="hub-pill" id="hubLoadoutBtn">灵宠 · 招式 · 徽记</button>
-      <button type="button" class="hub-pill" id="hubHeroesBtn">二十侠客 · 三大套装</button>
-    </div>
+
     <div class="home-hero" id="homeHero">   <!-- 跟着首页正中那位侠客的脚下走：上面是名字，下面是换侠客 -->
       <div class="hh-name" id="heroName"></div>
       <div class="hh-swapwrap" id="homeSub">   <!-- 点开一排头像，选谁首页正中就站谁，进点将台也先指着他 -->
@@ -5455,8 +5665,26 @@ border: 1px solid rgba(239, 232, 216, 0.12);
     <div class="db-feats" id="dummyFeats"></div>
     <p class="db-note" id="dummyNote"></p>
   </div>
+  <!-- 习武训练场：实时状态、徽记灵宠机制解析与战斗数据面板 -->
+  <aside class="train-lab hidden" id="trainLab" aria-label="训练场状态与机制面板">
+    <div class="tlab-head">
+      <b id="trainLabHero">训练状态</b>
+      <span class="tlab-opp" id="trainLabOpp">木人桩</span>
+      <button class="tlab-min" id="trainLabMin" type="button" title="收起面板" aria-label="收起面板">−</button>
+    </div>
+    <div class="tlab-tabs" id="trainLabTabs" role="tablist">
+      <button type="button" role="tab" data-tltab="status" class="sel" aria-selected="true">状态</button>
+      <button type="button" role="tab" data-tltab="loadout" aria-selected="false">徽记与灵宠</button>
+      <button type="button" role="tab" data-tltab="stats" aria-selected="false">战绩</button>
+      <button type="button" role="tab" data-tltab="attrs" aria-selected="false">属性</button>
+    </div>
+    <div class="tlab-body" id="trainLabBody"></div>
+  </aside>
   <div class="train-inspect hidden" id="trainInspect" aria-label="训练帧控制">
-    <button class="train-inspect-hitbox" id="trainHitboxBtn" type="button" aria-pressed="false">F1 判定框：关</button>
+    <button id="trainLabToggle" type="button" aria-pressed="true">状态面板：开</button>
+    <button class="train-inspect-hitbox" id="trainHitboxBtn" type="button" aria-pressed="true">F1 判定框：开</button>
+    <button id="trainFullMeterBtn" type="button" title="回满真元并清除技能与灵宠冷却">满怒清冷</button>
+    <button id="trainResetBtn" type="button" title="重置双方位置、气血、架势与统计">重置状态</button>
     <label class="train-inspect-rate" for="trainHz"><span>模拟频率</span><input id="trainHz" type="range" min="1" max="120" step="1" value="120"><output id="trainHzValue" for="trainHz">120 Hz</output></label>
     <button id="trainPauseBtn" type="button" aria-pressed="false">暂停时间</button>
     <button id="trainStepBtn" type="button" disabled>推进 1 帧</button>
@@ -11930,9 +12158,6 @@ Object.assign(UI_COPY_EN, {
 "灵宠": "Pet",
 "招式自选流派": "Custom Skill Variants",
 "人机切磋 · 8v8 团战 · 历练闯关": "Play vs AI · 8v8 Battles · Story & Trials",
-"大型团战 8v8": "Large-Scale 8v8",
-"灵宠 · 招式 · 徽记": "Pets · Skills · Badges",
-"二十侠客 · 三大套装": "20 Heroes · 3 Skin Sets",
 "大型团战": "Large-Scale",
 "3v3–8v8 混战、夺旗与无尽": "3v3–8v8 Melee, CTF & Endless",
 "群雄会战": "Grand Melee",
@@ -12018,7 +12243,17 @@ Object.assign(UI_COPY_EN, {
 "Q/R 技能冷却略减": "Q/R skills have slightly shorter cooldowns",
 "连弩齐发：齐射三枚追踪机矢": "Repeating Volley (fire three homing bolts)",
 "镜头": "Zoom",
-"待选": "Open"
+"待选": "Open",
+"训练场状态与机制面板": "Training Status & Mechanics Panel",
+"训练状态": "Training Status",
+"收起面板": "Collapse Panel",
+"徽记与灵宠": "Badges & Pets",
+"状态面板：开": "Status Panel: On",
+"状态面板：关": "Status Panel: Off",
+"满怒清冷": "Full Fury & CDs",
+"重置状态": "Reset State",
+"回满真元并清除技能与灵宠冷却": "Fill Fury and reset all skill and pet cooldowns",
+"重置双方位置、气血、架势与统计": "Reset positions, HP, guard, and training stats"
 });
 Object.assign(UI_COPY_EN, {
 "旧版本录的，可能对不上": "Recorded with an older version. Playback may differ.",
@@ -19696,7 +19931,7 @@ this.job = null; this.wait = c.gap;
 if (!c.rep) this.done = true;
 }
 }
-const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0, inspectHz: 120, inspectAcc: 0, inspectPaused: false };
+const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0, lastHitDmg: 0, maxHitDmg: 0, hitCount: 0, parries: 0, breaks: 0, events: [], lastBadgeT: -99, lastBadgeMsg: '', lastPetT: -99, lastStanceT: -99, labOpen: true, labTab: 'status', inspectHz: 120, inspectAcc: 0, inspectPaused: false };
 const HERO_AI_REGISTRY = {};
 function registerHeroAI(heroId, mode = '*', variant = '*', spec = {}) {
 HERO_AI_REGISTRY[`${heroId}:${mode}:${variant}`] = spec;
@@ -34151,7 +34386,7 @@ announceQueue.push(item);
 function randomPair() { const a = Math.random() * CHARS.length | 0; let b = Math.random() * (CHARS.length - 1) | 0; if (b >= a) b++; return [a, b]; }
 function netDropWaiting() { if (!NET.open && p2pActive()) { netLeave(); $id('roomCode').textContent = ''; netStatus(''); } }
 function startMatch(mode, level, chars, isWatch = false) {
-debugHitbox = false;
+debugHitbox = mode === 'train';
 TRAIN.inspectHz = 120; TRAIN.inspectAcc = 0; TRAIN.inspectPaused = false;
 if (mode !== 'demo') refocusGame();
 if (mode !== 'net' && mode !== 'demo' && mode !== 'replay') netDropWaiting();
@@ -36699,6 +36934,17 @@ const stDesc = `${f.state}${f.stun > 0 ? ` (硬直 ${Math.round(f.stun / STEP)}F
 ctx.fillStyle = advText.includes('+') ? '#70ff90' : advText.includes('-') ? '#ff7070' : '#efe8d8';
 ctx.fillText(stDesc, f.x, f.y - 125 * (f.size || 1));
 }
+if (typeof projs !== 'undefined' && Array.isArray(projs)) {
+for (const p of projs) {
+if (!p || !p.w || !p.h) continue;
+const x0 = p.x - p.w / 2, y0 = p.y - p.h / 2;
+ctx.strokeStyle = p.owner === 0 ? 'rgba(80, 235, 255, 0.92)' : 'rgba(255, 145, 70, 0.92)';
+ctx.fillStyle = p.owner === 0 ? 'rgba(80, 235, 255, 0.2)' : 'rgba(255, 145, 70, 0.2)';
+ctx.lineWidth = 1.5;
+ctx.fillRect(x0, y0, p.w, p.h);
+ctx.strokeRect(x0, y0, p.w, p.h);
+}
+}
 ctx.restore();
 }
 function tryHit(f, foe, m) {
@@ -37201,7 +37447,27 @@ if (ev.ko) hitstop = 0.28;
 function hitVisual(ev, quiet) {
 const att = fighterByIdx(ev.a), def = fighterByIdx(ev.d);
 if (M.combatStats && M.combatStats[ev.a]) { const s = M.combatStats[ev.a]; s.damage += ev.dd || 0; s.combo = Math.max(s.combo, ev.cn || 0); if (ev.guardBreak) s.breaks++; }
-if (!RESIM && !quiet && M.mode === 'train' && ev.d === 1 && !ev.justGuard) { TRAIN.total += ev.dd || 0; TRAIN.hits.push([clock, ev.dd || 0]); TRAIN.frameProbe = { start: clock, attacker: null, defender: null }; }
+if (!RESIM && !quiet && M.mode === 'train') {
+if (ev.justGuard && ev.d === 0) {
+TRAIN.parries = (TRAIN.parries || 0) + 1;
+if (typeof trainLogEvent === 'function') trainLogEvent('parry', '精准招架', '免伤 +12 架势，敌手硬直');
+}
+if (ev.guardBreak && ev.a === 0) {
+TRAIN.breaks = (TRAIN.breaks || 0) + 1;
+if (typeof trainLogEvent === 'function') trainLogEvent('break', '破防崩势', '击溃敌方架势，硬直 0.85s');
+}
+if (ev.d === 1 && !ev.justGuard) {
+const dd = ev.dd || 0;
+TRAIN.total += dd;
+TRAIN.hits.push([clock, dd]);
+if (dd > 0) {
+TRAIN.lastHitDmg = dd;
+TRAIN.hitCount = (TRAIN.hitCount || 0) + 1;
+if (dd > (TRAIN.maxHitDmg || 0)) TRAIN.maxHitDmg = dd;
+}
+TRAIN.frameProbe = { start: clock, attacker: null, defender: null };
+}
+}
 if (RESIM) { hitStopOf(ev, att); return; }   // 重算：只保留影响对战的顿帧
 if (!quiet) hitStopOf(ev, att);
 if (quiet) {   // 效果已经提前播过了，只更新连击数
@@ -43447,6 +43713,7 @@ const cu = comboUI[0];
 if (cu.t > 0 && cu.n > TRAIN.best) { TRAIN.best = cu.n; }
 if (cu.t > 0 && cu.dmg > TRAIN.bestDmg) TRAIN.bestDmg = cu.dmg;
 while (TRAIN.hits.length && clock - TRAIN.hits[0][0] > 5) TRAIN.hits.shift();
+if (TRAIN.labOpen && typeof $id === 'function' && $id('trainLab') && !$id('trainLab').classList.contains('hidden')) return;
 const dps = TRAIN.hits.reduce((a, h) => a + h[1], 0) / 5;
 const x = W - Math.max(24, W * 0.04), y = top + bh + 80, fs = Math.max(13, Math.round(H * 0.019));
 const lines = [
@@ -45450,16 +45717,6 @@ menuGo(b.dataset.go);
 for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', backToMenu);
 (function initExpansionHome() {
 let meleeTeamSize = 5, ctfTeamSize = 5;
-if ($id('hubLargeBtn')) $id('hubLargeBtn').addEventListener('click', () => {
-openScreen('single');
-const tab = document.querySelector('#xiwuCatTabs [data-cat="large"]');
-if (tab) tab.click();
-});
-if ($id('hubLoadoutBtn')) $id('hubLoadoutBtn').addEventListener('click', () => {
-openScreen('armory');
-setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="badges"]'); if (t) t.click(); }, 60);
-});
-if ($id('hubHeroesBtn')) $id('hubHeroesBtn').addEventListener('click', () => openScreen('codex'));
 const meleeSeg = $id('meleeSizeSeg');
 if (meleeSeg) meleeSeg.addEventListener('click', e => {
 const b = e.target.closest('[data-lsize]'); if (!b) return;
@@ -49346,8 +49603,259 @@ const ok = dummyBarAvail(), btn = $id('dummyBarBtn');
 if (btn) btn.classList.toggle('hidden', !ok || DB.open || !!document.querySelector('.scr.on'));
 if (DB.open && !ok) dummyBarShow(false);
 }
+let _tlabLastDraw = 0;
+function trainLogEvent(kind, title, detail = '') {
+if (!Array.isArray(TRAIN.events)) TRAIN.events = [];
+TRAIN.events.unshift({ t: clock || 0, kind, title, detail });
+if (TRAIN.events.length > 8) TRAIN.events.length = 8;
+}
+function trainLabFullMeter() {
+if (M.mode !== 'train' || !A) return;
+A.meter = 100;
+A.skillCD = 0; A.skill2CD = 0; A.dashCD = 0; A.feintCD = 0; A.qiParryCD = 0; A.petCD = 0; A.iaidoCD = 0; A.grappleCD = 0;
+A.guard = A.maxGuard || 100;
+A.hp = A.lagHp = A.maxHp;
+if (A.ch && A.ch.id === 'moyu') A.ink = INK_MAX;
+if (A.ch && A.ch.passive === 'drunk') A.drunk = 100;
+if (A.ch && A.ch.fly) A.flyT = A.ch.fly;
+trainLogEvent('stance', '满怒清冷', '真元已满，技能与灵宠冷却已重置');
+SFX.slice && SFX.slice();
+_tlabLastDraw = 0;
+trainLabRender(true);
+}
+function trainLabReset() {
+if (M.mode !== 'train' || !A || !B) return;
+A.reset(STAGE_W / 2 - 180); A.face = 1; A.meter = 0;
+const isDummy = !!B.dummy;
+B.reset(isDummy && dummyCfg.fixed ? STAGE_W / 2 : STAGE_W / 2 + 120);
+B.face = -1; B.meter = 0;
+if (isDummy) { B.maxHp = B.hp = B.lagHp = 300; }
+if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts();
+Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0, lastHitDmg: 0, maxHitDmg: 0, hitCount: 0, parries: 0, breaks: 0, events: [], advantage: null, frameProbe: null, lastBadgeT: -99, lastBadgeMsg: '', lastPetT: -99, lastStanceT: -99 });
+for (const cu of comboUI) { cu.n = 0; cu.dmg = 0; cu.t = 0; }
+projs.length = 0;
+SFX.slice && SFX.slice();
+_tlabLastDraw = 0;
+trainLabRender(true);
+}
+function _tlabBuffs(f) {
+const list = [];
+if (!f) return list;
+const add = (cls, text) => list.push(`<span class="tlab-chip ${cls}">${text}</span>`);
+if ((f.armorT || 0) > 0) add('buff', `霸体 ${f.armorT.toFixed(1)}s${f.armorHits > 0 ? ` (${f.armorHits}次)` : ''}`);
+if ((f.invul || 0) > 0 && f.invul < 20) add('buff', `无敌 ${f.invul.toFixed(2)}s`);
+if ((f.parryT || 0) > 0 || (f.qiParryT || 0) > 0 || (f.thunderGuardT || 0) > 0) add('buff', '弹反架势中');
+if ((f.reflectT || 0) > 0) add('buff', `反弹 ${f.reflectT.toFixed(1)}s`);
+if ((f.buffT || 0) > 0) add('buff', `增伤 +50% (${f.buffT.toFixed(1)}s)`);
+if ((f.twinT || 0) > 0) add('buff', `双风强化 ${f.twinT.toFixed(1)}s`);
+if (f.stance === 1 && f.stanceUnlocked) add('buff', `二式 · ${(HERO_STANCES[f.ch.id] || {}).name || '切换态'}`);
+if ((f.badgeLinkT || 0) > 0) add('badge', `连势追步 ${f.badgeLinkT.toFixed(2)}s`);
+if ((f.badgePressureT || 0) > 0) add('badge', `凝锋压迫 ${f.badgePressureT.toFixed(2)}s`);
+if ((f.badgeRiposteT || 0) > 0) add('badge', `回锋反击 ${f.badgeRiposteT.toFixed(2)}s`);
+if ((f.badgeBreakT || 0) > 0) add('badge', `破军追击 ${f.badgeBreakT.toFixed(2)}s`);
+if ((f.badgeAirSkillT || 0) > 0) add('badge', `凌空续招 ${f.badgeAirSkillT.toFixed(2)}s`);
+if ((f.badgeExitT || 0) > 0) add('badge', `追影退步 ${f.badgeExitT.toFixed(2)}s`);
+if ((f.badgeDashT || 0) > 0) add('badge', `闪避窗口 ${f.badgeDashT.toFixed(2)}s`);
+if ((f.shadowExecT || 0) > 0) add('badge', `影落破势就绪 [R] ${f.shadowExecT.toFixed(1)}s`);
+if ((f.stun || 0) > 0) add('debuff', `硬直 ${Math.round(f.stun / STEP)}F`);
+if ((f.slowT || 0) > 0 || (f.frostSlow || 0) > 0) add('debuff', `减速 ${Math.max(f.slowT || 0, f.frostSlow || 0).toFixed(1)}s`);
+if ((f.burnT || 0) > 0) add('debuff', `灼烧 ${f.burnT.toFixed(1)}s`);
+if ((f.defDebuffT || 0) > 0) add('debuff', `破甲 ${f.defDebuffT.toFixed(1)}s`);
+if ((f.acupointT || 0) > 0) add('debuff', `点穴封脉 ${f.acupointT.toFixed(1)}s`);
+if (f.rooted) add('debuff', '定身');
+if ((f.jailT || 0) > 0) add('debuff', `禁锢 ${f.jailT.toFixed(1)}s`);
+if ((f.veilT || 0) > 0) add('debuff', `蓬莱境 ${f.veilT.toFixed(1)}s`);
+if ((f.needleMark || 0) > 0) add('debuff', `雀芒 ×${f.needleMark}`);
+if ((f.shadowMarks || 0) > 0) add('debuff', `影印 ${f.shadowMarks}/25`);
+if ((f.fu || 0) > 0) add('debuff', `符印 ×${f.fu}`);
+return list;
+}
+function trainLabRender(force = false) {
+const panel = $id('trainLab'), body = $id('trainLabBody');
+if (!panel || !body || !A || !B) return;
+const nowMs = typeof performance !== 'undefined' ? performance.now() : Date.now();
+if (!force && nowMs - _tlabLastDraw < 65) return;
+_tlabLastDraw = nowMs;
+const heroTitle = $id('trainLabHero'), oppTag = $id('trainLabOpp');
+if (heroTitle) heroTitle.textContent = `${A.ch.name} · ${cvT('训练状态')}`;
+if (oppTag) oppTag.textContent = B.dummy ? (B.ctrl instanceof DummyCtrl ? dummyActName(B.ctrl.cfg) : '木人桩') : `AI · ${LV_NAME[trainAiLevel] || trainAiLevel}`;
+const tab = TRAIN.labTab || 'status';
+const hpPct = Math.round(clamp(A.hp / Math.max(1, A.maxHp), 0, 1) * 100);
+const furyPct = Math.round(clamp((A.meter || 0) / 100, 0, 1) * 100);
+const gMax = Math.max(1, A.maxGuard || 100);
+const gPct = Math.round(clamp((A.guard || 0) / gMax, 0, 1) * 100);
+if (tab === 'status') {
+const cdCell = (lbl, val, readyTxt = '就绪') => {
+const rdy = !(val > 0.04);
+return `<div class="tlab-cd ${rdy ? 'ready' : 'cool'}"><span>${lbl}</span><b>${rdy ? readyTxt : val.toFixed(1) + 's'}</b></div>`;
+};
+const sk1Nm = (A.ch.skillName || 'Q 技能').slice(0, 4);
+const sk2Nm = (A.ch.skill2Name || 'R 特殊').slice(0, 4);
+const ultReady = (A.meter || 0) >= 100;
+const resRows = [];
+if (A.ch.id === 'moyu') resRows.push(`<div class="tlab-bar-row"><div class="tlab-bar-meta"><span>墨韵资源</span><b>${Math.round(A.ink || 0)} / ${INK_MAX}</b></div><div class="tlab-bar res"><i style="width:${Math.round(((A.ink || 0) / INK_MAX) * 100)}%"></i></div></div>`);
+if (A.ch.passive === 'drunk') resRows.push(`<div class="tlab-bar-row"><div class="tlab-bar-meta"><span>醉意 (+${Math.round((A.drunk || 0) * 0.5)}% 伤)</span><b>${Math.round(A.drunk || 0)} / 100</b></div><div class="tlab-bar res"><i style="width:${Math.round(A.drunk || 0)}%"></i></div></div>`);
+if (A.ch.passive === 'rhythm') resRows.push(`<div class="tlab-bar-row"><div class="tlab-bar-meta"><span>音律层数</span><b>${A.notes || 0} / 3</b></div><div class="tlab-bar res"><i style="width:${Math.round(((A.notes || 0) / 3) * 100)}%"></i></div></div>`);
+if (A.ch.passive === 'magnet') resRows.push(`<div class="tlab-kv"><span>当前磁极</span><b>${A.pol > 0 ? '⊕ 正极 (高伤斥力)' : '⊖ 负极 (吸附牵引)'}</b></div>`);
+if (A.ch.fly) resRows.push(`<div class="tlab-bar-row"><div class="tlab-bar-meta"><span>滞空气力</span><b>${(A.flyT || 0).toFixed(1)} / ${A.ch.fly}s</b></div><div class="tlab-bar res"><i style="width:${Math.round(clamp((A.flyT || 0) / A.ch.fly, 0, 1) * 100)}%"></i></div></div>`);
+if (A.ch.passive === 'mist') resRows.push(`<div class="tlab-kv"><span>场上雾身 / 敌方影印</span><b>${(A.clones || []).length} 身 · ${B.shadowMarks || 0}/25 印</b></div>`);
+const myChips = _tlabBuffs(A), foeChips = _tlabBuffs(B);
+body.innerHTML = `
+<div class="tlab-sec">
+<div class="tlab-sec-h"><span>我方核心状态 (${A.state})</span><span class="tlab-pill">${A.stance ? ((HERO_STANCES[A.ch.id] || {}).name || '二式') : '本式'}</span></div>
+<div class="tlab-bar-row"><div class="tlab-bar-meta"><span>气血 HP</span><b>${Math.round(A.hp)} / ${Math.round(A.maxHp)} (${hpPct}%)</b></div><div class="tlab-bar hp"><i style="width:${hpPct}%"></i></div></div>
+<div class="tlab-bar-row"><div class="tlab-bar-meta"><span>真元 / 怒气</span><b>${Math.round(A.meter || 0)} / 100${ultReady ? ' · 奥义就绪' : ''}</b></div><div class="tlab-bar fury"><i style="width:${furyPct}%"></i></div></div>
+<div class="tlab-bar-row"><div class="tlab-bar-meta"><span>架势 Guard</span><b>${Math.round(A.guard || 0)} / ${Math.round(gMax)} (${gPct}%)</b></div><div class="tlab-bar guard"><i style="width:${gPct}%"></i></div></div>
+${resRows.join('')}
+</div>
+<div class="tlab-sec">
+<div class="tlab-sec-h"><span>招式与机动冷却</span></div>
+<div class="tlab-cd-grid">
+${cdCell(`Q ${sk1Nm}`, A.skillCD || 0)}
+${cdCell(`R ${sk2Nm}`, A.skill2CD || 0)}
+<div class="tlab-cd ${ultReady ? 'ready' : 'cool'}"><span>E 奥义</span><b>${ultReady ? '满气' : furyPct + '%'}</b></div>
+${cdCell('腾空闪', A.dashCD || 0)}
+${cdCell('C 虚招', A.feintCD || 0)}
+${cdCell('F 弹反', A.qiParryCD || 0)}
+${A.petId ? cdCell('V 灵宠', A.petCD || 0) : '<div class="tlab-cd"><span>V 灵宠</span><b>未携</b></div>'}
+${cdCell('架势', A.stanceT || 0, A.stanceUnlocked ? '可切' : '未解')}
+</div>
+</div>
+<div class="tlab-sec">
+<div class="tlab-sec-h"><span>当前增益 / 减益</span></div>
+<div class="tlab-chips">${myChips.length ? myChips.join('') : '<span class="tlab-chip dim">无激活中的增益或减益</span>'}</div>
+</div>
+<div class="tlab-sec">
+<div class="tlab-sec-h"><span>对手状态 (${B.state})</span><span>HP ${Math.round(B.hp)}/${Math.round(B.maxHp)} · 架势 ${Math.round(B.guard || 0)}</span></div>
+<div class="tlab-chips">${foeChips.length ? foeChips.join('') : '<span class="tlab-chip dim">对手当前无异常状态</span>'}</div>
+</div>`;
+} else if (tab === 'loadout') {
+const bSpec = A.badgeId && COMBAT_BADGES[A.badgeId];
+const bTierNames = { silver: '白银阶', gold: '黄金阶', purpgold: '紫金阶' };
+const bTierIdx = A.badgeTier === 'purpgold' ? 2 : A.badgeTier === 'gold' ? 1 : 0;
+const bActiveWin = Math.max(A.badgeLinkT || 0, A.badgePressureT || 0, A.badgeRiposteT || 0, A.badgeBreakT || 0, A.badgeAirSkillT || 0, A.badgeExitT || 0);
+const bLive = (clock - (TRAIN.lastBadgeT || -99)) < 1.8 || bActiveWin > 0;
+const pSpec = A.petId && COMBAT_PETS[A.petId];
+const pTierNames = { basic: '初阶 1.0×', spirit: '灵阶 1.25×', immortal: '仙阶 1.55×' };
+const pLive = (clock - (TRAIN.lastPetT || -99)) < 1.8;
+const stSpec = HERO_STANCES[A.ch.id];
+const stLive = (clock - (TRAIN.lastStanceT || -99)) < 1.5;
+const sm = A.skillMod || { q: 'std', r: 'std', e: 'std' };
+const modDesc = (slot, key) => {
+const m = (SKILL_MODS && SKILL_MODS[key]) || { name: '本宗', cd: 1, dmg: 1, guard: 1 };
+const fx = key === 'swift' ? '冷却 -18%，伤害 -8%' : key === 'heavy' ? '伤害 +18%，破防 +25%，冷却 +16%' : '均衡标准参数';
+return `<div class="tlab-kv"><span>${slot.toUpperCase()} 招式流派 · <b>${m.name}</b></span><span>${fx}</span></div>`;
+};
+body.innerHTML = `
+<div class="tlab-sec${bLive ? ' is-live' : ''}">
+<div class="tlab-sec-h"><span>武学徽记 · ${bSpec ? `${bSpec.n} (${bTierNames[A.badgeTier] || '白银阶'})` : '未装配'}</span><span class="tlab-pill${bLive ? ' live' : ''}">${bSpec ? (bActiveWin > 0 ? `生效中 ${bActiveWin.toFixed(2)}s` : bLive ? (TRAIN.lastBadgeMsg || '已触发') : A.badgeId === 'ironwall' ? `格挡 ${A.badgeBlockCnt || 0}/3` : '待触发') : '未装配'}</span></div>
+${bSpec ? `
+<p class="tlab-desc"><strong>触发条件：</strong>${bSpec.trigger}</p>
+<p class="tlab-desc"><strong>机制说明：</strong>${bSpec.effect}</p>
+<p class="tlab-desc"><strong>当前品阶效果：</strong>${(bSpec.tiers && bSpec.tiers[bTierIdx]) || bSpec.effect}</p>
+` : '<p class="tlab-desc">当前侠客未装配徽记。前往「英雄」或「武库 → 徽记」即可一键装配并在训练场实时验证触发效果。</p>'}
+</div>
+<div class="tlab-sec${pLive ? ' is-live' : ''}">
+<div class="tlab-sec-h"><span>随行灵宠 · ${pSpec ? `${pSpec.n} (${pTierNames[A.petTier] || '初阶'})` : '未携带'}</span><span class="tlab-pill${pSpec && !(A.petCD > 0.05) ? ' live' : ''}">${pSpec ? ((A.petCD || 0) > 0.05 ? `冷却 ${A.petCD.toFixed(1)}s` : 'V 键就绪') : '未携带'}</span></div>
+${pSpec ? `
+<p class="tlab-desc"><strong>常驻被动：</strong>${pSpec.passive || '随行协同增益'}</p>
+<p class="tlab-desc"><strong>主动秘技 [V]：</strong>${pSpec.active || '发动灵宠秘技'}</p>
+<p class="tlab-desc"><strong>触发方式：</strong>按 V 键释放（基础冷却 ${pSpec.cd}s，品阶越高倍率越高且冷却更短）。</p>
+` : '<p class="tlab-desc">当前未携带灵宠。可在「武库 → 灵宠」收养并携宠出战，在训练场按 V 键实时观测效果。</p>'}
+</div>
+<div class="tlab-sec${stLive ? ' is-live' : ''}">
+<div class="tlab-sec-h"><span>架势与招式流派</span><span class="tlab-pill">${A.stance ? (stSpec ? stSpec.name : '二式') : '本式'}</span></div>
+<p class="tlab-desc"><strong>当前架势：</strong>${A.stance && stSpec ? `${stSpec.name} — ${stSpec.desc}` : `本式 — 标准均衡参数。${A.stanceUnlocked && stSpec ? `按架势键可随时切换「${stSpec.name}」：${stSpec.desc}` : '（累计 20 斩可解锁二式架势）'}`}</p>
+${modDesc('q', sm.q)}${modDesc('r', sm.r)}${modDesc('e', sm.e)}
+</div>
+<div class="tlab-sec">
+<div class="tlab-sec-h"><span>侠客固有被动 · ${A.ch.passiveName || A.ch.passive || '门派心法'}</span></div>
+<p class="tlab-desc">${A.ch.passiveDesc || A.ch.desc || '该侠客拥有专属武器机制与门派连携特性。'}</p>
+</div>`;
+} else if (tab === 'stats') {
+const cu = comboUI[0] || { n: 0, dmg: 0, t: 0 };
+const dps = TRAIN.hits.reduce((acc, h) => acc + h[1], 0) / 5;
+const advTxt = TRAIN.advantage == null ? '—' : `${TRAIN.advantage >= 0 ? '+' : ''}${TRAIN.advantage}F`;
+const logs = (TRAIN.events || []).slice(0, 6);
+body.innerHTML = `
+<div class="tlab-sec">
+<div class="tlab-sec-h"><span>实时战斗统计</span><span class="tlab-pill">命中 ${TRAIN.hitCount || 0} 次</span></div>
+<div class="tlab-kv"><span>当前连击</span><b>${cu.t > 0 ? `${cu.n} 段 · ${Math.round(cu.dmg)} 伤` : '—'}</b></div>
+<div class="tlab-kv"><span>最高连击</span><b>${TRAIN.best || 0} 段 · ${Math.round(TRAIN.bestDmg || 0)} 伤</b></div>
+<div class="tlab-kv"><span>最近单次 / 单击峰值</span><b>${Math.round(TRAIN.lastHitDmg || 0)} / ${Math.round(TRAIN.maxHitDmg || 0)}</b></div>
+<div class="tlab-kv"><span>累计伤害 / 5s DPS</span><b>${Math.round(TRAIN.total || 0)} · ${dps.toFixed(1)}/s</b></div>
+<div class="tlab-kv"><span>帧优势 (Frame Adv)</span><b>${advTxt}</b></div>
+<div class="tlab-kv"><span>精准招架 / 破防次数</span><b>${TRAIN.parries || 0} 次 / ${TRAIN.breaks || 0} 次</b></div>
+</div>
+<div class="tlab-sec">
+<div class="tlab-sec-h"><span>实时机制触发记录</span></div>
+<div class="tlab-log">${logs.length ? logs.map(ev => `<div class="tlab-log-row k-${ev.kind}"><b>${ev.title} <small style="opacity:.6">(${ev.t.toFixed(1)}s)</small></b>${ev.detail ? `<span>${ev.detail}</span>` : ''}</div>`).join('') : '<span class="tlab-chip dim">施放招式、触发徽记/灵宠/招架/破防后将在此实时记录</span>'}</div>
+</div>`;
+} else {
+const st = A.ch.stat || {};
+body.innerHTML = `
+<div class="tlab-sec">
+<div class="tlab-sec-h"><span>${A.ch.name} · 核心战斗属性</span><span class="tlab-pill">${A.ch.title || '侠客'}</span></div>
+<div class="tlab-attr-grid">
+<div class="tlab-kv"><span>最大气血</span><b>${Math.round(A.maxHp)}</b></div>
+<div class="tlab-kv"><span>架势上限</span><b>${Math.round(A.maxGuard || 100)}</b></div>
+<div class="tlab-kv"><span>架势稳固</span><b>${((st.guardStab || 1)).toFixed(2)}×</b></div>
+<div class="tlab-kv"><span>格挡磨血</span><b>${Math.round(((st.guardChip || 0.12)) * 100)}%</b></div>
+<div class="tlab-kv"><span>体量权重</span><b>${((st.weight || 1)).toFixed(2)}</b></div>
+<div class="tlab-kv"><span>护甲减伤</span><b>${((st.defRating || 1)).toFixed(2)}×</b></div>
+<div class="tlab-kv"><span>抗硬直韧性</span><b>${((st.poise || 1)).toFixed(2)}×</b></div>
+<div class="tlab-kv"><span>移动速度</span><b>${((st.walk || 1)).toFixed(2)}×</b></div>
+<div class="tlab-kv"><span>出招速度</span><b>${((st.speed || 1)).toFixed(2)}×</b></div>
+<div class="tlab-kv"><span>攻击距离</span><b>${((st.reach || 1)).toFixed(2)}×</b></div>
+<div class="tlab-kv"><span>连段衰减</span><b>-${Math.round(((A.ch.scaling || 0.08)) * 100)}%/段</b></div>
+<div class="tlab-kv"><span>真元获取</span><b>${((A.ch.meterMul || 1)).toFixed(2)}×</b></div>
+</div>
+</div>
+<div class="tlab-sec">
+<div class="tlab-sec-h"><span>判定框图例（默认开启 · F1 切换）</span></div>
+<div class="tlab-chips">
+<span class="tlab-chip buff">绿框：受击框</span>
+<span class="tlab-chip buff">蓝框：无敌状态</span>
+<span class="tlab-chip badge">黄框：前摇帧</span>
+<span class="tlab-chip debuff">红框：活跃攻击帧</span>
+<span class="tlab-chip">青/橙框：飞行道具</span>
+</div>
+<p class="tlab-desc">按 <strong>${dummyBarKey()}</strong> 切换木人行为或 AI 境界，用右下角 <strong>Hz 滑块</strong> 与 <strong>推进 1 帧</strong> 精确观测招式帧差。</p>
+</div>`;
+}
+}
+function trainLabUpdate() {
+const panel = $id('trainLab');
+if (!panel) return;
+const active = M.mode === 'train' && !TUT && !FOREST.on && !REPLAY.on && M.phase !== 'end' && !currentScreen;
+const show = active && !!TRAIN.labOpen && !paused && !DB.open;
+panel.classList.toggle('hidden', !show);
+if (show) trainLabRender(false);
+}
+if ($id('trainLabTabs')) {
+$id('trainLabTabs').addEventListener('click', e => {
+const b = e.target.closest('button[data-tltab]');
+if (!b) return;
+TRAIN.labTab = b.dataset.tltab;
+for (const x of $id('trainLabTabs').querySelectorAll('button[data-tltab]')) {
+const on = x === b;
+x.classList.toggle('sel', on);
+x.setAttribute('aria-selected', String(on));
+}
+_tlabLastDraw = 0;
+trainLabRender(true);
+SFX.slice && SFX.slice();
+});
+}
+if ($id('trainLabMin')) $id('trainLabMin').addEventListener('click', () => {
+TRAIN.labOpen = false;
+trainInspectRender();
+trainLabUpdate();
+refocusGame();
+});
 function trainInspectRender() {
-const rate = $id('trainHz'), value = $id('trainHzValue'), hitbox = $id('trainHitboxBtn'), pause = $id('trainPauseBtn'), advance = $id('trainStepBtn');
+const rate = $id('trainHz'), value = $id('trainHzValue'), hitbox = $id('trainHitboxBtn'), pause = $id('trainPauseBtn'), advance = $id('trainStepBtn'), labBtn = $id('trainLabToggle');
+if (labBtn) { labBtn.setAttribute('aria-pressed', String(!!TRAIN.labOpen)); const lTxt = cvT(TRAIN.labOpen ? '状态面板：开' : '状态面板：关'); if (labBtn.textContent !== lTxt) labBtn.textContent = lTxt; }
 if (rate && rate.value !== String(TRAIN.inspectHz)) rate.value = String(TRAIN.inspectHz);
 if (value && value.textContent !== `${TRAIN.inspectHz} Hz`) value.textContent = `${TRAIN.inspectHz} Hz`;
 if (hitbox) { hitbox.setAttribute('aria-pressed', String(debugHitbox)); const label = cvT(`F1 判定框：${debugHitbox ? '开' : '关'}`); if (hitbox.textContent !== label) hitbox.textContent = label; }
@@ -49361,15 +49869,28 @@ if (!panel) return;
 const active = M.mode === 'train' && !REPLAY.on && M.phase !== 'end' && !currentScreen;
 panel.classList.toggle('hidden', !active || paused || DB.open);
 trainInspectRender();
+trainLabUpdate();
 }
 function trainInspectStep() {
 if (M.mode !== 'train' || !TRAIN.inspectPaused || paused || DB.open || REPLAY.on || currentScreen) return false;
 acc = 0; TRAIN.inspectAcc = 0;
 step();
 trainInspectRender();
+_tlabLastDraw = 0;
+trainLabRender(true);
 return true;
 }
 if ($id('trainInspect')) {
+if ($id('trainLabToggle')) $id('trainLabToggle').addEventListener('click', () => {
+if (M.mode !== 'train') return;
+TRAIN.labOpen = !TRAIN.labOpen;
+_tlabLastDraw = 0;
+trainInspectRender();
+trainLabUpdate();
+refocusGame();
+});
+if ($id('trainFullMeterBtn')) $id('trainFullMeterBtn').addEventListener('click', () => { trainLabFullMeter(); refocusGame(); });
+if ($id('trainResetBtn')) $id('trainResetBtn').addEventListener('click', () => { trainLabReset(); refocusGame(); });
 $id('trainHz').addEventListener('input', e => {
 TRAIN.inspectHz = Math.max(1, Math.min(120, Math.round(+e.target.value || 120)));
 TRAIN.inspectAcc = 0;
@@ -49426,7 +49947,8 @@ initAudio(); paused = false;
 showScreen(null);
 const foeIdx = trainOppMode === 'ai' ? ((trainChar + 1) % CHARS.length) : 0;
 startMatch('train', { ...dummyCfg }, [trainChar, foeIdx]);
-Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0, advantage: null, frameProbe: null });
+Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0, lastHitDmg: 0, maxHitDmg: 0, hitCount: 0, parries: 0, breaks: 0, events: [], advantage: null, frameProbe: null, lastBadgeT: -99, lastBadgeMsg: '', lastPetT: -99, lastStanceT: -99, labOpen: true });
+_tlabLastDraw = 0;
 if (trainOppMode === 'ai') {
 B.dummy = false;
 B.ctrl = new AICtrl(trainAiLevel || 'normal');
@@ -59414,22 +59936,22 @@ oath: { n: '结义', en: 'Sworn Oath', trigger: '团战队友受创或倒下', e
 tactician: { n: '军师', en: 'Tactician', trigger: '团战命中敌方目标', effect: '为队友共享连击回气增益。', tiers: ['附近队友真气 +4。', '附近队友真气 +6。', '附近队友真气 +9 与架势 +8。'] },
 };
 var COMBAT_PETS = {
-inkfox: { n: '墨狐', en: 'Ink Fox', rgb: '120,235,205', cd: 7.5, shape: 'fox' },
-tortoise: { n: '玄龟', en: 'Obsidian Tortoise', rgb: '140,200,255', cd: 8.5, shape: 'shell' },
-falcon: { n: '雷隼', en: 'Thunder Falcon', rgb: '255,220,110', cd: 7.0, shape: 'bird' },
-froststag: { n: '霜鹿', en: 'Frost Stag', rgb: '160,235,255', cd: 9.0, shape: 'stag' },
-flamelion: { n: '炎狮', en: 'Flame Lion', rgb: '255,125,85', cd: 8.0, shape: 'beast' },
-shadowcrow: { n: '影鸦', en: 'Shadow Crow', rgb: '195,140,255', cd: 7.0, shape: 'bird' },
-jadekoi: { n: '玉鲤', en: 'Jade Koi', rgb: '115,245,175', cd: 8.0, shape: 'koi' },
-mechfinch: { n: '机雀', en: 'Clockwork Finch', rgb: '233,196,106', cd: 6.5, shape: 'bird' },
-azure_dragon: { n: '青龙', en: 'Azure Dragon', rgb: '70,225,255', cd: 8.5, shape: 'dragon' },
-white_tiger: { n: '白虎', en: 'White Tiger', rgb: '240,244,255', cd: 8.0, shape: 'beast' },
-vermilion_bird: { n: '朱雀', en: 'Vermilion Bird', rgb: '255,105,75', cd: 8.5, shape: 'bird' },
-qilin: { n: '墨麟', en: 'Ink Qilin', rgb: '235,195,90', cd: 9.0, shape: 'stag' },
-moonrabbit: { n: '玉兔', en: 'Moon Rabbit', rgb: '215,225,255', cd: 7.0, shape: 'rabbit' },
-spiritcrane: { n: '灵鹤', en: 'Spirit Crane', rgb: '155,240,220', cd: 7.5, shape: 'bird' },
-ironape: { n: '玄猿', en: 'Iron Ape', rgb: '185,155,120', cd: 8.5, shape: 'beast' },
-starowl: { n: '星枭', en: 'Star Owl', rgb: '175,145,255', cd: 7.2, shape: 'bird' },
+inkfox: { n: '墨狐', en: 'Ink Fox', rgb: '120,235,205', cd: 7.5, shape: 'fox', passive: '连击>=2段命中额外回气 +2.5×品阶', active: '立刻回复 12×品阶 真元，并使 420px 内敌手缓速' },
+tortoise: { n: '玄龟', en: 'Obsidian Tortoise', rgb: '140,200,255', cd: 8.5, shape: 'shell', passive: '非格挡状态下持续加速回复架势 (+4.5/秒×品阶)', active: '获得短暂霸体 (0.75s×品阶) 并回复 25×品阶 架势' },
+falcon: { n: '雷隼', en: 'Thunder Falcon', rgb: '255,220,110', cd: 7.0, shape: 'bird', passive: '空中招式压制与追击协同', active: '朝锁定目标发射高速惊雷风刃 (14×品阶 伤)' },
+froststag: { n: '霜鹿', en: 'Frost Stag', rgb: '160,235,255', cd: 9.0, shape: 'stag', passive: '脱战 3.5 秒后持续缓慢回复气血', active: '瞬间回复 5.5%×品阶 最大气血与 20×品阶 架势' },
+flamelion: { n: '炎狮', en: 'Flame Lion', rgb: '255,125,85', cd: 8.0, shape: 'beast', passive: '近身灼烧与蓄力压制协同', active: '烈焰震退 260px 内敌众并施加灼烧 (2.5s×品阶)' },
+shadowcrow: { n: '影鸦', en: 'Shadow Crow', rgb: '195,140,255', cd: 7.0, shape: 'bird', passive: '机动追击与闪避节奏协同', active: '立刻重置虚招与冲刺冷却并回复 10×品阶 真元' },
+jadekoi: { n: '玉鲤', en: 'Jade Koi', rgb: '115,245,175', cd: 8.0, shape: 'koi', passive: '闪避脱身与状态净化协同', active: '驱散减速与灼烧，并获得短暂无敌 (0.22s×品阶)' },
+mechfinch: { n: '机雀', en: 'Clockwork Finch', rgb: '233,196,106', cd: 6.5, shape: 'bird', passive: '高频远程骚扰与连携补伤', active: '齐射三枚扇形机矢远程压制对手' },
+azure_dragon: { n: '青龙', en: 'Azure Dragon', rgb: '70,225,255', cd: 8.5, shape: 'dragon', passive: '全程每秒持续积攒 +1.8×品阶 真元', active: '释放贯通青龙气浪击飞沿途敌众 (18×品阶 伤)' },
+white_tiger: { n: '白虎', en: 'White Tiger', rgb: '240,244,255', cd: 8.0, shape: 'beast', passive: '强攻破防与重击压制协同', active: '撕裂 280px 内敌手 32×品阶 架势并回气 +10×品阶' },
+vermilion_bird: { n: '朱雀', en: 'Vermilion Bird', rgb: '255,105,75', cd: 8.5, shape: 'bird', passive: '气血低于 40% 时持续回复气血', active: '回复 5%×品阶 气血并击退灼烧 250px 内敌手' },
+qilin: { n: '墨麟', en: 'Ink Qilin', rgb: '235,195,90', cd: 9.0, shape: 'stag', passive: '非格挡状态下持续加速回复架势 (+4.5/秒×品阶)', active: '展开金墨护阵：2 次霸体 + 30×品阶 架势 + 10×品阶 真元' },
+moonrabbit: { n: '玉兔', en: 'Moon Rabbit', rgb: '215,225,255', cd: 7.0, shape: 'rabbit', passive: '空中机动与轻功步法协同', active: '重置冲刺、二段跳与空中冲刺，并回气 +12×品阶' },
+spiritcrane: { n: '灵鹤', en: 'Spirit Crane', rgb: '155,240,220', cd: 7.5, shape: 'bird', passive: '空战挑飞与滞空控场协同', active: '吹起旋风将 280px 内敌手挑空并施加缓速' },
+ironape: { n: '玄猿', en: 'Iron Ape', rgb: '185,155,120', cd: 8.5, shape: 'beast', passive: '非格挡状态下持续加速回复架势 (+4.5/秒×品阶)', active: '震地震退 260px 内敌手并削减 24×品阶 架势' },
+starowl: { n: '星枭', en: 'Star Owl', rgb: '175,145,255', cd: 7.2, shape: 'bird', passive: '远距控场与缓速牵制协同', active: '齐射两枚星弹并使 520px 内敌手缓速 (1.6s×品阶)' },
 };
 var PET_TIER_MUL = { basic: 1, spirit: 1.25, immortal: 1.55 };
 var SKILL_MODS = {
@@ -59482,9 +60004,14 @@ function showBadgeCue(f, key, consumed = false) {
 if (!f || RESIM) return;
 const badge = COMBAT_BADGES[f.badgeId]; if (!badge) return;
 const names = { flowing: consumed ? '连势 · 连段追步' : '连势 · 追步窗口', focus: consumed ? '凝锋 · 贴身压迫' : '凝锋 · 压迫窗口', riposte: consumed ? '回锋 · 踏进反击' : '回锋 · 反击窗口', breaker: consumed ? '破军 · 追击踏进' : '破军 · 破防追击', breakerDash: '破军 · 追击冲刺', ascent: consumed ? '凌空 · 空中续招' : '凌空 · 空中续闪', pursuit: consumed ? '追影 · 退步闪避' : '追影 · 退步窗口', ironwall: '铁壁 · 霸体反击', tempest: '疾电 · 灵动缩冷', bloodlust: '血怒 · 绝境回气', phantom: '绝影 · 虚招袭杀', resonance: '共鸣 · 灵宠缩冷', skybreaker: '破穹 · 御空重置', juggernaut: '镇岳 · 以伤换势', vanguard: '同心 · 众志聚气' };
+const label = names[key] || badge.n;
+if (M.mode === 'train' && f.idx === 0) {
+TRAIN.lastBadgeT = clock; TRAIN.lastBadgeMsg = label;
+if (typeof trainLogEvent === 'function') trainLogEvent('badge', label, badge.effect);
+}
 const rgb = f.look && f.look.slash || '233,196,106';
 ring(f.x, f.y - 58, consumed ? 78 : 58, rgb, consumed ? 0.28 : 0.18);
-addP({ type: 'text', text: names[key] || badge.n, x: f.x, y: f.y - 112, life: 0.7, max: 0.7, rgb });
+addP({ type: 'text', text: label, x: f.x, y: f.y - 112, life: 0.7, max: 0.7, rgb });
 }
 function petTickAll() {
 if (M.phase !== 'fight') return;
@@ -59583,6 +60110,10 @@ spawnProj(f, { kind: 'dart', x: f.x + dir * 30, y: f.y - 78 + dy, vx: dir * 1020
 if (foe && Math.abs(foe.x - f.x) < 520) foe.slowT = Math.max(foe.slowT || 0, 1.6 * mul);
 }
 if (!RESIM) {
+if (M.mode === 'train' && f.idx === 0) {
+TRAIN.lastPetT = clock;
+if (typeof trainLogEvent === 'function') trainLogEvent('pet', `灵宠 · ${spec.n}`, spec.active || '发动主动秘技');
+}
 ring(f.x, f.y - 68, 108, rgb, 0.36);
 addP({ type: 'text', text: `灵宠 · ${spec.n}`, x: f.x, y: f.y - 122, life: 0.8, max: 0.8, rgb });
 }
@@ -59631,7 +60162,12 @@ const c = f && f.ctrl;
 if (!c || !f.stanceUnlocked || f.stanceT > 0 || M.phase !== 'fight' || !c.consume('stance')) return false;
 f.stance = f.stance ? 0 : 1;
 f.stanceT = 0.18; f.state = 'stance'; f.t = 0; f.move = null; f.skill = null; f.sp = null; f.vx *= 0.18;
-addP({ type: 'text', text: f.stance ? (HERO_STANCES[f.ch.id] || {}).name : '本式', x: f.x, y: f.y - 130, life: 0.7, max: 0.7, rgb: f.look.slash || '230,210,150' });
+const stName = f.stance ? ((HERO_STANCES[f.ch.id] || {}).name || '二式') : '本式';
+if (!RESIM && M.mode === 'train' && f.idx === 0) {
+TRAIN.lastStanceT = clock;
+if (typeof trainLogEvent === 'function') trainLogEvent('stance', `切换架势 · ${stName}`, f.stance ? ((HERO_STANCES[f.ch.id] || {}).desc || '') : '恢复标准招式参数');
+}
+addP({ type: 'text', text: stName, x: f.x, y: f.y - 130, life: 0.7, max: 0.7, rgb: f.look.slash || '230,210,150' });
 ring(f.x, f.y - 54, 62, f.look.slash || '230,210,150', 0.28);
 return true;
 }

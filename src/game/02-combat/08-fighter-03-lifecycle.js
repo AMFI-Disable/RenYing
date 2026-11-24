@@ -13,8 +13,8 @@ function randomPair() { const a = Math.random() * CHARS.length | 0; let b = Math
 // 还在等人进房间或在排队时开始单人模式：先关掉房间，免得有人进来把你拉去选人
 function netDropWaiting() { if (!NET.open && p2pActive()) { netLeave(); $id('roomCode').textContent = ''; netStatus(''); } }
 function startMatch(mode, level, chars, isWatch = false) {
-  // 训练场的观察工具不能带入任何正式对局。
-  debugHitbox = false;
+  // 训练场默认开启判定框透视；进入任何正式对局时强制关闭观察工具。
+  debugHitbox = mode === 'train';
   TRAIN.inspectHz = 120; TRAIN.inspectAcc = 0; TRAIN.inspectPaused = false;
   if (mode !== 'demo') refocusGame();
   if (mode !== 'net' && mode !== 'demo' && mode !== 'replay') netDropWaiting();

@@ -196,9 +196,261 @@ function dummyBarUpdate() {
   if (btn) btn.classList.toggle('hidden', !ok || DB.open || !!document.querySelector('.scr.on'));
   if (DB.open && !ok) dummyBarShow(false);
 }
+// ---------- 训练场实时状态与机制解析面板 (#trainLab) ----------
+let _tlabLastDraw = 0;
+function trainLogEvent(kind, title, detail = '') {
+  if (!Array.isArray(TRAIN.events)) TRAIN.events = [];
+  TRAIN.events.unshift({ t: clock || 0, kind, title, detail });
+  if (TRAIN.events.length > 8) TRAIN.events.length = 8;
+}
+function trainLabFullMeter() {
+  if (M.mode !== 'train' || !A) return;
+  A.meter = 100;
+  A.skillCD = 0; A.skill2CD = 0; A.dashCD = 0; A.feintCD = 0; A.qiParryCD = 0; A.petCD = 0; A.iaidoCD = 0; A.grappleCD = 0;
+  A.guard = A.maxGuard || 100;
+  A.hp = A.lagHp = A.maxHp;
+  if (A.ch && A.ch.id === 'moyu') A.ink = INK_MAX;
+  if (A.ch && A.ch.passive === 'drunk') A.drunk = 100;
+  if (A.ch && A.ch.fly) A.flyT = A.ch.fly;
+  trainLogEvent('stance', '满怒清冷', '真元已满，技能与灵宠冷却已重置');
+  SFX.slice && SFX.slice();
+  _tlabLastDraw = 0;
+  trainLabRender(true);
+}
+function trainLabReset() {
+  if (M.mode !== 'train' || !A || !B) return;
+  A.reset(STAGE_W / 2 - 180); A.face = 1; A.meter = 0;
+  const isDummy = !!B.dummy;
+  B.reset(isDummy && dummyCfg.fixed ? STAGE_W / 2 : STAGE_W / 2 + 120);
+  B.face = -1; B.meter = 0;
+  if (isDummy) { B.maxHp = B.hp = B.lagHp = 300; }
+  if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts();
+  Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0, lastHitDmg: 0, maxHitDmg: 0, hitCount: 0, parries: 0, breaks: 0, events: [], advantage: null, frameProbe: null, lastBadgeT: -99, lastBadgeMsg: '', lastPetT: -99, lastStanceT: -99 });
+  for (const cu of comboUI) { cu.n = 0; cu.dmg = 0; cu.t = 0; }
+  projs.length = 0;
+  SFX.slice && SFX.slice();
+  _tlabLastDraw = 0;
+  trainLabRender(true);
+}
+function _tlabBuffs(f) {
+  const list = [];
+  if (!f) return list;
+  const add = (cls, text) => list.push(`<span class="tlab-chip ${cls}">${text}</span>`);
+  if ((f.armorT || 0) > 0) add('buff', `霸体 ${f.armorT.toFixed(1)}s${f.armorHits > 0 ? ` (${f.armorHits}次)` : ''}`);
+  if ((f.invul || 0) > 0 && f.invul < 20) add('buff', `无敌 ${f.invul.toFixed(2)}s`);
+  if ((f.parryT || 0) > 0 || (f.qiParryT || 0) > 0 || (f.thunderGuardT || 0) > 0) add('buff', '弹反架势中');
+  if ((f.reflectT || 0) > 0) add('buff', `反弹 ${f.reflectT.toFixed(1)}s`);
+  if ((f.buffT || 0) > 0) add('buff', `增伤 +50% (${f.buffT.toFixed(1)}s)`);
+  if ((f.twinT || 0) > 0) add('buff', `双风强化 ${f.twinT.toFixed(1)}s`);
+  if (f.stance === 1 && f.stanceUnlocked) add('buff', `二式 · ${(HERO_STANCES[f.ch.id] || {}).name || '切换态'}`);
+  if ((f.badgeLinkT || 0) > 0) add('badge', `连势追步 ${f.badgeLinkT.toFixed(2)}s`);
+  if ((f.badgePressureT || 0) > 0) add('badge', `凝锋压迫 ${f.badgePressureT.toFixed(2)}s`);
+  if ((f.badgeRiposteT || 0) > 0) add('badge', `回锋反击 ${f.badgeRiposteT.toFixed(2)}s`);
+  if ((f.badgeBreakT || 0) > 0) add('badge', `破军追击 ${f.badgeBreakT.toFixed(2)}s`);
+  if ((f.badgeAirSkillT || 0) > 0) add('badge', `凌空续招 ${f.badgeAirSkillT.toFixed(2)}s`);
+  if ((f.badgeExitT || 0) > 0) add('badge', `追影退步 ${f.badgeExitT.toFixed(2)}s`);
+  if ((f.badgeDashT || 0) > 0) add('badge', `闪避窗口 ${f.badgeDashT.toFixed(2)}s`);
+  if ((f.shadowExecT || 0) > 0) add('badge', `影落破势就绪 [R] ${f.shadowExecT.toFixed(1)}s`);
+  if ((f.stun || 0) > 0) add('debuff', `硬直 ${Math.round(f.stun / STEP)}F`);
+  if ((f.slowT || 0) > 0 || (f.frostSlow || 0) > 0) add('debuff', `减速 ${Math.max(f.slowT || 0, f.frostSlow || 0).toFixed(1)}s`);
+  if ((f.burnT || 0) > 0) add('debuff', `灼烧 ${f.burnT.toFixed(1)}s`);
+  if ((f.defDebuffT || 0) > 0) add('debuff', `破甲 ${f.defDebuffT.toFixed(1)}s`);
+  if ((f.acupointT || 0) > 0) add('debuff', `点穴封脉 ${f.acupointT.toFixed(1)}s`);
+  if (f.rooted) add('debuff', '定身');
+  if ((f.jailT || 0) > 0) add('debuff', `禁锢 ${f.jailT.toFixed(1)}s`);
+  if ((f.veilT || 0) > 0) add('debuff', `蓬莱境 ${f.veilT.toFixed(1)}s`);
+  if ((f.needleMark || 0) > 0) add('debuff', `雀芒 ×${f.needleMark}`);
+  if ((f.shadowMarks || 0) > 0) add('debuff', `影印 ${f.shadowMarks}/25`);
+  if ((f.fu || 0) > 0) add('debuff', `符印 ×${f.fu}`);
+  return list;
+}
+function trainLabRender(force = false) {
+  const panel = $id('trainLab'), body = $id('trainLabBody');
+  if (!panel || !body || !A || !B) return;
+  const nowMs = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  if (!force && nowMs - _tlabLastDraw < 65) return;
+  _tlabLastDraw = nowMs;
+  const heroTitle = $id('trainLabHero'), oppTag = $id('trainLabOpp');
+  if (heroTitle) heroTitle.textContent = `${A.ch.name} · ${cvT('训练状态')}`;
+  if (oppTag) oppTag.textContent = B.dummy ? (B.ctrl instanceof DummyCtrl ? dummyActName(B.ctrl.cfg) : '木人桩') : `AI · ${LV_NAME[trainAiLevel] || trainAiLevel}`;
+  const tab = TRAIN.labTab || 'status';
+  const hpPct = Math.round(clamp(A.hp / Math.max(1, A.maxHp), 0, 1) * 100);
+  const furyPct = Math.round(clamp((A.meter || 0) / 100, 0, 1) * 100);
+  const gMax = Math.max(1, A.maxGuard || 100);
+  const gPct = Math.round(clamp((A.guard || 0) / gMax, 0, 1) * 100);
+  if (tab === 'status') {
+    const cdCell = (lbl, val, readyTxt = '就绪') => {
+      const rdy = !(val > 0.04);
+      return `<div class="tlab-cd ${rdy ? 'ready' : 'cool'}"><span>${lbl}</span><b>${rdy ? readyTxt : val.toFixed(1) + 's'}</b></div>`;
+    };
+    const sk1Nm = (A.ch.skillName || 'Q 技能').slice(0, 4);
+    const sk2Nm = (A.ch.skill2Name || 'R 特殊').slice(0, 4);
+    const ultReady = (A.meter || 0) >= 100;
+    const resRows = [];
+    if (A.ch.id === 'moyu') resRows.push(`<div class="tlab-bar-row"><div class="tlab-bar-meta"><span>墨韵资源</span><b>${Math.round(A.ink || 0)} / ${INK_MAX}</b></div><div class="tlab-bar res"><i style="width:${Math.round(((A.ink || 0) / INK_MAX) * 100)}%"></i></div></div>`);
+    if (A.ch.passive === 'drunk') resRows.push(`<div class="tlab-bar-row"><div class="tlab-bar-meta"><span>醉意 (+${Math.round((A.drunk || 0) * 0.5)}% 伤)</span><b>${Math.round(A.drunk || 0)} / 100</b></div><div class="tlab-bar res"><i style="width:${Math.round(A.drunk || 0)}%"></i></div></div>`);
+    if (A.ch.passive === 'rhythm') resRows.push(`<div class="tlab-bar-row"><div class="tlab-bar-meta"><span>音律层数</span><b>${A.notes || 0} / 3</b></div><div class="tlab-bar res"><i style="width:${Math.round(((A.notes || 0) / 3) * 100)}%"></i></div></div>`);
+    if (A.ch.passive === 'magnet') resRows.push(`<div class="tlab-kv"><span>当前磁极</span><b>${A.pol > 0 ? '⊕ 正极 (高伤斥力)' : '⊖ 负极 (吸附牵引)'}</b></div>`);
+    if (A.ch.fly) resRows.push(`<div class="tlab-bar-row"><div class="tlab-bar-meta"><span>滞空气力</span><b>${(A.flyT || 0).toFixed(1)} / ${A.ch.fly}s</b></div><div class="tlab-bar res"><i style="width:${Math.round(clamp((A.flyT || 0) / A.ch.fly, 0, 1) * 100)}%"></i></div></div>`);
+    if (A.ch.passive === 'mist') resRows.push(`<div class="tlab-kv"><span>场上雾身 / 敌方影印</span><b>${(A.clones || []).length} 身 · ${B.shadowMarks || 0}/25 印</b></div>`);
+    const myChips = _tlabBuffs(A), foeChips = _tlabBuffs(B);
+    body.innerHTML = `
+      <div class="tlab-sec">
+        <div class="tlab-sec-h"><span>我方核心状态 (${A.state})</span><span class="tlab-pill">${A.stance ? ((HERO_STANCES[A.ch.id] || {}).name || '二式') : '本式'}</span></div>
+        <div class="tlab-bar-row"><div class="tlab-bar-meta"><span>气血 HP</span><b>${Math.round(A.hp)} / ${Math.round(A.maxHp)} (${hpPct}%)</b></div><div class="tlab-bar hp"><i style="width:${hpPct}%"></i></div></div>
+        <div class="tlab-bar-row"><div class="tlab-bar-meta"><span>真元 / 怒气</span><b>${Math.round(A.meter || 0)} / 100${ultReady ? ' · 奥义就绪' : ''}</b></div><div class="tlab-bar fury"><i style="width:${furyPct}%"></i></div></div>
+        <div class="tlab-bar-row"><div class="tlab-bar-meta"><span>架势 Guard</span><b>${Math.round(A.guard || 0)} / ${Math.round(gMax)} (${gPct}%)</b></div><div class="tlab-bar guard"><i style="width:${gPct}%"></i></div></div>
+        ${resRows.join('')}
+      </div>
+      <div class="tlab-sec">
+        <div class="tlab-sec-h"><span>招式与机动冷却</span></div>
+        <div class="tlab-cd-grid">
+          ${cdCell(`Q ${sk1Nm}`, A.skillCD || 0)}
+          ${cdCell(`R ${sk2Nm}`, A.skill2CD || 0)}
+          <div class="tlab-cd ${ultReady ? 'ready' : 'cool'}"><span>E 奥义</span><b>${ultReady ? '满气' : furyPct + '%'}</b></div>
+          ${cdCell('腾空闪', A.dashCD || 0)}
+          ${cdCell('C 虚招', A.feintCD || 0)}
+          ${cdCell('F 弹反', A.qiParryCD || 0)}
+          ${A.petId ? cdCell('V 灵宠', A.petCD || 0) : '<div class="tlab-cd"><span>V 灵宠</span><b>未携</b></div>'}
+          ${cdCell('架势', A.stanceT || 0, A.stanceUnlocked ? '可切' : '未解')}
+        </div>
+      </div>
+      <div class="tlab-sec">
+        <div class="tlab-sec-h"><span>当前增益 / 减益</span></div>
+        <div class="tlab-chips">${myChips.length ? myChips.join('') : '<span class="tlab-chip dim">无激活中的增益或减益</span>'}</div>
+      </div>
+      <div class="tlab-sec">
+        <div class="tlab-sec-h"><span>对手状态 (${B.state})</span><span>HP ${Math.round(B.hp)}/${Math.round(B.maxHp)} · 架势 ${Math.round(B.guard || 0)}</span></div>
+        <div class="tlab-chips">${foeChips.length ? foeChips.join('') : '<span class="tlab-chip dim">对手当前无异常状态</span>'}</div>
+      </div>`;
+  } else if (tab === 'loadout') {
+    const bSpec = A.badgeId && COMBAT_BADGES[A.badgeId];
+    const bTierNames = { silver: '白银阶', gold: '黄金阶', purpgold: '紫金阶' };
+    const bTierIdx = A.badgeTier === 'purpgold' ? 2 : A.badgeTier === 'gold' ? 1 : 0;
+    const bActiveWin = Math.max(A.badgeLinkT || 0, A.badgePressureT || 0, A.badgeRiposteT || 0, A.badgeBreakT || 0, A.badgeAirSkillT || 0, A.badgeExitT || 0);
+    const bLive = (clock - (TRAIN.lastBadgeT || -99)) < 1.8 || bActiveWin > 0;
+    const pSpec = A.petId && COMBAT_PETS[A.petId];
+    const pTierNames = { basic: '初阶 1.0×', spirit: '灵阶 1.25×', immortal: '仙阶 1.55×' };
+    const pLive = (clock - (TRAIN.lastPetT || -99)) < 1.8;
+    const stSpec = HERO_STANCES[A.ch.id];
+    const stLive = (clock - (TRAIN.lastStanceT || -99)) < 1.5;
+    const sm = A.skillMod || { q: 'std', r: 'std', e: 'std' };
+    const modDesc = (slot, key) => {
+      const m = (SKILL_MODS && SKILL_MODS[key]) || { name: '本宗', cd: 1, dmg: 1, guard: 1 };
+      const fx = key === 'swift' ? '冷却 -18%，伤害 -8%' : key === 'heavy' ? '伤害 +18%，破防 +25%，冷却 +16%' : '均衡标准参数';
+      return `<div class="tlab-kv"><span>${slot.toUpperCase()} 招式流派 · <b>${m.name}</b></span><span>${fx}</span></div>`;
+    };
+    body.innerHTML = `
+      <div class="tlab-sec${bLive ? ' is-live' : ''}">
+        <div class="tlab-sec-h"><span>武学徽记 · ${bSpec ? `${bSpec.n} (${bTierNames[A.badgeTier] || '白银阶'})` : '未装配'}</span><span class="tlab-pill${bLive ? ' live' : ''}">${bSpec ? (bActiveWin > 0 ? `生效中 ${bActiveWin.toFixed(2)}s` : bLive ? (TRAIN.lastBadgeMsg || '已触发') : A.badgeId === 'ironwall' ? `格挡 ${A.badgeBlockCnt || 0}/3` : '待触发') : '未装配'}</span></div>
+        ${bSpec ? `
+          <p class="tlab-desc"><strong>触发条件：</strong>${bSpec.trigger}</p>
+          <p class="tlab-desc"><strong>机制说明：</strong>${bSpec.effect}</p>
+          <p class="tlab-desc"><strong>当前品阶效果：</strong>${(bSpec.tiers && bSpec.tiers[bTierIdx]) || bSpec.effect}</p>
+        ` : '<p class="tlab-desc">当前侠客未装配徽记。前往「英雄」或「武库 → 徽记」即可一键装配并在训练场实时验证触发效果。</p>'}
+      </div>
+      <div class="tlab-sec${pLive ? ' is-live' : ''}">
+        <div class="tlab-sec-h"><span>随行灵宠 · ${pSpec ? `${pSpec.n} (${pTierNames[A.petTier] || '初阶'})` : '未携带'}</span><span class="tlab-pill${pSpec && !(A.petCD > 0.05) ? ' live' : ''}">${pSpec ? ((A.petCD || 0) > 0.05 ? `冷却 ${A.petCD.toFixed(1)}s` : 'V 键就绪') : '未携带'}</span></div>
+        ${pSpec ? `
+          <p class="tlab-desc"><strong>常驻被动：</strong>${pSpec.passive || '随行协同增益'}</p>
+          <p class="tlab-desc"><strong>主动秘技 [V]：</strong>${pSpec.active || '发动灵宠秘技'}</p>
+          <p class="tlab-desc"><strong>触发方式：</strong>按 V 键释放（基础冷却 ${pSpec.cd}s，品阶越高倍率越高且冷却更短）。</p>
+        ` : '<p class="tlab-desc">当前未携带灵宠。可在「武库 → 灵宠」收养并携宠出战，在训练场按 V 键实时观测效果。</p>'}
+      </div>
+      <div class="tlab-sec${stLive ? ' is-live' : ''}">
+        <div class="tlab-sec-h"><span>架势与招式流派</span><span class="tlab-pill">${A.stance ? (stSpec ? stSpec.name : '二式') : '本式'}</span></div>
+        <p class="tlab-desc"><strong>当前架势：</strong>${A.stance && stSpec ? `${stSpec.name} — ${stSpec.desc}` : `本式 — 标准均衡参数。${A.stanceUnlocked && stSpec ? `按架势键可随时切换「${stSpec.name}」：${stSpec.desc}` : '（累计 20 斩可解锁二式架势）'}`}</p>
+        ${modDesc('q', sm.q)}${modDesc('r', sm.r)}${modDesc('e', sm.e)}
+      </div>
+      <div class="tlab-sec">
+        <div class="tlab-sec-h"><span>侠客固有被动 · ${A.ch.passiveName || A.ch.passive || '门派心法'}</span></div>
+        <p class="tlab-desc">${A.ch.passiveDesc || A.ch.desc || '该侠客拥有专属武器机制与门派连携特性。'}</p>
+      </div>`;
+  } else if (tab === 'stats') {
+    const cu = comboUI[0] || { n: 0, dmg: 0, t: 0 };
+    const dps = TRAIN.hits.reduce((acc, h) => acc + h[1], 0) / 5;
+    const advTxt = TRAIN.advantage == null ? '—' : `${TRAIN.advantage >= 0 ? '+' : ''}${TRAIN.advantage}F`;
+    const logs = (TRAIN.events || []).slice(0, 6);
+    body.innerHTML = `
+      <div class="tlab-sec">
+        <div class="tlab-sec-h"><span>实时战斗统计</span><span class="tlab-pill">命中 ${TRAIN.hitCount || 0} 次</span></div>
+        <div class="tlab-kv"><span>当前连击</span><b>${cu.t > 0 ? `${cu.n} 段 · ${Math.round(cu.dmg)} 伤` : '—'}</b></div>
+        <div class="tlab-kv"><span>最高连击</span><b>${TRAIN.best || 0} 段 · ${Math.round(TRAIN.bestDmg || 0)} 伤</b></div>
+        <div class="tlab-kv"><span>最近单次 / 单击峰值</span><b>${Math.round(TRAIN.lastHitDmg || 0)} / ${Math.round(TRAIN.maxHitDmg || 0)}</b></div>
+        <div class="tlab-kv"><span>累计伤害 / 5s DPS</span><b>${Math.round(TRAIN.total || 0)} · ${dps.toFixed(1)}/s</b></div>
+        <div class="tlab-kv"><span>帧优势 (Frame Adv)</span><b>${advTxt}</b></div>
+        <div class="tlab-kv"><span>精准招架 / 破防次数</span><b>${TRAIN.parries || 0} 次 / ${TRAIN.breaks || 0} 次</b></div>
+      </div>
+      <div class="tlab-sec">
+        <div class="tlab-sec-h"><span>实时机制触发记录</span></div>
+        <div class="tlab-log">${logs.length ? logs.map(ev => `<div class="tlab-log-row k-${ev.kind}"><b>${ev.title} <small style="opacity:.6">(${ev.t.toFixed(1)}s)</small></b>${ev.detail ? `<span>${ev.detail}</span>` : ''}</div>`).join('') : '<span class="tlab-chip dim">施放招式、触发徽记/灵宠/招架/破防后将在此实时记录</span>'}</div>
+      </div>`;
+  } else {
+    const st = A.ch.stat || {};
+    body.innerHTML = `
+      <div class="tlab-sec">
+        <div class="tlab-sec-h"><span>${A.ch.name} · 核心战斗属性</span><span class="tlab-pill">${A.ch.title || '侠客'}</span></div>
+        <div class="tlab-attr-grid">
+          <div class="tlab-kv"><span>最大气血</span><b>${Math.round(A.maxHp)}</b></div>
+          <div class="tlab-kv"><span>架势上限</span><b>${Math.round(A.maxGuard || 100)}</b></div>
+          <div class="tlab-kv"><span>架势稳固</span><b>${((st.guardStab || 1)).toFixed(2)}×</b></div>
+          <div class="tlab-kv"><span>格挡磨血</span><b>${Math.round(((st.guardChip || 0.12)) * 100)}%</b></div>
+          <div class="tlab-kv"><span>体量权重</span><b>${((st.weight || 1)).toFixed(2)}</b></div>
+          <div class="tlab-kv"><span>护甲减伤</span><b>${((st.defRating || 1)).toFixed(2)}×</b></div>
+          <div class="tlab-kv"><span>抗硬直韧性</span><b>${((st.poise || 1)).toFixed(2)}×</b></div>
+          <div class="tlab-kv"><span>移动速度</span><b>${((st.walk || 1)).toFixed(2)}×</b></div>
+          <div class="tlab-kv"><span>出招速度</span><b>${((st.speed || 1)).toFixed(2)}×</b></div>
+          <div class="tlab-kv"><span>攻击距离</span><b>${((st.reach || 1)).toFixed(2)}×</b></div>
+          <div class="tlab-kv"><span>连段衰减</span><b>-${Math.round(((A.ch.scaling || 0.08)) * 100)}%/段</b></div>
+          <div class="tlab-kv"><span>真元获取</span><b>${((A.ch.meterMul || 1)).toFixed(2)}×</b></div>
+        </div>
+      </div>
+      <div class="tlab-sec">
+        <div class="tlab-sec-h"><span>判定框图例（默认开启 · F1 切换）</span></div>
+        <div class="tlab-chips">
+          <span class="tlab-chip buff">绿框：受击框</span>
+          <span class="tlab-chip buff">蓝框：无敌状态</span>
+          <span class="tlab-chip badge">黄框：前摇帧</span>
+          <span class="tlab-chip debuff">红框：活跃攻击帧</span>
+          <span class="tlab-chip">青/橙框：飞行道具</span>
+        </div>
+        <p class="tlab-desc">按 <strong>${dummyBarKey()}</strong> 切换木人行为或 AI 境界，用右下角 <strong>Hz 滑块</strong> 与 <strong>推进 1 帧</strong> 精确观测招式帧差。</p>
+      </div>`;
+  }
+}
+function trainLabUpdate() {
+  const panel = $id('trainLab');
+  if (!panel) return;
+  const active = M.mode === 'train' && !TUT && !FOREST.on && !REPLAY.on && M.phase !== 'end' && !currentScreen;
+  const show = active && !!TRAIN.labOpen && !paused && !DB.open;
+  panel.classList.toggle('hidden', !show);
+  if (show) trainLabRender(false);
+}
+if ($id('trainLabTabs')) {
+  $id('trainLabTabs').addEventListener('click', e => {
+    const b = e.target.closest('button[data-tltab]');
+    if (!b) return;
+    TRAIN.labTab = b.dataset.tltab;
+    for (const x of $id('trainLabTabs').querySelectorAll('button[data-tltab]')) {
+      const on = x === b;
+      x.classList.toggle('sel', on);
+      x.setAttribute('aria-selected', String(on));
+    }
+    _tlabLastDraw = 0;
+    trainLabRender(true);
+    SFX.slice && SFX.slice();
+  });
+}
+if ($id('trainLabMin')) $id('trainLabMin').addEventListener('click', () => {
+  TRAIN.labOpen = false;
+  trainInspectRender();
+  trainLabUpdate();
+  refocusGame();
+});
 // 帧检查器只属于木人训练，频率按逻辑帧计；最高 120 Hz 即标准速度。
 function trainInspectRender() {
-  const rate = $id('trainHz'), value = $id('trainHzValue'), hitbox = $id('trainHitboxBtn'), pause = $id('trainPauseBtn'), advance = $id('trainStepBtn');
+  const rate = $id('trainHz'), value = $id('trainHzValue'), hitbox = $id('trainHitboxBtn'), pause = $id('trainPauseBtn'), advance = $id('trainStepBtn'), labBtn = $id('trainLabToggle');
+  if (labBtn) { labBtn.setAttribute('aria-pressed', String(!!TRAIN.labOpen)); const lTxt = cvT(TRAIN.labOpen ? '状态面板：开' : '状态面板：关'); if (labBtn.textContent !== lTxt) labBtn.textContent = lTxt; }
   if (rate && rate.value !== String(TRAIN.inspectHz)) rate.value = String(TRAIN.inspectHz);
   if (value && value.textContent !== `${TRAIN.inspectHz} Hz`) value.textContent = `${TRAIN.inspectHz} Hz`;
   if (hitbox) { hitbox.setAttribute('aria-pressed', String(debugHitbox)); const label = cvT(`F1 判定框：${debugHitbox ? '开' : '关'}`); if (hitbox.textContent !== label) hitbox.textContent = label; }
@@ -212,15 +464,28 @@ function trainInspectUpdate() {
   const active = M.mode === 'train' && !REPLAY.on && M.phase !== 'end' && !currentScreen;
   panel.classList.toggle('hidden', !active || paused || DB.open);
   trainInspectRender();
+  trainLabUpdate();
 }
 function trainInspectStep() {
   if (M.mode !== 'train' || !TRAIN.inspectPaused || paused || DB.open || REPLAY.on || currentScreen) return false;
   acc = 0; TRAIN.inspectAcc = 0;
   step();
   trainInspectRender();
+  _tlabLastDraw = 0;
+  trainLabRender(true);
   return true;
 }
 if ($id('trainInspect')) {
+  if ($id('trainLabToggle')) $id('trainLabToggle').addEventListener('click', () => {
+    if (M.mode !== 'train') return;
+    TRAIN.labOpen = !TRAIN.labOpen;
+    _tlabLastDraw = 0;
+    trainInspectRender();
+    trainLabUpdate();
+    refocusGame();
+  });
+  if ($id('trainFullMeterBtn')) $id('trainFullMeterBtn').addEventListener('click', () => { trainLabFullMeter(); refocusGame(); });
+  if ($id('trainResetBtn')) $id('trainResetBtn').addEventListener('click', () => { trainLabReset(); refocusGame(); });
   $id('trainHz').addEventListener('input', e => {
     TRAIN.inspectHz = Math.max(1, Math.min(120, Math.round(+e.target.value || 120)));
     TRAIN.inspectAcc = 0;
@@ -278,7 +543,8 @@ function startDummyTraining() {
   showScreen(null);
   const foeIdx = trainOppMode === 'ai' ? ((trainChar + 1) % CHARS.length) : 0;
   startMatch('train', { ...dummyCfg }, [trainChar, foeIdx]);
-  Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0, advantage: null, frameProbe: null });
+  Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0, lastHitDmg: 0, maxHitDmg: 0, hitCount: 0, parries: 0, breaks: 0, events: [], advantage: null, frameProbe: null, lastBadgeT: -99, lastBadgeMsg: '', lastPetT: -99, lastStanceT: -99, labOpen: true });
+  _tlabLastDraw = 0;
   if (trainOppMode === 'ai') {
     B.dummy = false;
     B.ctrl = new AICtrl(trainAiLevel || 'normal');

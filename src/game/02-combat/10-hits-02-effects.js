@@ -436,7 +436,27 @@ function hitStopOf(ev, att) {
 function hitVisual(ev, quiet) {
   const att = fighterByIdx(ev.a), def = fighterByIdx(ev.d);
   if (M.combatStats && M.combatStats[ev.a]) { const s = M.combatStats[ev.a]; s.damage += ev.dd || 0; s.combo = Math.max(s.combo, ev.cn || 0); if (ev.guardBreak) s.breaks++; }
-  if (!RESIM && !quiet && M.mode === 'train' && ev.d === 1 && !ev.justGuard) { TRAIN.total += ev.dd || 0; TRAIN.hits.push([clock, ev.dd || 0]); TRAIN.frameProbe = { start: clock, attacker: null, defender: null }; }
+  if (!RESIM && !quiet && M.mode === 'train') {
+    if (ev.justGuard && ev.d === 0) {
+      TRAIN.parries = (TRAIN.parries || 0) + 1;
+      if (typeof trainLogEvent === 'function') trainLogEvent('parry', '精准招架', '免伤 +12 架势，敌手硬直');
+    }
+    if (ev.guardBreak && ev.a === 0) {
+      TRAIN.breaks = (TRAIN.breaks || 0) + 1;
+      if (typeof trainLogEvent === 'function') trainLogEvent('break', '破防崩势', '击溃敌方架势，硬直 0.85s');
+    }
+    if (ev.d === 1 && !ev.justGuard) {
+      const dd = ev.dd || 0;
+      TRAIN.total += dd;
+      TRAIN.hits.push([clock, dd]);
+      if (dd > 0) {
+        TRAIN.lastHitDmg = dd;
+        TRAIN.hitCount = (TRAIN.hitCount || 0) + 1;
+        if (dd > (TRAIN.maxHitDmg || 0)) TRAIN.maxHitDmg = dd;
+      }
+      TRAIN.frameProbe = { start: clock, attacker: null, defender: null };
+    }
+  }
   if (RESIM) { hitStopOf(ev, att); return; }   // 重算：只保留影响对战的顿帧
   if (!quiet) hitStopOf(ev, att);
   if (quiet) {   // 效果已经提前播过了，只更新连击数

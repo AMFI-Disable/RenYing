@@ -149,11 +149,7 @@
       <button class="mcard right" id="mMatch" data-go="netp" data-kb-default><span class="mk">联机对战</span><span class="ms">3v3 车轮战 · 排位与好友约战</span></button>
       <button class="mcard left" id="mPlay" data-go="single"><span class="mk">习武</span><span class="ms">人机切磋 · 8v8 团战 · 历练闯关</span></button>
     </div>
-    <div class="home-hub" id="homeHub">
-      <button type="button" class="hub-pill" id="hubLargeBtn">大型团战 8v8</button>
-      <button type="button" class="hub-pill" id="hubLoadoutBtn">灵宠 · 招式 · 徽记</button>
-      <button type="button" class="hub-pill" id="hubHeroesBtn">二十侠客 · 三大套装</button>
-    </div>
+
     <div class="home-hero" id="homeHero">   <!-- 跟着首页正中那位侠客的脚下走：上面是名字，下面是换侠客 -->
       <div class="hh-name" id="heroName"></div>
       <div class="hh-swapwrap" id="homeSub">   <!-- 点开一排头像，选谁首页正中就站谁，进点将台也先指着他 -->
@@ -1464,8 +1460,26 @@
     <div class="db-feats" id="dummyFeats"></div>
     <p class="db-note" id="dummyNote"></p>
   </div>
+  <!-- 习武训练场：实时状态、徽记灵宠机制解析与战斗数据面板 -->
+  <aside class="train-lab hidden" id="trainLab" aria-label="训练场状态与机制面板">
+    <div class="tlab-head">
+      <b id="trainLabHero">训练状态</b>
+      <span class="tlab-opp" id="trainLabOpp">木人桩</span>
+      <button class="tlab-min" id="trainLabMin" type="button" title="收起面板" aria-label="收起面板">−</button>
+    </div>
+    <div class="tlab-tabs" id="trainLabTabs" role="tablist">
+      <button type="button" role="tab" data-tltab="status" class="sel" aria-selected="true">状态</button>
+      <button type="button" role="tab" data-tltab="loadout" aria-selected="false">徽记与灵宠</button>
+      <button type="button" role="tab" data-tltab="stats" aria-selected="false">战绩</button>
+      <button type="button" role="tab" data-tltab="attrs" aria-selected="false">属性</button>
+    </div>
+    <div class="tlab-body" id="trainLabBody"></div>
+  </aside>
   <div class="train-inspect hidden" id="trainInspect" aria-label="训练帧控制">
-    <button class="train-inspect-hitbox" id="trainHitboxBtn" type="button" aria-pressed="false">F1 判定框：关</button>
+    <button id="trainLabToggle" type="button" aria-pressed="true">状态面板：开</button>
+    <button class="train-inspect-hitbox" id="trainHitboxBtn" type="button" aria-pressed="true">F1 判定框：开</button>
+    <button id="trainFullMeterBtn" type="button" title="回满真元并清除技能与灵宠冷却">满怒清冷</button>
+    <button id="trainResetBtn" type="button" title="重置双方位置、气血、架势与统计">重置状态</button>
     <label class="train-inspect-rate" for="trainHz"><span>模拟频率</span><input id="trainHz" type="range" min="1" max="120" step="1" value="120"><output id="trainHzValue" for="trainHz">120 Hz</output></label>
     <button id="trainPauseBtn" type="button" aria-pressed="false">暂停时间</button>
     <button id="trainStepBtn" type="button" disabled>推进 1 帧</button>

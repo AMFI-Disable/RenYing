@@ -120,6 +120,18 @@ function drawHitboxOverlay(fighters) {
     ctx.fillStyle = advText.includes('+') ? '#70ff90' : advText.includes('-') ? '#ff7070' : '#efe8d8';
     ctx.fillText(stDesc, f.x, f.y - 125 * (f.size || 1));
   }
+  // 3. 飞行道具判定框 (Projectile Hitboxes)
+  if (typeof projs !== 'undefined' && Array.isArray(projs)) {
+    for (const p of projs) {
+      if (!p || !p.w || !p.h) continue;
+      const x0 = p.x - p.w / 2, y0 = p.y - p.h / 2;
+      ctx.strokeStyle = p.owner === 0 ? 'rgba(80, 235, 255, 0.92)' : 'rgba(255, 145, 70, 0.92)';
+      ctx.fillStyle = p.owner === 0 ? 'rgba(80, 235, 255, 0.2)' : 'rgba(255, 145, 70, 0.2)';
+      ctx.lineWidth = 1.5;
+      ctx.fillRect(x0, y0, p.w, p.h);
+      ctx.strokeRect(x0, y0, p.w, p.h);
+    }
+  }
   ctx.restore();
 }
 function tryHit(f, foe, m) {

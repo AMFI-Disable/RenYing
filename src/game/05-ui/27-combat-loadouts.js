@@ -83,22 +83,22 @@ var COMBAT_BADGES = {
   tactician: { n: '军师', en: 'Tactician', trigger: '团战命中敌方目标', effect: '为队友共享连击回气增益。', tiers: ['附近队友真气 +4。', '附近队友真气 +6。', '附近队友真气 +9 与架势 +8。'] },
 };
 var COMBAT_PETS = {
-  inkfox: { n: '墨狐', en: 'Ink Fox', rgb: '120,235,205', cd: 7.5, shape: 'fox' },
-  tortoise: { n: '玄龟', en: 'Obsidian Tortoise', rgb: '140,200,255', cd: 8.5, shape: 'shell' },
-  falcon: { n: '雷隼', en: 'Thunder Falcon', rgb: '255,220,110', cd: 7.0, shape: 'bird' },
-  froststag: { n: '霜鹿', en: 'Frost Stag', rgb: '160,235,255', cd: 9.0, shape: 'stag' },
-  flamelion: { n: '炎狮', en: 'Flame Lion', rgb: '255,125,85', cd: 8.0, shape: 'beast' },
-  shadowcrow: { n: '影鸦', en: 'Shadow Crow', rgb: '195,140,255', cd: 7.0, shape: 'bird' },
-  jadekoi: { n: '玉鲤', en: 'Jade Koi', rgb: '115,245,175', cd: 8.0, shape: 'koi' },
-  mechfinch: { n: '机雀', en: 'Clockwork Finch', rgb: '233,196,106', cd: 6.5, shape: 'bird' },
-  azure_dragon: { n: '青龙', en: 'Azure Dragon', rgb: '70,225,255', cd: 8.5, shape: 'dragon' },
-  white_tiger: { n: '白虎', en: 'White Tiger', rgb: '240,244,255', cd: 8.0, shape: 'beast' },
-  vermilion_bird: { n: '朱雀', en: 'Vermilion Bird', rgb: '255,105,75', cd: 8.5, shape: 'bird' },
-  qilin: { n: '墨麟', en: 'Ink Qilin', rgb: '235,195,90', cd: 9.0, shape: 'stag' },
-  moonrabbit: { n: '玉兔', en: 'Moon Rabbit', rgb: '215,225,255', cd: 7.0, shape: 'rabbit' },
-  spiritcrane: { n: '灵鹤', en: 'Spirit Crane', rgb: '155,240,220', cd: 7.5, shape: 'bird' },
-  ironape: { n: '玄猿', en: 'Iron Ape', rgb: '185,155,120', cd: 8.5, shape: 'beast' },
-  starowl: { n: '星枭', en: 'Star Owl', rgb: '175,145,255', cd: 7.2, shape: 'bird' },
+  inkfox: { n: '墨狐', en: 'Ink Fox', rgb: '120,235,205', cd: 7.5, shape: 'fox', passive: '连击>=2段命中额外回气 +2.5×品阶', active: '立刻回复 12×品阶 真元，并使 420px 内敌手缓速' },
+  tortoise: { n: '玄龟', en: 'Obsidian Tortoise', rgb: '140,200,255', cd: 8.5, shape: 'shell', passive: '非格挡状态下持续加速回复架势 (+4.5/秒×品阶)', active: '获得短暂霸体 (0.75s×品阶) 并回复 25×品阶 架势' },
+  falcon: { n: '雷隼', en: 'Thunder Falcon', rgb: '255,220,110', cd: 7.0, shape: 'bird', passive: '空中招式压制与追击协同', active: '朝锁定目标发射高速惊雷风刃 (14×品阶 伤)' },
+  froststag: { n: '霜鹿', en: 'Frost Stag', rgb: '160,235,255', cd: 9.0, shape: 'stag', passive: '脱战 3.5 秒后持续缓慢回复气血', active: '瞬间回复 5.5%×品阶 最大气血与 20×品阶 架势' },
+  flamelion: { n: '炎狮', en: 'Flame Lion', rgb: '255,125,85', cd: 8.0, shape: 'beast', passive: '近身灼烧与蓄力压制协同', active: '烈焰震退 260px 内敌众并施加灼烧 (2.5s×品阶)' },
+  shadowcrow: { n: '影鸦', en: 'Shadow Crow', rgb: '195,140,255', cd: 7.0, shape: 'bird', passive: '机动追击与闪避节奏协同', active: '立刻重置虚招与冲刺冷却并回复 10×品阶 真元' },
+  jadekoi: { n: '玉鲤', en: 'Jade Koi', rgb: '115,245,175', cd: 8.0, shape: 'koi', passive: '闪避脱身与状态净化协同', active: '驱散减速与灼烧，并获得短暂无敌 (0.22s×品阶)' },
+  mechfinch: { n: '机雀', en: 'Clockwork Finch', rgb: '233,196,106', cd: 6.5, shape: 'bird', passive: '高频远程骚扰与连携补伤', active: '齐射三枚扇形机矢远程压制对手' },
+  azure_dragon: { n: '青龙', en: 'Azure Dragon', rgb: '70,225,255', cd: 8.5, shape: 'dragon', passive: '全程每秒持续积攒 +1.8×品阶 真元', active: '释放贯通青龙气浪击飞沿途敌众 (18×品阶 伤)' },
+  white_tiger: { n: '白虎', en: 'White Tiger', rgb: '240,244,255', cd: 8.0, shape: 'beast', passive: '强攻破防与重击压制协同', active: '撕裂 280px 内敌手 32×品阶 架势并回气 +10×品阶' },
+  vermilion_bird: { n: '朱雀', en: 'Vermilion Bird', rgb: '255,105,75', cd: 8.5, shape: 'bird', passive: '气血低于 40% 时持续回复气血', active: '回复 5%×品阶 气血并击退灼烧 250px 内敌手' },
+  qilin: { n: '墨麟', en: 'Ink Qilin', rgb: '235,195,90', cd: 9.0, shape: 'stag', passive: '非格挡状态下持续加速回复架势 (+4.5/秒×品阶)', active: '展开金墨护阵：2 次霸体 + 30×品阶 架势 + 10×品阶 真元' },
+  moonrabbit: { n: '玉兔', en: 'Moon Rabbit', rgb: '215,225,255', cd: 7.0, shape: 'rabbit', passive: '空中机动与轻功步法协同', active: '重置冲刺、二段跳与空中冲刺，并回气 +12×品阶' },
+  spiritcrane: { n: '灵鹤', en: 'Spirit Crane', rgb: '155,240,220', cd: 7.5, shape: 'bird', passive: '空战挑飞与滞空控场协同', active: '吹起旋风将 280px 内敌手挑空并施加缓速' },
+  ironape: { n: '玄猿', en: 'Iron Ape', rgb: '185,155,120', cd: 8.5, shape: 'beast', passive: '非格挡状态下持续加速回复架势 (+4.5/秒×品阶)', active: '震地震退 260px 内敌手并削减 24×品阶 架势' },
+  starowl: { n: '星枭', en: 'Star Owl', rgb: '175,145,255', cd: 7.2, shape: 'bird', passive: '远距控场与缓速牵制协同', active: '齐射两枚星弹并使 520px 内敌手缓速 (1.6s×品阶)' },
 };
 var PET_TIER_MUL = { basic: 1, spirit: 1.25, immortal: 1.55 };
 var SKILL_MODS = {
@@ -151,9 +151,14 @@ function showBadgeCue(f, key, consumed = false) {
   if (!f || RESIM) return;
   const badge = COMBAT_BADGES[f.badgeId]; if (!badge) return;
   const names = { flowing: consumed ? '连势 · 连段追步' : '连势 · 追步窗口', focus: consumed ? '凝锋 · 贴身压迫' : '凝锋 · 压迫窗口', riposte: consumed ? '回锋 · 踏进反击' : '回锋 · 反击窗口', breaker: consumed ? '破军 · 追击踏进' : '破军 · 破防追击', breakerDash: '破军 · 追击冲刺', ascent: consumed ? '凌空 · 空中续招' : '凌空 · 空中续闪', pursuit: consumed ? '追影 · 退步闪避' : '追影 · 退步窗口', ironwall: '铁壁 · 霸体反击', tempest: '疾电 · 灵动缩冷', bloodlust: '血怒 · 绝境回气', phantom: '绝影 · 虚招袭杀', resonance: '共鸣 · 灵宠缩冷', skybreaker: '破穹 · 御空重置', juggernaut: '镇岳 · 以伤换势', vanguard: '同心 · 众志聚气' };
+  const label = names[key] || badge.n;
+  if (M.mode === 'train' && f.idx === 0) {
+    TRAIN.lastBadgeT = clock; TRAIN.lastBadgeMsg = label;
+    if (typeof trainLogEvent === 'function') trainLogEvent('badge', label, badge.effect);
+  }
   const rgb = f.look && f.look.slash || '233,196,106';
   ring(f.x, f.y - 58, consumed ? 78 : 58, rgb, consumed ? 0.28 : 0.18);
-  addP({ type: 'text', text: names[key] || badge.n, x: f.x, y: f.y - 112, life: 0.7, max: 0.7, rgb });
+  addP({ type: 'text', text: label, x: f.x, y: f.y - 112, life: 0.7, max: 0.7, rgb });
 }
 function petTickAll() {
   if (M.phase !== 'fight') return;
@@ -252,6 +257,10 @@ function tryPetActive(f, foe) {
     if (foe && Math.abs(foe.x - f.x) < 520) foe.slowT = Math.max(foe.slowT || 0, 1.6 * mul);
   }
   if (!RESIM) {
+    if (M.mode === 'train' && f.idx === 0) {
+      TRAIN.lastPetT = clock;
+      if (typeof trainLogEvent === 'function') trainLogEvent('pet', `灵宠 · ${spec.n}`, spec.active || '发动主动秘技');
+    }
     ring(f.x, f.y - 68, 108, rgb, 0.36);
     addP({ type: 'text', text: `灵宠 · ${spec.n}`, x: f.x, y: f.y - 122, life: 0.8, max: 0.8, rgb });
   }
@@ -301,7 +310,12 @@ function trySwitchStance(f) {
   if (!c || !f.stanceUnlocked || f.stanceT > 0 || M.phase !== 'fight' || !c.consume('stance')) return false;
   f.stance = f.stance ? 0 : 1;
   f.stanceT = 0.18; f.state = 'stance'; f.t = 0; f.move = null; f.skill = null; f.sp = null; f.vx *= 0.18;
-  addP({ type: 'text', text: f.stance ? (HERO_STANCES[f.ch.id] || {}).name : '本式', x: f.x, y: f.y - 130, life: 0.7, max: 0.7, rgb: f.look.slash || '230,210,150' });
+  const stName = f.stance ? ((HERO_STANCES[f.ch.id] || {}).name || '二式') : '本式';
+  if (!RESIM && M.mode === 'train' && f.idx === 0) {
+    TRAIN.lastStanceT = clock;
+    if (typeof trainLogEvent === 'function') trainLogEvent('stance', `切换架势 · ${stName}`, f.stance ? ((HERO_STANCES[f.ch.id] || {}).desc || '') : '恢复标准招式参数');
+  }
+  addP({ type: 'text', text: stName, x: f.x, y: f.y - 130, life: 0.7, max: 0.7, rgb: f.look.slash || '230,210,150' });
   ring(f.x, f.y - 54, 62, f.look.slash || '230,210,150', 0.28);
   return true;
 }

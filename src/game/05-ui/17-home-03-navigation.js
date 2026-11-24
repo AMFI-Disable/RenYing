@@ -212,19 +212,9 @@ for (const b of document.querySelectorAll('#menu [data-go]')) {
   });
 }   // 悬停不再把镜头甩到两边：场景只跟着鼠标轻轻晃（见 renderMenu 里的 MENU_M）
 for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', backToMenu);
-// ---------- 首页快捷入口与大型团战启动 ----------
+// ---------- 大型团战启动 ----------
 (function initExpansionHome() {
   let meleeTeamSize = 5, ctfTeamSize = 5;
-  if ($id('hubLargeBtn')) $id('hubLargeBtn').addEventListener('click', () => {
-    openScreen('single');
-    const tab = document.querySelector('#xiwuCatTabs [data-cat="large"]');
-    if (tab) tab.click();
-  });
-  if ($id('hubLoadoutBtn')) $id('hubLoadoutBtn').addEventListener('click', () => {
-    openScreen('armory');
-    setTimeout(() => { const t = document.querySelector('#arTabs [data-tab="badges"]'); if (t) t.click(); }, 60);
-  });
-  if ($id('hubHeroesBtn')) $id('hubHeroesBtn').addEventListener('click', () => openScreen('codex'));
   const meleeSeg = $id('meleeSizeSeg');
   if (meleeSeg) meleeSeg.addEventListener('click', e => {
     const b = e.target.closest('[data-lsize]'); if (!b) return;

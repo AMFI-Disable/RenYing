@@ -288,9 +288,6 @@ Object.assign(UI_COPY_EN, {
   "招式自选流派": "Custom Skill Variants",
   // Milestone 4 & 5：新模式与首页分类
   "人机切磋 · 8v8 团战 · 历练闯关": "Play vs AI · 8v8 Battles · Story & Trials",
-  "大型团战 8v8": "Large-Scale 8v8",
-  "灵宠 · 招式 · 徽记": "Pets · Skills · Badges",
-  "二十侠客 · 三大套装": "20 Heroes · 3 Skin Sets",
   "大型团战": "Large-Scale",
   "3v3–8v8 混战、夺旗与无尽": "3v3–8v8 Melee, CTF & Endless",
   "群雄会战": "Grand Melee",
@@ -376,5 +373,15 @@ Object.assign(UI_COPY_EN, {
   "Q/R 技能冷却略减": "Q/R skills have slightly shorter cooldowns",
   "连弩齐发：齐射三枚追踪机矢": "Repeating Volley (fire three homing bolts)",
   "镜头": "Zoom",
-  "待选": "Open"
+  "待选": "Open",
+  "训练场状态与机制面板": "Training Status & Mechanics Panel",
+  "训练状态": "Training Status",
+  "收起面板": "Collapse Panel",
+  "徽记与灵宠": "Badges & Pets",
+  "状态面板：开": "Status Panel: On",
+  "状态面板：关": "Status Panel: Off",
+  "满怒清冷": "Full Fury & CDs",
+  "重置状态": "Reset State",
+  "回满真元并清除技能与灵宠冷却": "Fill Fury and reset all skill and pet cooldowns",
+  "重置双方位置、气血、架势与统计": "Reset positions, HP, guard, and training stats"
 });

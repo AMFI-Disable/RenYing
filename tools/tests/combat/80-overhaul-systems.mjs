@@ -484,4 +484,42 @@ export default [
       return { pass: true };
     })()`
   },
+  {
+    name: 'Training mode enables hitbox visualization by default and renders live status, badges/pets, stats, and attributes',
+    fn: `(() => {
+      startTraining('dummy', false);
+      if (!debugHitbox) return { pass: false, error: 'Expected debugHitbox=true by default in Training mode' };
+      A.badgeId = 'flowing'; A.badgeTier = 'purpgold';
+      A.petId = 'inkfox'; A.petTier = 'immortal';
+      for (const tab of ['status', 'loadout', 'stats', 'attrs']) {
+        TRAIN.labTab = tab;
+        trainLabRender(true);
+        const html = ($id('trainLabBody') || {}).innerHTML || '';
+        if (!html || html.length < 40) return { pass: false, error: 'Training lab tab rendered empty: ' + tab };
+      }
+      TRAIN.labTab = 'loadout';
+      trainLabRender(true);
+      const loadoutHtml = $id('trainLabBody').innerHTML;
+      if (!loadoutHtml.includes('连势') || !loadoutHtml.includes('墨狐')) {
+        return { pass: false, error: 'Training lab loadout tab missing equipped badge or pet explanation' };
+      }
+      A.meter = 10; A.skillCD = 5; A.petCD = 6;
+      trainLabFullMeter();
+      if (A.meter !== 100 || A.skillCD !== 0 || A.petCD !== 0) {
+        return { pass: false, error: 'trainLabFullMeter did not fill meter and clear cooldowns' };
+      }
+      tryPetActive(A, B);
+      if (!TRAIN.events.some(e => e.kind === 'pet')) {
+        return { pass: false, error: 'Pet activation was not logged into live TRAIN.events' };
+      }
+      trainLabReset();
+      if (TRAIN.total !== 0 || TRAIN.events.length !== 0) {
+        return { pass: false, error: 'trainLabReset did not clear training telemetry' };
+      }
+      startMatch('cpu', 'normal', [0, 1]);
+      if (debugHitbox) return { pass: false, error: 'Expected debugHitbox=false when starting non-train cpu match' };
+      toMenu();
+      return { pass: true };
+    })()`
+  },
 ];

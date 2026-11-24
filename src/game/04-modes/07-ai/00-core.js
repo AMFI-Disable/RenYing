@@ -177,7 +177,7 @@ class DummyCtrl extends Ctrl {
     if (!c.rep) this.done = true;
   }
 }
-const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0, inspectHz: 120, inspectAcc: 0, inspectPaused: false };
+const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0, lastHitDmg: 0, maxHitDmg: 0, hitCount: 0, parries: 0, breaks: 0, events: [], lastBadgeT: -99, lastBadgeMsg: '', lastPetT: -99, lastStanceT: -99, labOpen: true, labTab: 'status', inspectHz: 120, inspectAcc: 0, inspectPaused: false };
 
 // 电脑：按键都由 src/ai.js 里的 AIBrain 决定，这里只是接到操作上；各侠客针对特定模式与变体的专属调优可注册进 HERO_AI_REGISTRY
 const HERO_AI_REGISTRY = {};

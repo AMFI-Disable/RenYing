@@ -13,6 +13,8 @@ function drawTrainStats(cx, top, bh) {
   if (cu.t > 0 && cu.n > TRAIN.best) { TRAIN.best = cu.n; }
   if (cu.t > 0 && cu.dmg > TRAIN.bestDmg) TRAIN.bestDmg = cu.dmg;
   while (TRAIN.hits.length && clock - TRAIN.hits[0][0] > 5) TRAIN.hits.shift();
+  // 右侧交互式训练面板展开时，由 DOM 面板承载完整状态与机制解析，避免画布卡片重叠
+  if (TRAIN.labOpen && typeof $id === 'function' && $id('trainLab') && !$id('trainLab').classList.contains('hidden')) return;
   const dps = TRAIN.hits.reduce((a, h) => a + h[1], 0) / 5;
   const x = W - Math.max(24, W * 0.04), y = top + bh + 80, fs = Math.max(13, Math.round(H * 0.019));
   const lines = [

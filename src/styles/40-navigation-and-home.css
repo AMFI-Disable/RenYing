@@ -424,9 +424,5 @@
   .ad-dev-row b { color: #fff; font-weight: 600; }
   .ad-dev-row span { flex: 1; color: rgba(236,232,225,.62); }
   .ad-dev-row .ad-dev-me { color: #7fe0a8; font-style: normal; }
-  /* 首页快捷分类入口条 */
-  .home-hub { position: relative; z-index: 6; display: flex; flex-wrap: wrap; justify-content: center; gap: 8px; margin: 10px auto 0; max-width: 720px; }
-  .hub-pill { padding: 6px 14px; border-radius: 999px; border: 1px solid rgba(233,196,106,.38); background: rgba(12,16,32,.78); color: #efe8d8; font-size: 12.5px; cursor: pointer; transition: border-color .2s, background .2s, transform .15s; }
-  .hub-pill:hover { border-color: #e9c46a; background: rgba(233,196,106,.16); transform: translateY(-1px); }
   .xiwu-large-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(233,196,106,.24); }
   .xl-lbl { font-size: 12.5px; color: #e9c46a; font-weight: 600; }
