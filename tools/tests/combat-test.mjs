@@ -133,6 +133,7 @@ async function initRunner() {
 
   // Fast In-Process Sandbox Fallback
   console.log('[Runner] Executing in high-speed in-process sandbox.');
+  const armoryCode = readFileSync('src/armory-core.js', 'utf8');
   const netCode = readFileSync('src/net-p2p.js', 'utf8');
   const gameCode = gameSource();
   const dummyEl = {
@@ -154,7 +155,10 @@ async function initRunner() {
   const elCache = {};
   const getEl = id => {
     if (!elCache[id]) {
+      const clicks = [];
       elCache[id] = Object.assign({}, dummyEl, {
+        addEventListener(type, callback) { if (type === 'click') clicks.push(callback); },
+        click() { for (const callback of clicks) callback({ target: this }); },
         id, textContent: '', innerHTML: '', style: {},
         classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => false }
       });
@@ -188,6 +192,7 @@ async function initRunner() {
   Object.assign(sandbox.window, sandbox);
   vm.createContext(sandbox.window);
 
+  new vm.Script(armoryCode).runInContext(sandbox.window);
   new vm.Script(netCode).runInContext(sandbox.window);
   new vm.Script(gameCode).runInContext(sandbox.window);
 

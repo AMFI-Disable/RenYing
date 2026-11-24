@@ -4,7 +4,7 @@
 // reports text boxes that overlap each other or run off the canvas.
 // Intended for the crowded 2v2 (watch2v2) HUD, works for any mode.
 // Usage: node tools/audits/hud-overlap-audit.mjs [outdir] [w] [h] [mode]
-//   mode: watch2v2 (default) | 2v2 | raid | cpu | mayhem
+//   mode: watch2v2 (default) | 2v2 | ctf | raid | cpu
 // Exit code 1 when an overlap or an off-canvas box is found.
 //
 // 找 bug 提示：只看画面顶部 BAND 像素高的那一条（血条、计时、名字所在的地方）；报重叠时会给出两段文字和它们的框。
@@ -115,7 +115,7 @@ await ev(`(() => {
   };
 })()`);
 
-await ev(MODE === 'watch2v2' ? `startWatch2v2()` : MODE === '2v2' ? `start2v2LocalCoop(0, 2, 1, 3, 'normal')` : MODE === 'raid' ? `startRaidMatch([0, 2, 3], 3)` : `startMatch('cpu','normal',[0,2])`);
+await ev(MODE === 'watch2v2' ? `startWatch2v2()` : MODE === '2v2' ? `start2v2LocalCoop(0, 2, 1, 3, 'normal')` : MODE === 'ctf' ? `startCtf(2)` : MODE === 'raid' ? `startRaidMatch([0, 2, 3], 3)` : `startMatch('cpu','normal',[0,2])`);
 await sleep(2200);                       // let the intro finish and the HUD settle
 await ev(`window.__hudBoxes = []`);
 await sleep(700);                        // ~1s of frames

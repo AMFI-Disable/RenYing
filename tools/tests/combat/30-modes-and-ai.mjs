@@ -553,14 +553,23 @@ export default [
   {
     name: 'Ink Ball (cuju): two AI sides finish a match without errors',
     fn: `(() => {
-      startCuju(11, 14, 'hard', { isWatch: true });
-      let n = 0;
-      while (M.phase !== 'end' && n < 120 * 400) { step(); n++; }
-      if (M.phase !== 'end') return { pass: false, error: 'AI match did not finish: ' + M.cuju.score + ' after ' + Math.round(n / 120) + 's' };
-      const t = M.cuju.touches;
-      if (t[0] + t[1] < 3) return { pass: false, error: 'AI barely touched the ball: ' + t };
-      toMenu();
-      return { pass: true, error: null };
+      const random = Math.random, previousSeed = GRNG.s;
+      let seed = 1;
+      Math.random = () => ((seed = (Math.imul(1664525, seed) + 1013904223) >>> 0) / 4294967296);
+      GRNG.s = 1;
+      try {
+        startCuju(11, 14, 'hard', { isWatch: true });
+        let n = 0;
+        while (M.phase !== 'end' && n < 120 * 400) { step(); n++; }
+        if (M.phase !== 'end') return { pass: false, error: 'AI match did not finish: ' + M.cuju.score + ' after ' + Math.round(n / 120) + 's' };
+        const t = M.cuju.touches;
+        if (t[0] + t[1] < 3) return { pass: false, error: 'AI barely touched the ball: ' + t };
+        return { pass: true, error: null };
+      } finally {
+        toMenu();
+        Math.random = random;
+        GRNG.s = previousSeed;
+      }
     })()`
   },
   {

@@ -40,6 +40,10 @@ function startMatch(mode, level, chars, isWatch = false) {
 }
 // 磁仙每回合开局抽正极或负极：只在这里抽、只用对局随机数，联机两边和回放抽到的一样（预览用的角色 reset 不碰随机数）
 function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet') f.pol = grnd() < 0.5 ? 1 : -1; }
+function applyMayhemStats(f) {
+  f.maxHp = Math.round(f.maxHp * 10); f.hp = f.lagHp = f.maxHp;
+  f.guard = f.maxGuard = 500; f.meter = 100;
+}
 function startRound() {
   M.squadOrders = ['auto', 'auto'];
   M.reviewReady = false;
@@ -108,12 +112,8 @@ function startRound() {
   if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts();
   if (REC.on && REC.meta) REC.meta.loadouts = allFighters().map(f => ({ unlocked: !!f.stanceUnlocked, stance: f.stance || 0, badge: f.badgeId || '', tier: f.badgeTier || '' }));
   if (M.round === 1) M.combatStats = Array.from({ length: Math.max(4, allFighters().length) }, () => ({ damage: 0, combo: 0, breaks: 0, falls: 0 }));
-  const isMayhem = mayhemOn();
-  if (isMayhem) {
-    for (const f of allFighters()) if (!f.hidden) {
-      f.maxHp = Math.round(f.maxHp * 10); f.hp = f.lagHp = f.maxHp;
-      f.guard = f.maxGuard = 500; f.meter = 100;
-    }
+  if (mayhemOn()) {
+    for (const f of allFighters()) if (!f.hidden) applyMayhemStats(f);
   }
   if (chaosOn() && M.round === 1) M.chaos = { i: -1, t: 0 };   // 天机乱斗：开打第一帧抽第一条异变（updateChaos），之后的回合接着换
   const foeHp = (LEVEL_BY_ID[M.level] || {}).foeHp || 1;   // 难度表里的电脑气血倍数（绝顶多 35%）

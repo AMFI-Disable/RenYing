@@ -4,6 +4,8 @@ Thanks for helping. This page lists the rules the repository and CI enforce. The
 
 ## Who Can Merge
 
+Repository development takes place directly on `main`. Do not create additional development branches.
+
 Only pull requests from the maintainer (Even, GitHub `AMFI-Disable`) and repository collaborators are merged. Pull requests from anyone else are not merged or copied into `main`. Bug reports and ideas are welcome from everyone in [Issues](https://github.com/AMFI-Disable/RenYing/issues).
 
 ## Before You Start

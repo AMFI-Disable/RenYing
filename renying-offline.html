@@ -3499,7 +3499,7 @@ white-space: nowrap;
 transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
 }
 .arch-pill small {
-font-size: 11px;
+font-size: 12px;
 opacity: 0.72;
 }
 .arch-pill:hover {
@@ -6775,6 +6775,11 @@ try { if (typeof updateVerLine === 'function') updateVerLine(); } catch (e) {}
 }
 const EN_DUR = s => String(s).replace(/(\d+)\s*天/g, '$1d').replace(/(\d+)\s*小时/g, '$1h').replace(/(\d+)\s*分(?:钟)?/g, '$1m');
 const PATTERNS_EN = [
+[/^“蓄满(.+)，格挡在它面前像纸一样薄。”$/, (m, move) => lookup(move) ? `“Fully charge ${lookup(move)} to break a guard.”` : m],
+[/^“凌空使出(.+)，制空追击一气呵成。”$/, (m, move) => lookup(move) ? `“Use ${lookup(move)} to follow up in midair.”` : m],
+[/^“(.+)一出，(.+)让对手措手不及。”$/, (m, move, effect) => lookup(move) && lookup(effect) ? `“Catch your opponent off guard with ${lookup(move)}. Effect: ${lookup(effect)}.”` : m],
+[/^“(.+)顺势抽身，化险为夷。”$/, (m, move) => lookup(move) ? `“Use ${lookup(move)} to slip out of danger.”` : m],
+[/^“气满施展「(.+)」，(.+)定乾坤。”$/, (m, move, effect) => lookup(move) && lookup(effect) ? `“At full meter, use ${lookup(move)}. Effect: ${lookup(effect)}.”` : m],
 [/^总伤害\s*(\d+)\s*·\s*最长连击\s*(\d+)\s*·\s*破防\s*(\d+)\s*·\s*坠崖\s*(\d+)$/, (m0, damage, combo, breaks, falls) => `Damage ${damage} · Longest combo ${combo} · Guard breaks ${breaks} · Terrain falls ${falls}`],
 [/^今日\s*(\d+)\/(\d+)(?:\s*·\s*可领\s*(\d+)\s*墨锭)?$/, (m0, a, b, c) => `Today ${a}/${b}` + (c ? ` · ${c} Ink to claim` : '')],
 [/^(.+?)\s*位侠士在线$/, (m0, n) => `${n} ${n === '1' ? 'warrior' : 'warriors'} online`],
@@ -12023,7 +12028,85 @@ Object.assign(UI_COPY_EN, {
 "居合起手极快，防反窗口更准。": "Extremely fast Iaido startup with a precise counter window.",
 "瞬拔式": "Quick-Draw Stance",
 "控场连携更强，单击略轻。": "Stronger crowd control in combos with slightly lighter individual hits.",
-"泼彩式": "Splashed Ink"
+"泼彩式": "Splashed Ink",
+"3v3–8v8 大型同屏混战：支持完整禁选（BP）排兵布阵与五层立体战场！": "3v3–8v8 battles with a full ban-and-pick draft and a five-level arena.",
+"快速会战": "Quick Melee",
+"快速夺旗": "Quick Capture the Banner",
+"2v2–8v8 团队夺旗争锋：支持战略禁选（BP），护送敌旗归阵先得三分胜！": "2v2–8v8 capture the banner with a full draft. Bring the enemy banner home three times to win.",
+"无尽车轮生存试炼：逐波迎战递增境界的江湖群雄！": "Survive waves of increasingly tough challengers in the endless gauntlet.",
+"根据侠客流派与徽记阶位，一键智能装配全部已拥有徽记": "Auto-equip owned badges based on hero archetype and badge tier",
+"侠客列表": "Hero roster",
+"登录之后才能用武库": "Sign in to use the Armory",
+"断魂墨敕控场 · 墨阵禁锢与追踪墨符压制(810血)": "Controls space with binding ink circles and homing talismans (810 HP)",
+"近战连招": "Melee Combo",
+"✦ 专属兵器连段": "✦ Signature Weapon Combo",
+"“断魂墨毫五式，每一式都带着独门兵器的劲道。”": "“The Soul Brush has five forms, each with a different stroke.”",
+"蓄力破防": "Charged Guard Break",
+"空中连击": "Aerial Combo",
+"空中压制": "Aerial Pressure",
+"墨阵禁锢": "Ink Circle Bind",
+"追踪墨符": "Homing Ink Talismans",
+"✦ 追踪墨符": "✦ Homing Ink Talismans",
+"绝墨判魂大阵": "Soul Judgment Circle",
+"✦ 绝墨判魂大阵": "✦ Soul Judgment Circle",
+"先用 Q 断魂墨缚禁锢走位，再用 R 镇魂敕符远程追踪压制": "Use Q to pin opponents in place, then pressure them from range with R’s homing talisman.",
+"心有灵犀音律 · 扩张音环减速与余音弹反震晕(805血)": "Slows foes with expanding sound rings and stuns them with a counter (805 HP)",
+"“灵犀玉笛连点，每一式都带着独门兵器的劲道。”": "“Each strike of the jade flute has its own rhythm.”",
+"音环减速": "Slowing Sound Ring",
+"“笛声听着柔和，震在架势上可一点不客气。”": "“The flute sounds soft, but it hits the guard hard.”",
+"余音震晕": "Echo Stun",
+"✦ 余音震晕": "✦ Echo Stun",
+"四重音波结界": "Four-Wave Sound Barrier",
+"✦ 四重音波结界": "✦ Four-Wave Sound Barrier",
+"Q 灵犀音波远距扩张减速，对手近身或出暗器时用 R 余音震魄反制": "Use Q to slow foes at range. Counter close approaches or projectiles with R.",
+"丹青妙笔绘卷 · 朱砂远波迟缓与青绿画阵定身(815血)": "Slows foes with ranged vermilion waves and roots them in a painted circle (815 HP)",
+"“丹青五韵连画，每一式都带着独门兵器的劲道。”": "“Each of the five painted strokes carries its own force.”",
+"朱砂减速": "Vermilion Slow",
+"“朱砂勾轮廓，青绿封退路，妥妥一幅名画。”": "“Vermilion draws the outline and jade ink cuts off the escape.”",
+"画阵定身": "Painted Circle Root",
+"✦ 画阵定身": "✦ Painted Circle Root",
+"三座墨峰画浪": "Three Ink Peaks",
+"✦ 三座墨峰画浪": "✦ Three Ink Peaks",
+"先用 R 青绿封卷定身困敌，接 Q 朱砂画弧远程气波连环压制": "Root foes with R, then pressure them from range with Q’s vermilion wave.",
+"武学与灵宠": "Martial Arts & Pets",
+"每累计斩获 40 次可得 1 枚徽记碎片。点击右上角 FULL AUTO 可一键全阵容最优装配。": "Earn one Badge Sigil per 40 KOs. Select FULL AUTO to equip the whole roster.",
+"武学徽记": "Martial Badges",
+"水墨灵宠": "Ink Pets",
+"侠客配装": "Hero Loadouts",
+"自动装配徽记": "Auto-Equip Badges",
+"缩地": "Flash Step",
+"腾空闪脱身后，立减 Q/R 技能剩余冷却并获得瞬步反击窗口。": "After an aerial escape, reduce remaining Q and R cooldowns and briefly gain a dash counter.",
+"腾空闪脱身": "Aerial escape",
+"试招": "Try Move",
+"达成 6 连击以上或残血命敌时，触发血月汲取，回血并大幅削减敌方架势。": "Land a combo of at least six hits or hit a foe while low on HP to heal and heavily reduce their guard.",
+"6 连击以上或残血命中": "At least six combo hits or a hit while low on HP",
+"莲华": "Lotus",
+"精准招架成功瞬间绽放护体莲华，回复气血并震开贴身敌手。": "A precise parry heals you and pushes away nearby foes.",
+"结义": "Sworn Allies",
+"团战队友受创或倒下": "An ally takes damage or falls in a team fight",
+"交替命中 Q 与 R 技能后，触发阴阳调和，大幅回气并回复架势。": "Alternate successful Q and R hits to recover substantial meter and guard.",
+"交替命中 Q 与 R 技能": "Alternate successful Q and R hits",
+"上一页": "Previous",
+"下一页": "Next",
+"分页": "Pagination",
+"一键智能补全阵容": "Auto-Fill Draft",
+"侠客流派筛选": "Filter by hero archetype",
+"【断魂敕墨 · 阵法聚元】墨缚禁锢与追踪墨符持续压制积怒；奥义「绝墨魂卷」在目标所在层布阵，先定身削减架势，再引爆画阵。": "Build meter with bindings and homing ink talismans. Abyssal Ink Scroll roots foes and drains their guard before detonating the circle on the target’s level.",
+"【灵犀音环 · 余音聚气】音环远程穿透与余音弹反稳步蓄能；奥义「心音幻境」四圈音波粉碎敌方飞行物、削减架势并迟缓敌人，同时为附近队友充能。": "Build meter with piercing sound rings and counters. Realm of Echoes destroys projectiles, weakens and slows enemies, and gives nearby allies meter.",
+"【丹青点墨 · 画卷聚意】远程朱砂气波与青绿封卷控场攒气；奥义「千里江山」在目标所在层依次掀起三重墨浪挑飞敌人。": "Build meter with ranged vermilion waves and painted traps. Land of a Thousand Miles launches foes with three ink waves on the target’s level.",
+"总计": "Total",
+"团战中有队友倒下或受重创时，自身立获真气爆发与霸体护身。": "Gain meter and armor when an ally falls or takes heavy damage in a team fight.",
+"魂笔重印": "Soul Brush Seal",
+"凌空书敕": "Aerial Decree",
+"墨影撤步": "Inkshade Retreat",
+"清音蓄扫": "Charged Flute Sweep",
+"凌空吹笛": "Aerial Flute",
+"踏音后撤": "Echo Retreat",
+"朱砂重笔": "Vermilion Brushstroke",
+"凌空点彩": "Aerial Brushstroke",
+"踏墨退避": "Inkstep Retreat",
+"“脚下的墨圈别乱踩，踩进去可拔不出脚。”": "“Watch for the ink circles. They can pin you in place.”",
+"解锁": "Unlock",
 });
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
@@ -33330,7 +33413,7 @@ spawnProj(foeSetter, { kind: 'bolt', x: hx, y: -360, vx: 0, w: 68, h: 720, life:
 }
 }
 }
-const mayhemOn = () => M.mode === 'mayhem' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'mayhem') || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
+const mayhemOn = () => M.mode === 'mayhem' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'mayhem') || ((M.mode === 'tag3' || M.mode === 'melee' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
 const mapsOn = () => {
 if (M.mode === 'replay' && REPLAY.on) {
 const m = REPLAY.m || {};
@@ -33737,6 +33820,10 @@ if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
 else if (mode === 'cpu') say('人机切磋 · 实战对练', 1.4);
 }
 function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet') f.pol = grnd() < 0.5 ? 1 : -1; }
+function applyMayhemStats(f) {
+f.maxHp = Math.round(f.maxHp * 10); f.hp = f.lagHp = f.maxHp;
+f.guard = f.maxGuard = 500; f.meter = 100;
+}
 function startRound() {
 M.squadOrders = ['auto', 'auto'];
 M.reviewReady = false;
@@ -33805,12 +33892,8 @@ magRoll();
 if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts();
 if (REC.on && REC.meta) REC.meta.loadouts = allFighters().map(f => ({ unlocked: !!f.stanceUnlocked, stance: f.stance || 0, badge: f.badgeId || '', tier: f.badgeTier || '' }));
 if (M.round === 1) M.combatStats = Array.from({ length: Math.max(4, allFighters().length) }, () => ({ damage: 0, combo: 0, breaks: 0, falls: 0 }));
-const isMayhem = mayhemOn();
-if (isMayhem) {
-for (const f of allFighters()) if (!f.hidden) {
-f.maxHp = Math.round(f.maxHp * 10); f.hp = f.lagHp = f.maxHp;
-f.guard = f.maxGuard = 500; f.meter = 100;
-}
+if (mayhemOn()) {
+for (const f of allFighters()) if (!f.hidden) applyMayhemStats(f);
 }
 if (chaosOn() && M.round === 1) M.chaos = { i: -1, t: 0 };   // 天机乱斗：开打第一帧抽第一条异变（updateChaos），之后的回合接着换
 const foeHp = (LEVEL_BY_ID[M.level] || {}).foeHp || 1;   // 难度表里的电脑气血倍数（绝顶多 35%）
@@ -42966,6 +43049,13 @@ ctx.font = `700 ${Math.round(bh * 2.3)}px ${BODY_FONT}`;
 ctx.fillStyle = M.timer < 10 ? '#ff8a78' : '#efe8d8';
 if (M.ot) ctx.fillStyle = '#ff6a5a';
 ctx.fillText(Math.ceil(M.timer), cx, top + bh / 2 + 2);
+if (ctfOn() && M.ctf) {
+ctx.font = `700 ${fsNum}px ${BODY_FONT}`;
+for (let side = 0; side < 2; side++) {
+ctx.fillStyle = side === 0 ? '#6fe0ff' : '#ff7878';
+ctx.fillText(`${M.ctf.score[side]}/${M.ctf.target}`, cx + (side === 0 ? -1 : 1) * gutter / 4, top + bh * 2.5);
+}
+}
 if (M.ot) { ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText(cvT('加时'), cx, top - bh * 0.75); }
 ctx.restore();
 const bar = (x, y, w, h, ratio, style, rev, lag) => {
@@ -43057,7 +43147,7 @@ else if (M.subMode === 'pp_pp') bTitle = '⚔️ 2v2 四方争锋 (双人对决)
 else if (M.mode === 'net' && netRoomMode === 'pp_cc') bTitle = '🌐 2v2 双人联机共斗 (抗击双天道)';
 else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 四人对决 (全员切磋)';
 }
-if (ctfOn() && M.ctf) bTitle = `${cvT('夺旗争锋')} · ${M.ctf.score.join(' : ')} / ${M.ctf.target}`;
+if (ctfOn()) bTitle = '夺旗争锋';
 if (chaosOn()) bTitle += ' · 天机乱斗';
 if (chaosOn()) drawChaosHUD(cx, H - 48, true);
 ctx.fillText(window.I18N ? I18N.t(bTitle) : bTitle, cx, H - 10);
@@ -46208,15 +46298,15 @@ chiyan: '【烈焰连拳 · 灼心暴怒】高频烈拳与灼烧伤害迅速拉�
 yinhu: '【狐步瞬影 · 疾刃充能】极速连段与穿身背袭高速攒气；奥义「九尾绝影」九道银月残影疾斩接交叉封喉。',
 yunhe: '【御风仙羽 · 凌云蓄势】制空仙羽穿透与云岚续航稳健充能；奥义「鹤舞九天」六道云岚羽芒凌空连击接九天俯冲。',
 tiangang: '【长驱破阵 · 铁壁蓄锋】超长枪芒贯穿与霸体抗压高效攒气；奥义「天罡破军」五道金戈枪芒贯杀接天罡坠世。',
-mojie: '【断魂敕墨 · 阵法聚元】墨缚禁锢与追踪墨符持续压制积怒；奥义「绝墨魂卷」六道玄墨剑意展卷封杀接绝墨印镇压。',
+mojie: '【断魂敕墨 · 阵法聚元】墨缚禁锢与追踪墨符持续压制积怒；奥义「绝墨魂卷」在目标所在层布阵，先定身削减架势，再引爆画阵。',
 baihe: '【霜镜凝华 · 寒江聚锋】霜镜弹反暗器与寒江贯刺灵动攒气；奥义「冰河奔涌」六道清霜剑影连斩接冰封江面。',
 jinpeng: '【裂空金羽 · 扶摇蓄势】三羽远程消耗与俯冲突袭迅猛积怒；奥义「鹏程万里」七道裂空罡风撕扯接大鹏压顶。',
 youming: '【暗影锁魂 · 永夜积煞】拘魂拉拽接双镰掠杀极速充能；奥义「永夜绝斩」八道幽冥双镰瞬息交错接噬影断魂。',
-lingxi: '【灵犀音环 · 余音聚气】音环远程穿透与余音弹反稳步蓄能；奥义「心音幻境」六道清音气浪震荡接破魂重音。',
+lingxi: '【灵犀音环 · 余音聚气】音环远程穿透与余音弹反稳步蓄能；奥义「心音幻境」四圈音波粉碎敌方飞行物、削减架势并迟缓敌人，同时为附近队友充能。',
 bawang: '【霸王悍勇 · 裂地积威】重甲霸体换血与震军气浪高效充能；奥义「力拔山兮」五记雷霆重劈接力拔山河压垮敌军。',
 fengling: '【清铃和风 · 轻灵充能】双风刃安全消耗与风铃回血弹反稳健攒气；奥义「万铃和鸣」六道和风刃影连斩接万铃共振。',
 wuya: '【无涯剑心 · 居合积势】踏虚闪避与疾闪居合节奏明快；奥义「剑气无涯」七道银月居合连闪接万道剑气爆发。',
-danqing: '【丹青点墨 · 画卷聚意】远程朱砂气波与青绿封卷控场攒气；奥义「千里江山」六道丹青画气连斩接点睛镇入画卷。',
+danqing: '【丹青点墨 · 画卷聚意】远程朱砂气波与青绿封卷控场攒气；奥义「千里江山」在目标所在层依次掀起三重墨浪挑飞敌人。',
 });
 (() => {
 const EXP_HEROES = [
@@ -46231,15 +46321,15 @@ const EXP_HEROES = [
 ['yinhu', 'fd', '银狐双匕连刺', '幻月蓄刺', '空翻狐刃', '狐步幻移', '幻月双斩', '九尾绝影', '狐步遁影', 'dash', 'melee', 'blink', 'shadows', 'shadows', '穿身强化', '十字连切', '九道银月绝影', '银狐出手前，你看到的只是上一秒的影子。', '九尾残影齐出，数清之前胜负已分。'],
 ['yunhe', 'cw', '仙羽清拂', '云翼蓄掠', '凌云翔击', '鹤翼凌空', '云岚沐羽', '鹤舞九天', '鹤翼腾空', 'dash', 'counter', 'feather', 'moonflow', 'featherstorm', '双羽穿刺', '云岚回血', '六道羽芒俯冲', '云鹤在天上盘旋，地面上的招式全扑空。', '打完一套顺手回口血，优雅得很。'],
 ['tiangang', 'gp', '天罡长枪连刺', '金戈蓄刺', '凌空点枪', '破阵长驱', '铁壁震枪', '天罡破军', '持枪退步', 'dash', 'counter', 'backthrust', 'spin', 'timestop', '霸体破防', '铁壁挑飞', '五道金戈贯杀', '一杆天罡枪立在阵前，千军万马都得绕道。', '红缨一抖，枪尖已经抵到眉心。'],
-['mojie', 'sb', '断魂墨毫五式', '魂笔重印', '凌空书敕', '断魂墨缚', '镇魂敕符', '绝墨魂卷', '墨影撤步', 'trap', 'ranged', 'inktrap', 'inkblob', 'inkdragon', '墨阵禁锢', '追踪墨符', '六道绝墨封杀', '一笔定生死，画完这卷就送你上路。', '脚下的墨圈别乱踩，踩进去可拔不出脚。'],
+['mojie', 'sb', '断魂墨毫五式', '魂笔重印', '凌空书敕', '断魂墨缚', '镇魂敕符', '绝墨魂卷', '墨影撤步', 'trap', 'ranged', 'inktrap', 'inkblob', 'inkdragon', '墨阵禁锢', '追踪墨符', '绝墨判魂大阵', '一笔定生死，画完这卷就送你上路。', '脚下的墨圈别乱踩，踩进去可拔不出脚。'],
 ['baihe', 'fr', '霜华细剑连刺', '寒芒蓄刺', '冰河空刺', '寒江贯虹', '霜华凝镜', '冰河奔涌', '踏霜撤步', 'dash', 'counter', 'gale', 'mirror', 'timestop', '贯刺减速', '霜镜弹反', '六道清霜冰封', '剑身细如冰棱，出手快得连霜花都追不上。', '暗器飞过来？霜镜原路奉还。'],
 ['jinpeng', 'rw', '金翼疾掠连击', '金爪蓄扑', '苍穹展翅', '金鹏裂空', '扶摇罡风', '鹏程万里', '振翼腾空', 'dash', 'ranged', 'dive', 'feather', 'featherstorm', '俯冲罡风', '三羽裂空', '七道罡风压顶', '大鹏一日同风起，俯冲下来地都抖三抖。', '三道金羽封走位，天上地下无处可逃。'],
 ['youming', 'rs', '幽冥双镰连割', '噬魂蓄镰', '空旋冥镰', '噬影掠杀', '幽冥拘魂', '永夜绝斩', '幽雾遁身', 'dash', 'ranged', 'blink', 'proj', 'shadows', '暗影穿斩', '锁链拘魂', '八道永夜绝斩', '双镰划过不留血，只留一团散不去的幽雾。', '跑远了？幽影锁链把你乖乖请回来。'],
-['lingxi', 'sf', '灵犀玉笛连点', '清音蓄扫', '凌空吹笛', '灵犀音波', '余音震魄', '心音幻境', '踏音后撤', 'ranged', 'counter', 'note', 'mirror', 'guangling', '音环减速', '余音震晕', '六道清音破魂', '一曲灵犀吹罢，对手连招式节拍都乱了。', '笛声听着柔和，震在架势上可一点不客气。'],
+['lingxi', 'sf', '灵犀玉笛连点', '清音蓄扫', '凌空吹笛', '灵犀音波', '余音震魄', '心音幻境', '踏音后撤', 'ranged', 'counter', 'note', 'mirror', 'guangling', '音环减速', '余音震晕', '四重音波结界', '一曲灵犀吹罢，对手连招式节拍都乱了。', '笛声听着柔和，震在架势上可一点不客气。'],
 ['bawang', 'ob', '霸王重刃连劈', '撼山蓄劈', '凌空断岳', '霸王裂地', '楚歌震军', '力拔山兮', '重甲后撤', 'mid', 'mid', 'quake', 'ironwall', 'avalanche', '裂地挑飞', '怒吼减速', '五记雷霆重劈', '力拔山兮气盖世，重刃落下谁敢硬接？', '一声楚歌震军，方圆三丈都得矮三分。'],
 ['fengling', 'cf', '素扇清铃舞', '和风蓄扇', '踏风轻掠', '清铃拂风', '和风祈愿', '万铃和鸣', '听风撤步', 'ranged', 'counter', 'windblade', 'moonflow', 'tornado', '双风刃击退', '祈愿回血', '六道和风共振', '风铃叮当一响，双道清风已经吹到脸上。', '别看扇子小，吹退强敌顺带回血两不误。'],
 ['wuya', 'ib', '无涯快刀五斩', '纳鞘蓄居合', '凌空拔刀', '无涯居合', '踏虚斩影', '剑气无涯', '踏虚瞬撤', 'dash', 'dash', 'gale', 'swordqi', 'crescent', '瞬闪居合', '无敌弯月', '七道银月剑气', '刀未出鞘，胜负已在按鞘的一瞬注定。', '踏虚闪过你的大招，反手就是一道弯月。'],
-['danqing', 'vb', '丹青五韵连画', '朱砂重笔', '凌空点彩', '朱砂画弧', '青绿封卷', '千里江山', '踏墨退避', 'ranged', 'trap', 'inkblob', 'inktrap', 'shanshui', '朱砂减速', '画阵定身', '六道山河点睛', '挥毫泼出千里江山，顺便把对手裱进画里。', '朱砂勾轮廓，青绿封退路，妥妥一幅名画。'],
+['danqing', 'vb', '丹青五韵连画', '朱砂重笔', '凌空点彩', '朱砂画弧', '青绿封卷', '千里江山', '踏墨退避', 'ranged', 'trap', 'inkblob', 'inktrap', 'shanshui', '朱砂减速', '画阵定身', '三座墨峰画浪', '挥毫泼出千里江山，顺便把对手裱进画里。', '朱砂勾轮廓，青绿封退路，妥妥一幅名画。'],
 ];
 for (const [id, pfx, lName, cName, aName, qName, rName, eName, escName, qType, rType, qFx, rFx, eFx, qTag, rTag, eTag, fun1, fun2] of EXP_HEROES) {
 const s1 = pfx + '_l1s', a1 = pfx + '_l1a', s2 = pfx + '_l2s', a2 = pfx + '_l2a';
@@ -49006,8 +49096,12 @@ bpStart('raid', { squadSize: M.raidSquadSize || rougeSquadSize || 3 });
 }
 return;
 }
-if (M.mode === 'melee') { startMelee(M.teamSize, A.chIdx, M.level, M.teamMutator); return; }
-if (M.mode === 'ctf') { startCtf(M.teamSize, A.chIdx, M.level); return; }
+if (M.mode === 'melee' || M.mode === 'ctf') {
+const teams = [0, 1].map(side => sideFighters(side).map(f => f.chIdx));
+if (M.mode === 'melee') startMelee(M.teamSize, A.chIdx, M.level, M.teamMutator, teams);
+else startCtf(M.teamSize, A.chIdx, M.level, teams);
+return;
+}
 if (M.mode === 'gauntlet') { startGauntlet(A.chIdx, M.level); return; }
 const handler = MODE_HANDLERS[M.mode];
 if (handler && handler.rematch) {
@@ -49419,7 +49513,7 @@ const CHAOS_MUTATIONS = [
 { id: "chaos_120", name: "「破军·离火」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 炽火焚天，烽烟万里" },
 ];
 let chaosP1 = 0, chaosP2 = 1;
-const chaosOn = () => M.mode === 'chaos' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'chaos') || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'chaos') || (netRoom() || {}).rule === 'chaos';
+const chaosOn = () => M.mode === 'chaos' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'chaos') || ((M.mode === 'tag3' || M.mode === 'melee' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'chaos') || (netRoom() || {}).rule === 'chaos';
 function chaosNow(type) {
 const c = chaosOn() && M.chaos, mut = c && c.i >= 0 ? CHAOS_MUTATIONS[c.i] : null;
 return mut && (!type || mut.type === type) ? mut : null;
@@ -53495,6 +53589,7 @@ f.face = team === 0 ? 1 : -1;
 f.invul = 1.1;
 if (f.idx === localIdx()) { f.beaconT = 1.4; camFocusPingT = 0.9; }
 if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
+if (mayhemOn()) applyMayhemStats(f);
 }
 }
 }
@@ -63066,7 +63161,7 @@ return `<div class="ar-ophead"><div><span class="ar-k">江湖行动 · 第 ${se.
 <p class="ar-note">对局掉落：每局 ${Math.round(C.cv(CF(), 'dropP') * 100)}% 机会掉一件饰品或武器箱，每周最多 ${C.cv(CF(), 'dropCap')} 次（本周已掉 ${s.drop.n} 次）。</p>`;
 }
 const BDG = { sub: 'badges', cat: 'all', rarity: 'all', state: 'all', sort: 'tier', page: 1, giftPick: 'flowing', petCat: 'all', petRarity: 'all', petState: 'all', petSort: 'rarity', petPage: 1, heroArch: 'all', heroPage: 1 };
-const pagerHtml = (kind, page, totalPages, totalItems) => totalPages <= 1 ? '' : `<div class="ar-pager" role="navigation" aria-label="分页"><button type="button" class="ghost small" data-page-${kind}="${Math.max(1, page - 1)}" ${page <= 1 ? 'disabled' : ''}>‹ ${cvT('上一页')}</button><span class="ar-pager-info">${page} / ${totalPages}（${cvT('共')} ${totalItems}）</span><button type="button" class="ghost small" data-page-${kind}="${Math.min(totalPages, page + 1)}" ${page >= totalPages ? 'disabled' : ''}>${cvT('下一页')} ›</button></div>`;
+const pagerHtml = (kind, page, totalPages, totalItems) => totalPages <= 1 ? '' : `<div class="ar-pager" role="navigation" aria-label="分页"><button type="button" class="ghost small" data-page-${kind}="${Math.max(1, page - 1)}" ${page <= 1 ? 'disabled' : ''}>‹ ${cvT('上一页')}</button><span class="ar-pager-info">${page} / ${totalPages} (${cvT('总计')}: ${totalItems})</span><button type="button" class="ghost small" data-page-${kind}="${Math.min(totalPages, page + 1)}" ${page >= totalPages ? 'disabled' : ''}>${cvT('下一页')} ›</button></div>`;
 function pBadges() {
 const s = blankS(), ids = Object.keys(C.BADGES), owned = Object.entries(s.badgeOwned || {}), totalKOs = Object.values(s.heroKOs || {}).reduce((n, x) => n + x, 0);
 const petIds = Object.keys(C.PETS || {}), petOwned = s.petOwned || {}, ownedPetList = Object.entries(petOwned);
@@ -63092,7 +63187,7 @@ const requirements = up ? `<div class="ar-badge-req"><small class="${s.badgeSigi
 const actionBtn = giftCard
 ? `<button type="button" class="go small" data-badge-gift="${id}" ${live() ? '' : 'disabled'}>${cvT('领取银徽')}</button>`
 : !tier
-? `<button type="button" class="go small" data-badge-unlock="${id}" ${live() ? '' : 'disabled'}>${cvT('解锁')} (${C.BADGE_UNLOCK_SIGILS}${cvT('碎')}/${C.BADGE_UNLOCK_INK}${cvT('墨')})</button>`
+? `<button type="button" class="go small" data-badge-unlock="${id}" ${live() ? '' : 'disabled'}>${cvT('解锁')} (${C.BADGE_UNLOCK_SIGILS} ${cvT('碎片')} / ${C.BADGE_UNLOCK_INK} ${cvT('墨锭')})</button>`
 : up
 ? `${requirements}<button type="button" class="go small" data-badge-upgrade="${id}" ${live() && ready ? '' : 'disabled'}>${cvT('升阶')} ${cvT(up.to === 'gold' ? '金徽' : '紫金徽')}</button>`
 : `<small style="color:#d9a6ff;font-weight:700">✦ ${cvT('紫金圆满')}</small>`;

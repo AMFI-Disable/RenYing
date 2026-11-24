@@ -111,8 +111,12 @@ document.getElementById('againBtn').addEventListener('click', () => {
     }
     return;
   }
-  if (M.mode === 'melee') { startMelee(M.teamSize, A.chIdx, M.level, M.teamMutator); return; }
-  if (M.mode === 'ctf') { startCtf(M.teamSize, A.chIdx, M.level); return; }
+  if (M.mode === 'melee' || M.mode === 'ctf') {
+    const teams = [0, 1].map(side => sideFighters(side).map(f => f.chIdx));
+    if (M.mode === 'melee') startMelee(M.teamSize, A.chIdx, M.level, M.teamMutator, teams);
+    else startCtf(M.teamSize, A.chIdx, M.level, teams);
+    return;
+  }
   if (M.mode === 'gauntlet') { startGauntlet(A.chIdx, M.level); return; }
   const handler = MODE_HANDLERS[M.mode];
   if (handler && handler.rematch) {

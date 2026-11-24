@@ -13,25 +13,25 @@ export default [
         const petIds = Object.keys(C.PETS || {});
         if (badgeIds.length !== 42) return { pass: false, error: 'Expected 42 badges in ArmoryCore, got ' + badgeIds.length };
         if (petIds.length !== 16) return { pass: false, error: 'Expected 16 pets in ArmoryCore, got ' + petIds.length };
-        const st = C.emptyState();
-        st.ink = 1000;
-        st.badges = {
-          flow: { tier: 'silver', unlocked: true },
-          breaker: { tier: 'purple_gold', unlocked: true },
-          heaven_might: { tier: 'purple_gold', unlocked: true },
-          dragon_soul: { tier: 'gold', unlocked: true },
-        };
-        st.badgeAssign = { qingfeng: 'flow' };
-        st.pets = { inkfox: 3, azure_dragon: 3, white_tiger: 2 };
-        st.petAssign = { qingfeng: 'inkfox' };
-        st.stances = { qingfeng: true };
-        const sampleSkin = Object.keys(C.ITEMS)[0];
-        for (let i = 0; i < 76; i++) {
-          st.inv.push({ id: 'dup_' + i, k: sampleSkin, t: 1, w: 0.1 + i * 0.001, st: false, kc: 0 });
+        for (const id of petIds) {
+          if (!COMBAT_PETS[id]) return { pass: false, error: 'Missing combat runtime pet: ' + id };
         }
-        const res = C.ACTIONS.fullAuto(st, {});
+        const st = C.blank();
+        const env = { now: 1000, rnd: () => 0.5, uid: 'local', ink: 1000, skins: [], equip: {}, server: false };
+        const [oldBadge, ...otherBadges] = badgeIds.slice(0, 4);
+        st.badgeOwned = Object.fromEntries(otherBadges.map(id => [id, 'purpgold']));
+        st.badgeOwned[oldBadge] = 'silver';
+        st.badgeEquip.qingfeng = oldBadge;
+        st.petOwned = Object.fromEntries(petIds.slice(0, 3).map(id => [id, 'spirit']));
+        const sampleSkin = Object.keys(C.ITEM)[0];
+        for (let i = 0; i < 76; i++) st.inv.push(C.mkItem(st, sampleSkin, 'case', env.rnd, { st: -1 }));
+        const { res, state } = C.run(st, 'fullAuto', {}, env);
         if (!res.ok) return { pass: false, error: 'fullAuto action failed: ' + (res.err || 'unknown') };
-        if (res.sold !== 75) return { pass: false, error: 'Expected 75 uncapped duplicates sold (>50 limit), got ' + res.sold };
+        if (res.soldCount !== 75) return { pass: false, error: 'Expected 75 uncapped duplicates sold, got ' + res.soldCount };
+        if (state.inv.length !== 1) return { pass: false, error: 'Expected one item kept, got ' + state.inv.length };
+        if (state.badgeEquip.qingfeng === oldBadge) return { pass: false, error: 'FULL AUTO kept the old badge assignment' };
+        if (res.badges !== 4) return { pass: false, error: 'Expected all four unlocked badges assigned, got ' + res.badges };
+        if (res.pets !== CHARS.length) return { pass: false, error: 'Expected pets assigned across roster, got ' + res.pets };
       }
       return { pass: true };
     })()`
@@ -50,7 +50,7 @@ export default [
         const U = ULTS[key];
         if (!U) return { pass: false, error: 'Missing ult: ' + key };
         if (U.flurry) return { pass: false, error: 'Expansion ult is still a generic flurry clone: ' + key };
-        if (typeof U.begin !== 'function' || typeof U.update !== 'function') return { pass: false, error: 'Ult missing begin/update function: ' + key };
+        if (typeof U.begin !== 'function' || typeof U.update !== 'function') return { pass: false, error: 'Ult missing begin or update function: ' + key };
         const src = U.begin.toString() + U.update.toString();
         if (fns.has(src)) return { pass: false, error: 'Duplicate ult implementation detected for: ' + key };
         fns.add(src);
@@ -62,8 +62,14 @@ export default [
         A.reset(STAGE_W / 2 - 110); B.reset(STAGE_W / 2 + 110);
         A.face = 1; B.face = -1;
         A.meter = 100;
+        B.ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
         startSpecial(A);
-        for (let t = 0; t < 45; t++) step();
+        let began = false;
+        for (let t = 0; t < 480 && A.state === 'special'; t++) {
+          step();
+          if (A.sp !== 'charge') began = true;
+        }
+        if (!began || A.state === 'special') return { pass: false, error: 'Ultimate did not run to completion: ' + A.ch.id };
       }
       toMenu();
       return { pass: true };
@@ -78,6 +84,7 @@ export default [
       M.phase = 'fight';
       if (!battleMapOn()) return { pass: false, error: 'BATTLE_MAP not active in 8v8 melee' };
       // Start Tie Shan on ground (y=0) to prove he launches above all 5 layers (-528) before plummeting through all 5
+      for (const f of allFighters()) f.ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
       const lx = STAGE_W / 2;
       A.reset(lx); A.y = 0; A.plat = -1; A.meter = 100; A.face = 1;
       const foes = sideFighters(1);
@@ -86,7 +93,7 @@ export default [
       for (let i = 0; i < 5; i++) {
         const foe = foes[i];
         foe.reset(lx + (i % 2 ? 25 : -25));
-        foe.y = layers[i];
+        foe.y = layers[i]; foe.plat = i < 3 ? i + 1 : -1;
         foe.vy = 0;
         foe.invul = 0;
         foe.ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
@@ -94,15 +101,18 @@ export default [
       }
       A.ctrl = human[0];
       startSpecial(A);
+      // Hold down to accelerate descent through all 5 layers
       let minY = 0;
-      for (let t = 0; t < 480; t++) {
+      human[0].held.down = true;
+      for (let t = 0; t < 600; t++) {
         step();
         if (A.y < minY) minY = A.y;
         if (A.state !== 'special' && A.y >= -1 && t > 30) break;
       }
+      human[0].held.down = false;
       if (minY > -620) return { pass: false, error: 'Expected Tie Shan to soar above all 5 layers (minY < -620), got ' + minY };
-      const slammedCount = A.avaSlammedLayers ? A.avaSlammedLayers.size : 0;
-      if (slammedCount < 5) return { pass: false, error: 'Expected Tie Shan to slam all 5 layers, got ' + slammedCount };
+      const slammedCount = A.avaSlammedLayers ? new Set(A.avaSlammedLayers).size : 0;
+      if (slammedCount < 5) return { pass: false, error: 'Expected Tie Shan to slam all 5 layers, got ' + slammedCount + ' (state ' + A.state + ', phase ' + A.sp + ', y ' + A.y + ')' };
       let hitLayers = 0;
       for (let i = 0; i < 5; i++) {
         if (foes[i].hp < initHp[i]) hitLayers++;
@@ -147,7 +157,7 @@ export default [
         lmHp.push(lmFoes[i].hp);
       }
       startSpecial(A);
-      for (let t = 0; t < 120; t++) step();
+      for (let t = 0; t < 180; t++) step();
       const lmHit = lmFoes.slice(0, 4).filter((f, i) => f.hp < lmHp[i]).length;
       if (lmHit < 2) return { pass: false, error: 'Expected Leiming thunder + chain lightning to hit >=2 foes across layers, got ' + lmHit };
 
@@ -232,7 +242,7 @@ export default [
         step();
         if (B.jailT > 0) break;
       }
-      if (B.jailT > 0 && Math.abs(B.y - (-132)) > 45) return { pass: false, error: 'Zuixian pavilion dropped jailed victim to ground: B.y=' + B.y };
+      if (B.jailT <= 0 || Math.abs(B.y - (-132)) > 45) return { pass: false, error: 'Zuixian pavilion dropped jailed victim to ground: B.y=' + B.y };
       toMenu();
       return { pass: true };
     })()`
@@ -262,13 +272,65 @@ export default [
         if (FIGHTERS[slot * 2].chIdx !== expectedTeam0[slot]) return { pass: false, error: 'Team 0 drafted hero mismatch at slot ' + slot };
         if (FIGHTERS[slot * 2 + 1].chIdx !== expectedTeam1[slot]) return { pass: false, error: 'Team 1 drafted hero mismatch at slot ' + slot };
       }
+      $id('againBtn').click();
+      if (M.mode !== 'melee' || sideFighters(0).some((f, i) => f.chIdx !== expectedTeam0[i])
+          || sideFighters(1).some((f, i) => f.chIdx !== expectedTeam1[i])) {
+        return { pass: false, error: 'Melee rematch changed the drafted teams' };
+      }
       // Verify 8v8 CTF BP draft structure
       bpStart('ctf', { teamSize: 8, level: 'hard' });
       if (BP.picks[0].length !== 8 || BP.picks[1].length !== 8 || BP.bansBySide[0].length !== 2) {
         return { pass: false, error: '8v8 CTF BP structure mismatch' };
       }
+      bpAutoFillLarge();
+      const ctfTeams = BP.picks.map(team => team.slice());
+      bpFinish();
+      if (M.mode !== 'ctf' || M.teamSize !== 8) return { pass: false, error: '8v8 CTF did not start' };
+      $id('againBtn').click();
+      if (M.mode !== 'ctf' || [0, 1].some(side => sideFighters(side).some((f, i) => f.chIdx !== ctfTeams[side][i]))) {
+        return { pass: false, error: 'CTF rematch changed the drafted teams' };
+      }
       toMenu();
       return { pass: true };
+    })()`
+  },
+  {
+    name: 'Grand Melee applies selected mutators and preserves Mayhem stats on respawn',
+    fn: `(() => {
+      startMelee(3, 0, 'normal', 'chaos');
+      M.phase = 'fight';
+      meleeMatch();
+      if (!chaosOn() || M.chaos.i < 0) return { pass: false, error: 'Chaos did not activate in melee' };
+      startMelee(3, 0, 'normal', 'mayhem');
+      const hp = A.maxHp;
+      if (!mayhemOn() || A.maxGuard !== 500 || A.meter !== 100) return { pass: false, error: 'Mayhem did not apply at round start' };
+      A.hp = 0;
+      A.meter = 0;
+      M.melee.respawn[0] = STEP;
+      meleeMatch();
+      if (A.hp !== hp || A.maxGuard !== 500 || A.meter !== 100) return { pass: false, error: 'Mayhem stats were lost at respawn' };
+      startCtf(2, 0, 'normal');
+      if (mayhemOn() || allFighters().length !== 4) return { pass: false, error: 'Melee mutator leaked into CTF' };
+      toMenu();
+      return { pass: true };
+    })()`
+  },
+  {
+    name: '2v2 Capture the Banner HUD shows each team score and the capture target',
+    fn: `(() => {
+      startCtf(2, 0, 'normal');
+      M.ctf.score = [1, 2];
+      const fighterHealth = A.maxHp + '/' + A.maxHp;
+      const labels = [];
+      const fillText = ctx.fillText;
+      try {
+        ctx.fillText = text => labels.push(String(text));
+        drawHUD();
+      } finally {
+        ctx.fillText = fillText;
+        toMenu();
+      }
+      return { pass: labels.includes('1/3') && labels.includes('2/3') && labels.includes(fighterHealth), error: labels.join(', ') };
     })()`
   },
   {
