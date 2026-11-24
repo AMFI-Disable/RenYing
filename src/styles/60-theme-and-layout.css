@@ -76,25 +76,7 @@
   .mode-pill { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; font-weight: 700; padding: 1px 7px; border-radius: 3px; background: rgba(70,211,234,.16); color: #46d3ea; }
   .mode-pill.watch { background: rgba(180,120,255,.2); color: #d4b3ff; }
   .tab-ink { display: inline-flex; align-items: center; gap: 6px; }
-  /* 次按钮 ghost：结构化玄青素笺按钮 */
-  .ghost {
-    background: linear-gradient(180deg, rgba(30, 40, 56, 0.82), rgba(20, 27, 40, 0.90));
-    border: 1px solid rgba(233, 196, 106, 0.30);
-    border-radius: 4px;
-    color: var(--rice);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.25);
-  }
-  .ghost:hover {
-    background: linear-gradient(180deg, rgba(40, 54, 74, 0.92), rgba(26, 36, 52, 0.96));
-    border-color: rgba(233, 196, 106, 0.68);
-    color: #fff;
-  }
-  .ghost.sel, .ghost.sel:hover {
-    background: linear-gradient(180deg, #f3cf73, #d9a440);
-    color: #16141c;
-    border-color: #f3cf73;
-    font-weight: 700;
-  }
+
   /* 单人模式底部操作栏统一对齐 */
   .single-action-row {
     display: flex;
@@ -203,18 +185,7 @@
       linear-gradient(180deg, rgba(13,19,30,.78) 0%, rgba(16,23,36,.85) 55%, rgba(11,16,26,.90) 100%) !important;
   }
 
-  /* 各大功能面板与子容器：玄青镶金古卷轴设计，告别死黑底色 */
-  body.has-nav .scr:not(.menuscr):not(#netp) > .panel {
-    background:
-      radial-gradient(ellipse at 50% 0%, rgba(233,196,106,.08), transparent 68%),
-      radial-gradient(circle at 95% 95%, rgba(184,57,46,.05), transparent 55%),
-      linear-gradient(180deg, rgba(22,30,44,.94), rgba(16,22,34,.96)) !important;
-    border: 1px solid rgba(233,196,106,.34) !important;
-    box-shadow:
-      0 20px 56px rgba(0,0,0,.55),
-      inset 0 0 0 1px rgba(239,230,210,.08),
-      inset 0 1px 20px rgba(233,196,106,.06) !important;
-  }
+
 
   /* 内部子模块统一替换为玄青金边质感，消除纯黑块 */
   .single-nav-deck {

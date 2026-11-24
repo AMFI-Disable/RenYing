@@ -1,8 +1,8 @@
 /* 第 4 层：对战大厅（匹配对战 / 排位赛、段位）、顶部导航、首页、页面出错时的兜底提示、首页入场退场动效。
    找 bug 提示：首页动效只在冷启动和从对局退回时播，平时看不到不是坏了。 */
   /* ======================= 对战大厅：匹配对战 / 排位赛 ======================= */
-  .mm-hero { margin: 4px auto 10px; width: min(1180px, 100%); text-align: left; }
-  .season-bar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; margin: 0 0 14px; padding: 0 2px; font-family: var(--v-cond); letter-spacing: .06em; color: rgba(236,232,225,.7); font-size: 14px; }
+  .mm-hero { margin: 0 auto 8px; width: 100%; text-align: left; }
+  .season-bar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 10px; padding: 0 2px; font-family: var(--v-cond); letter-spacing: .06em; color: rgba(236,232,225,.7); font-size: 14px; }
   .season-tag { background: var(--v-red); color: #fff; padding: 4px 14px 4px 12px; font-weight: 700; clip-path: polygon(0 0, 100% 0, calc(100% - 10px) 100%, 0 100%); letter-spacing: .12em; }
   .season-range { color: var(--v-white); font-weight: 600; }
   .season-left::before { content: ""; display: inline-block; width: 6px; height: 6px; background: var(--v-red); margin-right: 8px; transform: rotate(45deg) translateY(-2px); }
@@ -60,12 +60,7 @@
   .mm-search-txt span { font-family: var(--v-cond); font-size: 13px; color: rgba(236,232,225,.6); letter-spacing: .05em; }
   .mm-cancel { background: transparent; color: var(--v-white); border: 1px solid rgba(236,232,225,.35); padding: 7px 18px; cursor: pointer; font-family: var(--body); font-size: 13px; }
   .mm-cancel:hover { border-color: var(--v-red); color: #fff; background: rgba(255,70,85,.15); }
-  .mm-fallback { margin: 8px 0 0; padding: 12px 18px; background: rgba(15,25,35,.92); border-left: 4px solid var(--gold); display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
-  .mm-fb-txt { margin: 0; flex: 1 1 280px; font-size: 14px; color: var(--v-white); line-height: 1.5; }
-  .mm-fb-count { margin: 0; font-family: var(--v-cond); font-size: 13px; color: rgba(236,232,225,.7); letter-spacing: .05em; }
-  .mm-fb-count b { color: var(--gold); font-size: 16px; }
-  .mm-fb-btns { display: flex; flex-wrap: wrap; gap: 8px; }
-  .mm-fb-btns .mm-go { margin: 0; min-width: 0; padding: 8px 46px 8px 20px; font-size: 14px; letter-spacing: .12em; }
+
   .menuscr .mcard.mm-hot { filter: drop-shadow(0 0 14px rgba(184,57,46,.7)); }
   .menuscr .mcard.mm-hot .ms { color: #ffd7a8; }
   .mm-foot { display: flex; justify-content: center; margin-top: 14px; }
@@ -335,10 +330,10 @@
 
   /* ---------- 通用：菜单页底板、标题、按钮、分段、输入框 ---------- */
   .scr:not(.menuscr):not(#bp):not(#pause):not(#end) { background: linear-gradient(180deg, rgba(6,10,16,.74), rgba(6,10,16,.86)); }
-  body.has-nav .scr:not(.menuscr) > .panel { background: var(--panel); border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(0,0,0,.45); margin: 22px auto; padding: 22px 28px 26px;
+  body.has-nav .scr:not(.menuscr) > .panel { background: var(--panel); border: 1px solid var(--line); box-shadow: 0 24px 60px rgba(0,0,0,.45); margin: auto; padding: 16px 22px 18px;
     clip-path: polygon(0 0, calc(100% - 24px) 0, 100% 24px, 100% 100%, 24px 100%, 0 calc(100% - 24px)); }
-  body.has-nav #netp > .panel { background: transparent; border: none; box-shadow: none; clip-path: none; }
-  .scr h2 { position: relative; padding-bottom: 12px; }
+  body.has-nav #netp > .panel { background: transparent; border: none; box-shadow: none; clip-path: none; padding: 12px 18px 16px; }
+  .scr h2 { position: relative; padding-bottom: 8px; }
   .scr h2::after { content: ""; position: absolute; left: 50%; bottom: 0; width: 46px; height: 3px; background: var(--v-red); transform: translateX(-50%); }
   .rk-info-head b::after, .menuscr h2::after { display: none; }
   .go { font-family: var(--v-cond), var(--title); font-weight: 700; font-size: 22px; letter-spacing: .3em; padding: 12px 40px 12px 46px; border: none; border-radius: 0; background: var(--v-red); color: #fff; box-shadow: none;
@@ -370,7 +365,7 @@
   #end h2::after, #pause h2::after { left: 50%; }
 
   /* ---------- 账号页 ---------- */
-  .accp { max-width: min(760px, 95vw); text-align: left; }
+  .accp { max-width: min(960px, 95vw); text-align: left; }
   .accp h2 { text-align: left; } .accp h2::after { left: 0; transform: none; }
   .accp .sub { text-align: left; }
   .accp .row { justify-content: flex-start; }
@@ -402,7 +397,7 @@
   .ad-btn { margin-top: 0; min-width: 0; padding: 10px 26px; font-size: 15px; letter-spacing: .2em; }
   .acc-dash.hidden, .acc-in.hidden { display: none; }
   @media (max-width: 640px) { .ad-stats { grid-template-columns: repeat(2, 1fr); } .ad-medal { display: none; } }
-  body.has-nav .scr:not(.menuscr):not(#netp) { padding: 18px 0; }
+  body.has-nav .scr:not(.menuscr):not(#netp) { padding: 10px 12px; }
   body.has-nav .scr:not(.menuscr) > .panel { margin: auto; }
   .go.alt { clip-path: none; }
   .row .go, .row .go.small { margin: 0; }

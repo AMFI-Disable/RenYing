@@ -7,13 +7,6 @@ try { const v = localStorage.getItem('renying-map-vote'); if (MAPS[v]) mapVote =
 function setMapVote(id) {
   mapVote = MAPS[id] ? id : null;
   try { if (mapVote) localStorage.setItem('renying-map-vote', mapVote); else localStorage.removeItem('renying-map-vote'); } catch (e) {}
-  updateMapChipsUI();
-}
-function updateMapChipsUI() {
-  const badge = $id('mapVoteStatusBadge');
-  if (badge) {
-    badge.textContent = mapVote && MAPS[mapVote] ? `偏好：${MAPS[mapVote].n}` : '标准擂台';
-  }
 }
 // 一排地图卡片：名字、说明、得票和概率。数字和中文分开放，界面翻成英文时各自翻
 function mapVoteCards(box, votes, mine, onPick) {

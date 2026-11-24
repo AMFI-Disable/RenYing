@@ -162,13 +162,6 @@ function chooseLang(l) {
 
 if ($id('lpPickZh')) $id('lpPickZh').addEventListener('click', () => chooseLang('zh'));
 if ($id('lpPickEn')) $id('lpPickEn').addEventListener('click', () => chooseLang('en'));
-if ($id('tnLangBtn')) $id('tnLangBtn').addEventListener('click', () => {
-  const next = (window.I18N && window.I18N.getLang() === 'en') ? 'zh' : 'en';
-  SETTINGS.lang = next;
-  saveSettings();
-  if (window.I18N) window.I18N.setLang(next);
-  toast(next === 'en' ? 'Switched to English mode' : '已切换至中文模式');
-});
 
 setTimeout(() => { if ($id('menu').classList.contains('on')) showScreen('menu'); }, 0);   // 一打开就和点返回回来的首页一个样子（顶栏在、底栏不变）
 setTimeout(() => {

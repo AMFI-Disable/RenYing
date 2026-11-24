@@ -123,7 +123,6 @@ Object.assign(UI_COPY_EN, {
   "架势恒满，不会破防": "Guard stays full and never breaks",
   "连段自愈": "Combo Heal",
   "连击停下后血量回满": "Health refills after each combo ends",
-  "标准擂台": "Standard Arena",
   "战场：": "Arena:",
   "即刻开战": "Fight Now",
   "帧优势": "Frame Advantage",

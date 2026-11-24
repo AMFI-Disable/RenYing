@@ -219,7 +219,6 @@ if (SETTINGS.kbOnly === undefined) SETTINGS.kbOnly = false;
 function kbOnly() { return SETTINGS.kbOnly === true; }
 function kbOnlyApply() {
   try { document.body.classList.toggle('kb-only', kbOnly()); } catch (e) {}
-  const b = $id('mKbOnly'); if (b && b.setAttribute) b.setAttribute('aria-pressed', kbOnly() ? 'true' : 'false');
   if (kbOnly()) kbnOn();
 }
 function kbOnlySet(on) {
@@ -256,5 +255,4 @@ function kbHelpShow(on) {
   }
 }
 if (kbHelp.addEventListener) kbHelp.addEventListener('click', e => { if (e.target === kbHelp) kbHelpShow(false); });
-if ($id('mKbOnly')) $id('mKbOnly').addEventListener('click', () => kbOnlySet(!kbOnly()));
 kbOnlyApply();

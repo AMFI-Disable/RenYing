@@ -81,16 +81,6 @@ if ($id('trainAiLvSeg')) {
     SFX.slice();
   });
 }
-const trainModeSegEl = $id('trainModeSeg');
-if (trainModeSegEl) {
-  trainModeSegEl.addEventListener('click', e => {
-    const b = e.target.closest('button');
-    if (!b || !b.dataset.tmode) return;
-    trainTargetMode = b.dataset.tmode;
-    for (const btn of trainModeSegEl.querySelectorAll('button')) btn.classList.toggle('sel', btn === b);
-    SFX.slice();
-  });
-}
 // 开练前的特性开关（练的时候在对手行为栏里也能改）
 function renderDummyFeatures() {
   const el = $id('dummyFeatList');
