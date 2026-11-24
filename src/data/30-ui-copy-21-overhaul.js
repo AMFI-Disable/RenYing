@@ -213,7 +213,6 @@ Object.assign(UI_COPY_EN, {
   "瞬拔式": "Quick-Draw Stance",
   "控场连携更强，单击略轻。": "Stronger crowd control in combos with slightly lighter individual hits.",
   "泼彩式": "Splashed Ink",
-  "3v3–8v8 大型同屏混战：支持完整禁选（BP）排兵布阵与五层立体战场！": "3v3–8v8 battles with a full ban-and-pick draft and a five-level arena.",
   "2v2–8v8 团队夺旗争锋：支持战略禁选（BP），护送敌旗归阵先得三分胜！": "2v2–8v8 capture the banner with a full draft. Bring the enemy banner home three times to win.",
   "无尽车轮生存试炼：逐波迎战递增境界的江湖群雄！": "Survive waves of increasingly tough challengers in the endless gauntlet.",
   "根据侠客流派与徽记阶位，一键智能装配全部已拥有徽记": "Auto-equip owned badges based on hero archetype and badge tier",

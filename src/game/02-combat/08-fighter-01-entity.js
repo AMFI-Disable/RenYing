@@ -83,7 +83,7 @@ class Fighter {
 }
 // ======================= 比赛流程 =======================
 const M = { mode: 'demo', level: 'normal', phase: 'intro', t: 0, round: 1, wins: [0, 0], timer: 60, koWinner: -1, flags: {}, bans: [], teamSize: 0, squadOrders: ['auto', 'auto'] };
-const MAX_FIGHTERS = 16;   // 最多支持 8v8 同屏大混战（16 名侠客）
+const MAX_FIGHTERS = 32;   // 最多支持 16v16 同屏大混战（32 名侠客）；四象争锋是 4 队各 4 人
 const FIGHTERS = Array.from({ length: MAX_FIGHTERS }, (_, i) => new Fighter(i));
 let A = FIGHTERS[0], B = FIGHTERS[1], C = FIGHTERS[2], D = FIGHTERS[3];
 for (let i = 2; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
@@ -93,44 +93,49 @@ const roomDef = () => ROOM_MODES[netRoomMode] || ROOM_MODES.normal;   // 联机�
 const netRoom = () => (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net' && REPLAY.m) ? (ROOM_MODES[REPLAY.m.room || REPLAY.m.sub || 'normal'] || null) : M.mode === 'net' ? roomDef() : null;
 // 对局要在别的机器上算得一模一样的时候（联机回滚、放联机录像）：电脑想招、抽秘卷都用对局随机数
 const netSim = () => (ROLL.on && M.mode === 'net') || (M.mode === 'replay' && REPLAY.on && REPLAY.kind === 'net');
-const isLargeTeam = () => meleeOn() || (ctfOn() && M.teamSize > 2);
+const isLargeTeam = () => meleeOn() || quadOn() || (ctfOn() && M.teamSize > 2);
+// 同屏有几个阵营：四象争锋是 4 个，其余都是 2 个（按编号 idx % 阵营数 分队）
+const teamCount = () => quadOn() ? 4 : 2;
 const is2v2 = () => !isLargeTeam() && (M.mode === 'watch2v2' || M.mode === '2v2' || ctfOn() || (M.mode === 'cuju' && !!M.cujuFour) || (M.mode === 'koth' && !!M.kothFour) || (typeof bastionOn === 'function' && bastionOn()) || !!(netRoom() && netRoom().four) || (M.mode === 'replay' && REPLAY.on && REPLAY.kind !== 'net' && !!(REPLAY.m && REPLAY.m.four)));
 const isRaid = () => M.mode === 'raid' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.raid)) || !!(netRoom() && netRoom().raid);
 const isMulti = () => is2v2() || isRaid() || isLargeTeam();
-const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : ((is2v2() || isLargeTeam()) ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
-let _afMask = -1, _afMode = '', _afAll = [A, B], _afS0 = [A], _afS1 = [B];
+const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (isLargeTeam() ? ((f ? f.idx : 0) % teamCount()) : is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
+let _afMask = -1, _afMode = '', _afAll = [A, B], _afS0 = [A], _afS1 = [B], _afSides = [[A], [B]];
 function _syncFighterCache() {
   const large = isLargeTeam(), raid = !large && isRaid(), two = !large && !raid && is2v2();
-  const modeKey = large ? 'L' : raid ? 'R' : two ? '2' : '1';
+  const tc = large ? teamCount() : 2;
+  const modeKey = large ? 'L' + tc : raid ? 'R' : two ? '2' : '1';
   let mask = 0;
   if (large) {
-    for (let i = 0; i < MAX_FIGHTERS; i++) if (!FIGHTERS[i].hidden) mask |= (1 << i);
+    for (let i = 0; i < MAX_FIGHTERS; i++) if (!FIGHTERS[i].hidden) mask += Math.pow(2, i);   // 32 人不能用 1 << i（会溢出成负数）
   } else if (raid) {
     for (let i = 0; i < 4; i++) if (!FIGHTERS[i].hidden) mask |= (1 << i);
   }
   if (modeKey === _afMode && mask === _afMask) return;
   _afMode = modeKey; _afMask = mask;
   if (large) {
-    _afAll = []; _afS0 = []; _afS1 = [];
+    _afAll = []; _afSides = Array.from({ length: tc }, () => []);
     for (let i = 0; i < MAX_FIGHTERS; i++) {
       const f = FIGHTERS[i];
       if (f.hidden) continue;
       _afAll.push(f);
-      if ((f.idx & 1) === 0) _afS0.push(f); else _afS1.push(f);
+      _afSides[i % tc].push(f);
     }
+    _afS0 = _afSides[0]; _afS1 = _afSides[1];
   } else if (raid) {
     _afAll = []; _afS0 = []; _afS1 = [B];
     for (let i = 0; i < 4; i++) {
       const f = FIGHTERS[i];
       if (!f.hidden) { _afAll.push(f); if (i !== 1) _afS0.push(f); }
     }
+    _afSides = [_afS0, _afS1];
   } else if (two) {
-    _afAll = [A, B, C, D]; _afS0 = [A, C]; _afS1 = [B, D];
+    _afAll = [A, B, C, D]; _afS0 = [A, C]; _afS1 = [B, D]; _afSides = [_afS0, _afS1];
   } else {
-    _afAll = [A, B]; _afS0 = [A]; _afS1 = [B];
+    _afAll = [A, B]; _afS0 = [A]; _afS1 = [B]; _afSides = [_afS0, _afS1];
   }
 }
-const sideFighters = side => { _syncFighterCache(); return side === 0 ? _afS0 : _afS1; };
+const sideFighters = side => { _syncFighterCache(); return _afSides[side] || []; };
 const allFighters = () => { _syncFighterCache(); return _afAll; };
 const isAiVsAi = () => !!(M.watchAi || (M.mode === 'watch2v2' && M.watchAi) || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && !isMulti() && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
 const fighterByIdx = idx => FIGHTERS[idx] || A;
@@ -196,6 +201,7 @@ const foeOf = f => {
   if (!isRaid() && cpuTeamwork(f) && f.target && list.includes(f.target) && brainCommitted(f, f.target)) return f.target;
   // 电脑侠客的团队意识：支持 1/2/3 战术指令（集火 / 掩护 / 散开）
   if (!isRaid() && cpuTeamwork(f)) {
+    if (M.cmd) { const ct = cmdPickTarget(f, list, distance); if (ct) { f.target = ct; return ct; } }   // 统帅的战术和任务（22-modes-17-command.js）
     const myTeam = fighterTeam(f);
     const order = M.squadOrders?.[myTeam] || 'auto';
     if (order !== 'auto') {
@@ -245,7 +251,7 @@ const foeOf = f => {
   f.target = best;
   return best;
 };
-const wk = f => WALK * f.ch.stat.walk * ((f.slowT || 0) > 0 ? 0.6 : 1) * (scOn() ? scSpd(f) : 1);   // 爬塔里秘卷、霜冻会改移速
+const wk = f => WALK * f.ch.stat.walk * ((f.slowT || 0) > 0 ? 0.6 : 1) * (scOn() ? scSpd(f) : 1) * (M.cmd ? cmdSpeedMul(f) : 1);   // 爬塔里秘卷、霜冻会改移速
 function setChars(a, b) { A.setChar(a); B.setChar(b); }
 
 // 2v2 扩阔擂台交互机关（御风灵泉、天道剑坛、天劫剑雨）

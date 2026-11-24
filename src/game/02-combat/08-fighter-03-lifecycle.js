@@ -53,19 +53,24 @@ function startRound() {
   announce = null;
   announceQueue.length = 0;
   secretRound();
-  const largeN = isLargeTeam() ? clamp(M.teamSize || 5, 3, 8) : 0;
-  STAGE_W = M.mode === 'world' ? WORLD_W : largeN ? (largeN >= 8 ? BATTLE_WIDTH : largeN === 5 ? BATTLE5_WIDTH : largeN >= 6 ? 3400 : 2600) : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);   // 开放世界 8000，8v8 3600，5v5 专属三层演武楼阁 2800
+  const largeN = isLargeTeam() ? clamp(M.teamSize || 5, 3, 16) : 0;
+  STAGE_W = M.mode === 'world' ? WORLD_W : largeN ? (quadOn() ? BATTLE_WIDTH : largeN >= 16 ? 6400 : largeN >= 12 ? 4800 : largeN >= 8 ? BATTLE_WIDTH : largeN === 5 ? BATTLE5_WIDTH : largeN >= 6 ? 3400 : 2600) : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);   // 开放世界 8000，8v8 3600，5v5 专属三层演武楼阁 2800
   if (M.round === 1 && typeof resetCamZoom === 'function') resetCamZoom(true);
   const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
   M.mapEnv = mp ? { wT: mp.wind ? mp.wind.every : 0, wOn: 0, wDir: 1, wN: 0, tT: mp.thunder ? mp.thunder.every : 0, tWarn: 0 } : null;   // 风、天雷的计时：每回合从头算
   if (typeof applySkins === 'function') applySkins();
   for (let i = 4; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
   if (largeN) {
-    const total = largeN * 2;
+    const total = largeN * teamCount();
     const span = Math.min(STAGE_W * 0.38, largeN * 150);
+    if (quadOn()) quadPlaceSpots();
     for (let i = 0; i < MAX_FIGHTERS; i++) {
       const f = FIGHTERS[i];
-      if (i < total) {
+      if (i < total && quadOn()) {
+        f.hidden = false;
+        quadSpawn(f);
+        if (i === localIdx() && !M.watchAi) f.beaconT = 1.4;
+      } else if (i < total) {
         f.hidden = false;
         const side = i % 2, slot = Math.floor(i / 2);
         const stepX = largeN > 1 ? span / (largeN - 1) : 0;
@@ -117,6 +122,7 @@ function startRound() {
   if (mayhemOn()) {
     for (const f of allFighters()) if (!f.hidden) applyMayhemStats(f);
   }
+  if (typeof cmdRoundInit === 'function') cmdRoundInit();   // 团战的统帅：随机抽人、加额外气血（必须在气血都定好之后）
   if (chaosOn() && M.round === 1) M.chaos = { i: -1, t: 0 };   // 天机乱斗：开打第一帧抽第一条异变（updateChaos），之后的回合接着换
   const foeHp = (LEVEL_BY_ID[M.level] || {}).foeHp || 1;   // 难度表里的电脑气血倍数（绝顶多 35%）
   if ((M.mode === 'cpu' || (M.mode === 'replay' && REPLAY.kind !== 'net') || M.mode === 'tag3') && foeHp !== 1) { B.maxHp = Math.round(B.maxHp * foeHp); B.hp = B.lagHp = B.maxHp; }
@@ -128,6 +134,7 @@ function startRound() {
   if (typeof partyOn === 'function' && partyOn()) partyRoundInit();
   if (typeof bastionOn === 'function' && bastionOn()) bastionRoundInit();
   if (typeof meleeOn === 'function' && meleeOn()) meleeRoundInit();
+  if (typeof quadOn === 'function' && quadOn()) quadRoundInit();
   if (typeof ctfOn === 'function' && ctfOn()) ctfRoundInit();
   if (typeof gauntletOn === 'function' && gauntletOn()) gauntletRoundInit();
   battlePerksInit();
@@ -171,6 +178,7 @@ function updateMatch() {
     if (typeof kothOn === 'function' && kothOn()) { kothMatch(); return; }
     if (typeof bastionOn === 'function' && bastionOn()) { bastionMatch(); return; }
     if (typeof meleeOn === 'function' && meleeOn()) { meleeMatch(); return; }
+    if (typeof quadOn === 'function' && quadOn()) { quadMatch(); return; }
     if (typeof ctfOn === 'function' && ctfOn()) { ctfMatch(); return; }
     if (typeof gauntletOn === 'function' && gauntletOn()) { gauntletMatch(); return; }
     if (M.mode === 'boss') gbossStep();   // 天魔倒下会再站起来，见 22-tianmo.js

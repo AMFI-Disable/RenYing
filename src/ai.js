@@ -1323,6 +1323,8 @@ class AIBrain {
       return;
     }
     if (this.watch2v2(me, foe, d, to)) return;
+    const cm = M.cmd ? cmdAiMod(me, foe, d) : null;   // 团战统帅的战术：积极度、站位距离、格挡倾向（22-modes-17-command.js）
+    if (cm && cm.dir && !this.holdDown && !this.holdAtk) { this.dir = cm.dir; return; }
     // 假动作（绝顶/天道）：贴近半步骗对手出手或乱闪，再退开等它收招
     if (this.feint && clock < this.feint.end) { this.dir = clock < this.feint.turn ? to : -to; return; }
     if (L.bait >= 0.6 && me.onGround() && (!this.feint || clock > this.feint.end + 2.5)
@@ -1403,13 +1405,13 @@ class AIBrain {
     // 时间快到了还落后：必须抢攻（时间到按血量判负）；领先就稳着打
     const rushing = L.lead > 0 && hpRatio < -0.03 && !M.ot && M.timer < 18;
     const riskMod = rushing ? 1.6 : hpRatio < -0.2 ? 1.25 : hpRatio > 0.25 ? 0.85 : 1.0;
-    const aggr = Math.min(1, L.aggr * (0.45 + g.aggr) * riskMod);
+    const aggr = Math.min(1, L.aggr * (0.45 + g.aggr) * riskMod * (cm ? cm.aggr : 1));
     const foeBusy = foe.state === 'walk' || (foe.state === 'attack' && foe.t > foe.move.su) || foe.state === 'air';
     const go = bestKey && foe.invul <= 0.05 && Math.random() < aggr * (foeBusy ? 1 : 0.7) && bv > 18 * (1.2 - aggr);
     if (go) { this.attacks++; return this.doAct(me, foe, d, to, bestKey); }
     // 站位：往理想距离走，偶尔后撤诱招、原地格挡
     const profile = aiHeroTactic(me.ch.id);
-    let want = map.want * profile.range;
+    let want = map.want * profile.range * (cm ? cm.range : 1);
     if (rushing) want *= 0.8;
     const arena = typeof mapNow === 'function' ? mapNow() : null, env = M.mapEnv;
     if (arena && arena.ice && typeof mapGrip === 'function' && mapGrip(me) < 1) want *= 1.04;
@@ -1425,7 +1427,7 @@ class AIBrain {
     else if (clock < (this.stepT || 0)) this.dir = this.stepDir || 0;
     else {
       if (Math.random() < g.back * 0.4) this.stepDir = -to;
-      else if (map.theirs[i] > map.mine[i] && Math.random() < L.block * 0.4) { this.stepDir = 0; this.holdDown = 0.15; }
+      else if (map.theirs[i] > map.mine[i] && Math.random() < L.block * 0.4 + (cm ? cm.block : 0)) { this.stepDir = 0; this.holdDown = 0.15; }
       else this.stepDir = Math.random() < 0.35 ? to : Math.random() < 0.5 ? -to : 0;
       this.stepT = clock + rand(0.16, 0.45);
       this.dir = this.stepDir;

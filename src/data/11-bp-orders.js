@@ -24,4 +24,8 @@ const BP_ORDERS = {
     [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'],
     [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']
   ],
+  large16: [                                                                                                             // 大型团战 16v16：各禁 1 人，蛇形各选 16 人（共 34 人，不超过侠客总数）
+    [0, 'ban'], [1, 'ban'],
+    ...Array.from({ length: 32 }, (_, k) => [[0, 1, 1, 0][k % 4], 'pick'])
+  ],
 };

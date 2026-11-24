@@ -336,6 +336,7 @@ function render() {
   drawCujuField();
   if (typeof drawKothField === 'function') drawKothField();
   if (typeof drawCtfField === 'function') drawCtfField();
+  if (typeof drawQuadField === 'function') drawQuadField();
   if (typeof drawBastionField === 'function') drawBastionField();
   if (typeof drawRaidMechanics === 'function') drawRaidMechanics();
   drawProjs();

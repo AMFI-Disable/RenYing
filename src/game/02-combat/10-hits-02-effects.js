@@ -20,6 +20,7 @@ function applyHit(att, def, m, pt) {
     }
   }
   if (M.ot && M.phase === 'fight' && m.dmg) m = { ...m, dmg: m.dmg * OT_DMG };   // 加时赛：伤害翻倍
+  if (M.cmd && m.dmg && att !== def) { m = { ...m, dmg: m.dmg * cmdDmgMul(att, def) }; cmdNoteHit(att, def, m.dmg); }   // 团战的战术相克（22-modes-17-command.js）
   if (def.jailT > 0) m = { ...m, launch: false, spike: false, knock: false, kb: [0, 0] };   // 关在醉翁亭里的人打不飞
   if (!m.isProj && !m.ult && mapFavOn(att) && att.ch.id === 'lingshuang' && (mapNow() || {}).cliff
       && (def.x < WALL + 280 || def.x > STAGE_W - WALL - 280) && m.kb) {
@@ -418,7 +419,7 @@ function fighterDown(def, att, ev) {
     }
   }
   // These modes settle eliminations, respawns or objectives in their match update.
-  if (meleeOn() || ctfOn() || gauntletOn() || FOREST.on || (M.mode === 'boss' && def === B)) return;
+  if (meleeOn() || quadOn() || ctfOn() || gauntletOn() || FOREST.on || (M.mode === 'boss' && def === B)) return;
   const losingTeam = fighterTeam(def);
   if ((isLargeTeam() || isRaid()) && sideFighters(losingTeam).some(f => f.hp > 0)) return;
   M.phase = 'ko'; M.t = 0; M.koWinner = 1 - losingTeam; ev.ko = true;

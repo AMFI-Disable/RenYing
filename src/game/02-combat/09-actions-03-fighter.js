@@ -486,6 +486,7 @@ function strike(f, foe, spec) {
 }
 // 统一范围（圆形/椭圆）技能与奥义判定（自动适配五层垂直高度与 8v8 多目标衰减）
 function strikeAoE(f, cx, cy, rx, ry, spec, exclude) {
+  if (exclude && !Array.isArray(exclude)) exclude = exclude.idx !== undefined ? [exclude.idx] : [];   // 磁仙大招传过来的是一个侠客而不是编号数组
   const targets = findTargetsInRadius(f, cx, cy, rx, ry || rx, { ignoreInvul: !!spec.ignoreInvul, exclude });
   if (!targets.length) return 0;
   for (let i = 0; i < targets.length; i++) {
@@ -618,7 +619,8 @@ function tryTacticalKeys(f, foe) {
       }
     }
   }
-  if (isMulti() && f.idx < 2 && !cpuTeamwork(f)) {
+  if (M.cmd) cmdHandleKeys(f, c);
+  else if (isMulti() && f.idx < 2 && !cpuTeamwork(f)) {
     if (c.consume('orderFocus')) {
       M.squadOrders[fighterTeam(f)] = 'focus';
       if (!RESIM) addP({ type: 'text', text: '令 · 全军集火', x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '255,165,100' });

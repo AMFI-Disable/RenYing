@@ -268,6 +268,7 @@ function drawHUDRaid() {
 }
 function drawHUDLargeTeam() {
   const top = Math.max(16, Math.round(H * 0.025)), cx = W / 2;
+  if (quadOn()) { drawHUDQuad(top, cx); drawLargeMiniMap(top, cx); drawLocalCard(); if (M.cmd) drawCmdPanel(); return; }
   const allyTeam = localTeam(), enemyTeam = 1 - allyTeam;
   const s0 = sideFighters(allyTeam), s1 = sideFighters(enemyTeam);
   const alive0 = s0.filter(f => f.hp > 0).length, alive1 = s1.filter(f => f.hp > 0).length;
@@ -306,7 +307,14 @@ function drawHUDLargeTeam() {
     ctx.fillStyle = '#e9c46a';
   }
   ctx.fillText(`${sz}v${sz}`, cx, top + 30);
-  // 顶部战场小地图条（一眼定位自己、队友与敌人）
+  drawLargeMiniMap(top, cx);
+  drawLocalCard();
+  if (M.cmd) drawCmdPanel();
+  ctx.restore();
+}
+// 顶部战场小地图条（一眼定位自己、队友与敌人；四象争锋里每个阵营一种颜色）
+function drawLargeMiniMap(top, cx) {
+  ctx.save();
   const bm = typeof battleMapDef === 'function' ? battleMapDef() : null;
   const layered = !!bm;
   const layerCnt = bm ? bm.layers : 1;
@@ -332,11 +340,16 @@ function drawHUDLargeTeam() {
     const isAlly = fighterTeam(f) === localTeam();
     ctx.beginPath();
     ctx.arc(rx, mapY(f.y), isSelf ? 4.5 : 2.8, 0, Math.PI * 2);
-    ctx.fillStyle = isSelf ? '#ffe066' : isAlly ? '#6fe0ff' : '#ff6470';
+    ctx.fillStyle = isSelf ? '#ffe066' : quadOn() ? teamHexOf(f) : isAlly ? '#6fe0ff' : '#ff6470';
     ctx.fill();
     if (isSelf) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2; ctx.stroke(); }
   }
-  // 左下角：本机玩家专属清晰状态卡（气血、架势、真气、扩展技能冷却、战队指令）
+  ctx.restore();
+}
+// 左下角：本机玩家专属状态卡
+function drawLocalCard() {
+  const lf = fighterByIdx(localIdx());
+  ctx.save();
   if (lf && !lf.hidden) {
     const cw = 264, ch = 76, px = 14, py = H - ch - 34;
     ctx.fillStyle = 'rgba(8,10,24,0.82)'; ctx.fillRect(px, py, cw, ch);
@@ -353,42 +366,51 @@ function drawHUDLargeTeam() {
     const cd = (k, t) => t < 0.05 ? `${k}✓` : `${k}${t.toFixed(0)}`;
     ctx.font = `11px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.86)';
     ctx.fillText(`${cd('Q', lf.skillCD)} ${cd('R', lf.skill2CD)} ${cd('C', lf.feintCD || 0)} ${cd('F', lf.qiParryCD || 0)} ${cd('V', lf.petCD || 0)}  [B${cvT('自标')} G${cvT('锁定')} Tab]`, px + 8, py + 47);
-    const ordMap = { auto: '自由作战', focus: '全军集火', protect: '回防掩护', spread: '分散游击' };
-    ctx.fillStyle = '#e9c46a';
-    ctx.fillText(`${cvT('指令')}: ${cvT(ordMap[M.squadOrders?.[localTeam()] || 'auto'])} [1/2/3]`, px + 8, py + 61);
+    if (!M.cmd) {
+      const ordMap = { auto: '自由作战', focus: '全军集火', protect: '回防掩护', spread: '分散游击' };
+      ctx.fillStyle = '#e9c46a';
+      ctx.fillText(`${cvT('指令')}: ${cvT(ordMap[M.squadOrders?.[localTeam()] || 'auto'])} [1/2/3]`, px + 8, py + 61);
+    }
   }
   if (chaosOn()) drawChaosHUD(cx, H - 22, true);
   ctx.restore();
 }
 function drawTabScoreboard() {
   if (typeof TAB_SCOREBOARD === 'undefined' || !TAB_SCOREBOARD || M.mode === 'demo') return;
-  const fs = allFighters().filter(f => !f.hidden);
-  const w = Math.min(W - 40, 620), rowH = 24, h = Math.min(H - 60, 54 + Math.ceil(fs.length / 2) * rowH + 20);
-  const x = (W - w) / 2, y = (H - h) / 2;
+  const tc = isLargeTeam() ? teamCount() : 2;
+  const teams = Array.from({ length: tc }, (_, t) => sideFighters(t));
+  const rows = Math.max(1, ...teams.map(l => l.length));
+  const w = Math.min(W - 40, tc > 2 ? 940 : 620), gapX = 10, colW = (w - 28 - gapX * (tc - 1)) / tc;
+  const rowH = clamp(Math.floor((H - 150) / rows), 13, 24), h = Math.min(H - 40, 62 + rows * rowH + 14);
+  const x = (W - w) / 2, y = (H - h) / 2, fs = rowH < 18 ? 10 : 12;
   ctx.save();
   ctx.fillStyle = 'rgba(8,10,24,0.92)'; ctx.fillRect(x, y, w, h);
   ctx.strokeStyle = 'rgba(233,196,106,0.6)'; ctx.lineWidth = 1.5; ctx.strokeRect(x, y, w, h);
   ctx.font = `bold 15px ${TITLE_FONT}`; ctx.fillStyle = '#e9c46a'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
-  ctx.fillText(cvT('战况总览 (Tab)'), W / 2, y + 12);
-  const s0 = sideFighters(0), s1 = sideFighters(1), colW = (w - 36) / 2;
-  const drawCol = (list, cx0, title, col) => {
+  ctx.fillText(cvT('战况总览 (Tab)'), W / 2, y + 10);
+  const lt = localTeam();
+  const drawCol = (list, cx0, title, col, mine) => {
     ctx.font = `bold 12px ${BODY_FONT}`; ctx.fillStyle = col; ctx.textAlign = 'left';
-    ctx.fillText(title, cx0, y + 36);
+    ctx.fillText(title, cx0, y + 34);
     list.forEach((f, idx) => {
       const ry = y + 54 + idx * rowH;
       const isMe = f.idx === localIdx();
       ctx.fillStyle = isMe ? 'rgba(52,231,155,0.16)' : 'rgba(255,255,255,0.03)';
-      ctx.fillRect(cx0, ry - 2, colW, rowH - 3);
-      ctx.font = `${isMe ? 'bold ' : ''}12px ${BODY_FONT}`;
+      ctx.fillRect(cx0, ry - 2, colW, rowH - 2);
+      ctx.font = `${isMe ? 'bold ' : ''}${fs}px ${BODY_FONT}`;
       ctx.fillStyle = f.hp <= 0 ? 'rgba(180,140,140,0.55)' : isMe ? '#34e79b' : '#efe8d8';
-      ctx.fillText(`${isMe ? '★ ' : ''}${cvT(f.look.name)}`, cx0 + 6, ry + 3);
-      ctx.textAlign = 'right';
-      ctx.fillText(`${Math.max(0, Math.round(f.hp))}/${f.maxHp} · ${Math.round(f.meter)}%`, cx0 + colW - 6, ry + 3);
+      const role = mine && M.cmd && !cmdIs(f) && M.cmd.role[f.idx] ? CMD_ROLES[M.cmd.role[f.idx]].g : '';
       ctx.textAlign = 'left';
+      ctx.fillText(`${isMe ? '★ ' : ''}${cmdIs(f) ? cvT('帅') + ' ' : ''}${role ? '[' + cvT(role) + '] ' : ''}${cvT(f.look.name)}`, cx0 + 5, ry + 1);
+      ctx.textAlign = 'right';
+      ctx.fillText(tc > 2 ? `${Math.max(0, Math.round(f.hp))}` : `${Math.max(0, Math.round(f.hp))}/${f.maxHp} · ${Math.round(f.meter)}%`, cx0 + colW - 5, ry + 1);
     });
   };
-  drawCol(s0, x + 14, cvT('我方阵营'), '#6fe0ff');
-  drawCol(s1, x + 22 + colW, cvT('敌方阵营'), '#ff7878');
+  teams.forEach((list, t) => {
+    const title = tc > 2 ? cvT(QUAD_TEAMS[t].n) + (t === lt ? ' ' + cvT('(我方)') : '') : cvT(t === lt ? '我方阵营' : '敌方阵营');
+    const col = tc > 2 ? QUAD_TEAMS[t].hex : (t === lt ? '#6fe0ff' : '#ff7878');
+    drawCol(list, x + 14 + t * (colW + gapX), title, col, t === lt);
+  });
   ctx.restore();
 }
 function drawHUDQuiet() {
@@ -424,7 +446,7 @@ function drawHUDQuiet() {
 }
 function drawHUD() {
   if (M.mode === 'demo') return;
-  if (typeof hudPreset === 'function' && hudPreset() === 'quiet') { drawHUDQuiet(); drawTabScoreboard(); return; }
+  if (typeof hudPreset === 'function' && hudPreset() === 'quiet' && !quadOn()) { drawHUDQuiet(); drawTabScoreboard(); return; }
   if (isLargeTeam()) { drawHUDLargeTeam(); drawTabScoreboard(); return; }
   if (isRaid()) { drawHUDRaid(); drawTabScoreboard(); return; }
   if (is2v2()) { drawHUD2v2(); drawTabScoreboard(); return; }

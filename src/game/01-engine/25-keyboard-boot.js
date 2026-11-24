@@ -66,6 +66,11 @@ window.addEventListener('keydown', e => {
     if (e.code === 'KeyG' && typeof bastionCastCompanionSkill === 'function') { e.preventDefault(); bastionCastCompanionSkill(); return; }
     if (e.code === 'KeyB' && typeof bastionToggleArmory === 'function') { e.preventDefault(); bastionToggleArmory(); return; }
   }
+  if (M.cmd && e.code === 'Tab' && KEYS[0] && KEYS[0].Tab === 'scoreboard') {   // 团战统帅：轻点 Tab 换战术，按住 Tab 看战况总览
+    e.preventDefault();
+    if (!e.repeat) cmdTabDown();
+    return;
+  }
   if (KEYS[0] && KEYS[0][e.code] === 'scoreboard') {
     e.preventDefault();
     TAB_SCOREBOARD = true;
@@ -108,6 +113,7 @@ window.addEventListener('keydown', e => {
   }
 });
 window.addEventListener('keyup', e => {
+  if (M.cmd && e.code === 'Tab' && KEYS[0] && KEYS[0].Tab === 'scoreboard') { cmdTabUp(); return; }
   if (KEYS[0] && KEYS[0][e.code] === 'scoreboard') {
     TAB_SCOREBOARD = false;
     return;

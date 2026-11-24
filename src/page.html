@@ -180,7 +180,7 @@
           <button class="xiwu-cat-btn" data-cat="large" type="button" role="tab" aria-selected="false">
             <span class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span>
             <span class="cat-name">大型团战</span>
-            <span class="cat-desc">3v3–8v8 混战、夺旗与无尽</span>
+            <span class="cat-desc">3v3–16v16 混战、四象、夺旗与无尽</span>
           </button>
           <button class="xiwu-cat-btn" data-cat="training" type="button" role="tab" aria-selected="false">
             <span class="cat-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-dummy"/></svg></span>
@@ -210,8 +210,9 @@
           <!-- 大型团战与新玩法分区 -->
           <div class="xiwu-cat-group" data-cat-group="large" style="display:none">
             <div class="xiwu-cards-row">
-              <button data-tab="melee" type="button" id="cardMelee"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">群雄会战</b><span class="pt-d">3v3 / 5v5 / 8v8 同屏大混战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="melee" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="melee" type="button" id="cardMelee"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">群雄会战</b><span class="pt-d">3v3 至 16v16 同屏大混战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="melee" title="玩法说明" aria-label="玩法说明">i</span></button>
               <button data-tab="ctf" type="button" id="cardCtf"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">夺旗争锋</b><span class="pt-d">2v2–8v8 护旗夺分战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="ctf" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="quad" type="button" id="cardQuad"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">四象争锋</b><span class="pt-d">4v4v4v4 四方混战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="quad" title="玩法说明" aria-label="玩法说明">i</span></button>
               <button data-tab="gauntlet" type="button" id="cardGauntlet"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">无尽试炼</b><span class="pt-d">逐波递增车轮生存战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="gauntlet" title="玩法说明" aria-label="玩法说明">i</span></button>
             </div>
           </div>
@@ -375,14 +376,15 @@
       <div data-sec="melee" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
           <h3 class="spt">群雄会战 · 大型同屏混战</h3>
-          <span class="sub-badge">3v3 / 5v5 / 8v8 · 多层立体战场</span>
+          <span class="sub-badge">3v3 至 16v16 · 多层立体战场</span>
         </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">支持 3v3、5v5（三层演武楼阁）与 8v8（五层飞檐战场）同屏大混战！配备兵力积分、战损复活、战队指令与滚轮镜头缩放。</p>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">支持 3v3、5v5（三层演武楼阁）与 8v8（五层飞檐战场）乃至 16v16 同屏大混战！由统帅下令，配备兵力积分、战损复活、战队指令与滚轮镜头缩放。</p>
         <div class="sec-sub-label" style="text-align:left;margin-top:6px">团战规模</div>
         <div class="seg m2-seg" id="meleeSizeSeg" style="margin-bottom:12px">
           <button type="button" data-lsize="3">3v3 小队战</button>
           <button type="button" data-lsize="5" class="sel">5v5 演武楼阁</button>
           <button type="button" data-lsize="8">8v8 五层大战场</button>
+          <button type="button" data-lsize="16">16v16 全军会战</button>
         </div>
         <div class="bp-rule-banner">
           <span class="bp-rule-seal">禁选</span>
@@ -419,6 +421,25 @@
         </div>
         <div class="single-action-row">
           <button class="go" id="largeStartCtf" type="button">进入点将台 (BP) · 开启夺旗争锋</button>
+        </div>
+      </div>
+
+      <!-- 四象争锋 · 4v4v4v4 -->
+      <div data-sec="quad" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">四象争锋 · 四方混战</h3>
+          <span class="sub-badge">4v4v4v4 · 统帅战术相克</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">苍龙、朱雀、玄武、白虎四队同屏混战，你是苍龙统帅：用 1/2/3 或 Tab 切换锋矢、固守、游袭战术，敌方统帅的战术不可见，最后存活的队伍夺魁！</p>
+        <div class="bp-rule-banner">
+          <span class="bp-rule-seal pick-only">直选</span>
+          <div class="bp-rule-txt">
+            <b>点将台规则 · 免禁用自选本命侠客</b>
+            <span>进入点将台挑选你的侠客，其余队友与三支敌队随机组成。</span>
+          </div>
+        </div>
+        <div class="single-action-row">
+          <button class="go" id="largeStartQuad" type="button">进入点将台 · 开启四象争锋</button>
         </div>
       </div>
 

@@ -126,7 +126,7 @@ const BATTLE5_STAIRS = [
 ];
 const BATTLE5_MAP = { id: 'battle5', w: BATTLE5_WIDTH, layers: 3, layerH: BATTLE5_LAYER_HEIGHT, decks: BATTLE5_DECKS, stairs: BATTLE5_STAIRS, plats: [...BATTLE5_DECKS, ...BATTLE5_STAIRS] };
 
-const battleMapDef = () => !isLargeTeam() ? null : (M.teamSize === 8 ? BATTLE_MAP : M.teamSize === 5 ? BATTLE5_MAP : null);
+const battleMapDef = () => !isLargeTeam() ? null : (quadOn() || M.teamSize === 8 ? BATTLE_MAP : M.teamSize === 5 ? BATTLE5_MAP : null);
 const battleMapOn = () => !!battleMapDef();
 
 function battlePerksInit() {

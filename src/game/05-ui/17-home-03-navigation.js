@@ -231,9 +231,11 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
   });
   if ($id('largeStartMelee')) $id('largeStartMelee').addEventListener('click', () => bpStart('melee', { teamSize: meleeTeamSize, level: pickLevel || 'normal', mut: typeof teamMutator !== 'undefined' ? teamMutator : 'normal' }));
   if ($id('largeStartCtf')) $id('largeStartCtf').addEventListener('click', () => bpStart('ctf', { teamSize: ctfTeamSize, level: pickLevel || 'normal', mut: typeof teamMutator !== 'undefined' ? teamMutator : 'normal' }));
+  if ($id('largeStartQuad')) $id('largeStartQuad').addEventListener('click', () => bpStart('quad', { teamSize: 4, level: pickLevel || 'normal' }));
   if ($id('largeStartGauntlet')) $id('largeStartGauntlet').addEventListener('click', () => bpStart('gauntlet', { level: pickLevel || 'normal' }));
   if ($id('cardMelee')) $id('cardMelee').addEventListener('dblclick', () => $id('largeStartMelee') && $id('largeStartMelee').click());
   if ($id('cardCtf')) $id('cardCtf').addEventListener('dblclick', () => $id('largeStartCtf') && $id('largeStartCtf').click());
+  if ($id('cardQuad')) $id('cardQuad').addEventListener('dblclick', () => $id('largeStartQuad') && $id('largeStartQuad').click());
   if ($id('cardGauntlet')) $id('cardGauntlet').addEventListener('dblclick', () => $id('largeStartGauntlet') && $id('largeStartGauntlet').click());
 })();
 

@@ -426,3 +426,5 @@
   .ad-dev-row .ad-dev-me { color: #7fe0a8; font-style: normal; }
   .xiwu-large-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin-top: 10px; padding: 10px 12px; border-radius: 10px; background: rgba(255,255,255,.04); border: 1px solid rgba(233,196,106,.24); }
   .xl-lbl { font-size: 12.5px; color: #e9c46a; font-weight: 600; }
+  #meleeSizeSeg { flex-wrap: wrap; }
+  #meleeSizeSeg button { flex: 1 1 auto; }

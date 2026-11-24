@@ -173,6 +173,7 @@ function renderBP() {
   else if (bpMode === 'party') modePrefix = '江湖百戏 · ';
   else if (bpMode === 'bastion') modePrefix = '天枢守境 · ';
   else if (bpMode === 'melee') modePrefix = `群雄会战 ${(bpCustomOpts && bpCustomOpts.teamSize) || (BP.picks[0] ? BP.picks[0].length : 5)}v${(bpCustomOpts && bpCustomOpts.teamSize) || (BP.picks[0] ? BP.picks[0].length : 5)} · `;
+  else if (bpMode === 'quad') modePrefix = '四象争锋 · ';
   else if (bpMode === 'ctf') modePrefix = `夺旗争锋 ${(bpCustomOpts && bpCustomOpts.teamSize) || (BP.picks[0] ? BP.picks[0].length : 5)}v${(bpCustomOpts && bpCustomOpts.teamSize) || (BP.picks[0] ? BP.picks[0].length : 5)} · `;
   else if (bpMode === 'mayhem') modePrefix = '通天神决 · ';
   else if (bpMode === 'tag3') modePrefix = '3v3车轮 · ';
@@ -211,7 +212,7 @@ function renderBP() {
   } else if (multiPick) {
     const idxNum = (BP.picks[side] || []).filter(x => x >= 0).length;
     stepTitle = `${bpSideName(side)}钦点【${TEAM2_ROLES[idxNum] || '次锋'}】出战`;
-  } else if (bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train' || bpMode === 'world') {
+  } else if (bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train' || bpMode === 'world' || bpMode === 'quad') {
     stepTitle = '挑选你的本命首发出战侠客（免禁用直选）';
   } else {
     stepTitle = `${bpSideName(side)}选择出战侠客`;
@@ -240,11 +241,12 @@ function renderBP() {
       const bossTitle = rb ? `六技魔首：${rb.heroNames.join('·')}` : '三侠六技·融魂魔首';
       el.innerHTML = `<div class="who" style="color:var(--p2)">秘境魔首 (3xHP · 1.25x伤)</div>
         <div class="slots"><div class="slot2">${bossTitle}</div></div>`;
-    } else if (bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train' || bpMode === 'world') {
+    } else if (bpMode === 'tower' || bpMode === 'stage' || bpMode === 'train' || bpMode === 'world' || bpMode === 'quad') {
       if (sd === 1) {
         // 单人模式右侧显示对位/关卡信息
         let rightInfo = '木人桩试剑';
         if (bpMode === 'tower') rightInfo = '万仞剑阁守关者';
+        else if (bpMode === 'quad') rightInfo = '朱雀 · 玄武 · 白虎';
         else if (bpMode === 'stage') rightInfo = (STAGE && STAGE.C ? STAGE.C.name : '守关宗师');
         el.innerHTML = `<div class="who" style="color:var(--p2)">敌阵挑战</div>
           <div class="slots"><div class="slot2">${rightInfo}</div></div>`;

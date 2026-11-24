@@ -21,7 +21,7 @@ function bpStart(mode, customOpts = null) {
   bpCustomOpts = customOpts;
   // 顺序和每边选几个人都按模式表来（src/data/10-modes.js、11-bp-orders.js）
   const md = bpModeDef(mode);
-  const squad = customOpts && customOpts.teamSize ? clamp(customOpts.teamSize | 0, 2, 8) : (customOpts && customOpts.squadSize === 2 ? 2 : 3);
+  const squad = customOpts && customOpts.teamSize ? clamp(customOpts.teamSize | 0, 2, 16) : (customOpts && customOpts.squadSize === 2 ? 2 : 3);
   const steps = BP_ORDERS[mode === 'tag3' && customOpts.quickRelay ? 'trioQuick' : (md.squadBp && md.squadBp[squad]) || md.bp].map(st => st.slice());
   const banCnt = side => steps.filter(st => st[0] === side && st[1] === 'ban').length;
   const b0 = banCnt(0), b1 = banCnt(1);
@@ -229,6 +229,8 @@ function launchBpMatch(mode, opts, picks, bans, mapId, preMatch) {
     const sz = opts.teamSize || (Array.isArray(picks[0]) ? picks[0].length : 5);
     startMelee(sz, Array.isArray(picks[0]) ? picks[0][0] : picks[0], opts.level || pickLevel, opts.mut || (typeof teamMutator !== 'undefined' ? teamMutator : 'normal'), picks);
     M.bans = bans;
+  } else if (mode === 'quad') {
+    startQuad(opts.teamSize || 4, Array.isArray(picks) ? picks[0] : picks, opts.level || pickLevel);
   } else if (mode === 'ctf') {
     const sz = opts.teamSize || (Array.isArray(picks[0]) ? picks[0].length : 5);
     startCtf(sz, Array.isArray(picks[0]) ? picks[0][0] : picks[0], opts.level || pickLevel, picks, opts.mut || (typeof teamMutator !== 'undefined' ? teamMutator : 'normal'));

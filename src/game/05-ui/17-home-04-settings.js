@@ -49,7 +49,9 @@ const KEY_ACTIONS = [
   ['scoreboard', '战况总览（Tab）'],
   ['orderFocus', '指令：全军集火（1）'],
   ['orderProtect', '指令：回防掩护（2）'],
-  ['orderSpread', '指令：分散游击（3）']
+  ['orderSpread', '指令：分散游击（3）'],
+  ['cmdSelect', '统帅：选中队友（Y）'],
+  ['cmdRole', '统帅：分派任务（N）']
 ];
 let rebindingKey = null;
 function handleKeyRebind(e) {

@@ -117,6 +117,7 @@ document.getElementById('againBtn').addEventListener('click', () => {
     else startCtf(M.teamSize, A.chIdx, M.level, teams);
     return;
   }
+  if (M.mode === 'quad') { startQuad(M.teamSize, A.chIdx, M.level); return; }
   if (M.mode === 'gauntlet') { startGauntlet(A.chIdx, M.level); return; }
   const handler = MODE_HANDLERS[M.mode];
   if (handler && handler.rematch) {

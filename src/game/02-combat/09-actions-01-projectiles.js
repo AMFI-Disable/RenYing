@@ -96,7 +96,7 @@ function updateProjs() {
     if (p.delay > 0) { const gy = p.groundY !== undefined ? p.groundY : 0; p.delay -= STEP; if (p.delay <= 0 && p.kind === 'net') { shake = Math.max(shake, 18); dust(p.x, gy, 22); SFX.thud(); } if (p.delay <= 0 && p.kind === 'popcorn') { SFX.poof(); for (let k = 0; k < 9; k++) { const a = rand(0, 6.28), v = rand(80, 260); addP({ type: 'spark', x: p.x, y: p.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v - 60, life: 0.35, max: 0.35, rgb: k % 3 ? '255,240,200' : '255,200,90', w: 2.2, drag: 2 }); } } if (p.delay <= 0 && p.kind === 'bolt') { if (p.small) { dust(p.x, gy, 8); SFX.thunder(); flashA = Math.max(flashA, 0.1); flashRGB = '255,245,200'; } else boltFX(p); } continue; }
     // Moving enemy projectiles bend gently in Ci Xian's magnetic field.
     if (p.vx && !p.fx) for (const f of allFighters()) {
-      if (f.hidden || f.hp <= 0 || !f.ch || f.ch.passive !== 'magnet' || f.idx % 2 === p.owner % 2) continue;
+      if (f.hidden || f.hp <= 0 || !f.ch || f.ch.passive !== 'magnet' || fighterTeam(f) === fighterTeam(fighterByIdx(p.owner))) continue;
       const dx = f.x - p.x, dy = f.y - 65 - p.y, d = Math.hypot(dx, dy);
       if (d > 20 && d < 420) p.vy += clamp(dy / d * f.pol * 100 * (1 - d / 420), -100, 100) * STEP;
     }

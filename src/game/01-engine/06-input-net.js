@@ -30,7 +30,8 @@ const DEFAULT_1P_KEYS = {
   heavyStrike: 'KeyU', lowKick: 'KeyI', iaido: 'KeyO', grapple: 'KeyH',
   stance: 'KeyZ', feint: 'KeyC', parry: 'KeyF', pet: 'KeyV',
   lock: 'KeyG', beacon: 'KeyB', rally: 'KeyT', scoreboard: 'Tab',
-  orderFocus: 'Digit1', orderProtect: 'Digit2', orderSpread: 'Digit3'
+  orderFocus: 'Digit1', orderProtect: 'Digit2', orderSpread: 'Digit3',
+  cmdSelect: 'KeyY', cmdRole: 'KeyN'   // 统帅：选队友 / 给他分任务（Tab 轻点换战术在 25-keyboard-boot.js）
 };
 let custom1PKeys = { ...DEFAULT_1P_KEYS };
 try {

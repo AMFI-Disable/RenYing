@@ -28,7 +28,7 @@ function idRole(f) {
       : cvT(f.look.name);
     return { kind: 'ally', rgb: ID_ALLY, label: name };
   }
-  return { kind: 'foe', rgb: ID_FOE };
+  return { kind: 'foe', rgb: quadOn() ? teamRgbOf(f) : ID_FOE };
 }
 
 // 战斗开局与受身/起身降临垂直水墨光束（Beacon）
@@ -177,6 +177,7 @@ function drawIdentityTags(list) {
   const lockedIdx = localF && !localF.hidden && localF.lockIdx >= 0 ? localF.lockIdx : -1;
   // 1P 的徽章胶囊标 [ ▼ 我 ] / [ ▼ 1P ]：带微型发光描边与向下指针，视距补偿（乘 1 / cam.zoom 像素恒定）
   for (const { f, r, hx, hy } of tags) {
+    if (typeof cmdDrawCrown === 'function') cmdDrawCrown(f, hx, hy, px);
     if (r.kind === 'foe') {
       if (isLargeTeam() || f.idx === lockedIdx) {
         ctx.save();
@@ -185,7 +186,7 @@ function drawIdentityTags(list) {
         if (isLargeTeam()) {
           const bw = 36, bh = 4;
           ctx.fillStyle = 'rgba(0,0,0,0.65)'; ctx.fillRect(-bw / 2 - 1, -bh / 2 - 1, bw + 2, bh + 2);
-          ctx.fillStyle = '#ff5e6c'; ctx.fillRect(-bw / 2, -bh / 2, bw * clamp(f.hp / f.maxHp, 0, 1), bh);
+          ctx.fillStyle = quadOn() ? teamHexOf(f) : '#ff5e6c'; ctx.fillRect(-bw / 2, -bh / 2, bw * clamp(f.hp / f.maxHp, 0, 1), bh);
         }
         if (f.idx === lockedIdx) {
           const pulse = 0.5 + 0.5 * Math.sin(clock * 10);

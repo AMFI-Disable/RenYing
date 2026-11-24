@@ -31,6 +31,7 @@ import teamsAndPreMatch from './combat/50-teams-and-pre-match.mjs';
 import mapsTerrainAndMatchups from './combat/60-maps-terrain-and-matchups.mjs';
 import loadouts from './combat/70-loadouts.mjs';
 import overhaulSystems from './combat/80-overhaul-systems.mjs';
+import teamCommand from './combat/90-team-command.mjs';
 
 console.log('===== RenYing Combat Mechanics & AI Capabilities Suite =====\n');
 
@@ -137,13 +138,14 @@ async function initRunner() {
   const netCode = readFileSync('src/net-p2p.js', 'utf8');
   const gameCode = gameSource();
   const dummyEl = {
-    getContext: () => ({
+    // 画布上下文：已知的方法照旧，没列出的绘图方法（strokeRect、ellipse、roundRect……）一律当成什么都不做，设置属性也不报错
+    getContext: () => new Proxy({
       fillRect: () => {}, clearRect: () => {}, beginPath: () => {}, arc: () => {}, fill: () => {},
       stroke: () => {}, moveTo: () => {}, lineTo: () => {}, save: () => {}, restore: () => {},
       translate: () => {}, scale: () => {}, rotate: () => {}, measureText: () => ({ width: 10 }),
       fillText: () => {}, strokeText: () => {}, createRadialGradient: () => ({ addColorStop: () => {} }),
       createLinearGradient: () => ({ addColorStop: () => {} })
-    }),
+    }, { get: (o, k) => (k in o ? o[k] : (typeof k === 'string' && /^(?:stroke|fill|clip|ellipse|round|rect|quad|bezier|close|arc|set|draw|transform)/.test(k) ? () => {} : undefined)) }),
     getBoundingClientRect: () => ({ width: 1440, height: 900, left: 0, top: 0, right: 1440, bottom: 900 }),
     addEventListener: () => {}, removeEventListener: () => {},
     classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => false },
@@ -228,6 +230,7 @@ const testSuite = [
   ...mapsTerrainAndMatchups,
   ...loadouts,
   ...overhaulSystems,
+  ...teamCommand,
 ];
 
 let failed = 0;

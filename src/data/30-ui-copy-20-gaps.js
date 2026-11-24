@@ -289,7 +289,6 @@ Object.assign(UI_COPY_EN, {
   // Milestone 4 & 5：新模式与首页分类
   "人机切磋 · 8v8 团战 · 历练闯关": "Play vs AI · 8v8 Battles · Story & Trials",
   "大型团战": "Large-Scale",
-  "3v3–8v8 混战、夺旗与无尽": "3v3–8v8 Melee, CTF & Endless",
   "群雄会战": "Grand Melee",
   "群雄会战 · 8v8": "Grand Melee · 8v8",
   "夺旗争锋 · 8v8": "Capture the Banner · 8v8",
