@@ -138,6 +138,18 @@ function tryHit(f, foe, m) {
   }
 
   f.hitDone = true;
+  if (isMulti()) {
+    let hitAny = false;
+    for (const tf of foesOf(f)) {
+      if (!tf || tf.invul > 0 || tf.hp <= 0) continue;
+      const thu = hurtbox(tf);
+      if (!overlap(hb, thu)) continue;
+      hitAny = true;
+      const px = (Math.max(hb[0], thu[0]) + Math.min(hb[2], thu[2])) / 2, py = (Math.max(hb[1], thu[1]) + Math.min(hb[3], thu[3])) / 2;
+      applyHit(f, tf, m, [px, py]);
+    }
+    if (hitAny) return;
+  }
   const px = (Math.max(hb[0], hu[0]) + Math.min(hb[2], hu[2])) / 2, py = (Math.max(hb[1], hu[1]) + Math.min(hb[3], hu[3])) / 2;
   applyHit(f, foe, m, [px, py]);
 }

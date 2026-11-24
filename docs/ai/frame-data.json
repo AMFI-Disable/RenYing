@@ -467,7 +467,7 @@
    },
    "ult": {
     "id": "thunder",
-    "hit": 57,
+    "hit": 54,
     "total": 136
    }
   }
@@ -701,8 +701,8 @@
    },
    "ult": {
     "id": "featherstorm",
-    "hit": 54,
-    "total": 124
+    "hit": 61,
+    "total": 130
    }
   }
  },
@@ -1156,8 +1156,8 @@
    "skill": null,
    "skill2": {
     "id": "magfield",
-    "hit": 17,
-    "total": 46
+    "hit": 23,
+    "total": 49
    },
    "ult": {
     "id": "sandwich",
@@ -1313,8 +1313,8 @@
    },
    "ult": {
     "id": "skyfall",
-    "hit": 0,
-    "total": 132
+    "hit": 30,
+    "total": 121
    }
   }
  },
@@ -1391,8 +1391,8 @@
    },
    "ult": {
     "id": "thicket",
-    "hit": 0,
-    "total": 131
+    "hit": 37,
+    "total": 94
    }
   }
  },
@@ -1469,8 +1469,8 @@
    },
    "ult": {
     "id": "celestial",
-    "hit": 0,
-    "total": 128
+    "hit": 23,
+    "total": 106
    }
   }
  },
@@ -1547,8 +1547,8 @@
    },
    "ult": {
     "id": "maelstrom",
-    "hit": 0,
-    "total": 132
+    "hit": 18,
+    "total": 78
    }
   }
  },
@@ -1625,8 +1625,8 @@
    },
    "ult": {
     "id": "eclipsecleave",
-    "hit": 0,
-    "total": 132
+    "hit": 32,
+    "total": 83
    }
   }
  },
@@ -1703,8 +1703,8 @@
    },
    "ult": {
     "id": "phoenixchorus",
-    "hit": 0,
-    "total": 124
+    "hit": 10,
+    "total": 90
    }
   }
  },
@@ -1781,8 +1781,8 @@
    },
    "ult": {
     "id": "tortoiseslam",
-    "hit": 0,
-    "total": 127
+    "hit": 20,
+    "total": 97
    }
   }
  },
@@ -1860,7 +1860,7 @@
    "ult": {
     "id": "infernorush",
     "hit": 0,
-    "total": 136
+    "total": 82
    }
   }
  },
@@ -1937,8 +1937,8 @@
    },
    "ult": {
     "id": "ninestrike",
-    "hit": 0,
-    "total": 135
+    "hit": 8,
+    "total": 85
    }
   }
  },
@@ -2015,8 +2015,8 @@
    },
    "ult": {
     "id": "skywarddance",
-    "hit": 0,
-    "total": 124
+    "hit": 35,
+    "total": 97
    }
   }
  },
@@ -2093,8 +2093,8 @@
    },
    "ult": {
     "id": "heavenbreaker",
-    "hit": 0,
-    "total": 126
+    "hit": 20,
+    "total": 78
    }
   }
  },
@@ -2171,8 +2171,8 @@
    },
    "ult": {
     "id": "abyssscroll",
-    "hit": 0,
-    "total": 132
+    "hit": 16,
+    "total": 102
    }
   }
  },
@@ -2249,8 +2249,8 @@
    },
    "ult": {
     "id": "wintertorrent",
-    "hit": 0,
-    "total": 128
+    "hit": 14,
+    "total": 67
    }
   }
  },
@@ -2327,8 +2327,8 @@
    },
    "ult": {
     "id": "roctempest",
-    "hit": 0,
-    "total": 131
+    "hit": 43,
+    "total": 87
    }
   }
  },
@@ -2405,8 +2405,8 @@
    },
    "ult": {
     "id": "nightmarecut",
-    "hit": 0,
-    "total": 132
+    "hit": 25,
+    "total": 76
    }
   }
  },
@@ -2483,8 +2483,8 @@
    },
    "ult": {
     "id": "spiritdomain",
-    "hit": 0,
-    "total": 128
+    "hit": 8,
+    "total": 102
    }
   }
  },
@@ -2561,8 +2561,8 @@
    },
    "ult": {
     "id": "conquerorslam",
-    "hit": 0,
-    "total": 135
+    "hit": 34,
+    "total": 85
    }
   }
  },
@@ -2639,8 +2639,8 @@
    },
    "ult": {
     "id": "bellharmony",
-    "hit": 0,
-    "total": 124
+    "hit": 26,
+    "total": 97
    }
   }
  },
@@ -2717,8 +2717,8 @@
    },
    "ult": {
     "id": "endlessblade",
-    "hit": 0,
-    "total": 127
+    "hit": 25,
+    "total": 93
    }
   }
  },
@@ -2795,8 +2795,8 @@
    },
    "ult": {
     "id": "grandpainting",
-    "hit": 0,
-    "total": 128
+    "hit": 11,
+    "total": 97
    }
   }
  }

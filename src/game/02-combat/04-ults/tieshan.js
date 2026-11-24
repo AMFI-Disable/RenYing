@@ -3,7 +3,7 @@ Object.assign(ULTS, {
   // 重做：裂空山崩可自高空贯通全部五层战场，逐层崩裂平台并引发每层独立震波、碎石与打击判定，不再被单层平台阻挡。
   avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可操控落点（按 S 加速下砸），泰山压顶贯通五层战场逐层崩裂（每层 185 伤害，不可格挡），击碎格挡与地面霸体！正中命中触发【怒意回涌】：震荡晕眩对手（0.9 秒），回满真气并重置震地与铁壁冲冷却；连放、擦边或砸中倒地目标回 50% 真气。',
     begin(f, foe) {
-      f.sp = 'leap'; f.vy = -1050; f.y = f.y - 1; f.plat = -1; f.dropT = 1.2;
+      f.sp = 'leap'; f.vy = (typeof battleMapOn === 'function' && battleMapOn()) ? -1880 : -1050; f.y = f.y - 1; f.plat = -1; f.dropT = 1.2;
       const c = f.ctrl, dir = (c && c.held && c.held.right ? 1 : 0) - (c && c.held && c.held.left ? 1 : 0);
       f.vx = dir * 360;
       f.spPose = 'ts_lift'; f.invul = 0.35; SFX.heavy();

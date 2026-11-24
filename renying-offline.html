@@ -17478,11 +17478,18 @@ addP({ type: 'text', text: '⚡ 雷帝灌顶 · 拳劲重置', x: f.x, y: f.y - 
 SFX.superOn();
 },
 update(f, foe) {
-const times = [0.02, 0.38, 0.74];
+const times = [0.02, 0.36, 0.70];
 if (f.spN < 3 && f.t >= times[f.spN]) {
+const foes = (isMulti() ? foesOf(f).filter(t => t && t.hp > 0) : [foe]).sort((a, b) => Math.abs(a.x - f.x) - Math.abs(b.x - f.x));
+const tg = foes[f.spN % foes.length] || foe;
 f.spN++;
 f.spPose = f.spN % 2 ? 'lm_boxer' : 'lm_kick';
-spawnProj(f, { kind: 'bolt', x: clamp(foe.x + foe.vx * 0.2, WALL, STAGE_W - WALL), y: -360, vx: 0, w: 76, h: 720, life: 0.62, delay: 0.46, track: 5, trackEnd: 0.18, dmg: 48, kb: [0, -620], stun: 0.5, hs: 0.1, launch: true, unblockable: true, ult: true, unbreakable: true, noScale: true });
+const tx = clamp(tg.x + tg.vx * 0.2, WALL, STAGE_W - WALL);
+spawnProj(f, { kind: 'bolt', x: tx, y: -380, vx: 0, w: 84, h: 920, life: 0.62, delay: 0.44, track: 5, trackEnd: 0.18, dmg: 48, kb: [0, -620], stun: 0.5, hs: 0.1, launch: true, unblockable: true, ult: true, unbreakable: true, noScale: true, pierce: true, maxHits: 4 });
+for (const arcF of foes.slice(0, 3)) {
+if (!arcF || arcF === tg || Math.hypot(arcF.x - tx, arcF.y - tg.y) > 260) continue;
+spawnProj(f, { kind: 'bolt', x: arcF.x, y: arcF.y - 160, vx: 0, w: 46, h: 360, life: 0.32, delay: 0.18, dmg: 26, kb: [Math.sign(arcF.x - tx) * 140, -320], stun: 0.38, hs: 0.06, ult: true, unbreakable: true, noScale: true });
+}
 }
 if (f.t >= 1.2) endSpecial(f);
 } },
@@ -17770,7 +17777,7 @@ if (f.t >= 0.72) endSpecial(f);
 Object.assign(ULTS, {
 avalanche: { name: '山崩', desc: '举巨刃蓄势一跃擎天，滞空期间可操控落点（按 S 加速下砸），泰山压顶贯通五层战场逐层崩裂（每层 185 伤害，不可格挡），击碎格挡与地面霸体！正中命中触发【怒意回涌】：震荡晕眩对手（0.9 秒），回满真气并重置震地与铁壁冲冷却；连放、擦边或砸中倒地目标回 50% 真气。',
 begin(f, foe) {
-f.sp = 'leap'; f.vy = -1050; f.y = f.y - 1; f.plat = -1; f.dropT = 1.2;
+f.sp = 'leap'; f.vy = (typeof battleMapOn === 'function' && battleMapOn()) ? -1880 : -1050; f.y = f.y - 1; f.plat = -1; f.dropT = 1.2;
 const c = f.ctrl, dir = (c && c.held && c.held.right ? 1 : 0) - (c && c.held && c.held.left ? 1 : 0);
 f.vx = dir * 360;
 f.spPose = 'ts_lift'; f.invul = 0.35; SFX.heavy();
@@ -17988,13 +17995,16 @@ addP({ type: 'text', text: '🪶 凌霄破虚 · 俯冲重置', x: f.x, y: f.y -
 SFX.superOn();
 },
 update(f, foe) {
-const n = Math.floor(f.t / 0.07);
-if (n >= f.spN && f.spN < 14) {
+const n = Math.floor(f.t / 0.058);
+if (n >= f.spN && f.spN < 18) {
+const foes = isMulti() ? foesOf(f).filter(t => t && t.hp > 0) : [foe];
+const tg = foes[f.spN % foes.length] || foe;
 f.spN++;
 f.spPose = f.spN % 2 ? 'yl_wings' : 'a1a';
-spawnProj(f, { kind: 'feather', x: clamp(foe.x + foe.vx * 0.4 + grand(-110, 110), WALL, STAGE_W - WALL), y: -620, vx: grand(-60, 60), vy: 1100, home: 4, homeV: 240, w: 22, h: 40, life: 1.2, dmg: 14, kb: [40, 0], stun: 0.3, hs: 0.02, ult: true, noScale: true, unbreakable: true });
+const tx = clamp(tg.x + tg.vx * 0.35 + grand(-120, 120), WALL, STAGE_W - WALL);
+spawnProj(f, { kind: 'feather', x: tx, y: -740, vx: grand(-95, 95), vy: 1220, home: 4.5, homeV: 280, w: 24, h: 44, life: 1.35, dmg: 13, kb: [45, 0], stun: 0.3, hs: 0.02, ult: true, noScale: true, unbreakable: true, pierce: true, maxHits: 2 });
 }
-if (f.t >= 1.1) endSpecial(f);
+if (f.t >= 1.15) endSpecial(f);
 } },
 });
 Object.assign(ULTS, {
@@ -35885,6 +35895,18 @@ return;
 }
 }
 f.hitDone = true;
+if (isMulti()) {
+let hitAny = false;
+for (const tf of foesOf(f)) {
+if (!tf || tf.invul > 0 || tf.hp <= 0) continue;
+const thu = hurtbox(tf);
+if (!overlap(hb, thu)) continue;
+hitAny = true;
+const px = (Math.max(hb[0], thu[0]) + Math.min(hb[2], thu[2])) / 2, py = (Math.max(hb[1], thu[1]) + Math.min(hb[3], thu[3])) / 2;
+applyHit(f, tf, m, [px, py]);
+}
+if (hitAny) return;
+}
 const px = (Math.max(hb[0], hu[0]) + Math.min(hb[2], hu[2])) / 2, py = (Math.max(hb[1], hu[1]) + Math.min(hb[3], hu[3])) / 2;
 applyHit(f, foe, m, [px, py]);
 }

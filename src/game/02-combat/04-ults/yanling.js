@@ -8,12 +8,15 @@ Object.assign(ULTS, {
       SFX.superOn();
     },
     update(f, foe) {
-      const n = Math.floor(f.t / 0.07);
-      if (n >= f.spN && f.spN < 14) {
+      const n = Math.floor(f.t / 0.058);
+      if (n >= f.spN && f.spN < 18) {
+        const foes = isMulti() ? foesOf(f).filter(t => t && t.hp > 0) : [foe];
+        const tg = foes[f.spN % foes.length] || foe;
         f.spN++;
         f.spPose = f.spN % 2 ? 'yl_wings' : 'a1a';
-        spawnProj(f, { kind: 'feather', x: clamp(foe.x + foe.vx * 0.4 + grand(-110, 110), WALL, STAGE_W - WALL), y: -620, vx: grand(-60, 60), vy: 1100, home: 4, homeV: 240, w: 22, h: 40, life: 1.2, dmg: 14, kb: [40, 0], stun: 0.3, hs: 0.02, ult: true, noScale: true, unbreakable: true });
+        const tx = clamp(tg.x + tg.vx * 0.35 + grand(-120, 120), WALL, STAGE_W - WALL);
+        spawnProj(f, { kind: 'feather', x: tx, y: -740, vx: grand(-95, 95), vy: 1220, home: 4.5, homeV: 280, w: 24, h: 44, life: 1.35, dmg: 13, kb: [45, 0], stun: 0.3, hs: 0.02, ult: true, noScale: true, unbreakable: true, pierce: true, maxHits: 2 });
       }
-      if (f.t >= 1.1) endSpecial(f);
+      if (f.t >= 1.15) endSpecial(f);
     } },
 });
