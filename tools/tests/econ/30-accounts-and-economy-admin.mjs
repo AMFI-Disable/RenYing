@@ -821,3 +821,42 @@ section('人机验证（Turnstile）：没配置时完全跳过；配置了以�
     globalThis.fetch = realFetch; delete ENV.TURNSTILE_SITEKEY; delete ENV.TURNSTILE_SECRET;
   }
 }
+
+section('持久化 AI 玩家生态：独立作息、昼夜周期、会话与休息节律、偏好演化与真人隔离');
+{
+  const list0 = await adm('GET', '/api/admin/ai-players');
+  ok(list0.ok && Array.isArray(list0.list) && list0.list.length === 25, '初始化 25 个独立持久化 AI 账号', list0.list && list0.list.length);
+  const chronos = new Set(list0.list.map(x => x.chronotype));
+  const styles = new Set(list0.list.map(x => x.behaviorProfile));
+  ok(chronos.size >= 5 && styles.size === 4, 'AI 账号覆盖多种作息类型与全部 4 种行为流派', [[...chronos], [...styles]]);
+  ok(list0.list.every(x => x.schedule && Array.isArray(x.schedule.windows) && x.prefs && Array.isArray(x.prefs.modes) && Array.isArray(x.prefs.heroes) && x.evolution && typeof x.evolution.mood === 'string'), '每个 AI 均具备独立作息窗口、模式/侠客偏好与演化画像');
+
+  // 昼夜周期验证：凌晨 4:00 (深夜低谷) vs 晚间 21:00 (晚间高峰)
+  const night = await adm('POST', '/api/admin/ai-players/update', { tick: true, simHour: 4, withMarket: false, why: '测试凌晨低谷' });
+  const night2 = await adm('POST', '/api/admin/ai-players/update', { tick: true, simHour: 4.1, withMarket: false, why: '测试凌晨低谷2' });
+  const peak = await adm('POST', '/api/admin/ai-players/update', { tick: true, simHour: 21, withMarket: false, why: '测试晚间高峰' });
+  const peak2 = await adm('POST', '/api/admin/ai-players/update', { tick: true, simHour: 21.1, withMarket: false, why: '测试晚间高峰2' });
+  ok(night2.ok && peak2.ok && peak2.counts.aiOnline > night2.counts.aiOnline && night2.counts.aiOnline < 25, '昼夜周期生效：晚间高峰在线 AI 明显多于凌晨低谷，且不会全天 25 人满员在线', { night: night2.counts, peak: peak2.counts });
+  ok(peak2.counts.aiPlaying % 2 === 0, 'AI 专属对局人数成对匹配，绝不混入真人队列', peak2.counts);
+
+  // 会话超时自动进入休息（resting）或离线（offline），且不计入 aiOnline
+  ENV.DB.raw.prepare("UPDATE ai_players SET status = 'match', session_until = ? WHERE uid = 'ai_01'").run(T - 1000);
+  const afterSess = await adm('POST', '/api/admin/ai-players/update', { tick: true, simHour: 21.2, withMarket: false, why: '测试会话结束休息' });
+  const ai01 = afterSess.list.find(x => x.uid === 'ai_01');
+  ok(ai01 && (ai01.status === 'resting' || ai01.status === 'offline') && ai01.sessionUntil === 0, '会话到期后自动进入休息或离线状态，不会无限连续在线', ai01 && { status: ai01.status, restUntil: ai01.restUntil });
+
+  // 在线统计精确区分真人与 AI，且 AI 绝不写入人类 presence 表
+  const pr = await call('POST', '/api/presence', { sid: 'humanpresencesid1234', st: 'queue' }, undefined, '9.9.1.1');
+  ok(pr.ok && pr.humanOnline >= 1 && pr.humanWaiting >= 1 && pr.online === pr.humanOnline + pr.aiOnline && pr.aiResting !== undefined && pr.aiOffline !== undefined, '在线接口同时返回全服总数与真人/AI 细分状态', pr);
+  const presCount = row('SELECT COUNT(*) AS n FROM presence').n;
+  ok(presCount === pr.humanOnline, '人类 presence 表中不含任何 AI 账号', [presCount, pr.humanOnline]);
+
+  // 管理员修改作息类型与偏好并生效，且跨日演化更新 evolution_json
+  const upd = await adm('POST', '/api/admin/ai-players/update', { uid: 'ai_02', chronotype: 'night_owl', behaviorProfile: 'tactical', preferredModes: ['1v1', 'train'], preferredHeroes: ['qingfeng', 'wuya'], why: '测试调整 AI 作息与偏好' });
+  const ai02 = upd.list.find(x => x.uid === 'ai_02');
+  ok(upd.ok && ai02.chronotype === 'night_owl' && ai02.behaviorProfile === 'tactical' && ai02.prefs.heroes.includes('wuya'), '管理员可独立调整单个 AI 的作息类型、行为流派与模式/侠客偏好', ai02);
+  ENV.DB.raw.prepare("UPDATE ai_players SET daily_reset_day = daily_reset_day - 10 WHERE uid = 'ai_02'").run();
+  const evolved = await adm('POST', '/api/admin/ai-players/update', { tick: true, simHour: 22, withMarket: true, why: '测试跨日演化与市场' });
+  const ai02Ev = evolved.list.find(x => x.uid === 'ai_02');
+  ok(evolved.ok && ai02Ev.evolution && ai02Ev.evolution.lastEvolvedDay > 0, '跨日演进更新 AI 长期演化状态与心境', ai02Ev.evolution);
+}

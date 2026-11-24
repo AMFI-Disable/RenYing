@@ -367,7 +367,7 @@ CREATE TABLE IF NOT EXISTS ai_training_matches (
 );
 CREATE INDEX IF NOT EXISTS idx_ai_training_received ON ai_training_matches (received_at);
 
--- 持久化 AI 玩家账号（0010）
+-- 持久化 AI 玩家账号（0010 / 0011）
 CREATE TABLE IF NOT EXISTS ai_players (
     uid TEXT PRIMARY KEY,
     username TEXT NOT NULL UNIQUE COLLATE NOCASE,
@@ -376,7 +376,19 @@ CREATE TABLE IF NOT EXISTS ai_players (
     behavior_profile TEXT NOT NULL DEFAULT 'balanced' CHECK (behavior_profile IN ('aggressive', 'balanced', 'defensive', 'tactical')),
     matchmaking_enabled INTEGER NOT NULL DEFAULT 1 CHECK (matchmaking_enabled IN (0, 1)),
     market_enabled INTEGER NOT NULL DEFAULT 1 CHECK (market_enabled IN (0, 1)),
-    status TEXT NOT NULL DEFAULT 'menu' CHECK (status IN ('menu', 'queue', 'match')),
+    status TEXT NOT NULL DEFAULT 'offline' CHECK (status IN ('offline', 'resting', 'menu', 'queue', 'match', 'training', 'market')),
+    chronotype TEXT NOT NULL DEFAULT 'evening' CHECK (chronotype IN ('early_bird', 'daytime', 'student', 'evening', 'night_owl', 'casual')),
+    schedule_json TEXT NOT NULL DEFAULT '{}',
+    prefs_json TEXT NOT NULL DEFAULT '{}',
+    evolution_json TEXT NOT NULL DEFAULT '{}',
+    current_mode TEXT NOT NULL DEFAULT '',
+    current_hero TEXT NOT NULL DEFAULT '',
+    session_until INTEGER NOT NULL DEFAULT 0,
+    rest_until INTEGER NOT NULL DEFAULT 0,
+    next_market_at INTEGER NOT NULL DEFAULT 0,
+    sessions_today INTEGER NOT NULL DEFAULT 0 CHECK (sessions_today >= 0),
+    matches_today INTEGER NOT NULL DEFAULT 0 CHECK (matches_today >= 0),
+    training_today INTEGER NOT NULL DEFAULT 0 CHECK (training_today >= 0),
     last_active_at INTEGER NOT NULL DEFAULT 0,
     daily_spent INTEGER NOT NULL DEFAULT 0 CHECK (daily_spent >= 0),
     daily_listed INTEGER NOT NULL DEFAULT 0 CHECK (daily_listed >= 0),
