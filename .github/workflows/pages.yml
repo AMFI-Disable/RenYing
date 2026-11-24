@@ -1,4 +1,4 @@
-# 发布 GitHub Pages：main 上 index.html、renying.html 或 assets/ 变了就把这三样拷到 _site 发布。
+# 发布 GitHub Pages：把游戏入口、离线版和资源拷到 _site 发布。
 # 网页入口必须是根目录的 index.html；挪动这几样文件要同时改这里。
 name: Deploy GitHub Pages
 
@@ -8,28 +8,27 @@ on:
       - main
     paths:
       - ".github/workflows/pages.yml"
+      - ".github/actions/setup-ci/**"
       - "src/**"
       - "tools/build.py"
       - "index.html"
       - "renying.html"
+      - "renying-offline.html"
       - "assets/**"
   workflow_dispatch:
-
-permissions:
-  contents: read
-  pages: write
-  id-token: write
 
 concurrency:
   group: pages
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pages: read
+    outputs:
+      artifact_name: ${{ steps.artifact.outputs.name }}
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v7
@@ -48,14 +47,31 @@ jobs:
       - name: Stage Web Runtime Files
         run: |
           mkdir -p _site
-          cp index.html renying.html _site/
+          cp index.html renying.html renying-offline.html _site/
           cp -R assets _site/assets
+
+      - name: Name Pages Artifact
+        id: artifact
+        run: echo "name=github-pages-${GITHUB_RUN_ATTEMPT}" >> "$GITHUB_OUTPUT"
 
       - name: Upload Pages Artifact
         uses: actions/upload-pages-artifact@v5
         with:
+          name: ${{ steps.artifact.outputs.name }}
           path: _site
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v5
+        with:
+          artifact_name: ${{ needs.build.outputs.artifact_name }}
