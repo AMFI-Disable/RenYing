@@ -18,6 +18,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Changed
 
+- **Li Ying (离影) Strength Pass (`src/data/heroes/13-liying.js`, `src/game/02-combat/04-ults/liying.js`)**: AI-vs-AI runs against the other 35 heroes (20 games each) put Li Ying at 85% on the top difficulty and 66% on Hard, so her strength multipliers drop from 1.074 to 1.0 (about 80% and 49% afterwards). Her ultimate now fires at most four mist slashes from the clones closest to the opponent, matching its description; before, every clone fired, so ten clones dealt 300 unblockable damage.
+
 - Restored Star History charts in `readme.md` and `readme.zh-cn.md`, updated `.markdownlint.json`, increased CI `node-checks` timeout to 25 minutes in `.github/workflows/ci.yml`, tuned AI brain parameters (`src/models/ai-brain.json`), adjusted `.ub-tag` font size (`src/styles/40-navigation-and-home.css`), and replaced a dingbat symbol in `docs/history/changelog.md`.
 
 ### Fixed
