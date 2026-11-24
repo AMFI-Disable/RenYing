@@ -6,7 +6,7 @@
 const KBN = { on: false, root: null, key: '', rect: null, mem: new Map() };
 const KBN_FOCUSABLE = 'button, a[href], input:not([type="hidden"]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
 const KBN_DIR = { ArrowUp: 'u', ArrowDown: 'd', ArrowLeft: 'l', ArrowRight: 'r', KeyW: 'u', KeyS: 'd', KeyA: 'l', KeyD: 'r' };
-const KBN_DIALOGS = '#dummyBar:not(.hidden), .rk-info:not(.hidden), .rk-reveal:not(.hidden), #arModal:not([hidden]), #arIns:not([hidden]), .ui-confirm, #kbHelp:not([hidden])';
+const KBN_DIALOGS = '#teamCmdPanel:not(.hidden), #dummyBar:not(.hidden), .rk-info:not(.hidden), .rk-reveal:not(.hidden), #arModal:not([hidden]), #arIns:not([hidden]), .ui-confirm, #kbHelp:not([hidden])';
 const KBN_BACK = { bp: 'bpQuit', acc: 'accBack', lb: 'lbBack', replays: 'rpBack', settings: 'setDone', towerModal: '' };   // 各页的返回键；空串表示这一页 Esc 不返回
 const kbnRing = document.createElement('div');
 kbnRing.id = 'kbRing'; kbnRing.setAttribute('aria-hidden', 'true');
@@ -129,6 +129,7 @@ setInterval(kbnTick, 120);
 function kbnBack(roots) {
   const main = roots[0];
   if (main.id === 'arModal' || main.id === 'arIns') return false;   // 武库自己会用 Esc 收起弹窗和检视
+  if (main.id === 'teamCmdPanel') { if (typeof teamCmdClose === 'function') teamCmdClose(); return true; }
   if (main.id === 'kbHelp') { kbHelpShow(false); return true; }
   const close = main.matches('.rk-info, .rk-reveal') && [...main.querySelectorAll('#modal2v2Close, #modalRougeClose, .mm-cancel, [data-close]')].find(kbnShown);
   if (close) { close.click(); return true; }
@@ -164,6 +165,11 @@ window.addEventListener('keydown', e => {
     return;
   }
   if (e.code === 'Tab') {
+    if (roots[0] && roots[0].id === 'teamCmdPanel') {
+      stop();
+      if (typeof teamCmdClose === 'function') teamCmdClose();
+      return;
+    }
     if (!cands.length) return;
     kbnOn(); stop();
     const i = cands.indexOf(document.activeElement);

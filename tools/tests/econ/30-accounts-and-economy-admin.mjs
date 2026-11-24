@@ -855,6 +855,9 @@ section('持久化 AI 玩家生态：100 账号、UTC+8 昼夜节律（20~30 在
   ok(presCount === pr.humanOnline, '人类 presence 表中不含任何 AI 账号', [presCount, pr.humanOnline]);
   const lb = await call('GET', '/api/leaderboard?k=wins', undefined, undefined, '9.9.1.2');
   ok(lb.ok && !lb.list.some(x => names.has(x.name)), 'AI 账号不进入真人战绩排行榜', lb.list.slice(0, 5));
+  const findAll = await adm('GET', '/api/admin/find?limit=100');
+  const findAi = await adm('GET', '/api/admin/find?q=6767');
+  ok(findAll.ok && Array.isArray(findAll.users) && !findAll.users.some(r => names.has(r.username)) && findAi.ok && Array.isArray(findAi.users) && !findAi.users.some(r => r.username === '6767'), '管理后台「玩家」标签仅显示真人玩家，彻底排除 AI 账号', [findAll.total, findAi.users && findAi.users.length]);
 
   // 管理员修改作息类型与偏好并生效，且跨日演化更新 evolution_json
   const upd = await adm('POST', '/api/admin/ai-players/update', { uid: 'ai_02', chronotype: 'night_owl', behaviorProfile: 'tactical', preferredModes: ['ranked', 'quickmatch', 'train'], preferredHeroes: ['qingfeng', 'wuya'], why: '测试调整 AI 作息与偏好' });

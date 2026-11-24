@@ -173,7 +173,7 @@ section('删除账号（软删除）：登录不了、不上榜、挂单看不�
   const ex = await raw('/api/admin/export');
   const bytes = new Uint8Array(await ex.clone().arrayBuffer()), csv = await ex.text(), lines = csv.replace(/^﻿/, '').trim().split('\r\n');
   ok(ex.status === 200 && /text\/csv/.test(ex.headers.get('Content-Type')) && /attachment; filename="renying-users-\d{4}-\d\d-\d\d\.csv"/.test(ex.headers.get('Content-Disposition')) && bytes[0] === 0xef && bytes[1] === 0xbb && bytes[2] === 0xbf, '导出 CSV：是附件，开头有 BOM（Excel 打开中文不乱码）');
-  ok(lines[0] === 'uid,username,created_at,updated_at,econ_at,ink,strikes,ban,deleted_at' && lines.length - 1 === row('SELECT COUNT(*) AS n FROM users').n, '第一行是表头，一个号一行', lines[0]);
+  ok(lines[0] === 'uid,username,created_at,updated_at,econ_at,ink,strikes,ban,deleted_at' && lines.length - 1 === row("SELECT COUNT(*) AS n FROM users WHERE COALESCE(password_algo, '') != 'ai-bot-locked'").n, '第一行是表头，一个号一行', lines[0]);
   ok(lines.some(l => l.startsWith('u_csvformula1,"\'=HYPERLINK(""x"")"')), '= 开头的昵称前面加了 \'，Excel 不会当成公式；引号转义了', lines.find(l => l.startsWith('u_csvformula1')));
   ok(lines.find(l => l.startsWith(ids[2] + ',')).split(',')[6] === '0' && !lines.some(l => /secret|password|salt/i.test(l)), '没有密码、盐这些');
   await batch({ op: 'delete', uids: [ids[1]], why: '导出测试' });

@@ -25,6 +25,12 @@ const CMD_ROLES = [
   { id: 'lure', n: '牵制', g: '牵' },
   { id: 'peel', n: '破连', g: '缠' },
 ];
+const CMD_FORMATIONS = [
+  { id: 'auto', n: '自由阵型', sub: '依战术自然站位' },
+  { id: 'group', n: '抱团集结', sub: '全队向队伍中心靠拢' },
+  { id: 'escort', n: '护卫统帅', sub: '紧随玩家身侧协防' },
+  { id: 'spread', n: '分散包抄', sub: '拉开间距多线牵制' },
+];
 const CMD_HP_BONUS = 1.35;
 const CMD_BEAT_MUL = 1.18, CMD_BEATEN_MUL = 0.88;
 
@@ -136,19 +142,161 @@ function cmdRoleCycle(t) {
   const c = cmdFighter(t);
   if (c && !RESIM) addP({ type: 'text', text: `${C.sel >= 0 ? cvT(targets[0].look.name) : cvT('全队')} · ${cvT(CMD_ROLES[next].n)}`, x: c.x, y: c.y - 128, life: 0.9, max: 0.9, rgb: '255,235,150' });
 }
-// Tab：轻点换战术，按住 0.25 秒以上是战况总览（键盘处理在 25-keyboard-boot.js）
-function cmdTabDown() {
-  if (!M.cmd) return;
-  M.cmd.tabAt = performance.now();
-  setTimeout(() => { if (M.cmd && M.cmd.tabAt > 0 && typeof TAB_SCOREBOARD !== 'undefined') TAB_SCOREBOARD = true; }, 260);
+// Tab：在任何含 AI 队友的团队模式中直接开关交互式「战队指挥面板」（可配置目标集火、战术、阵型与队友分工）
+let TEAM_CMD_OPEN = false;
+function teamCmdEligible() {
+  if (M.mode === 'demo' || M.watchAi || !isMulti()) return false;
+  const t = localTeam();
+  const mates = sideFighters(t).filter(f => !f.hidden);
+  return mates.length > 1 && mates.some(f => human.includes(f.ctrl));
 }
-function cmdTabUp() {
-  const C = M.cmd; if (!C) { TAB_SCOREBOARD = false; return; }
-  const held = performance.now() - C.tabAt;
-  C.tabAt = 0;
-  if (held < 260 && !TAB_SCOREBOARD) cmdCycleTactic();
-  TAB_SCOREBOARD = false;
+function teamCmdOpen() {
+  const el = typeof $id === 'function' ? $id('teamCmdPanel') : null;
+  return !!(TEAM_CMD_OPEN && el && !el.classList.contains('hidden'));
 }
+function teamCmdClose() {
+  TEAM_CMD_OPEN = false;
+  const el = typeof $id === 'function' ? $id('teamCmdPanel') : null;
+  if (el) el.classList.add('hidden');
+  if (typeof refocusGame === 'function' && M.mode !== 'demo' && !paused && !document.querySelector('.scr.on')) refocusGame();
+}
+function toggleTeamCmdPanel(force) {
+  if (force === false) { teamCmdClose(); return false; }
+  if (!teamCmdEligible()) return false;
+  const next = force === true ? true : !teamCmdOpen();
+  TEAM_CMD_OPEN = next;
+  const el = typeof $id === 'function' ? $id('teamCmdPanel') : null;
+  if (!el) return false;
+  el.classList.toggle('hidden', !next);
+  if (next) {
+    if (typeof TAB_SCOREBOARD !== 'undefined') TAB_SCOREBOARD = false;
+    renderTeamCmdPanel();
+  } else if (typeof refocusGame === 'function' && M.mode !== 'demo' && !paused && !document.querySelector('.scr.on')) {
+    refocusGame();
+  }
+  return next;
+}
+function teamCmdSetTactic(tac) {
+  const t = localTeam();
+  const orderMap = { spear: 'focus', wall: 'protect', raid: 'spread' };
+  if (M.cmd) {
+    cmdSet(t, tac, true);
+  } else {
+    if (!Array.isArray(M.squadOrders)) M.squadOrders = ['auto', 'auto', 'auto', 'auto'];
+    M.squadOrders[t] = orderMap[tac] || 'auto';
+    const lf = sideFighters(t).find(m => human.includes(m.ctrl)) || fighterByIdx(localIdx());
+    const d = CMD_TACTICS[tac];
+    if (lf && d && !RESIM) {
+      addP({ type: 'text', text: `${cvT('令')} · ${cvT(d.n)}（${cvT(d.sub)}）`, x: lf.x, y: lf.y - 132, life: 1.0, max: 1.0, rgb: d.rgb });
+      ring(lf.x, lf.y - 56, 120, d.rgb, 0.42);
+    }
+  }
+  if (teamCmdOpen()) renderTeamCmdPanel();
+}
+function teamCmdSetFormation(fm) {
+  const t = localTeam();
+  if (!Array.isArray(M.teamFormation)) M.teamFormation = ['auto', 'auto', 'auto', 'auto'];
+  M.teamFormation[t] = fm;
+  const lf = sideFighters(t).find(m => human.includes(m.ctrl)) || fighterByIdx(localIdx());
+  const fObj = CMD_FORMATIONS.find(x => x.id === fm);
+  if (lf && fObj && !RESIM) {
+    addP({ type: 'text', text: `${cvT('阵型')} · ${cvT(fObj.n)}`, x: lf.x, y: lf.y - 118, life: 0.9, max: 0.9, rgb: '140,225,255' });
+  }
+  if (teamCmdOpen()) renderTeamCmdPanel();
+}
+function teamCmdSetFocus(enemyIdx) {
+  const t = localTeam();
+  if (!Array.isArray(M.teamFocus)) M.teamFocus = [-1, -1, -1, -1];
+  M.teamFocus[t] = enemyIdx;
+  if (M.cmd && M.cmd.team[t]) { M.cmd.team[t].focus = enemyIdx; M.cmd.team[t].focusT = clock + 12; }
+  const lf = sideFighters(t).find(m => human.includes(m.ctrl)) || fighterByIdx(localIdx());
+  if (lf) lf.lockIdx = enemyIdx;
+  const tgt = enemyIdx >= 0 ? FIGHTERS[enemyIdx] : null;
+  if (tgt && !RESIM) {
+    ring(tgt.x, tgt.y - 58, 92, '255,100,90', 0.36);
+    addP({ type: 'text', text: `${cvT('全队集火')} · ${cvT(tgt.look.name)}`, x: tgt.x, y: tgt.y - 122, life: 0.95, max: 0.95, rgb: '255,150,120' });
+  }
+  for (const m of sideFighters(t)) if (!human.includes(m.ctrl)) { m.cmdTgt = enemyIdx; m.cmdTgtT = enemyIdx >= 0 ? clock + 1.2 : 0; }
+  if (teamCmdOpen()) renderTeamCmdPanel();
+}
+function teamCmdSetRole(fighterIdx, roleIdx) {
+  const t = localTeam();
+  if (!Array.isArray(M.teamRoles)) M.teamRoles = new Array(MAX_FIGHTERS).fill(0);
+  const mates = fighterIdx < 0
+    ? sideFighters(t).filter(m => !m.hidden && !human.includes(m.ctrl))
+    : [FIGHTERS[fighterIdx]].filter(m => m && !m.hidden);
+  for (const m of mates) {
+    M.teamRoles[m.idx] = roleIdx;
+    if (M.cmd && M.cmd.role) M.cmd.role[m.idx] = roleIdx;
+    m.cmdTgtT = 0;
+  }
+  if (teamCmdOpen()) renderTeamCmdPanel();
+}
+function renderTeamCmdPanel() {
+  const body = typeof $id === 'function' ? $id('tcpBody') : null;
+  if (!body || !teamCmdEligible()) return;
+  const t = localTeam();
+  const curTac = M.cmd && M.cmd.team[t] ? M.cmd.team[t].tactic : ({ focus: 'spear', protect: 'wall', spread: 'raid' }[M.squadOrders?.[t]] || '');
+  const curForm = (M.teamFormation && M.teamFormation[t]) || 'auto';
+  const curFocus = (M.teamFocus && M.teamFocus[t] >= 0) ? M.teamFocus[t] : -1;
+  const lf = sideFighters(t).find(m => human.includes(m.ctrl)) || fighterByIdx(localIdx());
+  const foes = lf ? foesOf(lf).filter(e => !e.hidden) : [];
+  const mates = sideFighters(t).filter(m => !m.hidden && !human.includes(m.ctrl));
+  const badge = $id('tcpModeBadge');
+  if (badge) badge.textContent = M.cmd ? `${cvT('统帅战术')} · ${cvT(cmdTacName(curTac))}` : `${cvT('小队协同')} · ${mates.length} ${cvT('名 AI 队友')}`;
+
+  const tacBtns = CMD_ORDER.map(id => {
+    const d = CMD_TACTICS[id];
+    return `<button type="button" class="tcp-btn${curTac === id ? ' sel' : ''}" data-tcp-tac="${id}"><b>[${d.key}]</b> ${cvT(d.n)} <small>${cvT(d.sub)}</small></button>`;
+  }).join('');
+  const formBtns = CMD_FORMATIONS.map(f => `<button type="button" class="tcp-btn${curForm === f.id ? ' sel' : ''}" data-tcp-form="${f.id}" title="${cvT(f.sub)}">${cvT(f.n)}</button>`).join('');
+  const focusBtns = `<button type="button" class="tcp-btn${curFocus < 0 ? ' sel' : ''}" data-tcp-focus="-1">${cvT('自动 / 跟随统帅')}</button>` + foes.map(e => {
+    const dead = e.hp <= 0;
+    const pct = Math.max(0, Math.round((e.hp / Math.max(1, e.maxHp)) * 100));
+    return `<button type="button" class="tcp-btn${curFocus === e.idx ? ' sel' : ''}${dead ? ' dead' : ''}" data-tcp-focus="${e.idx}"${dead ? ' disabled' : ''}>${escapeHTML(cvT(e.look.name))} <small>${dead ? cvT('阵亡') : pct + '%'}</small></button>`;
+  }).join('');
+  const allRoleBtns = CMD_ROLES.map((r, ri) => `<button type="button" class="tcp-btn" data-tcp-role-all="${ri}">${cvT('全队')}${cvT(r.n)}</button>`).join('');
+  const mateRows = mates.length ? mates.map(m => {
+    const curR = (M.cmd && M.cmd.role ? M.cmd.role[m.idx] : (M.teamRoles ? M.teamRoles[m.idx] : 0)) || 0;
+    const pct = Math.max(0, Math.round((m.hp / Math.max(1, m.maxHp)) * 100));
+    return `<div class="tcp-mate-row"><div class="tcp-mate-info"><b>${escapeHTML(cvT(m.look.name))}</b><span class="tcp-mate-hp">${m.hp <= 0 ? cvT('阵亡') : `${Math.round(m.hp)}/${m.maxHp} (${pct}%)`}</span></div><div class="tcp-role-grp">${CMD_ROLES.map((r, ri) => `<button type="button" class="tcp-btn${curR === ri ? ' sel' : ''}" data-tcp-mate="${m.idx}" data-tcp-role="${ri}">${cvT(r.n)}</button>`).join('')}</div></div>`;
+  }).join('') : `<div class="tcp-mate-hp">${cvT('当前队伍暂无 AI 队友')}</div>`;
+
+  const tc = isLargeTeam() ? teamCount() : 2;
+  const ovCols = Array.from({ length: tc }, (_, ti) => {
+    const list = sideFighters(ti).filter(f => !f.hidden);
+    const title = tc > 2 ? cvT(QUAD_TEAMS[ti].n) + (ti === t ? ' (' + cvT('我方') + ')' : '') : cvT(ti === t ? '我方阵营' : '敌方阵营');
+    const col = tc > 2 ? QUAD_TEAMS[ti].hex : (ti === t ? '#6fe0ff' : '#ff7878');
+    return `<div class="tcp-team-col"><b style="color:${col}">${title}</b>${list.map(f => `<div class="tcp-ov-row"><span>${f.idx === localIdx() ? '★ ' : ''}${cmdIs(f) ? cvT('帅') + ' ' : ''}${escapeHTML(cvT(f.look.name))}</span><span>${f.hp <= 0 ? cvT('阵亡') : `${Math.round(f.hp)}/${f.maxHp}`}</span></div>`).join('')}</div>`;
+  }).join('');
+
+  body.innerHTML = `
+    <section class="tcp-sec"><div class="tcp-sec-h"><span>${cvT('战队战术')}</span><small>${cvT('锋矢 > 铁壁 > 游袭 > 锋矢')}</small></div><div class="tcp-btns">${tacBtns}</div></section>
+    <section class="tcp-sec"><div class="tcp-sec-h"><span>${cvT('阵型与集结')}</span><small>${cvT('控制 AI 队友站位与聚散')}</small></div><div class="tcp-btns">${formBtns}</div></section>
+    <section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('目标集火')}</span><small>${cvT('指定全队 AI 优先攻击的目标')}</small></div><div class="tcp-btns">${focusBtns}</div></section>
+    <section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('队友分工')}</span><div class="tcp-btns">${allRoleBtns}</div></div><div class="tcp-mates">${mateRows}</div></section>
+    <section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('战况总览')}</span></div><div class="tcp-overview">${ovCols}</div></section>
+  `;
+}
+if (typeof document !== 'undefined') {
+  const tcpEl = $id('teamCmdPanel');
+  if (tcpEl) tcpEl.addEventListener('click', e => {
+    const tBtn = e.target.closest('[data-tcp-tac]');
+    if (tBtn) { teamCmdSetTactic(tBtn.dataset.tcpTac); return; }
+    const fBtn = e.target.closest('[data-tcp-form]');
+    if (fBtn) { teamCmdSetFormation(fBtn.dataset.tcpForm); return; }
+    const fcBtn = e.target.closest('[data-tcp-focus]');
+    if (fcBtn) { teamCmdSetFocus(+fcBtn.dataset.tcpFocus); return; }
+    const raBtn = e.target.closest('[data-tcp-role-all]');
+    if (raBtn) { teamCmdSetRole(-1, +raBtn.dataset.tcpRoleAll); return; }
+    const mrBtn = e.target.closest('[data-tcp-mate]');
+    if (mrBtn) { teamCmdSetRole(+mrBtn.dataset.tcpMate, +mrBtn.dataset.tcpRole); return; }
+  });
+  const tcpClose = $id('tcpCloseBtn');
+  if (tcpClose) tcpClose.addEventListener('click', () => teamCmdClose());
+}
+function cmdTabDown() { toggleTeamCmdPanel(); }
+function cmdTabUp() {}
 
 // ----- 每一帧：观察对面、电脑统帅决策、刷新目标统计 -----
 function cmdTick() {
@@ -227,6 +375,13 @@ function cmdRoleOf(f) {
 const cmdAlive = (e, list) => e && !e.hidden && e.hp > 0 && list.includes(e);
 function cmdFocusOf(t, list, distance) {
   const T = M.cmd.team[t], cmdr = FIGHTERS[T.cmdr];
+  // 优先使用玩家在 Tab 指挥面板指定的集火目标
+  const explicitIdx = (M.teamFocus && M.teamFocus[t] >= 0) ? M.teamFocus[t] : -1;
+  if (explicitIdx >= 0) {
+    const ef = FIGHTERS[explicitIdx];
+    if (cmdAlive(ef, list)) return ef;
+    if (M.teamFocus) M.teamFocus[t] = -1;
+  }
   if (cmdr && human.includes(cmdr.ctrl)) {
     // 真人统帅：锁定（G）的人，没锁就是统帅现在打的人
     const c = cmdr.lockIdx >= 0 ? FIGHTERS[cmdr.lockIdx] : cmdr.target;
@@ -311,11 +466,12 @@ function cmdPickTarget(f, list, distance) {
   return pick;
 }
 
-// ai.js 的 neutral() 用：战术让电脑队友的出手积极度、站位距离、格挡倾向和站位都不一样
+// ai.js 的 neutral() 用：统一处理团战统帅战术（M.cmd）与 2v2 / 同袍肉鸽小队战术、阵型集结与角色分工
 function cmdAiMod(me, foe, d) {
   const C = M.cmd; if (!C || human.includes(me.ctrl)) return null;
   const t = fighterTeam(me), tac = cmdTacticOf(t), role = cmdRoleOf(me);
-  if (!tac && role === 'auto') return null;
+  const fm = (M.teamFormation && M.teamFormation[t]) || 'auto';
+  if (!tac && role === 'auto' && fm === 'auto') return null;
   const m = { aggr: 1, range: 1, block: 0, dir: 0 };
   if (tac === 'spear') { m.aggr = 1.3; m.range = 0.88; }
   else if (tac === 'raid') { m.aggr = 1.12; m.range = 1.14; }
@@ -324,8 +480,55 @@ function cmdAiMod(me, foe, d) {
   else if (role === 'lure') { m.aggr *= 0.82; m.range *= 1.12; m.block += 0.12; }
   else if (role === 'peel') m.aggr *= 1.18;
   const cmdr = cmdFighter(t);
-  if (tac === 'wall' && cmdr && cmdr !== me && cmdr.hp > 0 && d > 330 && Math.abs(me.x - cmdr.x) > 300) m.dir = Math.sign(cmdr.x - me.x);   // 离统帅太远又没人贴身：先回到统帅身边
-  else if (tac === 'spear' && d > 260) m.dir = Math.sign(foe.x - me.x);                                                                   // 锋矢：不磨蹭，直扑目标
+  if (fm === 'escort' && cmdr && cmdr !== me && cmdr.hp > 0 && Math.abs(me.x - cmdr.x) > 220 && d > 220) {
+    m.dir = Math.sign(cmdr.x - me.x);
+  } else if (fm === 'group') {
+    const alive = sideFighters(t).filter(x => !x.hidden && x.hp > 0);
+    if (alive.length > 1) {
+      const cx = alive.reduce((s, x) => s + x.x, 0) / alive.length;
+      if (Math.abs(me.x - cx) > 210 && d > 220) m.dir = Math.sign(cx - me.x);
+    }
+  } else if (fm === 'spread') {
+    const nearMate = sideFighters(t).find(x => x !== me && !x.hidden && x.hp > 0 && Math.abs(x.x - me.x) < 150);
+    if (nearMate && d > 190) m.dir = Math.sign(me.x - nearMate.x) || (me.idx % 2 ? 1 : -1);
+  } else if (tac === 'wall' && cmdr && cmdr !== me && cmdr.hp > 0 && d > 330 && Math.abs(me.x - cmdr.x) > 300) {
+    m.dir = Math.sign(cmdr.x - me.x);
+  } else if (tac === 'spear' && d > 260) {
+    m.dir = Math.sign(foe.x - me.x);
+  }
+  return m;
+}
+function squadAiMod(me, foe, d) {
+  if (M.cmd) return cmdAiMod(me, foe, d);
+  if (!isMulti() || human.includes(me.ctrl)) return null;
+  const t = fighterTeam(me);
+  const ord = (M.squadOrders && M.squadOrders[t]) || 'auto';
+  const fm = (M.teamFormation && M.teamFormation[t]) || 'auto';
+  const roleIdx = (M.teamRoles && M.teamRoles[me.idx]) || 0;
+  const role = CMD_ROLES[roleIdx] ? CMD_ROLES[roleIdx].id : 'auto';
+  if (ord === 'auto' && fm === 'auto' && role === 'auto') return null;
+  const m = { aggr: 1, range: 1, block: 0, dir: 0 };
+  if (ord === 'focus') { m.aggr = 1.26; m.range = 0.9; }
+  else if (ord === 'protect') { m.aggr = 0.82; m.block = 0.28; }
+  else if (ord === 'spread') { m.aggr = 1.1; m.range = 1.14; }
+  if (role === 'main') m.aggr *= 1.12;
+  else if (role === 'lure') { m.aggr *= 0.84; m.range *= 1.12; m.block += 0.12; }
+  else if (role === 'peel') m.aggr *= 1.16;
+  const leader = sideFighters(t).find(x => !x.hidden && x.hp > 0 && human.includes(x.ctrl));
+  if ((fm === 'escort' || ord === 'protect') && leader && leader !== me && Math.abs(me.x - leader.x) > 240 && d > 240) {
+    m.dir = Math.sign(leader.x - me.x);
+  } else if (fm === 'group') {
+    const alive = sideFighters(t).filter(x => !x.hidden && x.hp > 0);
+    if (alive.length > 1) {
+      const cx = alive.reduce((s, x) => s + x.x, 0) / alive.length;
+      if (Math.abs(me.x - cx) > 210 && d > 220) m.dir = Math.sign(cx - me.x);
+    }
+  } else if (fm === 'spread' || ord === 'spread') {
+    const nearMate = sideFighters(t).find(x => x !== me && !x.hidden && x.hp > 0 && Math.abs(x.x - me.x) < 150);
+    if (nearMate && d > 190) m.dir = Math.sign(me.x - nearMate.x) || 1;
+  } else if (ord === 'focus' && d > 260) {
+    m.dir = Math.sign(foe.x - me.x);
+  }
   return m;
 }
 
@@ -392,7 +595,7 @@ function drawCmdPanel() {
   ctx.strokeStyle = 'rgba(233,196,106,0.6)'; ctx.lineWidth = 1.2; ctx.strokeRect(px, py, cw, ch);
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   ctx.font = `bold 12px ${TITLE_FONT}`; ctx.fillStyle = '#e9c46a';
-  ctx.fillText(`${cvT('统帅')} · ${cvT('战术')}${down ? ' (' + cvT('暂停') + ')' : ''}  [Tab ${cvT('轮换')}]`, px + 8, py + 6);
+  ctx.fillText(`${cvT('统帅')} · ${cvT('战术')}${down ? ' (' + cvT('暂停') + ')' : ''}  [Tab ${cvT('指挥面板')}]`, px + 8, py + 6);
   const bw = (cw - 16 - 12) / 3;
   CMD_ORDER.forEach((id, i) => {
     const d = CMD_TACTICS[id], x = px + 8 + i * (bw + 6), on = T.tactic === id;

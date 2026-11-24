@@ -444,8 +444,8 @@ window.RYBoot = (function () {
         <div class="bp-rule-banner">
           <span class="bp-rule-seal">禁选</span>
           <div class="bp-rule-txt">
-            <b>点将台规则 · 完整战略禁选（不自动补全阵容）</b>
-            <span>按所选规模进入点将台亲自禁选排兵布阵，打造专属大型团战阵容。</span>
+            <b>点将台规则 · 亲自禁人与自选本命侠客，其余位置 AI 极速补齐</b>
+            <span>你仅需掌控禁用与自身出战侠客，其余队友与敌方阵营将由 AI 快速完成选人，减少等待。</span>
           </div>
         </div>
         <div class="single-action-row">
@@ -470,8 +470,8 @@ window.RYBoot = (function () {
         <div class="bp-rule-banner">
           <span class="bp-rule-seal">禁选</span>
           <div class="bp-rule-txt">
-            <b>点将台规则 · 完整战略禁选（不自动补全阵容）</b>
-            <span>按所选规模进入点将台亲自搭配突进、控场与护旗阵容。</span>
+            <b>点将台规则 · 亲自禁人与自选本命侠客，其余位置 AI 极速补齐</b>
+            <span>你仅需掌控禁用与自身出战侠客，其余队友与敌方阵营将由 AI 快速完成选人，即刻开战。</span>
           </div>
         </div>
         <div class="single-action-row">
@@ -1561,6 +1561,20 @@ window.RYBoot = (function () {
     </div>
     <div class="tlab-body" id="trainLabBody"></div>
   </aside>
+  <!-- 战队实时指挥面板（对局中按 Tab 开启，可配置战术、阵型、集火目标与队友职责） -->
+  <div class="team-cmd-panel hidden" id="teamCmdPanel" role="dialog" aria-modal="true" aria-label="战队指挥面板">
+    <div class="tcp-box">
+      <div class="tcp-head">
+        <div>
+          <b id="tcpTitle">战队指挥面板</b>
+          <span class="tcp-badge" id="tcpModeBadge"></span>
+          <span class="tcp-sub" id="tcpSub">配置全队战术、阵型、集火目标与队友职责（按 Tab 或 Esc 关闭）</span>
+        </div>
+        <button class="mm-cancel" id="tcpCloseBtn" type="button" data-tcp-close>关闭</button>
+      </div>
+      <div class="tcp-body" id="tcpBody"></div>
+    </div>
+  </div>
   <div class="train-inspect hidden" id="trainInspect" aria-label="训练帧控制">
     <button id="trainLabToggle" type="button" aria-pressed="true">状态面板：开</button>
     <button class="train-inspect-hitbox" id="trainHitboxBtn" type="button" aria-pressed="true">F1 判定框：开</button>

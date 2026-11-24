@@ -68,21 +68,39 @@ applyCustomKeys();
 const human = [new Ctrl(), new Ctrl(), new Ctrl(), new Ctrl()];
 
 // Session-only hidden player automation. Decisions are sent as ordinary local inputs.
-// 要在几秒内连点 12 下才算：以前是整个网页开着期间累计点 12 下，正常进出设置页十几次就会被打开，键盘鼠标突然不听使唤
+// 要在几秒内连点 12 下才算：开启后 AI 协助战斗，但玩家手动按键、鼠标、触屏与 1/2/3 战术指令始终完全可用
 let secretSettingsClicks = 0, secretLastClick = 0, secretEnabled = false, secretBrain = null;
+let secretHumanUntil = 0;
+const secretHumanHeld = { left: false, right: false, down: false, atk: false, jump: false };
+const SECRET_TACTICAL_ACTS = new Set(['orderFocus', 'orderProtect', 'orderSpread', 'cmdSelect', 'cmdRole', 'lock', 'beacon', 'rally']);
+function secretNoteHumanInput(act, down) {
+  if (!secretEnabled) return;
+  if (SECRET_TACTICAL_ACTS.has(act)) return;
+  if (act === 'left' || act === 'right' || act === 'down' || act === 'atk' || act === 'jump') {
+    secretHumanHeld[act] = !!down;
+  }
+  if (down) secretHumanUntil = clock + 0.45;
+}
+function secretHumanActive() {
+  return clock < secretHumanUntil || secretHumanHeld.left || secretHumanHeld.right || secretHumanHeld.down || secretHumanHeld.atk || secretHumanHeld.jump;
+}
 function secretSettingsClick() {
   const now = Date.now();
   if (now - secretLastClick > 600) secretSettingsClicks = 0;
   secretLastClick = now;
   if (!secretEnabled && ++secretSettingsClicks >= 12) {
-    secretEnabled = true; human[0].clear(); NET.presses.length = 0;
+    secretEnabled = true;
+    if (typeof toast === 'function') toast('AI 托管辅助已开启 · 仍可随时手动操作与使用 1/2/3 战术指令', 3.5);
   }
 }
 function secretRound() {
-  if (secretEnabled) { secretBrain = new AIBrain(human[0], 'god'); human[0].clear(); }
+  secretHumanUntil = 0;
+  secretHumanHeld.left = secretHumanHeld.right = secretHumanHeld.down = secretHumanHeld.atk = secretHumanHeld.jump = false;
+  if (secretEnabled) { secretBrain = new AIBrain(human[0], 'god'); }
 }
 function secretThink(f, networkInput = false) {
   if (!secretEnabled || (M.mode === 'net' && NET.isRanked) || RESIM || REPLAY.on || M.watchAi || M.mode === 'demo' || !f || f.hidden || f.hp <= 0 || M.phase !== 'fight') return;
+  if (secretHumanActive()) return;
   if (!secretBrain) secretRound();
   const oldTarget = f.target, foe = foeOf(f);
   if (!foe) return;

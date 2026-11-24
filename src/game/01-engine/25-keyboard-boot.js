@@ -29,6 +29,11 @@ window.addEventListener('keydown', e => {
     refocusGame();
   }
   const onBtn = (scr) => e.target && e.target.tagName === 'BUTTON' && e.target.closest('#' + scr);   // 键盘选中了页上某个按钮：Enter / 空格按它，不走快捷键
+  if (paused && document.getElementById('settings') && document.getElementById('settings').classList.contains('on') && e.code === 'Escape') {
+    e.preventDefault();
+    showScreen('pause');
+    return;
+  }
   if (paused && document.getElementById('pause').classList.contains('on')) {
     if (e.code === 'KeyP' || e.code === 'Escape' || ((e.code === 'Space' || e.code === 'Enter') && !onBtn('pause'))) {
       e.preventDefault();
@@ -55,7 +60,13 @@ window.addEventListener('keydown', e => {
       return;
     }
   }
+  if (typeof teamCmdOpen === 'function' && teamCmdOpen() && e.code === 'Escape') {
+    e.preventDefault();
+    teamCmdClose();
+    return;
+  }
   if ((e.code === 'KeyP' || e.code === 'Escape') && M.mode !== 'demo' && M.mode !== 'net' && !['end', 'perk', 'draft', 'talk'].includes(M.phase)) {   // 抽秘卷、剧情对话时不弹暂停
+    if (typeof teamCmdClose === 'function') teamCmdClose();
     paused = !paused; showScreen(paused ? 'pause' : null); if (!paused) refocusGame(); return;
   }
   if (M.mode === 'demo') return;
@@ -66,9 +77,9 @@ window.addEventListener('keydown', e => {
     if (e.code === 'KeyG' && typeof bastionCastCompanionSkill === 'function') { e.preventDefault(); bastionCastCompanionSkill(); return; }
     if (e.code === 'KeyB' && typeof bastionToggleArmory === 'function') { e.preventDefault(); bastionToggleArmory(); return; }
   }
-  if (M.cmd && e.code === 'Tab' && KEYS[0] && KEYS[0].Tab === 'scoreboard') {   // 团战统帅：轻点 Tab 换战术，按住 Tab 看战况总览
+  if ((e.code === 'Tab' || (KEYS[0] && KEYS[0][e.code] === 'scoreboard')) && typeof teamCmdEligible === 'function' && teamCmdEligible() && !paused && !document.querySelector('.scr.on')) {
     e.preventDefault();
-    if (!e.repeat) cmdTabDown();
+    if (!e.repeat) toggleTeamCmdPanel();
     return;
   }
   if (KEYS[0] && KEYS[0][e.code] === 'scoreboard') {
@@ -100,7 +111,17 @@ window.addEventListener('keydown', e => {
       c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (typeof isLargeTeam === 'function' && isLargeTeam()) || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
     }
     if (p > 0 && c === human[0] && KEYS[0]?.[e.code]) continue;
-    if (secretEnabled && c === human[0] && !REPLAY.on) continue;
+    if (c === human[0] && typeof secretNoteHumanInput === 'function') secretNoteHumanInput(act, true);
+    if (act === 'orderFocus' || act === 'orderProtect' || act === 'orderSpread') {
+      if (!e.repeat) {
+        c.press(act);
+        if (typeof teamCmdOpen === 'function' && teamCmdOpen()) {
+          const tMap = { orderFocus: 'spear', orderProtect: 'wall', orderSpread: 'raid' };
+          if (typeof teamCmdSetTactic === 'function') teamCmdSetTactic(tMap[act]);
+        }
+      }
+      continue;
+    }
     if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
     if (act === 'jump') { c.held.jump = true; if (!e.repeat) c.press('jump'); continue; }
     if (act === 'left' || act === 'right' || act === 'down') {
@@ -113,7 +134,7 @@ window.addEventListener('keydown', e => {
   }
 });
 window.addEventListener('keyup', e => {
-  if (M.cmd && e.code === 'Tab' && KEYS[0] && KEYS[0].Tab === 'scoreboard') { cmdTabUp(); return; }
+  if ((e.code === 'Tab' || (KEYS[0] && KEYS[0][e.code] === 'scoreboard')) && typeof teamCmdEligible === 'function' && teamCmdEligible()) { return; }
   if (KEYS[0] && KEYS[0][e.code] === 'scoreboard') {
     TAB_SCOREBOARD = false;
     return;
@@ -139,7 +160,7 @@ window.addEventListener('keyup', e => {
       c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (typeof isLargeTeam === 'function' && isLargeTeam()) || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
     }
     if (p > 0 && c === human[0] && KEYS[0]?.[e.code]) continue;
-    if (secretEnabled && c === human[0] && !REPLAY.on) continue;
+    if (c === human[0] && typeof secretNoteHumanInput === 'function') secretNoteHumanInput(act, false);
     if (act === 'left' || act === 'right' || act === 'down') {
       c.held[act] = false;
       if (c.held.left && !c.held.right) c.held.aim = -1;
@@ -160,16 +181,16 @@ cv.addEventListener('mousedown', e => {
   }
   if (M.mode === 'demo') return;
   e.preventDefault();
-  if (secretEnabled && !REPLAY.on) return;
   if (SETTINGS.kbOnly === true) return;   // 纯键盘模式：鼠标不出招，1P 只用键盘的攻击键
   const c = human[0];
-  if (e.button === 0) { c.held.atk = true; c.atkT = clock; c.press('light'); }
+  if (e.button === 0) { if (typeof secretNoteHumanInput === 'function') secretNoteHumanInput('atk', true); c.held.atk = true; c.atkT = clock; c.press('light'); }
   else if (e.button === 2) {   // 右键单点：腾空闪；按住左键时点右键：远程招式
+    if (typeof secretNoteHumanInput === 'function') secretNoteHumanInput('dash', true);
     if (c.held.atk) { c.press('skill2'); c.atkT = clock + 1e6; delete c.buf.light; } else c.press('dash');
   }
 });
 cv.addEventListener('pointerdown', () => refocusGame());
-window.addEventListener('mouseup', e => { if (e.button === 0 && !secretEnabled) human[0].held.atk = false; });
+window.addEventListener('mouseup', e => { if (e.button === 0) { if (typeof secretNoteHumanInput === 'function') secretNoteHumanInput('atk', false); human[0].held.atk = false; } });
 cv.addEventListener('wheel', e => {
   if (M.mode === 'demo' || paused || EXT.on || (typeof bastion2dActive === 'function' && bastion2dActive())) return;
   if (document.querySelector('.scr.on')) return;

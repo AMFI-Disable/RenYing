@@ -45,7 +45,7 @@ function bpStart(mode, customOpts = null) {
     BP.preMatch = preMatchCreate(BP.mapId, BP.matchSeed === null ? (Math.random() * 0x100000000) >>> 0 : BP.matchSeed >>> 0);
   }
   // Online map and scroll candidates share the match seed sent in the BP state.
-  bpSel = -1; bpCpuT = BP_CPU_DELAY;
+  bpSel = -1; bpCpuT = bpCpuDelayForStep();
   showScreen('bp'); renderBP();
   if (mode === 'net') send({ bps: BP });
 }
@@ -131,7 +131,7 @@ function bpApply(i) {
       BP.picks[side] = i;
     }
   }
-  BP.step++; BP.t = BP_TIME; bpSel = -1; bpCpuT = BP_CPU_DELAY;
+  BP.step++; BP.t = BP_TIME; bpSel = -1; bpCpuT = bpCpuDelayForStep();
   if (BP.preMatch && BP.step >= bpSteps().length) preMatchSetPicks(BP.preMatch, BP.picks);
   if (type === 'ban') SFX.thud(); else { SFX.block(); }
   if (bpMode === 'net') send({ bps: BP });
@@ -141,7 +141,8 @@ function bpApply(i) {
   }
   if (BP.step >= bpSteps().length) {
     if (bpFinishTimer) clearTimeout(bpFinishTimer);
-    bpFinishTimer = setTimeout(bpFinish, bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay ? 0 : 1100);
+    const finishDelay = (bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay) ? 0 : (bpMode === 'melee' || bpMode === 'ctf') ? 450 : 1100;
+    bpFinishTimer = setTimeout(bpFinish, finishDelay);
   }
 }
 function bpFinish() {
@@ -290,6 +291,16 @@ function bpCpuChoice() {
     }
   }
   return valid[Math.random() * valid.length | 0];
+}
+function bpCpuDelayForStep() {
+  if (!BP) return BP_CPU_DELAY;
+  if (bpMode === 'melee' || bpMode === 'ctf') {
+    const total = bpSteps().length;
+    if (total >= 24) return 0.04;
+    if (total >= 16) return 0.06;
+    return 0.12;
+  }
+  return BP_CPU_DELAY;
 }
 function bpTick(dt) {
   if (bpMode === 'watch2v2') { bpTickWatch2v2(dt); return; }

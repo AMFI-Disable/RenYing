@@ -157,10 +157,18 @@ export default [
       A.hp = A.maxHp;
       // 战术牌只显示自己的战术：画一帧，不能抛错
       drawCmdPanel();
-      // Tab 键的轻点/按住：轻点换战术，按住是总览
-      const t0 = cmdTacticOf(0);
-      cmdTabDown(); cmdTabUp();
-      if (cmdTacticOf(0) === t0) return fail('A tap on Tab did not change the tactic');
+      // Tab 键开启/关闭交互式战队指挥面板，并可配置战术、阵型、集火与角色
+      cmdTabDown();
+      if (!teamCmdOpen()) return fail('Tab did not open the interactive team command panel');
+      teamCmdSetTactic('raid');
+      if (cmdTacticOf(0) !== 'raid') return fail('Command panel did not switch tactic to raid');
+      teamCmdSetFormation('escort');
+      if (M.teamFormation[0] !== 'escort') return fail('Command panel did not set formation');
+      const enemy = sideFighters(1)[0];
+      teamCmdSetFocus(enemy.idx);
+      if (M.teamFocus[0] !== enemy.idx) return fail('Command panel did not set focus target');
+      cmdTabDown();
+      if (teamCmdOpen()) return fail('Second Tab press did not close the team command panel');
       toMenu();
       return { pass: true };
     })()`
@@ -310,8 +318,79 @@ export default [
       if (M.cmd) return fail('2v2 must not have commanders');
       A.ctrl.press('orderFocus'); updateFighter(A, foeOf(A));
       if (M.squadOrders[0] !== 'focus') return fail('Old squad order 1 stopped working in 2v2');
+      // 2v2 中 Tab 指挥面板也可用，且 AI 队友执行集火目标与阵型指令
+      if (!teamCmdEligible()) return fail('2v2 with AI teammate must allow team command panel');
+      toggleTeamCmdPanel(true);
+      if (!teamCmdOpen()) return fail('Team command panel did not open in 2v2');
+      const e2 = sideFighters(1)[1];
+      teamCmdSetFocus(e2.idx);
+      teamCmdSetFormation('escort');
+      const ally = sideFighters(0).find(f => f !== A);
+      if (foeOf(ally) !== e2) return fail('2v2 AI teammate did not honor explicit focus target');
+      ally.x = A.x + 500; e2.x = A.x + 900;
+      const sm = squadAiMod(ally, e2, 400);
+      if (!sm || sm.dir !== -1) return fail('2v2 AI teammate did not honor escort formation');
+      toggleTeamCmdPanel(false);
       if (teamCount() !== 2) return fail('2v2 must have two teams');
       startMatch('train'); if (M.cmd) return fail('Training must not have commanders');
+      toMenu();
+      return { pass: true };
+    })()`
+  },
+  {
+    name: 'BP in 3v3/5v5/8v8/16v16 only gives human bans and their own first pick while AI rapidly auto-picks the rest',
+    fn: `(() => {
+      const fail = error => ({ pass: false, error });
+      for (const sz of [3, 5, 8, 16]) {
+        bpStart('melee', { teamSize: sz, level: 'normal' });
+        const steps = bpSteps();
+        let humanBans = 0, humanPicks = 0;
+        for (let i = 0; i < steps.length; i++) {
+          BP.step = i;
+          if (isMyTurnBP()) {
+            if (steps[i][1] === 'ban') humanBans++;
+            else humanPicks++;
+          }
+        }
+        if (humanBans !== BP.bansBySide[0].length) return fail(sz + 'v' + sz + ' human ban turns mismatch: ' + humanBans);
+        if (humanPicks !== 1) return fail(sz + 'v' + sz + ' human should only pick 1 hero, got ' + humanPicks);
+        if (bpCpuDelayForStep() > 0.15) return fail(sz + 'v' + sz + ' AI pick delay too slow: ' + bpCpuDelayForStep());
+      }
+      toMenu();
+      return { pass: true };
+    })()`
+  },
+  {
+    name: 'In-match Settings overlay stays in the match without returning to home, and 12-click secret AI keeps human inputs and 1/2/3 usable',
+    fn: `(() => {
+      const fail = error => ({ pass: false, error });
+      startMelee(5, 0, 'normal', 'normal'); M.phase = 'fight';
+      paused = true;
+      showScreen('pause');
+      settingsBack = 'pause';
+      openScreen('settings');
+      if (settingsBack !== 'pause') return fail('openScreen(settings) overwrote settingsBack during match');
+      if (currentScreen !== 'settings') return fail('openScreen(settings) did not open settings');
+      if (M.mode !== 'melee' || M.phase !== 'fight') return fail('Opening settings reset the active match');
+      $id('setDone').click();
+      if (currentScreen !== 'pause') return fail('Closing settings mid-match did not return to pause screen: ' + currentScreen);
+      if (M.mode !== 'melee') return fail('Closing settings mid-match terminated the match');
+      paused = false; showScreen(null);
+      // 12-click secretEnabled: human combat input + 1/2/3 tactical options remain fully functional
+      secretEnabled = true;
+      secretNoteHumanInput('atk', true);
+      if (!secretHumanActive()) return fail('Human combat input did not take priority over secret AI');
+      secretNoteHumanInput('atk', false);
+      A.ctrl.press('orderFocus');
+      updateFighter(A, foeOf(A));
+      if (cmdTacticOf(0) !== 'spear') return fail('Tactical option 1 failed while secretEnabled is active');
+      A.ctrl.press('orderProtect');
+      updateFighter(A, foeOf(A));
+      if (cmdTacticOf(0) !== 'wall') return fail('Tactical option 2 failed while secretEnabled is active');
+      A.ctrl.press('orderSpread');
+      updateFighter(A, foeOf(A));
+      if (cmdTacticOf(0) !== 'raid') return fail('Tactical option 3 failed while secretEnabled is active');
+      secretEnabled = false;
       toMenu();
       return { pass: true };
     })()`

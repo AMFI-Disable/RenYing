@@ -149,7 +149,18 @@ function cancelKeyRebind() {   // 点了改键又直接离开设置：别让监�
   rebindingKey = null;
   window.removeEventListener('keydown', handleKeyRebind, true);
 }
-$id('setHelp').addEventListener('click', () => navTo('help'));
-$id('setDone').addEventListener('click', () => { if (settingsBack === 'pause') showScreen('pause'); else backToMenu(); });
-$id('pauseSet').addEventListener('click', () => { settingsBack = 'pause'; buildSettings(); showScreen('settings'); });
+$id('setHelp').addEventListener('click', () => {
+  if (settingsBack === 'pause' && M.mode !== 'demo') showScreen('help');
+  else navTo('help');
+});
+$id('setDone').addEventListener('click', () => {
+  if (settingsBack === 'pause' || (M.mode !== 'demo' && paused)) showScreen('pause');
+  else backToMenu();
+});
+$id('pauseSet').addEventListener('click', () => {
+  settingsBack = 'pause';
+  paused = true;
+  buildSettings();
+  showScreen('settings');
+});
 

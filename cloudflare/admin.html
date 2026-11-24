@@ -665,7 +665,7 @@ async function vPlayers() {
     : S.pFilter === 'active24h' ? '24 小时内活跃的账号'
     : isDel ? '删除了的账号' : '所有账号';
   return H`<div class="card">
-    <div class="row between wrap"><h2>玩家</h2><div class="row wrap">
+    <div class="row between wrap"><h2>玩家 <small style="font-size:12px;color:var(--dim);font-weight:400">仅显示真人玩家（AI 账号请在「AI 玩家」标签管理）</small></h2><div class="row wrap">
       <button class="btn ghost sm" data-act="fltview" data-f="" aria-pressed="${String(!S.pFilter)}">所有账号</button>
       <button class="btn ghost sm" data-act="fltview" data-f="active24h" aria-pressed="${String(S.pFilter === 'active24h')}">24h 活跃</button>
       <button class="btn ghost sm" data-act="fltview" data-f="wealth" aria-pressed="${String(S.pFilter === 'wealth')}">富豪榜</button>

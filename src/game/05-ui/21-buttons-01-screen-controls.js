@@ -10,7 +10,8 @@ function showScreen(id) {
   const prev = currentScreen; currentScreen = id;
   for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'mapBriefing', 'buffDraft', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'langPrompt', 'gboss', 'sagaTalk']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
   if (id && $id(id)) $id(id).classList.add('scr-seen');   // 打开过的面板才排版，见 style.css 的 .scr-seen
-  $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
+  const inMatchOverlay = (id === 'settings' || id === 'help') && settingsBack === 'pause' && M.mode !== 'demo';
+  $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id) || inMatchOverlay);
   if (id !== 'settings') cancelKeyRebind();
   if (id !== 'bp') {
     try { showPop(null); } catch (e) {}
@@ -33,7 +34,7 @@ function showScreen(id) {
     menuCam.tx = 0; menuCam.tz = 1;
   }
   if (id === 'netp') renderLobby();
-  const nav = NAV_SCREENS.includes(id);   // 离线版也用顶栏（离线用不到的按钮由 body.offline 藏起来）
+  const nav = NAV_SCREENS.includes(id) && !inMatchOverlay;   // 对局中打开设置/帮助时不显示首页顶栏，避免误跳转回主页
   $id('topNav').classList.toggle('hidden', !nav);
   document.body.classList.toggle('has-nav', nav);
   if (nav) {

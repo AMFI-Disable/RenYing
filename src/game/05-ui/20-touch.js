@@ -28,15 +28,16 @@ if (TOUCH) {
   for (const b of document.querySelectorAll('#touchUI [data-a]')) {
     b.addEventListener('pointerdown', e => {
       e.preventDefault(); initAudio(); haptic(12); try { b.setPointerCapture(e.pointerId); } catch (err) {} b.classList.add('on');
-      if (secretEnabled) return;
       const c = human[0], a = b.dataset.a;
+      if (typeof secretNoteHumanInput === 'function') secretNoteHumanInput(a, true);
       if (a === 'atk') { c.held.atk = true; c.atkT = clock; c.press('light'); }
       else if (a === 'jump') { TUI.jumpHeld = true; touchHeldJump(); c.press('jump'); }
       else if (a === 'skill2') { if (c.held.atk) { c.atkT = clock + 1e6; delete c.buf.light; } c.press('skill2'); }
       else c.press(a);
     });
     const up = e => {
-      b.classList.remove('on'); if (secretEnabled) return; const c = human[0], a = b.dataset.a;
+      b.classList.remove('on'); const c = human[0], a = b.dataset.a;
+      if (typeof secretNoteHumanInput === 'function') secretNoteHumanInput(a, false);
       if (a === 'atk') c.held.atk = false;
       if (a === 'jump') { TUI.jumpHeld = false; touchHeldJump(); }
     };
@@ -44,7 +45,6 @@ if (TOUCH) {
   }
   const st = $id('tStick'), kn = $id('tKnob');
   const move = e => {
-    if (secretEnabled) return;
     const r = st.getBoundingClientRect(), R0 = r.width / 2;
     let dx = e.clientX - (r.left + R0), dy = e.clientY - (r.top + R0); const l = Math.hypot(dx, dy);
     if (l > R0) { dx *= R0 / l; dy *= R0 / l; }
@@ -57,10 +57,23 @@ if (TOUCH) {
     const upNow = ny < -0.6 && Math.abs(nx) < 0.8;
     if (upNow && !TUI.stickUp) human[0].press('jump');
     TUI.stickUp = upNow; touchHeldJump();
+    if (typeof secretNoteHumanInput === 'function') {
+      secretNoteHumanInput('left', h.left);
+      secretNoteHumanInput('right', h.right);
+      secretNoteHumanInput('down', h.down);
+      secretNoteHumanInput('jump', h.jump);
+    }
   };
   st.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); TUI.stick = e.pointerId; try { st.setPointerCapture(e.pointerId); } catch (err) {} move(e); });
   st.addEventListener('pointermove', e => { if (e.pointerId === TUI.stick) move(e); });
-  const end = e => { if (e.pointerId !== TUI.stick) return; TUI.stick = null; kn.style.transform = ''; if (secretEnabled) return; const h = human[0].held; h.left = h.right = h.down = false; TUI.stickUp = false; TUI.stickDown = false; touchHeldJump(); };
+  const end = e => {
+    if (e.pointerId !== TUI.stick) return;
+    TUI.stick = null; kn.style.transform = '';
+    const h = human[0].held; h.left = h.right = h.down = false; TUI.stickUp = false; TUI.stickDown = false; touchHeldJump();
+    if (typeof secretNoteHumanInput === 'function') {
+      secretNoteHumanInput('left', false); secretNoteHumanInput('right', false); secretNoteHumanInput('down', false); secretNoteHumanInput('jump', false);
+    }
+  };
   st.addEventListener('pointerup', end); st.addEventListener('pointercancel', end);
   $id('tPause').addEventListener('click', () => { if (M.mode !== 'net' && M.phase !== 'end') { paused = true; showScreen('pause'); } });
   $id('tDummy').addEventListener('click', () => dummyBarShow(true));   // 打开对手行为栏（21-buttons-02-training.js）

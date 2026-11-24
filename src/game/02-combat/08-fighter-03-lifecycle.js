@@ -46,7 +46,11 @@ function applyMayhemStats(f) {
   f.guard = f.maxGuard = 500; f.meter = 100;
 }
 function startRound() {
-  M.squadOrders = ['auto', 'auto'];
+  M.squadOrders = ['auto', 'auto', 'auto', 'auto'];
+  M.teamFormation = ['auto', 'auto', 'auto', 'auto'];
+  M.teamFocus = [-1, -1, -1, -1];
+  M.teamRoles = new Array(MAX_FIGHTERS).fill(0);
+  if (typeof teamCmdClose === 'function') teamCmdClose();
   M.reviewReady = false;
   CLONE_FADES.length = 0;
   if (typeof statMatch === 'function') statMatch();   // 匿名统计：一局的第一回合记一次模式

@@ -41,7 +41,7 @@ function openScreen(name, reveal = true) {
   if (name === 'replays') renderReplays();
   if (name === 'netp') renderRankLine();
   if (name === 'single') renderStages();
-  if (name === 'settings') { settingsBack = 'menu'; buildSettings(); }
+  if (name === 'settings') { if (M.mode === 'demo' || !paused) settingsBack = 'menu'; buildSettings(); }
   if (name === 'codex') openCodex();
   if (name === 'community') openCommunity();
   if (name === 'armory') prepareArmory();
@@ -137,6 +137,13 @@ $id('endChangeHeroBtn').addEventListener('click', () => {
 const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'armory', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare', 'gboss'];
 function navTo(name) {
   initAudio();
+  if (name === 'settings' && M.mode !== 'demo') {
+    if (!paused) paused = true;
+    settingsBack = 'pause';
+    buildSettings();
+    showScreen('settings');
+    return;
+  }
   if (name === 'menu') { backToMenu(); return; }
   if (name === 'acc') { openAcc(); return; }
   if (name === 'qfx') { openQfx(); return; }
@@ -211,7 +218,13 @@ for (const b of document.querySelectorAll('#menu [data-go]')) {
     menuGo(b.dataset.go);
   });
 }   // 悬停不再把镜头甩到两边：场景只跟着鼠标轻轻晃（见 renderMenu 里的 MENU_M）
-for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', backToMenu);
+for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', () => {
+  if (currentScreen === 'help' && settingsBack === 'pause' && M.mode !== 'demo') {
+    showScreen('settings');
+    return;
+  }
+  backToMenu();
+});
 // ---------- 大型团战启动 ----------
 (function initExpansionHome() {
   let meleeTeamSize = 5, ctfTeamSize = 5;

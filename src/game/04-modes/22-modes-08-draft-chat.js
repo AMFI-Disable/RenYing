@@ -55,14 +55,14 @@ const isMyTurnBP = () => {
   const isWatch = bpMode === 'cpuWatch' || (bpCustomOpts && bpCustomOpts.isWatch);
   if (isWatch) return false;
   if (isLocalBothHumanBP()) return true;
-  // 2v2 p_cc: 玩家只操控 Side 0 的第 1 个席位（禁选第一手），队友由电脑自动挑选
-  if (bpMode === '2v2' && bpCustomOpts && bpCustomOpts.subMode === 'p_cc') {
+  // 2v2 p_cc 以及 3v3 / 5v5 / 8v8 / 16v16 大型团战（群雄会战、夺旗争锋）：
+  // 玩家只负责本方禁用（ban）和自己的侠客选择（本方第 1 手 pick），其余队友与敌方由 AI 快速自动选人
+  if ((bpMode === '2v2' && bpCustomOpts && bpCustomOpts.subMode === 'p_cc') || bpMode === 'melee' || bpMode === 'ctf') {
     const curStep = bpSteps()[BP.step];
     if (curStep[0] !== bpMySide()) return false;
-    // Side 0 的第 2 个 pick 归电脑队友
-    const priorPicksSide0 = bpSteps().slice(0, BP.step).filter(st => st[0] === 0 && st[1] === 'pick').length;
-    if (curStep[1] === 'pick' && priorPicksSide0 >= 1) return false;
-    return true;
+    if (curStep[1] === 'ban') return true;
+    const priorPicksMine = bpSteps().slice(0, BP.step).filter(st => st[0] === bpMySide() && st[1] === 'pick').length;
+    return priorPicksMine < 1;
   }
   return bpSteps()[BP.step][0] === bpMySide();
 };

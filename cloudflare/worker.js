@@ -1683,16 +1683,16 @@ async function handleAdmin(env, request, path, now, ip) {
     await cfgNow(env, now);
     const one = (sql, ...b) => env.DB.prepare(sql).bind(...b).first();
     const [users, fresh, eco, open, deals, banned, gone, inkFlow, opens24, signups, inkFlow7, caseOpens, pres] = await Promise.all([
-      one('SELECT COUNT(*) AS n FROM users WHERE deleted_at = 0'),
-      one('SELECT COUNT(*) AS n FROM users WHERE created_at > ?', now - DAY_MS),
-      one('SELECT COUNT(*) AS n, COALESCE(SUM(ink), 0) AS ink FROM econ'),
+      one("SELECT COUNT(*) AS n FROM users WHERE deleted_at = 0 AND COALESCE(password_algo, '') != 'ai-bot-locked'"),
+      one("SELECT COUNT(*) AS n FROM users WHERE created_at > ? AND COALESCE(password_algo, '') != 'ai-bot-locked'", now - DAY_MS),
+      one("SELECT COUNT(*) AS n, COALESCE(SUM(e.ink), 0) AS ink FROM econ e LEFT JOIN users u ON u.id = e.uid WHERE COALESCE(u.password_algo, '') != 'ai-bot-locked'"),
       one('SELECT COUNT(*) AS n FROM mkt WHERE state = 0'),
       one('SELECT COUNT(*) AS n, COALESCE(SUM(price), 0) AS v FROM mkt WHERE state = 1 AND done_at > ?', now - DAY_MS),
       one('SELECT COUNT(*) AS n FROM sanctions WHERE perm = 1 OR ban_until > ?', now),
-      one('SELECT COUNT(*) AS n FROM users WHERE deleted_at > 0'),
+      one("SELECT COUNT(*) AS n FROM users WHERE deleted_at > 0 AND COALESCE(password_algo, '') != 'ai-bot-locked'"),
       one("SELECT COALESCE(SUM(CASE WHEN ink1 > ink0 THEN ink1 - ink0 ELSE 0 END), 0) AS inkIn, COALESCE(SUM(CASE WHEN ink0 > ink1 THEN ink0 - ink1 ELSE 0 END), 0) AS inkOut FROM econ_log WHERE at > ?", now - DAY_MS),
       one("SELECT COALESCE(SUM(CASE WHEN act = 'open' THEN 1 WHEN json_valid(detail) THEN COALESCE(json_extract(detail, '$.n'), 0) ELSE 0 END), 0) AS n FROM econ_log WHERE act IN ('open', 'openAll') AND ok = 1 AND at > ?", now - DAY_MS),
-      env.DB.prepare("SELECT CAST((created_at / 86400000) AS INTEGER) AS d, COUNT(*) AS n FROM users WHERE created_at > ? GROUP BY d ORDER BY d").bind(now - 7 * DAY_MS).all(),
+      env.DB.prepare("SELECT CAST((created_at / 86400000) AS INTEGER) AS d, COUNT(*) AS n FROM users WHERE created_at > ? AND COALESCE(password_algo, '') != 'ai-bot-locked' GROUP BY d ORDER BY d").bind(now - 7 * DAY_MS).all(),
       env.DB.prepare("SELECT CAST((at / 86400000) AS INTEGER) AS d, COALESCE(SUM(CASE WHEN ink1 > ink0 THEN ink1 - ink0 ELSE 0 END), 0) AS inkIn, COALESCE(SUM(CASE WHEN ink0 > ink1 THEN ink0 - ink1 ELSE 0 END), 0) AS inkOut FROM econ_log WHERE at > ? GROUP BY d ORDER BY d").bind(now - 7 * DAY_MS).all(),
       env.DB.prepare("SELECT detail FROM econ_log WHERE act IN ('open', 'openAll') AND ok = 1 AND at > ? LIMIT 1000").bind(now - 7 * DAY_MS).all(),
       one("SELECT COUNT(*) AS online, COALESCE(SUM(st = 'match'), 0) AS playing, COALESCE(SUM(st = 'queue'), 0) AS waiting FROM presence WHERE seen > ?", now - PRESENCE_WINDOW),
@@ -1896,10 +1896,11 @@ async function handleAdmin(env, request, path, now, ip) {
       : sort === 'username' ? `u.username ${dir}`
       : sort === 'updated' ? `COALESCE(e.updated_at, u.updated_at) ${dir}`
       : '';
+    const humanOnly = "COALESCE(u.password_algo, '') != 'ai-bot-locked'";
     let total = 0, rows = [];
     if (key) {
       const prefix = escKey + '%', substr = '%' + escKey + '%';
-      const w = `(u.username LIKE ? ESCAPE '\\' OR u.username LIKE ? ESCAPE '\\' OR u.id = ? OR u.id LIKE ? ESCAPE '\\')${del ? ' AND u.deleted_at > 0' : ''}${fltCond}`;
+      const w = `${humanOnly} AND (u.username LIKE ? ESCAPE '\\' OR u.username LIKE ? ESCAPE '\\' OR u.id = ? OR u.id LIKE ? ESCAPE '\\')${del ? ' AND u.deleted_at > 0' : ''}${fltCond}`;
       const tot = await env.DB.prepare(`SELECT COUNT(*) AS n FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w}`).bind(prefix, substr, key, prefix).first();
       total = (tot && tot.n) || 0;
       const orderClause = sortSql || `(u.username = ?) DESC, (u.username LIKE ? ESCAPE '\\') DESC, length(u.username), u.username`;
@@ -1907,12 +1908,12 @@ async function handleAdmin(env, request, path, now, ip) {
       rows = (await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w} ORDER BY ${orderClause} LIMIT ? OFFSET ?`)
         .bind(...binds).all()).results || [];
     } else if (del) {
-      const w = `u.deleted_at > 0${fltCond}`;
+      const w = `${humanOnly} AND u.deleted_at > 0${fltCond}`;
       const tot = await env.DB.prepare(`SELECT COUNT(*) AS n FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w}`).first();
       total = (tot && tot.n) || 0;
       rows = (await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w} ORDER BY ${sortSql || 'u.deleted_at DESC'} LIMIT ? OFFSET ?`).bind(limit, offset).all()).results || [];
     } else {
-      const w = `1=1${fltCond}`;
+      const w = `${humanOnly}${fltCond}`;
       const tot = await env.DB.prepare(`SELECT COUNT(*) AS n FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w}`).first();
       total = (tot && tot.n) || 0;
       rows = (await env.DB.prepare(`SELECT ${cols} FROM users u LEFT JOIN econ e ON e.uid = u.id LEFT JOIN sanctions s ON s.uid = u.id WHERE ${w} ORDER BY ${sortSql || 'COALESCE(e.updated_at, u.updated_at) DESC'} LIMIT ? OFFSET ?`).bind(limit, offset).all()).results || [];
@@ -2145,7 +2146,7 @@ async function handleAdmin(env, request, path, now, ip) {
   /* 导出 CSV：q 和找号一样（昵称开头或编号，不填就全部），del=1 只要删除了的，del=0 只要没删的；最多 5000 行。
    * 开头带 BOM，Excel 打开中文不乱码；= + - @ 开头的格子前面加 '，Excel 不会当成公式。每次导出记一条流水 */
   if (route === 'GET /api/admin/export') {
-    const key = q('q'), del = q('del'), where = [], args = [];
+    const key = q('q'), del = q('del'), where = ["COALESCE(u.password_algo, '') != 'ai-bot-locked'"], args = [];
     if (key) { where.push("(u.username LIKE ? ESCAPE '\\' OR u.id = ?)"); args.push(key.replace(/[\\%_]/g, m => '\\' + m) + '%', key); }
     if (del === '1') where.push('u.deleted_at > 0');
     if (del === '0') where.push('u.deleted_at = 0');

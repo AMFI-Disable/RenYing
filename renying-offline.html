@@ -4258,6 +4258,121 @@ gap: 5px 10px;
 @media (max-width: 760px) {
 .train-lab { width: min(310px, calc(100vw - 24px)); top: 84px; bottom: 72px; }
 }
+.team-cmd-panel {
+position: fixed;
+left: 50%;
+top: 50%;
+transform: translate(-50%, -50%);
+width: min(820px, 94vw);
+max-height: min(82vh, 660px);
+z-index: 920;
+display: flex;
+flex-direction: column;
+background: linear-gradient(175deg, rgba(13, 16, 32, 0.96), rgba(8, 10, 22, 0.96));
+border: 1px solid rgba(233, 196, 106, 0.52);
+border-radius: 14px;
+box-shadow: 0 24px 72px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+backdrop-filter: blur(10px);
+-webkit-backdrop-filter: blur(10px);
+color: #efe8d8;
+overflow: hidden;
+}
+.team-cmd-panel.hidden { display: none; }
+.tcp-head {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 10px;
+padding: 12px 16px;
+background: linear-gradient(90deg, rgba(233, 196, 106, 0.16), rgba(16, 20, 38, 0.4));
+border-bottom: 1px solid rgba(233, 196, 106, 0.25);
+flex-wrap: wrap;
+}
+.tcp-title { display: flex; align-items: center; gap: 8px; }
+.tcp-title b { font-family: var(--title); font-size: 20px; color: #e9c46a; letter-spacing: 0.06em; }
+.tcp-badge {
+font-size: 11.5px;
+padding: 2px 9px;
+border-radius: 99px;
+background: rgba(70, 211, 234, 0.16);
+border: 1px solid rgba(70, 211, 234, 0.45);
+color: #8fe8ff;
+}
+.tcp-hint { font-size: 12px; color: rgba(239, 232, 216, 0.68); margin-right: auto; }
+.tcp-body {
+padding: 14px 16px 16px;
+overflow-y: auto;
+display: grid;
+grid-template-columns: repeat(2, minmax(0, 1fr));
+gap: 12px;
+scrollbar-width: thin;
+}
+.tcp-sec {
+padding: 11px 13px;
+border-radius: 10px;
+background: rgba(255, 255, 255, 0.035);
+border: 1px solid rgba(239, 232, 216, 0.12);
+display: flex;
+flex-direction: column;
+gap: 8px;
+}
+.tcp-sec.full { grid-column: 1 / -1; }
+.tcp-sec-h {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 8px;
+font-size: 13px;
+font-weight: 700;
+color: #e9c46a;
+}
+.tcp-sec-h small { font-weight: 400; font-size: 11.5px; color: rgba(239, 232, 216, 0.65); }
+.tcp-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+.tcp-btn {
+display: inline-flex;
+align-items: center;
+gap: 5px;
+padding: 6px 11px;
+border-radius: 7px;
+border: 1px solid rgba(239, 232, 216, 0.18);
+background: rgba(255, 255, 255, 0.05);
+color: #efe8d8;
+font-size: 12.5px;
+cursor: pointer;
+transition: border-color 0.14s ease, background 0.14s ease, transform 0.12s ease;
+}
+.tcp-btn:hover { border-color: rgba(233, 196, 106, 0.6); transform: translateY(-1px); }
+.tcp-btn.sel {
+background: rgba(233, 196, 106, 0.24);
+border-color: #e9c46a;
+color: #fff6d6;
+font-weight: 700;
+box-shadow: 0 0 12px rgba(233, 196, 106, 0.22);
+}
+.tcp-btn.dead { opacity: 0.45; cursor: not-allowed; }
+.tcp-mates { display: flex; flex-direction: column; gap: 6px; max-height: 210px; overflow-y: auto; padding-right: 2px; }
+.tcp-mate-row {
+display: flex;
+align-items: center;
+justify-content: space-between;
+gap: 8px;
+padding: 6px 9px;
+border-radius: 7px;
+background: rgba(0, 0, 0, 0.28);
+border: 1px solid rgba(255, 255, 255, 0.08);
+flex-wrap: wrap;
+}
+.tcp-mate-info { display: flex; align-items: center; gap: 7px; font-size: 12.5px; min-width: 140px; }
+.tcp-mate-hp { font-size: 11.5px; color: rgba(239, 232, 216, 0.68); font-variant-numeric: tabular-nums; }
+.tcp-role-grp { display: flex; gap: 4px; flex-wrap: wrap; }
+.tcp-role-grp .tcp-btn { padding: 3px 8px; font-size: 11.5px; }
+.tcp-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.tcp-team-col { padding: 7px 9px; border-radius: 8px; background: rgba(0, 0, 0, 0.26); border: 1px solid rgba(255, 255, 255, 0.08); }
+.tcp-team-col b { display: block; font-size: 12px; margin-bottom: 5px; }
+.tcp-ov-row { display: flex; justify-content: space-between; font-size: 11.5px; padding: 1px 0; font-variant-numeric: tabular-nums; }
+@media (max-width: 720px) {
+.tcp-body { grid-template-columns: 1fr; }
+}
 </style>
 </head>
 <body>
@@ -4657,8 +4772,8 @@ window.RYBoot = (function () {
         <div class="bp-rule-banner">
           <span class="bp-rule-seal">禁选</span>
           <div class="bp-rule-txt">
-            <b>点将台规则 · 完整战略禁选（不自动补全阵容）</b>
-            <span>按所选规模进入点将台亲自禁选排兵布阵，打造专属大型团战阵容。</span>
+            <b>点将台规则 · 亲自禁人与自选本命侠客，其余位置 AI 极速补齐</b>
+            <span>你仅需掌控禁用与自身出战侠客，其余队友与敌方阵营将由 AI 快速完成选人，减少等待。</span>
           </div>
         </div>
         <div class="single-action-row">
@@ -4683,8 +4798,8 @@ window.RYBoot = (function () {
         <div class="bp-rule-banner">
           <span class="bp-rule-seal">禁选</span>
           <div class="bp-rule-txt">
-            <b>点将台规则 · 完整战略禁选（不自动补全阵容）</b>
-            <span>按所选规模进入点将台亲自搭配突进、控场与护旗阵容。</span>
+            <b>点将台规则 · 亲自禁人与自选本命侠客，其余位置 AI 极速补齐</b>
+            <span>你仅需掌控禁用与自身出战侠客，其余队友与敌方阵营将由 AI 快速完成选人，即刻开战。</span>
           </div>
         </div>
         <div class="single-action-row">
@@ -5774,6 +5889,20 @@ window.RYBoot = (function () {
     </div>
     <div class="tlab-body" id="trainLabBody"></div>
   </aside>
+  <!-- 战队实时指挥面板（对局中按 Tab 开启，可配置战术、阵型、集火目标与队友职责） -->
+  <div class="team-cmd-panel hidden" id="teamCmdPanel" role="dialog" aria-modal="true" aria-label="战队指挥面板">
+    <div class="tcp-box">
+      <div class="tcp-head">
+        <div>
+          <b id="tcpTitle">战队指挥面板</b>
+          <span class="tcp-badge" id="tcpModeBadge"></span>
+          <span class="tcp-sub" id="tcpSub">配置全队战术、阵型、集火目标与队友职责（按 Tab 或 Esc 关闭）</span>
+        </div>
+        <button class="mm-cancel" id="tcpCloseBtn" type="button" data-tcp-close>关闭</button>
+      </div>
+      <div class="tcp-body" id="tcpBody"></div>
+    </div>
+  </div>
   <div class="train-inspect hidden" id="trainInspect" aria-label="训练帧控制">
     <button id="trainLabToggle" type="button" aria-pressed="true">状态面板：开</button>
     <button class="train-inspect-hitbox" id="trainHitboxBtn" type="button" aria-pressed="true">F1 判定框：开</button>
@@ -8855,7 +8984,7 @@ if (d < aiFrame(me, 'l1').max * 1.7 + 30 && Math.random() < 0.3) this.press('lig
 return;
 }
 if (this.watch2v2(me, foe, d, to)) return;
-const cm = M.cmd ? cmdAiMod(me, foe, d) : null;   // 团战统帅的战术：积极度、站位距离、格挡倾向（22-modes-17-command.js）
+const cm = typeof squadAiMod === 'function' ? squadAiMod(me, foe, d) : (M.cmd ? cmdAiMod(me, foe, d) : null);   // 战队指挥战术与阵型：适用于 2v2、3v3–16v16 团战、夺旗、四象、同袍肉鸽
 if (cm && cm.dir && !this.holdDown && !this.holdAtk) { this.dir = cm.dir; return; }
 if (this.feint && clock < this.feint.end) { this.dir = clock < this.feint.turn ? to : -to; return; }
 if (L.bait >= 0.6 && me.onGround() && (!this.feint || clock > this.feint.end + 2.5)
@@ -19649,19 +19778,37 @@ KEYS[0][code] = realAct;
 applyCustomKeys();
 const human = [new Ctrl(), new Ctrl(), new Ctrl(), new Ctrl()];
 let secretSettingsClicks = 0, secretLastClick = 0, secretEnabled = false, secretBrain = null;
+let secretHumanUntil = 0;
+const secretHumanHeld = { left: false, right: false, down: false, atk: false, jump: false };
+const SECRET_TACTICAL_ACTS = new Set(['orderFocus', 'orderProtect', 'orderSpread', 'cmdSelect', 'cmdRole', 'lock', 'beacon', 'rally']);
+function secretNoteHumanInput(act, down) {
+if (!secretEnabled) return;
+if (SECRET_TACTICAL_ACTS.has(act)) return;
+if (act === 'left' || act === 'right' || act === 'down' || act === 'atk' || act === 'jump') {
+secretHumanHeld[act] = !!down;
+}
+if (down) secretHumanUntil = clock + 0.45;
+}
+function secretHumanActive() {
+return clock < secretHumanUntil || secretHumanHeld.left || secretHumanHeld.right || secretHumanHeld.down || secretHumanHeld.atk || secretHumanHeld.jump;
+}
 function secretSettingsClick() {
 const now = Date.now();
 if (now - secretLastClick > 600) secretSettingsClicks = 0;
 secretLastClick = now;
 if (!secretEnabled && ++secretSettingsClicks >= 12) {
-secretEnabled = true; human[0].clear(); NET.presses.length = 0;
+secretEnabled = true;
+if (typeof toast === 'function') toast('AI 托管辅助已开启 · 仍可随时手动操作与使用 1/2/3 战术指令', 3.5);
 }
 }
 function secretRound() {
-if (secretEnabled) { secretBrain = new AIBrain(human[0], 'god'); human[0].clear(); }
+secretHumanUntil = 0;
+secretHumanHeld.left = secretHumanHeld.right = secretHumanHeld.down = secretHumanHeld.atk = secretHumanHeld.jump = false;
+if (secretEnabled) { secretBrain = new AIBrain(human[0], 'god'); }
 }
 function secretThink(f, networkInput = false) {
 if (!secretEnabled || (M.mode === 'net' && NET.isRanked) || RESIM || REPLAY.on || M.watchAi || M.mode === 'demo' || !f || f.hidden || f.hp <= 0 || M.phase !== 'fight') return;
+if (secretHumanActive()) return;
 if (!secretBrain) secretRound();
 const oldTarget = f.target, foe = foeOf(f);
 if (!foe) return;
@@ -34135,14 +34282,30 @@ f.lockIdx = -1;
 const layered = battleMapOn();
 const distance = (a, b) => layered ? Math.abs(a.x - b.x) + Math.abs(a.y - b.y) * 2 : Math.abs(a.x - b.x);
 if (!isRaid() && cpuTeamwork(f) && f.target && list.includes(f.target) && brainCommitted(f, f.target)) return f.target;
-if (!isRaid() && cpuTeamwork(f)) {
+if (cpuTeamwork(f)) {
 if (M.cmd) { const ct = cmdPickTarget(f, list, distance); if (ct) { f.target = ct; return ct; } }   // 统帅的战术和任务（22-modes-17-command.js）
 const myTeam = fighterTeam(f);
+const explicitIdx = M.teamFocus && M.teamFocus[myTeam] >= 0 ? M.teamFocus[myTeam] : -1;
+const explicitTgt = explicitIdx >= 0 ? fighterByIdx(explicitIdx) : null;
+const roleIdx = (M.teamRoles && M.teamRoles[f.idx]) || 0;
+const roleId = typeof CMD_ROLES !== 'undefined' && CMD_ROLES[roleIdx] ? CMD_ROLES[roleIdx].id : 'auto';
+if (roleId === 'peel' && typeof cmdPeelTarget === 'function') {
+const peelT = cmdPeelTarget(f, list, distance);
+if (peelT) { f.target = peelT; return peelT; }
+}
+if (explicitTgt && !explicitTgt.hidden && explicitTgt.hp > 0 && list.includes(explicitTgt)) {
+if (roleId === 'lure' && typeof cmdLureTarget === 'function') {
+const lureT = cmdLureTarget(f, list, explicitTgt, distance);
+if (lureT) { f.target = lureT; return lureT; }
+}
+f.target = explicitTgt; return explicitTgt;
+}
 const order = M.squadOrders?.[myTeam] || 'auto';
-if (order !== 'auto') {
-const playerF = fighterByIdx(myTeam);
-if (order === 'focus' && playerF && playerF.target && list.includes(playerF.target) && playerF.target.hp > 0) {
-f.target = playerF.target; return playerF.target;
+if (order !== 'auto' || roleId !== 'auto') {
+const playerF = sideFighters(myTeam).find(m => human.includes(m.ctrl)) || fighterByIdx(myTeam);
+const leaderTarget = playerF && (playerF.lockIdx >= 0 ? fighterByIdx(playerF.lockIdx) : playerF.target);
+if ((order === 'focus' || roleId === 'main') && leaderTarget && !leaderTarget.hidden && leaderTarget.hp > 0 && list.includes(leaderTarget)) {
+f.target = leaderTarget; return leaderTarget;
 }
 if (order === 'protect' && playerF && !playerF.hidden && playerF.hp > 0) {
 let nearP = list[0], minD = distance(nearP, playerF);
@@ -34154,12 +34317,14 @@ const pick = list[(Math.floor(f.idx / 2)) % list.length];
 if (pick) { f.target = pick; return pick; }
 }
 }
+if (!isRaid()) {
 const mate = is2v2() ? fighterByIdx(f.idx ^ 2) : sideFighters(myTeam).find(m => m !== f && m.hp > 0 && m.hp < m.maxHp * 0.3);
 const low = list.find(e => e.hp < e.maxHp * 0.25 && distance(e, f) < 700);
 if (low) { f.target = low; return low; }
 if (mate && mate !== f && !mate.hidden && mate.hp > 0 && mate.hp < mate.maxHp * 0.3) {
 const bully = list.find(e => distance(e, mate) < 260);
 if (bully) { f.target = bully; return bully; }
+}
 }
 }
 if (!isRaid() && cpuTeamwork(f)) {
@@ -34719,7 +34884,11 @@ f.maxHp = Math.round(f.maxHp * 10); f.hp = f.lagHp = f.maxHp;
 f.guard = f.maxGuard = 500; f.meter = 100;
 }
 function startRound() {
-M.squadOrders = ['auto', 'auto'];
+M.squadOrders = ['auto', 'auto', 'auto', 'auto'];
+M.teamFormation = ['auto', 'auto', 'auto', 'auto'];
+M.teamFocus = [-1, -1, -1, -1];
+M.teamRoles = new Array(MAX_FIGHTERS).fill(0);
+if (typeof teamCmdClose === 'function') teamCmdClose();
 M.reviewReady = false;
 CLONE_FADES.length = 0;
 if (typeof statMatch === 'function') statMatch();   // 匿名统计：一局的第一回合记一次模式
@@ -44325,6 +44494,7 @@ if (mayhemOn()) bTitle += ' · 通天神决';
 if (chaosOn()) drawChaosHUD(cx, H - 48, true);
 ctx.fillText(window.I18N ? I18N.t(bTitle) : bTitle, cx, H - 10);
 ctx.restore();
+if (typeof drawSquadTacticalBar === 'function') drawSquadTacticalBar();
 }
 function hudLocalPlayer(f) {
 if (!f) return false;
@@ -44447,6 +44617,7 @@ ctx.fillStyle = M.timer <= 15 ? '#ff6464' : '#f5ebd6';
 ctx.font = `bold ${Math.round(24 * u)}px ${TITLE_FONT}`;
 ctx.fillText(Math.ceil(M.timer).toString(), W / 2, topY + Math.round(38 * u));
 ctx.restore();
+if (typeof drawSquadTacticalBar === 'function') drawSquadTacticalBar();
 }
 function drawHUDLargeTeam() {
 const top = Math.max(16, Math.round(H * 0.025)), cx = W / 2;
@@ -44547,10 +44718,35 @@ ctx.fillText(`${cd('Q', lf.skillCD)} ${cd('R', lf.skill2CD)} ${cd('C', lf.feintC
 if (!M.cmd) {
 const ordMap = { auto: '自由作战', focus: '全军集火', protect: '回防掩护', spread: '分散游击' };
 ctx.fillStyle = '#e9c46a';
-ctx.fillText(`${cvT('指令')}: ${cvT(ordMap[M.squadOrders?.[localTeam()] || 'auto'])} [1/2/3]`, px + 8, py + 61);
+ctx.fillText(`${cvT('指令')}: ${cvT(ordMap[M.squadOrders?.[localTeam()] || 'auto'])} [1/2/3 · Tab${cvT('指挥')}]`, px + 8, py + 61);
 }
 }
 if (chaosOn()) drawChaosHUD(cx, H - 22, true);
+ctx.restore();
+}
+function drawSquadTacticalBar() {
+if (M.cmd || typeof teamCmdEligible !== 'function' || !teamCmdEligible()) return;
+const t = localTeam();
+const ord = (M.squadOrders && M.squadOrders[t]) || 'auto';
+const cw = 264, ch = 52, px = 14, py = H - ch - 34;
+const opts = [
+['focus', '1', '集火', '255,165,100'],
+['protect', '2', '掩护', '130,220,255'],
+['spread', '3', '游击', '140,240,180'],
+];
+ctx.save();
+ctx.fillStyle = 'rgba(8,10,24,0.82)'; ctx.fillRect(px, py, cw, ch);
+ctx.strokeStyle = 'rgba(233,196,106,0.55)'; ctx.lineWidth = 1.2; ctx.strokeRect(px, py, cw, ch);
+ctx.font = `bold 11.5px ${TITLE_FONT}`; ctx.fillStyle = '#e9c46a'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+ctx.fillText(`${cvT('战队指令')}  [Tab ${cvT('指挥面板')}]`, px + 8, py + 5);
+const bw = (cw - 16 - 12) / 3;
+opts.forEach(([id, k, n, rgb], i) => {
+const x = px + 8 + i * (bw + 6), on = ord === id;
+ctx.fillStyle = on ? `rgba(${rgb},0.34)` : 'rgba(255,255,255,0.05)'; ctx.fillRect(x, py + 23, bw, 22);
+ctx.strokeStyle = on ? `rgb(${rgb})` : 'rgba(255,255,255,0.18)'; ctx.lineWidth = on ? 1.8 : 1; ctx.strokeRect(x, py + 23, bw, 22);
+ctx.font = `bold 11.5px ${BODY_FONT}`; ctx.fillStyle = on ? '#ffffff' : 'rgba(239,232,216,0.82)'; ctx.textAlign = 'center';
+ctx.fillText(`${k} ${cvT(n)}`, x + bw / 2, py + 28);
+});
 ctx.restore();
 }
 function drawTabScoreboard() {
@@ -45900,7 +46096,7 @@ if (name === 'tasks') renderTasks();
 if (name === 'replays') renderReplays();
 if (name === 'netp') renderRankLine();
 if (name === 'single') renderStages();
-if (name === 'settings') { settingsBack = 'menu'; buildSettings(); }
+if (name === 'settings') { if (M.mode === 'demo' || !paused) settingsBack = 'menu'; buildSettings(); }
 if (name === 'codex') openCodex();
 if (name === 'community') openCommunity();
 if (name === 'armory') prepareArmory();
@@ -45992,6 +46188,13 @@ heroPickShow(true);
 const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'armory', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare', 'gboss'];
 function navTo(name) {
 initAudio();
+if (name === 'settings' && M.mode !== 'demo') {
+if (!paused) paused = true;
+settingsBack = 'pause';
+buildSettings();
+showScreen('settings');
+return;
+}
 if (name === 'menu') { backToMenu(); return; }
 if (name === 'acc') { openAcc(); return; }
 if (name === 'qfx') { openQfx(); return; }
@@ -46064,7 +46267,13 @@ setTimeout(() => b.classList.remove('pressed'), 900);
 menuGo(b.dataset.go);
 });
 }   // 悬停不再把镜头甩到两边：场景只跟着鼠标轻轻晃（见 renderMenu 里的 MENU_M）
-for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', backToMenu);
+for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('click', () => {
+if (currentScreen === 'help' && settingsBack === 'pause' && M.mode !== 'demo') {
+showScreen('settings');
+return;
+}
+backToMenu();
+});
 (function initExpansionHome() {
 let meleeTeamSize = 5, ctfTeamSize = 5;
 const meleeSeg = $id('meleeSizeSeg');
@@ -46237,9 +46446,20 @@ if (!rebindingKey) return;
 rebindingKey = null;
 window.removeEventListener('keydown', handleKeyRebind, true);
 }
-$id('setHelp').addEventListener('click', () => navTo('help'));
-$id('setDone').addEventListener('click', () => { if (settingsBack === 'pause') showScreen('pause'); else backToMenu(); });
-$id('pauseSet').addEventListener('click', () => { settingsBack = 'pause'; buildSettings(); showScreen('settings'); });
+$id('setHelp').addEventListener('click', () => {
+if (settingsBack === 'pause' && M.mode !== 'demo') showScreen('help');
+else navTo('help');
+});
+$id('setDone').addEventListener('click', () => {
+if (settingsBack === 'pause' || (M.mode !== 'demo' && paused)) showScreen('pause');
+else backToMenu();
+});
+$id('pauseSet').addEventListener('click', () => {
+settingsBack = 'pause';
+paused = true;
+buildSettings();
+showScreen('settings');
+});
 const ICONS = {
 passive: '<circle cx="12" cy="12" r="9"/><path d="M12 3a4.5 4.5 0 0 1 0 9 4.5 4.5 0 0 0 0 9"/><circle cx="12" cy="7.5" r="1"/><circle cx="12" cy="16.5" r="1"/>',
 light: '<path d="M20 4L7 17l-3 3 1-4L18 3l2 1zM5.5 14.5l4 4M14 6l4 4"/>',
@@ -49440,15 +49660,16 @@ window.addEventListener(type, preventGameplayZoom, { passive: false });
 for (const b of document.querySelectorAll('#touchUI [data-a]')) {
 b.addEventListener('pointerdown', e => {
 e.preventDefault(); initAudio(); haptic(12); try { b.setPointerCapture(e.pointerId); } catch (err) {} b.classList.add('on');
-if (secretEnabled) return;
 const c = human[0], a = b.dataset.a;
+if (typeof secretNoteHumanInput === 'function') secretNoteHumanInput(a, true);
 if (a === 'atk') { c.held.atk = true; c.atkT = clock; c.press('light'); }
 else if (a === 'jump') { TUI.jumpHeld = true; touchHeldJump(); c.press('jump'); }
 else if (a === 'skill2') { if (c.held.atk) { c.atkT = clock + 1e6; delete c.buf.light; } c.press('skill2'); }
 else c.press(a);
 });
 const up = e => {
-b.classList.remove('on'); if (secretEnabled) return; const c = human[0], a = b.dataset.a;
+b.classList.remove('on'); const c = human[0], a = b.dataset.a;
+if (typeof secretNoteHumanInput === 'function') secretNoteHumanInput(a, false);
 if (a === 'atk') c.held.atk = false;
 if (a === 'jump') { TUI.jumpHeld = false; touchHeldJump(); }
 };
@@ -49456,7 +49677,6 @@ b.addEventListener('pointerup', up); b.addEventListener('pointercancel', up);
 }
 const st = $id('tStick'), kn = $id('tKnob');
 const move = e => {
-if (secretEnabled) return;
 const r = st.getBoundingClientRect(), R0 = r.width / 2;
 let dx = e.clientX - (r.left + R0), dy = e.clientY - (r.top + R0); const l = Math.hypot(dx, dy);
 if (l > R0) { dx *= R0 / l; dy *= R0 / l; }
@@ -49469,10 +49689,23 @@ h.down = downNow; TUI.stickDown = downNow;
 const upNow = ny < -0.6 && Math.abs(nx) < 0.8;
 if (upNow && !TUI.stickUp) human[0].press('jump');
 TUI.stickUp = upNow; touchHeldJump();
+if (typeof secretNoteHumanInput === 'function') {
+secretNoteHumanInput('left', h.left);
+secretNoteHumanInput('right', h.right);
+secretNoteHumanInput('down', h.down);
+secretNoteHumanInput('jump', h.jump);
+}
 };
 st.addEventListener('pointerdown', e => { e.preventDefault(); initAudio(); TUI.stick = e.pointerId; try { st.setPointerCapture(e.pointerId); } catch (err) {} move(e); });
 st.addEventListener('pointermove', e => { if (e.pointerId === TUI.stick) move(e); });
-const end = e => { if (e.pointerId !== TUI.stick) return; TUI.stick = null; kn.style.transform = ''; if (secretEnabled) return; const h = human[0].held; h.left = h.right = h.down = false; TUI.stickUp = false; TUI.stickDown = false; touchHeldJump(); };
+const end = e => {
+if (e.pointerId !== TUI.stick) return;
+TUI.stick = null; kn.style.transform = '';
+const h = human[0].held; h.left = h.right = h.down = false; TUI.stickUp = false; TUI.stickDown = false; touchHeldJump();
+if (typeof secretNoteHumanInput === 'function') {
+secretNoteHumanInput('left', false); secretNoteHumanInput('right', false); secretNoteHumanInput('down', false); secretNoteHumanInput('jump', false);
+}
+};
 st.addEventListener('pointerup', end); st.addEventListener('pointercancel', end);
 $id('tPause').addEventListener('click', () => { if (M.mode !== 'net' && M.phase !== 'end') { paused = true; showScreen('pause'); } });
 $id('tDummy').addEventListener('click', () => dummyBarShow(true));   // 打开对手行为栏（21-buttons-02-training.js）
@@ -49652,7 +49885,8 @@ menuTransition++;
 const prev = currentScreen; currentScreen = id;
 for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'mapBriefing', 'buffDraft', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'langPrompt', 'gboss', 'sagaTalk']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
 if (id && $id(id)) $id(id).classList.add('scr-seen');   // 打开过的面板才排版，见 style.css 的 .scr-seen
-$id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id));
+const inMatchOverlay = (id === 'settings' || id === 'help') && settingsBack === 'pause' && M.mode !== 'demo';
+$id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id) || inMatchOverlay);
 if (id !== 'settings') cancelKeyRebind();
 if (id !== 'bp') {
 try { showPop(null); } catch (e) {}
@@ -49675,7 +49909,7 @@ for (const b of document.querySelectorAll('#menu .mcard.pressed')) b.classList.r
 menuCam.tx = 0; menuCam.tz = 1;
 }
 if (id === 'netp') renderLobby();
-const nav = NAV_SCREENS.includes(id);   // 离线版也用顶栏（离线用不到的按钮由 body.offline 藏起来）
+const nav = NAV_SCREENS.includes(id) && !inMatchOverlay;   // 对局中打开设置/帮助时不显示首页顶栏，避免误跳转回主页
 $id('topNav').classList.toggle('hidden', !nav);
 document.body.classList.toggle('has-nav', nav);
 if (nav) {
@@ -52003,12 +52237,12 @@ if (!BP || BP.step >= bpSteps().length) return false;
 const isWatch = bpMode === 'cpuWatch' || (bpCustomOpts && bpCustomOpts.isWatch);
 if (isWatch) return false;
 if (isLocalBothHumanBP()) return true;
-if (bpMode === '2v2' && bpCustomOpts && bpCustomOpts.subMode === 'p_cc') {
+if ((bpMode === '2v2' && bpCustomOpts && bpCustomOpts.subMode === 'p_cc') || bpMode === 'melee' || bpMode === 'ctf') {
 const curStep = bpSteps()[BP.step];
 if (curStep[0] !== bpMySide()) return false;
-const priorPicksSide0 = bpSteps().slice(0, BP.step).filter(st => st[0] === 0 && st[1] === 'pick').length;
-if (curStep[1] === 'pick' && priorPicksSide0 >= 1) return false;
-return true;
+if (curStep[1] === 'ban') return true;
+const priorPicksMine = bpSteps().slice(0, BP.step).filter(st => st[0] === bpMySide() && st[1] === 'pick').length;
+return priorPicksMine < 1;
 }
 return bpSteps()[BP.step][0] === bpMySide();
 };
@@ -55570,6 +55804,12 @@ const CMD_ROLES = [
 { id: 'lure', n: '牵制', g: '牵' },
 { id: 'peel', n: '破连', g: '缠' },
 ];
+const CMD_FORMATIONS = [
+{ id: 'auto', n: '自由阵型', sub: '依战术自然站位' },
+{ id: 'group', n: '抱团集结', sub: '全队向队伍中心靠拢' },
+{ id: 'escort', n: '护卫统帅', sub: '紧随玩家身侧协防' },
+{ id: 'spread', n: '分散包抄', sub: '拉开间距多线牵制' },
+];
 const CMD_HP_BONUS = 1.35;
 const CMD_BEAT_MUL = 1.18, CMD_BEATEN_MUL = 0.88;
 const cmdOn = () => !!M.cmd;
@@ -55674,18 +55914,157 @@ for (const m of targets) C.role[m.idx] = next;
 const c = cmdFighter(t);
 if (c && !RESIM) addP({ type: 'text', text: `${C.sel >= 0 ? cvT(targets[0].look.name) : cvT('全队')} · ${cvT(CMD_ROLES[next].n)}`, x: c.x, y: c.y - 128, life: 0.9, max: 0.9, rgb: '255,235,150' });
 }
-function cmdTabDown() {
-if (!M.cmd) return;
-M.cmd.tabAt = performance.now();
-setTimeout(() => { if (M.cmd && M.cmd.tabAt > 0 && typeof TAB_SCOREBOARD !== 'undefined') TAB_SCOREBOARD = true; }, 260);
+let TEAM_CMD_OPEN = false;
+function teamCmdEligible() {
+if (M.mode === 'demo' || M.watchAi || !isMulti()) return false;
+const t = localTeam();
+const mates = sideFighters(t).filter(f => !f.hidden);
+return mates.length > 1 && mates.some(f => human.includes(f.ctrl));
 }
-function cmdTabUp() {
-const C = M.cmd; if (!C) { TAB_SCOREBOARD = false; return; }
-const held = performance.now() - C.tabAt;
-C.tabAt = 0;
-if (held < 260 && !TAB_SCOREBOARD) cmdCycleTactic();
-TAB_SCOREBOARD = false;
+function teamCmdOpen() {
+const el = typeof $id === 'function' ? $id('teamCmdPanel') : null;
+return !!(TEAM_CMD_OPEN && el && !el.classList.contains('hidden'));
 }
+function teamCmdClose() {
+TEAM_CMD_OPEN = false;
+const el = typeof $id === 'function' ? $id('teamCmdPanel') : null;
+if (el) el.classList.add('hidden');
+if (typeof refocusGame === 'function' && M.mode !== 'demo' && !paused && !document.querySelector('.scr.on')) refocusGame();
+}
+function toggleTeamCmdPanel(force) {
+if (force === false) { teamCmdClose(); return false; }
+if (!teamCmdEligible()) return false;
+const next = force === true ? true : !teamCmdOpen();
+TEAM_CMD_OPEN = next;
+const el = typeof $id === 'function' ? $id('teamCmdPanel') : null;
+if (!el) return false;
+el.classList.toggle('hidden', !next);
+if (next) {
+if (typeof TAB_SCOREBOARD !== 'undefined') TAB_SCOREBOARD = false;
+renderTeamCmdPanel();
+} else if (typeof refocusGame === 'function' && M.mode !== 'demo' && !paused && !document.querySelector('.scr.on')) {
+refocusGame();
+}
+return next;
+}
+function teamCmdSetTactic(tac) {
+const t = localTeam();
+const orderMap = { spear: 'focus', wall: 'protect', raid: 'spread' };
+if (M.cmd) {
+cmdSet(t, tac, true);
+} else {
+if (!Array.isArray(M.squadOrders)) M.squadOrders = ['auto', 'auto', 'auto', 'auto'];
+M.squadOrders[t] = orderMap[tac] || 'auto';
+const lf = sideFighters(t).find(m => human.includes(m.ctrl)) || fighterByIdx(localIdx());
+const d = CMD_TACTICS[tac];
+if (lf && d && !RESIM) {
+addP({ type: 'text', text: `${cvT('令')} · ${cvT(d.n)}（${cvT(d.sub)}）`, x: lf.x, y: lf.y - 132, life: 1.0, max: 1.0, rgb: d.rgb });
+ring(lf.x, lf.y - 56, 120, d.rgb, 0.42);
+}
+}
+if (teamCmdOpen()) renderTeamCmdPanel();
+}
+function teamCmdSetFormation(fm) {
+const t = localTeam();
+if (!Array.isArray(M.teamFormation)) M.teamFormation = ['auto', 'auto', 'auto', 'auto'];
+M.teamFormation[t] = fm;
+const lf = sideFighters(t).find(m => human.includes(m.ctrl)) || fighterByIdx(localIdx());
+const fObj = CMD_FORMATIONS.find(x => x.id === fm);
+if (lf && fObj && !RESIM) {
+addP({ type: 'text', text: `${cvT('阵型')} · ${cvT(fObj.n)}`, x: lf.x, y: lf.y - 118, life: 0.9, max: 0.9, rgb: '140,225,255' });
+}
+if (teamCmdOpen()) renderTeamCmdPanel();
+}
+function teamCmdSetFocus(enemyIdx) {
+const t = localTeam();
+if (!Array.isArray(M.teamFocus)) M.teamFocus = [-1, -1, -1, -1];
+M.teamFocus[t] = enemyIdx;
+if (M.cmd && M.cmd.team[t]) { M.cmd.team[t].focus = enemyIdx; M.cmd.team[t].focusT = clock + 12; }
+const lf = sideFighters(t).find(m => human.includes(m.ctrl)) || fighterByIdx(localIdx());
+if (lf) lf.lockIdx = enemyIdx;
+const tgt = enemyIdx >= 0 ? FIGHTERS[enemyIdx] : null;
+if (tgt && !RESIM) {
+ring(tgt.x, tgt.y - 58, 92, '255,100,90', 0.36);
+addP({ type: 'text', text: `${cvT('全队集火')} · ${cvT(tgt.look.name)}`, x: tgt.x, y: tgt.y - 122, life: 0.95, max: 0.95, rgb: '255,150,120' });
+}
+for (const m of sideFighters(t)) if (!human.includes(m.ctrl)) { m.cmdTgt = enemyIdx; m.cmdTgtT = enemyIdx >= 0 ? clock + 1.2 : 0; }
+if (teamCmdOpen()) renderTeamCmdPanel();
+}
+function teamCmdSetRole(fighterIdx, roleIdx) {
+const t = localTeam();
+if (!Array.isArray(M.teamRoles)) M.teamRoles = new Array(MAX_FIGHTERS).fill(0);
+const mates = fighterIdx < 0
+? sideFighters(t).filter(m => !m.hidden && !human.includes(m.ctrl))
+: [FIGHTERS[fighterIdx]].filter(m => m && !m.hidden);
+for (const m of mates) {
+M.teamRoles[m.idx] = roleIdx;
+if (M.cmd && M.cmd.role) M.cmd.role[m.idx] = roleIdx;
+m.cmdTgtT = 0;
+}
+if (teamCmdOpen()) renderTeamCmdPanel();
+}
+function renderTeamCmdPanel() {
+const body = typeof $id === 'function' ? $id('tcpBody') : null;
+if (!body || !teamCmdEligible()) return;
+const t = localTeam();
+const curTac = M.cmd && M.cmd.team[t] ? M.cmd.team[t].tactic : ({ focus: 'spear', protect: 'wall', spread: 'raid' }[M.squadOrders?.[t]] || '');
+const curForm = (M.teamFormation && M.teamFormation[t]) || 'auto';
+const curFocus = (M.teamFocus && M.teamFocus[t] >= 0) ? M.teamFocus[t] : -1;
+const lf = sideFighters(t).find(m => human.includes(m.ctrl)) || fighterByIdx(localIdx());
+const foes = lf ? foesOf(lf).filter(e => !e.hidden) : [];
+const mates = sideFighters(t).filter(m => !m.hidden && !human.includes(m.ctrl));
+const badge = $id('tcpModeBadge');
+if (badge) badge.textContent = M.cmd ? `${cvT('统帅战术')} · ${cvT(cmdTacName(curTac))}` : `${cvT('小队协同')} · ${mates.length} ${cvT('名 AI 队友')}`;
+const tacBtns = CMD_ORDER.map(id => {
+const d = CMD_TACTICS[id];
+return `<button type="button" class="tcp-btn${curTac === id ? ' sel' : ''}" data-tcp-tac="${id}"><b>[${d.key}]</b> ${cvT(d.n)} <small>${cvT(d.sub)}</small></button>`;
+}).join('');
+const formBtns = CMD_FORMATIONS.map(f => `<button type="button" class="tcp-btn${curForm === f.id ? ' sel' : ''}" data-tcp-form="${f.id}" title="${cvT(f.sub)}">${cvT(f.n)}</button>`).join('');
+const focusBtns = `<button type="button" class="tcp-btn${curFocus < 0 ? ' sel' : ''}" data-tcp-focus="-1">${cvT('自动 / 跟随统帅')}</button>` + foes.map(e => {
+const dead = e.hp <= 0;
+const pct = Math.max(0, Math.round((e.hp / Math.max(1, e.maxHp)) * 100));
+return `<button type="button" class="tcp-btn${curFocus === e.idx ? ' sel' : ''}${dead ? ' dead' : ''}" data-tcp-focus="${e.idx}"${dead ? ' disabled' : ''}>${escapeHTML(cvT(e.look.name))} <small>${dead ? cvT('阵亡') : pct + '%'}</small></button>`;
+}).join('');
+const allRoleBtns = CMD_ROLES.map((r, ri) => `<button type="button" class="tcp-btn" data-tcp-role-all="${ri}">${cvT('全队')}${cvT(r.n)}</button>`).join('');
+const mateRows = mates.length ? mates.map(m => {
+const curR = (M.cmd && M.cmd.role ? M.cmd.role[m.idx] : (M.teamRoles ? M.teamRoles[m.idx] : 0)) || 0;
+const pct = Math.max(0, Math.round((m.hp / Math.max(1, m.maxHp)) * 100));
+return `<div class="tcp-mate-row"><div class="tcp-mate-info"><b>${escapeHTML(cvT(m.look.name))}</b><span class="tcp-mate-hp">${m.hp <= 0 ? cvT('阵亡') : `${Math.round(m.hp)}/${m.maxHp} (${pct}%)`}</span></div><div class="tcp-role-grp">${CMD_ROLES.map((r, ri) => `<button type="button" class="tcp-btn${curR === ri ? ' sel' : ''}" data-tcp-mate="${m.idx}" data-tcp-role="${ri}">${cvT(r.n)}</button>`).join('')}</div></div>`;
+}).join('') : `<div class="tcp-mate-hp">${cvT('当前队伍暂无 AI 队友')}</div>`;
+const tc = isLargeTeam() ? teamCount() : 2;
+const ovCols = Array.from({ length: tc }, (_, ti) => {
+const list = sideFighters(ti).filter(f => !f.hidden);
+const title = tc > 2 ? cvT(QUAD_TEAMS[ti].n) + (ti === t ? ' (' + cvT('我方') + ')' : '') : cvT(ti === t ? '我方阵营' : '敌方阵营');
+const col = tc > 2 ? QUAD_TEAMS[ti].hex : (ti === t ? '#6fe0ff' : '#ff7878');
+return `<div class="tcp-team-col"><b style="color:${col}">${title}</b>${list.map(f => `<div class="tcp-ov-row"><span>${f.idx === localIdx() ? '★ ' : ''}${cmdIs(f) ? cvT('帅') + ' ' : ''}${escapeHTML(cvT(f.look.name))}</span><span>${f.hp <= 0 ? cvT('阵亡') : `${Math.round(f.hp)}/${f.maxHp}`}</span></div>`).join('')}</div>`;
+}).join('');
+body.innerHTML = `
+<section class="tcp-sec"><div class="tcp-sec-h"><span>${cvT('战队战术')}</span><small>${cvT('锋矢 > 铁壁 > 游袭 > 锋矢')}</small></div><div class="tcp-btns">${tacBtns}</div></section>
+<section class="tcp-sec"><div class="tcp-sec-h"><span>${cvT('阵型与集结')}</span><small>${cvT('控制 AI 队友站位与聚散')}</small></div><div class="tcp-btns">${formBtns}</div></section>
+<section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('目标集火')}</span><small>${cvT('指定全队 AI 优先攻击的目标')}</small></div><div class="tcp-btns">${focusBtns}</div></section>
+<section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('队友分工')}</span><div class="tcp-btns">${allRoleBtns}</div></div><div class="tcp-mates">${mateRows}</div></section>
+<section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('战况总览')}</span></div><div class="tcp-overview">${ovCols}</div></section>
+`;
+}
+if (typeof document !== 'undefined') {
+const tcpEl = $id('teamCmdPanel');
+if (tcpEl) tcpEl.addEventListener('click', e => {
+const tBtn = e.target.closest('[data-tcp-tac]');
+if (tBtn) { teamCmdSetTactic(tBtn.dataset.tcpTac); return; }
+const fBtn = e.target.closest('[data-tcp-form]');
+if (fBtn) { teamCmdSetFormation(fBtn.dataset.tcpForm); return; }
+const fcBtn = e.target.closest('[data-tcp-focus]');
+if (fcBtn) { teamCmdSetFocus(+fcBtn.dataset.tcpFocus); return; }
+const raBtn = e.target.closest('[data-tcp-role-all]');
+if (raBtn) { teamCmdSetRole(-1, +raBtn.dataset.tcpRoleAll); return; }
+const mrBtn = e.target.closest('[data-tcp-mate]');
+if (mrBtn) { teamCmdSetRole(+mrBtn.dataset.tcpMate, +mrBtn.dataset.tcpRole); return; }
+});
+const tcpClose = $id('tcpCloseBtn');
+if (tcpClose) tcpClose.addEventListener('click', () => teamCmdClose());
+}
+function cmdTabDown() { toggleTeamCmdPanel(); }
+function cmdTabUp() {}
 function cmdTick() {
 const C = M.cmd;
 if (C && M.phase === 'intro') {   // 开战前就能下令：按键在这里处理（fight 阶段由 tryTacticalKeys 处理）
@@ -55757,6 +56136,12 @@ return r < 0.4 ? 'peel' : 'auto';
 const cmdAlive = (e, list) => e && !e.hidden && e.hp > 0 && list.includes(e);
 function cmdFocusOf(t, list, distance) {
 const T = M.cmd.team[t], cmdr = FIGHTERS[T.cmdr];
+const explicitIdx = (M.teamFocus && M.teamFocus[t] >= 0) ? M.teamFocus[t] : -1;
+if (explicitIdx >= 0) {
+const ef = FIGHTERS[explicitIdx];
+if (cmdAlive(ef, list)) return ef;
+if (M.teamFocus) M.teamFocus[t] = -1;
+}
 if (cmdr && human.includes(cmdr.ctrl)) {
 const c = cmdr.lockIdx >= 0 ? FIGHTERS[cmdr.lockIdx] : cmdr.target;
 return cmdAlive(c, list) ? c : null;
@@ -55837,7 +56222,8 @@ return pick;
 function cmdAiMod(me, foe, d) {
 const C = M.cmd; if (!C || human.includes(me.ctrl)) return null;
 const t = fighterTeam(me), tac = cmdTacticOf(t), role = cmdRoleOf(me);
-if (!tac && role === 'auto') return null;
+const fm = (M.teamFormation && M.teamFormation[t]) || 'auto';
+if (!tac && role === 'auto' && fm === 'auto') return null;
 const m = { aggr: 1, range: 1, block: 0, dir: 0 };
 if (tac === 'spear') { m.aggr = 1.3; m.range = 0.88; }
 else if (tac === 'raid') { m.aggr = 1.12; m.range = 1.14; }
@@ -55846,8 +56232,55 @@ if (role === 'main') m.aggr *= 1.12;
 else if (role === 'lure') { m.aggr *= 0.82; m.range *= 1.12; m.block += 0.12; }
 else if (role === 'peel') m.aggr *= 1.18;
 const cmdr = cmdFighter(t);
-if (tac === 'wall' && cmdr && cmdr !== me && cmdr.hp > 0 && d > 330 && Math.abs(me.x - cmdr.x) > 300) m.dir = Math.sign(cmdr.x - me.x);   // 离统帅太远又没人贴身：先回到统帅身边
-else if (tac === 'spear' && d > 260) m.dir = Math.sign(foe.x - me.x);                                                                   // 锋矢：不磨蹭，直扑目标
+if (fm === 'escort' && cmdr && cmdr !== me && cmdr.hp > 0 && Math.abs(me.x - cmdr.x) > 220 && d > 220) {
+m.dir = Math.sign(cmdr.x - me.x);
+} else if (fm === 'group') {
+const alive = sideFighters(t).filter(x => !x.hidden && x.hp > 0);
+if (alive.length > 1) {
+const cx = alive.reduce((s, x) => s + x.x, 0) / alive.length;
+if (Math.abs(me.x - cx) > 210 && d > 220) m.dir = Math.sign(cx - me.x);
+}
+} else if (fm === 'spread') {
+const nearMate = sideFighters(t).find(x => x !== me && !x.hidden && x.hp > 0 && Math.abs(x.x - me.x) < 150);
+if (nearMate && d > 190) m.dir = Math.sign(me.x - nearMate.x) || (me.idx % 2 ? 1 : -1);
+} else if (tac === 'wall' && cmdr && cmdr !== me && cmdr.hp > 0 && d > 330 && Math.abs(me.x - cmdr.x) > 300) {
+m.dir = Math.sign(cmdr.x - me.x);
+} else if (tac === 'spear' && d > 260) {
+m.dir = Math.sign(foe.x - me.x);
+}
+return m;
+}
+function squadAiMod(me, foe, d) {
+if (M.cmd) return cmdAiMod(me, foe, d);
+if (!isMulti() || human.includes(me.ctrl)) return null;
+const t = fighterTeam(me);
+const ord = (M.squadOrders && M.squadOrders[t]) || 'auto';
+const fm = (M.teamFormation && M.teamFormation[t]) || 'auto';
+const roleIdx = (M.teamRoles && M.teamRoles[me.idx]) || 0;
+const role = CMD_ROLES[roleIdx] ? CMD_ROLES[roleIdx].id : 'auto';
+if (ord === 'auto' && fm === 'auto' && role === 'auto') return null;
+const m = { aggr: 1, range: 1, block: 0, dir: 0 };
+if (ord === 'focus') { m.aggr = 1.26; m.range = 0.9; }
+else if (ord === 'protect') { m.aggr = 0.82; m.block = 0.28; }
+else if (ord === 'spread') { m.aggr = 1.1; m.range = 1.14; }
+if (role === 'main') m.aggr *= 1.12;
+else if (role === 'lure') { m.aggr *= 0.84; m.range *= 1.12; m.block += 0.12; }
+else if (role === 'peel') m.aggr *= 1.16;
+const leader = sideFighters(t).find(x => !x.hidden && x.hp > 0 && human.includes(x.ctrl));
+if ((fm === 'escort' || ord === 'protect') && leader && leader !== me && Math.abs(me.x - leader.x) > 240 && d > 240) {
+m.dir = Math.sign(leader.x - me.x);
+} else if (fm === 'group') {
+const alive = sideFighters(t).filter(x => !x.hidden && x.hp > 0);
+if (alive.length > 1) {
+const cx = alive.reduce((s, x) => s + x.x, 0) / alive.length;
+if (Math.abs(me.x - cx) > 210 && d > 220) m.dir = Math.sign(cx - me.x);
+}
+} else if (fm === 'spread' || ord === 'spread') {
+const nearMate = sideFighters(t).find(x => x !== me && !x.hidden && x.hp > 0 && Math.abs(x.x - me.x) < 150);
+if (nearMate && d > 190) m.dir = Math.sign(me.x - nearMate.x) || 1;
+} else if (ord === 'focus' && d > 260) {
+m.dir = Math.sign(foe.x - me.x);
+}
 return m;
 }
 function cmdDmgMul(att, def) {
@@ -55908,7 +56341,7 @@ ctx.fillStyle = 'rgba(8,10,24,0.82)'; ctx.fillRect(px, py, cw, ch);
 ctx.strokeStyle = 'rgba(233,196,106,0.6)'; ctx.lineWidth = 1.2; ctx.strokeRect(px, py, cw, ch);
 ctx.textAlign = 'left'; ctx.textBaseline = 'top';
 ctx.font = `bold 12px ${TITLE_FONT}`; ctx.fillStyle = '#e9c46a';
-ctx.fillText(`${cvT('统帅')} · ${cvT('战术')}${down ? ' (' + cvT('暂停') + ')' : ''}  [Tab ${cvT('轮换')}]`, px + 8, py + 6);
+ctx.fillText(`${cvT('统帅')} · ${cvT('战术')}${down ? ' (' + cvT('暂停') + ')' : ''}  [Tab ${cvT('指挥面板')}]`, px + 8, py + 6);
 const bw = (cw - 16 - 12) / 3;
 CMD_ORDER.forEach((id, i) => {
 const d = CMD_TACTICS[id], x = px + 8 + i * (bw + 6), on = T.tactic === id;
@@ -58536,7 +58969,7 @@ BP.matchSeed = Number.isInteger(customOpts.matchSeed) ? customOpts.matchSeed : n
 if (['cpu', 'cpuWatch', 'chaos', 'mayhem', 'maps', 'tag3', '2v2'].includes(mode) || (mode === 'net' && !md.raid)) {
 BP.preMatch = preMatchCreate(BP.mapId, BP.matchSeed === null ? (Math.random() * 0x100000000) >>> 0 : BP.matchSeed >>> 0);
 }
-bpSel = -1; bpCpuT = BP_CPU_DELAY;
+bpSel = -1; bpCpuT = bpCpuDelayForStep();
 showScreen('bp'); renderBP();
 if (mode === 'net') send({ bps: BP });
 }
@@ -58621,7 +59054,7 @@ else slots[slots.length - 1] = i;
 BP.picks[side] = i;
 }
 }
-BP.step++; BP.t = BP_TIME; bpSel = -1; bpCpuT = BP_CPU_DELAY;
+BP.step++; BP.t = BP_TIME; bpSel = -1; bpCpuT = bpCpuDelayForStep();
 if (BP.preMatch && BP.step >= bpSteps().length) preMatchSetPicks(BP.preMatch, BP.picks);
 if (type === 'ban') SFX.thud(); else { SFX.block(); }
 if (bpMode === 'net') send({ bps: BP });
@@ -58631,7 +59064,8 @@ while (BP && BP.step < bpSteps().length && bpValidList().length) bpApply(bpCpuCh
 }
 if (BP.step >= bpSteps().length) {
 if (bpFinishTimer) clearTimeout(bpFinishTimer);
-bpFinishTimer = setTimeout(bpFinish, bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay ? 0 : 1100);
+const finishDelay = (bpMode === 'tag3' && bpCustomOpts && bpCustomOpts.quickRelay) ? 0 : (bpMode === 'melee' || bpMode === 'ctf') ? 450 : 1100;
+bpFinishTimer = setTimeout(bpFinish, finishDelay);
 }
 }
 function bpFinish() {
@@ -58777,6 +59211,16 @@ if (counters.length) return counters[Math.random() * counters.length | 0];
 }
 }
 return valid[Math.random() * valid.length | 0];
+}
+function bpCpuDelayForStep() {
+if (!BP) return BP_CPU_DELAY;
+if (bpMode === 'melee' || bpMode === 'ctf') {
+const total = bpSteps().length;
+if (total >= 24) return 0.04;
+if (total >= 16) return 0.06;
+return 0.12;
+}
+return BP_CPU_DELAY;
 }
 function bpTick(dt) {
 if (bpMode === 'watch2v2') { bpTickWatch2v2(dt); return; }
@@ -60372,6 +60816,11 @@ try { e.target.blur(); } catch (err) {}
 refocusGame();
 }
 const onBtn = (scr) => e.target && e.target.tagName === 'BUTTON' && e.target.closest('#' + scr);   // 键盘选中了页上某个按钮：Enter / 空格按它，不走快捷键
+if (paused && document.getElementById('settings') && document.getElementById('settings').classList.contains('on') && e.code === 'Escape') {
+e.preventDefault();
+showScreen('pause');
+return;
+}
 if (paused && document.getElementById('pause').classList.contains('on')) {
 if (e.code === 'KeyP' || e.code === 'Escape' || ((e.code === 'Space' || e.code === 'Enter') && !onBtn('pause'))) {
 e.preventDefault();
@@ -60398,7 +60847,13 @@ if (againBtn && !againBtn.disabled && againBtn.style.display !== 'none') againBt
 return;
 }
 }
+if (typeof teamCmdOpen === 'function' && teamCmdOpen() && e.code === 'Escape') {
+e.preventDefault();
+teamCmdClose();
+return;
+}
 if ((e.code === 'KeyP' || e.code === 'Escape') && M.mode !== 'demo' && M.mode !== 'net' && !['end', 'perk', 'draft', 'talk'].includes(M.phase)) {   // 抽秘卷、剧情对话时不弹暂停
+if (typeof teamCmdClose === 'function') teamCmdClose();
 paused = !paused; showScreen(paused ? 'pause' : null); if (!paused) refocusGame(); return;
 }
 if (M.mode === 'demo') return;
@@ -60409,9 +60864,9 @@ if (e.code === 'KeyV' && typeof bastionFireSos === 'function') { e.preventDefaul
 if (e.code === 'KeyG' && typeof bastionCastCompanionSkill === 'function') { e.preventDefault(); bastionCastCompanionSkill(); return; }
 if (e.code === 'KeyB' && typeof bastionToggleArmory === 'function') { e.preventDefault(); bastionToggleArmory(); return; }
 }
-if (M.cmd && e.code === 'Tab' && KEYS[0] && KEYS[0].Tab === 'scoreboard') {   // 团战统帅：轻点 Tab 换战术，按住 Tab 看战况总览
+if ((e.code === 'Tab' || (KEYS[0] && KEYS[0][e.code] === 'scoreboard')) && typeof teamCmdEligible === 'function' && teamCmdEligible() && !paused && !document.querySelector('.scr.on')) {
 e.preventDefault();
-if (!e.repeat) cmdTabDown();
+if (!e.repeat) toggleTeamCmdPanel();
 return;
 }
 if (KEYS[0] && KEYS[0][e.code] === 'scoreboard') {
@@ -60443,7 +60898,17 @@ c = human[0];
 c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (typeof isLargeTeam === 'function' && isLargeTeam()) || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
 }
 if (p > 0 && c === human[0] && KEYS[0]?.[e.code]) continue;
-if (secretEnabled && c === human[0] && !REPLAY.on) continue;
+if (c === human[0] && typeof secretNoteHumanInput === 'function') secretNoteHumanInput(act, true);
+if (act === 'orderFocus' || act === 'orderProtect' || act === 'orderSpread') {
+if (!e.repeat) {
+c.press(act);
+if (typeof teamCmdOpen === 'function' && teamCmdOpen()) {
+const tMap = { orderFocus: 'spear', orderProtect: 'wall', orderSpread: 'raid' };
+if (typeof teamCmdSetTactic === 'function') teamCmdSetTactic(tMap[act]);
+}
+}
+continue;
+}
 if (act === 'atk') { if (!e.repeat) { c.held.atk = true; c.atkT = clock; c.press('light'); } continue; }
 if (act === 'jump') { c.held.jump = true; if (!e.repeat) c.press('jump'); continue; }
 if (act === 'left' || act === 'right' || act === 'down') {
@@ -60456,7 +60921,7 @@ if (!e.repeat) c.press(act);
 }
 });
 window.addEventListener('keyup', e => {
-if (M.cmd && e.code === 'Tab' && KEYS[0] && KEYS[0].Tab === 'scoreboard') { cmdTabUp(); return; }
+if ((e.code === 'Tab' || (KEYS[0] && KEYS[0][e.code] === 'scoreboard')) && typeof teamCmdEligible === 'function' && teamCmdEligible()) { return; }
 if (KEYS[0] && KEYS[0][e.code] === 'scoreboard') {
 TAB_SCOREBOARD = false;
 return;
@@ -60482,7 +60947,7 @@ c = human[0];
 c = (M.mode === 'cpu' || M.mode === 'net' || M.mode === 'tag3' || M.mode === 'tower' || (typeof isLargeTeam === 'function' && isLargeTeam()) || (M.mode === 'cuju' && !M.cujuPvp) || (M.mode === 'koth' && !M.kothPvp) || (M.mode === 'party' && !M.partyPvp) || (M.mode === 'bastion' && !M.bastionPvp)) ? human[0] : (human[p] || human[0]);
 }
 if (p > 0 && c === human[0] && KEYS[0]?.[e.code]) continue;
-if (secretEnabled && c === human[0] && !REPLAY.on) continue;
+if (c === human[0] && typeof secretNoteHumanInput === 'function') secretNoteHumanInput(act, false);
 if (act === 'left' || act === 'right' || act === 'down') {
 c.held[act] = false;
 if (c.held.left && !c.held.right) c.held.aim = -1;
@@ -60502,16 +60967,16 @@ return;
 }
 if (M.mode === 'demo') return;
 e.preventDefault();
-if (secretEnabled && !REPLAY.on) return;
 if (SETTINGS.kbOnly === true) return;   // 纯键盘模式：鼠标不出招，1P 只用键盘的攻击键
 const c = human[0];
-if (e.button === 0) { c.held.atk = true; c.atkT = clock; c.press('light'); }
+if (e.button === 0) { if (typeof secretNoteHumanInput === 'function') secretNoteHumanInput('atk', true); c.held.atk = true; c.atkT = clock; c.press('light'); }
 else if (e.button === 2) {   // 右键单点：腾空闪；按住左键时点右键：远程招式
+if (typeof secretNoteHumanInput === 'function') secretNoteHumanInput('dash', true);
 if (c.held.atk) { c.press('skill2'); c.atkT = clock + 1e6; delete c.buf.light; } else c.press('dash');
 }
 });
 cv.addEventListener('pointerdown', () => refocusGame());
-window.addEventListener('mouseup', e => { if (e.button === 0 && !secretEnabled) human[0].held.atk = false; });
+window.addEventListener('mouseup', e => { if (e.button === 0) { if (typeof secretNoteHumanInput === 'function') secretNoteHumanInput('atk', false); human[0].held.atk = false; } });
 cv.addEventListener('wheel', e => {
 if (M.mode === 'demo' || paused || EXT.on || (typeof bastion2dActive === 'function' && bastion2dActive())) return;
 if (document.querySelector('.scr.on')) return;
@@ -60605,7 +61070,7 @@ window.addEventListener('load', () => refocusGame());
 const KBN = { on: false, root: null, key: '', rect: null, mem: new Map() };
 const KBN_FOCUSABLE = 'button, a[href], input:not([type="hidden"]), select, textarea, summary, [tabindex]:not([tabindex="-1"])';
 const KBN_DIR = { ArrowUp: 'u', ArrowDown: 'd', ArrowLeft: 'l', ArrowRight: 'r', KeyW: 'u', KeyS: 'd', KeyA: 'l', KeyD: 'r' };
-const KBN_DIALOGS = '#dummyBar:not(.hidden), .rk-info:not(.hidden), .rk-reveal:not(.hidden), #arModal:not([hidden]), #arIns:not([hidden]), .ui-confirm, #kbHelp:not([hidden])';
+const KBN_DIALOGS = '#teamCmdPanel:not(.hidden), #dummyBar:not(.hidden), .rk-info:not(.hidden), .rk-reveal:not(.hidden), #arModal:not([hidden]), #arIns:not([hidden]), .ui-confirm, #kbHelp:not([hidden])';
 const KBN_BACK = { bp: 'bpQuit', acc: 'accBack', lb: 'lbBack', replays: 'rpBack', settings: 'setDone', towerModal: '' };   // 各页的返回键；空串表示这一页 Esc 不返回
 const kbnRing = document.createElement('div');
 kbnRing.id = 'kbRing'; kbnRing.setAttribute('aria-hidden', 'true');
@@ -60720,6 +61185,7 @@ setInterval(kbnTick, 120);
 function kbnBack(roots) {
 const main = roots[0];
 if (main.id === 'arModal' || main.id === 'arIns') return false;   // 武库自己会用 Esc 收起弹窗和检视
+if (main.id === 'teamCmdPanel') { if (typeof teamCmdClose === 'function') teamCmdClose(); return true; }
 if (main.id === 'kbHelp') { kbHelpShow(false); return true; }
 const close = main.matches('.rk-info, .rk-reveal') && [...main.querySelectorAll('#modal2v2Close, #modalRougeClose, .mm-cancel, [data-close]')].find(kbnShown);
 if (close) { close.click(); return true; }
@@ -60755,6 +61221,11 @@ if (kbnBack(roots)) { kbnOn(); stop(); }
 return;
 }
 if (e.code === 'Tab') {
+if (roots[0] && roots[0].id === 'teamCmdPanel') {
+stop();
+if (typeof teamCmdClose === 'function') teamCmdClose();
+return;
+}
 if (!cands.length) return;
 kbnOn(); stop();
 const i = cands.indexOf(document.activeElement);

@@ -1337,7 +1337,7 @@ class AIBrain {
       return;
     }
     if (this.watch2v2(me, foe, d, to)) return;
-    const cm = M.cmd ? cmdAiMod(me, foe, d) : null;   // 团战统帅的战术：积极度、站位距离、格挡倾向（22-modes-17-command.js）
+    const cm = typeof squadAiMod === 'function' ? squadAiMod(me, foe, d) : (M.cmd ? cmdAiMod(me, foe, d) : null);   // 战队指挥战术与阵型：适用于 2v2、3v3–16v16 团战、夺旗、四象、同袍肉鸽
     if (cm && cm.dir && !this.holdDown && !this.holdAtk) { this.dir = cm.dir; return; }
     // 假动作（绝顶/天道）：贴近半步骗对手出手或乱闪，再退开等它收招
     if (this.feint && clock < this.feint.end) { this.dir = clock < this.feint.turn ? to : -to; return; }

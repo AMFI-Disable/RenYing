@@ -143,6 +143,7 @@ function drawHUD2v2() {
   if (chaosOn()) drawChaosHUD(cx, H - 48, true);
   ctx.fillText(window.I18N ? I18N.t(bTitle) : bTitle, cx, H - 10);
   ctx.restore();
+  if (typeof drawSquadTacticalBar === 'function') drawSquadTacticalBar();
 }
 function hudLocalPlayer(f) {
   if (!f) return false;
@@ -265,6 +266,7 @@ function drawHUDRaid() {
   ctx.font = `bold ${Math.round(24 * u)}px ${TITLE_FONT}`;
   ctx.fillText(Math.ceil(M.timer).toString(), W / 2, topY + Math.round(38 * u));
   ctx.restore();
+  if (typeof drawSquadTacticalBar === 'function') drawSquadTacticalBar();
 }
 function drawHUDLargeTeam() {
   const top = Math.max(16, Math.round(H * 0.025)), cx = W / 2;
@@ -369,10 +371,35 @@ function drawLocalCard() {
     if (!M.cmd) {
       const ordMap = { auto: '自由作战', focus: '全军集火', protect: '回防掩护', spread: '分散游击' };
       ctx.fillStyle = '#e9c46a';
-      ctx.fillText(`${cvT('指令')}: ${cvT(ordMap[M.squadOrders?.[localTeam()] || 'auto'])} [1/2/3]`, px + 8, py + 61);
+      ctx.fillText(`${cvT('指令')}: ${cvT(ordMap[M.squadOrders?.[localTeam()] || 'auto'])} [1/2/3 · Tab${cvT('指挥')}]`, px + 8, py + 61);
     }
   }
   if (chaosOn()) drawChaosHUD(cx, H - 22, true);
+  ctx.restore();
+}
+function drawSquadTacticalBar() {
+  if (M.cmd || typeof teamCmdEligible !== 'function' || !teamCmdEligible()) return;
+  const t = localTeam();
+  const ord = (M.squadOrders && M.squadOrders[t]) || 'auto';
+  const cw = 264, ch = 52, px = 14, py = H - ch - 34;
+  const opts = [
+    ['focus', '1', '集火', '255,165,100'],
+    ['protect', '2', '掩护', '130,220,255'],
+    ['spread', '3', '游击', '140,240,180'],
+  ];
+  ctx.save();
+  ctx.fillStyle = 'rgba(8,10,24,0.82)'; ctx.fillRect(px, py, cw, ch);
+  ctx.strokeStyle = 'rgba(233,196,106,0.55)'; ctx.lineWidth = 1.2; ctx.strokeRect(px, py, cw, ch);
+  ctx.font = `bold 11.5px ${TITLE_FONT}`; ctx.fillStyle = '#e9c46a'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.fillText(`${cvT('战队指令')}  [Tab ${cvT('指挥面板')}]`, px + 8, py + 5);
+  const bw = (cw - 16 - 12) / 3;
+  opts.forEach(([id, k, n, rgb], i) => {
+    const x = px + 8 + i * (bw + 6), on = ord === id;
+    ctx.fillStyle = on ? `rgba(${rgb},0.34)` : 'rgba(255,255,255,0.05)'; ctx.fillRect(x, py + 23, bw, 22);
+    ctx.strokeStyle = on ? `rgb(${rgb})` : 'rgba(255,255,255,0.18)'; ctx.lineWidth = on ? 1.8 : 1; ctx.strokeRect(x, py + 23, bw, 22);
+    ctx.font = `bold 11.5px ${BODY_FONT}`; ctx.fillStyle = on ? '#ffffff' : 'rgba(239,232,216,0.82)'; ctx.textAlign = 'center';
+    ctx.fillText(`${k} ${cvT(n)}`, x + bw / 2, py + 28);
+  });
   ctx.restore();
 }
 function drawTabScoreboard() {

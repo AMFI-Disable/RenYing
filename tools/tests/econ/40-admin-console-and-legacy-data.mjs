@@ -3,7 +3,7 @@
 section('管理后台的查询：总览、找号、操作记录、饰品目录');
 {
   const st = await adm('GET', '/api/admin/stats');
-  ok(st.ok && st.users === row('SELECT COUNT(*) AS n FROM users').n && st.inkTotal === row('SELECT SUM(ink) AS n FROM econ').n && st.accounts === row('SELECT COUNT(*) AS n FROM econ').n, '总览：注册数、武库存档数、全服墨锭对得上', st);
+  ok(st.ok && st.users === row("SELECT COUNT(*) AS n FROM users WHERE COALESCE(password_algo, '') != 'ai-bot-locked'").n && st.inkTotal === row("SELECT COALESCE(SUM(e.ink), 0) AS n FROM econ e LEFT JOIN users u ON u.id = e.uid WHERE COALESCE(u.password_algo, '') != 'ai-bot-locked'").n && st.accounts === row("SELECT COUNT(*) AS n FROM econ e LEFT JOIN users u ON u.id = e.uid WHERE COALESCE(u.password_algo, '') != 'ai-bot-locked'").n, '总览：注册数、武库存档数、全服墨锭对得上', st);
   const f1 = await adm('GET', '/api/admin/find?q=gift');
   ok(f1.ok && f1.users.length === 2 && f1.users.every(u => u.username.startsWith('giftee')), '按昵称开头找', f1.users.map(u => u.username));
   const f2 = await adm('GET', '/api/admin/find?q=' + encodeURIComponent('%')), f3 = await adm('GET', '/api/admin/find?q=_');

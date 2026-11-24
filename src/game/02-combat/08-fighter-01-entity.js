@@ -199,15 +199,32 @@ const foeOf = f => {
   const distance = (a, b) => layered ? Math.abs(a.x - b.x) + Math.abs(a.y - b.y) * 2 : Math.abs(a.x - b.x);
   // 电脑侠客的脑子：正在连招的时候不换人，连招打完才回头反击
   if (!isRaid() && cpuTeamwork(f) && f.target && list.includes(f.target) && brainCommitted(f, f.target)) return f.target;
-  // 电脑侠客的团队意识：支持 1/2/3 战术指令（集火 / 掩护 / 散开）
-  if (!isRaid() && cpuTeamwork(f)) {
+  // 电脑侠客的团队意识：支持 1/2/3 战术指令、Tab 指挥面板的目标集火 / 阵型 / 队友分工（覆盖 2v2、3v3–16v16 团战、夺旗、四象与同袍肉鸽）
+  if (cpuTeamwork(f)) {
     if (M.cmd) { const ct = cmdPickTarget(f, list, distance); if (ct) { f.target = ct; return ct; } }   // 统帅的战术和任务（22-modes-17-command.js）
     const myTeam = fighterTeam(f);
+    // 显式集火目标（由 Tab 指挥面板或 G 锁定设置）
+    const explicitIdx = M.teamFocus && M.teamFocus[myTeam] >= 0 ? M.teamFocus[myTeam] : -1;
+    const explicitTgt = explicitIdx >= 0 ? fighterByIdx(explicitIdx) : null;
+    const roleIdx = (M.teamRoles && M.teamRoles[f.idx]) || 0;
+    const roleId = typeof CMD_ROLES !== 'undefined' && CMD_ROLES[roleIdx] ? CMD_ROLES[roleIdx].id : 'auto';
+    if (roleId === 'peel' && typeof cmdPeelTarget === 'function') {
+      const peelT = cmdPeelTarget(f, list, distance);
+      if (peelT) { f.target = peelT; return peelT; }
+    }
+    if (explicitTgt && !explicitTgt.hidden && explicitTgt.hp > 0 && list.includes(explicitTgt)) {
+      if (roleId === 'lure' && typeof cmdLureTarget === 'function') {
+        const lureT = cmdLureTarget(f, list, explicitTgt, distance);
+        if (lureT) { f.target = lureT; return lureT; }
+      }
+      f.target = explicitTgt; return explicitTgt;
+    }
     const order = M.squadOrders?.[myTeam] || 'auto';
-    if (order !== 'auto') {
-      const playerF = fighterByIdx(myTeam);
-      if (order === 'focus' && playerF && playerF.target && list.includes(playerF.target) && playerF.target.hp > 0) {
-        f.target = playerF.target; return playerF.target;
+    if (order !== 'auto' || roleId !== 'auto') {
+      const playerF = sideFighters(myTeam).find(m => human.includes(m.ctrl)) || fighterByIdx(myTeam);
+      const leaderTarget = playerF && (playerF.lockIdx >= 0 ? fighterByIdx(playerF.lockIdx) : playerF.target);
+      if ((order === 'focus' || roleId === 'main') && leaderTarget && !leaderTarget.hidden && leaderTarget.hp > 0 && list.includes(leaderTarget)) {
+        f.target = leaderTarget; return leaderTarget;
       }
       if (order === 'protect' && playerF && !playerF.hidden && playerF.hp > 0) {
         let nearP = list[0], minD = distance(nearP, playerF);
@@ -219,12 +236,14 @@ const foeOf = f => {
         if (pick) { f.target = pick; return pick; }
       }
     }
-    const mate = is2v2() ? fighterByIdx(f.idx ^ 2) : sideFighters(myTeam).find(m => m !== f && m.hp > 0 && m.hp < m.maxHp * 0.3);
-    const low = list.find(e => e.hp < e.maxHp * 0.25 && distance(e, f) < 700);
-    if (low) { f.target = low; return low; }
-    if (mate && mate !== f && !mate.hidden && mate.hp > 0 && mate.hp < mate.maxHp * 0.3) {
-      const bully = list.find(e => distance(e, mate) < 260);
-      if (bully) { f.target = bully; return bully; }
+    if (!isRaid()) {
+      const mate = is2v2() ? fighterByIdx(f.idx ^ 2) : sideFighters(myTeam).find(m => m !== f && m.hp > 0 && m.hp < m.maxHp * 0.3);
+      const low = list.find(e => e.hp < e.maxHp * 0.25 && distance(e, f) < 700);
+      if (low) { f.target = low; return low; }
+      if (mate && mate !== f && !mate.hidden && mate.hp > 0 && mate.hp < mate.maxHp * 0.3) {
+        const bully = list.find(e => distance(e, mate) < 260);
+        if (bully) { f.target = bully; return bully; }
+      }
     }
   }
   if (!isRaid() && cpuTeamwork(f)) {
