@@ -414,7 +414,7 @@ function drawHUDQuiet() {
 function drawHUD() {
   if (M.mode === 'demo') return;
   if (typeof hudPreset === 'function' && hudPreset() === 'quiet') { drawHUDQuiet(); drawTabScoreboard(); return; }
-  if (isLargeTeam()) { drawHUDLargeTeam(); drawTabScoreboard(); return; }
+  if (isLargeTeam() || ctfOn()) { drawHUDLargeTeam(); drawTabScoreboard(); return; }
   if (isRaid()) { drawHUDRaid(); drawTabScoreboard(); return; }
   if (is2v2()) { drawHUD2v2(); drawTabScoreboard(); return; }
   const barW = Math.min(W * 0.36, 520), bh = Math.max(12, H * 0.02), top = Math.max(22, H * 0.04), cx = W / 2, gap = 56;

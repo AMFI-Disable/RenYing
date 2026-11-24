@@ -3499,7 +3499,7 @@ white-space: nowrap;
 transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
 }
 .arch-pill small {
-font-size: 11px;
+font-size: 12px;
 opacity: 0.72;
 }
 .arch-pill:hover {
@@ -33123,7 +33123,7 @@ spawnProj(foeSetter, { kind: 'bolt', x: hx, y: -360, vx: 0, w: 68, h: 720, life:
 }
 }
 }
-const mayhemOn = () => M.mode === 'mayhem' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'mayhem') || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
+const mayhemOn = () => M.mode === 'mayhem' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'mayhem') || ((M.mode === 'tag3' || M.mode === 'melee' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
 const mapsOn = () => {
 if (M.mode === 'replay' && REPLAY.on) {
 const m = REPLAY.m || {};
@@ -33498,6 +33498,10 @@ if (isWatch && mode !== 'demo') say('AI 对决 · 演武观战', 1.4);
 else if (mode === 'cpu') say('人机切磋 · 实战对练', 1.4);
 }
 function magRoll() { for (const f of allFighters()) if (f.ch.passive === 'magnet') f.pol = grnd() < 0.5 ? 1 : -1; }
+function applyMayhemStats(f) {
+f.maxHp = Math.round(f.maxHp * 10); f.hp = f.lagHp = f.maxHp;
+f.guard = f.maxGuard = 500; f.meter = 100;
+}
 function startRound() {
 M.squadOrders = ['auto', 'auto'];
 M.reviewReady = false;
@@ -33566,12 +33570,8 @@ magRoll();
 if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts();
 if (REC.on && REC.meta) REC.meta.loadouts = allFighters().map(f => ({ unlocked: !!f.stanceUnlocked, stance: f.stance || 0, badge: f.badgeId || '', tier: f.badgeTier || '' }));
 if (M.round === 1) M.combatStats = Array.from({ length: Math.max(4, allFighters().length) }, () => ({ damage: 0, combo: 0, breaks: 0, falls: 0 }));
-const isMayhem = mayhemOn();
-if (isMayhem) {
-for (const f of allFighters()) if (!f.hidden) {
-f.maxHp = Math.round(f.maxHp * 10); f.hp = f.lagHp = f.maxHp;
-f.guard = f.maxGuard = 500; f.meter = 100;
-}
+if (mayhemOn()) {
+for (const f of allFighters()) if (!f.hidden) applyMayhemStats(f);
 }
 if (chaosOn() && M.round === 1) M.chaos = { i: -1, t: 0 };   // 天机乱斗：开打第一帧抽第一条异变（updateChaos），之后的回合接着换
 const foeHp = (LEVEL_BY_ID[M.level] || {}).foeHp || 1;   // 难度表里的电脑气血倍数（绝顶多 35%）
@@ -42868,7 +42868,7 @@ drawSide(eCfg, cx + gap, hp1 / max1, rf ? rf.meter : 0, true, '#ff8a70', '#c42a4
 function drawHUD() {
 if (M.mode === 'demo') return;
 if (typeof hudPreset === 'function' && hudPreset() === 'quiet') { drawHUDQuiet(); drawTabScoreboard(); return; }
-if (isLargeTeam()) { drawHUDLargeTeam(); drawTabScoreboard(); return; }
+if (isLargeTeam() || ctfOn()) { drawHUDLargeTeam(); drawTabScoreboard(); return; }
 if (isRaid()) { drawHUDRaid(); drawTabScoreboard(); return; }
 if (is2v2()) { drawHUD2v2(); drawTabScoreboard(); return; }
 const barW = Math.min(W * 0.36, 520), bh = Math.max(12, H * 0.02), top = Math.max(22, H * 0.04), cx = W / 2, gap = 56;
@@ -48536,8 +48536,12 @@ bpStart('raid', { squadSize: M.raidSquadSize || rougeSquadSize || 3 });
 }
 return;
 }
-if (M.mode === 'melee') { startMelee(M.teamSize, A.chIdx, M.level, M.teamMutator); return; }
-if (M.mode === 'ctf') { startCtf(M.teamSize, A.chIdx, M.level); return; }
+if (M.mode === 'melee' || M.mode === 'ctf') {
+const teams = [0, 1].map(side => sideFighters(side).map(f => f.chIdx));
+if (M.mode === 'melee') startMelee(M.teamSize, A.chIdx, M.level, M.teamMutator, teams);
+else startCtf(M.teamSize, A.chIdx, M.level, teams);
+return;
+}
 if (M.mode === 'gauntlet') { startGauntlet(A.chIdx, M.level); return; }
 const handler = MODE_HANDLERS[M.mode];
 if (handler && handler.rematch) {
@@ -48949,7 +48953,7 @@ const CHAOS_MUTATIONS = [
 { id: "chaos_120", name: "「破军·离火」", icon: "🗡️", type: "crit", val: 1.5, desc: "锋芒毕露，破招破防暴伤提升50% · 炽火焚天，烽烟万里" },
 ];
 let chaosP1 = 0, chaosP2 = 1;
-const chaosOn = () => M.mode === 'chaos' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'chaos') || ((M.mode === 'tag3' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'chaos') || (netRoom() || {}).rule === 'chaos';
+const chaosOn = () => M.mode === 'chaos' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'chaos') || ((M.mode === 'tag3' || M.mode === 'melee' || M.mode === '2v2' || M.mode === 'watch2v2' || M.mode === 'replay' || M.mode === 'net') && M.teamMutator === 'chaos') || (netRoom() || {}).rule === 'chaos';
 function chaosNow(type) {
 const c = chaosOn() && M.chaos, mut = c && c.i >= 0 ? CHAOS_MUTATIONS[c.i] : null;
 return mut && (!type || mut.type === type) ? mut : null;
@@ -53025,6 +53029,7 @@ f.face = team === 0 ? 1 : -1;
 f.invul = 1.1;
 if (f.idx === localIdx()) { f.beaconT = 1.4; camFocusPingT = 0.9; }
 if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
+if (mayhemOn()) applyMayhemStats(f);
 }
 }
 }

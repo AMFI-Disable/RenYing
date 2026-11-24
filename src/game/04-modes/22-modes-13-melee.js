@@ -38,6 +38,7 @@ function meleeMatch() {
           f.invul = 1.1;
           if (f.idx === localIdx()) { f.beaconT = 1.4; camFocusPingT = 0.9; }
           if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
+          if (mayhemOn()) applyMayhemStats(f);
         }
       }
     }
