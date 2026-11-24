@@ -284,6 +284,7 @@
     <button role="tab" data-act="tab" data-tab="audit">操作记录</button>
     <button role="tab" data-act="tab" data-tab="errors">错误</button>
     <button role="tab" data-act="tab" data-tab="play">游玩统计</button>
+    <button role="tab" data-act="tab" data-tab="aiplayers">AI 玩家</button>
     <button role="tab" data-act="tab" data-tab="admins" data-need="all">管理员</button>
   </div></nav>
   <main id="main"></main>
@@ -1366,7 +1367,46 @@ function drawCodeGives() {
   if (el) paint(el, S.codeSkins.map((g, i) => H`<span class="chip">${itemName(g.k)}（${heroOf(g.k)}）${g.st >= 0 ? ' 斩数 ' + g.st : ''}<button type="button" data-act="delcodegive" data-i="${i}" aria-label="去掉">×</button></span>`));
 }
 
-const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, maint: vMaint, auth: vAuth, audit: vAudit, errors: vErrors, play: vPlay, admins: vAdmins };
+async function vAiPlayers() {
+  const r = await api('ai-players');
+  const c = r.counts || {};
+  const profNames = { aggressive: '激进强攻', balanced: '均衡游走', defensive: '稳健防守', tactical: '战术拉扯' };
+  const stNames = { menu: '大厅待机', queue: 'AI 匹配中', match: 'AI 对战中' };
+  return H`<div class="card"><h2>持久化 AI 玩家生态（仅限 AI 互相对战，绝不进入真人匹配）</h2>
+    <p class="hint">共维护 25 个独立 AI 账号，在线总数会计入全服在线与匹配统计，同时精确区分真人与 AI 活跃。市场行为受参考价 0.75x~1.25x、禁止自交易及每日消费/挂单上限保护（每日消耗上限 ${fmtN(r.maxDailySpent || 2500)} 墨锭，挂单上限 ${r.maxDailyListed || 3} 次）。</p>
+    <div class="tiles">
+      <div class="tile"><div class="k">AI 账号总数</div><div class="v">${fmtN((r.list || []).length)}</div></div>
+      <div class="tile"><div class="k">AI 当前在线</div><div class="v">${fmtN(c.aiOnline || 0)}</div></div>
+      <div class="tile"><div class="k">AI 对战中</div><div class="v">${fmtN(c.aiPlaying || 0)}</div></div>
+      <div class="tile"><div class="k">AI 匹配中</div><div class="v">${fmtN(c.aiWaiting || 0)}</div></div>
+      <div class="tile"><div class="k">匿名训练样本</div><div class="v">${fmtN(r.trainingSamples || 0)}</div></div>
+    </div>
+    <div class="row" style="margin-top:12px">
+      <button class="btn" data-act="aitick" data-need="econ">立即演进一轮（含市场）</button>
+    </div>
+  </div>
+  <div class="card"><h2>AI 账号与行为管理</h2>
+    <div class="tw"><table><thead><tr><th>UID / 昵称</th><th>启用</th><th>活跃度 (0~1)</th><th>行为流派</th><th>AI 匹配</th><th>市场参与</th><th>状态</th><th>墨锭 / 库存 / 今日支出·挂单</th><th>增减墨锭</th><th></th></tr></thead><tbody>
+      ${(r.list || []).map(a => H`<tr>
+        <td class="nowrap"><b>${a.username}</b><br><small>${a.uid}</small></td>
+        <td colspan="9"><form data-form="aiupdate" style="display:flex;flex-wrap:wrap;gap:6px;align-items:center">
+          <input type="hidden" name="uid" value="${a.uid}">
+          <label class="chk"><input type="checkbox" name="active"${a.active ? ' checked' : ''}> 启用</label>
+          <input name="activityLevel" type="number" step="0.05" min="0" max="1" value="${a.activityLevel}" style="width:72px">
+          <select name="behaviorProfile">${Object.entries(profNames).map(([k, v]) => H`<option value="${k}"${a.behaviorProfile === k ? ' selected' : ''}>${v}</option>`)}</select>
+          <label class="chk"><input type="checkbox" name="matchmakingEnabled"${a.matchmakingEnabled ? ' checked' : ''}> 匹配</label>
+          <label class="chk"><input type="checkbox" name="marketEnabled"${a.marketEnabled ? ' checked' : ''}> 市场</label>
+          <select name="status">${Object.entries(stNames).map(([k, v]) => H`<option value="${k}"${a.status === k ? ' selected' : ''}>${v}</option>`)}</select>
+          <span class="nowrap"><small>${fmtN(a.ink)} 锭 · ${a.itemCount} 件 · 支 ${fmtN(a.dailySpent)} / 单 ${a.dailyListed}</small></span>
+          <input name="inkDelta" type="number" step="100" value="0" style="width:82px" title="墨锭增减">
+          <button class="btn sm" data-need="econ">保存</button>
+        </form></td>
+      </tr>`)}
+    </tbody></table></div>
+  </div>`;
+}
+
+const VIEWS = { home: vHome, players: vPlayers, gifts: vGifts, codes: vCodes, cfg: vCfg, flags: vFlags, maint: vMaint, auth: vAuth, audit: vAudit, errors: vErrors, play: vPlay, aiplayers: vAiPlayers, admins: vAdmins };
 const AFTER = { players: drawGives, gifts: drawGiftGives, codes: drawCodeGives, cfg: () => { const f = $('form[data-form=cfg]'); if (f) cfgLive(f); } };
 let adminEditRevision = 0, adminDirty = false, auditResetBusy = false;
 $('#main').addEventListener('input', () => { adminDirty = true; adminEditRevision++; });
@@ -1740,6 +1780,10 @@ const ACTS = {
   },
   admedit: b => { S.admEdit = b.dataset.name; render(); },
   admnew: () => { S.admEdit = ''; render(); },
+  aitick: async b => {
+    const a = await ask({ title: '推进一轮 AI 生态模拟', lines: ['将更新活跃 AI 匹配/对战状态，并在风控范围内执行一次市场买卖试算'], whyInit: '人工触发 AI 生态演进', ok: '立即执行' });
+    if (a) await busy(b, async () => { await api('ai-players/update', { tick: true, withMarket: true, why: a.why }); toast('AI 生态已推进一轮'); render(); });
+  },
   copy: b => { if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.v).then(() => toast('复制好了'), () => toast('复制不了，手动选一下吧', true)); },
   addgive: () => {
     const f = $('form[data-form=adjust]'), k = f.elements.gk.value;
@@ -1866,6 +1910,21 @@ const FORMS = {
     if (a) await busy(submitBtn(f), async () => { await api('admins', { ...body, why: a.why }); toast(old ? '改好了' : '建好了，' + name + ' 可以登录了'); S.admEdit = ''; render(); });
   },
   find: f => { S.q = f.elements.q.value.trim().slice(0, 64); S.pOffset = 0; render(); },
+  aiupdate: async f => {
+    const uid = f.elements.uid.value;
+    const body = {
+      uid,
+      active: f.elements.active.checked,
+      activityLevel: Number(f.elements.activityLevel.value),
+      behaviorProfile: f.elements.behaviorProfile.value,
+      matchmakingEnabled: f.elements.matchmakingEnabled.checked,
+      marketEnabled: f.elements.marketEnabled.checked,
+      status: f.elements.status.value,
+      inkDelta: Math.trunc(Number(f.elements.inkDelta.value) || 0)
+    };
+    const a = await ask({ title: '修改 AI 账号 ' + uid, lines: ['启用：' + (body.active ? '是' : '否') + '，活跃度：' + body.activityLevel, '流派：' + body.behaviorProfile + '，状态：' + body.status + (body.inkDelta ? '，墨锭 ' + sign(body.inkDelta) : '')], whyInit: '调整 AI 账号参数', ok: '保存' });
+    if (a) await busy(submitBtn(f), async () => { await api('ai-players/update', { ...body, why: a.why }); toast('已保存 ' + uid); render(); });
+  },
   authq: f => { S.aq = f.elements.q.value.trim().slice(0, 64); S.aact = f.elements.act.value; render(); },
   auditq: f => { S.auditAct = f.elements.act.value; S.auditBy = f.elements.by.value.trim().slice(0, 40); S.auditBefore = 0; S.auditBeforeAt = 0; S.auditStack = []; render(); },
   gbosshp: async f => {

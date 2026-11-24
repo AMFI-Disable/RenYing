@@ -349,10 +349,12 @@ class AIBrain {
     this.lastFoeState = ''; this.foeComboAtEsc = 0; this.myHitsInCombo = 0;
     this.chainT = 0; this.wakeWatch = false; this.okiPlan = null; this.baitX = 0;
     this.attacks = 0; this.blocked = 0;
+    this.dirHoldT = 0; this.lastDir = 0;
   }
   // 新的一局：清掉这局的临时状态，对手习惯留着
   newRound() {
     this.queue.length = 0; this.dir = 0; this.holdDown = 0; this.holdAtk = 0; this.next = 0;
+    this.dirHoldT = 0; this.lastDir = 0;
     this.mode = 'neutral'; this.okiPlan = null; this.defKey = ''; this.projKey = null; this.afterBlock = false; this.techRoll = undefined;
   }
   // ----- 输出 -----
@@ -442,6 +444,18 @@ class AIBrain {
     c.held.atk = this.holdAtk > 0;
     if (!c.held.atk && this.holdAtk <= 0) c.atkT = clock + 1e6;
     c.held.jump = this.jumpHeld || !!(me.ch.fly && clock < (this.flyUntil || 0));
+    const jumped = this._hx !== undefined && (Math.abs(me.x - this._hx) >= 80 || (foe && this._hfx !== undefined && Math.abs(foe.x - this._hfx) >= 80));
+    this._hx = me.x; this._hfx = foe ? foe.x : me.x;
+    if (jumped) { this.dirHoldT = 0; this.lastDir = this.dir; }
+    else {
+      this.dirHoldT = Math.max(0, (this.dirHoldT || 0) - STEP);
+      if (this.dir !== 0 && this.lastDir !== 0 && this.dir * this.lastDir < 0 && this.dirHoldT > 0 && AI_FREE.includes(me.state) && !this.queue.length) {
+        this.dir = this.lastDir;
+      } else if (this.dir !== this.lastDir) {
+        this.lastDir = this.dir;
+        if (this.dir !== 0) this.dirHoldT = 0.14;
+      }
+    }
     c.held.left = this.dir < 0; c.held.right = this.dir > 0;
   }
   qianjiBat(me, foe) {

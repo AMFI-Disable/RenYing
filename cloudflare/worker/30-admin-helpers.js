@@ -38,6 +38,7 @@ const ADMIN_NEED = {
   'POST /api/admin/player/devices/drop': 'ban', 'POST /api/admin/player/clear-history': 'ban', 'GET /api/admin/player/export': 'ban',
   'POST /api/admin/errors/delete': 'ban', 'POST /api/admin/audit/compact': 'all', 'POST /api/admin/maint/prune': 'all', 'POST /api/admin/world/act': 'all',
   'POST /api/admin/audit/reset-reasons': 'all',
+  'GET /api/admin/ai-players': 'view', 'POST /api/admin/ai-players/update': 'econ',
   'POST /api/admin/logout': 'view', 'POST /api/admin/refresh': 'view', 'GET /api/admin/admins': 'all',
 };
 const adminCan = (role, need) => role === 'all' || need === 'view' || role === need;

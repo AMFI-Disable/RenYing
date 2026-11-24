@@ -169,6 +169,7 @@ async function main() {
     // Step 1: Automated Build Synchronization
     if (!PYTHON) throw new Error('找不到 Python 3（试过 python3、python、py），网页没法重新生成');
     await runStep('Build Synchronization (build.py)', PYTHON, ['tools/build.py']);
+    await runStep('Hero Completeness Check (hero-completeness.mjs)', 'node', ['tools/checks/hero-completeness.mjs']);
 
     // Step 2: Combat & Netcode Suite
     const combatArgs = isFull ? [] : ['--fast'];

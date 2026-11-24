@@ -88,7 +88,17 @@ async function presence(env, body, ip, now) {
     }
   }
   const c = await env.DB.prepare("SELECT COUNT(*) AS online, SUM(st = 'match') AS playing, SUM(st = 'queue') AS waiting FROM presence WHERE seen > ?").bind(now - PRESENCE_WINDOW).first();
-  return json({ ok: true, online: (c && c.online) || 0, playing: (c && c.playing) || 0, waiting: (c && c.waiting) || 0, every: 30 });
+  const humanOnline = (c && c.online) || 0, humanPlaying = (c && c.playing) || 0, humanWaiting = (c && c.waiting) || 0;
+  const ai = typeof aiPresenceCounts === 'function' ? await aiPresenceCounts(env, now) : { aiOnline: 0, aiPlaying: 0, aiWaiting: 0 };
+  return json({
+    ok: true,
+    online: humanOnline + ai.aiOnline,
+    playing: humanPlaying + ai.aiPlaying,
+    waiting: humanWaiting + ai.aiWaiting,
+    humanOnline,
+    aiOnline: ai.aiOnline,
+    every: 30
+  });
 }
 
 /* ---------- 匿名游玩统计 ----------

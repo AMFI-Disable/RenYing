@@ -23,7 +23,7 @@ function bpDetailHTML(i) {
     ${comboFlow ? `<dt>连招流向</dt><dd>${comboFlow}</dd>` : ''}
     <dt><span>技能</span> <span>${S.name}</span></dt><dd><span>${S.desc}</span><span>（冷却 ${S.cd} 秒）</span></dd>
     ${specialMove ? `<dt><span>绝技</span> <span>${S2.name}</span></dt><dd>${specialMove}</dd>` : ''}
-    <dt><span>大招</span> <span>${U.name}</span></dt><dd><span>${U.desc}</span><div style="margin-top:2px;font-size:12px;color:#ffe8a3">${HERO_METER_EXPLAIN[c.id] || ''}</div></dd>${ADV[c.id] ? `<dt>进阶</dt><dd>${ADV[c.id]}</dd>` : ''}</dl>
+    <dt><span>大招</span> <span>${U.name}</span></dt><dd><span>${U.desc}</span><div style="margin-top:2px;font-size:12px;color:#ffe8a3">${HERO_METER_EXPLAIN[c.id] || ''}</div></dd>${typeof HERO_GUIDES !== 'undefined' && HERO_GUIDES[c.id] ? `<dt>上手打法</dt><dd><span>${HERO_GUIDES[c.id].tip}</span></dd><dt>推荐连招</dt><dd><span>${HERO_GUIDES[c.id].combo}</span></dd>` : ''}${ADV[c.id] ? `<dt>进阶</dt><dd>${ADV[c.id]}</dd>` : ''}</dl>
     </div>`;
 }
 function buildDetails(force) {

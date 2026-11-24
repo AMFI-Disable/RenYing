@@ -5580,7 +5580,7 @@ window.RYBoot = (function () {
           </div>
           <p class="sub" style="margin:4px 0 14px;text-align:left">输入官方发布的礼包兑换码或密令，兑换丰厚墨锭与珍稀福利。</p>
           <div class="row redeemrow">
-            <input id="rdCode" maxlength="32" placeholder="输入礼包兑换码（如 RENYINGALL）" autocomplete="off" spellcheck="false">
+            <input id="rdCode" maxlength="32" placeholder="输入礼包兑换码" autocomplete="off" spellcheck="false">
             <button class="go" id="rdBtn">兑换</button>
           </div>
           <p class="netnote" id="tMsg" style="min-height:22px;margin-top:6px"></p>
@@ -8027,9 +8027,11 @@ this.mode = 'neutral'; this.modeT = 0;            // neutral 立回、keep 避�
 this.lastFoeState = ''; this.foeComboAtEsc = 0; this.myHitsInCombo = 0;
 this.chainT = 0; this.wakeWatch = false; this.okiPlan = null; this.baitX = 0;
 this.attacks = 0; this.blocked = 0;
+this.dirHoldT = 0; this.lastDir = 0;
 }
 newRound() {
 this.queue.length = 0; this.dir = 0; this.holdDown = 0; this.holdAtk = 0; this.next = 0;
+this.dirHoldT = 0; this.lastDir = 0;
 this.mode = 'neutral'; this.okiPlan = null; this.defKey = ''; this.projKey = null; this.afterBlock = false; this.techRoll = undefined;
 }
 press(a, why) {
@@ -8104,6 +8106,18 @@ c.held.down = this.holdDown > 0;
 c.held.atk = this.holdAtk > 0;
 if (!c.held.atk && this.holdAtk <= 0) c.atkT = clock + 1e6;
 c.held.jump = this.jumpHeld || !!(me.ch.fly && clock < (this.flyUntil || 0));
+const jumped = this._hx !== undefined && (Math.abs(me.x - this._hx) >= 80 || (foe && this._hfx !== undefined && Math.abs(foe.x - this._hfx) >= 80));
+this._hx = me.x; this._hfx = foe ? foe.x : me.x;
+if (jumped) { this.dirHoldT = 0; this.lastDir = this.dir; }
+else {
+this.dirHoldT = Math.max(0, (this.dirHoldT || 0) - STEP);
+if (this.dir !== 0 && this.lastDir !== 0 && this.dir * this.lastDir < 0 && this.dirHoldT > 0 && AI_FREE.includes(me.state) && !this.queue.length) {
+this.dir = this.lastDir;
+} else if (this.dir !== this.lastDir) {
+this.lastDir = this.dir;
+if (this.dir !== 0) this.dirHoldT = 0.14;
+}
+}
 c.held.left = this.dir < 0; c.held.right = this.dir > 0;
 }
 qianjiBat(me, foe) {
@@ -9527,6 +9541,44 @@ fixed: { name: '钉在原地', desc: '不被击飞、不被打退' },
 escape: { name: '被连便闪', desc: '被挑空或连中 4 下就腾空闪' },
 infGuard: { name: '坚若磐石', desc: '架势恒满，不会破防' },
 autoHeal: { name: '连段自愈', desc: '连击停下后血量回满' },
+};
+const HERO_GUIDES = {
+qingfeng:  { tip: '攻守均衡，借疾风斩穿身抢先手，再用弧月剑气远程压制。', combo: 'J J J → Q 疾风斩 → 右键 弧月剑气' },
+feiying:   { tip: '高机动刺客，用烟幕隐身绕背偷袭，打完一套立刻拉扯。', combo: 'Q 瞬影步 → J J J → 右键 飞镖' },
+tieshan:   { tip: '重装霸体强压正面，靠蓄力重斩与山崩破防一锤定音。', combo: 'Q 震地 → 重击(U) → 右键 铁壁冲' },
+lingshuang:{ tip: '长枪控距，中远距离点刺拉扯，找准破绽穿云枪连刺破防。', combo: 'J J → Q 穿云枪 → 右键 回马枪' },
+liuyun:    { tip: '中距风系消耗，折扇旋风控场弹开近身敌，趁浮空接连段。', combo: '右键 飞扇 → Q 疾风破 → J J J' },
+leiming:   { tip: '近身拳脚爆发与受击反震，被连招时用雷铠打断反打。', combo: 'J J J → Q 奔雷拳 → 右键 撼地' },
+moyu:      { tip: '消耗墨水布阵控场，留符叠满后开大招墨龙镇压全场。', combo: '右键 泼墨 → Q 画符 → E 墨龙出海' },
+yuehua:    { tip: '架招反打核心，看准对手出手瞬间开月镜，接莲华连斩。', combo: 'Q 月镜架招 → J J J → 右键 月轮' },
+yanling:   { tip: '空中滞空游走，用翎羽远程消耗，抓准时机高空俯冲突袭。', combo: 'W 起跳 → 右键 翎羽 → Q 俯冲' },
+yuxiao:    { tip: '音波控场与弹反飞行道具，攒满音律后引爆大招破魂。', combo: '右键 音浪 → Q 回音壁 → J J' },
+zuixian:   { tip: '喝满醉意强化招式，贴身滚打与醉拳浮空打乱对手节奏。', combo: 'Q 饮酒 → 右键 醉仙望月 → J J J' },
+gouchen:   { tip: '链锤中远距离拉拽强开，把逃跑或高台上的敌人扯到身前。', combo: '右键 飞锤勾拉 → J J → Q 旋风锤' },
+lingque:   { tip: '飞梭挂雀芒印记，叠层后瞬移换影切入引爆打爆发。', combo: '右键 飞梭 → Q 移形换影 → J J J' },
+liying:    { tip: '留下雾身制造双重剑气，利用换位躲招并打出背刺连击。', combo: 'Q 留影 → 右键 影波 → Q 换位 → J J' },
+cixian:    { tip: '灵活切换正负极性，负极吸人连段，正极强力击飞破防。', combo: '右键 磁力牵引 → J J J → Q 换极重击' },
+qianji:    { tip: '操控玄铁傀丸双线夹击，借金丝回拉与反弹角度封锁走位。', combo: 'Q 抛球 → J J → 右键 牵引回抽' },
+chixiao:   { tip: '烈焰火耙压制中近距离，附带灼烧持续消耗对手气血。', combo: 'Q 火耙突刺 → J J → 右键 灼热火轮' },
+youhuang:  { tip: '淬药飞针减速拉扯，再用回纹绞带远距离拽近打一套爆发。', combo: 'Q 淬药飞针 → 右键 绞带牵引 → J J J' },
+xuanji:    { tip: '三臂星规中远距消耗，展开星场聚拢敌人并削减架势条。', combo: 'Q 星火一线 → 右键 聚星力场 → J J' },
+polang:    { tip: '重锚霸体强冲，怒涛震锚重创敌方架势后接破浪突进。', combo: 'Q 怒涛震锚 → 右键 破浪冲锋 → J J' },
+cangming:  { tip: '寒渊重剑滞缓对手，用霸体扛住换血后上挑破防打满连招。', combo: 'Q 寒渊斩 → 右键 裂魂斩 → 空中 J K' },
+qingluan:  { tip: '团队治疗与青鸾风场控场，大招兼顾回血与清场击飞。', combo: 'Q 鸾羽灵风 → 右键 翠风斩 → E 鸾鸣九霄' },
+xuanwu:    { tip: '高耐力铁壁坦克，站稳据点用重锤震地与护盾反震拖垮敌军。', combo: 'Q 玄甲震岳 → 右键 龟盾反震 → 重击(U)' },
+chiyan:    { tip: '炽烈拳套贴身猛攻，靠多段灼烧连拳和升龙爆发压制对手。', combo: 'J J J → Q 爆炎冲拳 → 右键 陨火升龙' },
+yinhu:     { tip: '极速影刃绕后刺杀，利用狐步闪烁规避集火并收割残血。', combo: 'Q 幻月闪 → J J J → 右键 银月交叉斩' },
+yunhe:     { tip: '御风滞空支援，从高空发射穿透鹤羽掩护队友推进与抢旗。', combo: 'W 腾空 → Q 云岚羽芒 → 右键 仙鹤旋风' },
+tiangang:  { tip: '阵地长枪先锋，霸体顶住火力并用连环枪影刺穿敌方前排。', combo: 'Q 天罡穿阵 → J J J → 右键 破军重刺' },
+mojie:     { tip: '长毫玄墨封锁走位，用高硬直墨波控制战场再接重笔点杀。', combo: 'Q 玄墨波 → 右键 断魂点印 → J J' },
+baihe:     { tip: '高频细剑突刺，靠极致移速拉扯身位并寻找冰霜破防时机。', combo: 'Q 冰河突刺 → J J J → 右键 霜华回闪' },
+jinpeng:   { tip: '制空突击好手，借高台起跳高速俯冲切入敌阵打乱阵型。', combo: 'W 腾跃 → Q 金翅俯冲 → 右键 烈风翼斩' },
+youming:   { tip: '暗影镰刀聚拢收割，多目标残血时直接切入引爆冥域斩。', combo: 'Q 幽冥步 → 右键 噬魂镰阵 → J J J' },
+lingxi:    { tip: '灵笛音波跨层控场，减速敌军并配合队友完成集火留人。', combo: 'Q 清音震荡 → 右键 灵犀曲波 → E 心音幻境' },
+bawang:    { tip: '重剑霸王强行破阵，凭借高体重与重劈高额破防压制前排。', combo: 'Q 霸王冲锋 → 重击(U) → 右键 裂地重劈' },
+fengling:  { tip: '轻盈双风扇游走辅助，兼具团队回复与双道旋风击退护航。', combo: 'Q 风铃清音 → 右键 樱风旋 → E 万铃和鸣' },
+wuya:      { tip: '居合瞬拔反制流，静待对手进攻一瞬拔刀闪穿并收鞘引爆。', combo: 'Q 居合闪 → J J J → 右键 剑气瞬拔' },
+danqing:   { tip: '丹青画卷多弹道控场，在混战中远程泼墨压制大片敌军。', combo: 'Q 丹青泼墨 → 右键 山河画卷 → J J' },
 };
 const DIFFICULTIES = [
 {
@@ -12645,6 +12697,80 @@ Object.assign(UI_COPY_EN, {
 "踏墨退避": "Inkstep Retreat",
 "“脚下的墨圈别乱踩，踩进去可拔不出脚。”": "“Watch for the ink circles. They can pin you in place.”",
 "解锁": "Unlock",
+"上手打法": "Playstyle Tip",
+"推荐连招": "Starter Combo",
+"攻守均衡，借疾风斩穿身抢先手，再用弧月剑气远程压制。": "Balanced fighter: open with Gale Slash pass-through, then zone with Crescent Sword Qi.",
+"J J J → Q 疾风斩 → 右键 弧月剑气": "J J J -> Q Gale Slash -> RMB Sword Qi",
+"高机动刺客，用烟幕隐身绕背偷袭，打完一套立刻拉扯。": "High-mobility assassin: slip behind with Shadow Step, burst, and disengage.",
+"Q 瞬影步 → J J J → 右键 飞镖": "Q Shadow Step -> J J J -> RMB Kunai",
+"重装霸体强压正面，靠蓄力重斩与山崩破防一锤定音。": "Armored juggernaut: pressure head-on and break guards with charged strikes and Avalanche.",
+"Q 震地 → 重击(U) → 右键 铁壁冲": "Q Quake -> Heavy (U) -> RMB Iron Ram",
+"长枪控距，中远距离点刺拉扯，找准破绽穿云枪连刺破防。": "Mid-long spear zoner: poke at range and punish openings with Cloud Pierce.",
+"J J → Q 穿云枪 → 右键 回马枪": "J J -> Q Cloud Pierce -> RMB Back Thrust",
+"中距风系消耗，折扇旋风控场弹开近身敌，趁浮空接连段。": "Wind zoner: push rushers back with Whirlwind Fan and juggle them mid-air.",
+"右键 飞扇 → Q 疾风破 → J J J": "RMB Flying Fan -> Q Wind Break -> J J J",
+"近身拳脚爆发与受击反震，被连招时用雷铠打断反打。": "Close-range brawler: break enemy combos with Thunder Armor and counter-burst.",
+"J J J → Q 奔雷拳 → 右键 撼地": "J J J -> Q Thunder Fist -> RMB Ground Slam",
+"消耗墨水布阵控场，留符叠满后开大招墨龙镇压全场。": "Ink controller: stack talismans while zoning, then unleash Ink Dragon across the stage.",
+"右键 泼墨 → Q 画符 → E 墨龙出海": "RMB Ink Splash -> Q Talisman -> E Ink Dragon",
+"架招反打核心，看准对手出手瞬间开月镜，接莲华连斩。": "Counter specialist: parry incoming hits with Moon Mirror and punish cleanly.",
+"Q 月镜架招 → J J J → 右键 月轮": "Q Moon Mirror -> J J J -> RMB Moon Ring",
+"空中滞空游走，用翎羽远程消耗，抓准时机高空俯冲突袭。": "Aerial skirmisher: harass from above with feathers before diving in.",
+"W 起跳 → 右键 翎羽 → Q 俯冲": "W Jump -> RMB Feathers -> Q Sky Dive",
+"音波控场与弹反飞行道具，攒满音律后引爆大招破魂。": "Sonic controller: reflect projectiles with Echo Wall and build notes for a burst finish.",
+"右键 音浪 → Q 回音壁 → J J": "RMB Sound Wave -> Q Echo Wall -> J J",
+"喝满醉意强化招式，贴身滚打与醉拳浮空打乱对手节奏。": "Drunken brawler: drink to empower skills and disrupt foes with rolling strikes.",
+"Q 饮酒 → 右键 醉仙望月 → J J J": "Q Drink -> RMB Drunken Moon -> J J J",
+"链锤中远距离拉拽强开，把逃跑或高台上的敌人扯到身前。": "Chain-flail grappler: yank fleeing or upper-layer foes straight into melee range.",
+"右键 飞锤勾拉 → J J → Q 旋风锤": "RMB Hook Pull -> J J -> Q Whirlwind",
+"飞梭挂雀芒印记，叠层后瞬移换影切入引爆打爆发。": "Mark assassin: apply Needle Marks with spindles, then Shadow Swap to detonate.",
+"右键 飞梭 → Q 移形换影 → J J J": "RMB Spindle -> Q Shadow Swap -> J J J",
+"留下雾身制造双重剑气，利用换位躲招并打出背刺连击。": "Clone trickster: plant mist doubles to double-cast waves and swap for backstabs.",
+"Q 留影 → 右键 影波 → Q 换位 → J J": "Q Mist Clone -> RMB Shadow Wave -> Q Swap -> J J",
+"灵活切换正负极性，负极吸人连段，正极强力击飞破防。": "Polarity master: pull foes in with Negative chains, then swap Positive to launch.",
+"右键 磁力牵引 → J J J → Q 换极重击": "RMB Mag Pull -> J J J -> Q Polarity Slam",
+"操控玄铁傀丸双线夹击，借金丝回拉与反弹角度封锁走位。": "Tether puppet master: pincer foes between your body and bouncing iron ball.",
+"Q 抛球 → J J → 右键 牵引回抽": "Q Toss Ball -> J J -> RMB Silk Yank",
+"烈焰火耙压制中近距离，附带灼烧持续消耗对手气血。": "Flame bruiser: control mid-close range with the fire rake and burn ticks.",
+"Q 火耙突刺 → J J → 右键 灼热火轮": "Q Rake Thrust -> J J -> RMB Fire Wheel",
+"淬药飞针减速拉扯，再用回纹绞带远距离拽近打一套爆发。": "Tether controller: slow foes with treated needles, then reel them in with the sash.",
+"Q 淬药飞针 → 右键 绞带牵引 → J J J": "Q Needles -> RMB Sash Pull -> J J J",
+"三臂星规中远距消耗，展开星场聚拢敌人并削减架势条。": "Astrolabe zoner: snipe with star-rays and pull foes together to shred Guard.",
+"Q 星火一线 → 右键 聚星力场 → J J": "Q Star Ray -> RMB Star Field -> J J",
+"重锚霸体强冲，怒涛震锚重创敌方架势后接破浪突进。": "Anchor vanguard: shatter enemy Guard with Tidal Slam, then armor-charge through.",
+"Q 怒涛震锚 → 右键 破浪冲锋 → J J": "Q Tidal Slam -> RMB Undertow Dash -> J J",
+"寒渊重剑滞缓对手，用霸体扛住换血后上挑破防打满连招。": "Heavy frost swordsman: slow foes with Abyssal Slash, trade with armor, and launch.",
+"Q 寒渊斩 → 右键 裂魂斩 → 空中 J K": "Q Abyssal Slash -> RMB Soul Rift -> Air J K",
+"团队治疗与青鸾风场控场，大招兼顾回血与清场击飞。": "Wind support: heal allies and peel rushers with emerald gale tornadoes.",
+"Q 鸾羽灵风 → 右键 翠风斩 → E 鸾鸣九霄": "Q Luan Wind -> RMB Jade Gale -> E Phoenix Chorus",
+"高耐力铁壁坦克，站稳据点用重锤震地与护盾反震拖垮敌军。": "Fortress tank: anchor objectives with seismic slams and counter-shields.",
+"Q 玄甲震岳 → 右键 龟盾反震 → 重击(U)": "Q Bastion Slam -> RMB Shell Counter -> Heavy (U)",
+"炽烈拳套贴身猛攻，靠多段灼烧连拳和升龙爆发压制对手。": "Blazing rushdown: overwhelm foes with rapid scorch punches and uppercuts.",
+"J J J → Q 爆炎冲拳 → 右键 陨火升龙": "J J J -> Q Blaze Rush -> RMB Meteor Upper",
+"极速影刃绕后刺杀，利用狐步闪烁规避集火并收割残血。": "Flash assassin: blink behind enemy lines to finish low-HP targets.",
+"Q 幻月闪 → J J J → 右键 银月交叉斩": "Q Fox Blink -> J J J -> RMB Cross Slash",
+"御风滞空支援，从高空发射穿透鹤羽掩护队友推进与抢旗。": "Aerial support: rain piercing feathers from high layers to cover teammates.",
+"W 腾空 → Q 云岚羽芒 → 右键 仙鹤旋风": "W Leap -> Q Crane Plumes -> RMB Gale",
+"阵地长枪先锋，霸体顶住火力并用连环枪影刺穿敌方前排。": "Phalanx tank: absorb pressure with armor and pierce frontlines with pike thrusts.",
+"Q 天罡穿阵 → J J J → 右键 破军重刺": "Q Phalanx Thrust -> J J J -> RMB Breaker",
+"长毫玄墨封锁走位，用高硬直墨波控制战场再接重笔点杀。": "Calligraphy controller: lock down lanes with heavy-stun ink waves.",
+"Q 玄墨波 → 右键 断魂点印 → J J": "Q Ink Wave -> RMB Soul Seal -> J J",
+"高频细剑突刺，靠极致移速拉扯身位并寻找冰霜破防时机。": "Frost duelist: outspace enemies with speed and puncture Guard with rapid lunges.",
+"Q 冰河突刺 → J J J → 右键 霜华回闪": "Q Frost Lunge -> J J J -> RMB Flash Riposte",
+"制空突击好手，借高台起跳高速俯冲切入敌阵打乱阵型。": "Airborne diver: leap off upper layers and crash into enemy formations.",
+"W 腾跃 → Q 金翅俯冲 → 右键 烈风翼斩": "W Leap -> Q Roc Dive -> RMB Gale Wing",
+"暗影镰刀聚拢收割，多目标残血时直接切入引爆冥域斩。": "Shadow reaper: pull clustered foes inward and harvest with dual scythes.",
+"Q 幽冥步 → 右键 噬魂镰阵 → J J J": "Q Shadow Step -> RMB Scythe Vortex -> J J J",
+"灵笛音波跨层控场，减速敌军并配合队友完成集火留人。": "Sonic support-controller: slow enemies across layers to set up team focus.",
+"Q 清音震荡 → 右键 灵犀曲波 → E 心音幻境": "Q Sonic Ring -> RMB Flute Wave -> E Spirit Domain",
+"重剑霸王强行破阵，凭借高体重与重劈高额破防压制前排。": "Tyrant frontline: bulldoze guards with heavy greatsword armor and cleaves.",
+"Q 霸王冲锋 → 重击(U) → 右键 裂地重劈": "Q Tyrant Charge -> Heavy (U) -> RMB Earth Split",
+"轻盈双风扇游走辅助，兼具团队回复与双道旋风击退护航。": "Agile wind healer: peel with twin breeze fans while sustaining nearby allies.",
+"Q 风铃清音 → 右键 樱风旋 → E 万铃和鸣": "Q Chime Breeze -> RMB Sakura Gale -> E Bell Harmony",
+"居合瞬拔反制流，静待对手进攻一瞬拔刀闪穿并收鞘引爆。": "Iaido counter-slayer: dash through incoming attacks and detonate on sheathe.",
+"Q 居合闪 → J J J → 右键 剑气瞬拔": "Q Iaido Flash -> J J J -> RMB Quick Draw",
+"丹青画卷多弹道控场，在混战中远程泼墨压制大片敌军。": "Scroll painter: blanket teamfights with multi-arc ink waves from mid-range.",
+"Q 丹青泼墨 → 右键 山河画卷 → J J": "Q Vermilion Ink -> RMB Landscape -> J J",
 });
 Object.assign(UI_COPY_EN, {
 "16v16 全军会战": "16v16 Full Army",
@@ -58698,7 +58824,7 @@ ${bpFav(c) ? `<div class="bp-fav"><b>本局地利</b> <span>${bpFav(c)}</span></
 ${comboFlow ? `<dt>连招流向</dt><dd>${comboFlow}</dd>` : ''}
 <dt><span>技能</span> <span>${S.name}</span></dt><dd><span>${S.desc}</span><span>（冷却 ${S.cd} 秒）</span></dd>
 ${specialMove ? `<dt><span>绝技</span> <span>${S2.name}</span></dt><dd>${specialMove}</dd>` : ''}
-<dt><span>大招</span> <span>${U.name}</span></dt><dd><span>${U.desc}</span><div style="margin-top:2px;font-size:12px;color:#ffe8a3">${HERO_METER_EXPLAIN[c.id] || ''}</div></dd>${ADV[c.id] ? `<dt>进阶</dt><dd>${ADV[c.id]}</dd>` : ''}</dl>
+<dt><span>大招</span> <span>${U.name}</span></dt><dd><span>${U.desc}</span><div style="margin-top:2px;font-size:12px;color:#ffe8a3">${HERO_METER_EXPLAIN[c.id] || ''}</div></dd>${typeof HERO_GUIDES !== 'undefined' && HERO_GUIDES[c.id] ? `<dt>上手打法</dt><dd><span>${HERO_GUIDES[c.id].tip}</span></dd><dt>推荐连招</dt><dd><span>${HERO_GUIDES[c.id].combo}</span></dd>` : ''}${ADV[c.id] ? `<dt>进阶</dt><dd>${ADV[c.id]}</dd>` : ''}</dl>
 </div>`;
 }
 function buildDetails(force) {
