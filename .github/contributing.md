@@ -6,7 +6,7 @@ Thanks for helping. This page lists the rules the repository and CI enforce. The
 
 Repository development takes place directly on `main`. Do not create additional development branches.
 
-Only pull requests from the maintainer (Even, GitHub `AMFI-Disable`) and repository collaborators are merged. Pull requests from anyone else are not merged or copied into `main`. Bug reports and ideas are welcome from everyone in [Issues](https://github.com/AMFI-Disable/RenYing/issues).
+Only pull requests from the maintainer (Even, GitHub `AMFI-Disable`) and repository collaborators are merged. Pull requests from anyone else are not merged or copied into `main`. Bug reports and ideas are welcome from everyone in [Issues](https://github.com/BigBrainDevBros/RenYing/issues).
 
 ## Before You Start
 
@@ -32,13 +32,13 @@ Only pull requests from the maintainer (Even, GitHub `AMFI-Disable`) and reposit
 2. **Commit messages** match `type: word word word`: a lowercase type, a colon, then exactly three lowercase words or numbers. Examples: `fix: guard break timing`, `docs: refresh readme wiki`, `feat: add qianji hero`.
 3. **File names are lowercase** for every tracked file.
 4. **Markdown headings use Title Case** and pass `.markdownlint.json`.
-5. **Tests pass.** At least `node tools/tests/combat-test.mjs --sim` and `node tools/tests/econ-test.mjs` for gameplay or economy changes. See the [Testing And CI](https://github.com/AMFI-Disable/RenYing/wiki/Testing-and-CI) wiki page for the full list.
+5. **Tests pass.** At least `node tools/tests/combat-test.mjs --sim` and `node tools/tests/econ-test.mjs` for gameplay or economy changes. See the [Testing And CI](https://github.com/BigBrainDevBros/RenYing/wiki/Testing-and-CI) wiki page for the full list.
 6. **No direct binary download links** (`.dmg`, `.zip`) in the readme or docs.
 
 ## Writing Docs
 
 - Keep `readme.md` and `readme.zh-cn.md` saying the same thing.
-- The wiki lives at <https://github.com/AMFI-Disable/RenYing/wiki>. A copy of its pages is kept in `docs/wiki/` (lowercase file names). When you change one, change the other.
+- The wiki lives at <https://github.com/BigBrainDevBros/RenYing/wiki>. A copy of its pages is kept in `docs/wiki/` (lowercase file names). When you change one, change the other.
 - Describe RenYing on its own terms, without comparing it to other games.
 - Do not put secrets, Worker URLs with keys, database exports or player data in any file.
 

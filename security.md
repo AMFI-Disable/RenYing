@@ -15,5 +15,5 @@ If you discover a security vulnerability or unintended data exposure in `RenYing
 
 Instead, report it privately through one of the following channels:
 
-- **GitHub Security Advisories**: Open a private security advisory on `https://github.com/AMFI-Disable/RenYing/security/advisories/new`.
+- **GitHub Security Advisories**: Open a private security advisory on `https://github.com/BigBrainDevBros/RenYing/security/advisories/new`.
 - **Direct Email**: Contact `evengao6688@gmail.com` with reproduction steps, affected environment details, and impact summary.

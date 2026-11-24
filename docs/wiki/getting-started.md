@@ -4,7 +4,7 @@
 
 | Edition | How to open it | Has |
 | :--- | :--- | :--- |
-| **Online / 在线版** | <https://amfi-disable.github.io/RenYing/> in Chrome, Edge, Safari or Firefox | Everything: online play, accounts, armory market, open world |
+| **Online / 在线版** | <https://bigbraindevbros.github.io/RenYing/> in Chrome, Edge, Safari or Firefox | Everything: online play, accounts, armory market, open world |
 | **Offline / 离线版** | Download `renying-offline.html` from the repository and double-click it | Single player, local multiplayer, music and the 青锋行 mini-game. No online modes, no cloud account |
 
 在线版打开链接就能玩，所有模式都有；离线版是一个文件，双击打开，不用网络，但没有联机和云端账号。

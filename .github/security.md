@@ -2,7 +2,7 @@
 
 ## Supported Versions
 
-Only the version currently served at <https://amfi-disable.github.io/RenYing/> and the latest `renying-offline.html` on `main` get fixes.
+Only the version currently served at <https://bigbraindevbros.github.io/RenYing/> and the latest `renying-offline.html` on `main` get fixes.
 
 | Version | Supported |
 | :--- | :--- |
@@ -15,7 +15,7 @@ Only the version currently served at <https://amfi-disable.github.io/RenYing/> a
 - The Cloudflare Worker in `cloudflare/`: accounts, sign-in, cloud saves, the armory economy and market, leaderboards, the open world and the admin page.
 - Anything that lets one player read or change another player's account, items or Ink.
 
-Out of scope: balance problems, cosmetic bugs, and attacks that need someone else's unlocked device. Report those as normal [issues](https://github.com/AMFI-Disable/RenYing/issues).
+Out of scope: balance problems, cosmetic bugs, and attacks that need someone else's unlocked device. Report those as normal [issues](https://github.com/BigBrainDevBros/RenYing/issues).
 
 ## Reporting A Vulnerability
 

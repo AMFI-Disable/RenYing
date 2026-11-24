@@ -7,14 +7,14 @@
 **An ink-wash martial-arts fighting game that runs in a browser tab.**  
 *Made by Even, Luffy, Opus 5.5 and Gemini 4 Argon. Plain JavaScript on one canvas, peer-to-peer online play, and an optional Cloudflare Worker for accounts.*
 
-[![Play: GitHub Pages](https://img.shields.io/badge/Play-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
+[![Play: GitHub Pages](https://img.shields.io/badge/Play-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://bigbraindevbros.github.io/RenYing/)
 [![Client: 1.0.11](https://img.shields.io/badge/Client-1.0.11-blue.svg?style=flat-square)](docs/history/changelog.md)
 [![Heroes: 16](https://img.shields.io/badge/Heroes-16-red.svg?style=flat-square)](#heroes)
 [![Tech: HTML5 Canvas](https://img.shields.io/badge/Tech-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](#how-it-works)
 [![Online: WebRTC + Rollback](https://img.shields.io/badge/Online-WebRTC%20%2B%20Rollback-blue.svg?style=flat-square)](#how-it-works)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](license)
 
-**[English](readme.md)** · **[简体中文](readme.zh-cn.md)** · **[Wiki](https://github.com/AMFI-Disable/RenYing/wiki)** · [Changelog](changelog.md) · [Security Policy](security.md) · [MIT License](license)
+**[English](readme.md)** · **[简体中文](readme.zh-cn.md)** · **[Wiki](https://github.com/BigBrainDevBros/RenYing/wiki)** · [Changelog](changelog.md) · [Security Policy](security.md) · [MIT License](license)
 
 </div>
 
@@ -22,11 +22,11 @@
 
 ## Star History
 
-<a href="https://www.star-history.com/?type=date&repos=amfi-disable%2Frenying">
+<a href="https://www.star-history.com/?type=date&repos=bigbraindevbros%2Frenying">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=amfi-disable%2Frenying&type=date&theme=dark&legend=top-left" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=amfi-disable%2Frenying&type=date&legend=top-left" />
-    <img alt="AMFI-Disable/RenYing Star History Chart" src="https://api.star-history.com/chart?repos=amfi-disable%2Frenying&type=date&legend=top-left" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=bigbraindevbros%2Frenying&type=date&theme=dark&legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=bigbraindevbros%2Frenying&type=date&legend=top-left" />
+    <img alt="BigBrainDevBros/RenYing Star History Chart" src="https://api.star-history.com/chart?repos=bigbraindevbros%2Frenying&type=date&legend=top-left" />
   </picture>
 </a>
 
@@ -90,7 +90,7 @@ These captures show the English interface in combat, hero draft and the Armory. 
 
 | Way | How |
 | :--- | :--- |
-| **Online** | Open <https://amfi-disable.github.io/RenYing/> in Chrome, Edge, Safari or Firefox. Nothing to install. |
+| **Online** | Open <https://bigbraindevbros.github.io/RenYing/> in Chrome, Edge, Safari or Firefox. Nothing to install. |
 | **Offline** | Download `renying-offline.html` and double-click it. Music and the 青锋行 (Qingfengxing) mini-game are packed inside the one file. Online modes and accounts are not available offline. |
 | **Phone or tablet** | Open the same link and turn the device sideways. Touch controls appear automatically. |
 
@@ -176,7 +176,7 @@ Sixteen heroes. Each has a passive, a skill on `Q`, a second skill on `R`and an 
 | 磁仙 Ci Xian | Two-Pole Adept | 极性反转 Pole Swap | 磁极 Magnet Poles | 天地磁合 Heaven-Earth Clamp |
 | 千机 Qian Ji | Puppet Engineer | 金丝回环 Silk Loop | 穿丝急袭 Tether Lash | 机轮三穿 Gearwheel Triple Pass |
 
-Full move lists and frame data: [wiki: Heroes And Combat](https://github.com/AMFI-Disable/RenYing/wiki/Heroes-and-Combat) and [docs/ai/frame-data.md](docs/ai/frame-data.md).
+Full move lists and frame data: [wiki: Heroes And Combat](https://github.com/BigBrainDevBros/RenYing/wiki/Heroes-and-Combat) and [docs/ai/frame-data.md](docs/ai/frame-data.md).
 
 ---
 
@@ -192,7 +192,7 @@ The armory (武库) is the game's cosmetic collection. Skins and weapon looks ne
 - **Peddler (货郎)** shows one offer at a time at a fixed price.
 - **Combat loadouts** add an alternate stance for each hero and account-bound martial badges with action-triggered effects. KOs unlock stances and earn badge upgrade materials; these are separate from cosmetic skins.
 
-Every armory action on a cloud account is checked and recorded by the server. Details: [wiki: Armory](https://github.com/AMFI-Disable/RenYing/wiki/Armory-and-Marketplace).
+Every armory action on a cloud account is checked and recorded by the server. Details: [wiki: Armory](https://github.com/BigBrainDevBros/RenYing/wiki/Armory-and-Marketplace).
 
 ---
 
@@ -213,7 +213,7 @@ flowchart LR
 - **Server (optional):** a Cloudflare Worker with a D1 database for accounts, cloud saves, the armory economy, leaderboards and the open world (a Durable Object per world line). The game still works without it.
 - **Generated pages:** `tools/build.py`joins the sources in `src/`into `index.html`(online) and `renying-offline.html` (single file, offline).
 
-More in the wiki: [Multiplayer And Netcode](https://github.com/AMFI-Disable/RenYing/wiki/Multiplayer-and-Netcode) and [Architecture And Development](https://github.com/AMFI-Disable/RenYing/wiki/Architecture-and-Development).
+More in the wiki: [Multiplayer And Netcode](https://github.com/BigBrainDevBros/RenYing/wiki/Multiplayer-and-Netcode) and [Architecture And Development](https://github.com/BigBrainDevBros/RenYing/wiki/Architecture-and-Development).
 
 ---
 
@@ -273,7 +273,7 @@ Main test suites (all run in CI):
 
 Browser audits need a local server first (`python3 -m http.server 8791`), then for example `node tools/audits/ui-audit.mjs ci-ui 1440 900`, `node tools/audits/hud-audit.mjs ci-hud 1440 900`, `node tools/audits/touch-audit.mjs ci-touch`and `node tools/audits/kb-flow-test.mjs ci-kb 1440 900`. `node tools/tests/test.mjs` runs the main set in one go.
 
-The full test matrix is on the wiki page [Testing And CI](https://github.com/AMFI-Disable/RenYing/wiki/Testing-and-CI). The Worker is deployed by the maintainer; the steps are in [docs/ops/deploy-runbook.md](docs/ops/deploy-runbook.md).
+The full test matrix is on the wiki page [Testing And CI](https://github.com/BigBrainDevBros/RenYing/wiki/Testing-and-CI). The Worker is deployed by the maintainer; the steps are in [docs/ops/deploy-runbook.md](docs/ops/deploy-runbook.md).
 
 ---
 
@@ -287,7 +287,7 @@ Read [contributing.md](.github/contributing.md) first. In short:
 - Rebuild and commit the generated pages together with the source change.
 - Only pull requests from the maintainer and repository collaborators are merged.
 
-Bugs and ideas go in [Issues](https://github.com/AMFI-Disable/RenYing/issues). Security problems go through [security.md](security.md), not public issues.
+Bugs and ideas go in [Issues](https://github.com/BigBrainDevBros/RenYing/issues). Security problems go through [security.md](security.md), not public issues.
 
 ---
 

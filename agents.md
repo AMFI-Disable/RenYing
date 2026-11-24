@@ -81,7 +81,7 @@ Never skip, disable or weaken a test to make it pass.
 
 - Every tracked file and folder name is lowercase. `CNAME` is the only exception.
 - Markdown headings use Title Case and pass `.markdownlint.json`.
-- Keep `readme.md` and `readme.zh-cn.md` in step. The wiki lives at `AMFI-Disable/RenYing.wiki`, with a copy in `docs/wiki/`. Change both sides together.
+- Keep `readme.md` and `readme.zh-cn.md` in step. The wiki lives at `BigBrainDevBros/RenYing.wiki`, with a copy in `docs/wiki/`. Change both sides together.
 - Every user-facing string needs an English entry in `src/data/30-ui-copy-*.js`.
 
 ## Account Safety And Content Rules

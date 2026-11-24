@@ -7,14 +7,14 @@
 **在浏览器里打开就能玩的水墨武侠格斗游戏。**  
 *由 Even、Luffy、Opus 5.5 和 Gemini 4 Argon 制作。纯 JavaScript 画在一块 canvas 上，点对点联机，账号和存档用可选的 Cloudflare Worker。*
 
-[![在线游玩](https://img.shields.io/badge/在线游玩-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://amfi-disable.github.io/RenYing/)
+[![在线游玩](https://img.shields.io/badge/在线游玩-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://bigbraindevbros.github.io/RenYing/)
 [![客户端 1.0.11](https://img.shields.io/badge/客户端-1.0.11-blue.svg?style=flat-square)](docs/history/changelog.md)
 [![侠客 16 位](https://img.shields.io/badge/侠客-16%20位-red.svg?style=flat-square)](#侠客)
 [![技术 HTML5 Canvas](https://img.shields.io/badge/技术-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](#工作原理)
 [![联机 WebRTC 回滚](https://img.shields.io/badge/联机-WebRTC%20%2B%20回滚-blue.svg?style=flat-square)](#工作原理)
 [![许可 MIT](https://img.shields.io/badge/许可-MIT-blue.svg?style=flat-square)](license)
 
-**[English](readme.md)** • **[简体中文](readme.zh-cn.md)** • **[Wiki](https://github.com/AMFI-Disable/RenYing/wiki)**
+**[English](readme.md)** • **[简体中文](readme.zh-cn.md)** • **[Wiki](https://github.com/BigBrainDevBros/RenYing/wiki)**
 
 </div>
 
@@ -22,11 +22,11 @@
 
 ## 星标历史
 
-<a href="https://www.star-history.com/?type=date&repos=amfi-disable%2Frenying">
+<a href="https://www.star-history.com/?type=date&repos=bigbraindevbros%2Frenying">
   <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=amfi-disable%2Frenying&type=date&theme=dark&legend=top-left" />
-    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=amfi-disable%2Frenying&type=date&legend=top-left" />
-    <img alt="AMFI-Disable/RenYing Star History Chart" src="https://api.star-history.com/chart?repos=amfi-disable%2Frenying&type=date&legend=top-left" />
+    <source media="(prefers-color-scheme: dark)" srcset="https://api.star-history.com/chart?repos=bigbraindevbros%2Frenying&type=date&theme=dark&legend=top-left" />
+    <source media="(prefers-color-scheme: light)" srcset="https://api.star-history.com/chart?repos=bigbraindevbros%2Frenying&type=date&legend=top-left" />
+    <img alt="BigBrainDevBros/RenYing Star History Chart" src="https://api.star-history.com/chart?repos=bigbraindevbros%2Frenying&type=date&legend=top-left" />
   </picture>
 </a>
 
@@ -90,7 +90,7 @@
 
 | 方式 | 做法 |
 | :--- | :--- |
-| **在线** | 用 Chrome、Edge、Safari 或 Firefox 打开 <https://amfi-disable.github.io/RenYing/>，什么都不用装。 |
+| **在线** | 用 Chrome、Edge、Safari 或 Firefox 打开 <https://bigbraindevbros.github.io/RenYing/>，什么都不用装。 |
 | **离线** | 下载 `renying-offline.html`，双击打开。音乐和青锋行小游戏都在这一个文件里。离线版没有联机模式和账号。 |
 | **手机或平板** | 打开同一个链接，把设备横过来，触屏操作会自动出现。 |
 
@@ -176,7 +176,7 @@
 | 磁仙 | 两极方士 | 极性反转 | 磁极 | 天地磁合 |
 | 千机 | 机关傀客 | 金丝回环 | 穿丝急袭 | 机轮三穿 |
 
-完整招式和帧数见 [Wiki：侠客与战斗](https://github.com/AMFI-Disable/RenYing/wiki/Heroes-and-Combat) 和 [docs/ai/frame-data.md](docs/ai/frame-data.md)。
+完整招式和帧数见 [Wiki：侠客与战斗](https://github.com/BigBrainDevBros/RenYing/wiki/Heroes-and-Combat) 和 [docs/ai/frame-data.md](docs/ai/frame-data.md)。
 
 ---
 
@@ -192,7 +192,7 @@
 - **货郎** 一次报一件、按固定价格卖。
 - **战斗配置** 每位侠客都有可解锁的第二架势，还能装备账号绑定、由指定动作触发效果的武学徽记。斩获可解锁架势并获得徽记升阶材料；这些系统与外观皮肤分开。
 
-云端账号的每一次武库操作都由服务器核对并记录。详见 [Wiki：武库与市场](https://github.com/AMFI-Disable/RenYing/wiki/Armory-and-Marketplace)。
+云端账号的每一次武库操作都由服务器核对并记录。详见 [Wiki：武库与市场](https://github.com/BigBrainDevBros/RenYing/wiki/Armory-and-Marketplace)。
 
 ---
 
@@ -213,7 +213,7 @@ flowchart LR
 - **服务器（可选）：** Cloudflare Worker 加 D1 数据库，负责账号、云存档、武库经济、排行榜和开放世界（每条线一个 Durable Object）。没有它游戏也能玩。
 - **生成的网页：** `tools/build.py`把 `src/`里的源码拼成 `index.html`（在线版）和 `renying-offline.html`（单文件离线版）。
 
-更多见 Wiki：[联机与回滚同步](https://github.com/AMFI-Disable/RenYing/wiki/Multiplayer-and-Netcode)、[架构与开发](https://github.com/AMFI-Disable/RenYing/wiki/Architecture-and-Development)。
+更多见 Wiki：[联机与回滚同步](https://github.com/BigBrainDevBros/RenYing/wiki/Multiplayer-and-Netcode)、[架构与开发](https://github.com/BigBrainDevBros/RenYing/wiki/Architecture-and-Development)。
 
 ---
 
@@ -273,7 +273,7 @@ python3 tools/build.py --check
 
 浏览器检查要先开本地服务器（`python3 -m http.server 8791`），然后比如 `node tools/audits/ui-audit.mjs ci-ui 1440 900`、`node tools/audits/hud-audit.mjs ci-hud 1440 900`、`node tools/audits/touch-audit.mjs ci-touch`、`node tools/audits/kb-flow-test.mjs ci-kb 1440 900`。`node tools/tests/test.mjs` 一次跑完主要的几项。
 
-完整的测试清单见 Wiki 的 [测试与 CI](https://github.com/AMFI-Disable/RenYing/wiki/Testing-and-CI)。Worker 由维护者部署，步骤在 [docs/ops/deploy-runbook.md](docs/ops/deploy-runbook.md)。
+完整的测试清单见 Wiki 的 [测试与 CI](https://github.com/BigBrainDevBros/RenYing/wiki/Testing-and-CI)。Worker 由维护者部署，步骤在 [docs/ops/deploy-runbook.md](docs/ops/deploy-runbook.md)。
 
 ---
 
@@ -287,7 +287,7 @@ python3 tools/build.py --check
 - 改了源码要重新生成网页，和源码一起提交。
 - 只合并维护者和仓库协作者开的 PR。
 
-问题和想法提到 [Issues](https://github.com/AMFI-Disable/RenYing/issues)。安全问题请按 [security.md](security.md) 私下报告，不要公开发 issue。
+问题和想法提到 [Issues](https://github.com/BigBrainDevBros/RenYing/issues)。安全问题请按 [security.md](security.md) 私下报告，不要公开发 issue。
 
 ---
 
