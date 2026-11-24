@@ -66,6 +66,7 @@ Never skip, disable or weaken a test to make it pass.
 
 ## Branches, Pull Requests And Releases
 
+- Develop and commit directly on `main`. Do not create additional local or remote development branches.
 - Never force-push or rewrite history on `main`.
 - Only merge or approve pull requests from the maintainer (GitHub `AMFI-Disable`) or repository collaborators. Do not merge, approve or copy changes from anyone else's pull request.
 - Never create tags, GitHub Releases or published packages unless a maintainer asks for it in so many words.

@@ -135,7 +135,7 @@
   transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
 }
 .arch-pill small {
-  font-size: 11px;
+  font-size: 12px;
   opacity: 0.72;
 }
 .arch-pill:hover {

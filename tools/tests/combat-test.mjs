@@ -30,6 +30,7 @@ import rulesAndArenas from './combat/40-rules-and-arenas.mjs';
 import teamsAndPreMatch from './combat/50-teams-and-pre-match.mjs';
 import mapsTerrainAndMatchups from './combat/60-maps-terrain-and-matchups.mjs';
 import loadouts from './combat/70-loadouts.mjs';
+import overhaulSystems from './combat/80-overhaul-systems.mjs';
 
 console.log('===== RenYing Combat Mechanics & AI Capabilities Suite =====\n');
 
@@ -132,6 +133,7 @@ async function initRunner() {
 
   // Fast In-Process Sandbox Fallback
   console.log('[Runner] Executing in high-speed in-process sandbox.');
+  const armoryCode = readFileSync('src/armory-core.js', 'utf8');
   const netCode = readFileSync('src/net-p2p.js', 'utf8');
   const gameCode = gameSource();
   const dummyEl = {
@@ -153,7 +155,10 @@ async function initRunner() {
   const elCache = {};
   const getEl = id => {
     if (!elCache[id]) {
+      const clicks = [];
       elCache[id] = Object.assign({}, dummyEl, {
+        addEventListener(type, callback) { if (type === 'click') clicks.push(callback); },
+        click() { for (const callback of clicks) callback({ target: this }); },
         id, textContent: '', innerHTML: '', style: {},
         classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => false }
       });
@@ -187,6 +192,7 @@ async function initRunner() {
   Object.assign(sandbox.window, sandbox);
   vm.createContext(sandbox.window);
 
+  new vm.Script(armoryCode).runInContext(sandbox.window);
   new vm.Script(netCode).runInContext(sandbox.window);
   new vm.Script(gameCode).runInContext(sandbox.window);
 
@@ -221,6 +227,7 @@ const testSuite = [
   ...teamsAndPreMatch,
   ...mapsTerrainAndMatchups,
   ...loadouts,
+  ...overhaulSystems,
 ];
 
 let failed = 0;

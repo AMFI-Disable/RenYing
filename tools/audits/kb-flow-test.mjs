@@ -31,7 +31,6 @@ const OUT = args[0] || join(tmpdir(), 'renying-kb-flow');
 const VW = +(args[1] || 1440), VH = +(args[2] || 900);
 const PORT = +(process.env.RENYING_CDP_PORT || 9385);
 const GAME = process.env.RENYING_URL || 'http://127.0.0.1:8791/';
-const MATCH_LIMIT = +(process.env.RENYING_KB_MATCH_S || 300);   // a full best-of-three can run 3 x (50 s + overtime)
 mkdirSync(OUT, { recursive: true });
 const LOG = `${OUT}/chrome.log`;
 const sleep = ms => new Promise(r => setTimeout(r, ms));
@@ -320,9 +319,10 @@ async function dummyFlow() {
 }
 
 // 4. fight with the 1P keyboard keys only: walk at the opponent, attack, jump now and then
+const matchLimit = +(process.env.RENYING_KB_MATCH_S || await ev('MAX_ROUNDS * (ROUND_TIME + OT_TIME + 10) + CREDIT'));
 const t0 = Date.now(); let held = null, hits = 0, shotMid = false;
-while (Date.now() - t0 < MATCH_LIMIT * 1000) {
-  const g = await ev(`({ scr: ([...document.querySelectorAll('.scr.on')].pop() || {}).id || null, phase: M.phase, ax: A.x, bx: B.x, bhp: B.hp, round: M.round, wins: M.wins.slice() })`);
+while (Date.now() - t0 < matchLimit * 1000) {
+  const g = await ev(`({ scr: ([...document.querySelectorAll('.scr.on')].pop() || {}).id || null, phase: M.phase, ax: A.x, bx: B.x, meter: A.meter })`);
   if (g.scr === 'end') break;
   if (g.scr === 'pause') { await fatal('match', 'game paused itself'); }
   if (g.phase === 'fight') {
@@ -331,11 +331,15 @@ while (Date.now() - t0 < MATCH_LIMIT * 1000) {
     await press('KeyX', 40); hits++;
     if (hits % 9 === 0) await press('KeyW', 40);
     if (hits % 13 === 0) await press('KeyQ', 40);
+    if (g.meter >= 100) await press('KeyE', 40);
     if (!shotMid && hits > 20) { await shot('04-match'); shotMid = true; }
   } else { if (held) { await keyUp(held); held = null; } await sleep(150); }
 }
 if (held) await keyUp(held);
-if ((await waitScreen(['end'], 15000)) !== 'end') await fatal('results screen', `no results after ${MATCH_LIMIT}s`);
+if ((await waitScreen(['end'], 15000)) !== 'end') {
+  const state = await ev(`JSON.stringify({ phase: M.phase, round: M.round, wins: M.wins, timer: Math.ceil(M.timer), fps: FPS })`);
+  await fatal('results screen', `no results after ${matchLimit}s (${state})`);
+}
 const res = await ev(`({ title: $id('endTitle') ? $id('endTitle').textContent : '', sub: $id('endSub') ? $id('endSub').textContent : '', wins: M.wins.slice() })`);
 ok('results screen', true, `${res.title} ${res.wins.join(':')} after ${Math.round((Date.now() - t0) / 1000)}s`);
 await sleep(900);

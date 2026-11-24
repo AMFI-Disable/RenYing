@@ -81,6 +81,11 @@
   // 这里按模板换：$1 之类照常可用，也可以直接给一个替换函数。
   const EN_DUR = s => String(s).replace(/(\d+)\s*天/g, '$1d').replace(/(\d+)\s*小时/g, '$1h').replace(/(\d+)\s*分(?:钟)?/g, '$1m');
   const PATTERNS_EN = [
+    [/^“蓄满(.+)，格挡在它面前像纸一样薄。”$/, (m, move) => lookup(move) ? `“Fully charge ${lookup(move)} to break a guard.”` : m],
+    [/^“凌空使出(.+)，制空追击一气呵成。”$/, (m, move) => lookup(move) ? `“Use ${lookup(move)} to follow up in midair.”` : m],
+    [/^“(.+)一出，(.+)让对手措手不及。”$/, (m, move, effect) => lookup(move) && lookup(effect) ? `“Catch your opponent off guard with ${lookup(move)}. Effect: ${lookup(effect)}.”` : m],
+    [/^“(.+)顺势抽身，化险为夷。”$/, (m, move) => lookup(move) ? `“Use ${lookup(move)} to slip out of danger.”` : m],
+    [/^“气满施展「(.+)」，(.+)定乾坤。”$/, (m, move, effect) => lookup(move) && lookup(effect) ? `“At full meter, use ${lookup(move)}. Effect: ${lookup(effect)}.”` : m],
     [/^总伤害\s*(\d+)\s*·\s*最长连击\s*(\d+)\s*·\s*破防\s*(\d+)\s*·\s*坠崖\s*(\d+)$/, (m0, damage, combo, breaks, falls) => `Damage ${damage} · Longest combo ${combo} · Guard breaks ${breaks} · Terrain falls ${falls}`],
     [/^今日\s*(\d+)\/(\d+)(?:\s*·\s*可领\s*(\d+)\s*墨锭)?$/, (m0, a, b, c) => `Today ${a}/${b}` + (c ? ` · ${c} Ink to claim` : '')],
     [/^(.+?)\s*位侠士在线$/, (m0, n) => `${n} ${n === '1' ? 'warrior' : 'warriors'} online`],
