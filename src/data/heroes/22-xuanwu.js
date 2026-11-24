@@ -7,7 +7,7 @@ defHero({
     skill: 'shellbash', skill2: 'earthfort', ult: 'tortoiseslam', passive: 'armor',
     passiveName: '玄甲不动',
     passiveDesc: '稳如泰山的玄甲重卫；重击附带霸体，Q 玄甲冲撞顶锤突进击退破防，R 镇岳壁垒强化护体霸体并震地反击。',
-    stat: { hp: 920, walk: 0.9, speed: 0.88, dmg: 1.06, reach: 1.06, swing: 0.84, jump: 0.94, weight: 1.32, defRating: 1.16, guardMax: 128, guardStab: 1.14, guardChip: 0.06, guardRegen: 28, poise: 1.25, size: 1.1 },
+    stat: { hp: 920, walk: 0.88, speed: 0.88, dmg: 1.0, reach: 1.0, swing: 0.84, jump: 0.94, weight: 1.32, defRating: 1.2, guardMax: 140, guardStab: 1.35, guardChip: 0.04, guardRegen: 32, poise: 1.25, size: 1.1 },
     hitFeel: 1.15,
     look: { body: '#222b26', shade: '#101613', outline: '#8cd48c', outlineA: 0.9, scarf: '#4c7a5a', slash: '140,212,140', blade: '#e4f7dc', hair: '#1b201d', head: 'turtle-crown', weapon: 'bastionshell' },
     ai: { range: [70, 205] },

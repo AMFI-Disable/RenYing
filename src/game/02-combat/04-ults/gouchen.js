@@ -10,7 +10,7 @@ Object.assign(ULTS, {
       }
       if (f.spN === 1 && f.t >= 0.95) {
         f.spN = 2;
-        if (foe && foe.rooted && foe.state === 'hitstun' && foe.hp > 0 && foe.invul <= 0) {
+        if (foe && foe.rooted && foe.state === 'hitstun' && foe.hp > 0 && !invulVs(foe, f)) {
           f.face = foe.x >= f.x ? 1 : -1; f.spPose = 'gc_pull'; f.snap = true;
           foe.x = clamp(f.x + f.face * 70, WALL, STAGE_W - WALL);
           if (f.plat >= 0 && typeof mapPutOn === 'function') mapPutOn(foe, f.plat);

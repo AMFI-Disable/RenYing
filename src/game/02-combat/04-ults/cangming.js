@@ -8,7 +8,7 @@ Object.assign(ULTS, {
     update(f, foe) {
       if (f.sp === 'pull') {
         for (const tf of isMulti() ? foesOf(f) : [foe]) {
-          if (!tf || tf.hidden || tf.hp <= 0 || tf.invul > 0 || Math.hypot(tf.x - f.x, tf.y - f.y) > 380) continue;
+          if (!tf || tf.hidden || tf.hp <= 0 || invulVs(tf, f) || Math.hypot(tf.x - f.x, tf.y - f.y) > 380) continue;
           const pullX = clamp(f.x + f.face * 86, WALL + 20, STAGE_W - WALL - 20);
           tf.x = damp(tf.x, pullX, 11, STEP);
         }

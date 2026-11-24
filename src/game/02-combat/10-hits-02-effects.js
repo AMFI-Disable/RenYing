@@ -191,12 +191,7 @@ function applyHit(att, def, m, pt) {
     if (--def.armorHits <= 0) def.armorT = 0;
     if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.16 * mm);
     def.meter = Math.min(100, def.meter + m.dmg * 0.14);
-    if (def.ch.passive === 'armor') {
-      def.meter = Math.min(100, def.meter + 2.5);
-      def.skillCD = Math.max(0, def.skillCD - 0.4);
-      def.skill2CD = Math.max(0, def.skill2CD - 0.4);
-      ring(def.x, def.y - 60, 90, '255,200,120', 0.25);
-    }
+    armorPerk(def);   // 各位霸体侠客扛住一下的回报不一样，见 10-hits-03-signatures.js
     if (typeof applyCombatBadgeHit === 'function') applyCombatBadgeHit(att, def, m, ev);
     ev.armor = true; ev.dd = dmg;
     hitVisual(ev); netEmit(ev);
@@ -327,6 +322,9 @@ function applyHit(att, def, m, pt) {
   if (def.dummy) def.hp = Math.max(1, def.hp);
   if (scPre) scAfterHit(att, def, m, ev, dmg, isCounter, scPre);
   att.hitConfirmed = true;
+  // 记下谁打了谁：电脑的「脑子」靠它决定先打完连招还是反击（见 08-fighter-01-entity.js 的 brainCommitted）
+  if (!(clock - brainT(att.lastLandT) < BRAIN.commit && att.lastLandIdx === def.idx)) att.comboT0 = clock;
+  att.lastLandIdx = def.idx; att.lastLandT = clock; def.lastHitByIdx = att.idx; def.lastHitByT = clock;
   const chaosMeterMul = (chaosNow('meter_gain') || { val: 1 }).val;
   if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul);
   def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.08 : 0.14));
@@ -341,7 +339,7 @@ function applyHit(att, def, m, pt) {
     def.vy = 0;
     def.y = gndY(def);
     def.rot = 0;
-    def.invul = 0.45;
+    def.invul = 0.45; markHitInvul(def, att);
     def.spiked = false;
     def.juggle = 0;
     def.comboHits = 0;
@@ -353,7 +351,7 @@ function applyHit(att, def, m, pt) {
     addP({ type: 'text', text: '格挡卸力 · 快速起身', x: def.x, y: def.y - 110, life: 0.85, max: 0.85, rgb: '170,220,255' });
   }
   else if (m.noStun && def.hp > 0) { /* 不僵直：只掉血，对手手上的动作照常 */ }
-  else if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.plat = -1; def.y = Math.min(def.y - 1, -1); def.invul = 1.5; def.spiked = false; def.juggle = 0; ev.knock = true; }
+  else if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.plat = -1; def.y = Math.min(def.y - 1, -1); def.invul = 1.5; markHitInvul(def, att); def.spiked = false; def.juggle = 0; ev.knock = true; }
   else if (m.root && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = m.stun; def.vx = 0; def.rooted = true; ev.root = true; }
   else if (m.hold) { def.state = 'held'; }
   else {
@@ -365,7 +363,7 @@ function applyHit(att, def, m, pt) {
         def.vx = fx * 560 * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio)));
         def.vy = -180;
         def.plat = -1;
-        def.invul = 0.65;
+        def.invul = 0.65; markHitInvul(def, att);
         def.spiked = false;
         def.airRecover = true;
         def.juggle = 0;

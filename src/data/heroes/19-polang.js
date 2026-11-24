@@ -8,7 +8,7 @@ defHero({
     profile: { weapon: "燕尾救生锚", bio: "破浪小时候靠一根空船绳活下来，如今在回头湾捞船也捞人。他一害怕就笑得格外响，还给每条靠岸的船起外号。" },
     passiveName: '沧澜重锚',
     passiveDesc: '重击与蓄力攻击附带短暂霸体；Q 怒涛震锚重创架势并挑飞对手，R 破浪突进携霸体冲锋。',
-    stat: { hp: 900, walk: 0.92, speed: 0.9, dmg: 1.06, reach: 1.1, swing: 0.86, jump: 0.96, weight: 1.28, defRating: 1.12, guardMax: 120, guardStab: 1.1, guardChip: 0.07, guardRegen: 26, poise: 1.2, size: 1.08 },
+    stat: { hp: 900, walk: 1.0, speed: 0.9, dmg: 1.06, reach: 1.1, swing: 0.86, jump: 1.04, weight: 1.18, defRating: 1.08, guardMax: 120, guardStab: 1.1, guardChip: 0.07, guardRegen: 26, poise: 1.2, size: 1.08 },
     hitFeel: 1.12,
     look: { body: '#193545', shade: '#0c1c26', outline: '#54d8ff', outlineA: 0.9, scarf: '#2ca8d8', slash: '80,210,255', blade: '#dff8ff', hair: '#142028', head: 'wave-visor', weapon: 'rescueanchor' },
     ai: { range: [75, 215] },

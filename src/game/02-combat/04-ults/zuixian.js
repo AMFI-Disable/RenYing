@@ -5,7 +5,7 @@ Object.assign(ULTS, {
     update(f, foe) {
       if (f.spN < 8 && f.t >= 0.35 + f.spN * 0.17) {
         f.spN++; f.spPose = f.spN % 2 ? 'zx_sway' : 'zx_drink';
-        if (foe.hp > 0 && foe.invul <= 0) applyHit(f, foe, { dmg: 15, exact: true, kb: [0, 0], stun: 0.35, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: f.face }, [foe.x, foe.y - 60]);
+        if (foe.hp > 0 && !invulVs(foe, f)) applyHit(f, foe, { dmg: 15, exact: true, kb: [0, 0], stun: 0.35, hs: 0.03, unblockable: true, ult: true, noScale: true, dir: f.face }, [foe.x, foe.y - 60]);
         shake = Math.max(shake, 4 + f.spN); SFX.thud();
       }
       if (f.t >= 1.95) { if (foe.hp > 0) foe.veilT = PENGLAI_T; endSpecial(f); }

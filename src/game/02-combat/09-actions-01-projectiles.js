@@ -257,7 +257,7 @@ function updateProjs() {
     for (const foe of candidates) {
       if (p.dead) break;
       if (!foe || foe.hidden || foe.hp <= 0) continue;
-      if (p.kind === 'ironball' ? ironBallInvulnerable(foe) : foe.invul > 0) continue;
+      if (p.kind === 'ironball' ? ironBallInvulnerable(foe) : invulVs(foe, owner)) continue;
       const lastHit = p.hitAt[foe.idx];
       if (lastHit !== undefined && (p.age - lastHit) < (p.rehit || 99)) continue;
       if (p.groundOnly || p.kind === 'quake') {
@@ -285,11 +285,7 @@ function updateProjs() {
       }
       if (foe.armorT > 0 && !p.ult && !p.pierce) {
         p.dead = true; ring(p.x, p.y, 50, '255,215,120', 0.25); SFX.block();
-        if (foe.ch.passive === 'armor') {
-          foe.meter = Math.min(100, foe.meter + 3);
-          foe.skillCD = Math.max(0, foe.skillCD - 0.3);
-          foe.skill2CD = Math.max(0, foe.skill2CD - 0.3);
-        }
+        armorPerk(foe);   // 暗器被霸体挡住，回报同样按各自的侠客（10-hits-03-signatures.js）
         addP({ type: 'text', text: '霸体', x: foe.x, y: foe.y - 130, life: 0.6, max: 0.6, rgb: '255,215,120' });
         break;
       }
@@ -339,7 +335,7 @@ function updateProjs() {
         const chained = [foe.idx];
         const range = p.chainRange || 340;
         for (let ci = 0; ci < p.chain; ci++) {
-          const next = candidates.find(ef => ef && !ef.hidden && ef.hp > 0 && ef.invul <= 0 && !chained.includes(ef.idx) && Math.hypot(ef.x - cur.x, (ef.y - 55) - (cur.y - 55)) <= range);
+          const next = candidates.find(ef => ef && !ef.hidden && ef.hp > 0 && !invulVs(ef, owner) && !chained.includes(ef.idx) && Math.hypot(ef.x - cur.x, (ef.y - 55) - (cur.y - 55)) <= range);
           if (!next) break;
           chained.push(next.idx);
           const cDmg = Math.max(6, Math.round(p.dmg * Math.pow(0.75, ci + 1)));

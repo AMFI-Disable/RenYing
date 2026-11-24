@@ -134,7 +134,7 @@ Object.assign(SKILLS, {
           const lo = Math.min(x0, f.x) - (C.swapPathPad || 30), hi = Math.max(x0, f.x) + (C.swapPathPad || 30), top = Math.min(y0, f.y) - 170, bot = Math.max(y0, f.y) + 30;
           echoCloneAttack(f, [lo, top, hi, bot], { dmg: C.swapPathDmg, kb: [220, -380], stun: 0.45, hs: 0.1, launch: true, big: true, skill: true }, 'mistswap');
           for (const e of foesOf(f)) {
-            if (!e || e.hp <= 0 || e.invul > 0 || e.x < lo || e.x > hi || e.y < top || e.y > bot) continue;
+            if (!e || e.hp <= 0 || invulVs(e, f) || e.x < lo || e.x > hi || e.y < top || e.y > bot) continue;
             applyHit(f, e, { dmg: C.swapPathDmg, kb: [220, -380], stun: 0.45, hs: 0.1, launch: true, big: true, dir: Math.sign(f.x - x0) || f.face, srcX: x0 }, [e.x, e.y - 60]);
             if (!RESIM) for (let k = 0; k < 8; k++) addP({ type: 'spark', x: e.x, y: e.y - 60 + rand(-30, 30), vx: (Math.sign(f.x - x0) || 1) * rand(200, 460), vy: rand(-60, 60), rgb: '127,214,224', life: 0.28, max: 0.28, w: 1.8 });
           }

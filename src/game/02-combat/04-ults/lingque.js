@@ -13,7 +13,7 @@ Object.assign(ULTS, {
         const ang = (f.spN * 0.6) % 3.14;
         slashLine(foe.x + rand(-40, 40), foe.y - 50 + rand(-30, 30), ang, '235,110,210');
         ring(foe.x, foe.y - 50, 70 + f.spN * 10, '235,110,210', 0.25);
-        const targets = isMulti() ? foesOf(f).filter(tf => tf && tf.hp > 0 && tf.invul <= 0 && Math.hypot(tf.x - foe.x, tf.y - foe.y) <= 210) : (foe && foe.hp > 0 && foe.invul <= 0 ? [foe] : []);
+        const targets = isMulti() ? foesOf(f).filter(tf => tf && tf.hp > 0 && !invulVs(tf, f) && Math.hypot(tf.x - foe.x, tf.y - foe.y) <= 210) : (foe && foe.hp > 0 && !invulVs(foe, f) ? [foe] : []);
         for (let i = 0; i < targets.length; i++) {
           const tf = targets[i];
           const sc = typeof multiTargetScale === 'function' ? multiTargetScale(i) : 1;
@@ -26,7 +26,7 @@ Object.assign(ULTS, {
         f.y = gndY(f); f.vy = 0;
         shake = Math.max(shake, 16); SFX.heavy(); SFX.slice();
         ring(foe.x, foe.y - 50, 165, '255,140,225', 0.45);
-        const targets = isMulti() ? foesOf(f).filter(tf => tf && tf.hp > 0 && tf.invul <= 0 && Math.hypot(tf.x - foe.x, tf.y - foe.y) <= 230) : (foe && foe.hp > 0 && foe.invul <= 0 ? [foe] : []);
+        const targets = isMulti() ? foesOf(f).filter(tf => tf && tf.hp > 0 && !invulVs(tf, f) && Math.hypot(tf.x - foe.x, tf.y - foe.y) <= 230) : (foe && foe.hp > 0 && !invulVs(foe, f) ? [foe] : []);
         for (let i = 0; i < targets.length; i++) {
           const tf = targets[i];
           const sc = typeof multiTargetScale === 'function' ? multiTargetScale(i) : 1;

@@ -12,7 +12,7 @@ Object.assign(ULTS, {
     update(f, foe) {
       if (f.t >= 0.1 && !f.hitDone) {
         f.hitDone = true;
-        if (Math.abs(foe.x - f.x) < 280 && Math.abs(foe.y - f.y) < 220 && foe.invul <= 0)
+        if (Math.abs(foe.x - f.x) < 280 && Math.abs(foe.y - f.y) < 220 && !invulVs(foe, f))
           applyHit(f, foe, { dmg: 75, kb: [460, -640], stun: 0.6, hs: 0.15, launch: true, big: true, ult: true, noScale: true, dir: foe.x >= f.x ? 1 : -1 }, [foe.x, foe.y - 60]);
       }
       if (f.t >= 0.55) endSpecial(f);

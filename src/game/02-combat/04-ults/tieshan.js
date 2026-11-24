@@ -62,7 +62,7 @@ Object.assign(ULTS, {
           const canCrushUlt = tf.state === 'special' && !foeIsFlying && !foeIsDashUlt;
           const dx = Math.abs(tf.x - f.x), dy = Math.abs(tf.y - layerY);
           const foeDown = tf.state === 'knockdown' || tf.state === 'getup';
-          if (dx < 225 && dy < 110 && (tf.invul <= 0 || canCrushUlt || foeDown) && !foeIsFlying && !foeIsDashUlt) {
+          if (dx < 225 && dy < 110 && (!invulVs(tf, f) || canCrushUlt || foeDown) && !foeIsFlying && !foeIsDashUlt) {
             f.avaHitSet.push(tf.idx);
             const dir = tf.x >= f.x ? 1 : -1;
             const full = dx < 100 && !foeDown;

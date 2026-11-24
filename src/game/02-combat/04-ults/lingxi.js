@@ -16,7 +16,7 @@ Object.assign(ULTS, {
           if (p.owner !== f.idx && !p.dead && !p.ult && !p.unbreakable && Math.hypot(p.x - f.x, p.y - (f.y - 60)) < rad) p.dead = true;
         }
         for (const tf of isMulti() ? foesOf(f) : [foe]) {
-          if (!tf || tf.hp <= 0 || tf.invul > 0 || Math.hypot(tf.x - f.x, tf.y - f.y) > rad) continue;
+          if (!tf || tf.hp <= 0 || invulVs(tf, f) || Math.hypot(tf.x - f.x, tf.y - f.y) > rad) continue;
           tf.slowT = Math.max(tf.slowT || 0, 2.0);
           tf.guard = Math.max(0, (tf.guard || 0) - 22);
           applyHit(f, tf, { dmg: last ? 58 : 28, kb: [last ? 420 : 120, last ? -520 : -140], stun: last ? 0.6 : 0.32, hs: last ? 0.14 : 0.05, launch: last, unblockable: last, ult: true, noScale: true, big: last, dir: tf.x >= f.x ? 1 : -1 }, [tf.x, tf.y - 54]);

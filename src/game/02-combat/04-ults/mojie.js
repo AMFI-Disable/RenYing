@@ -11,7 +11,7 @@ Object.assign(ULTS, {
       if (f.spN === 0 && f.t >= 0.2) {
         f.spN = 1;
         for (const tf of isMulti() ? foesOf(f) : [foe]) {
-          if (!tf || tf.hp <= 0 || tf.invul > 0 || Math.abs(tf.x - f.mjX) > 175 || Math.abs(tf.y - f.mjY) > 110) continue;
+          if (!tf || tf.hp <= 0 || invulVs(tf, f) || Math.abs(tf.x - f.mjX) > 175 || Math.abs(tf.y - f.mjY) > 110) continue;
           tf.slowT = Math.max(tf.slowT || 0, 2.5);
           tf.guard = Math.max(0, (tf.guard || 0) - 45);
           applyHit(f, tf, { dmg: 38, kb: [0, 0], stun: 0.55, hs: 0.08, root: true, unblockable: true, ult: true, noScale: true, dir: f.face }, [tf.x, tf.y - 50]);
@@ -21,7 +21,7 @@ Object.assign(ULTS, {
         f.spN = 2;
         if (!RESIM) { shake = Math.max(shake, 22); flashA = 0.34; flashRGB = '170,120,255'; ring(f.mjX, f.mjY - 40, 225, '170,120,255', 0.5); dust(f.mjX, f.mjY, 22); SFX.ko(); }
         for (const tf of isMulti() ? foesOf(f) : [foe]) {
-          if (!tf || tf.hp <= 0 || tf.invul > 0 || Math.abs(tf.x - f.mjX) > 210 || Math.abs(tf.y - f.mjY) > 140) continue;
+          if (!tf || tf.hp <= 0 || invulVs(tf, f) || Math.abs(tf.x - f.mjX) > 210 || Math.abs(tf.y - f.mjY) > 140) continue;
           applyHit(f, tf, { dmg: 115, kb: [340, -680], stun: 0.72, hs: 0.18, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: tf.x >= f.mjX ? 1 : -1 }, [tf.x, tf.y - 56]);
         }
       }

@@ -68,7 +68,7 @@ class Fighter {
       skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escMode: '', escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, skAir: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, thunderGuardT: 0, buffT: 0, sinceHit: 0, regenLeft: Math.round(135 * HERO_HP_SCALE), spN: 0, spPose: null, rooted: false, slowT: 0, defDebuffT: 0, swapFreezeT: 0,
       notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, needleMarkT: 0, lqNormHits: 0, shadowMarks: 0, shadowMarkT: 0, shadowExecTarget: -1, shadowExecT: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0, pol: 0, polT: 0, magN: 0, magTg: -1, mChain: 0, mT: 0, sw: null, squashT: 0,
       guard: this.maxGuard, sinceBlock: 0,
-      state: 'idle', t: 0, move: null, invul: 0, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
+      state: 'idle', t: 0, move: null, invul: 0, hitInvulBy: -1, hitInvulEnd: 0, lastHitByIdx: -1, lastHitByT: -99, lastLandIdx: -1, lastLandT: -99, comboT0: -99, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
       stance: 0, stanceUnlocked: false, stanceT: 0, badgeId: '', badgeTier: '', badgeDashT: 0,
       badgeLinkT: 0, badgePressureT: 0, badgePressureSkill: 0, badgeRiposteT: 0, badgeBreakT: 0, badgeAirSkillT: 0, badgeExitT: 0, badgeAirUsed: 0, badgeAirSkillUsed: 0,
       ballGuardBreakT: 0,
@@ -156,6 +156,25 @@ const foesOf = f => {
 };
 // 2v2 / 大型团战里谁算电脑（会配合队友选目标）。本地四个玩家用 human[0]～[3]；联机和本地回放里玩家的操控是普通 Ctrl，带 net 标记，也不是电脑
 const cpuTeamwork = f => !!(f.ctrl && !human.includes(f.ctrl) && !f.ctrl.net);
+// 多人对局电脑侠客的「脑子」：专心打一个人的时候，就算被别人打了，也先把手上这套连招打完，再回头反击打他的人。
+//   commit：打中对手后这么多秒内算「连招进行中」；maxCombo：一套连招最多让他专注这么久，免得被人一直牵着；
+//   revenge：被打后这么多秒内，连招一结束就优先反击那个人；range：反击的人离得太远就不追。
+const BRAIN = { commit: 0.6, maxCombo: 3.5, revenge: 2.6, range: 560 };
+const BRAIN_STUN = ['hitstun', 'launched', 'held', 'blockstun'];
+const brainT = t => t === undefined ? -99 : t;   // 时间戳可能正好是 0（对局刚开始），不能用 || 兜底
+function brainCommitted(f, cur) {
+  if (!cur || cur.hidden || cur.hp <= 0) return false;
+  if (clock - brainT(f.comboT0) > BRAIN.maxCombo) return false;
+  const swinging = f.state === 'attack' || f.state === 'skill' || f.state === 'special';
+  if (swinging && f.lastLandIdx === cur.idx && clock - brainT(f.lastLandT) < BRAIN.commit * 3) return true;
+  return f.lastLandIdx === cur.idx && clock - brainT(f.lastLandT) < BRAIN.commit && (BRAIN_STUN.includes(cur.state) || cur.state === 'knockdown');
+}
+function brainRevenge(f, list, distance) {
+  const by = f.lastHitByIdx >= 0 ? fighterByIdx(f.lastHitByIdx) : null;
+  if (!by || by.hidden || by.hp <= 0 || !list.includes(by)) return null;
+  if (clock - brainT(f.lastHitByT) > BRAIN.revenge || distance(by, f) > BRAIN.range) return null;
+  return by;
+}
 const foeOf = f => {
   if (!isMulti()) return f === A ? B : A;
   if (isRaid() && f !== B) { f.target = B; return B; }
@@ -173,6 +192,8 @@ const foeOf = f => {
   }
   const layered = battleMapOn();
   const distance = (a, b) => layered ? Math.abs(a.x - b.x) + Math.abs(a.y - b.y) * 2 : Math.abs(a.x - b.x);
+  // 电脑侠客的脑子：正在连招的时候不换人，连招打完才回头反击
+  if (!isRaid() && cpuTeamwork(f) && f.target && list.includes(f.target) && brainCommitted(f, f.target)) return f.target;
   // 电脑侠客的团队意识：支持 1/2/3 战术指令（集火 / 掩护 / 散开）
   if (!isRaid() && cpuTeamwork(f)) {
     const myTeam = fighterTeam(f);
@@ -199,6 +220,10 @@ const foeOf = f => {
       const bully = list.find(e => distance(e, mate) < 260);
       if (bully) { f.target = bully; return bully; }
     }
+  }
+  if (!isRaid() && cpuTeamwork(f)) {
+    const avenge = brainRevenge(f, list, distance);
+    if (avenge) { f.target = avenge; return avenge; }
   }
   let cur = f.target && !f.target.hidden && f.target.hp > 0 && list.includes(f.target) ? f.target : null;
   if (cur) {

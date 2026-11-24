@@ -8,7 +8,7 @@ Object.assign(ULTS, {
     update(f, foe) {
       if (f.sp === 'rush') {
         for (const tf of isMulti() ? foesOf(f) : [foe]) {
-          if (!tf || tf.hp <= 0 || tf.invul > 0 || Math.abs(tf.x - f.x) > 105 || Math.abs(tf.y - f.y) > 95) continue;
+          if (!tf || tf.hp <= 0 || invulVs(tf, f) || Math.abs(tf.x - f.x) > 105 || Math.abs(tf.y - f.y) > 95) continue;
           f.sp = 'hoist'; f.t = 0; f.vx = 0; f.bwVictim = tf; f.spPose = 'ts_lift';
           tf.state = 'held'; tf.t = 0; tf.vx = 0; tf.vy = 0; tf.move = null; tf.skill = null; tf.sp = null;
           SFX.heavy(); return;
@@ -27,7 +27,7 @@ Object.assign(ULTS, {
           }
           let splashIdx = 1;
           for (const tf of isMulti() ? foesOf(f) : [foe]) {
-            if (!tf || tf === v || tf.hp <= 0 || tf.invul > 0 || Math.abs(tf.x - f.x) > 225 || Math.abs(tf.y - f.y) > 120) continue;
+            if (!tf || tf === v || tf.hp <= 0 || invulVs(tf, f) || Math.abs(tf.x - f.x) > 225 || Math.abs(tf.y - f.y) > 120) continue;
             const sc = typeof multiTargetScale === 'function' ? multiTargetScale(splashIdx++) : 1;
             applyHit(f, tf, { dmg: Math.max(1, Math.round(85 * sc)), kb: [380, -520], stun: 0.55, hs: 0.08, launch: true, unblockable: true, ult: true, noScale: true, dir: tf.x >= f.x ? 1 : -1 }, [tf.x, tf.y - 45]);
           }

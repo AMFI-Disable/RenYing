@@ -15,7 +15,7 @@ Object.assign(ULTS, {
           else { f.y = foe.y; f.plat = foe.plat; }
           f.face = foe.x >= f.x ? 1 : -1;
           if (!RESIM) { shake = Math.max(shake, 22); flashA = 0.38; flashRGB = '195,95,255'; slashLine(foe.x, foe.y - 58, -0.5 * f.face, '200,105,255'); slashLine(foe.x, foe.y - 58, 0.5 * f.face, '255,220,255'); SFX.ko(); }
-          if (foe.invul <= 0) {
+          if (!invulVs(foe, f)) {
             const lowBonus = foe.hp < foe.maxHp * 0.35 ? 1.32 : 1;
             applyHit(f, foe, { dmg: Math.round(145 * lowBonus), kb: [460, -560], stun: 0.72, hs: 0.2, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 56]);
             if (lowBonus > 1 && !RESIM) addP({ type: 'text', text: '☠ 永夜斩杀!', x: foe.x, y: foe.y - 126, life: 1.0, max: 1.0, rgb: '220,120,255' });

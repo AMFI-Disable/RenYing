@@ -7,7 +7,7 @@ defHero({
     skill: 'gangthrust', skill2: 'ironbulwark', ult: 'heavenbreaker', passive: 'armor',
     passiveName: '天罡铁壁',
     passiveDesc: '军阵出身的铁甲枪卫；重击附带霸体，Q 破阵长驱顶枪霸体突进破防，R 铁壁震枪固守架势并震退近敌。',
-    stat: { hp: 910, walk: 0.93, speed: 0.9, dmg: 1.05, reach: 1.15, swing: 0.86, jump: 0.95, weight: 1.28, defRating: 1.14, guardMax: 124, guardStab: 1.12, guardChip: 0.06, guardRegen: 28, poise: 1.22, size: 1.08 },
+    stat: { hp: 910, walk: 0.98, speed: 0.9, dmg: 1.05, reach: 1.28, swing: 0.86, jump: 0.95, weight: 1.28, defRating: 1.08, guardMax: 112, guardStab: 1.12, guardChip: 0.06, guardRegen: 28, poise: 1.1, size: 1.08 },
     hitFeel: 1.12,
     look: { body: '#222b3d', shade: '#111622', outline: '#f0c860', outlineA: 0.92, scarf: '#c83e3b', slash: '240,200,96', blade: '#fff6d6', hair: '#1d1d24', head: 'halberd-plume', weapon: 'gangpike' },
     ai: { range: [100, 250] },

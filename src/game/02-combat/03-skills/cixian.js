@@ -31,7 +31,7 @@ Object.assign(SKILLS, {
           ring(f.x, f.y - 60, 70, rgb, 0.3); SFX.dash();
           addP({ type: 'mag', pol: -1, x: f.x + f.face * 34, y: f.y - 62, vx: 0, vy: 0, rot: 0, r: 13, life: 0.45, max: 0.45 });
           const dx = tg.x - f.x;
-          if (!isClient() && tg.hp > 0 && tg.invul <= 0 && Math.abs(dx) <= minusRange && Math.abs(tg.y - f.y) < 310) {
+          if (!isClient() && tg.hp > 0 && !invulVs(tg, f) && Math.abs(dx) <= minusRange && Math.abs(tg.y - f.y) < 310) {
             f.face = Math.sign(dx) || f.face; f.magTg = tg.idx; f.hitDone = true;
             if (!RESIM && typeof lightningArc === 'function') lightningArc(f.x + f.face * 34, f.y - 62, tg.x, tg.y - 60, rgb, 5, 0.28, 2.6);
             tg.state = 'held'; tg.t = 0; tg.vx = 0; tg.vy = 0; tg.move = null; tg.skill = null; tg.sp = null;

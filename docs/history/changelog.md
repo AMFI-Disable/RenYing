@@ -6,6 +6,15 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+### Fixed
+
+- **Gang-Up Hits Now Count (#29) (`src/game/02-combat/10-hits-01-collision.js`, `src/game/02-combat/10-hits-02-effects.js`, `src/game/02-combat/04-ults/`, `src/game/02-combat/09-actions-01-projectiles.js`)**: when several fighters attacked one target in a multi-fighter match, only one of them did damage, because the short invulnerability a launch or knockdown gives the target blocked everyone. That invulnerability now only blocks the fighter who caused it (`markHitInvul` and `invulVs`), so each attacker's hit is resolved on its own. Dodge and ultimate invulnerability still blocks everyone. No Worker change.
+
+### Added
+
+- **CPU Fighter Combat Brain (#30) (`src/game/02-combat/08-fighter-01-entity.js`, `src/game/02-combat/10-hits-02-effects.js`)**: in multi-fighter matches a CPU fighter in the middle of a combo now finishes it (up to 3.5 seconds) before turning on the fighter who hit it, and then goes after that fighter for a few seconds. Hits are recorded as `lastHitByIdx` and `lastLandIdx`.
+- **Hero Role Signatures For The Armor Group (#31) (`src/game/02-combat/10-hits-03-signatures.js`, `src/data/heroes/19-polang.js`, `src/data/heroes/22-xuanwu.js`, `src/data/heroes/26-tiangang.js`, `src/data/heroes/32-bawang.js`, `docs/design/hero-roles.md`)**: the seven armor heroes get a different reward for absorbing a hit, and Xuan Wu, Tian Gang, Ba Wang and Po Lang get a different stat shape (turtle, long spear, bruiser, mobile grappler). The overlapping groups and the plan for new heroes are in `docs/design/hero-roles.md`.
+
 ### Changed
 
 - **Separated GitHub Pages Build And Deploy Workflow (`.github/workflows/pages.yml`)**: split `pages.yml` into dedicated `build` and `deploy` jobs with least-privilege permissions, added `.github/actions/setup-ci/**` and `renying-offline.html` path triggers, staged `renying-offline.html` alongside `index.html`, `renying.html`, and `assets/` into `_site/`, and parameterized artifact names by `GITHUB_RUN_ATTEMPT`.

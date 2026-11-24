@@ -20,7 +20,7 @@ Object.assign(ULTS, {
           f.y = tg.y; f.plat = tg.plat; f.face = -side; f.snap = true;
           const last = f.spN === 2;
           if (!RESIM) { slashLine(tg.x, tg.y - 54, (f.spN - 1) * 0.65, '220,235,255'); ring(tg.x, tg.y - 54, last ? 150 : 95, '210,230,255', 0.36); SFX.slice(); }
-          if (tg.invul <= 0) {
+          if (!invulVs(tg, f)) {
             applyHit(f, tg, { dmg: last ? 74 : 42, kb: [last ? -side * 380 : 80, last ? -540 : -120], stun: last ? 0.65 : 0.35, hs: last ? 0.16 : 0.08, launch: last, unblockable: last, ult: true, noScale: true, big: last, dir: -side }, [tg.x, tg.y - 54]);
           }
         }

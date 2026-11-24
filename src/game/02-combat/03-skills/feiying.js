@@ -23,7 +23,7 @@ Object.assign(SKILLS, {
         f.skPh = 1; f.t = 0; f.snap = true; f.trail.length = 0; f.scarf = [];
         smoke(f.x, f.y - 50, 10); SFX.poof();
         slashLine(foe.x, foe.y - 60, 0.5, '255,95,115'); slashLine(foe.x, foe.y - 60, -0.5, '255,95,115'); SFX.slice();
-        if (foe.invul <= 0 && foe.hp > 0) {
+        if (!invulVs(foe, f) && foe.hp > 0) {
           applyHit(f, foe, { dmg: 45, kb: [0, 0], stun: 0, hs: 0.06, noScale: true, noStun: true, dir: foe.x >= f.x ? 1 : -1 }, [foe.x, foe.y - 60]);
         }
         if (!isClient() && typeof strikeAoE === 'function') {

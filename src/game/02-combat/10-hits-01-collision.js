@@ -18,6 +18,20 @@ function hurtbox(f) {
 }
 const overlap = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
 
+// 命中带来的短暂无敌（挑飞保护、倒地保护、浮空脱离）只防「打出这一下的人」。
+// 多人对局里别的对手照样能打到：以前这类无敌把所有人都挡在外面，围攻时看起来只有一个人的伤害生效。
+// 闪避、大招这类自己带来的无敌不受影响，仍然防所有人。
+function markHitInvul(def, att) {
+  def.hitInvulBy = att ? att.idx : -1;
+  def.hitInvulEnd = clock + def.invul;
+}
+function invulVs(def, att) {
+  if (!(def.invul > 0)) return false;
+  if (!att || def.hitInvulBy === undefined || def.hitInvulBy < 0 || att.idx === def.hitInvulBy || !isMulti()) return true;
+  // 剩下的无敌不超过命中给的那一份，才算命中无敌；之后叠上更长的无敌（闪避、大招）照常防所有人
+  return def.invul > (def.hitInvulEnd - clock) + 0.03;
+}
+
 // 多目标伤害衰减：1v1 与 2v2 保持 100% 原始平衡；大型团战（>=6人）同时命中多敌时平滑递减避免瞬间团灭
 function multiTargetScale(hitIndex) {
   if (hitIndex <= 0) return 1;
@@ -33,7 +47,7 @@ function findTargetsInBox(f, hb, opts) {
   const out = [];
   for (const ef of list) {
     if (!ef || ef.hidden || ef.hp <= 0) continue;
-    if (!o.ignoreInvul && ef.invul > 0) continue;
+    if (!o.ignoreInvul && invulVs(ef, f)) continue;
     if (o.exclude && o.exclude.includes(ef.idx)) continue;
     if (!overlap(hb, hurtbox(ef))) continue;
     out.push(ef);
@@ -50,7 +64,7 @@ function findTargetsInRadius(f, cx, cy, rx, ry, opts) {
   const out = [];
   for (const ef of list) {
     if (!ef || ef.hidden || ef.hp <= 0) continue;
-    if (!o.ignoreInvul && ef.invul > 0) continue;
+    if (!o.ignoreInvul && invulVs(ef, f)) continue;
     if (o.exclude && o.exclude.includes(ef.idx)) continue;
     const hu = hurtbox(ef);
     const nx = clamp(cx, hu[0], hu[2]), ny = clamp(cy, hu[1], hu[3]);

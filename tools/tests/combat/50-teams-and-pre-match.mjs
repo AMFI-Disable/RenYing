@@ -241,4 +241,62 @@ export default [
       return { pass: true, error: null };
     })()`
   },
+  {
+    name: 'Gang-up: two attackers each deal their own damage to one target, and a launch from one does not shield the target from the other',
+    fn: `(() => {
+      const setup = () => {
+        start2v2LocalCoop(0, 2, 1, 3, 'normal'); showScreen(null); paused = false; M.phase = 'fight';
+        for (const f of [A, B, C, D]) f.ctrl = new Ctrl();
+        A.x = 900; C.x = 1000; B.x = 960; D.x = 2400;
+        for (const f of [A, B, C, D]) { f.y = 0; f.vx = 0; }
+        A.face = 1; C.face = -1;
+      };
+      // 1. 两人同时出手：两份伤害都要结算
+      setup();
+      const seen = []; const orig = applyHit;
+      applyHit = function (a, d, m, p) { seen.push(a.idx); return orig(a, d, m, p); };
+      startAttack(A, 'l1'); startAttack(C, 'l1');
+      for (let i = 0; i < 60; i++) step();
+      applyHit = orig;
+      if (!seen.includes(0) || !seen.includes(2)) return { pass: false, error: 'both attackers should land a hit, got ' + seen };
+      // 2. 一人的挑飞无敌只防他自己，队友照样能打；别人的真无敌（闪避）仍然防所有人
+      setup(); B.invul = 1.5; markHitInvul(B, A);
+      let hp0 = B.hp; startAttack(C, 'l1'); for (let i = 0; i < 30; i++) step();
+      if (!(B.hp < hp0)) return { pass: false, error: 'hit-granted invulnerability from A must not block C' };
+      setup(); B.invul = 1.5; markHitInvul(B, A);
+      if (!invulVs(B, A)) return { pass: false, error: 'the attacker who caused the invulnerability must stay blocked' };
+      setup(); B.invul = 1.5;
+      hp0 = B.hp; startAttack(C, 'l1'); for (let i = 0; i < 30; i++) step();
+      if (B.hp !== hp0) return { pass: false, error: 'real invulnerability (not from a hit) must block everyone' };
+      return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'CPU brain: a CPU fighter in the middle of a combo finishes it before turning on whoever hit it, then goes after that attacker',
+    fn: `(() => {
+      start2v2LocalCoop(0, 2, 1, 3, 'normal'); showScreen(null); paused = false; M.phase = 'fight';
+      if (!cpuTeamwork(B)) return { pass: false, error: 'B should be a CPU fighter' };
+      A.x = 900; B.x = 1000; C.x = 1100; D.x = 2300;
+      for (const f of [A, B, C, D]) { f.y = 0; f.vx = 0; f.hp = f.maxHp; f.hidden = false; }
+      B.target = A;
+      // B 正在连招 A，同时被 C 打了一下
+      B.lastLandIdx = A.idx; B.lastLandT = clock; B.comboT0 = clock; A.state = 'hitstun';
+      B.lastHitByIdx = C.idx; B.lastHitByT = clock;
+      if (foeOf(B) !== A) return { pass: false, error: 'B should keep hitting A until the combo ends, not switch to C' };
+      // 连招结束（超过 BRAIN.commit 没再打中、目标已站起来）：回头打 C
+      B.lastLandT = clock - 1; A.state = 'idle';
+      if (foeOf(B) !== C) return { pass: false, error: 'after the combo B should turn on C who hit it' };
+      // 连招拖太久也不能被牵着走
+      B.target = A; B.lastLandT = clock; B.comboT0 = clock - BRAIN.maxCombo - 1; A.state = 'hitstun';
+      if (foeOf(B) !== C) return { pass: false, error: 'a very long combo must not lock B on one target forever' };
+      // 命中时要写下谁打了谁
+      B.lastLandIdx = -1; B.lastHitByIdx = -1; C.lastHitByIdx = -1;
+      A.ctrl = new Ctrl(); B.ctrl = new Ctrl();   // 这一段不要电脑插手，免得动作不固定
+      A.invul = 0; A.state = 'idle'; A.x = 900; B.x = 960; B.face = -1;
+      B.target = A;
+      startAttack(B, 'l1'); for (let i = 0; i < 20; i++) step();
+      if (B.lastLandIdx !== A.idx || A.lastHitByIdx !== B.idx) return { pass: false, error: 'hits are not recorded (landed ' + B.lastLandIdx + ', by ' + A.lastHitByIdx + ')' };
+      return { pass: true, error: null };
+    })()`
+  },
 ];

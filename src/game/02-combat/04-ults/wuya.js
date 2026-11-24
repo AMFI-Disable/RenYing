@@ -19,7 +19,7 @@ Object.assign(ULTS, {
         }
         let hitIdx = 0;
         for (const tf of isMulti() ? foesOf(f) : [foe]) {
-          if (!tf || tf.hp <= 0 || tf.invul > 0 || tf.x < lo || tf.x > hi || Math.abs(tf.y - f.wyY) > 105) continue;
+          if (!tf || tf.hp <= 0 || invulVs(tf, f) || tf.x < lo || tf.x > hi || Math.abs(tf.y - f.wyY) > 105) continue;
           const sc = typeof multiTargetScale === 'function' ? multiTargetScale(hitIdx++) : 1;
           applyHit(f, tf, { dmg: Math.max(1, Math.round(55 * sc)), kb: [0, 0], stun: 0.55, hs: hitIdx === 1 ? 0.1 : 0.03, root: true, unblockable: true, ult: true, noScale: true, dir: f.face }, [tf.x, tf.y - 58]);
         }
@@ -37,7 +37,7 @@ Object.assign(ULTS, {
         }
         let hitIdx = 0;
         for (const tf of isMulti() ? foesOf(f) : [foe]) {
-          if (!tf || tf.hp <= 0 || tf.invul > 0 || tf.x < lo || tf.x > hi || Math.abs(tf.y - f.wyY) > 120) continue;
+          if (!tf || tf.hp <= 0 || invulVs(tf, f) || tf.x < lo || tf.x > hi || Math.abs(tf.y - f.wyY) > 120) continue;
           const sc = typeof multiTargetScale === 'function' ? multiTargetScale(hitIdx++) : 1;
           applyHit(f, tf, { dmg: Math.max(1, Math.round(105 * sc)), kb: [440, -620], stun: 0.72, hs: hitIdx === 1 ? 0.2 : 0.05, launch: true, unblockable: true, ult: true, noScale: true, big: hitIdx === 1, dir: f.face }, [tf.x, tf.y - 58]);
         }
