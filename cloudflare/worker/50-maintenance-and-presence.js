@@ -89,7 +89,7 @@ async function presence(env, body, ip, now) {
   }
   const c = await env.DB.prepare("SELECT COUNT(*) AS online, SUM(st = 'match') AS playing, SUM(st = 'queue') AS waiting FROM presence WHERE seen > ?").bind(now - PRESENCE_WINDOW).first();
   const humanOnline = (c && c.online) || 0, humanPlaying = (c && c.playing) || 0, humanWaiting = (c && c.waiting) || 0;
-  const ai = typeof aiPresenceCounts === 'function' ? await aiPresenceCounts(env, now) : { aiOnline: 0, aiPlaying: 0, aiWaiting: 0, aiTraining: 0, aiResting: 0, aiOffline: 0 };
+  const ai = typeof aiPresenceCounts === 'function' ? await aiPresenceCounts(env, now) : { aiOnline: 0, aiPlaying: 0, aiWaiting: 0, aiQuickmatch: 0, aiRanked: 0, aiTraining: 0, aiResting: 0, aiOffline: 0 };
   return json({
     ok: true,
     online: humanOnline + ai.aiOnline,
@@ -101,6 +101,8 @@ async function presence(env, body, ip, now) {
     aiOnline: ai.aiOnline,
     aiPlaying: ai.aiPlaying,
     aiWaiting: ai.aiWaiting,
+    aiQuickmatch: ai.aiQuickmatch || 0,
+    aiRanked: ai.aiRanked || 0,
     aiTraining: ai.aiTraining || 0,
     aiResting: ai.aiResting || 0,
     aiOffline: ai.aiOffline || 0,

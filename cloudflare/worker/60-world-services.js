@@ -128,7 +128,7 @@ async function gbHit(env, auth, body, now) {
  * 这些号不封、存档不动，只是不上榜；真要处理用管理网页封号。 */
 const LB_N = 100, RK_PLACE = 3, RK_MIN = 1000, RK_MAX = 25000, LB_WIN_FAKE = 1000, LB_WIN_CLEAN = 30;
 async function leaderboard(env, kind, season, me, now) {
-  const notBanned = 'deleted_at = 0 AND id NOT IN (SELECT uid FROM sanctions WHERE perm = 1 OR ban_until > ?1)';
+  const notBanned = "deleted_at = 0 AND COALESCE(password_algo, '') != 'ai-bot-locked' AND id NOT IN (SELECT uid FROM sanctions WHERE perm = 1 OR ban_until > ?1)";
   if (kind === 'rank') {
     if (!/^S\d{1,3}$/.test(season)) return { ok: true, kind, list: [] };
     const rows = (await env.DB.prepare(
@@ -143,7 +143,7 @@ async function leaderboard(env, kind, season, me, now) {
        AND json_extract(profile_json, '$.netWins') > 0 AND json_extract(profile_json, '$.netWins') < ?3
        AND NOT (COALESCE(json_extract(profile_json, '$.netLosses'), 0) = 0 AND json_extract(profile_json, '$.netWins') > ?4)
        ORDER BY w DESC, l, updated_at LIMIT ?2`).bind(now, LB_N, LB_WIN_FAKE, LB_WIN_CLEAN).all(),
-    env.DB.prepare('SELECT COUNT(*) AS n FROM users WHERE deleted_at = 0').first(),
+    env.DB.prepare("SELECT COUNT(*) AS n FROM users WHERE deleted_at = 0 AND COALESCE(password_algo, '') != 'ai-bot-locked'").first(),
   ]);
   const n = v => Math.max(0, Math.min(1e6, Math.floor(+v || 0)));
   return { ok: true, kind, players: (cnt && cnt.n) || 0, list: (rows.results || []).map(r => ({ name: r.username, wins: n(r.w), losses: n(r.l), me: r.id === me })) };

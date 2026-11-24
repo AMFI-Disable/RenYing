@@ -1375,27 +1375,66 @@ async function vAiPlayers() {
   const chronoNames = { early_bird: '晨练早鸟', daytime: '日间活跃', student: '放学晚间', evening: '晚间主力', night_owl: '深夜夜猫', casual: '零散休闲' };
   const phaseNames = { late_night: '深夜低谷', morning: '晨间渐起', afternoon: '午后活跃', evening_peak: '晚间高峰' };
   const moodNames = { focused: '专注', relaxed: '轻松', competitive: '好胜', exploratory: '尝鲜' };
-  const modeNames = { '1v1': '1v1 演武', '2v2': '2v2 组队', tag3: '3v3 车轮', melee: '群雄会战', ctf: '夺旗争锋', raid: '同袍肉鸽', train: '习武训练', market: '江湖市场' };
+  const modeNames = { quickmatch: '匹配', ranked: '排位', '1v1': '1v1 演武', '2v2': '2v2 组队', tag3: '3v3 车轮', melee: '群雄会战', ctf: '夺旗争锋', raid: '同袍肉鸽', train: '习武训练', market: '江湖市场' };
+  const onlineSet = new Set(['menu', 'queue', 'match', 'training', 'market']);
+  const allList = r.list || [];
+  const q = String(S.aiQ || '').trim().toLowerCase();
+  const stF = S.aiSt || '';
+  const chF = S.aiCh || '';
+  const filtered = allList.filter(a => {
+    if (q && !a.username.toLowerCase().includes(q) && !a.uid.toLowerCase().includes(q)) return false;
+    if (chF && a.chronotype !== chF) return false;
+    if (stF === 'online' && !onlineSet.has(a.status)) return false;
+    if (stF === 'mm' && !(a.status === 'queue' || a.status === 'match')) return false;
+    if (stF === 'other' && !['training', 'market', 'menu'].includes(a.status)) return false;
+    if (stF === 'resting' && a.status !== 'resting') return false;
+    if (stF === 'offline' && a.status !== 'offline') return false;
+    return true;
+  });
+  const pageSize = 25;
+  const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const page = Math.max(0, Math.min(pages - 1, S.aiPage || 0));
+  S.aiPage = page;
+  const slice = filtered.slice(page * pageSize, (page + 1) * pageSize);
   const nowMs = Date.now();
   const fmtWin = sc => ((sc && sc.windows) || []).map(([s, e]) => `${String(Math.floor(s) % 24).padStart(2, '0')}:00–${String(Math.floor(e) % 24).padStart(2, '0')}:00`).join(' / ') || '—';
   const remMin = ts => ts > nowMs ? Math.max(1, Math.round((ts - nowMs) / 60e3)) + 'm' : '—';
-  return H`<div class="card"><h2>持久化 AI 玩家生态（独立作息与昼夜周期 · 仅限 AI 互相对战，绝不进入真人匹配）</h2>
-    <p class="hint">当前北京时间 <b>${String(c.beijingHour ?? 0).padStart(2, '0')}:${String(c.beijingMinute ?? 0).padStart(2, '0')}</b>（${phaseNames[c.dayPhase] || c.dayPhase || '—'}）。25 位 AI 拥有独立的作息窗口、会话时长、休息间隔、模式/侠客偏好与长期行为演化；休息与离线中的 AI 不计入在线人数。市场行为受参考价 0.75x~1.25x、自然间隔冷却、禁止自交易及每日上限（${fmtN(r.maxDailySpent || 2500)} 墨锭 / ${r.maxDailyListed || 3} 单）保护。</p>
+  return H`<div class="card"><h2>持久化 AI 玩家生态（100 账号 · 常驻 20~30 在线 · 仅限 AI 互相对战，绝不进入真人匹配）</h2>
+    <p class="hint">当前北京时间 <b>${String(c.beijingHour ?? 0).padStart(2, '0')}:${String(c.beijingMinute ?? 0).padStart(2, '0')}</b>（${phaseNames[c.dayPhase] || c.dayPhase || '—'}）。共维护 ${fmtN(allList.length)} 个独立 AI 账号，按 UTC+8 昼夜节律动态维持约 20~30 人在线，其余处于休息或离线状态（不计入在线人数）；在线 AI 重点参与 AI 专属「匹配」与「排位」，绝不进入人类匹配队列或排行榜。市场行为受参考价 0.75x~1.25x、自然间隔冷却及每日上限（${fmtN(r.maxDailySpent || 2500)} 墨锭 / ${r.maxDailyListed || 3} 单）保护。</p>
     <div class="tiles">
       ${tile('真人实时在线', hc.humanOnline || 0, `对战 ${fmtN(hc.humanPlaying || 0)} · 匹配 ${fmtN(hc.humanWaiting || 0)}`)}
-      ${tile('AI 当前在线', c.aiOnline || 0, `共 ${fmtN((r.list || []).length)} 个 AI 账号`)}
-      ${tile('AI 专属对战', c.aiPlaying || 0, `AI 匹配中 ${fmtN(c.aiWaiting || 0)}`)}
+      ${tile('AI 当前在线', c.aiOnline || 0, `总计 ${fmtN(allList.length)} 个 AI 账号`)}
+      ${tile('AI 匹配 / 排位', H`${fmtN(c.aiQuickmatch || 0)}<small>匹</small> / ${fmtN(c.aiRanked || 0)}<small>排</small>`, `对战 ${fmtN(c.aiPlaying || 0)} · 排队 ${fmtN(c.aiWaiting || 0)}`)}
       ${tile('AI 习武 / 市场', H`${fmtN(c.aiTraining || 0)}<small>训</small> / ${fmtN(c.aiMarket || 0)}<small>市</small>`, '非匹配活动')}
       ${tile('AI 休息 / 离线', H`${fmtN(c.aiResting || 0)}<small>休</small> / ${fmtN(c.aiOffline || 0)}<small>离</small>`, '不计入在线人数')}
       ${tile('今日 AI 对局 / 训练', H`${fmtN(c.matchesToday || 0)}<small>局</small> / ${fmtN(c.trainingToday || 0)}<small>训</small>`, `匿名样本 ${fmtN(r.trainingSamples || 0)}`)}
     </div>
     <div class="row wrap" style="margin-top:12px">
       <button class="btn" data-act="aitick" data-need="econ">立即演进一轮（含市场）</button>
+      <button class="btn ghost sm" data-act="aitick" data-hour="4" data-need="econ">模拟凌晨 04:00</button>
+      <button class="btn ghost sm" data-act="aitick" data-hour="14" data-need="econ">模拟午后 14:00</button>
+      <button class="btn ghost sm" data-act="aitick" data-hour="21" data-need="econ">模拟晚间 21:00</button>
     </div>
   </div>
-  <div class="card"><h2>AI 账号作息、偏好与演化管理</h2>
+  <div class="card"><h2>AI 账号作息、偏好与演化管理 <small>筛选 ${fmtN(filtered.length)} / ${fmtN(allList.length)} · 第 ${page + 1}/${pages} 页</small></h2>
+    <form class="search" data-form="aifilter">
+      <input name="q" value="${S.aiQ || ''}" placeholder="按 AI 昵称或 UID 过滤（如 6767、看见你、ai_01）" autocomplete="off" spellcheck="false">
+      <select name="st" aria-label="按状态过滤">
+        <option value=""${!stF ? ' selected' : ''}>全部状态</option>
+        <option value="online"${stF === 'online' ? ' selected' : ''}>仅在线 (${fmtN(c.aiOnline || 0)})</option>
+        <option value="mm"${stF === 'mm' ? ' selected' : ''}>匹配 / 排位中</option>
+        <option value="other"${stF === 'other' ? ' selected' : ''}>习武 / 市场 / 大厅</option>
+        <option value="resting"${stF === 'resting' ? ' selected' : ''}>休息中 (${fmtN(c.aiResting || 0)})</option>
+        <option value="offline"${stF === 'offline' ? ' selected' : ''}>离线 (${fmtN(c.aiOffline || 0)})</option>
+      </select>
+      <select name="ch" aria-label="按作息过滤">
+        <option value=""${!chF ? ' selected' : ''}>全部作息</option>
+        ${Object.entries(chronoNames).map(([k, v]) => H`<option value="${k}"${chF === k ? ' selected' : ''}>${v}</option>`)}
+      </select>
+      <button class="btn">筛选</button>
+    </form>
     <div class="tw"><table><thead><tr><th>UID / 昵称 / 作息</th><th>当前状态 / 模式·侠客 / 偏好与演化</th><th>管理配置</th></tr></thead><tbody>
-      ${(r.list || []).map(a => {
+      ${slice.map(a => {
         const evo = a.evolution || {}, pf = a.prefs || {};
         const stBadge = a.status === 'match' ? 'ok' : a.status === 'training' || a.status === 'market' ? 'gold' : (a.status === 'offline' || a.status === 'resting') ? '' : 'gold';
         const timerTxt = a.status === 'resting' ? ('休 ' + remMin(a.restUntil)) : (a.sessionUntil > nowMs ? ('会话余 ' + remMin(a.sessionUntil)) : '—');
@@ -1423,6 +1462,7 @@ async function vAiPlayers() {
         </tr>`;
       })}
     </tbody></table></div>
+    ${pages > 1 ? H`<div class="row between wrap" style="margin-top:12px"><span class="hint">第 ${page + 1} / ${pages} 页（每页 ${pageSize} 个 AI）</span><div class="row"><button type="button" class="btn ghost sm" data-act="aipage" data-dir="-1"${page <= 0 ? ' disabled' : ''}>上一页</button><button type="button" class="btn ghost sm" data-act="aipage" data-dir="1"${page >= pages - 1 ? ' disabled' : ''}>下一页</button></div></div>` : ''}
   </div>`;
 }
 
@@ -1801,9 +1841,12 @@ const ACTS = {
   admedit: b => { S.admEdit = b.dataset.name; render(); },
   admnew: () => { S.admEdit = ''; render(); },
   aitick: async b => {
-    const a = await ask({ title: '推进一轮 AI 生态模拟', lines: ['将更新活跃 AI 匹配/对战状态，并在风控范围内执行一次市场买卖试算'], whyInit: '人工触发 AI 生态演进', ok: '立即执行' });
-    if (a) await busy(b, async () => { await api('ai-players/update', { tick: true, withMarket: true, why: a.why }); toast('AI 生态已推进一轮'); render(); });
+    const hour = b.dataset.hour !== undefined ? Number(b.dataset.hour) : undefined;
+    const title = hour !== undefined ? `按北京时间 ${String(hour).padStart(2, '0')}:00 推进一轮 AI 模拟` : '推进一轮 AI 生态模拟';
+    const a = await ask({ title, lines: ['将按 UTC+8 作息节律更新 100 位 AI 的在线/休息/匹配/排位状态，并在风控范围内执行市场试算'], whyInit: '人工触发 AI 生态演进', ok: '立即执行' });
+    if (a) await busy(b, async () => { await api('ai-players/update', { tick: true, withMarket: hour === undefined, simHour: hour, why: a.why }); toast('AI 生态已推进一轮'); render(); });
   },
+  aipage: b => { S.aiPage = Math.max(0, (S.aiPage || 0) + (+b.dataset.dir || 0)); render(); },
   copy: b => { if (navigator.clipboard) navigator.clipboard.writeText(b.dataset.v).then(() => toast('复制好了'), () => toast('复制不了，手动选一下吧', true)); },
   addgive: () => {
     const f = $('form[data-form=adjust]'), k = f.elements.gk.value;
@@ -1930,6 +1973,7 @@ const FORMS = {
     if (a) await busy(submitBtn(f), async () => { await api('admins', { ...body, why: a.why }); toast(old ? '改好了' : '建好了，' + name + ' 可以登录了'); S.admEdit = ''; render(); });
   },
   find: f => { S.q = f.elements.q.value.trim().slice(0, 64); S.pOffset = 0; render(); },
+  aifilter: f => { S.aiQ = f.elements.q.value.trim().slice(0, 40); S.aiSt = f.elements.st.value; S.aiCh = f.elements.ch.value; S.aiPage = 0; render(); },
   aiupdate: async f => {
     const uid = f.elements.uid.value;
     const body = {
