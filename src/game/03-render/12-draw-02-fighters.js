@@ -202,6 +202,32 @@ function drawFighter(f) {
     }
     ctx.restore();
   }
+  // 离影影印（独立计数 0~25）及满印后的影落破势正上方锁定准星
+  if ((f.shadowMarks || 0) > 0 && f.hp > 0) {
+    const frac = clamp(f.shadowMarks / 25, 0, 1);
+    const pulse = 0.65 + 0.35 * Math.sin(clock * 10);
+    ctx.save();
+    ctx.strokeStyle = `rgba(127,214,224,${(0.45 + 0.45 * frac).toFixed(2)})`;
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.arc(f.x, f.y - 58, 30, -Math.PI * 0.5, -Math.PI * 0.5 + Math.PI * 2 * frac);
+    ctx.stroke();
+    ctx.font = `bold 11px ${TITLE_FONT}`; ctx.textAlign = 'center';
+    ctx.fillStyle = `rgba(175,245,255,${pulse.toFixed(2)})`;
+    ctx.fillText(`影印 ${f.shadowMarks}/25`, f.x, f.y - 104);
+    ctx.restore();
+  }
+  if (f.hp > 0 && allFighters().some(o => o && o.hp > 0 && o.shadowExecT > 0 && o.shadowExecTarget === f.idx)) {
+    const p = 0.7 + 0.3 * Math.sin(clock * 14);
+    ctx.save();
+    ctx.strokeStyle = `rgba(210,165,255,${p.toFixed(2)})`;
+    ctx.lineWidth = 2.4;
+    ctx.beginPath(); ctx.ellipse(f.x, f.y - 122, 22, 8, 0, 0, Math.PI * 2); ctx.stroke();
+    ctx.font = `bold 12px ${TITLE_FONT}`; ctx.textAlign = 'center';
+    ctx.fillStyle = '#c8f6ff';
+    ctx.fillText('⬇ 影落破势 (R)', f.x, f.y - 138 + Math.sin(clock * 10) * 3);
+    ctx.restore();
+  }
   // 磁仙：头顶小极性记号；按 Q 换极性时身上亮一个大圈 ⊕ / ⊖；大招时天上、地上两块磁石
   if (f.ch && f.ch.passive === 'magnet' && f.hp > 0 && f.pol) {
     drawMagSym(sk.head[0], sk.head[1] - 30, 9, f.pol, 0.92);

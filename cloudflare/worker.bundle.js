@@ -1254,9 +1254,10 @@
     }
     return { ok: true, assigned, badgeEquip: s.badgeEquip };
   };
-  // FULL AUTO：全自动一键管理 —— 覆盖重配全阵容徽记、穿戴最优皮肤、匹配最佳灵宠、启用已解锁二式架势与招式流派、并无上限出售全部重复饰品
+  // FULL AUTO：全自动一键管理 —— 覆盖重配全阵容徽记、穿戴最优皮肤、匹配最佳灵宠、启用已解锁二式架势与招式流派，
+  // 并无上限直接变现全部可售饰品（含库存重复饰品与玩家市场上尚未成交的在售挂单），立即结算为墨锭
   A.fullAuto = (s, a, env) => {
-    let badges = 0, skins = 0, pets = 0, stances = 0, skills = 0, soldCount = 0, inkGain = 0;
+    let badges = 0, skins = 0, pets = 0, stances = 0, skills = 0, soldCount = 0, soldDupesCount = 0, soldMarketCount = 0, inkGain = 0;
     if (Object.keys(s.badgeOwned || {}).length) {
       const br = A.badgeAutoAssign(s);
       if (br && br.ok) badges = br.assigned || 0;
@@ -1319,6 +1320,25 @@
         }
       }
     }
+    // 直接变现玩家市场上所有仍在售（未成交）的挂单，无需等待买家；已成交的挂单保留给 settle 结账，避免重复发奖
+    const openIds = env.server && env.mkt && env.mkt.openIds instanceof Set ? env.mkt.openIds : null;
+    const cancelledIds = [], keepLst = [];
+    for (const L of s.lst) {
+      if (!L || !L.it || !C.isItem(L.it.k)) continue;
+      if (openIds && !openIds.has(L.l)) { keepLst.push(L); continue; }
+      const val = C.refVal(L.it);
+      giveInk(env, val);
+      s.stat.sold++;
+      histPush(s, { t: env.now, kind: 'sell', k: L.it.k, st: L.it.st, price: val, gain: val });
+      soldMarketCount++;
+      soldCount++;
+      inkGain += val;
+      bump(s, 'sell', 1);
+      cancelledIds.push(L.l);
+    }
+    s.lst = keepLst;
+    if (cancelledIds.length && env.mkt) env.mkt.out = { cancelMany: cancelledIds };
+    // 无数量上限直接出售库存中的全部重复饰品
     const plan = C.dupePlan(s);
     if (plan.items.length) {
       for (const d of plan.items) {
@@ -1328,12 +1348,13 @@
         giveInk(env, val);
         s.stat.sold++;
         histPush(s, { t: env.now, kind: 'sell', k: it.k, st: it.st, price: val, gain: val });
+        soldDupesCount++;
         soldCount++;
         inkGain += val;
         bump(s, 'sell', 1);
       }
     }
-    return { ok: true, badges, skins, pets, stances, skills, soldCount, inkGain };
+    return { ok: true, badges, skins, pets, stances, skills, soldCount, soldDupesCount, soldMarketCount, inkGain };
   };
   A.petBuy = (s, a, env) => {
     const id = String(a.id || '');
@@ -1423,6 +1444,27 @@
     histPush(s, { t: env.now, kind: 'term', k: tm.o.k, st: tm.o.st, price: tm.o.price });
     s.tm = null; s.stat.term++;
     return { ok: true, item: it, price: tm.o.price };
+  };
+  // 批量开启全部可用货郎（含已开封尚未处理的货郎与所有未开封货郎，单次事务最多 500 台，前端自动接续循环）
+  A.termOpenAll = (s, a, env) => {
+    const items = [];
+    if (s.tm && s.tm.o && C.isItem(s.tm.o.k)) {
+      const o = s.tm.o;
+      const it = C.addItem(s, C.mkItem(s, o.k, 'term', env.rnd, { st: o.st }), env);
+      histPush(s, { t: env.now, kind: 'term', k: o.k, st: o.st, price: 0 });
+      s.tm = null;
+      s.stat.term++;
+      items.push(it);
+    }
+    while (s.term > 0 && items.length < 500 && !C.invFull(s)) {
+      s.term--;
+      const o = C.termOffer(env.rnd, env.cfg);
+      const it = C.addItem(s, C.mkItem(s, o.k, 'term', env.rnd, { st: o.st }), env);
+      histPush(s, { t: env.now, kind: 'term', k: o.k, st: o.st, price: 0 });
+      s.stat.term++;
+      items.push(it);
+    }
+    return items.length ? { ok: true, count: items.length, remaining: s.term, items } : { err: '没有可开启的货郎' };
   };
   A.supply = (s, a, env) => {
     const picks = Array.isArray(a.picks) ? a.picks.map(Number).filter(Number.isInteger) : [];
@@ -2414,17 +2456,21 @@ function pruneGone(srv, now) {
   srv.gone = Object.fromEntries(Object.entries(srv.gone).filter(([, v]) => Array.isArray(v) && now - v[1] < 30 * DAY_MS).slice(-200));
 }
 // 一批写入里的每一条都带上“版本号还是读出来时那个”：中间被别的请求改过，这一批就什么都不写，重读再算。
-// 买、撤玩家市场上的一单时还要再带一条“那一单是被这个请求改掉的”（tx = [挂单编号, 请求标记]）：别人先买走了，这一批也什么都不写
+// 买、撤玩家市场上的一单时还要再带一条“那一单是被这个请求改掉的”（tx = [挂单编号, 请求标记]）；
+// 批量撤单变现（fullAuto）时 tx = { seller: uid, tag: 请求标记, n: 数量 }，核对被本请求改掉的挂单数完全一致才落库
 const TXC = ' AND EXISTS (SELECT 1 FROM mkt WHERE id = ? AND tx = ?)';
+const TXM = ' AND (SELECT COUNT(*) FROM mkt WHERE seller = ? AND tx = ?) = ?';
+const txSql = tx => !tx ? '' : Array.isArray(tx) ? TXC : TXM;
+const txBinds = tx => !tx ? [] : Array.isArray(tx) ? tx : [tx.seller, tx.tag, tx.n];
 // guard 只给 INSERT … SELECT、UPDATE … WHERE 后面接着用（cond 前面没有 AND）
-const guard = (env, sql, binds, uid, ver, tx) => env.DB.prepare(`${sql} EXISTS (SELECT 1 FROM econ WHERE uid = ? AND ver = ?)${tx ? TXC : ''}`).bind(...binds, uid, ver, ...(tx || []));
+const guard = (env, sql, binds, uid, ver, tx) => env.DB.prepare(`${sql} EXISTS (SELECT 1 FROM econ WHERE uid = ? AND ver = ?)${txSql(tx)}`).bind(...binds, uid, ver, ...txBinds(tx));
 const ins = (env, sql, binds, uid, ver, tx) => guard(env, sql + ' WHERE', binds, uid, ver, tx);
 function userWrite(env, uid, prof, now, ver, tx) {
   return guard(env, 'UPDATE users SET profile_json = ?, updated_at = ? WHERE id = ? AND', [JSON.stringify(prof), now, uid], uid, ver, tx);
 }
 function econWrite(env, uid, ver, now, srv, ink, stateJson, tx) {
-  return env.DB.prepare(`UPDATE econ SET state_json = ?, srv_json = ?, ink = ?, ver = ver + 1, updated_at = ? WHERE uid = ? AND ver = ?${tx ? TXC : ''}`)
-    .bind(stateJson, JSON.stringify(srv), ink, now, uid, ver, ...(tx || []));
+  return env.DB.prepare(`UPDATE econ SET state_json = ?, srv_json = ?, ink = ?, ver = ver + 1, updated_at = ? WHERE uid = ? AND ver = ?${txSql(tx)}`)
+    .bind(stateJson, JSON.stringify(srv), ink, now, uid, ver, ...txBinds(tx));
 }
 
 /* ---------- 在线改的经济数值（管理员用 /api/admin/cfg 改，cfg 表的最后一行是现在用的） ---------- */
@@ -2585,7 +2631,8 @@ async function handleEcon(env, auth, body, now, ip) {
     // 玩家市场：自己挂的单被别人买走、钱还没结的，这次一起结；买、撤的话把那一单现在的样子交给规则核心
     const paid = (await env.DB.prepare('SELECT id, k, st, price, done_at AS at FROM mkt WHERE seller = ? AND state = 1 AND paid = 0 ORDER BY done_at LIMIT 40').bind(uid).all()).results || [];
     const dupeNeed = act === 'listDupes' ? Math.max(C.LIST_BATCH, Math.min(2000, C.dupePlan(eco.state).items.length)) : 0;
-    const mkt = { id: randHex(8), ids: act === 'listDupes' ? Array.from({ length: dupeNeed }, () => randHex(8)) : null, row: null, out: null };
+    const openMarketIds = act === 'fullAuto' ? new Set(((await env.DB.prepare('SELECT id FROM mkt WHERE seller = ? AND state = 0').bind(uid).all()).results || []).map(r => r.id)) : null;
+    const mkt = { id: randHex(8), ids: act === 'listDupes' ? Array.from({ length: dupeNeed }, () => randHex(8)) : null, openIds: openMarketIds, row: null, out: null };
     if ((act === 'buy' || act === 'cancel') && C.isLid(args.l)) {
       const r0 = await env.DB.prepare('SELECT id, seller, k, st, item_json, price, state, at FROM mkt WHERE id = ?').bind(args.l).first();
       if (r0) mkt.row = { id: r0.id, seller: r0.seller, k: r0.k, st: r0.st, price: r0.price, state: r0.state, item: parseObj(r0.item_json), expired: r0.state === 0 && r0.at < now - ttl };
@@ -2707,12 +2754,24 @@ async function handleEcon(env, auth, body, now, ip) {
     const quiet = QUIET.includes(act) && !out.sold.length && !out.back;
     // 流水里记下这一次进出库存的每一件（rm 出去的、ad 进来的，挂到市场上不算出去）：哪件饰品是哪一步没的，后台找回工具按这个查
     const moved = itemDiff(eco.state, st);
-    const detail = logDetail({ a: args, r: res.err ? res.err : res.item ? itemRef(res.item) : res.gain || res.price || '', n: act === 'openAll' && res.items ? res.items.length : undefined, cases: act === 'openAll' ? res.cases : undefined, s: out.sold.length || undefined, b: out.back ? out.back.length : undefined, ...moved });
+    const detail = logDetail({ a: args, r: res.err ? res.err : res.item ? itemRef(res.item) : res.gain || res.price || '', n: (act === 'openAll' || act === 'termOpenAll') && res.items ? res.items.length : undefined, cases: act === 'openAll' ? res.cases : undefined, soldMarket: act === 'fullAuto' ? res.soldMarketCount || undefined : undefined, s: out.sold.length || undefined, b: out.back ? out.back.length : undefined, ...moved });
     // 买、撤：先把那一单从“在卖”改掉（只有它还在卖、版本号也没变才改得动），后面每一条都要看到这一改才生效
-    const id = mo && (mo.buy || mo.cancel), tx = id ? [id, nonce.slice(0, 24) + '.' + attempt] : null;
+    const id = mo && (mo.buy || mo.cancel);
+    const cancelMany = mo && Array.isArray(mo.cancelMany) && mo.cancelMany.length ? mo.cancelMany : null;
+    const txTag = nonce.slice(0, 24) + '.' + attempt;
+    const tx = id ? [id, txTag] : cancelMany ? { seller: uid, tag: txTag, n: cancelMany.length } : null;
     const stmts = [];
-    if (mo && mo.buy) stmts.push(guard(env, 'UPDATE mkt SET state = 1, buyer = ?, done_at = ?, tx = ? WHERE id = ? AND state = 0 AND seller <> ? AND at >= ? AND', [uid, now, tx[1], id, uid, now - ttl], uid, ver));   // 到期的单买不了
-    if (mo && mo.cancel) stmts.push(guard(env, 'UPDATE mkt SET state = 2, done_at = ?, tx = ? WHERE id = ? AND seller = ? AND state = 0 AND', [now, tx[1], id, uid], uid, ver));
+    if (mo && mo.buy) stmts.push(guard(env, 'UPDATE mkt SET state = 1, buyer = ?, done_at = ?, tx = ? WHERE id = ? AND state = 0 AND seller <> ? AND at >= ? AND', [uid, now, txTag, id, uid, now - ttl], uid, ver));   // 到期的单买不了
+    if (mo && mo.cancel) stmts.push(guard(env, 'UPDATE mkt SET state = 2, done_at = ?, tx = ? WHERE id = ? AND seller = ? AND state = 0 AND', [now, txTag, id, uid], uid, ver));
+    if (cancelMany) {
+      // 每批最多 40 单（D1 单语句 100 绑定参数上限），整批全处于在售状态才标记为已撤下，避免并发成交造成重复发奖或物品丢失
+      for (let ci = 0; ci < cancelMany.length; ci += 40) {
+        const chunk = cancelMany.slice(ci, ci + 40);
+        const ph = chunk.map(() => '?').join(', ');
+        stmts.push(env.DB.prepare(`UPDATE mkt SET state = 2, done_at = ?, tx = ? WHERE seller = ? AND state = 0 AND id IN (${ph}) AND EXISTS (SELECT 1 FROM econ WHERE uid = ? AND ver = ?) AND (SELECT COUNT(*) FROM mkt WHERE seller = ? AND state = 0 AND id IN (${ph})) = ?`)
+          .bind(now, txTag, uid, ...chunk, uid, ver, uid, ...chunk, chunk.length));
+      }
+    }
     if (mo && mo.list) {
       const L = mo.list;
       stmts.push(ins(env, 'INSERT INTO mkt (id, seller, k, st, item_json, price, at, state, paid) SELECT ?, ?, ?, ?, ?, ?, ?, 0, 0', [L.l, uid, L.it.k, L.it.st, JSON.stringify(L.it), L.price, now], uid, ver));

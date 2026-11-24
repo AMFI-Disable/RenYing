@@ -114,19 +114,23 @@ function applyHit(att, def, m, pt) {
     const hpBeforeChip = def.hp;
     def.hp = Math.max(1, def.hp - m.dmg * chipFrac * (bm ? bm.chip : 1));
     ev.dd = hpBeforeChip - def.hp;
+    if (m.shadowMark > 0 && att && att.ch && att.ch.passive === 'mist' && typeof addShadowMark === 'function') {
+      addShadowMark(att, def, m.shadowMark);
+    }
 
-    // 消耗架势耐力（Guard Posture）：重体量/高威能打小体量，架势消耗倍增
+    // 消耗架势耐力（Guard Posture）：影击（noGuardDrain / cloneEcho）不削减架势；影落破势（guardDeplete）直接清零全部架势
     const defVuln = (def.defDebuffT > 0 || (m && m.isWave)) ? 1.5 : 1.0;
-    let guardLoss = ((m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1)) * defVuln;
-    guardLoss += Math.max(0, m.blockGuardDamage || 0);
+    let guardLoss = (m.noGuardDrain || m.cloneEcho) ? 0 : (((m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1)) * defVuln);
+    if (!m.noGuardDrain && !m.cloneEcho) guardLoss += Math.max(0, m.blockGuardDamage || 0);
     if (chaosNow('guard_stab')) guardLoss *= chaosNow('guard_stab').val;
-    if (def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true)) {
+    if (m.guardDeplete) guardLoss = Math.max(def.maxGuard || 100, (def.guard !== undefined ? def.guard : def.maxGuard) + 1);
+    if (!m.guardDeplete && def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true)) {
       guardLoss = 0;
       def.guard = def.maxGuard || 100;
-    } else {
+    } else if (guardLoss > 0) {
       def.guard = Math.max(0, (def.guard !== undefined ? def.guard : def.maxGuard) - guardLoss);
+      def.sinceBlock = 0;
     }
-    def.sinceBlock = 0;
 
     // 破防崩势判定（Guard Break）
     if (def.guard <= 0 && scOn() && scAny(def, 'brk', att)) { hitVisual(ev); netEmit(ev); return; }   // 秘卷「卸力」：这次不崩
@@ -169,7 +173,12 @@ function applyHit(att, def, m, pt) {
     hitVisual(ev); netEmit(ev);
     return;
   }
-  if (m.guardDamage > 0 && def.guard !== undefined && !(def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true))) {
+  if (m.guardDeplete && def.guard !== undefined) {
+    def.guard = 0;
+    def.sinceBlock = 0;
+    def.ballGuardBreakT = Math.max(def.ballGuardBreakT || 0, 0.85);
+    ev.guardBreak = true;
+  } else if (!m.noGuardDrain && !m.cloneEcho && m.guardDamage > 0 && def.guard !== undefined && !(def.dummy && def.ctrl && (def.ctrl.cfg ? def.ctrl.cfg.infGuard : true))) {
     def.guard = Math.max(0, def.guard - m.guardDamage);
     def.sinceBlock = 0;
   }
@@ -254,6 +263,9 @@ function applyHit(att, def, m, pt) {
   if (att.ch.passive === 'bind' && def.hookedT > 0 && !m.ult) { dmg *= 1.25; ev.big = true; }
   if (att.ch.passive === 'rhythm' && !m.isProj && !m.ult && att.state === 'attack') att.notes = Math.min(3, (att.notes || 0) + 1);
   if (att.ch.passive === 'drunk' && !m.ult) att.drunk = Math.min(100, (att.drunk || 0) + 4);
+  if (m.shadowMark > 0 && att.ch.passive === 'mist' && typeof addShadowMark === 'function') {
+    addShadowMark(att, def, m.shadowMark);
+  }
   if (att.ch.passive === 'needlemark') {
     if (m.name === 'cs1' || m.name === 'cs2' || att.moveName === 'cs1' || att.moveName === 'cs2') {
       addNeedleMark(def, 1);

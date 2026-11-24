@@ -1064,31 +1064,31 @@
     if (again) $id('arAgain').addEventListener('click', () => { closeModal(); openCase(cid); });
   }
 
-  // 货郎：开封后一次报一件，买下就用掉；不要就换下一件，最多 5 件
+  // 货郎：开封后一次报一件，买下就用掉；不要就换下一件，最多 5 件；也支持一键批量开启全部可用货郎
   let TERM_FX = 0;   // 新的一件刚出来：卡面播一下“解码”的动画
   function pTerm() {
-    const s = blankS(), tm = s.tm, O = C.TERM.odds;
+    const s = blankS(), tm = s.tm, O = C.TERM.odds, totalTerms = (s.term || 0) + (tm ? 1 : 0);
     const odds = `<div class="ar-todds">${C.TIERS.map(t => `<span style="--tc:${C.TIER[t].c}"><i></i>${C.TIER[t].n} ${pct(O[t])}</span>`).join('')}<span class="ar-st-chip">斩数版 ${pct(C.cv(CF(), 'stP'))}</span></div>`;
     let body;
     if (tm) {
       const o = tm.o, left = C.TERM.offers - tm.n, fx = NOW() - TERM_FX < 1500;
       body = `<div class="ar-term${fx ? ' scan' : ''}" style="--tc:${tc(o.k)}">
         <div class="ar-termart"><img src="${bigArt(o.k)}" alt="">${o.st >= 0 ? `<span class="ar-st">斩数 ${o.st}</span>` : ''}<i class="ar-scanline"></i></div>
-        <div class="ar-terminfo"><span class="ar-k">货郎 · 第 ${tm.n} / ${C.TERM.offers} 件</span>
+        <div class="ar-terminfo"><span class="ar-k">货郎 · 第 ${tm.n} / ${C.TERM.offers} 件${s.term ? `（另有 ${s.term} 台未开封）` : ''}</span>
           <span class="ar-tier" style="--tc:${tc(o.k)}">${C.TIER[tierOf(o.k)].n}</span>
           <h3>${escapeHTML(itemName(o))}</h3>
           <p class="ar-note">${colName(o.k)}武器箱 · ${charName(o.k)}</p>
           <div class="ar-termprice"><span>报价</span>${ink(o.price)}</div>
           <p class="ar-note">玩家市场：${mkLine(o.k, o.st)}</p>
-          <div class="ar-insbtns"><button type="button" class="go small" data-term="buy" ${live() ? '' : 'disabled'}>买下 ${ink(o.price)}</button><button type="button" class="ghost small" data-term="next" ${live() ? '' : 'disabled'}>${left ? `不要，换下一件（还能换 ${left} 次）` : '不要（这台货郎就没了）'}</button></div>
+          <div class="ar-insbtns"><button type="button" class="go small" data-term="buy" ${live() ? '' : 'disabled'}>买下 ${ink(o.price)}</button><button type="button" class="ghost small" data-term="next" ${live() ? '' : 'disabled'}>${left ? `不要，换下一件（还能换 ${left} 次）` : '不要（这台货郎就没了）'}</button><button type="button" class="go small" data-term="openAll" ${totalTerms && live() ? '' : 'disabled'}>一键开启全部（${totalTerms}）</button></div>
           <p class="ar-note" id="arTermLeft"></p></div></div>`;
     } else {
       body = `<div class="ar-card ar-termseal"><span class="ar-termbox"><span>终</span></span><div><h3>货郎 <small>还有 ${s.term} 台没开封</small></h3>
-        <p class="ar-note">${s.term ? '开封以后一次给你看一件饰品、报一个价：想要就买下，不要就换下一件，最多看 5 件。' : `货郎在商店按固定价格卖（一台 ${fmt(C.shopPrice('term', CF()))} 墨锭），每周补给、星章兑换也有，新手礼也送一台。`}</p></div>
-        <div class="ar-termbtns"><button type="button" class="go small" data-term="unseal" ${s.term && live() ? '' : 'disabled'}>开封一台</button><button type="button" class="ghost small" data-buyg="term">买一台 ${ink(C.shopPrice('term', CF()))}</button></div></div>`;
+        <p class="ar-note">${s.term ? '可逐台开封挑选报价，或直接一键开启全部货郎，一次性领取所有奖励。' : `货郎在商店按固定价格卖（一台 ${fmt(C.shopPrice('term', CF()))} 墨锭），每周补给、星章兑换也有，新手礼也送一台。`}</p></div>
+        <div class="ar-termbtns"><button type="button" class="go small" data-term="openAll" ${totalTerms && live() ? '' : 'disabled'}>一键开启全部（${totalTerms}）</button><button type="button" class="ghost small" data-term="unseal" ${s.term && live() ? '' : 'disabled'}>逐台开封</button><button type="button" class="ghost small" data-buyg="term">买一台 ${ink(C.shopPrice('term', CF()))}</button></div></div>`;
     }
-    return `${body}<h4 class="ar-h">货郎报价的概率 <small>每件都从八个武器箱的全部饰品里抽（神兵、星座武器箱的也有），报价按饰品的品质定，有高有低</small></h4>${odds}
-      <p class="ar-note">买下一件，这台货郎就用掉了；5 件都不要，货郎也没了。开封 ${C.TERM.days} 天内不处理会作废。货郎只在商店卖，买来的不能转卖。</p>`;
+    return `${body}<h4 class="ar-h">货郎报价的概率 <small>每件都从全部武器箱饰品里抽取（含神兵与星座武器箱），支持逐台挑货或一键批量开启</small></h4>${odds}
+      <p class="ar-note">一键开启全部会一次性打开所有可用货郎并直接将奖励收入库存；逐台开封时 5 件都不要或 ${C.TERM.days} 天内不处理会作废。</p>`;
   }
   let TERM_TM = 0;
   function termTick() {   // 开着的货郎：显示还剩多久作废
@@ -1100,7 +1100,28 @@
     el.textContent = `还剩 ${h >= 24 ? `${Math.floor(h / 24)} 天 ${h % 24} 小时` : h ? `${h} 小时 ${m} 分` : `${Math.max(1, m)} 分钟`}作废`;
     TERM_TM = setTimeout(termTick, 30000);
   }
+  async function openAllTerms() {
+    if (bulkOpening || REEL.on || BUSY || !live()) return;
+    bulkOpening = true;
+    const wins = [], owner = UID;
+    try {
+      while (live() && UID === owner && ((ST.term || 0) > 0 || !!ST.tm) && !C.invFull(ST)) {
+        const r = await act('termOpenAll', {});
+        if (!r || !r.ok || !Array.isArray(r.items) || !r.items.length) break;
+        wins.push(...r.items);
+      }
+    } finally {
+      bulkOpening = false;
+      render();
+      if (wins.length && UID === owner && $id('armory').classList.contains('on')) {
+        SFX.gong && SFX.gong();
+        modal(`<h3>货郎批量开启结果（共 ${wins.length} 件）</h3><div class="ar-grid">${wins.map(it => tile(it)).join('')}</div><div class="row"><button class="go small" id="arTermBulkDone">全部收下</button></div>`, 'wide');
+        $id('arTermBulkDone').addEventListener('click', () => { closeModal(); render(); });
+      }
+    }
+  }
   async function termAct(a) {
+    if (a === 'openAll') { await openAllTerms(); return; }
     if (a === 'unseal') { const r = await act('unseal', {}); if (r && r.ok) { TERM_FX = NOW(); SFX.chargeFull && SFX.chargeFull(); render(); } return; }
     const tm = ST && ST.tm; if (!tm) { render(); return; }
     if (a === 'buy') {
@@ -1605,6 +1626,7 @@
     if (!live()) return { err: '请先登录账号后再使用 FULL AUTO' };
     const r = await act('fullAuto', {});
     if (r && r.ok) {
+      if (r.soldMarketCount) MKD.at = 0;
       redrawLooks();
       SFX.gong && SFX.gong();
       const parts = [];
@@ -1613,7 +1635,9 @@
       if (r.pets) parts.push(`灵宠 ${r.pets}`);
       if (r.stances) parts.push(`架势 ${r.stances}`);
       if (r.skills) parts.push(`招式 ${r.skills}`);
-      if (r.soldCount) parts.push(`售出重复 ${r.soldCount} 件 (+${fmt(r.inkGain)}墨)`);
+      if (r.soldMarketCount) parts.push(`变现挂单 ${r.soldMarketCount} 件`);
+      if (r.soldDupesCount) parts.push(`售出重复 ${r.soldDupesCount} 件`);
+      if (r.soldCount && r.inkGain) parts.push(`+${fmt(r.inkGain)}墨`);
       toast(`⚡ FULL AUTO 完成：${parts.join(' · ') || '配置均已最优'}`);
       if ($id('armory') && $id('armory').classList.contains('on')) render();
     }

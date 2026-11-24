@@ -1216,9 +1216,10 @@
     }
     return { ok: true, assigned, badgeEquip: s.badgeEquip };
   };
-  // FULL AUTO：全自动一键管理 —— 覆盖重配全阵容徽记、穿戴最优皮肤、匹配最佳灵宠、启用已解锁二式架势与招式流派、并无上限出售全部重复饰品
+  // FULL AUTO：全自动一键管理 —— 覆盖重配全阵容徽记、穿戴最优皮肤、匹配最佳灵宠、启用已解锁二式架势与招式流派，
+  // 并无上限直接变现全部可售饰品（含库存重复饰品与玩家市场上尚未成交的在售挂单），立即结算为墨锭
   A.fullAuto = (s, a, env) => {
-    let badges = 0, skins = 0, pets = 0, stances = 0, skills = 0, soldCount = 0, inkGain = 0;
+    let badges = 0, skins = 0, pets = 0, stances = 0, skills = 0, soldCount = 0, soldDupesCount = 0, soldMarketCount = 0, inkGain = 0;
     if (Object.keys(s.badgeOwned || {}).length) {
       const br = A.badgeAutoAssign(s);
       if (br && br.ok) badges = br.assigned || 0;
@@ -1281,6 +1282,25 @@
         }
       }
     }
+    // 直接变现玩家市场上所有仍在售（未成交）的挂单，无需等待买家；已成交的挂单保留给 settle 结账，避免重复发奖
+    const openIds = env.server && env.mkt && env.mkt.openIds instanceof Set ? env.mkt.openIds : null;
+    const cancelledIds = [], keepLst = [];
+    for (const L of s.lst) {
+      if (!L || !L.it || !C.isItem(L.it.k)) continue;
+      if (openIds && !openIds.has(L.l)) { keepLst.push(L); continue; }
+      const val = C.refVal(L.it);
+      giveInk(env, val);
+      s.stat.sold++;
+      histPush(s, { t: env.now, kind: 'sell', k: L.it.k, st: L.it.st, price: val, gain: val });
+      soldMarketCount++;
+      soldCount++;
+      inkGain += val;
+      bump(s, 'sell', 1);
+      cancelledIds.push(L.l);
+    }
+    s.lst = keepLst;
+    if (cancelledIds.length && env.mkt) env.mkt.out = { cancelMany: cancelledIds };
+    // 无数量上限直接出售库存中的全部重复饰品
     const plan = C.dupePlan(s);
     if (plan.items.length) {
       for (const d of plan.items) {
@@ -1290,12 +1310,13 @@
         giveInk(env, val);
         s.stat.sold++;
         histPush(s, { t: env.now, kind: 'sell', k: it.k, st: it.st, price: val, gain: val });
+        soldDupesCount++;
         soldCount++;
         inkGain += val;
         bump(s, 'sell', 1);
       }
     }
-    return { ok: true, badges, skins, pets, stances, skills, soldCount, inkGain };
+    return { ok: true, badges, skins, pets, stances, skills, soldCount, soldDupesCount, soldMarketCount, inkGain };
   };
   A.petBuy = (s, a, env) => {
     const id = String(a.id || '');
@@ -1385,6 +1406,27 @@
     histPush(s, { t: env.now, kind: 'term', k: tm.o.k, st: tm.o.st, price: tm.o.price });
     s.tm = null; s.stat.term++;
     return { ok: true, item: it, price: tm.o.price };
+  };
+  // 批量开启全部可用货郎（含已开封尚未处理的货郎与所有未开封货郎，单次事务最多 500 台，前端自动接续循环）
+  A.termOpenAll = (s, a, env) => {
+    const items = [];
+    if (s.tm && s.tm.o && C.isItem(s.tm.o.k)) {
+      const o = s.tm.o;
+      const it = C.addItem(s, C.mkItem(s, o.k, 'term', env.rnd, { st: o.st }), env);
+      histPush(s, { t: env.now, kind: 'term', k: o.k, st: o.st, price: 0 });
+      s.tm = null;
+      s.stat.term++;
+      items.push(it);
+    }
+    while (s.term > 0 && items.length < 500 && !C.invFull(s)) {
+      s.term--;
+      const o = C.termOffer(env.rnd, env.cfg);
+      const it = C.addItem(s, C.mkItem(s, o.k, 'term', env.rnd, { st: o.st }), env);
+      histPush(s, { t: env.now, kind: 'term', k: o.k, st: o.st, price: 0 });
+      s.stat.term++;
+      items.push(it);
+    }
+    return items.length ? { ok: true, count: items.length, remaining: s.term, items } : { err: '没有可开启的货郎' };
   };
   A.supply = (s, a, env) => {
     const picks = Array.isArray(a.picks) ? a.picks.map(Number).filter(Number.isInteger) : [];

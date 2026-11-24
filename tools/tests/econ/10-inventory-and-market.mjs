@@ -476,4 +476,54 @@ section('货郎：一次报一件，最多 5 件，买下就用掉；重发、�
   ok(!out && C.TERM.markup[0] >= 1.2, `报价都在基准价的 ${C.TERM.markup[0]}~${C.TERM.markup[1]} 倍（四舍五入到整数，实际 ${lo.toFixed(3)}~${hi.toFixed(3)}）`, [lo, hi, out]);
 }
 
+section('货郎批量开启（termOpenAll）：一次性开启已开封与全部未开封货郎，重试不重复');
+{
+  T = nextNoon();
+  const u = await newUser('peddlerBulk', { ink: 5000 });
+  await econ(u.token, 'sync');
+  const s0 = stateOf(u.uid); s0.term = 6;
+  ENV.DB.raw.prepare('UPDATE econ SET state_json = ?, ver = ver + 1 WHERE uid = ?').run(JSON.stringify(s0), u.uid);
+  const un = await econ(u.token, 'unseal');
+  ok(un.res.ok && stateOf(u.uid).tm && stateOf(u.uid).term === 5, '先开封一台，剩 5 台未开封');
+  const n = nonce();
+  const r1 = await econ(u.token, 'termOpenAll', {}, n);
+  const r2 = await econ(u.token, 'termOpenAll', {}, n);
+  const s1 = stateOf(u.uid);
+  ok(r1.res.ok && r1.res.count === 6 && r1.res.items.length === 6 && r2.replay && !s1.tm && s1.term === 0 && s1.inv.length === 6 && s1.stat.term === 6,
+    '一键批量开启 1 台已开封 + 5 台未开封货郎：共得 6 件饰品，重放不重复', { res: r1.res, inv: s1.inv.length, term: s1.term });
+  ok((await econ(u.token, 'termOpenAll')).res.err, '没有货郎时拒绝批量开启');
+}
+
+section('FULL AUTO 批量直售：无 50 件上限出售库存重复 + 自动撤下并直售市场在售挂单（不与已成交单重复发奖）');
+{
+  T = nextNoon();
+  const S = await newUser('faSeller', { ink: 1000 }), B = await newUser('faBuyer', { ink: 5000 });
+  await econ(S.token, 'sync'); await econ(B.token, 'sync');
+  // 发放 62 件同款饰品（>50 件上限）以及 3 件拟挂市场饰品
+  const dupes = grant(S.uid, Array.from({ length: 62 }, () => ({ k: 'qf_p1' })));
+  const mktItems = grant(S.uid, [{ k: 'ts_p1' }, { k: 'lm_p1' }, { k: 'fy_p1' }]);
+  const l1 = await econ(S.token, 'list', { i: mktItems[0].i, price: 200 });
+  const l2 = await econ(S.token, 'list', { i: mktItems[1].i, price: 250 });
+  const l3 = await econ(S.token, 'list', { i: mktItems[2].i, price: 300 });
+  // 买家先买走 l3（state=1, paid=0），l1/l2 仍为在售（state=0）
+  const bought3 = await econ(B.token, 'buy', { l: l3.res.l, price: 300 });
+  ok(l1.res.ok && l2.res.ok && l3.res.ok && bought3.res.ok, '挂出 3 单且买家买走其中 1 单');
+  const inkBefore = inkOf(S.uid);
+  const expectedNet3 = C.net(300);
+  const expectedMktRef = C.refVal({ k: 'ts_p1', st: -1 }) + C.refVal({ k: 'lm_p1', st: -1 });
+  const expectedDupesRef = 61 * C.refVal({ k: 'qf_p1', st: -1 });
+  const fa = await econ(S.token, 'fullAuto');
+  const stAfter = stateOf(S.uid);
+  ok(fa.res.ok && fa.res.soldDupesCount === 61 && fa.res.soldMarketCount === 2 && fa.res.soldCount === 63,
+    'FULL AUTO 无 50 件上限售出 61 件重复 + 2 单在售挂单', fa.res);
+  ok(inkOf(S.uid) === inkBefore + expectedNet3 + expectedMktRef + expectedDupesRef,
+    '墨锭精确到账：已成交单按成交净额结账 + 未成交挂单与 61 件重复按基准价直售，无重复发奖', { got: inkOf(S.uid) - inkBefore, want: expectedNet3 + expectedMktRef + expectedDupesRef });
+  ok(stAfter.inv.length === 1 && stAfter.lst.length === 0 && mrow(l1.res.l).state === 2 && mrow(l2.res.l).state === 2 && mrow(l3.res.l).state === 1 && mrow(l3.res.l).paid === 1,
+    '库存保留 1 件最优饰品，D1 mkt 表两单未售已标 state=2，已售单 paid=1', { inv: stAfter.inv.length, lst: stAfter.lst.length });
+  // 再次同步不会重复结账或丢失物品
+  const inkAfter = inkOf(S.uid);
+  const sync2 = await econ(S.token, 'sync');
+  ok(sync2.sold.length === 0 && inkOf(S.uid) === inkAfter && stateOf(S.uid).inv.length === 1, '再次同步墨锭与库存完全稳定');
+}
+
 section('斩数：穿着斩数版的侠客每击倒一个对手 +1；没穿、没票、乱报都不算');

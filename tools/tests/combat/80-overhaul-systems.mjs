@@ -355,4 +355,48 @@ export default [
       return { pass: true };
     })()`
   },
+  {
+    name: 'Liying shadow attacks deal minimal damage with zero guard drain, stack 25 per-opponent Shadow Marks for burst + overhead full guard-break teleport',
+    fn: `(() => {
+      const lyIdx = CHARS.findIndex(c => c.id === 'liying');
+      if (lyIdx < 0) return { pass: false, error: 'Liying not found' };
+      startMelee(8, lyIdx, 'normal', 'normal');
+      M.phase = 'fight';
+      for (const f of allFighters()) f.ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
+      const lx = STAGE_W / 2;
+      A.reset(lx - 120); A.y = 0; A.plat = -1; A.face = 1;
+      const foes = sideFighters(1);
+      const foe1 = foes[0], foe2 = foes[1];
+      foe1.reset(lx + 40); foe1.y = 0; foe1.plat = -1; foe1.invul = 0; foe1.face = -1;
+      foe1.state = 'block'; foe1.ctrl = new DummyCtrl({ act: 'block', autoHeal: false, infGuard: false });
+      foe2.reset(lx + 380); foe2.y = -264; foe2.plat = 2; foe2.invul = 0; foe2.face = -1;
+      foe2.ctrl = new DummyCtrl({ act: 'stand', autoHeal: false, infGuard: false });
+      const g1Before = foe1.guard, hp1Before = foe1.hp;
+      // 1. Shadow wave hits blocking foe1: minimal damage, ZERO guard drain, +1 Shadow Mark on foe1 only
+      spawnCloneWave(A, A.x + 20, A.y, 1, 4);
+      for (let t = 0; t < 25; t++) step();
+      if (foe1.guard < g1Before) return { pass: false, error: 'Shadow wave drained guard on block: ' + g1Before + ' -> ' + foe1.guard };
+      if (hp1Before - foe1.hp > 6) return { pass: false, error: 'Shadow wave dealt too much damage: ' + (hp1Before - foe1.hp) };
+      if (foe1.shadowMarks !== 1 || foe2.shadowMarks !== 0) return { pass: false, error: 'Shadow marks not tracked independently: foe1=' + foe1.shadowMarks + ' foe2=' + foe2.shadowMarks };
+      // 2. Stack foe2 independently to 25 Shadow Marks on elevated layer (-264): triggers burst damage + unlocks overhead teleport
+      const hp2Before = foe2.hp, g2Before = foe2.guard;
+      addShadowMark(A, foe2, 24);
+      if (foe2.shadowMarks !== 24 || A.shadowExecTarget >= 0) return { pass: false, error: 'Should not burst before 25 marks: ' + foe2.shadowMarks };
+      addShadowMark(A, foe2, 1);
+      if (foe2.shadowMarks !== 0) return { pass: false, error: 'Marks did not reset after 25-stack burst: ' + foe2.shadowMarks };
+      if (hp2Before - foe2.hp < 50) return { pass: false, error: '25-stack burst damage too small: ' + (hp2Before - foe2.hp) };
+      if (A.shadowExecTarget !== foe2.idx || !(A.shadowExecT > 0)) return { pass: false, error: 'Overhead teleport window not granted for foe2' };
+      if (foe1.shadowMarks !== 1) return { pass: false, error: 'foe1 independent marks were affected by foe2 burst' };
+      // 3. Trigger R (mistswap) with zero clones out: teleports directly above foe2 on layer -264 and completely depletes guard
+      A.clones = [];
+      A.skill2CD = 0;
+      foe2.guard = g2Before;
+      startSkill(A, foe1, 2);
+      if (Math.abs(A.x - foe2.x) > 5 || A.y >= foe2.y - 80) return { pass: false, error: 'Liying did not teleport directly above foe2: A=(' + A.x + ',' + A.y + ') foe2=(' + foe2.x + ',' + foe2.y + ')' };
+      for (let t = 0; t < 80; t++) step();
+      if (foe2.guard !== 0) return { pass: false, error: 'Overhead follow-up strike did not completely deplete foe2 guard: ' + foe2.guard };
+      toMenu();
+      return { pass: true };
+    })()`
+  },
 ];

@@ -938,6 +938,14 @@ function updateFighter(f, foe) {
     }
     if (Math.random() < 0.2) addP({ type: 'spark', x: f.x + rand(-15, 15), y: f.y - rand(25, 75), vx: 0, vy: rand(-10, 10), life: 0.25, max: 0.25, rgb: '235,110,210' });
   }
+  if (f.shadowMarkT > 0) {
+    f.shadowMarkT = Math.max(0, f.shadowMarkT - STEP);
+    if (f.shadowMarkT <= 0) { f.shadowMarks = 0; f.shadowMarkT = 0; }
+  }
+  if (f.shadowExecT > 0) {
+    f.shadowExecT = Math.max(0, f.shadowExecT - STEP);
+    if (f.shadowExecT <= 0) { f.shadowExecTarget = -1; f.shadowExecT = 0; }
+  }
   if (scOn()) scTick(f, foe);
   physics(f);
 }

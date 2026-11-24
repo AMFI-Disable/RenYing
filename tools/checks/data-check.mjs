@@ -61,7 +61,7 @@ const CHAR = { id: 'str', name: 'str', role: 'str', diff: 'int', escCD: 'pos', s
   stat: 'obj', look: 'obj', ai: 'obj', beats: 'arr', weakTo: 'arr', 'meterMul?': 'pos', 'hitFeel?': 'pos', 'moveMods?': 'obj', 'jumps?': 'int', 'fly?': 'pos', 'scaling?': 'num', 'inkShot?': 'bool', 'cancel?': 'obj', 'clone?': 'obj', 'profile?': 'obj' };
 const CANCEL_SPEC = { blockEarly: 'num', chainAt: 'num', skill2FromLight: 'bool', skillOnHit: 'bool' };
 // 雾身（离影）：上限、存在秒数、拴绳距离、换影结印 / 凝身 / 无敌秒数、打碎一个给对手多少气
-const CLONE_SPEC = { max: 'int', life: 'pos', leash: 'num', swapSeal: 'pos', swapLand: 'pos', swapInvul: 'pos', breakMeter: 'num', swapPathDmg: 'num', swapPathPad: 'num', 'hp?': 'pos', 'subHp?': 'pos', 'swapArmor?': 'num', 'swapFreeze?': 'num', 'waveDmg?': 'num', 'waveGuardMul?': 'num' };
+const CLONE_SPEC = { max: 'int', life: 'pos', leash: 'num', swapSeal: 'pos', swapLand: 'pos', swapInvul: 'pos', breakMeter: 'num', swapPathDmg: 'num', swapPathPad: 'num', 'hp?': 'pos', 'subHp?': 'pos', 'swapArmor?': 'num', 'swapFreeze?': 'num', 'waveDmg?': 'num', 'waveGuardMul?': 'num', 'shadowMarkMax?': 'pos', 'shadowBurstDmg?': 'pos', 'shadowExecDmg?': 'pos', 'shadowExecWindow?': 'pos' };
 function checkClone(w, c) {
   if (!shape(w, c, CLONE_SPEC)) return;
   if (!(c.max >= 1 && c.max <= 10)) err(w, `max 是场上最多几个雾身，只能是 1~10，现在是 ${c.max}`);

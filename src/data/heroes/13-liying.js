@@ -10,10 +10,10 @@ defHero({
   bal: { normal: 1.0, skill: 1.0, ult: 1.0, cd: 1.0, hp: 1.0 },
   // ---- 基础设定：名字、技能编号、被动、属性 stat、外观 look、电脑偏好 ai、普攻改动 moveMods ----
   char: { name: '离影', role: '离魂刀客', diff: 3, escCD: 8.5, skill: 'mistmark', skill2: 'mistswap', ult: 'mistarray', passive: 'mist',
-    passiveName: '离魂', passiveDesc: '能把一缕魂留在原地化作雾身（最多 10 个，存在 15 秒，具高额生命且承受攻击，破碎时反噬引爆并削弱对手）。本体再次留影时场上雾身会同步复制出刀并生出较弱子影。雾身以波动内功重放攻击，伤害较低但削弱对手防御并加速其架势消耗。渡影（R）获得 0.25 秒霸体，并在时空凝滞中精准拣选本体真身所生雾身瞬移渡位。',
+    passiveName: '离魂', passiveDesc: '能把一缕魂留在原地化作雾身（最多 10 个，存在 15 秒，具高额生命且承受攻击）。雾身攻击仅造成极低伤害且不削减对手架势，但每次命中都会为该对手独立叠加「影印」；叠满 25 层时立即引爆魂噬重创该对手，并使离影获得「影落破势」瞬移时机——按 R 可直瞬至该对手正上方发动强力下劈，瞬间清零其全部架势并触发破防。渡影（R）平时可获 0.25 秒霸体并在 0.5 秒时空凝滞中瞬移至真身雾身。',
     stat: { hp: 815, walk: 1.0, speed: 0.92, dmg: 1.0, reach: 1.0, swing: 0.9, jump: 1.0, weight: 0.95, defRating: 1.0, guardMax: 95, guardStab: 1.0, guardChip: 0.10, guardRegen: 28, poise: 1.0, size: 0.95 }, hitFeel: 0.85,
     jumps: 1,
-    clone: { max: 10, life: 15, leash: 0, hp: 120, subHp: 60, swapSeal: 0.1, swapLand: 0.08, swapInvul: 0.12, swapArmor: 0.25, swapFreeze: 0.5, swapPathDmg: 65, swapPathPad: 30, breakMeter: 5, waveDmg: 12, waveGuardMul: 2.2 },
+    clone: { max: 10, life: 15, leash: 0, hp: 120, subHp: 60, swapSeal: 0.1, swapLand: 0.08, swapInvul: 0.12, swapArmor: 0.25, swapFreeze: 0.5, swapPathDmg: 65, swapPathPad: 30, breakMeter: 5, waveDmg: 4, waveGuardMul: 0, shadowMarkMax: 25, shadowBurstDmg: 85, shadowExecDmg: 75, shadowExecWindow: 5.0 },
     look: { body: '#1c2a30', shade: '#0e171b', outline: '#7fd6e0', outlineA: .85, scarf: '#5cc8d6', slash: '120,215,225', blade: '#e6fbff', head: 'ponytail', weapon: 'sword' },
     ai: { range: [80, 200] }, beats: ['tieshan', 'gouchen'], weakTo: ['lingque', 'yanling'] },
   // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----

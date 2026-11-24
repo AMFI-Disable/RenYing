@@ -256,6 +256,62 @@ function plantClone(f, x) {
     }
   }
 }
+const SHADOW_MARK_MAX = 25;
+function addShadowMark(att, def, count = 1) {
+  if (!att || !def || def.hp <= 0 || def.forestProxy || def.worldProxy || !count) return;
+  const C = (att.ch && att.ch.clone) || {};
+  const maxMarks = C.shadowMarkMax || SHADOW_MARK_MAX;
+  def.shadowMarks = (def.shadowMarks || 0) + count;
+  def.shadowMarkT = 12.0;
+  if (def.shadowMarks < maxMarks) {
+    if (!RESIM && (def.shadowMarks % 5 === 0 || def.shadowMarks >= maxMarks - 3)) {
+      addP({ type: 'text', text: `影印 ${def.shadowMarks}/${maxMarks}`, x: def.x, y: def.y - 112, life: 0.65, max: 0.65, rgb: '127,214,224' });
+    }
+    return;
+  }
+  // 叠满 25 层影印：立即引爆魂噬重创该对手，并赋予离影向该对手正上方瞬移破势的强力追击时机
+  def.shadowMarks = 0;
+  def.shadowMarkT = 0;
+  const rawBurst = (C.shadowBurstDmg || 85) * (typeof balDmg === 'function' ? balDmg(att, { skill: true }) : 1);
+  const burstDmg = Math.max(1, Math.round(rawBurst));
+  const ev = { e: 'hit', a: att.idx, d: def.idx, x: def.x, y: def.y - 60, dmg: burstDmg, dd: burstDmg, hs: 0.14, big: true, nc: true };
+  if (typeof cujuOn === 'function' && cujuOn()) {
+    def.hp = def.lagHp = def.maxHp;
+  } else {
+    def.hp = Math.max(def.dummy ? 1 : 0, def.hp - burstDmg);
+    def.sinceHit = 0;
+    def.lagDelay = 0.5;
+    def.flash = 0.15;
+    if (def.hp <= 0 && M.phase === 'fight') {
+      def.vx = (def.x >= att.x ? 1 : -1) * 420;
+      def.vy = -520;
+      def.state = 'launched';
+      def.plat = -1;
+      def.y = Math.min(def.y - 1, -1);
+      fighterDown(def, att, ev);
+    }
+  }
+  if (def.hp > 0) {
+    att.shadowExecTarget = def.idx;
+    att.shadowExecT = C.shadowExecWindow || 5.0;
+    att.skill2CD = 0;   // 立即可按 R 瞬移至该对手正上方发动影落破势
+  }
+  if (!RESIM) {
+    ring(def.x, def.y - 58, 170, '127,214,224', 0.48);
+    ring(def.x, def.y - 58, 95, '210,165,255', 0.36);
+    shake = Math.max(shake, 16);
+    flashA = Math.max(flashA, 0.28);
+    flashRGB = '127,214,224';
+    for (let k = 0; k < 14; k++) {
+      const a = (k / 14) * Math.PI * 2, v = rand(140, 360);
+      addP({ type: 'spark', x: def.x, y: def.y - 58, vx: Math.cos(a) * v, vy: Math.sin(a) * v, rgb: k % 2 ? '127,214,224' : '210,165,255', life: 0.42, max: 0.42, w: 2.2 });
+    }
+    addP({ type: 'text', text: '✦ 影印满盈 · 魂噬！', x: def.x, y: def.y - 128, life: 1.15, max: 1.15, rgb: '165,245,255' });
+    SFX.heavy();
+  }
+  hitVisual(ev);
+  netEmit(ev);
+}
 function cloneGone(f, c, broken) {
   const i = f.clones ? f.clones.indexOf(c) : -1; if (i < 0) return;
   if (!RESIM) {
@@ -268,37 +324,32 @@ function cloneGone(f, c, broken) {
   f.clones.splice(i, 1);
   delete CLONE_SK[f.idx + ':' + c.id];
   if (broken) {
-    // 碎影爆炸与削弱反噬 (Shadow Explosion & Debuff)
-    const C = f.ch.clone || {};
+    // 碎影余波：极低伤害、不削减架势，为附近对手叠加 2 层影印
     const bx = c.x, by = (c.y || 0) - 50;
     const boomR = 140;
     for (const foe of foesOf(f)) {
       if (!foe || foe.hp <= 0 || foe.invul > 0) continue;
       if (Math.abs(foe.x - bx) <= boomR && Math.abs(foe.y - (c.y || 0)) <= 120) {
-        // 自爆反噬伤害与虚弱 Debuff（削减防御评级与加速架势消耗）
-        foe.guard = Math.max(0, (foe.guard !== undefined ? foe.guard : foe.maxGuard) - 22);
-        foe.slowT = Math.max(foe.slowT || 0, 2.0);
-        foe.defDebuffT = Math.max(foe.defDebuffT || 0, 3.5);
         if (foe.hp > 1) {
-          const dmg = Math.round(18 * (f.ch.bal ? f.ch.bal.skill || 1 : 1));
+          const dmg = Math.max(2, Math.round(5 * (f.ch.bal ? f.ch.bal.skill || 1 : 1)));
           foe.hp = Math.max(1, foe.hp - dmg);
-          foe.sinceHit = 0; foe.lagDelay = 0.4;
+          foe.sinceHit = 0; foe.lagDelay = 0.3;
         }
+        addShadowMark(f, foe, 2);
         if (!RESIM) {
-          addP({ type: 'text', text: '破影震煞', x: foe.x, y: foe.y - 120, life: 0.8, max: 0.8, rgb: '255,90,90' });
-          for (let k = 0; k < 6; k++) addP({ type: 'spark', x: foe.x, y: foe.y - 60 + rand(-20, 20), vx: rand(-180, 180), vy: rand(-120, 60), rgb: '255,100,100', life: 0.3, max: 0.3, w: 2 });
+          for (let k = 0; k < 6; k++) addP({ type: 'spark', x: foe.x, y: foe.y - 60 + rand(-20, 20), vx: rand(-160, 160), vy: rand(-100, 60), rgb: '127,214,224', life: 0.28, max: 0.28, w: 1.8 });
         }
       }
     }
     if (!RESIM) {
-      ring(bx, by, 95, '255,80,80', 0.4);
-      shake = Math.max(shake, 8);
-      SFX.heavy();
+      ring(bx, by, 90, '127,214,224', 0.35);
+      shake = Math.max(shake, 5);
+      SFX.poof();
     }
   }
   if (RESIM) return;
   smoke(c.x, (c.y || 0) - 50, broken ? 14 : 7);
-  if (broken) { addP({ type: 'text', text: '破影爆', x: c.x, y: (c.y || 0) - 120, life: 0.6, max: 0.6, rgb: f.look.slash }); SFX.poof(); }
+  if (broken) { addP({ type: 'text', text: '破影印', x: c.x, y: (c.y || 0) - 120, life: 0.6, max: 0.6, rgb: f.look.slash }); SFX.poof(); }
 }
 function clearClones(f) { for (const c of (f.clones || []).slice()) cloneGone(f, c, false); }
 function cloneTick(f) {
@@ -311,10 +362,9 @@ function cloneTick(f) {
     if (c.t >= C.life || (C.leash > 0 && Math.abs(c.x - f.x) > C.leash) || f.hp <= 0) cloneGone(f, c, false);
   }
 }
-// 生成波状行进内功波动飞刃（Wave-like projectile emitting from shadows）
-function spawnCloneWave(f, srcX, srcY, dir, dmg = 12) {
-  const C = f.ch.clone || {};
-  const waveDmg = Math.round(dmg * ((f.ch.bal && f.ch.bal.normal) || 1));
+// 生成雾身影刃波动：极低伤害、零架势削减，每次命中为该对手独立叠加 1 层影印
+function spawnCloneWave(f, srcX, srcY, dir, dmg = 4) {
+  const waveDmg = Math.max(2, Math.round(dmg * ((f.ch.bal && f.ch.bal.normal) || 1)));
   spawnProj(f, {
     kind: 'wind',
     x: srcX + dir * 28,
@@ -325,30 +375,32 @@ function spawnCloneWave(f, srcX, srcY, dir, dmg = 12) {
     h: 52,
     life: 0.55,
     dmg: waveDmg,
-    kb: [120, 0],
-    stun: 0.24,
-    hs: 0.05,
+    kb: [70, 0],
+    stun: 0.14,
+    hs: 0.03,
     cloneEcho: true,
     isWave: true,
-    guardBreakMul: C.waveGuardMul || 2.2,
+    noGuardDrain: true,
+    shadowMark: 1,
+    guardBreakMul: 0,
     unbreakable: true
   });
 }
-// 离影出招时，雾身在各自位置重放判定并释放行进的内功波动飞刃；透破防御并加剧架势消耗
+// 离影出招时，雾身在各自位置重放判定并释放影刃波动：极低伤害、不削减架势，但每次命中均叠加影印
 function echoCloneAttack(f, hb, m, phase = '') {
   if (!f.clones || !f.clones.length || f.ch.passive !== 'mist' || !hb || !m || m.cloneEcho) return;
   const key = [f.state, f.moveName || '', f.skill || '', f.skPh || 0, f.spN || 0, f.spinN || 0, f.mChain || 0, phase, m.name || ''].join(':');
   const targets = foesOf(f);
   const C = f.ch.clone || {};
-  const baseDmg = C.waveDmg || 12;
+  const baseDmg = C.waveDmg || 4;
 
   for (const c of f.clones) {
     if (c.echoHitKey === key) continue;
     c.echoHitKey = key;
 
-    // 释放波状内功气刃
+    // 释放影刃气波（极低伤害、零架势削减、叠影印）
     const waveDir = Math.sign(f.face) || 1;
-    const waveDmg = c.sub ? Math.round(baseDmg * 0.7) : baseDmg;
+    const waveDmg = c.sub ? Math.max(2, Math.round(baseDmg * 0.75)) : baseDmg;
     spawnCloneWave(f, c.x, c.y, waveDir, waveDmg);
 
     const dx = c.x - f.x, dy = (c.y || 0) - f.y;
@@ -357,13 +409,17 @@ function echoCloneAttack(f, hb, m, phase = '') {
       if (!target || target.hp <= 0 || target.invul > 0) continue;
       const hu = hurtbox(target);
       if (!overlap(cb, hu)) continue;
-      // 内功削防与架势重击：较低直接伤害，高额架势削减
-      const mirrorDmg = Math.round((m.dmg || 0) * (c.sub ? 0.35 : 0.50));
+      // 雾身同步斩击：极低伤害、不削减架势、附加 1 层影印
+      const mirrorDmg = Math.max(2, Math.round((m.dmg || 0) * (c.sub ? 0.12 : 0.18)));
       const mirror = {
         ...m,
         dmg: mirrorDmg,
         cloneEcho: true,
-        guardBreakMul: C.waveGuardMul || 2.2,
+        noGuardDrain: true,
+        shadowMark: 1,
+        guardBreakMul: 0,
+        guardDamage: 0,
+        blockGuardDamage: 0,
         srcX: c.x,
         dir: Math.sign(target.x - c.x) || f.face
       };
