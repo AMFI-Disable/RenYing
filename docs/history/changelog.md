@@ -22,9 +22,9 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
-- Grand Melee applies the selected Chaos or Mayhem rules, including Mayhem bonuses after respawn. Grand Melee and Capture the Banner keep both drafted lineups on rematch, and 2v2 Capture the Banner shows the objective score.
+- Grand Melee applies the selected Chaos or Mayhem rules, including Mayhem bonuses after respawn. Grand Melee and Capture the Banner keep both drafted lineups on rematch, and 2v2 Capture the Banner shows both objective scores by the match timer.
 - Hero archetype filter counts meet the panel audit’s minimum font size in the codex and draft screens.
-- The combat runner now executes the overhaul regression group against the current Armory and combat APIs.
+- The combat runner now executes the overhaul regression group against the current Armory and combat APIs. The AI Ink Ball smoke test uses fixed random seeds for repeatable results.
 
 - **Home Update Banner Removal & Character Collision Physics (`src/page.html`, `src/game/05-ui/17-home-03-navigation.js`, `src/styles/40-navigation-and-home.css`, `src/styles/80-studio-display-and-overhaul.css`, `src/data/30-ui-copy-20-gaps.js`, `src/data/30-ui-copy-21-overhaul.js`, `src/game/02-combat/10-hits-02-effects.js`, `src/ai.js`, `tools/tests/combat/60-maps-terrain-and-matchups.mjs`)**: removed the home-screen update banner (`#updateBanner`), its toggle pill (`#hubBannerBtn`), and associated styles/scripts; reworked `pushApart()` and AI spacing so characters no longer shove each other across the arena or get stuck nose-to-nose across PvP, PvAI, AI-vs-AI, corners, airborne jump-overs, and multi-fighter team modes (teammates pass freely while moving, grounded walkers shoulder-pass cleanly, stationary defenders resist being pushed, corner separation is symmetric on both walls, airborne fighters cross over freely, and `pushApart()` no longer aborts when `B` is hidden).
 

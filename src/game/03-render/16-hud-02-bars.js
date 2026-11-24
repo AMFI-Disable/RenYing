@@ -34,6 +34,13 @@ function drawHUD2v2() {
   ctx.fillStyle = M.timer < 10 ? '#ff8a78' : '#efe8d8';
   if (M.ot) ctx.fillStyle = '#ff6a5a';
   ctx.fillText(Math.ceil(M.timer), cx, top + bh / 2 + 2);
+  if (ctfOn() && M.ctf) {
+    ctx.font = `700 ${fsNum}px ${BODY_FONT}`;
+    for (let side = 0; side < 2; side++) {
+      ctx.fillStyle = side === 0 ? '#6fe0ff' : '#ff7878';
+      ctx.fillText(`${M.ctf.score[side]}/${M.ctf.target}`, cx + (side === 0 ? -1 : 1) * gutter / 4, top + bh * 2.5);
+    }
+  }
   if (M.ot) { ctx.font = `${Math.max(12, Math.round(bh * 0.8))}px ${TITLE_FONT}`; ctx.fillStyle = '#ff6a5a'; ctx.fillText(cvT('加时'), cx, top - bh * 0.75); }
   ctx.restore();
 
@@ -131,7 +138,7 @@ function drawHUD2v2() {
     else if (M.mode === 'net' && netRoomMode === 'pp_cc') bTitle = '🌐 2v2 双人联机共斗 (抗击双天道)';
     else if (M.mode === 'net' && netRoomMode === 'pp_pp') bTitle = '🌐 2v2 四人对决 (全员切磋)';
   }
-  if (ctfOn() && M.ctf) bTitle = `${cvT('夺旗争锋')} · ${M.ctf.score.join(' : ')} / ${M.ctf.target}`;
+  if (ctfOn()) bTitle = '夺旗争锋';
   if (chaosOn()) bTitle += ' · 天机乱斗';
   if (chaosOn()) drawChaosHUD(cx, H - 48, true);
   ctx.fillText(window.I18N ? I18N.t(bTitle) : bTitle, cx, H - 10);
@@ -414,7 +421,7 @@ function drawHUDQuiet() {
 function drawHUD() {
   if (M.mode === 'demo') return;
   if (typeof hudPreset === 'function' && hudPreset() === 'quiet') { drawHUDQuiet(); drawTabScoreboard(); return; }
-  if (isLargeTeam() || ctfOn()) { drawHUDLargeTeam(); drawTabScoreboard(); return; }
+  if (isLargeTeam()) { drawHUDLargeTeam(); drawTabScoreboard(); return; }
   if (isRaid()) { drawHUDRaid(); drawTabScoreboard(); return; }
   if (is2v2()) { drawHUD2v2(); drawTabScoreboard(); return; }
   const barW = Math.min(W * 0.36, 520), bh = Math.max(12, H * 0.02), top = Math.max(22, H * 0.04), cx = W / 2, gap = 56;

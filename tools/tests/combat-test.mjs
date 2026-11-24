@@ -138,7 +138,7 @@ async function initRunner() {
   const gameCode = gameSource();
   const dummyEl = {
     getContext: () => ({
-      fillRect: () => {}, strokeRect: () => {}, clearRect: () => {}, beginPath: () => {}, arc: () => {}, fill: () => {},
+      fillRect: () => {}, clearRect: () => {}, beginPath: () => {}, arc: () => {}, fill: () => {},
       stroke: () => {}, moveTo: () => {}, lineTo: () => {}, save: () => {}, restore: () => {},
       translate: () => {}, scale: () => {}, rotate: () => {}, measureText: () => ({ width: 10 }),
       fillText: () => {}, strokeText: () => {}, createRadialGradient: () => ({ addColorStop: () => {} }),

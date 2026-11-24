@@ -219,6 +219,7 @@ export default [
     fn: `(() => {
       startCtf(2, 0, 'normal');
       M.ctf.score = [1, 2];
+      const fighterHealth = A.maxHp + '/' + A.maxHp;
       const labels = [];
       const fillText = ctx.fillText;
       try {
@@ -228,7 +229,7 @@ export default [
         ctx.fillText = fillText;
         toMenu();
       }
-      return { pass: labels.includes('1/3') && labels.includes('2/3'), error: labels.join(', ') };
+      return { pass: labels.includes('1/3') && labels.includes('2/3') && labels.includes(fighterHealth), error: labels.join(', ') };
     })()`
   },
   {
