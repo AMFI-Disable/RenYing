@@ -363,6 +363,7 @@
     [/^(\d+)上限$/, (m0, n) => `${n} cap`],
     // 武库（src/armory.js、src/armory-core.js）
     [/^(.+)武器箱$/, (m0, c) => lookup(c) ? `${lookup(c)} Case` : m0],
+    [/^(.+)典藏匣$/, (m0, c) => lookup(c) ? `${lookup(c)} Collector's Chest` : m0],
     [/^(精铁|碧玉|灵犀|赤霄|绝世|斩数版) ([\d.]+%)$/, (m0, t, p) => `${lookup(t)} ${p}`],
     [/^(精铁|碧玉|灵犀|赤霄) →(?: (精铁|碧玉|灵犀|赤霄|绝世))?$/, (m0, a, b) => `${lookup(a)} →${b ? ' ' + lookup(b) : ''}`],
     [/^集齐这个箱子的 (\d+) 款精铁：(\d+)\/(\d+)，送 1 个(.+)武器箱 \+ 1 张改名标签$/, (m0, n, a, b, c) => `Collect all ${n} Iron items from this case: ${a}/${b}. Reward: 1 ${lookup(c) || c} Case + 1 Rename Tag`],
@@ -399,7 +400,11 @@
     [/^赢下 (\d+) 局 3v3 车轮战$/, (m0, n) => `Win ${n} ${lookup('3v3 车轮战')} match${n === '1' ? '' : 'es'}`],
     [/^开启 (\d+) 个武器箱$/, (m0, n) => `Open ${n} case${n === '1' ? '' : 's'}`],
     [/^签 (\d+) 份熔铸契$/, (m0, n) => `Sign ${n} ${lookup('熔铸契')}${n === '1' ? '' : 's'}`],
-    [/^在玩家市场(卖出|买入) (\d+) 件饰品$/, (m0, v, n) => `${v === '卖出' ? 'Sell' : 'Buy'} ${n} cosmetic${n === '1' ? '' : 's'} on the player market`]
+    [/^在玩家市场(卖出|买入) (\d+) 件饰品$/, (m0, v, n) => `${v === '卖出' ? 'Sell' : 'Buy'} ${n} cosmetic${n === '1' ? '' : 's'} on the player market`],
+    [/^默认：(.+)$/, (m0, k) => `Default: ${lookup(k) || k}`],
+    [/^共 (\d+) 枚$/, (m0, n) => `${n} total`],
+    [/^一键开启全部（(\d+)）$/, (m0, n) => `Open all (${n})`],
+    [/^🏅 徽记：未装备$/, '🏅 Emblem: none']
   ];
   // ---------- 3. 查表与翻页面 ----------
   // 一处查表：先查固定词条，再试模板；返回空串表示“没有这句的译文”
