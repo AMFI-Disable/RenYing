@@ -8,6 +8,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ### Fixed
 
+- **D1 Free-Tier Daily Row-Write Exhaustion & `aiMarketStep` `ReferenceError` (`cloudflare/worker/55-ai-players.js`, `cloudflare/worker/00-runtime-and-http.js`, `cloudflare/wrangler.toml`)**: prevented Cloudflare D1 daily row-write quota exhaustion by (1) throttling `aiPresenceCounts` simulation ticks to 5-minute intervals (`AI_TICK_INTERVAL_MS = 5 * 60e3`) coordinated across Worker isolates via `hit(env, 'ai:tick', ...)`, (2) caching per-isolate `ensureAiPlayers` initialization in a `WeakSet` keyed on `env.DB`, and (3) emitting `UPDATE ai_players` statements in `aiTickSimulation` only for rows whose persisted state actually changed instead of rewriting all 500 AI rows every tick; fixed `ReferenceError: uid is not defined` in `aiMarketStep` by generating market transaction/order IDs with `crypto.randomUUID()`; and added `https://bigbraindevbros.github.io` to `CORS_ORIGINS` alongside `amfi-disable.github.io`. Needs a Worker redeploy.
+
 - **GitHub Pages Build Failure & Local/CI Strict-Copy Parity (`src/data/30-ui-copy-20-gaps.js`, `tools/build.py`, `index.html`, `renying-offline.html`)**: fixed the orphaned English UI copy key in `src/data/30-ui-copy-20-gaps.js` that caused `python3 tools/build.py --check` to fail under `CI=true` (`data-check.mjs --strict-copy`) during GitHub Pages deployment after the `c14` Armory refresh notice update, and updated `tools/build.py` so local `python3 tools/build.py --check` always enforces `--strict-copy` identically to GitHub Actions. No Worker change.
 
 ### Added

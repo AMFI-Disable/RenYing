@@ -18,7 +18,7 @@ head_sampling_rate = 1
 
 # 环境变量：额外允许跨域调用接口的来源（支持 http:// 访问游戏网页时的跨域请求）
 [vars]
-CORS_ORIGINS = "http://amfi-disable.github.io, https://amfi-disable.github.io"
+CORS_ORIGINS = "http://bigbraindevbros.github.io, https://bigbraindevbros.github.io, http://amfi-disable.github.io, https://amfi-disable.github.io"
 
 [[d1_databases]]
 binding = "DB"
@@ -61,4 +61,4 @@ tag = "v1-world"
 new_sqlite_classes = ["WorldLine"]
 
 [env.staging.vars]
-CORS_ORIGINS = "http://amfi-disable.github.io, https://amfi-disable.github.io"
+CORS_ORIGINS = "http://bigbraindevbros.github.io, https://bigbraindevbros.github.io, http://amfi-disable.github.io, https://amfi-disable.github.io"

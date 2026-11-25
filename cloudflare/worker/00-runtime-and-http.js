@@ -49,7 +49,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Max-Age': '86400',
 };
-const CORS_ORIGINS = ['https://amfi-disable.github.io'];
+const CORS_ORIGINS = ['https://bigbraindevbros.github.io', 'https://amfi-disable.github.io'];
 const GITHUB_IO_ORIGIN = /^https:\/\/[a-z0-9_-]+\.github\.io$/i;
 const CF_HOST_ORIGIN = /^https:\/\/[a-z0-9_-]+(\.[a-z0-9_-]+)*\.(workers\.dev|pages\.dev)$/i;
 const DEV_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}|[a-z0-9_-]+\.local)(:\d{1,5})?$/i;

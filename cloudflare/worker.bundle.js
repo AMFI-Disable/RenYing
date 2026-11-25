@@ -2002,7 +2002,7 @@ const CORS_HEADERS = {
   'Access-Control-Allow-Headers': 'Content-Type, Authorization',
   'Access-Control-Max-Age': '86400',
 };
-const CORS_ORIGINS = ['https://amfi-disable.github.io'];
+const CORS_ORIGINS = ['https://bigbraindevbros.github.io', 'https://amfi-disable.github.io'];
 const GITHUB_IO_ORIGIN = /^https:\/\/[a-z0-9_-]+\.github\.io$/i;
 const CF_HOST_ORIGIN = /^https:\/\/[a-z0-9_-]+(\.[a-z0-9_-]+)*\.(workers\.dev|pages\.dev)$/i;
 const DEV_ORIGIN = /^https?:\/\/(localhost|127\.0\.0\.1|\[::1\]|0\.0\.0\.0|192\.168\.\d{1,3}\.\d{1,3}|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2[0-9]|3[0-1])\.\d{1,3}\.\d{1,3}|[a-z0-9_-]+\.local)(:\d{1,5})?$/i;
@@ -4753,7 +4753,9 @@ const AI_MOODS = ['focused', 'relaxed', 'competitive', 'exploratory'];
 const AI_MARKET_MAX_SPENT = 2500;
 const AI_MARKET_MAX_LIST = 3;
 const AI_TOTAL_COUNT = AI_USERNAMES_500.length;
+const AI_TICK_INTERVAL_MS = 5 * 60e3;
 let AI_LAST_TICK = 0;
+const AI_ENSURED_DBS = typeof WeakSet === 'function' ? new WeakSet() : null;
 
 // 每种作息类型的基础活动时段（UTC+8 北京时间，支持跨午夜如 [21.0, 26.8]）与会话/休息时长范围（分钟）
 const AI_CHRONO_CFG = {
@@ -5072,14 +5074,19 @@ async function ensureAiPlayers(env, now) {
     }
   }
   if (stmts.length) await aiBatchChunked(env, stmts, 50);
+  if (AI_ENSURED_DBS && env && env.DB) AI_ENSURED_DBS.add(env.DB);
 }
 
 async function aiPresenceCounts(env, now) {
   try {
-    await ensureAiPlayers(env, now);
-    if (now - AI_LAST_TICK > 60e3) {
+    if (!AI_ENSURED_DBS || !env.DB || !AI_ENSURED_DBS.has(env.DB)) {
+      await ensureAiPlayers(env, now);
+    }
+    if (now - AI_LAST_TICK >= AI_TICK_INTERVAL_MS) {
       AI_LAST_TICK = now;
-      await aiTickSimulation(env, now, { market: true });
+      if (await hit(env, 'ai:tick', 1, AI_TICK_INTERVAL_MS, now)) {
+        await aiTickSimulation(env, now, { market: true });
+      }
     }
     const r = await env.DB.prepare(
       "SELECT " +
@@ -5325,14 +5332,33 @@ async function aiTickSimulation(env, now, opts = {}) {
 
   const rowMap = Object.fromEntries(rows.map(x => [x.uid, x]));
   for (const p of plans) {
+    const prev = rowMap[p.uid];
+    const evoJson = JSON.stringify(p.evo);
+    const changed = !prev ||
+      p.status !== (prev.status || 'offline') ||
+      p.activity !== prev.activity_level ||
+      p.profile !== prev.behavior_profile ||
+      evoJson !== (prev.evolution_json || '') ||
+      p.currentMode !== (prev.current_mode || '') ||
+      p.currentHero !== (prev.current_hero || '') ||
+      p.sessionUntil !== (prev.session_until || 0) ||
+      p.restUntil !== (prev.rest_until || 0) ||
+      p.nextMarketAt !== (prev.next_market_at || 0) ||
+      p.sessionsToday !== (prev.sessions_today || 0) ||
+      p.matchesToday !== (prev.matches_today || 0) ||
+      p.trainingToday !== (prev.training_today || 0) ||
+      p.dailySpent !== (prev.daily_spent || 0) ||
+      p.dailyListed !== (prev.daily_listed || 0) ||
+      bj.day !== prev.daily_reset_day;
+    if (!changed) continue;
     stmts.push(
       env.DB.prepare(
         'UPDATE ai_players SET status = ?1, activity_level = ?2, behavior_profile = ?3, evolution_json = ?4, current_mode = ?5, current_hero = ?6, session_until = ?7, rest_until = ?8, next_market_at = ?9, sessions_today = ?10, matches_today = ?11, training_today = ?12, last_active_at = ?13, daily_spent = ?14, daily_listed = ?15, daily_reset_day = ?16, updated_at = ?17 WHERE uid = ?18'
       ).bind(
-        p.status, p.activity, p.profile, JSON.stringify(p.evo), p.currentMode, p.currentHero,
+        p.status, p.activity, p.profile, evoJson, p.currentMode, p.currentHero,
         p.sessionUntil, p.restUntil, p.nextMarketAt,
         p.sessionsToday, p.matchesToday, p.trainingToday,
-        AI_ONLINE_STATUSES.includes(p.status) ? simNow : (rowMap[p.uid]?.last_active_at || 0),
+        AI_ONLINE_STATUSES.includes(p.status) ? simNow : (prev.last_active_at || 0),
         p.dailySpent, p.dailyListed, bj.day, now, p.uid
       )
     );
@@ -5364,7 +5390,7 @@ async function aiMarketStep(env, now, day, eligibleUids = null) {
     if (!Array.isArray(st.items)) st.items = [];
     const item = safeJson(ord.item_json, null);
     if (!item || !item.k) continue;
-    const txId = 'ai_mkt_' + uid(8);
+    const txId = 'ai_mkt_' + crypto.randomUUID().replace(/-/g, '').slice(0, 8);
     const updOrd = await env.DB.prepare('UPDATE mkt SET state = 1, buyer = ?1, done_at = ?2, tx = ?3 WHERE id = ?4 AND state = 0').bind(buyer.uid, now, txId, ord.id).run();
     if (!updOrd || !updOrd.meta || !updOrd.meta.changes) continue;
     st.items.push({ ...item, src: 'ai_mkt', at: now });
@@ -5389,7 +5415,7 @@ async function aiMarketStep(env, now, day, eligibleUids = null) {
     const ref = aiRefPrice(picked.k);
     const priceJitter = 0.94 + aiHash(`${seller.uid}:list:${day}:${listedToday}`) * 0.16;
     const listPrice = Math.max(20, Math.round(ref * priceJitter));
-    const mktId = 'aim_' + uid(10);
+    const mktId = 'aim_' + crypto.randomUUID().replace(/-/g, '').slice(0, 10);
     await env.DB.batch([
       env.DB.prepare('UPDATE econ SET state_json = ?1, ver = ver + 1, updated_at = ?2 WHERE uid = ?3 AND ver = ?4').bind(JSON.stringify(st), now, seller.uid, seller.ver),
       env.DB.prepare('INSERT INTO mkt (id, seller, k, st, item_json, price, at, state, paid) VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 0, 0)').bind(mktId, seller.uid, picked.k, picked.st || 0, JSON.stringify(picked), listPrice, now),
