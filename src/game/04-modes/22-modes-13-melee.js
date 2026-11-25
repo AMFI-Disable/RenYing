@@ -1,6 +1,6 @@
 // ======================= 群雄会战：3v3 ~ 16v16 大型同屏团战 =======================
 // 支持 3v3 ~ 16v16（最多 32 人同屏），带兵力积分、复活机制、战术指令与自标定位。
-const meleeOn = () => M.mode === 'melee' || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'melee');
+const meleeOn = () => M.mode === 'melee' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && (REPLAY.m.mode === 'melee' || REPLAY.m.room === 'melee'))) || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'melee');
 
 function meleeRoundInit() {
   const sz = clamp(M.teamSize || 5, 3, 16);
@@ -75,9 +75,11 @@ function startMelee(teamSize = 5, heroIdx = 0, level = 'normal', mut = 'normal',
     f.hidden = false;
   }
   for (let i = total; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
+  if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
   human[0].clear();
   paused = false;
   showScreen(null);
+  REC.on = false; recBegin('loc');
   startRound();
   say(`群雄会战 · ${sz}v${sz}`, 1.4);
 }

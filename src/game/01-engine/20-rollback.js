@@ -109,12 +109,14 @@ function capState() {
 function restState(st) {
   clock = st.clock; hitstop = st.hitstop; superFreeze = st.superFreeze; superOwner = st.so >= 0 ? fighterByIdx(st.so) : null;
   projSeq = st.projSeq; GRNG.s = st.rng;
-  st.f.forEach((o, i) => resF(fighterByIdx(i), o));
+  for (let i = 0; i < st.f.length; i++) resF(fighterByIdx(i), st.f[i]);
+  for (let i = st.f.length; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
   projs.length = 0; for (const q of jclone(st.projs)) projs.push(q);
   decoys.length = 0; for (const q of jclone(st.decoys)) decoys.push(q);
   for (const k of Object.keys(M)) delete M[k]; Object.assign(M, jclone(st.M));
-  st.c.forEach((o, i) => resC(fighterByIdx(i).ctrl, o));
+  for (let i = 0; i < st.c.length; i++) { const f = fighterByIdx(i); if (f && f.ctrl) resC(f.ctrl, st.c[i]); }
   if (st.arena) Object.assign(ARENA2V2, jclone(st.arena));
+  if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
   if (isRaid()) raidBossSkills();
 }
 function hashState(st) {
@@ -151,16 +153,19 @@ function localInput() {
   } else NET.presses2.length = 0;
   return { h, p: pr };
 }
-function rollStart(ch, seed, duo, mv, map, mut, competitiveScrolls = null, loadouts = null) {
+function rollStart(ch, seed, duo, mv, map, mut, competitiveScrolls = null, loadouts = null, teamSize = 0) {
   if (typeof currentScreen !== 'undefined' && (currentScreen === 'buffDraft' || currentScreen === 'mapBriefing')) showScreen(null);   // 加入方：房主开打时收起通览和密卷页
   refocusGame();
   setChars(ch[0], ch[1]);
-  if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }
-  setupNetMatch();
+  setupNetMatch(teamSize);
+  if (Array.isArray(ch) && ch.length > 2) {
+    const n = Math.min(ch.length, MAX_FIGHTERS);
+    for (let i = 2; i < n; i++) FIGHTERS[i].setChar(ch[i]);
+  }
   M.combatLoadouts = Array.isArray(loadouts) ? loadouts : [combatLoadoutMap(), NET.peerLoadout || {}];
   M.competitiveScrolls = competitiveScrolls && typeof competitiveScrolls === 'object' ? competitiveScrolls : null;
   M.hasBuffs = !!(M.competitiveScrolls && Object.values(M.competitiveScrolls).some(team => Object.keys(team || {}).length));
-  M.teamMutator = !NET.isRanked && ['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'maps'].includes(netRoomMode) && mut === 'mayhem' ? 'mayhem' : 'normal';
+  M.teamMutator = !NET.isRanked && ['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'quad', 'maps'].includes(netRoomMode) && mut === 'mayhem' ? 'mayhem' : 'normal';
   // 山河异境：房主在点将台上选好的图随开局发来（map）；同阵容再战没有点将台，就按两边的票和种子选
   if (MAPS[map]) M.map = map;
   else if (Array.isArray(mv) || roomDef().rule === 'maps') M.map = mapPick(mv, mapSeedRand(seed));

@@ -4,7 +4,7 @@
 // 每队有兵力积分（人数 × 3），倒下一次扣一点，兵力清零又没人活着就覆灭；最后一支站着的队伍夺魁，时间到按兵力和剩余气血排名。
 // 队伍编号 = 侠客编号 % 4（fighterTeam 在 08-fighter-01-entity.js）。
 // 找 bug 提示：队伍分错先看 teamCount / fighterTeam；开局站位不对看 quadSpawn；结算不对看 quadMatch / quadShowEnd。
-const quadOn = () => M.mode === 'quad';
+const quadOn = () => M.mode === 'quad' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && (REPLAY.m.mode === 'quad' || REPLAY.m.room === 'quad'))) || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'quad');
 
 const QUAD_TEAMS = [
   { n: '苍龙', rgb: '70,211,234', hex: '#46d3ea' },
@@ -23,7 +23,7 @@ const teamNameOf = t => quadOn() ? (QUAD_TEAMS[t] || QUAD_TEAMS[0]).n : (t === l
 // 四个出生点：0 地面左、1 地面右、2 顶层左、3 顶层右。每局随机打乱，哪队在哪里不固定
 function quadPlaceSpots() {
   const spots = [0, 1, 2, 3];
-  for (let i = 3; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [spots[i], spots[j]] = [spots[j], spots[i]]; }
+  for (let i = 3; i > 0; i--) { const j = (grnd() * (i + 1)) | 0; [spots[i], spots[j]] = [spots[j], spots[i]]; }
   M.quadSpots = spots;
 }
 function quadSpawnPoint(team, slot) {
@@ -42,7 +42,7 @@ function quadSpawn(f, offsetSlot) {
 }
 
 function quadRoundInit() {
-  const sz = clamp(M.teamSize || 4, 2, 6);
+  const sz = clamp(M.teamSize || 4, 2, 8);
   const tk = sz * QUAD_TICKETS_PER_HERO;
   M.quad = {
     size: sz,
@@ -121,7 +121,7 @@ function quadMatch() {
 }
 
 function startQuad(teamSize = 4, heroIdx = 0, level = 'normal') {
-  const sz = clamp(teamSize | 0, 2, 6);
+  const sz = clamp(teamSize | 0, 2, 8);
   debugHitbox = false;
   refocusGame();
   netDropWaiting();
@@ -142,9 +142,11 @@ function startQuad(teamSize = 4, heroIdx = 0, level = 'normal') {
     f.hidden = false;
   }
   for (let i = total; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
+  if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
   human[0].clear();
   paused = false;
   showScreen(null);
+  REC.on = false; recBegin('loc');
   startRound();
   say(`${cvT('四象争锋')} · ${sz}v${sz}v${sz}v${sz}`, 1.4);
 }

@@ -45,9 +45,10 @@ function spawnProj(f, o) {
 }
 function projBox(p) { return [p.x - p.w / 2, p.y - p.h / 2, p.x + p.w / 2, p.y + p.h / 2]; }
 const ironBallInvulnerable = f => f.invul > 0 && !(f.onGround() && ['idle', 'walk', 'block', 'blockstun'].includes(f.state));
+const _projCand = [];
 function resolveYoyoBallHits(p, owner, box) {
   if (!owner || !p.dmg) return;
-  const foes = isMulti() ? foesOf(owner) : [foeOf(owner)];
+  const foes = (isMulti() && typeof spatialFoesInXRange === 'function') ? spatialFoesInXRange(owner, box[0], box[2], _projCand) : (isMulti() ? foesOf(owner) : [foeOf(owner)]);
   p.yoyoHitAt = p.yoyoHitAt || {};
   p.yoyoUltDealt = p.yoyoUltDealt || {};
   for (const foe of foes) {
@@ -236,7 +237,7 @@ function updateProjs() {
     if (p.fx || p.dmg <= 0) continue;
     const owner = fighterByIdx(p.owner), box = projBox(p);
     if (p.kind === 'ironball' && p.yoyo) { resolveYoyoBallHits(p, owner, box); hitClones(box, p.owner, p.dmg); continue; }
-    const candidates = isMulti() ? foesOf(owner) : [foeOf(owner)];
+    const candidates = (isMulti() && typeof spatialFoesInXRange === 'function') ? spatialFoesInXRange(owner, box[0] - 80, box[2] + 80, _projCand) : (isMulti() ? foesOf(owner) : [foeOf(owner)]);
     // 斩弹：对手的刀砍中飞行道具就把它打散
     if (!p.unbreakable) {
       let cut = false;
@@ -334,8 +335,9 @@ function updateProjs() {
         let cur = foe;
         const chained = [foe.idx];
         const range = p.chainRange || 340;
+        const chainPool = isMulti() ? foesOf(owner) : candidates;
         for (let ci = 0; ci < p.chain; ci++) {
-          const next = candidates.find(ef => ef && !ef.hidden && ef.hp > 0 && !invulVs(ef, owner) && !chained.includes(ef.idx) && Math.hypot(ef.x - cur.x, (ef.y - 55) - (cur.y - 55)) <= range);
+          const next = chainPool.find(ef => ef && !ef.hidden && ef.hp > 0 && !invulVs(ef, owner) && !chained.includes(ef.idx) && Math.hypot(ef.x - cur.x, (ef.y - 55) - (cur.y - 55)) <= range);
           if (!next) break;
           chained.push(next.idx);
           const cDmg = Math.max(6, Math.round(p.dmg * Math.pow(0.75, ci + 1)));

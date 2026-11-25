@@ -259,11 +259,11 @@ function checkModes(env) {
     if (!shape(w, md, { ...MODE, slots: 'arr', 'four?': 'bool', 'raid?': 'bool', 'rule?': 'str', 'teamSize?': 'num' })) continue;
     order(w, md);
     if (md.local) err(w, '联机房间不能写 local');
-    if (md.rule && !['chaos', 'mayhem', 'maps', 'cuju', 'koth', 'party', 'bastion', 'melee', 'ctf'].includes(md.rule)) err(w, `rule 只能是 chaos、mayhem、maps、cuju、koth、party、bastion、melee 或 ctf，现在是 ${md.rule}`);
+    if (md.rule && !['chaos', 'mayhem', 'maps', 'cuju', 'koth', 'party', 'bastion', 'melee', 'ctf', 'quad'].includes(md.rule)) err(w, `rule 只能是 chaos、mayhem、maps、cuju、koth、party、bastion、melee、ctf 或 quad，现在是 ${md.rule}`);
     const ok = md.slots.length === 2 && md.slots.every(s => Array.isArray(s) && s.length && s.every(i => [0, 1, 2, 3].includes(i)));
     if (!ok) { err(w, 'slots 要写成 [[房主控制的编号…], [加入的人控制的编号…]]，编号 0~3'); continue; }
     unique(w + ' slots', md.slots.flat(), '侠客编号');
-    if (md.teamSize !== undefined && (!Number.isInteger(md.teamSize) || md.teamSize < 3 || md.teamSize > 8 || !['melee', 'ctf'].includes(md.rule))) err(w, '大型团战队伍人数须为 3 至 8');
+    if (md.teamSize !== undefined && (!Number.isInteger(md.teamSize) || (md.rule === 'quad' ? (md.teamSize < 2 || md.teamSize > 8) : (md.teamSize < 3 || md.teamSize > 16)) || !['melee', 'ctf', 'quad'].includes(md.rule))) err(w, '大型团战队伍人数须为 3 至 16（四方混战为 2 至 8）');
     if (!md.four && !md.raid && md.slots.flat().some(i => i > 1)) err(w, '不是四人模式（four）或同袍肉鸽（raid）就只能控制 0 和 1');
     if (md.raid && md.slots.flat().includes(1)) err(w, '同袍肉鸽里 1 号（B）是魔首，玩家不能控制');
   }

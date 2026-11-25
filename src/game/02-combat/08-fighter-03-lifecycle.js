@@ -57,7 +57,7 @@ function startRound() {
   announce = null;
   announceQueue.length = 0;
   secretRound();
-  const largeN = isLargeTeam() ? clamp(M.teamSize || 5, 3, 16) : 0;
+  const largeN = isLargeTeam() ? clamp(M.teamSize || (quadOn() ? 4 : 5), quadOn() ? 2 : 3, quadOn() ? 8 : 16) : 0;
   STAGE_W = M.mode === 'world' ? WORLD_W : largeN ? (quadOn() ? BATTLE_WIDTH : largeN >= 16 ? 6400 : largeN >= 12 ? 4800 : largeN >= 8 ? BATTLE_WIDTH : largeN === 5 ? BATTLE5_WIDTH : largeN >= 6 ? 3400 : 2600) : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);   // 开放世界 8000，8v8 3600，5v5 专属三层演武楼阁 2800
   if (M.round === 1 && typeof resetCamZoom === 'function') resetCamZoom(true);
   const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
@@ -119,6 +119,7 @@ function startRound() {
     if (A.ctrl && typeof A.ctrl.updateTactic === 'function') A.ctrl.updateTactic(A, B);
     if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
   }
+  if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
   magRoll();
   if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts();
   if (REC.on && REC.meta) REC.meta.loadouts = allFighters().map(f => ({ unlocked: !!f.stanceUnlocked, stance: f.stance || 0, badge: f.badgeId || '', tier: f.badgeTier || '' }));
@@ -129,7 +130,8 @@ function startRound() {
   if (typeof cmdRoundInit === 'function') cmdRoundInit();   // 团战的统帅：随机抽人、加额外气血（必须在气血都定好之后）
   if (chaosOn() && M.round === 1) M.chaos = { i: -1, t: 0 };   // 天机乱斗：开打第一帧抽第一条异变（updateChaos），之后的回合接着换
   const foeHp = (LEVEL_BY_ID[M.level] || {}).foeHp || 1;   // 难度表里的电脑气血倍数（绝顶多 35%）
-  if ((M.mode === 'cpu' || (M.mode === 'replay' && REPLAY.kind !== 'net') || M.mode === 'tag3') && foeHp !== 1) { B.maxHp = Math.round(B.maxHp * foeHp); B.hp = B.lagHp = B.maxHp; }
+  const rpOrigMode = (M.mode === 'replay' && REPLAY.m) ? REPLAY.m.mode : M.mode;
+  if ((rpOrigMode === 'cpu' || rpOrigMode === 'tag3') && !(M.mode === 'replay' && REPLAY.kind === 'net') && foeHp !== 1) { B.maxHp = Math.round(B.maxHp * foeHp); B.hp = B.lagHp = B.maxHp; }
   if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
   M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
   M.phase = 'intro'; M.t = 0; M.timer = isLargeTeam() ? 150 : isRaid() ? 120 : (is2v2() ? ROUND_TIME_2V2 : ROUND_TIME); M.koWinner = -1; M.flags = {};

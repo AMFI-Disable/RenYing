@@ -13,26 +13,34 @@ function ctrlKey(c) {
 }
 function recBegin(kind) {
   M.reviewReady = false;
+  const active = allFighters();
   Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], trStart: null, post: ['', ''], last: [-1, -1],
-    meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), trainSlots: kind === 'net' ? [...((ROLL.slots || [])[localIdx()] || [])] : allFighters().filter(f => human.includes(f.ctrl)).map(f => [A, B, C, D].indexOf(f)), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], trEvery: TR_EVERY, st0: capState(), t: Date.now() } });
+    meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), trainSlots: kind === 'net' ? [...((ROLL.slots || [])[localIdx()] || [])] : active.filter(f => human.includes(f.ctrl)).map(f => f.idx), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], trEvery: TR_EVERY, st0: capState(), t: Date.now() } });
   if (M.hasBuffs && M.competitiveScrolls) REC.meta.competitiveScrolls = JSON.parse(JSON.stringify(M.competitiveScrolls));
   // pl：哪几个人按玩家的规则选目标。回放里大家都是普通 Ctrl，不记的话玩家会被当成电脑去配合队友，回放就走样了
+  if (isLargeTeam()) {
+    const tc = teamCount(), n = active.length;
+    Object.assign(REC.meta, { large: true, teamCount: tc, teamSize: M.teamSize || Math.max(1, Math.floor(n / tc)), fighterCount: n, chAll: active.map(f => f.chIdx), pl: active.map(f => !cpuTeamwork(f)) });
+    if (kind === 'loc') REC.post = new Array(n).fill('');
+  }
   if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], pl: [A, B, C, D].map(f => !cpuTeamwork(f)) }); REC.post = ['', '', '', '']; }
   if (kind === 'loc' && M.mode === 'raid') { Object.assign(REC.meta, { raid: true, four: true, sub: 'local', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], raidSquadSize: M.raidSquadSize || 3, raidWave: M.raidWave || 1 }); REC.post = ['', '', '', '']; }
   if (kind === 'loc' && M.mode === 'tag3') Object.assign(REC.meta, { tag3: true, teams: jclone(M.teams || []), teamIdx: [...(M.teamIdx || [0, 0])], round: M.round || 1, mutator: M.teamMutator || 'normal' });
   if (kind === 'loc' && M.mode === 'tower') Object.assign(REC.meta, { towerFloor: M.towerFloor || 1, scrolls: [...(M.towerPerks || [])] });
   if (kind === 'loc' && M.mode === 'saga' && typeof SG !== 'undefined') Object.assign(REC.meta, { chapter: SG.hero || '', chapterNode: SG.node || 0 });
-  // 联机：按键是按“每台电脑”记的（一台可能管两个人），回放时要知道每台电脑管哪几个人；2v2 里没人管的是电脑，回放时照样让它想
+  // 联机：按键是按“每台电脑”记的（一台可能管两个人），回放时要知道每台电脑管哪几个人；2v2 / 大团战里没人管的是电脑，回放时照样让它想
   if (kind === 'net') {
-    Object.assign(REC.meta, { slots: ROLL.slots.map(s => s.slice()), room: netRoomMode, ranked: !!NET.isRanked });   // 房间规则也记下：回放时按它判断 2v2、同袍肉鸽、神决
+    Object.assign(REC.meta, { slots: ROLL.slots.map(s => s.slice()), room: netRoomMode, ranked: !!NET.isRanked });   // 房间规则也记下：回放时按它判断 2v2、同袍肉鸽、四象、群雄、神决
     if (isRaid()) REC.meta.raidWave = M.raidWave || 1;
-    if (allFighters().length > 2 || isRaid()) Object.assign(REC.meta, { four: is2v2(), raid: isRaid(), sub: netRoomMode, ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] });
+    if (active.length > 2 || isRaid()) Object.assign(REC.meta, { four: is2v2(), raid: isRaid(), sub: netRoomMode, ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] });
   }
 }
-// 本地回放要记的人：1v1 是 A、B，2v2 四个人都记（顺序 A B C D，和 fighterByIdx 一样）
+// 回放要恢复/记录的人：支持 1v1、2v2、同袍肉鸽，以及最多 4 队 32 人的大型团战/四象争锋
 const rpFighters = m => {
-  const size = m?.kind === 'net' ? m.st0?.M?.teamSize : 0;
-  if (size > 2) return FIGHTERS.slice(0, size * 2);
+  if (m && m.fighterCount > 2) return FIGHTERS.slice(0, Math.min(MAX_FIGHTERS, m.fighterCount));
+  const tc = (m && m.teamCount) || ((m && (m.mode === 'quad' || m.room === 'quad')) ? 4 : 2);
+  const size = (m && m.teamSize) || (m && m.st0 && m.st0.M && m.st0.M.teamSize) || 0;
+  if (size > 2 || (tc > 2 && size > 0)) return FIGHTERS.slice(0, Math.min(MAX_FIGHTERS, size * tc));
   return m && (m.four || m.raid) ? [A, B, C, D] : [A, B];
 };   // 同袍肉鸽：A、C、D 打魔首 B（两人队时 D 藏着）
 // 本地对战：在角色读操作之前记下双方控制器的状态（只记变化）
@@ -103,10 +111,9 @@ function trSample() {
   // 前 28 项保持旧训练轨迹兼容；末尾为每名本机玩家记录其自身视角的状态与输入。
   const players = [];
   for (const slot of REC.meta.trainSlots || []) {
-    const f = [A, B, C, D][slot];
+    const f = fighterByIdx(slot);
     if (!f || f.hidden || !f.ctrl) continue;
-    const side = sideFighters(0).includes(f) ? 0 : 1;
-    const foes = sideFighters(1 - side).filter(o => !o.hidden);
+    const foes = foesOf(f);
     if (!foes.length) continue;
     const foe = foes.reduce((best, o) => Math.hypot(o.x - f.x, o.y - f.y) < Math.hypot(best.x - f.x, best.y - f.y) ? o : best, foes[0]);
     players.push([slot, trFeat(f, foe), trActionBits(f.ctrl)]);
@@ -183,10 +190,13 @@ function recSave(w) {
   REC.on = false;
   if (REC.bad || !REC.meta) return;
   const m = REC.meta;
+  const isQuadRep = m.mode === 'quad' || m.room === 'quad' || m.teamCount === 4;
   Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, trStart: REC.trStart, stats: M.combatStats ? M.combatStats.map(s => ({ ...s })) : null, skins: rpFighters(m).map(f => f.skinKey || ''),
     names: M.mode === 'net' ? rpNetNames(m)
-      : m.raid ? [sideFighters(0).map(f => f.look.name).join(' · '), (M.raidBoss && M.raidBoss.heroNames || []).join('·') || B.look.name]
-        : m.four ? ({ p_cc: [ACC.name || '你', '电脑'], pp_cc: ['1P · 2P', '电脑'], pp_pp: ['1P · 2P', '3P · 4P'] }[m.sub] || ['苍龙', '赤凤']) : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
+      : isQuadRep ? (typeof QUAD_TEAMS !== 'undefined' ? QUAD_TEAMS.map(t => t.n) : ['苍龙', '朱雀', '玄武', '白虎'])
+        : m.large ? ['我方大军', '敌方大军']
+          : m.raid ? [sideFighters(0).map(f => f.look.name).join(' · '), (M.raidBoss && M.raidBoss.heroNames || []).join('·') || B.look.name]
+            : m.four ? ({ p_cc: [ACC.name || '你', '电脑'], pp_cc: ['1P · 2P', '电脑'], pp_pp: ['1P · 2P', '3P · 4P'] }[m.sub] || ['苍龙', '赤凤']) : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
   if (RP.run && RP.run.mode === M.mode) {
     RP.run.segments.push(m);
     if (typeof aiTrainMatch === 'function') aiTrainMatch(m, M.worldKey ? 'world' : undefined);
@@ -428,6 +438,15 @@ function rpNetNames(m) {
 function rpTitle(m) {
   const vs = window.I18N?.getLang() === 'en' ? ' vs ' : ' 对 ';
   if (m.raid && Array.isArray(m.names)) return `${m.names[0]}${vs}${cvT(m.names[1])}`;
+  if (m.mode === 'quad' || m.room === 'quad' || m.teamCount === 4) {
+    const sz = m.teamSize || (m.st0 && m.st0.M && m.st0.M.teamSize) || 4;
+    return `${cvT('四象争锋')} · ${sz}v${sz}v${sz}v${sz}`;
+  }
+  if (m.large || m.mode === 'melee' || m.mode === 'ctf' || m.room === 'melee' || m.room === 'ctf') {
+    const sz = m.teamSize || (m.st0 && m.st0.M && m.st0.M.teamSize) || 5;
+    const label = (m.mode === 'ctf' || m.room === 'ctf') ? '夺旗争锋' : '群雄会战';
+    return `${cvT(label)} · ${sz}v${sz}`;
+  }
   const name = i => cvT((CHARS[(m.ch4 || m.ch)[i]] || {}).name || '?');
   return m.four ? `${name(0)} · ${name(2)}${vs}${name(1)} · ${name(3)}` : `${name(0)}${vs}${name(1)}`;
 }
@@ -438,7 +457,8 @@ function rpSub(m) {
   const names = (m.names || []).map(name => m.kind === 'net' ? name : cvT(name));
   let win = cvT('平局');
   if (m.w >= 0) {
-    const winner = m.four ? names[m.w] || '' : cvT((CHARS[m.ch[m.w]] || {}).name || '');
+    const isQuadRep = m.mode === 'quad' || m.room === 'quad' || m.teamCount === 4;
+    const winner = isQuadRep ? cvT((typeof QUAD_TEAMS !== 'undefined' && QUAD_TEAMS[m.w] ? QUAD_TEAMS[m.w].n : names[m.w]) || '') : (m.four || m.large) ? (names[m.w] || '') : cvT((CHARS[m.ch[m.w]] || {}).name || '');
     win = en ? `${winner} wins` : `${winner} 胜`;
   }
   const warning = m.v !== VERSION ? ` · ${cvT('旧版本录的，可能对不上')}` : '';
@@ -447,9 +467,14 @@ function rpSub(m) {
 function replayModeTag(m) {
   const mutator = m.st0 && m.st0.M && m.st0.M.teamMutator;
   const mutatorTag = mutator === 'mayhem' ? ` · ${cvT('通天神决')}` : '';
+  const sz = m.teamSize || (m.st0 && m.st0.M && m.st0.M.teamSize) || 0;
   if (m.raid) return `${cvT(m.kind === 'net' ? '联机同袍肉鸽' : '本地同袍肉鸽')} · ${cvT('第')} ${m.raidWave || 1}${m.runId ? ` · ${cvT('全程')} ${m.segments.length} ${cvT('劫')}` : ''}`;
   if (m.mode === 'mayhem' || m.room === 'mayhem') return cvT(m.mode === 'net' ? '联机通天神决' : '通天神决');
-  if (m.room === 'melee' || m.room === 'ctf') return `${cvT('联机')} · ${cvT(m.room === 'melee' ? '群雄会战 · 8v8' : '夺旗争锋 · 8v8')}${mutatorTag}`;
+  if (m.room === 'quad' || m.mode === 'quad') return `${m.kind === 'net' ? cvT('联机') + ' · ' : ''}${cvT('四象争锋')} · ${sz || 4}v${sz || 4}v${sz || 4}v${sz || 4}${mutatorTag}`;
+  if (m.room === 'melee' || m.room === 'ctf' || m.mode === 'melee' || m.mode === 'ctf') {
+    const isCtf = m.room === 'ctf' || m.mode === 'ctf';
+    return `${m.kind === 'net' ? cvT('联机') + ' · ' : ''}${cvT(isCtf ? '夺旗争锋' : '群雄会战')} · ${sz || 8}v${sz || 8}${mutatorTag}`;
+  }
   if (m.mode === 'net') return m.ranked ? cvT('排位赛') : m.four ? `${cvT('联机2v2')} · ${cvT(m.sub === 'pp_pp' ? '四人对决' : m.sub === 'pp_cc' ? '双人共斗' : '携手共斗')}${mutatorTag}` : `${cvT('联机')} · ${cvT(m.room === 'mayhem' ? '通天神决' : '常规标准')}`;
   if (m.mode === 'cpu') return `${cvT('人机')} · ${cvT(LV_NAME[m.level] || m.level || '')}${mutatorTag}`;
   if (m.mode === 'pvp') return cvT('本地双人') + mutatorTag;
@@ -594,23 +619,31 @@ function startReplay(m) {
 }
 function replayLoadSegment(m) {
   ROLL.on = false; REC.on = false; M.stage = null;
+  const rpf = rpFighters(m);
   setChars(m.ch[0], m.ch[1]);
-  if (m.ch4) { C.setChar(m.ch4[2]); D.setChar(m.ch4[3]); }
+  if (Array.isArray(m.chAll) && m.chAll.length) {
+    for (let i = 0; i < Math.min(m.chAll.length, MAX_FIGHTERS); i++) FIGHTERS[i].setChar(m.chAll[i]);
+  } else if (m.ch4) {
+    C.setChar(m.ch4[2]); D.setChar(m.ch4[3]);
+  }
+  for (let i = 0; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = i >= rpf.length;
   const net = m.kind === 'net', mine = new Set(net ? rpSlots(m).flat() : []);
-  for (const f of rpFighters(m)) {
+  for (const f of rpf) {
     f.ctrl = net && !mine.has(f.idx) ? new AICtrl(m.level || 'god') : new Ctrl();
     if (net && mine.has(f.idx)) f.ctrl.net = true;
   }
-  if (!net && m.four && Array.isArray(m.pl)) rpFighters(m).forEach((f, i) => { if (m.pl[i]) f.ctrl.net = true; });
+  if (!net && (m.four || m.large) && Array.isArray(m.pl)) rpf.forEach((f, i) => { if (m.pl[i]) f.ctrl.net = true; });
   restState(m.st0);
   M.mode = 'replay';
+  if (m.teamSize && !M.teamSize) M.teamSize = m.teamSize;
   M.competitiveScrolls = m.competitiveScrolls && typeof m.competitiveScrolls === 'object' ? JSON.parse(JSON.stringify(m.competitiveScrolls)) : null;
   M.hasBuffs = !!(M.competitiveScrolls && Object.values(M.competitiveScrolls).some(team => Object.keys(team || {}).length));
   Object.assign(REPLAY, { kind: m.kind, seg: m, ev: m.ev || [], p: 0, f: 0, nf: 0, lh: [0, 0] });
+  if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
   if (isRaid()) raidBossSkills();
   showScreen(null);
   startRound();
-  rpFighters(m).forEach((f, i) => { const k = (m.skins || [])[i] || ''; f.look = skinLook(f.chIdx, k); f.skinKey = k; });
+  rpf.forEach((f, i) => { const k = (m.skins || [])[i] || ''; f.look = skinLook(f.chIdx, k); f.skinKey = k; });
 }
 function rpInfo() {
   if (REPLAY.on) {
@@ -669,9 +702,20 @@ function replayEnd(w) {
   }
   M.phase = 'end'; REPLAY.paused = true;
   $id('rpBar').classList.add('hidden');
-  const t = $id('endTitle'), wf = [A, B][w], mate = REPLAY.m && REPLAY.m.four ? [C, D][w] : null;
-  if (wf) { t.textContent = `${wf.look.name}${mate ? ' · ' + mate.look.name : ''} 胜`; t.style.color = `rgb(${wf.look.slash})`; } else { t.textContent = '平局'; t.style.color = ''; }
-  $id('endSub').textContent = `回放结束，比分 ${M.wins[0]} : ${M.wins[1]}`;
+  const t = $id('endTitle'), rm = REPLAY.m;
+  const isQuadRep = rm && (rm.mode === 'quad' || rm.room === 'quad' || rm.teamCount === 4);
+  if (isQuadRep && w >= 0 && typeof QUAD_TEAMS !== 'undefined' && QUAD_TEAMS[w]) {
+    t.textContent = `${cvT(QUAD_TEAMS[w].n)} 胜`; t.style.color = QUAD_TEAMS[w].hex;
+    $id('endSub').textContent = `回放结束 · ${cvT('四象争锋')}`;
+  } else if (rm && rm.large && w >= 0) {
+    const teamLabel = (rm.names && rm.names[w]) || (w === 0 ? '我方大军' : '敌方大军');
+    t.textContent = `${cvT(teamLabel)} 胜`; t.style.color = w === 0 ? '#6fe0ff' : '#ff6470';
+    $id('endSub').textContent = `回放结束 · ${replayModeTag(rm)}`;
+  } else {
+    const wf = [A, B][w], mate = rm && rm.four ? [C, D][w] : null;
+    if (wf) { t.textContent = `${wf.look.name}${mate ? ' · ' + mate.look.name : ''} 胜`; t.style.color = `rgb(${wf.look.slash})`; } else { t.textContent = '平局'; t.style.color = ''; }
+    $id('endSub').textContent = `回放结束，比分 ${M.wins[0]} : ${M.wins[1]}`;
+  }
   $id('endRank').textContent = '';
   $id('againBtn').style.display = 'none';
   $id('rpWatch').style.display = ''; $id('rpWatch').textContent = '再看一遍';

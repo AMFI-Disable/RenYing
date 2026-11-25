@@ -40,19 +40,117 @@ function multiTargetScale(hitIndex) {
   return Math.max(0.68, 1 - hitIndex * 0.1);
 }
 
-// 统一矩形判定框多目标检索（支持 1v1 / 2v2 / 3v3 / 5v5 / 8v8 及跨层垂直判定）
+// ======================= 确定性空间分桶（32 人同屏碰撞/判定优化） =======================
+// 仅在 >= 6 名同屏侠客时启用，1v1 / 2v2 / 同袍肉鸽走原路径保持 100% 字节级兼容。
+// 所有桶按 f.idx 升序填入，查询结果以距离 + idx 次序排序，确保回滚与回放完全确定。
+const SPATIAL_CELL = 128;
+const SPATIAL_OFFSET = 512;
+const SPATIAL_BUCKETS = 48;
+const SPATIAL_HURT_PAD = 88;
+const SPATIAL = {
+  buckets: Array.from({ length: SPATIAL_BUCKETS }, () => []),
+  activeCells: [],
+  dirty: true,
+  ver: -1,
+};
+function spatialCell(x) {
+  const c = ((x + SPATIAL_OFFSET) * (1 / SPATIAL_CELL)) | 0;
+  return c < 0 ? 0 : c >= SPATIAL_BUCKETS ? SPATIAL_BUCKETS - 1 : c;
+}
+function spatialInvalidate() {
+  SPATIAL.dirty = true;
+}
+function spatialEnsure() {
+  if (!SPATIAL.dirty && _afCacheVer === SPATIAL.ver) return SPATIAL;
+  const all = allFighters(), n = all.length;
+  const active = SPATIAL.activeCells, buckets = SPATIAL.buckets;
+  for (let i = 0; i < active.length; i++) buckets[active[i]].length = 0;
+  active.length = 0;
+  for (let i = 0; i < n; i++) {
+    const f = all[i];
+    if (f.hidden) continue;
+    const c = spatialCell(f.x);
+    const b = buckets[c];
+    if (!b.length) active.push(c);
+    b.push(f);
+  }
+  SPATIAL.dirty = false;
+  SPATIAL.ver = _afCacheVer;
+  return SPATIAL;
+}
+const _spatialCand = [];
+function spatialFoesInXRange(f, minX, maxX, out) {
+  const dst = out || _spatialCand;
+  dst.length = 0;
+  if (!isMulti()) {
+    const e = foeOf(f);
+    if (e && !e.hidden && e.hp > 0) dst.push(e);
+    return dst;
+  }
+  const all = allFighters();
+  if (all.length < 6) {
+    const foes = foesOf(f);
+    for (let i = 0; i < foes.length; i++) {
+      const e = foes[i];
+      if (e && !e.hidden && e.hp > 0) dst.push(e);
+    }
+    return dst;
+  }
+  spatialEnsure();
+  const myTeam = fighterTeam(f);
+  const c0 = spatialCell(minX - SPATIAL_HURT_PAD), c1 = spatialCell(maxX + SPATIAL_HURT_PAD);
+  const buckets = SPATIAL.buckets;
+  for (let c = c0; c <= c1; c++) {
+    const b = buckets[c];
+    for (let i = 0; i < b.length; i++) {
+      const e = b[i];
+      if (e.hp > 0 && fighterTeam(e) !== myTeam) dst.push(e);
+    }
+  }
+  if (dst.length > 1) dst.sort((a, b) => a.idx - b.idx);
+  return dst;
+}
+
+// 统一矩形判定框多目标检索（支持 1v1 / 2v2 / 3v3 / 5v5 / 8v8 / 16v16 / 四象 4 队及跨层垂直判定）
 function findTargetsInBox(f, hb, opts) {
   const o = opts || {};
-  const list = isMulti() ? foesOf(f) : [foeOf(f)];
+  const multi = isMulti();
   const out = [];
-  for (const ef of list) {
-    if (!ef || ef.hidden || ef.hp <= 0) continue;
-    if (!o.ignoreInvul && invulVs(ef, f)) continue;
-    if (o.exclude && o.exclude.includes(ef.idx)) continue;
-    if (!overlap(hb, hurtbox(ef))) continue;
-    out.push(ef);
+  if (multi && allFighters().length >= 6) {
+    spatialEnsure();
+    const myTeam = fighterTeam(f);
+    const c0 = spatialCell(hb[0] - SPATIAL_HURT_PAD), c1 = spatialCell(hb[2] + SPATIAL_HURT_PAD);
+    const buckets = SPATIAL.buckets, excl = o.exclude, ign = o.ignoreInvul;
+    for (let c = c0; c <= c1; c++) {
+      const b = buckets[c];
+      for (let i = 0; i < b.length; i++) {
+        const ef = b[i];
+        if (ef.hp <= 0 || fighterTeam(ef) === myTeam) continue;
+        if (!ign && invulVs(ef, f)) continue;
+        if (excl && excl.includes(ef.idx)) continue;
+        if (!overlap(hb, hurtbox(ef))) continue;
+        out.push(ef);
+      }
+    }
+  } else {
+    const list = multi ? foesOf(f) : [foeOf(f)];
+    for (let i = 0; i < list.length; i++) {
+      const ef = list[i];
+      if (!ef || ef.hidden || ef.hp <= 0) continue;
+      if (!o.ignoreInvul && invulVs(ef, f)) continue;
+      if (o.exclude && o.exclude.includes(ef.idx)) continue;
+      if (!overlap(hb, hurtbox(ef))) continue;
+      out.push(ef);
+    }
   }
-  out.sort((a, b) => Math.hypot(a.x - f.x, a.y - f.y) - Math.hypot(b.x - f.x, b.y - f.y));
+  if (out.length > 1) {
+    const fx = f.x, fy = f.y;
+    out.sort((a, b) => {
+      const da = (a.x - fx) * (a.x - fx) + (a.y - fy) * (a.y - fy);
+      const db = (b.x - fx) * (b.x - fx) + (b.y - fy) * (b.y - fy);
+      return da - db || a.idx - b.idx;
+    });
+  }
   return out;
 }
 
@@ -60,18 +158,47 @@ function findTargetsInBox(f, hb, opts) {
 function findTargetsInRadius(f, cx, cy, rx, ry, opts) {
   const o = opts || {};
   const rY = ry || rx;
-  const list = isMulti() ? foesOf(f) : [foeOf(f)];
+  const invRx = 1 / Math.max(1, rx), invRy = 1 / Math.max(1, rY);
+  const multi = isMulti();
   const out = [];
-  for (const ef of list) {
-    if (!ef || ef.hidden || ef.hp <= 0) continue;
-    if (!o.ignoreInvul && invulVs(ef, f)) continue;
-    if (o.exclude && o.exclude.includes(ef.idx)) continue;
-    const hu = hurtbox(ef);
-    const nx = clamp(cx, hu[0], hu[2]), ny = clamp(cy, hu[1], hu[3]);
-    const dx = (nx - cx) / Math.max(1, rx), dy = (ny - cy) / Math.max(1, rY);
-    if (dx * dx + dy * dy <= 1) out.push(ef);
+  if (multi && allFighters().length >= 6) {
+    spatialEnsure();
+    const myTeam = fighterTeam(f);
+    const c0 = spatialCell(cx - rx - SPATIAL_HURT_PAD), c1 = spatialCell(cx + rx + SPATIAL_HURT_PAD);
+    const buckets = SPATIAL.buckets, excl = o.exclude, ign = o.ignoreInvul;
+    for (let c = c0; c <= c1; c++) {
+      const b = buckets[c];
+      for (let i = 0; i < b.length; i++) {
+        const ef = b[i];
+        if (ef.hp <= 0 || fighterTeam(ef) === myTeam) continue;
+        if (!ign && invulVs(ef, f)) continue;
+        if (excl && excl.includes(ef.idx)) continue;
+        const hu = hurtbox(ef);
+        const nx = clamp(cx, hu[0], hu[2]), ny = clamp(cy, hu[1], hu[3]);
+        const dx = (nx - cx) * invRx, dy = (ny - cy) * invRy;
+        if (dx * dx + dy * dy <= 1) out.push(ef);
+      }
+    }
+  } else {
+    const list = multi ? foesOf(f) : [foeOf(f)];
+    for (let i = 0; i < list.length; i++) {
+      const ef = list[i];
+      if (!ef || ef.hidden || ef.hp <= 0) continue;
+      if (!o.ignoreInvul && invulVs(ef, f)) continue;
+      if (o.exclude && o.exclude.includes(ef.idx)) continue;
+      const hu = hurtbox(ef);
+      const nx = clamp(cx, hu[0], hu[2]), ny = clamp(cy, hu[1], hu[3]);
+      const dx = (nx - cx) * invRx, dy = (ny - cy) * invRy;
+      if (dx * dx + dy * dy <= 1) out.push(ef);
+    }
   }
-  out.sort((a, b) => Math.hypot(a.x - cx, (a.y - 55) - cy) - Math.hypot(b.x - cx, (b.y - 55) - cy));
+  if (out.length > 1) {
+    out.sort((a, b) => {
+      const da = (a.x - cx) * (a.x - cx) + (a.y - 55 - cy) * (a.y - 55 - cy);
+      const db = (b.x - cx) * (b.x - cx) + (b.y - 55 - cy) * (b.y - 55 - cy);
+      return da - db || a.idx - b.idx;
+    });
+  }
   return out;
 }
 

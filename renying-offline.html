@@ -9608,8 +9608,9 @@ cuju: { bp: 'open', slots: [[0], [1]], rule: 'cuju' },   // 墨球蹴鞠：好�
 koth: { bp: 'open', slots: [[0], [1]], rule: 'koth' },   // 灵坛争锋：好友房抢坛
 party: { bp: 'open', slots: [[0], [1]], rule: 'party' },   // 江湖百戏：好友房趣味百戏
 bastion: { bp: 'open', slots: [[0], [1]], rule: 'bastion' },   // 天枢守境：随时加入传音守城与远征
-melee: { bp: 'open', slots: [[0], [1]], rule: 'melee', teamSize: 8 },   // 群雄会战：联机大型团战
+melee: { bp: 'open', slots: [[0], [1]], rule: 'melee', teamSize: 8 },   // 群雄会战：联机大型团战（支持至 16v16 = 32 人）
 ctf: { bp: 'open', slots: [[0], [1]], rule: 'ctf', teamSize: 8 },   // 夺旗争锋：联机团队夺旗
+quad: { bp: 'open', slots: [[0], [1]], rule: 'quad', teamSize: 4 },   // 四象争锋：联机四方混战（支持至 8v8v8v8 = 32 人）
 pp_cc: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true },
 pp_pp: { bp: 'duo', team: true, us: '我方战队', slots: [[0, 2], [1, 3]], four: true },
 raid: { bp: 'squadNet', team: true, us: '我方战队', slots: [[0], [2]], raid: true },   // 房主 A、好友 C、电脑同袍 D 一起打魔首 B
@@ -18346,7 +18347,7 @@ rollRecv(msg); return;
 if (msg.rstart) {
 const r = msg.rstart;
 if (NET.role === 'host' || !r || !Array.isArray(r.ch) || r.ch.length < 2 || typeof r.seed !== 'number' || !isFinite(r.seed)) return;
-rollStart(r.ch, r.seed, r.duo, r.mv, r.map, r.mut, r.competitiveScrolls, r.loadouts); return;
+rollStart(r.ch, r.seed, r.duo, r.mv, r.map, r.mut, r.competitiveScrolls, r.loadouts, r.teamSize || 0); return;
 }
 if (msg.rsync) {
 const p = msg.rsync, st = p && p.st;
@@ -18414,22 +18415,27 @@ if (NET.out.length) msg.ev = NET.out.splice(0);
 if (msg.i || msg.s || msg.ev) send(msg);
 }
 const r2 = v => typeof v === 'number' ? Math.round(v * 100) / 100 : v;
-function setupNetMatch() {
-M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; M.duo = null; M.map = null; A.meter = B.meter = 0; NET.solo = false;
-M.teamSize = roomDef().teamSize || 0;
+function setupNetMatch(teamSizeOverride) {
+const def = roomDef();
+const tc = def.rule === 'quad' ? 4 : 2;
+M.mode = 'net'; M.wins = tc > 2 ? [0, 0, 0, 0] : [0, 0]; M.round = 1; M.carry = null; M.duo = null; M.map = null; A.meter = B.meter = 0; NET.solo = false;
+const maxPerTeam = tc > 2 ? 8 : 16;
+const reqSize = (typeof teamSizeOverride === 'number' && teamSizeOverride > 0) ? teamSizeOverride : (def.teamSize || 0);
+M.teamSize = reqSize ? clamp(reqSize | 0, tc > 2 ? 2 : 3, maxPerTeam) : 0;
 if (M.teamSize) {
 M.level = 'normal';
 M.watchAi = false;
-const total = M.teamSize * 2;
+const total = Math.min(MAX_FIGHTERS, M.teamSize * tc);
 for (let i = 0; i < MAX_FIGHTERS; i++) {
 const f = FIGHTERS[i];
 f.hidden = i >= total;
 if (i >= 2 && i < total) {
-const lead = i % 2 === 0 ? A : B;
-f.setChar((lead.chIdx + 3 * Math.floor(i / 2)) % CHARS.length);
+const lead = (i % tc === 1) ? B : A;
+f.setChar((lead.chIdx + 3 * Math.floor(i / tc) + (i % tc)) % CHARS.length);
 f.ctrl = new AICtrl(M.level);
 }
 }
+if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
 }
 human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
 NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;
@@ -32433,19 +32439,23 @@ const is2v2 = () => !isLargeTeam() && (M.mode === 'watch2v2' || M.mode === '2v2'
 const isRaid = () => M.mode === 'raid' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.raid)) || !!(netRoom() && netRoom().raid);
 const isMulti = () => is2v2() || isRaid() || isLargeTeam();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (isLargeTeam() ? ((f ? f.idx : 0) % teamCount()) : is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
-let _afMask = -1, _afMode = '', _afAll = [A, B], _afS0 = [A], _afS1 = [B], _afSides = [[A], [B]];
+let _afMask = -1, _afMode = '', _afCacheVer = 0, _afAll = [A, B], _afS0 = [A], _afS1 = [B], _afSides = [[A], [B]];
+const _afFoesAll = [[], [], [], []], _afFoesAlive = [[], [], [], []];
+let _afAliveMask = -1, _afAliveVer = -1;
+function invalidateFighterCache() { _afMask = -1; _afAliveMask = -1; if (typeof spatialInvalidate === 'function') spatialInvalidate(); }
 function _syncFighterCache() {
 const large = isLargeTeam(), raid = !large && isRaid(), two = !large && !raid && is2v2();
 const tc = large ? teamCount() : 2;
 const modeKey = large ? 'L' + tc : raid ? 'R' : two ? '2' : '1';
 let mask = 0;
 if (large) {
-for (let i = 0; i < MAX_FIGHTERS; i++) if (!FIGHTERS[i].hidden) mask += Math.pow(2, i);   // 32 人不能用 1 << i（会溢出成负数）
+for (let i = 0; i < MAX_FIGHTERS; i++) if (!FIGHTERS[i].hidden) mask |= (1 << i);
+mask >>>= 0;
 } else if (raid) {
 for (let i = 0; i < 4; i++) if (!FIGHTERS[i].hidden) mask |= (1 << i);
 }
 if (modeKey === _afMode && mask === _afMask) return;
-_afMode = modeKey; _afMask = mask;
+_afMode = modeKey; _afMask = mask; _afCacheVer++;
 if (large) {
 _afAll = []; _afSides = Array.from({ length: tc }, () => []);
 for (let i = 0; i < MAX_FIGHTERS; i++) {
@@ -32467,30 +32477,39 @@ _afAll = [A, B, C, D]; _afS0 = [A, C]; _afS1 = [B, D]; _afSides = [_afS0, _afS1]
 } else {
 _afAll = [A, B]; _afS0 = [A]; _afS1 = [B]; _afSides = [_afS0, _afS1];
 }
+for (let t = 0; t < 4; t++) _afFoesAll[t].length = 0;
+for (let i = 0; i < _afAll.length; i++) {
+const e = _afAll[i];
+const et = raid ? (e.idx === 1 ? 1 : 0) : (large ? (e.idx % tc) : (two ? (e.idx % 2) : e.idx));
+for (let t = 0; t < tc; t++) if (t !== et) _afFoesAll[t].push(e);
+}
+_afAliveVer = -1;
+}
+function _syncFoesAlive() {
+_syncFighterCache();
+const all = _afAll, n = all.length;
+let mask = 0;
+for (let i = 0; i < n; i++) if (all[i].hp > 0) mask |= (1 << i);
+mask >>>= 0;
+if (mask === _afAliveMask && _afAliveVer === _afCacheVer) return;
+_afAliveMask = mask; _afAliveVer = _afCacheVer;
+const tc = _afSides.length;
+for (let t = 0; t < tc; t++) {
+const src = _afFoesAll[t], dst = _afFoesAlive[t];
+dst.length = 0;
+for (let i = 0; i < src.length; i++) if (src[i].hp > 0) dst.push(src[i]);
+if (!dst.length) for (let i = 0; i < src.length; i++) dst.push(src[i]);
+}
 }
 const sideFighters = side => { _syncFighterCache(); return _afSides[side] || []; };
 const allFighters = () => { _syncFighterCache(); return _afAll; };
 const isAiVsAi = () => !!(M.watchAi || (M.mode === 'watch2v2' && M.watchAi) || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && !isMulti() && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
 const fighterByIdx = idx => FIGHTERS[idx] || A;
 const foesOf = f => {
-if (isRaid()) {
-if (f === B) {
-const list = [A, C, D].filter(e => !e.hidden);
-const alive = list.filter(e => e.hp > 0);
-return alive.length ? alive : list;
-}
-return [B];
-}
-if (isLargeTeam()) {
+if (!isMulti()) return [f === A ? B : A];
+_syncFoesAlive();
 const myT = fighterTeam(f);
-const list = FIGHTERS.filter(e => !e.hidden && fighterTeam(e) !== myT);
-const alive = list.filter(e => e.hp > 0);
-return alive.length ? alive : list;
-}
-if (!is2v2()) return [f === A ? B : A];
-const list = (f.idx % 2 === 0) ? [B, D] : [A, C];
-const alive = list.filter(e => !e.hidden && e.hp > 0);
-return alive.length ? alive : list;
+return _afFoesAlive[myT] || _afFoesAll[myT];
 };
 const cpuTeamwork = f => !!(f.ctrl && !human.includes(f.ctrl) && !f.ctrl.net);
 const BRAIN = { commit: 0.6, maxCombo: 3.5, revenge: 2.6, range: 560 };
@@ -32546,7 +32565,7 @@ f.target = explicitTgt; return explicitTgt;
 }
 const order = M.squadOrders?.[myTeam] || 'auto';
 if (order !== 'auto' || roleId !== 'auto') {
-const playerF = sideFighters(myTeam).find(m => human.includes(m.ctrl)) || fighterByIdx(myTeam);
+const playerF = sideFighters(myTeam).find(m => m.ctrl && (human.includes(m.ctrl) || m.ctrl.net)) || fighterByIdx(myTeam);
 const leaderTarget = playerF && (playerF.lockIdx >= 0 ? fighterByIdx(playerF.lockIdx) : playerF.target);
 if ((order === 'focus' || roleId === 'main') && leaderTarget && !leaderTarget.hidden && leaderTarget.hp > 0 && list.includes(leaderTarget)) {
 f.target = leaderTarget; return leaderTarget;
@@ -33139,7 +33158,7 @@ if (typeof statMatch === 'function') statMatch();   // 匿名统计：一局的�
 announce = null;
 announceQueue.length = 0;
 secretRound();
-const largeN = isLargeTeam() ? clamp(M.teamSize || 5, 3, 16) : 0;
+const largeN = isLargeTeam() ? clamp(M.teamSize || (quadOn() ? 4 : 5), quadOn() ? 2 : 3, quadOn() ? 8 : 16) : 0;
 STAGE_W = M.mode === 'world' ? WORLD_W : largeN ? (quadOn() ? BATTLE_WIDTH : largeN >= 16 ? 6400 : largeN >= 12 ? 4800 : largeN >= 8 ? BATTLE_WIDTH : largeN === 5 ? BATTLE5_WIDTH : largeN >= 6 ? 3400 : 2600) : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);   // 开放世界 8000，8v8 3600，5v5 专属三层演武楼阁 2800
 if (M.round === 1 && typeof resetCamZoom === 'function') resetCamZoom(true);
 const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
@@ -33201,6 +33220,7 @@ A.reset(STAGE_W / 2 - 230); B.reset(STAGE_W / 2 + 230);
 if (A.ctrl && typeof A.ctrl.updateTactic === 'function') A.ctrl.updateTactic(A, B);
 if (B.ctrl && typeof B.ctrl.updateTactic === 'function') B.ctrl.updateTactic(B, A);
 }
+if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
 magRoll();
 if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts();
 if (REC.on && REC.meta) REC.meta.loadouts = allFighters().map(f => ({ unlocked: !!f.stanceUnlocked, stance: f.stance || 0, badge: f.badgeId || '', tier: f.badgeTier || '' }));
@@ -33211,7 +33231,8 @@ for (const f of allFighters()) if (!f.hidden) applyMayhemStats(f);
 if (typeof cmdRoundInit === 'function') cmdRoundInit();   // 团战的统帅：随机抽人、加额外气血（必须在气血都定好之后）
 if (chaosOn() && M.round === 1) M.chaos = { i: -1, t: 0 };   // 天机乱斗：开打第一帧抽第一条异变（updateChaos），之后的回合接着换
 const foeHp = (LEVEL_BY_ID[M.level] || {}).foeHp || 1;   // 难度表里的电脑气血倍数（绝顶多 35%）
-if ((M.mode === 'cpu' || (M.mode === 'replay' && REPLAY.kind !== 'net') || M.mode === 'tag3') && foeHp !== 1) { B.maxHp = Math.round(B.maxHp * foeHp); B.hp = B.lagHp = B.maxHp; }
+const rpOrigMode = (M.mode === 'replay' && REPLAY.m) ? REPLAY.m.mode : M.mode;
+if ((rpOrigMode === 'cpu' || rpOrigMode === 'tag3') && !(M.mode === 'replay' && REPLAY.kind === 'net') && foeHp !== 1) { B.maxHp = Math.round(B.maxHp * foeHp); B.hp = B.lagHp = B.maxHp; }
 if (M.carry && M.round > 1) { [A, B].forEach((f, i) => { if (M.carry[i] !== null && M.carry[i] !== undefined) f.hp = f.lagHp = Math.round(f.maxHp * M.carry[i] * 10) / 10; }); }
 M.carry = null; M.pre = null; M.ot = false; M.rseq = (M.rseq || 0) + 1; M.introFX = M.round === 1 && M.mode !== 'demo';
 M.phase = 'intro'; M.t = 0; M.timer = isLargeTeam() ? 150 : isRaid() ? 120 : (is2v2() ? ROUND_TIME_2V2 : ROUND_TIME); M.koWinner = -1; M.flags = {};
@@ -33722,9 +33743,10 @@ dmg: projectile.dmg * 0.75, cloneEcho: true
 }
 function projBox(p) { return [p.x - p.w / 2, p.y - p.h / 2, p.x + p.w / 2, p.y + p.h / 2]; }
 const ironBallInvulnerable = f => f.invul > 0 && !(f.onGround() && ['idle', 'walk', 'block', 'blockstun'].includes(f.state));
+const _projCand = [];
 function resolveYoyoBallHits(p, owner, box) {
 if (!owner || !p.dmg) return;
-const foes = isMulti() ? foesOf(owner) : [foeOf(owner)];
+const foes = (isMulti() && typeof spatialFoesInXRange === 'function') ? spatialFoesInXRange(owner, box[0], box[2], _projCand) : (isMulti() ? foesOf(owner) : [foeOf(owner)]);
 p.yoyoHitAt = p.yoyoHitAt || {};
 p.yoyoUltDealt = p.yoyoUltDealt || {};
 for (const foe of foes) {
@@ -33901,7 +33923,7 @@ if (p.life <= 0 || p.x < -300 || p.x > STAGE_W + 300) { p.dead = true; continue;
 if (p.fx || p.dmg <= 0) continue;
 const owner = fighterByIdx(p.owner), box = projBox(p);
 if (p.kind === 'ironball' && p.yoyo) { resolveYoyoBallHits(p, owner, box); hitClones(box, p.owner, p.dmg); continue; }
-const candidates = isMulti() ? foesOf(owner) : [foeOf(owner)];
+const candidates = (isMulti() && typeof spatialFoesInXRange === 'function') ? spatialFoesInXRange(owner, box[0] - 80, box[2] + 80, _projCand) : (isMulti() ? foesOf(owner) : [foeOf(owner)]);
 if (!p.unbreakable) {
 let cut = false;
 for (const ef of candidates) {
@@ -33997,8 +34019,9 @@ if (p.chain > 0 && !isClient()) {
 let cur = foe;
 const chained = [foe.idx];
 const range = p.chainRange || 340;
+const chainPool = isMulti() ? foesOf(owner) : candidates;
 for (let ci = 0; ci < p.chain; ci++) {
-const next = candidates.find(ef => ef && !ef.hidden && ef.hp > 0 && !invulVs(ef, owner) && !chained.includes(ef.idx) && Math.hypot(ef.x - cur.x, (ef.y - 55) - (cur.y - 55)) <= range);
+const next = chainPool.find(ef => ef && !ef.hidden && ef.hp > 0 && !invulVs(ef, owner) && !chained.includes(ef.idx) && Math.hypot(ef.x - cur.x, (ef.y - 55) - (cur.y - 55)) <= range);
 if (!next) break;
 chained.push(next.idx);
 const cDmg = Math.max(6, Math.round(p.dmg * Math.pow(0.75, ci + 1)));
@@ -35624,35 +35647,158 @@ const total = typeof allFighters === 'function' ? allFighters().length : 2;
 if (total < 6) return 1;
 return Math.max(0.68, 1 - hitIndex * 0.1);
 }
+const SPATIAL_CELL = 128;
+const SPATIAL_OFFSET = 512;
+const SPATIAL_BUCKETS = 48;
+const SPATIAL_HURT_PAD = 88;
+const SPATIAL = {
+buckets: Array.from({ length: SPATIAL_BUCKETS }, () => []),
+activeCells: [],
+dirty: true,
+ver: -1,
+};
+function spatialCell(x) {
+const c = ((x + SPATIAL_OFFSET) * (1 / SPATIAL_CELL)) | 0;
+return c < 0 ? 0 : c >= SPATIAL_BUCKETS ? SPATIAL_BUCKETS - 1 : c;
+}
+function spatialInvalidate() {
+SPATIAL.dirty = true;
+}
+function spatialEnsure() {
+if (!SPATIAL.dirty && _afCacheVer === SPATIAL.ver) return SPATIAL;
+const all = allFighters(), n = all.length;
+const active = SPATIAL.activeCells, buckets = SPATIAL.buckets;
+for (let i = 0; i < active.length; i++) buckets[active[i]].length = 0;
+active.length = 0;
+for (let i = 0; i < n; i++) {
+const f = all[i];
+if (f.hidden) continue;
+const c = spatialCell(f.x);
+const b = buckets[c];
+if (!b.length) active.push(c);
+b.push(f);
+}
+SPATIAL.dirty = false;
+SPATIAL.ver = _afCacheVer;
+return SPATIAL;
+}
+const _spatialCand = [];
+function spatialFoesInXRange(f, minX, maxX, out) {
+const dst = out || _spatialCand;
+dst.length = 0;
+if (!isMulti()) {
+const e = foeOf(f);
+if (e && !e.hidden && e.hp > 0) dst.push(e);
+return dst;
+}
+const all = allFighters();
+if (all.length < 6) {
+const foes = foesOf(f);
+for (let i = 0; i < foes.length; i++) {
+const e = foes[i];
+if (e && !e.hidden && e.hp > 0) dst.push(e);
+}
+return dst;
+}
+spatialEnsure();
+const myTeam = fighterTeam(f);
+const c0 = spatialCell(minX - SPATIAL_HURT_PAD), c1 = spatialCell(maxX + SPATIAL_HURT_PAD);
+const buckets = SPATIAL.buckets;
+for (let c = c0; c <= c1; c++) {
+const b = buckets[c];
+for (let i = 0; i < b.length; i++) {
+const e = b[i];
+if (e.hp > 0 && fighterTeam(e) !== myTeam) dst.push(e);
+}
+}
+if (dst.length > 1) dst.sort((a, b) => a.idx - b.idx);
+return dst;
+}
 function findTargetsInBox(f, hb, opts) {
 const o = opts || {};
-const list = isMulti() ? foesOf(f) : [foeOf(f)];
+const multi = isMulti();
 const out = [];
-for (const ef of list) {
+if (multi && allFighters().length >= 6) {
+spatialEnsure();
+const myTeam = fighterTeam(f);
+const c0 = spatialCell(hb[0] - SPATIAL_HURT_PAD), c1 = spatialCell(hb[2] + SPATIAL_HURT_PAD);
+const buckets = SPATIAL.buckets, excl = o.exclude, ign = o.ignoreInvul;
+for (let c = c0; c <= c1; c++) {
+const b = buckets[c];
+for (let i = 0; i < b.length; i++) {
+const ef = b[i];
+if (ef.hp <= 0 || fighterTeam(ef) === myTeam) continue;
+if (!ign && invulVs(ef, f)) continue;
+if (excl && excl.includes(ef.idx)) continue;
+if (!overlap(hb, hurtbox(ef))) continue;
+out.push(ef);
+}
+}
+} else {
+const list = multi ? foesOf(f) : [foeOf(f)];
+for (let i = 0; i < list.length; i++) {
+const ef = list[i];
 if (!ef || ef.hidden || ef.hp <= 0) continue;
 if (!o.ignoreInvul && invulVs(ef, f)) continue;
 if (o.exclude && o.exclude.includes(ef.idx)) continue;
 if (!overlap(hb, hurtbox(ef))) continue;
 out.push(ef);
 }
-out.sort((a, b) => Math.hypot(a.x - f.x, a.y - f.y) - Math.hypot(b.x - f.x, b.y - f.y));
+}
+if (out.length > 1) {
+const fx = f.x, fy = f.y;
+out.sort((a, b) => {
+const da = (a.x - fx) * (a.x - fx) + (a.y - fy) * (a.y - fy);
+const db = (b.x - fx) * (b.x - fx) + (b.y - fy) * (b.y - fy);
+return da - db || a.idx - b.idx;
+});
+}
 return out;
 }
 function findTargetsInRadius(f, cx, cy, rx, ry, opts) {
 const o = opts || {};
 const rY = ry || rx;
-const list = isMulti() ? foesOf(f) : [foeOf(f)];
+const invRx = 1 / Math.max(1, rx), invRy = 1 / Math.max(1, rY);
+const multi = isMulti();
 const out = [];
-for (const ef of list) {
+if (multi && allFighters().length >= 6) {
+spatialEnsure();
+const myTeam = fighterTeam(f);
+const c0 = spatialCell(cx - rx - SPATIAL_HURT_PAD), c1 = spatialCell(cx + rx + SPATIAL_HURT_PAD);
+const buckets = SPATIAL.buckets, excl = o.exclude, ign = o.ignoreInvul;
+for (let c = c0; c <= c1; c++) {
+const b = buckets[c];
+for (let i = 0; i < b.length; i++) {
+const ef = b[i];
+if (ef.hp <= 0 || fighterTeam(ef) === myTeam) continue;
+if (!ign && invulVs(ef, f)) continue;
+if (excl && excl.includes(ef.idx)) continue;
+const hu = hurtbox(ef);
+const nx = clamp(cx, hu[0], hu[2]), ny = clamp(cy, hu[1], hu[3]);
+const dx = (nx - cx) * invRx, dy = (ny - cy) * invRy;
+if (dx * dx + dy * dy <= 1) out.push(ef);
+}
+}
+} else {
+const list = multi ? foesOf(f) : [foeOf(f)];
+for (let i = 0; i < list.length; i++) {
+const ef = list[i];
 if (!ef || ef.hidden || ef.hp <= 0) continue;
 if (!o.ignoreInvul && invulVs(ef, f)) continue;
 if (o.exclude && o.exclude.includes(ef.idx)) continue;
 const hu = hurtbox(ef);
 const nx = clamp(cx, hu[0], hu[2]), ny = clamp(cy, hu[1], hu[3]);
-const dx = (nx - cx) / Math.max(1, rx), dy = (ny - cy) / Math.max(1, rY);
+const dx = (nx - cx) * invRx, dy = (ny - cy) * invRy;
 if (dx * dx + dy * dy <= 1) out.push(ef);
 }
-out.sort((a, b) => Math.hypot(a.x - cx, (a.y - 55) - cy) - Math.hypot(b.x - cx, (b.y - 55) - cy));
+}
+if (out.length > 1) {
+out.sort((a, b) => {
+const da = (a.x - cx) * (a.x - cx) + (a.y - 55 - cy) * (a.y - 55 - cy);
+const db = (b.x - cx) * (b.x - cx) + (b.y - 55 - cy) * (b.y - 55 - cy);
+return da - db || a.idx - b.idx;
+});
+}
 return out;
 }
 function drawHitboxOverlay(fighters) {
@@ -36394,37 +36540,31 @@ camImpact(ev.x, ev.y, 0.42, 1.4);
 say('斩', 1.6, 'ko'); SFX.ko(); SFX.voiceHurt(0.75);
 }
 }
-function pushApart() {
-const skip = f => !f || f.hidden || f.hp <= 0 || !f.onGround()
-|| ['dash', 'special', 'launched', 'knockdown', 'held', 'getup', 'aircharge'].includes(f.state)
+const PUSH_SKIP_STATES = new Set(['dash', 'special', 'launched', 'knockdown', 'held', 'getup', 'aircharge']);
+const PUSH_STEADY_STATES = new Set(['block', 'blockstun', 'idle']);
+const _pushSkip = f => !f || f.hidden || f.hp <= 0 || !f.onGround()
+|| PUSH_SKIP_STATES.has(f.state)
 || (f.state === 'skill' && SKILLS[f.skill] && SKILLS[f.skill].pass);
-const isFixed = f => !!(f.dummy && f.ctrl && (f.ctrl.cfg ? f.ctrl.cfg.fixed : f.ctrl.mode === 'fixed'));
-const list = allFighters();
-const BODY_MIN = 34;
-const ALLY_IDLE_MIN = 20;
-for (let i = 0; i < list.length; i++) {
-const f1 = list[i];
-if (skip(f1)) continue;
-for (let j = i + 1; j < list.length; j++) {
-const f2 = list[j];
-if (skip(f2)) continue;
-if (Math.abs(f1.y - f2.y) > 64) continue;
-if (f1.plat !== f2.plat && Math.abs(f1.y - f2.y) > 44) continue;
+const _pushIsFixed = f => !!(f.dummy && f.ctrl && (f.ctrl.cfg ? f.ctrl.cfg.fixed : f.ctrl.mode === 'fixed'));
+function _pushResolvePair(f1, f2, multi, BODY_MIN, ALLY_IDLE_MIN) {
+const dy = Math.abs(f1.y - f2.y);
+if (dy > 64) return;
+if (f1.plat !== f2.plat && dy > 44) return;
 const dx = f2.x - f1.x;
 const absDx = Math.abs(dx);
-const sameTeam = list.length > 2 && typeof fighterTeam === 'function' && fighterTeam(f1) === fighterTeam(f2);
+const sameTeam = multi && fighterTeam(f1) === fighterTeam(f2);
 if (sameTeam) {
 if (absDx < ALLY_IDLE_MIN && Math.abs(f1.vx) < 25 && Math.abs(f2.vx) < 25) {
 const ov = ALLY_IDLE_MIN - absDx;
 const s = absDx > 0.5 ? Math.sign(dx) : (f1.idx < f2.idx ? 1 : -1);
 const step = Math.min(ov * 0.18, 2.0);
-if (!isFixed(f1)) f1.x = clamp(f1.x - s * step * 0.5, WALL, STAGE_W - WALL);
-if (!isFixed(f2)) f2.x = clamp(f2.x + s * step * 0.5, WALL, STAGE_W - WALL);
+if (!_pushIsFixed(f1)) f1.x = clamp(f1.x - s * step * 0.5, WALL, STAGE_W - WALL);
+if (!_pushIsFixed(f2)) f2.x = clamp(f2.x + s * step * 0.5, WALL, STAGE_W - WALL);
 }
-continue;
+return;
 }
 const ov = BODY_MIN - absDx;
-if (ov <= 0) continue;
+if (ov <= 0) return;
 let s;
 if (absDx > 0.5) s = Math.sign(dx);
 else if (Math.abs(f2.vx - f1.vx) > 10) s = Math.sign(f2.vx - f1.vx);
@@ -36435,17 +36575,17 @@ const f2WalkInto = f2.state === 'walk' && f2.vx * s < -40;
 if (f1WalkInto || f2WalkInto) {
 if (f1WalkInto) f1.vx *= 0.94;
 if (f2WalkInto) f2.vx *= 0.94;
-continue;
+return;
 }
-const fix1 = isFixed(f1), fix2 = isFixed(f2);
-if (fix1 && fix2) continue;
+const fix1 = _pushIsFixed(f1), fix2 = _pushIsFixed(f2);
+if (fix1 && fix2) return;
 const step = Math.min(ov, 5.0);
 let w1 = 0.5, w2 = 0.5;
 if (fix1) { w1 = 0; w2 = 1; }
 else if (fix2) { w1 = 1; w2 = 0; }
 else {
-const steady1 = ['block', 'blockstun', 'idle'].includes(f1.state) && Math.abs(f1.vx) < 25;
-const steady2 = ['block', 'blockstun', 'idle'].includes(f2.state) && Math.abs(f2.vx) < 25;
+const steady1 = PUSH_STEADY_STATES.has(f1.state) && Math.abs(f1.vx) < 25;
+const steady2 = PUSH_STEADY_STATES.has(f2.state) && Math.abs(f2.vx) < 25;
 if (steady1 && !steady2) { w1 = 0.15; w2 = 0.85; }
 else if (steady2 && !steady1) { w1 = 0.85; w2 = 0.15; }
 }
@@ -36458,6 +36598,58 @@ if (f1.x <= WALL + 1 && !fix2) f2.x = clamp(f2.x + pushRem, WALL, STAGE_W - WALL
 else if (f2.x <= WALL + 1 && !fix1) f1.x = clamp(f1.x + pushRem, WALL, STAGE_W - WALL);
 else if (f2.x >= STAGE_W - WALL - 1 && !fix1) f1.x = clamp(f1.x - pushRem, WALL, STAGE_W - WALL);
 else if (f1.x >= STAGE_W - WALL - 1 && !fix2) f2.x = clamp(f2.x - pushRem, WALL, STAGE_W - WALL);
+}
+}
+const _pushBuckets = Array.from({ length: SPATIAL_BUCKETS }, () => []);
+const _pushUsed = [];
+function pushApart() {
+const list = allFighters();
+const n = list.length;
+const BODY_MIN = 34;
+const ALLY_IDLE_MIN = 20;
+const multi = n > 2;
+if (n < 6) {
+for (let i = 0; i < n; i++) {
+const f1 = list[i];
+if (_pushSkip(f1)) continue;
+for (let j = i + 1; j < n; j++) {
+const f2 = list[j];
+if (_pushSkip(f2)) continue;
+_pushResolvePair(f1, f2, multi, BODY_MIN, ALLY_IDLE_MIN);
+}
+}
+return;
+}
+for (let i = 0; i < _pushUsed.length; i++) _pushBuckets[_pushUsed[i]].length = 0;
+_pushUsed.length = 0;
+for (let i = 0; i < n; i++) {
+const f = list[i];
+if (_pushSkip(f)) continue;
+const c = spatialCell(f.x);
+const b = _pushBuckets[c];
+if (!b.length) _pushUsed.push(c);
+b.push(f);
+}
+_pushUsed.sort((a, b) => a - b);
+for (let u = 0; u < _pushUsed.length; u++) {
+const c = _pushUsed[u], b1 = _pushBuckets[c], len1 = b1.length;
+for (let i = 0; i < len1; i++) {
+const f1 = b1[i];
+for (let j = i + 1; j < len1; j++) {
+_pushResolvePair(f1, b1[j], true, BODY_MIN, ALLY_IDLE_MIN);
+}
+}
+if (c + 1 < SPATIAL_BUCKETS) {
+const b2 = _pushBuckets[c + 1], len2 = b2.length;
+if (len2) {
+for (let i = 0; i < len1; i++) {
+const fa = b1[i];
+for (let j = 0; j < len2; j++) {
+const fb = b2[j];
+if (fa.idx < fb.idx) _pushResolvePair(fa, fb, true, BODY_MIN, ALLY_IDLE_MIN);
+else _pushResolvePair(fb, fa, true, BODY_MIN, ALLY_IDLE_MIN);
+}
+}
 }
 }
 }
@@ -36802,7 +36994,13 @@ if (M.cmd) cmdTick();   // 团战的统帅：观察对面、电脑统帅换战�
 if (!ROLL.on && !REPLAY.on) { const player = allFighters().find(f => f.ctrl === human[0]); if (player) secretThink(player); }
 for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
 rpPoint();
-for (const f of allFighters()) if (!f.hidden) updateFighter(f, foeOf(f));
+if (typeof spatialInvalidate === 'function') spatialInvalidate();
+for (const f of allFighters()) {
+if (f.hidden) continue;
+const ox = f.x;
+updateFighter(f, foeOf(f));
+if (Math.abs(f.x - ox) > 24 && typeof spatialInvalidate === 'function') spatialInvalidate();
+}
 if (isMulti()) updateArena2v2(STEP);
 if (M.mode === 'train' && TRAIN.frameProbe && !RESIM) {
 const p = TRAIN.frameProbe, ready = f => ['idle', 'walk', 'air', 'block'].includes(f.state);
@@ -36820,6 +37018,7 @@ f.state = 'knockdown'; f.t = 0; f.vx *= 0.5; f.invul = 99; f.move = null; f.skil
 }
 rpPost();
 pushApart();
+if (typeof spatialInvalidate === 'function') spatialInvalidate();
 if (!RESIM) { for (const f of allFighters()) if (!f.hidden) animFighter(f); }
 updateDecoys();
 cujuAimHook();
@@ -36887,9 +37086,10 @@ function faceDir(f, foe) {
 const h = f.ctrl && f.ctrl.held;
 const dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0;
 const a = dir || (h && h.aim);
-const on = a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl));   // 对手的设置由对手那边决定
+const isLocHuman = human.includes(f.ctrl) || (REPLAY.on && REPLAY.kind === 'loc' && !!(f.ctrl && f.ctrl.net));
+const on = a && !h.down && (SETTINGS.aim || !isLocHuman);   // 对手的设置由对手那边决定
 if (on) return a;
-if (h && !h.down && human.includes(f.ctrl) && SETTINGS.aim) return f.face;
+if (h && !h.down && isLocHuman && SETTINGS.aim) return f.face;
 const dx = (cujuOn() && M.cuju && M.cuju.ball ? M.cuju.ball.x : foe.x) - f.x;   // 墨球蹴鞠：不按方向键时面向墨球
 return Math.abs(dx) > 3 ? (dx > 0 ? 1 : -1) : f.face;
 }
@@ -36971,23 +37171,31 @@ return s;
 }
 function recBegin(kind) {
 M.reviewReady = false;
+const active = allFighters();
 Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], trStart: null, post: ['', ''], last: [-1, -1],
-meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), trainSlots: kind === 'net' ? [...((ROLL.slots || [])[localIdx()] || [])] : allFighters().filter(f => human.includes(f.ctrl)).map(f => [A, B, C, D].indexOf(f)), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], trEvery: TR_EVERY, st0: capState(), t: Date.now() } });
+meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), trainSlots: kind === 'net' ? [...((ROLL.slots || [])[localIdx()] || [])] : active.filter(f => human.includes(f.ctrl)).map(f => f.idx), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], trEvery: TR_EVERY, st0: capState(), t: Date.now() } });
 if (M.hasBuffs && M.competitiveScrolls) REC.meta.competitiveScrolls = JSON.parse(JSON.stringify(M.competitiveScrolls));
+if (isLargeTeam()) {
+const tc = teamCount(), n = active.length;
+Object.assign(REC.meta, { large: true, teamCount: tc, teamSize: M.teamSize || Math.max(1, Math.floor(n / tc)), fighterCount: n, chAll: active.map(f => f.chIdx), pl: active.map(f => !cpuTeamwork(f)) });
+if (kind === 'loc') REC.post = new Array(n).fill('');
+}
 if (kind === 'loc' && is2v2()) { Object.assign(REC.meta, { four: true, sub: M.subMode || '', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], pl: [A, B, C, D].map(f => !cpuTeamwork(f)) }); REC.post = ['', '', '', '']; }
 if (kind === 'loc' && M.mode === 'raid') { Object.assign(REC.meta, { raid: true, four: true, sub: 'local', ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx], raidSquadSize: M.raidSquadSize || 3, raidWave: M.raidWave || 1 }); REC.post = ['', '', '', '']; }
 if (kind === 'loc' && M.mode === 'tag3') Object.assign(REC.meta, { tag3: true, teams: jclone(M.teams || []), teamIdx: [...(M.teamIdx || [0, 0])], round: M.round || 1, mutator: M.teamMutator || 'normal' });
 if (kind === 'loc' && M.mode === 'tower') Object.assign(REC.meta, { towerFloor: M.towerFloor || 1, scrolls: [...(M.towerPerks || [])] });
 if (kind === 'loc' && M.mode === 'saga' && typeof SG !== 'undefined') Object.assign(REC.meta, { chapter: SG.hero || '', chapterNode: SG.node || 0 });
 if (kind === 'net') {
-Object.assign(REC.meta, { slots: ROLL.slots.map(s => s.slice()), room: netRoomMode, ranked: !!NET.isRanked });   // 房间规则也记下：回放时按它判断 2v2、同袍肉鸽、神决
+Object.assign(REC.meta, { slots: ROLL.slots.map(s => s.slice()), room: netRoomMode, ranked: !!NET.isRanked });   // 房间规则也记下：回放时按它判断 2v2、同袍肉鸽、四象、群雄、神决
 if (isRaid()) REC.meta.raidWave = M.raidWave || 1;
-if (allFighters().length > 2 || isRaid()) Object.assign(REC.meta, { four: is2v2(), raid: isRaid(), sub: netRoomMode, ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] });
+if (active.length > 2 || isRaid()) Object.assign(REC.meta, { four: is2v2(), raid: isRaid(), sub: netRoomMode, ch4: [A.chIdx, B.chIdx, C.chIdx, D.chIdx] });
 }
 }
 const rpFighters = m => {
-const size = m?.kind === 'net' ? m.st0?.M?.teamSize : 0;
-if (size > 2) return FIGHTERS.slice(0, size * 2);
+if (m && m.fighterCount > 2) return FIGHTERS.slice(0, Math.min(MAX_FIGHTERS, m.fighterCount));
+const tc = (m && m.teamCount) || ((m && (m.mode === 'quad' || m.room === 'quad')) ? 4 : 2);
+const size = (m && m.teamSize) || (m && m.st0 && m.st0.M && m.st0.M.teamSize) || 0;
+if (size > 2 || (tc > 2 && size > 0)) return FIGHTERS.slice(0, Math.min(MAX_FIGHTERS, size * tc));
 return m && (m.four || m.raid) ? [A, B, C, D] : [A, B];
 };   // 同袍肉鸽：A、C、D 打魔首 B（两人队时 D 藏着）
 function rpPoint() {
@@ -37052,10 +37260,9 @@ if (tf % TR_EVERY) return;
 if (!A.ctrl || !B.ctrl) return;
 const players = [];
 for (const slot of REC.meta.trainSlots || []) {
-const f = [A, B, C, D][slot];
+const f = fighterByIdx(slot);
 if (!f || f.hidden || !f.ctrl) continue;
-const side = sideFighters(0).includes(f) ? 0 : 1;
-const foes = sideFighters(1 - side).filter(o => !o.hidden);
+const foes = foesOf(f);
 if (!foes.length) continue;
 const foe = foes.reduce((best, o) => Math.hypot(o.x - f.x, o.y - f.y) < Math.hypot(best.x - f.x, best.y - f.y) ? o : best, foes[0]);
 players.push([slot, trFeat(f, foe), trActionBits(f.ctrl)]);
@@ -37130,8 +37337,11 @@ function recSave(w) {
 REC.on = false;
 if (REC.bad || !REC.meta) return;
 const m = REC.meta;
+const isQuadRep = m.mode === 'quad' || m.room === 'quad' || m.teamCount === 4;
 Object.assign(m, { w, wins: [...M.wins], frames: REC.kind === 'net' ? REC.nf : REC.f, ev: REC.ev, tr: REC.tr, trStart: REC.trStart, stats: M.combatStats ? M.combatStats.map(s => ({ ...s })) : null, skins: rpFighters(m).map(f => f.skinKey || ''),
 names: M.mode === 'net' ? rpNetNames(m)
+: isQuadRep ? (typeof QUAD_TEAMS !== 'undefined' ? QUAD_TEAMS.map(t => t.n) : ['苍龙', '朱雀', '玄武', '白虎'])
+: m.large ? ['我方大军', '敌方大军']
 : m.raid ? [sideFighters(0).map(f => f.look.name).join(' · '), (M.raidBoss && M.raidBoss.heroNames || []).join('·') || B.look.name]
 : m.four ? ({ p_cc: [ACC.name || '你', '电脑'], pp_cc: ['1P · 2P', '电脑'], pp_pp: ['1P · 2P', '3P · 4P'] }[m.sub] || ['苍龙', '赤凤']) : M.mode === 'cpu' ? [ACC.name || '你', '电脑'] : ['1P', '2P'] });
 if (RP.run && RP.run.mode === M.mode) {
@@ -37374,6 +37584,15 @@ return m.raid ? [h + ' · ' + c, '魔首'] : m.four && m.sub === 'pp_cc' ? [h + 
 function rpTitle(m) {
 const vs = window.I18N?.getLang() === 'en' ? ' vs ' : ' 对 ';
 if (m.raid && Array.isArray(m.names)) return `${m.names[0]}${vs}${cvT(m.names[1])}`;
+if (m.mode === 'quad' || m.room === 'quad' || m.teamCount === 4) {
+const sz = m.teamSize || (m.st0 && m.st0.M && m.st0.M.teamSize) || 4;
+return `${cvT('四象争锋')} · ${sz}v${sz}v${sz}v${sz}`;
+}
+if (m.large || m.mode === 'melee' || m.mode === 'ctf' || m.room === 'melee' || m.room === 'ctf') {
+const sz = m.teamSize || (m.st0 && m.st0.M && m.st0.M.teamSize) || 5;
+const label = (m.mode === 'ctf' || m.room === 'ctf') ? '夺旗争锋' : '群雄会战';
+return `${cvT(label)} · ${sz}v${sz}`;
+}
 const name = i => cvT((CHARS[(m.ch4 || m.ch)[i]] || {}).name || '?');
 return m.four ? `${name(0)} · ${name(2)}${vs}${name(1)} · ${name(3)}` : `${name(0)}${vs}${name(1)}`;
 }
@@ -37384,7 +37603,8 @@ const date = en ? d.toLocaleDateString('en', { month: 'short', day: 'numeric' })
 const names = (m.names || []).map(name => m.kind === 'net' ? name : cvT(name));
 let win = cvT('平局');
 if (m.w >= 0) {
-const winner = m.four ? names[m.w] || '' : cvT((CHARS[m.ch[m.w]] || {}).name || '');
+const isQuadRep = m.mode === 'quad' || m.room === 'quad' || m.teamCount === 4;
+const winner = isQuadRep ? cvT((typeof QUAD_TEAMS !== 'undefined' && QUAD_TEAMS[m.w] ? QUAD_TEAMS[m.w].n : names[m.w]) || '') : (m.four || m.large) ? (names[m.w] || '') : cvT((CHARS[m.ch[m.w]] || {}).name || '');
 win = en ? `${winner} wins` : `${winner} 胜`;
 }
 const warning = m.v !== VERSION ? ` · ${cvT('旧版本录的，可能对不上')}` : '';
@@ -37393,9 +37613,14 @@ return `${date} ${pad(d.getHours())}:${pad(d.getMinutes())} · ${replayModeTag(m
 function replayModeTag(m) {
 const mutator = m.st0 && m.st0.M && m.st0.M.teamMutator;
 const mutatorTag = mutator === 'mayhem' ? ` · ${cvT('通天神决')}` : '';
+const sz = m.teamSize || (m.st0 && m.st0.M && m.st0.M.teamSize) || 0;
 if (m.raid) return `${cvT(m.kind === 'net' ? '联机同袍肉鸽' : '本地同袍肉鸽')} · ${cvT('第')} ${m.raidWave || 1}${m.runId ? ` · ${cvT('全程')} ${m.segments.length} ${cvT('劫')}` : ''}`;
 if (m.mode === 'mayhem' || m.room === 'mayhem') return cvT(m.mode === 'net' ? '联机通天神决' : '通天神决');
-if (m.room === 'melee' || m.room === 'ctf') return `${cvT('联机')} · ${cvT(m.room === 'melee' ? '群雄会战 · 8v8' : '夺旗争锋 · 8v8')}${mutatorTag}`;
+if (m.room === 'quad' || m.mode === 'quad') return `${m.kind === 'net' ? cvT('联机') + ' · ' : ''}${cvT('四象争锋')} · ${sz || 4}v${sz || 4}v${sz || 4}v${sz || 4}${mutatorTag}`;
+if (m.room === 'melee' || m.room === 'ctf' || m.mode === 'melee' || m.mode === 'ctf') {
+const isCtf = m.room === 'ctf' || m.mode === 'ctf';
+return `${m.kind === 'net' ? cvT('联机') + ' · ' : ''}${cvT(isCtf ? '夺旗争锋' : '群雄会战')} · ${sz || 8}v${sz || 8}${mutatorTag}`;
+}
 if (m.mode === 'net') return m.ranked ? cvT('排位赛') : m.four ? `${cvT('联机2v2')} · ${cvT(m.sub === 'pp_pp' ? '四人对决' : m.sub === 'pp_cc' ? '双人共斗' : '携手共斗')}${mutatorTag}` : `${cvT('联机')} · ${cvT(m.room === 'mayhem' ? '通天神决' : '常规标准')}`;
 if (m.mode === 'cpu') return `${cvT('人机')} · ${cvT(LV_NAME[m.level] || m.level || '')}${mutatorTag}`;
 if (m.mode === 'pvp') return cvT('本地双人') + mutatorTag;
@@ -37537,23 +37762,31 @@ rpInfo();
 }
 function replayLoadSegment(m) {
 ROLL.on = false; REC.on = false; M.stage = null;
+const rpf = rpFighters(m);
 setChars(m.ch[0], m.ch[1]);
-if (m.ch4) { C.setChar(m.ch4[2]); D.setChar(m.ch4[3]); }
+if (Array.isArray(m.chAll) && m.chAll.length) {
+for (let i = 0; i < Math.min(m.chAll.length, MAX_FIGHTERS); i++) FIGHTERS[i].setChar(m.chAll[i]);
+} else if (m.ch4) {
+C.setChar(m.ch4[2]); D.setChar(m.ch4[3]);
+}
+for (let i = 0; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = i >= rpf.length;
 const net = m.kind === 'net', mine = new Set(net ? rpSlots(m).flat() : []);
-for (const f of rpFighters(m)) {
+for (const f of rpf) {
 f.ctrl = net && !mine.has(f.idx) ? new AICtrl(m.level || 'god') : new Ctrl();
 if (net && mine.has(f.idx)) f.ctrl.net = true;
 }
-if (!net && m.four && Array.isArray(m.pl)) rpFighters(m).forEach((f, i) => { if (m.pl[i]) f.ctrl.net = true; });
+if (!net && (m.four || m.large) && Array.isArray(m.pl)) rpf.forEach((f, i) => { if (m.pl[i]) f.ctrl.net = true; });
 restState(m.st0);
 M.mode = 'replay';
+if (m.teamSize && !M.teamSize) M.teamSize = m.teamSize;
 M.competitiveScrolls = m.competitiveScrolls && typeof m.competitiveScrolls === 'object' ? JSON.parse(JSON.stringify(m.competitiveScrolls)) : null;
 M.hasBuffs = !!(M.competitiveScrolls && Object.values(M.competitiveScrolls).some(team => Object.keys(team || {}).length));
 Object.assign(REPLAY, { kind: m.kind, seg: m, ev: m.ev || [], p: 0, f: 0, nf: 0, lh: [0, 0] });
+if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
 if (isRaid()) raidBossSkills();
 showScreen(null);
 startRound();
-rpFighters(m).forEach((f, i) => { const k = (m.skins || [])[i] || ''; f.look = skinLook(f.chIdx, k); f.skinKey = k; });
+rpf.forEach((f, i) => { const k = (m.skins || [])[i] || ''; f.look = skinLook(f.chIdx, k); f.skinKey = k; });
 }
 function rpInfo() {
 if (REPLAY.on) {
@@ -37611,9 +37844,20 @@ return;
 }
 M.phase = 'end'; REPLAY.paused = true;
 $id('rpBar').classList.add('hidden');
-const t = $id('endTitle'), wf = [A, B][w], mate = REPLAY.m && REPLAY.m.four ? [C, D][w] : null;
+const t = $id('endTitle'), rm = REPLAY.m;
+const isQuadRep = rm && (rm.mode === 'quad' || rm.room === 'quad' || rm.teamCount === 4);
+if (isQuadRep && w >= 0 && typeof QUAD_TEAMS !== 'undefined' && QUAD_TEAMS[w]) {
+t.textContent = `${cvT(QUAD_TEAMS[w].n)} 胜`; t.style.color = QUAD_TEAMS[w].hex;
+$id('endSub').textContent = `回放结束 · ${cvT('四象争锋')}`;
+} else if (rm && rm.large && w >= 0) {
+const teamLabel = (rm.names && rm.names[w]) || (w === 0 ? '我方大军' : '敌方大军');
+t.textContent = `${cvT(teamLabel)} 胜`; t.style.color = w === 0 ? '#6fe0ff' : '#ff6470';
+$id('endSub').textContent = `回放结束 · ${replayModeTag(rm)}`;
+} else {
+const wf = [A, B][w], mate = rm && rm.four ? [C, D][w] : null;
 if (wf) { t.textContent = `${wf.look.name}${mate ? ' · ' + mate.look.name : ''} 胜`; t.style.color = `rgb(${wf.look.slash})`; } else { t.textContent = '平局'; t.style.color = ''; }
 $id('endSub').textContent = `回放结束，比分 ${M.wins[0]} : ${M.wins[1]}`;
+}
 $id('endRank').textContent = '';
 $id('againBtn').style.display = 'none';
 $id('rpWatch').style.display = ''; $id('rpWatch').textContent = '再看一遍';
@@ -48071,12 +48315,14 @@ return st;
 function restState(st) {
 clock = st.clock; hitstop = st.hitstop; superFreeze = st.superFreeze; superOwner = st.so >= 0 ? fighterByIdx(st.so) : null;
 projSeq = st.projSeq; GRNG.s = st.rng;
-st.f.forEach((o, i) => resF(fighterByIdx(i), o));
+for (let i = 0; i < st.f.length; i++) resF(fighterByIdx(i), st.f[i]);
+for (let i = st.f.length; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
 projs.length = 0; for (const q of jclone(st.projs)) projs.push(q);
 decoys.length = 0; for (const q of jclone(st.decoys)) decoys.push(q);
 for (const k of Object.keys(M)) delete M[k]; Object.assign(M, jclone(st.M));
-st.c.forEach((o, i) => resC(fighterByIdx(i).ctrl, o));
+for (let i = 0; i < st.c.length; i++) { const f = fighterByIdx(i); if (f && f.ctrl) resC(f.ctrl, st.c[i]); }
 if (st.arena) Object.assign(ARENA2V2, jclone(st.arena));
+if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
 if (isRaid()) raidBossSkills();
 }
 function hashState(st) {
@@ -48109,16 +48355,19 @@ pr = pr.concat(NET.presses2.splice(0).map(a => '2' + a));
 } else NET.presses2.length = 0;
 return { h, p: pr };
 }
-function rollStart(ch, seed, duo, mv, map, mut, competitiveScrolls = null, loadouts = null) {
+function rollStart(ch, seed, duo, mv, map, mut, competitiveScrolls = null, loadouts = null, teamSize = 0) {
 if (typeof currentScreen !== 'undefined' && (currentScreen === 'buffDraft' || currentScreen === 'mapBriefing')) showScreen(null);   // 加入方：房主开打时收起通览和密卷页
 refocusGame();
 setChars(ch[0], ch[1]);
-if (ch && ch.length >= 4) { C.setChar(ch[2]); D.setChar(ch[3]); }
-setupNetMatch();
+setupNetMatch(teamSize);
+if (Array.isArray(ch) && ch.length > 2) {
+const n = Math.min(ch.length, MAX_FIGHTERS);
+for (let i = 2; i < n; i++) FIGHTERS[i].setChar(ch[i]);
+}
 M.combatLoadouts = Array.isArray(loadouts) ? loadouts : [combatLoadoutMap(), NET.peerLoadout || {}];
 M.competitiveScrolls = competitiveScrolls && typeof competitiveScrolls === 'object' ? competitiveScrolls : null;
 M.hasBuffs = !!(M.competitiveScrolls && Object.values(M.competitiveScrolls).some(team => Object.keys(team || {}).length));
-M.teamMutator = !NET.isRanked && ['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'maps'].includes(netRoomMode) && mut === 'mayhem' ? 'mayhem' : 'normal';
+M.teamMutator = !NET.isRanked && ['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'quad', 'maps'].includes(netRoomMode) && mut === 'mayhem' ? 'mayhem' : 'normal';
 if (MAPS[map]) M.map = map;
 else if (Array.isArray(mv) || roomDef().rule === 'maps') M.map = mapPick(mv, mapSeedRand(seed));
 if (Array.isArray(duo) && Array.isArray(duo[0]) && Array.isArray(duo[1])) M.duo = [duo[0].slice(0, 3), duo[1].slice(0, 3)];   // 各选 3 人（或 2 人），输一回合换下一人
@@ -53931,7 +54180,7 @@ startRound();
 if (opts.space) bastionSwitchSpace(opts.space, opts.tier || 1);
 bastionSyncHUD();
 }
-const meleeOn = () => M.mode === 'melee' || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'melee');
+const meleeOn = () => M.mode === 'melee' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && (REPLAY.m.mode === 'melee' || REPLAY.m.room === 'melee'))) || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'melee');
 function meleeRoundInit() {
 const sz = clamp(M.teamSize || 5, 3, 16);
 M.melee = {
@@ -54003,13 +54252,15 @@ f.ctrl = i === 0 ? human[0] : new AICtrl(M.level);
 f.hidden = false;
 }
 for (let i = total; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
+if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
 human[0].clear();
 paused = false;
 showScreen(null);
+REC.on = false; recBegin('loc');
 startRound();
 say(`群雄会战 · ${sz}v${sz}`, 1.4);
 }
-const ctfOn = () => M.mode === 'ctf' || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'ctf');
+const ctfOn = () => M.mode === 'ctf' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && (REPLAY.m.mode === 'ctf' || REPLAY.m.room === 'ctf'))) || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'ctf');
 function ctfRoundInit() {
 const base0 = WALL + 160, base1 = STAGE_W - WALL - 160;
 M.ctf = {
@@ -54127,9 +54378,11 @@ f.ctrl = i === 0 ? human[0] : new AICtrl(M.level);
 f.hidden = false;
 }
 for (let i = total; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
+if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
 human[0].clear();
 paused = false;
 showScreen(null);
+REC.on = false; recBegin('loc');
 startRound();
 say(`夺旗争锋 · ${sz}v${sz}`, 1.4);
 }
@@ -54197,7 +54450,7 @@ showScreen(null);
 startRound();
 say('无尽试炼 · 第 1 波', 1.3);
 }
-const quadOn = () => M.mode === 'quad';
+const quadOn = () => M.mode === 'quad' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && (REPLAY.m.mode === 'quad' || REPLAY.m.room === 'quad'))) || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'quad');
 const QUAD_TEAMS = [
 { n: '苍龙', rgb: '70,211,234', hex: '#46d3ea' },
 { n: '朱雀', rgb: '255,100,112', hex: '#ff6470' },
@@ -54212,7 +54465,7 @@ const teamRgbOf = f => quadOn() ? (QUAD_TEAMS[fighterTeam(f)] || QUAD_TEAMS[0]).
 const teamNameOf = t => quadOn() ? (QUAD_TEAMS[t] || QUAD_TEAMS[0]).n : (t === localTeam() ? '我方' : '敌方');
 function quadPlaceSpots() {
 const spots = [0, 1, 2, 3];
-for (let i = 3; i > 0; i--) { const j = (Math.random() * (i + 1)) | 0; [spots[i], spots[j]] = [spots[j], spots[i]]; }
+for (let i = 3; i > 0; i--) { const j = (grnd() * (i + 1)) | 0; [spots[i], spots[j]] = [spots[j], spots[i]]; }
 M.quadSpots = spots;
 }
 function quadSpawnPoint(team, slot) {
@@ -54230,7 +54483,7 @@ if (p.deck >= 0) mapPutOn(f, p.deck);
 f.face = p.face;
 }
 function quadRoundInit() {
-const sz = clamp(M.teamSize || 4, 2, 6);
+const sz = clamp(M.teamSize || 4, 2, 8);
 const tk = sz * QUAD_TICKETS_PER_HERO;
 M.quad = {
 size: sz,
@@ -54303,7 +54556,7 @@ sayNet(winner === localTeam() ? '四象称雄！' : (S.out[localTeam()] ? '全�
 }
 }
 function startQuad(teamSize = 4, heroIdx = 0, level = 'normal') {
-const sz = clamp(teamSize | 0, 2, 6);
+const sz = clamp(teamSize | 0, 2, 8);
 debugHitbox = false;
 refocusGame();
 netDropWaiting();
@@ -54323,9 +54576,11 @@ f.ctrl = i === 0 ? human[0] : new AICtrl(M.level);
 f.hidden = false;
 }
 for (let i = total; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
+if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
 human[0].clear();
 paused = false;
 showScreen(null);
+REC.on = false; recBegin('loc');
 startRound();
 say(`${cvT('四象争锋')} · ${sz}v${sz}v${sz}v${sz}`, 1.4);
 }
@@ -54408,7 +54663,8 @@ const CMD_BEAT_MUL = 1.18, CMD_BEATEN_MUL = 0.88;
 const cmdOn = () => !!M.cmd;
 const cmdFighter = t => { const T = M.cmd && M.cmd.team[t]; return T ? FIGHTERS[T.cmdr] : null; };
 const cmdIs = f => !!(M.cmd && f && M.cmd.team[fighterTeam(f)] && M.cmd.team[fighterTeam(f)].cmdr === f.idx);
-const cmdIsHumanTeam = t => { const c = cmdFighter(t); return !!(c && human.includes(c.ctrl)); };
+const cmdIsPlayerCtrl = c => !!(c && (human.includes(c) || c.net));
+const cmdIsHumanTeam = t => { const c = cmdFighter(t); return !!(c && cmdIsPlayerCtrl(c.ctrl)); };
 function cmdTacticOf(t) {
 const T = M.cmd && M.cmd.team[t];
 if (!T || !T.tactic) return null;
@@ -54424,7 +54680,7 @@ const tc = teamCount();
 const C = { team: [], role: new Array(MAX_FIGHTERS).fill(0), sel: -1, tgtCount: new Array(MAX_FIGHTERS).fill(0), obsT: 0, tabAt: 0, hint: 0 };
 for (let t = 0; t < tc; t++) {
 const members = sideFighters(t);
-const humans = members.filter(f => human.includes(f.ctrl));
+const humans = members.filter(f => cmdIsPlayerCtrl(f.ctrl));
 const pool = humans.length ? humans : members;   // 有真人就从真人里随机，没有就从电脑里随机
 const cmdr = pool[(grnd() * pool.length) | 0];
 C.team.push({
@@ -54484,7 +54740,7 @@ const i = CMD_ORDER.indexOf(T.tactic);
 cmdSet(t, CMD_ORDER[(i + 1) % 3], true);
 }
 function cmdHandleKeys(f, c) {
-if (!M.cmd || !cmdIs(f) || !human.includes(f.ctrl)) return false;
+if (!M.cmd || !cmdIs(f) || !cmdIsPlayerCtrl(f.ctrl)) return false;
 const t = fighterTeam(f);
 if (c.consume('orderFocus')) cmdSet(t, 'spear', true);
 else if (c.consume('orderProtect')) cmdSet(t, 'wall', true);
@@ -54779,7 +55035,7 @@ const C = M.cmd;
 if (C && M.phase === 'intro') {   // 开战前就能下令：按键在这里处理（fight 阶段由 tryTacticalKeys 处理）
 for (let t = 0; t < C.team.length; t++) {
 const hc = cmdFighter(t);
-if (hc && human.includes(hc.ctrl) && hc.hp > 0) cmdHandleKeys(hc, hc.ctrl);
+if (hc && cmdIsPlayerCtrl(hc.ctrl) && hc.hp > 0) cmdHandleKeys(hc, hc.ctrl);
 }
 }
 if (!C || M.phase !== 'fight') return;
@@ -54853,7 +55109,7 @@ const ef = FIGHTERS[explicitIdx];
 if (cmdAlive(ef, list)) return ef;
 if (M.teamFocus) M.teamFocus[t] = -1;
 }
-if (cmdr && human.includes(cmdr.ctrl)) {
+if (cmdr && cmdIsPlayerCtrl(cmdr.ctrl)) {
 const c = cmdr.lockIdx >= 0 ? FIGHTERS[cmdr.lockIdx] : cmdr.target;
 return cmdAlive(c, list) ? c : null;
 }
@@ -54914,7 +55170,7 @@ return best;
 }
 function cmdPickTarget(f, list, distance) {
 const C = M.cmd, t = fighterTeam(f);
-if (!C || !C.team[t] || human.includes(f.ctrl) || !list.length) return null;
+if (!C || !C.team[t] || cmdIsPlayerCtrl(f.ctrl) || !list.length) return null;
 const tac = cmdTacticOf(t), role = cmdRoleOf(f);
 if (!tac && role === 'auto') return null;
 if (f.cmdTgt >= 0 && clock < f.cmdTgtT) { const c = FIGHTERS[f.cmdTgt]; if (cmdAlive(c, list)) return c; }
@@ -54931,7 +55187,7 @@ f.cmdTgt = pick.idx; f.cmdTgtT = clock + 0.6 + (f.idx % 5) * 0.08;
 return pick;
 }
 function cmdAiMod(me, foe, d) {
-const C = M.cmd; if (!C || human.includes(me.ctrl)) return null;
+const C = M.cmd; if (!C || cmdIsPlayerCtrl(me.ctrl)) return null;
 const t = fighterTeam(me), tac = cmdTacticOf(t), role = cmdRoleOf(me);
 const fm = (M.teamFormation && M.teamFormation[t]) || 'auto';
 if (!tac && role === 'auto' && fm === 'auto') return null;

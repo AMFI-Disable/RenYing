@@ -402,7 +402,7 @@ function onNetMsg(msg) {
     // 开局只由房主发起：加入方收到才照办，形状不对的直接扔掉（以前 {} 就能把对面打崩）
     const r = msg.rstart;
     if (NET.role === 'host' || !r || !Array.isArray(r.ch) || r.ch.length < 2 || typeof r.seed !== 'number' || !isFinite(r.seed)) return;
-    rollStart(r.ch, r.seed, r.duo, r.mv, r.map, r.mut, r.competitiveScrolls, r.loadouts); return;
+    rollStart(r.ch, r.seed, r.duo, r.mv, r.map, r.mut, r.competitiveScrolls, r.loadouts, r.teamSize || 0); return;
   }
   if (msg.rsync) {
     // 纠正状态只有房主会发：加入方收到才接受，而且状态要是 capState() 那个样子
@@ -472,22 +472,27 @@ function netTick(dt) {
   if (msg.i || msg.s || msg.ev) send(msg);
 }
 const r2 = v => typeof v === 'number' ? Math.round(v * 100) / 100 : v;
-function setupNetMatch() {
-  M.mode = 'net'; M.wins = [0, 0]; M.round = 1; M.carry = null; M.duo = null; M.map = null; A.meter = B.meter = 0; NET.solo = false;
-  M.teamSize = roomDef().teamSize || 0;
+function setupNetMatch(teamSizeOverride) {
+  const def = roomDef();
+  const tc = def.rule === 'quad' ? 4 : 2;
+  M.mode = 'net'; M.wins = tc > 2 ? [0, 0, 0, 0] : [0, 0]; M.round = 1; M.carry = null; M.duo = null; M.map = null; A.meter = B.meter = 0; NET.solo = false;
+  const maxPerTeam = tc > 2 ? 8 : 16;
+  const reqSize = (typeof teamSizeOverride === 'number' && teamSizeOverride > 0) ? teamSizeOverride : (def.teamSize || 0);
+  M.teamSize = reqSize ? clamp(reqSize | 0, tc > 2 ? 2 : 3, maxPerTeam) : 0;
   if (M.teamSize) {
     M.level = 'normal';
     M.watchAi = false;
-    const total = M.teamSize * 2;
+    const total = Math.min(MAX_FIGHTERS, M.teamSize * tc);
     for (let i = 0; i < MAX_FIGHTERS; i++) {
       const f = FIGHTERS[i];
       f.hidden = i >= total;
       if (i >= 2 && i < total) {
-        const lead = i % 2 === 0 ? A : B;
-        f.setChar((lead.chIdx + 3 * Math.floor(i / 2)) % CHARS.length);
+        const lead = (i % tc === 1) ? B : A;
+        f.setChar((lead.chIdx + 3 * Math.floor(i / tc) + (i % tc)) % CHARS.length);
         f.ctrl = new AICtrl(M.level);
       }
     }
+    if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
   }
   human[0].clear(); human[1].clear(); human[2].clear(); human[3].clear();
   NET.remote.clear(); NET.presses.length = 0; human[0].rec = NET.presses;

@@ -277,6 +277,111 @@ if (runAll || args.includes('--rollback')) {
   })()`).runInContext(w);
   assert(rb47.xwMatch && rb47.tsArray && rb47.tsMatch && rb47.cycSafe && rb47.fighterSafe,
     'Issue #47: Xuanwu ultimate, Tie Shan avalanche layers, and circular graphs clone & resimulate without stack overflow', JSON.stringify(rb47));
+
+  // 回归检查（#33）：空间分桶判定一致性、4 队 32 人回放确定性、4 队 / 32 人联机回滚同步与零误伤隔离
+  const mt33 = new vm.Script(`(() => {
+    const ch32 = Array.from({ length: 32 }, (_, i) => i % CHARS.length);
+    // 1) 4-team 32-player rollback synchronization (8v8v8v8 quad)
+    netRoomMode = 'quad';
+    rollStart(ch32, 3301, null, null, null, 'normal', null, null, 8);
+    M.phase = 'fight';
+    const qCount = allFighters().length, qTeams = teamCount();
+    let noFriendlyFire = true;
+    for (const f of allFighters()) {
+      const myT = fighterTeam(f);
+      for (const e of foesOf(f)) if (fighterTeam(e) === myT) noFriendlyFire = false;
+      const box = [f.x - 160, f.y - 140, f.x + 160, f.y + 20];
+      const boxT = findTargetsInBox(f, box);
+      for (const e of boxT) if (fighterTeam(e) === myT) noFriendlyFire = false;
+      const radT = findTargetsInRadius(f, f.x, f.y - 60, 220, 140);
+      for (const e of radT) if (fighterTeam(e) === myT) noFriendlyFire = false;
+      const bruteBox = foesOf(f).filter(e => !e.hidden && e.hp > 0 && !invulVs(e, f) && overlap(box, hurtbox(e))).map(e => e.idx).sort((a, b) => a - b);
+      const spatialBox = boxT.map(e => e.idx).sort((a, b) => a - b);
+      if (bruteBox.join(',') !== spatialBox.join(',')) noFriendlyFire = false;
+    }
+    for (let f = 0; f < 90; f++) {
+      ROLL.loc[f] = { h: (f % 20 < 10) ? 2 : 0, p: f % 15 === 0 ? ['light'] : [] };
+      ROLL.rem[f] = { h: (f % 20 < 10) ? 1 : 0, p: f % 18 === 0 ? ['light'] : [] };
+      ROLL.remLast = 90;
+      rollFrame(f); ROLL.F = f + 1;
+    }
+    const qHashBefore = hashState(capState());
+    ROLL.pend = 65; rollResim();
+    const qHashAfter = hashState(capState());
+
+    // 2) 2-team 32-player rollback synchronization (16v16 melee)
+    netRoomMode = 'melee';
+    rollStart(ch32, 3302, null, null, null, 'normal', null, null, 16);
+    M.phase = 'fight';
+    const mCount = allFighters().length, mTeams = teamCount();
+    for (let f = 0; f < 90; f++) {
+      ROLL.loc[f] = { h: 2, p: f % 14 === 0 ? ['light'] : [] };
+      ROLL.rem[f] = { h: 1, p: f % 16 === 0 ? ['light'] : [] };
+      ROLL.remLast = 90;
+      rollFrame(f); ROLL.F = f + 1;
+    }
+    const mHashBefore = hashState(capState());
+    ROLL.pend = 65; rollResim();
+    const mHashAfter = hashState(capState());
+    netRoomMode = 'normal';
+
+    // 3) Local 4-team 32-player (8v8v8v8) & 2-team 32-player (16v16) replay record & playback determinism
+    const simSnap = () => {
+      const s = capState();
+      return {
+        f: s.f.map(ff => { const c = { ...ff }; delete c.lastComboHits; return c; }),
+        projs: s.projs, decoys: s.decoys,
+        quad: s.M.quad, timer: s.M.timer, wins: s.M.wins, koWinner: s.M.koWinner,
+      };
+    };
+    ROLL.on = false;
+    startQuad(8, 0, 'normal');
+    M.phase = 'fight';
+    for (let f = 0; f < 90; f++) step();
+    const liveQuadHash = hashState(simSnap());
+    const quadRec = recSave(0);
+    const quadTitle = rpTitle(quadRec), quadTag = replayModeTag(quadRec);
+    startReplay(quadRec);
+    M.phase = 'fight';
+    for (let f = 0; f < 90; f++) replayFrame();
+    const replayQuadHash = hashState(simSnap());
+    const replayQuadCount = allFighters().length, replayQuadTeams = teamCount();
+    REPLAY.on = false;
+
+    startMelee(16, 0, 'normal');
+    M.phase = 'fight';
+    for (let f = 0; f < 60; f++) step();
+    const liveMeleeHash = hashState(simSnap());
+    const meleeRec = recSave(0);
+    const meleeTitle = rpTitle(meleeRec), meleeTag = replayModeTag(meleeRec);
+    startReplay(meleeRec);
+    M.phase = 'fight';
+    for (let f = 0; f < 60; f++) replayFrame();
+    const replayMeleeHash = hashState(simSnap());
+    const replayMeleeCount = allFighters().length, replayMeleeTeams = teamCount();
+    REPLAY.on = false;
+
+    return {
+      qCount, qTeams, noFriendlyFire,
+      qRbMatch: qHashBefore === qHashAfter,
+      mCount, mTeams,
+      mRbMatch: mHashBefore === mHashAfter,
+      quadRecOk: !!(quadRec && quadRec.fighterCount === 32 && quadRec.teamCount === 4 && quadTitle.includes('8v8v8v8') && quadTag.includes('8v8v8v8')),
+      replayQuadMatch: liveQuadHash === replayQuadHash,
+      replayQuadCount, replayQuadTeams,
+      meleeRecOk: !!(meleeRec && meleeRec.fighterCount === 32 && meleeRec.teamCount === 2 && meleeTitle.includes('16v16') && meleeTag.includes('16v16')),
+      replayMeleeMatch: liveMeleeHash === replayMeleeHash,
+      replayMeleeCount, replayMeleeTeams,
+    };
+  })()`).runInContext(w);
+  assert(mt33.qCount === 32 && mt33.qTeams === 4 && mt33.noFriendlyFire && mt33.qRbMatch,
+    'Issue #33: 4-team 32-player (8v8v8v8) spatial bucketing parity, zero friendly-fire, and rollback determinism', JSON.stringify(mt33));
+  assert(mt33.mCount === 32 && mt33.mTeams === 2 && mt33.mRbMatch,
+    'Issue #33: 2-team 32-player (16v16) online rollback synchronization produces identical state hash', JSON.stringify(mt33));
+  assert(mt33.quadRecOk && mt33.replayQuadMatch && mt33.replayQuadCount === 32 && mt33.replayQuadTeams === 4,
+    'Issue #33: 4-team 32-player (8v8v8v8) replay records and replays deterministically with exact state hash', JSON.stringify(mt33));
+  assert(mt33.meleeRecOk && mt33.replayMeleeMatch && mt33.replayMeleeCount === 32 && mt33.replayMeleeTeams === 2,
+    'Issue #33: 2-team 32-player (16v16) replay records and replays deterministically with exact state hash', JSON.stringify(mt33));
 }
 
 // 2. QingFengXing (青锋行) 3D Action Mode Verification

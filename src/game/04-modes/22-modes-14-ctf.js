@@ -1,6 +1,6 @@
 // ======================= 夺旗争锋：2v2 ~ 8v8 团队夺旗战 =======================
 // 双方基地各立战旗；夺取敌方战旗护送回己方阵地即得 1 分，先夺 3 旗者胜。
-const ctfOn = () => M.mode === 'ctf' || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'ctf');
+const ctfOn = () => M.mode === 'ctf' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && (REPLAY.m.mode === 'ctf' || REPLAY.m.room === 'ctf'))) || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'ctf');
 
 function ctfRoundInit() {
   const base0 = WALL + 160, base1 = STAGE_W - WALL - 160;
@@ -128,9 +128,11 @@ function startCtf(teamSize = 4, heroIdx = 0, level = 'normal', drafted = null, m
     f.hidden = false;
   }
   for (let i = total; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
+  if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
   human[0].clear();
   paused = false;
   showScreen(null);
+  REC.on = false; recBegin('loc');
   startRound();
   say(`夺旗争锋 · ${sz}v${sz}`, 1.4);
 }

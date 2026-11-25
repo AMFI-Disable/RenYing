@@ -100,19 +100,23 @@ const is2v2 = () => !isLargeTeam() && (M.mode === 'watch2v2' || M.mode === '2v2'
 const isRaid = () => M.mode === 'raid' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && REPLAY.m.raid)) || !!(netRoom() && netRoom().raid);
 const isMulti = () => is2v2() || isRaid() || isLargeTeam();
 const fighterTeam = f => isRaid() ? (f && f.idx === 1 ? 1 : 0) : (isLargeTeam() ? ((f ? f.idx : 0) % teamCount()) : is2v2() ? ((f ? f.idx : 0) % 2) : (f ? f.idx : 0));
-let _afMask = -1, _afMode = '', _afAll = [A, B], _afS0 = [A], _afS1 = [B], _afSides = [[A], [B]];
+let _afMask = -1, _afMode = '', _afCacheVer = 0, _afAll = [A, B], _afS0 = [A], _afS1 = [B], _afSides = [[A], [B]];
+const _afFoesAll = [[], [], [], []], _afFoesAlive = [[], [], [], []];
+let _afAliveMask = -1, _afAliveVer = -1;
+function invalidateFighterCache() { _afMask = -1; _afAliveMask = -1; if (typeof spatialInvalidate === 'function') spatialInvalidate(); }
 function _syncFighterCache() {
   const large = isLargeTeam(), raid = !large && isRaid(), two = !large && !raid && is2v2();
   const tc = large ? teamCount() : 2;
   const modeKey = large ? 'L' + tc : raid ? 'R' : two ? '2' : '1';
   let mask = 0;
   if (large) {
-    for (let i = 0; i < MAX_FIGHTERS; i++) if (!FIGHTERS[i].hidden) mask += Math.pow(2, i);   // 32 人不能用 1 << i（会溢出成负数）
+    for (let i = 0; i < MAX_FIGHTERS; i++) if (!FIGHTERS[i].hidden) mask |= (1 << i);
+    mask >>>= 0;
   } else if (raid) {
     for (let i = 0; i < 4; i++) if (!FIGHTERS[i].hidden) mask |= (1 << i);
   }
   if (modeKey === _afMode && mask === _afMask) return;
-  _afMode = modeKey; _afMask = mask;
+  _afMode = modeKey; _afMask = mask; _afCacheVer++;
   if (large) {
     _afAll = []; _afSides = Array.from({ length: tc }, () => []);
     for (let i = 0; i < MAX_FIGHTERS; i++) {
@@ -134,30 +138,40 @@ function _syncFighterCache() {
   } else {
     _afAll = [A, B]; _afS0 = [A]; _afS1 = [B]; _afSides = [_afS0, _afS1];
   }
+  // 预建每个阵营的敌方全表（按 idx 升序，回滚确定性）
+  for (let t = 0; t < 4; t++) _afFoesAll[t].length = 0;
+  for (let i = 0; i < _afAll.length; i++) {
+    const e = _afAll[i];
+    const et = raid ? (e.idx === 1 ? 1 : 0) : (large ? (e.idx % tc) : (two ? (e.idx % 2) : e.idx));
+    for (let t = 0; t < tc; t++) if (t !== et) _afFoesAll[t].push(e);
+  }
+  _afAliveVer = -1;
+}
+function _syncFoesAlive() {
+  _syncFighterCache();
+  const all = _afAll, n = all.length;
+  let mask = 0;
+  for (let i = 0; i < n; i++) if (all[i].hp > 0) mask |= (1 << i);
+  mask >>>= 0;
+  if (mask === _afAliveMask && _afAliveVer === _afCacheVer) return;
+  _afAliveMask = mask; _afAliveVer = _afCacheVer;
+  const tc = _afSides.length;
+  for (let t = 0; t < tc; t++) {
+    const src = _afFoesAll[t], dst = _afFoesAlive[t];
+    dst.length = 0;
+    for (let i = 0; i < src.length; i++) if (src[i].hp > 0) dst.push(src[i]);
+    if (!dst.length) for (let i = 0; i < src.length; i++) dst.push(src[i]);
+  }
 }
 const sideFighters = side => { _syncFighterCache(); return _afSides[side] || []; };
 const allFighters = () => { _syncFighterCache(); return _afAll; };
 const isAiVsAi = () => !!(M.watchAi || (M.mode === 'watch2v2' && M.watchAi) || M.mode === 'demo' || (typeof bpMode !== 'undefined' && bpMode === 'cpuWatch') || (M.mode !== 'net' && !isMulti() && A && A.ctrl && A.ctrl !== human[0] && A.ctrl !== human[1]));
 const fighterByIdx = idx => FIGHTERS[idx] || A;
 const foesOf = f => {
-  if (isRaid()) {
-    if (f === B) {
-      const list = [A, C, D].filter(e => !e.hidden);
-      const alive = list.filter(e => e.hp > 0);
-      return alive.length ? alive : list;
-    }
-    return [B];
-  }
-  if (isLargeTeam()) {
-    const myT = fighterTeam(f);
-    const list = FIGHTERS.filter(e => !e.hidden && fighterTeam(e) !== myT);
-    const alive = list.filter(e => e.hp > 0);
-    return alive.length ? alive : list;
-  }
-  if (!is2v2()) return [f === A ? B : A];
-  const list = (f.idx % 2 === 0) ? [B, D] : [A, C];
-  const alive = list.filter(e => !e.hidden && e.hp > 0);
-  return alive.length ? alive : list;
+  if (!isMulti()) return [f === A ? B : A];
+  _syncFoesAlive();
+  const myT = fighterTeam(f);
+  return _afFoesAlive[myT] || _afFoesAll[myT];
 };
 // 2v2 / 大型团战里谁算电脑（会配合队友选目标）。本地四个玩家用 human[0]～[3]；联机和本地回放里玩家的操控是普通 Ctrl，带 net 标记，也不是电脑
 const cpuTeamwork = f => !!(f.ctrl && !human.includes(f.ctrl) && !f.ctrl.net);
@@ -221,7 +235,7 @@ const foeOf = f => {
     }
     const order = M.squadOrders?.[myTeam] || 'auto';
     if (order !== 'auto' || roleId !== 'auto') {
-      const playerF = sideFighters(myTeam).find(m => human.includes(m.ctrl)) || fighterByIdx(myTeam);
+      const playerF = sideFighters(myTeam).find(m => m.ctrl && (human.includes(m.ctrl) || m.ctrl.net)) || fighterByIdx(myTeam);
       const leaderTarget = playerF && (playerF.lockIdx >= 0 ? fighterByIdx(playerF.lockIdx) : playerF.target);
       if ((order === 'focus' || roleId === 'main') && leaderTarget && !leaderTarget.hidden && leaderTarget.hp > 0 && list.includes(leaderTarget)) {
         f.target = leaderTarget; return leaderTarget;

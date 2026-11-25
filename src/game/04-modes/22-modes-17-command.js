@@ -37,7 +37,8 @@ const CMD_BEAT_MUL = 1.18, CMD_BEATEN_MUL = 0.88;
 const cmdOn = () => !!M.cmd;
 const cmdFighter = t => { const T = M.cmd && M.cmd.team[t]; return T ? FIGHTERS[T.cmdr] : null; };
 const cmdIs = f => !!(M.cmd && f && M.cmd.team[fighterTeam(f)] && M.cmd.team[fighterTeam(f)].cmdr === f.idx);
-const cmdIsHumanTeam = t => { const c = cmdFighter(t); return !!(c && human.includes(c.ctrl)); };
+const cmdIsPlayerCtrl = c => !!(c && (human.includes(c) || c.net));
+const cmdIsHumanTeam = t => { const c = cmdFighter(t); return !!(c && cmdIsPlayerCtrl(c.ctrl)); };
 // 这一队现在生效的战术：统帅倒下时是 null（没有克制，队友回到默认打法）
 function cmdTacticOf(t) {
   const T = M.cmd && M.cmd.team[t];
@@ -56,7 +57,7 @@ function cmdRoundInit() {
   const C = { team: [], role: new Array(MAX_FIGHTERS).fill(0), sel: -1, tgtCount: new Array(MAX_FIGHTERS).fill(0), obsT: 0, tabAt: 0, hint: 0 };
   for (let t = 0; t < tc; t++) {
     const members = sideFighters(t);
-    const humans = members.filter(f => human.includes(f.ctrl));
+    const humans = members.filter(f => cmdIsPlayerCtrl(f.ctrl));
     const pool = humans.length ? humans : members;   // 有真人就从真人里随机，没有就从电脑里随机
     const cmdr = pool[(grnd() * pool.length) | 0];
     C.team.push({
@@ -120,7 +121,7 @@ function cmdCycleTactic() {
 }
 // 统帅的按键：1/2/3 直接选战术，Y 选队友，N 给他分任务。返回 true 表示这个人在带队（不再走老的「全军集火」指令）
 function cmdHandleKeys(f, c) {
-  if (!M.cmd || !cmdIs(f) || !human.includes(f.ctrl)) return false;
+  if (!M.cmd || !cmdIs(f) || !cmdIsPlayerCtrl(f.ctrl)) return false;
   const t = fighterTeam(f);
   if (c.consume('orderFocus')) cmdSet(t, 'spear', true);
   else if (c.consume('orderProtect')) cmdSet(t, 'wall', true);
@@ -423,7 +424,7 @@ function cmdTick() {
   if (C && M.phase === 'intro') {   // 开战前就能下令：按键在这里处理（fight 阶段由 tryTacticalKeys 处理）
     for (let t = 0; t < C.team.length; t++) {
       const hc = cmdFighter(t);
-      if (hc && human.includes(hc.ctrl) && hc.hp > 0) cmdHandleKeys(hc, hc.ctrl);
+      if (hc && cmdIsPlayerCtrl(hc.ctrl) && hc.hp > 0) cmdHandleKeys(hc, hc.ctrl);
     }
   }
   if (!C || M.phase !== 'fight') return;
@@ -503,7 +504,7 @@ function cmdFocusOf(t, list, distance) {
     if (cmdAlive(ef, list)) return ef;
     if (M.teamFocus) M.teamFocus[t] = -1;
   }
-  if (cmdr && human.includes(cmdr.ctrl)) {
+  if (cmdr && cmdIsPlayerCtrl(cmdr.ctrl)) {
     // 真人统帅：锁定（G）的人，没锁就是统帅现在打的人
     const c = cmdr.lockIdx >= 0 ? FIGHTERS[cmdr.lockIdx] : cmdr.target;
     return cmdAlive(c, list) ? c : null;
@@ -570,7 +571,7 @@ function cmdWallTarget(f, list, distance) {
 // foeOf 的钩子：返回这个电脑队友这一刻该打谁（null 就走原来的就近目标）。选好的目标留 0.7 秒左右，免得一帧一换
 function cmdPickTarget(f, list, distance) {
   const C = M.cmd, t = fighterTeam(f);
-  if (!C || !C.team[t] || human.includes(f.ctrl) || !list.length) return null;
+  if (!C || !C.team[t] || cmdIsPlayerCtrl(f.ctrl) || !list.length) return null;
   const tac = cmdTacticOf(t), role = cmdRoleOf(f);
   if (!tac && role === 'auto') return null;
   if (f.cmdTgt >= 0 && clock < f.cmdTgtT) { const c = FIGHTERS[f.cmdTgt]; if (cmdAlive(c, list)) return c; }
@@ -589,7 +590,7 @@ function cmdPickTarget(f, list, distance) {
 
 // ai.js 的 neutral() 用：统一处理团战统帅战术（M.cmd）与 2v2 / 同袍肉鸽小队战术、阵型集结与角色分工
 function cmdAiMod(me, foe, d) {
-  const C = M.cmd; if (!C || human.includes(me.ctrl)) return null;
+  const C = M.cmd; if (!C || cmdIsPlayerCtrl(me.ctrl)) return null;
   const t = fighterTeam(me), tac = cmdTacticOf(t), role = cmdRoleOf(me);
   const fm = (M.teamFormation && M.teamFormation[t]) || 'auto';
   if (!tac && role === 'auto' && fm === 'auto') return null;

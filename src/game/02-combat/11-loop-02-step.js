@@ -19,7 +19,13 @@ function step() {
   if (!ROLL.on && !REPLAY.on) { const player = allFighters().find(f => f.ctrl === human[0]); if (player) secretThink(player); }
   for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
   rpPoint();
-  for (const f of allFighters()) if (!f.hidden) updateFighter(f, foeOf(f));
+  if (typeof spatialInvalidate === 'function') spatialInvalidate();
+  for (const f of allFighters()) {
+    if (f.hidden) continue;
+    const ox = f.x;
+    updateFighter(f, foeOf(f));
+    if (Math.abs(f.x - ox) > 24 && typeof spatialInvalidate === 'function') spatialInvalidate();
+  }
   if (isMulti()) updateArena2v2(STEP);
   if (M.mode === 'train' && TRAIN.frameProbe && !RESIM) {
     const p = TRAIN.frameProbe, ready = f => ['idle', 'walk', 'air', 'block'].includes(f.state);
@@ -38,6 +44,7 @@ function step() {
   }
   rpPost();
   pushApart();
+  if (typeof spatialInvalidate === 'function') spatialInvalidate();
   if (!RESIM) { for (const f of allFighters()) if (!f.hidden) animFighter(f); }
   updateDecoys();
   cujuAimHook();
@@ -108,9 +115,10 @@ function faceDir(f, foe) {
   const h = f.ctrl && f.ctrl.held;
   const dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0;
   const a = dir || (h && h.aim);
-  const on = a && !h.down && (SETTINGS.aim || !human.includes(f.ctrl));   // 对手的设置由对手那边决定
+  const isLocHuman = human.includes(f.ctrl) || (REPLAY.on && REPLAY.kind === 'loc' && !!(f.ctrl && f.ctrl.net));
+  const on = a && !h.down && (SETTINGS.aim || !isLocHuman);   // 对手的设置由对手那边决定
   if (on) return a;
-  if (h && !h.down && human.includes(f.ctrl) && SETTINGS.aim) return f.face;
+  if (h && !h.down && isLocHuman && SETTINGS.aim) return f.face;
   const dx = (cujuOn() && M.cuju && M.cuju.ball ? M.cuju.ball.x : foe.x) - f.x;   // 墨球蹴鞠：不按方向键时面向墨球
   return Math.abs(dx) > 3 ? (dx > 0 ? 1 : -1) : f.face;
 }
