@@ -194,6 +194,8 @@ window.addEventListener('mouseup', e => { if (e.button === 0) { if (typeof secre
 cv.addEventListener('wheel', e => {
   if (M.mode === 'demo' || paused || EXT.on || (typeof bastion2dActive === 'function' && bastion2dActive())) return;
   if (document.querySelector('.scr.on')) return;
+  if ((typeof teamCmdOpen === 'function' && teamCmdOpen()) || (typeof dummyBarOn === 'function' && dummyBarOn())) return;
+  if (document.querySelector('.world-teleport:not(.hidden), .hud-custom-modal[style*="flex"]')) return;
   e.preventDefault();
   const scale = e.deltaMode === 1 ? 0.05 : (e.deltaMode === 2 ? 0.16 : 0.0014);
   const delta = clamp(-e.deltaY * scale, -0.18, 0.18);
@@ -259,6 +261,7 @@ window.addEventListener('focus', () => {
 });
 window.addEventListener('pointerdown', e => {
   if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) return;
+  if (e.target && e.target.closest && e.target.closest('#trainLab, #teamCmdPanel, #dummyBar, #trainInspect, #rpBar, .world-teleport, .hud-custom-modal')) return;
   if (M.mode !== 'demo' && !paused && !document.querySelector('.scr.on')) {
     refocusGame();
   }

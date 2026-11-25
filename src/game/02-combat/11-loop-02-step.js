@@ -71,7 +71,14 @@ function resetCamZoom(silent) {
 let camPunch = { zoom: 0, x: STAGE_W / 2, y: 0, t: 0, maxT: 0 };
 let camFocusPingT = 0;
 function camImpact(x, y, zoomBoost, duration) {
-  if (M.mode === 'watch2v2' || isLargeTeam()) zoomBoost *= 0.6;
+  if (isLargeTeam()) {
+    // 大型团战里只对视野附近的重击做极轻微回弹，不让远处 AI 交手扯动玩家镜头
+    if (x !== undefined && Math.abs(x - cam.x) > 420) return;
+    zoomBoost = Math.min(zoomBoost * 0.25, 0.08);
+    duration = Math.min(duration, 0.22);
+  } else if (M.mode === 'watch2v2') {
+    zoomBoost *= 0.6;
+  }
   if (camPunch.t <= 0 || zoomBoost >= camPunch.zoom) {
     camPunch.zoom = zoomBoost;
     camPunch.x = x !== undefined ? x : cam.x;

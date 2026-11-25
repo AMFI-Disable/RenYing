@@ -109,6 +109,10 @@ function drawFu(x, y, a, n) {   // 对手头顶那张符：黄纸朱砂
 function viewerIdx() { return (M.watchAi || M.mode === 'demo' || M.mode === 'replay' || (M.mode === 'pvp' && !is2v2()) || (M.mode === 'watch2v2' && M.watchAi)) ? -1 : localIdx(); }
 // 山水之间 / 蓬莱境：画卷落下时人人都看得到；落下之后被困的一方整屏被画挡住，醉翁一方和旁观者照常看，只在被困的人身上留一圈雾
 function drawShanshui() {
+  if (isLargeTeam()) {
+    for (const x of allFighters()) if (x && x.veilT > 0 && x.hp > 0) drawPenglaiMist(x);
+    return;
+  }
   const f = [A, B].find(x => x && x.state === 'special' && x.sp === 'cast' && x.ch.ult === 'shanshui');   // 起手蓄势那 0.42 秒不画，否则画卷会落两遍
   const vi = viewerIdx(), vf = vi >= 0 ? [A, B][vi] : null;
   for (const x of [A, B]) if (x && x.veilT > 0 && x !== vf && x.hp > 0) drawPenglaiMist(x);

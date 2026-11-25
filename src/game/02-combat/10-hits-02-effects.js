@@ -426,6 +426,23 @@ function fighterDown(def, att, ev) {
 }
 // 命中的顿帧会影响对战（顿帧里谁都不动），回滚重算和第一次算必须一模一样：两条路都只走这一个函数
 function hitStopOf(ev, att) {
+  // 大型团战（3v3~16v16）压缩全局顿帧并设上限，防止多人同时交火把整场节奏拖成慢动作（纯确定性缩放，回滚安全）
+  if (isLargeTeam()) {
+    const n = allFighters().length;
+    const mul = n >= 16 ? 0.14 : (n >= 10 ? 0.2 : 0.28);
+    const cap = n >= 16 ? 0.032 : 0.045;
+    let hs = 0;
+    if (ev.guardBreak) hs = 0.05;
+    else if (ev.blk) hs = Math.min(cap * 0.6, ev.hs * 0.5 * mul);
+    else if (ev.armor) hs = Math.min(cap * 0.6, ev.hs * 0.45 * mul);
+    else {
+      hs = Math.min(cap, ev.hs * (att.ch.hitFeel || 1) * mul);
+      if (ev.counter) hs = Math.max(hs, Math.min(cap, 0.04));
+      if (ev.ko) hs = Math.max(hs, 0.06);
+    }
+    hitstop = Math.max(hitstop, hs);
+    return;
+  }
   if (ev.guardBreak) { hitstop = Math.max(hitstop, 0.22); return; }
   if (ev.blk) { hitstop = ev.hs * 0.7; return; }
   if (ev.armor) { hitstop = Math.max(hitstop, ev.hs * 0.6); return; }
@@ -528,20 +545,24 @@ function hitVisual(ev, quiet) {
     } }
   if (!ev.blk && !quiet && fighterByIdx(ev.a)) skinHitFX(fighterByIdx(ev.a), ev);
   if (mayhemOn() && !quiet) {
-    shake = Math.max(shake, 24);
-    flashA = Math.max(flashA, 0.55);
-    flashRGB = att.look.slash || '255,215,80';
-    ring(ev.x, ev.y, 160, att.look.slash || '255,215,80', 0.42);
-    ring(ev.x, ev.y, 280, '255,240,160', 0.5);
-    slashLine(ev.x, ev.y, rand(-0.8, 0.8), att.look.slash);
-    slashLine(ev.x, ev.y, rand(-0.8, 0.8), '255,240,160');
-    if (ev.big || ev.ult) {
-      slashLine(ev.x, ev.y, rand(-0.8, 0.8), '255,60,60');
-      ring(ev.x, ev.y, 380, '255,220,80', 0.6);
+    const large = isLargeTeam();
+    shake = Math.max(shake, large ? 7 : 24);
+    flashA = Math.max(flashA, large ? 0.1 : 0.55);
+    if (!large || ev.a === localIdx() || ev.d === localIdx()) flashRGB = att.look.slash || '255,215,80';
+    ring(ev.x, ev.y, large ? 115 : 160, att.look.slash || '255,215,80', large ? 0.3 : 0.42);
+    if (!large) {
+      ring(ev.x, ev.y, 280, '255,240,160', 0.5);
+      slashLine(ev.x, ev.y, rand(-0.8, 0.8), att.look.slash);
+      slashLine(ev.x, ev.y, rand(-0.8, 0.8), '255,240,160');
+      if (ev.big || ev.ult) {
+        slashLine(ev.x, ev.y, rand(-0.8, 0.8), '255,60,60');
+        ring(ev.x, ev.y, 380, '255,220,80', 0.6);
+      }
     }
-    for (let i = 0; i < 28; i++) {
-      const a = rand(0, 6.28), v = rand(280, 720);
-      addP({ type: 'spark', x: ev.x, y: ev.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.65, max: 0.65, rgb: i % 2 === 0 ? '255,215,80' : att.look.slash, w: 3.5, drag: 2.6 });
+    const spN = large ? 8 : 28;
+    for (let i = 0; i < spN; i++) {
+      const a = rand(0, 6.28), v = rand(220, large ? 480 : 720);
+      addP({ type: 'spark', x: ev.x, y: ev.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: large ? 0.4 : 0.65, max: large ? 0.4 : 0.65, rgb: i % 2 === 0 ? '255,215,80' : att.look.slash, w: large ? 2.4 : 3.5, drag: 2.6 });
     }
   }
   if (!quiet && (ev.dd || 0) > 0) {   // 伤害数字：从命中点弹出来往上飘，越重越大

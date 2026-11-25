@@ -1,7 +1,7 @@
 Object.assign(ULTS, {
   // ---- 凌霜 · 大招 E：刹那（timestop） ----
   timestop: { name: '刹那', desc: '长枪拄地，凝神入定，天地为之一滞。漫天枪影泼洒开来，终归于一线寒芒，极速贯穿（140 到 185 伤害）。贯穿得手触发【寒霜贯日】：重置回马枪与枪旋冷却，并令对手陷入 4 秒冰冻迟缓（移速减慢 40%）。',
-    begin(f, foe) { f.sp = 'stop'; f.spPose = 'ls_stance'; f.invul = 99; superFreeze = 0.9; superOwner = f; f.spX = f.x; f.hitDone = false; SFX.superOn(); },
+    begin(f, foe) { f.sp = 'stop'; f.spPose = 'ls_stance'; f.invul = 99; if (!isLargeTeam()) { superFreeze = 0.9; superOwner = f; } f.spX = f.x; f.hitDone = false; if (!isLargeTeam() || f.idx === localIdx()) SFX.superOn(); },
     update(f, foe) {
       if (f.sp === 'stop' && f.t >= 0.45) {
         f.sp = 'sweep'; f.spPose = 'ls_thrust'; f.snap = true;

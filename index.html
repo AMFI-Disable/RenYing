@@ -3659,7 +3659,8 @@ font-variant-numeric: tabular-nums;
 .row { margin-top: 14px; }
 .go { margin: 14px auto 0; }
 #codex .cxw {
-max-height: calc(100vh - var(--nav-h, 58px) - 16px);
+max-height: none;
+overflow: visible;
 padding: 10px 14px;
 gap: 8px;
 }
@@ -4141,7 +4142,9 @@ font-weight: 700;
 }
 .tlab-body {
 flex: 1;
+min-height: 0;
 overflow-y: auto;
+overscroll-behavior: contain;
 padding: 9px 11px 11px;
 display: flex;
 flex-direction: column;
@@ -4324,8 +4327,11 @@ color: #8fe8ff;
 }
 .tcp-hint { font-size: 12px; color: rgba(239, 232, 216, 0.68); margin-right: auto; }
 .tcp-body {
+flex: 1;
+min-height: 0;
 padding: 14px 16px 16px;
 overflow-y: auto;
+overscroll-behavior: contain;
 display: grid;
 grid-template-columns: repeat(2, minmax(0, 1fr));
 gap: 12px;
@@ -4396,6 +4402,37 @@ flex-wrap: wrap;
 .tcp-ov-row { display: flex; justify-content: space-between; font-size: 11.5px; padding: 1px 0; font-variant-numeric: tabular-nums; }
 @media (max-width: 720px) {
 .tcp-body { grid-template-columns: 1fr; }
+}
+.scr {
+overscroll-behavior: contain;
+-webkit-overflow-scrolling: touch;
+}
+.bpscr {
+overflow-y: auto;
+overflow-x: hidden;
+}
+.bpw {
+height: auto;
+min-height: 100%;
+max-height: none;
+overflow: visible;
+}
+.bpmovedeck {
+overflow-y: auto;
+overscroll-behavior: contain;
+}
+.mb-wrap,
+.bd-wrap,
+.ui-confirm-box,
+.b2d-card-wrap {
+max-height: calc(100vh - 32px);
+overflow-y: auto;
+overscroll-behavior: contain;
+}
+.world-teleport .wt-list,
+.soc-pl {
+min-height: 0;
+overscroll-behavior: contain;
 }
 </style>
 </head>
@@ -18685,7 +18722,7 @@ if (f.t >= 1.15) endSpecial(f);
 });
 Object.assign(ULTS, {
 timestop: { name: '刹那', desc: '长枪拄地，凝神入定，天地为之一滞。漫天枪影泼洒开来，终归于一线寒芒，极速贯穿（140 到 185 伤害）。贯穿得手触发【寒霜贯日】：重置回马枪与枪旋冷却，并令对手陷入 4 秒冰冻迟缓（移速减慢 40%）。',
-begin(f, foe) { f.sp = 'stop'; f.spPose = 'ls_stance'; f.invul = 99; superFreeze = 0.9; superOwner = f; f.spX = f.x; f.hitDone = false; SFX.superOn(); },
+begin(f, foe) { f.sp = 'stop'; f.spPose = 'ls_stance'; f.invul = 99; if (!isLargeTeam()) { superFreeze = 0.9; superOwner = f; } f.spX = f.x; f.hitDone = false; if (!isLargeTeam() || f.idx === localIdx()) SFX.superOn(); },
 update(f, foe) {
 if (f.sp === 'stop' && f.t >= 0.45) {
 f.sp = 'sweep'; f.spPose = 'ls_thrust'; f.snap = true;
@@ -36365,27 +36402,41 @@ endEscape(f);
 if (f.ch.passive === 'drunk') f.drunk = Math.min(100, (f.drunk || 0) + 30);
 f.face = faceDir(f, foeOf(f));
 f.meter = 0; f.state = 'special'; f.sp = 'charge'; f.t = 0; f.invul = 99; f.vx = 0; f.spFace = f.face;
-superFreeze = 0.5; superOwner = f; dimA = 1;
-flashA = 0.35; flashRGB = f.look.slash;
+const large = isLargeTeam();
+const isLocal = f.idx === localIdx();
+if (!large) { superFreeze = 0.5; superOwner = f; }
+if (!RESIM) {
+dimA = Math.max(dimA, large ? (isLocal ? 0.28 : 0.14) : 1);
+flashA = Math.max(flashA, large ? (isLocal ? 0.14 : 0.06) : 0.35);
+flashRGB = f.look.slash;
 const ultName = skinUltName(f) || ULTS[f.ch.ult].name;
-say(ultName, 0.9, 'super'); SFX.superOn();
+if (!large || isLocal) {
+say(ultName, large ? 0.65 : 0.9, 'super');
+SFX.superOn();
 const ultPitch = f.ch.stat && f.ch.stat.weight > 1.1 ? 0.8 : 1.15;
 SFX.voiceUlt(ultPitch);
-if (CHAR_RARITY[f.ch.id] === 'legend') { ring(f.x, f.y - 60, 210, '233,196,106', 0.6); ring(f.x, f.y - 60, 150, f.look.slash, 0.5); flashRGB = '233,196,106'; }
-ring(f.x, f.y - 60, 120, f.look.slash, 0.5);
+} else {
+addP({ type: 'callout', text: ultName, x: f.x, y: f.y - 125, life: 0.75, max: 0.75, rgb: f.look.slash || '233,196,106', scale: 1.55 });
+}
+if (CHAR_RARITY[f.ch.id] === 'legend') { ring(f.x, f.y - 60, large ? 150 : 210, '233,196,106', 0.45); ring(f.x, f.y - 60, large ? 105 : 150, f.look.slash, 0.4); if (!large || isLocal) flashRGB = '233,196,106'; }
+ring(f.x, f.y - 60, large ? 96 : 120, f.look.slash, 0.42);
+}
 if (scOn()) { scFire(f, 'ult', foeOf(f)); scFire(foeOf(f), 'foeUlt', f); }
-if (mayhemOn()) {
-shake = Math.max(shake, 32);
-flashA = 0.65;
-flashRGB = '255,225,120';
-ring(f.x, f.y - 60, 320, '255,215,80', 0.7);
+if (mayhemOn() && !RESIM) {
+shake = Math.max(shake, large ? (isLocal ? 10 : 5) : 32);
+flashA = Math.max(flashA, large ? (isLocal ? 0.16 : 0.08) : 0.65);
+if (!large || isLocal) flashRGB = '255,225,120';
+ring(f.x, f.y - 60, large ? 170 : 320, '255,215,80', large ? 0.42 : 0.7);
+if (!large) {
 ring(f.x, f.y - 60, 480, f.look.slash, 0.65);
 slashLine(f.x, f.y - 60, 0, f.look.slash);
 slashLine(f.x, f.y - 60, Math.PI / 2, '255,240,180');
 slashLine(f.x, f.y - 60, rand(-0.7, 0.7), f.look.slash);
-for (let i = 0; i < 30; i++) {
-const a = rand(0, 6.28), v = rand(240, 720);
-addP({ type: 'spark', x: f.x, y: f.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.7, max: 0.7, rgb: i % 2 === 0 ? '255,220,100' : f.look.slash, w: 3.2, drag: 2.5 });
+}
+const spN = large ? 10 : 30;
+for (let i = 0; i < spN; i++) {
+const a = rand(0, 6.28), v = rand(200, large ? 460 : 720);
+addP({ type: 'spark', x: f.x, y: f.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: large ? 0.45 : 0.7, max: large ? 0.45 : 0.7, rgb: i % 2 === 0 ? '255,220,100' : f.look.slash, w: large ? 2.4 : 3.2, drag: 2.5 });
 }
 }
 }
@@ -36792,10 +36843,10 @@ const ev = { e: 'parry', a: def.idx, x: pt[0], y: pt[1] };
 parryVisual(ev); netEmit(ev);
 }
 function parryVisual(ev) {
-const d = fighterByIdx(ev.a);
+const d = fighterByIdx(ev.a), large = isLargeTeam();
 ring(ev.x, ev.y, 110, '255,255,255', 0.35); ring(ev.x, ev.y, 60, d.look.slash, 0.3);
-slashLine(ev.x, ev.y, -0.6, d.look.slash); flashA = Math.max(flashA, 0.35); flashRGB = '255,255,255';
-hitstop = Math.max(hitstop, 0.14); shake = Math.max(shake, 10);
+slashLine(ev.x, ev.y, -0.6, d.look.slash); flashA = Math.max(flashA, large ? 0.1 : 0.35); flashRGB = '255,255,255';
+hitstop = Math.max(hitstop, large ? 0.04 : 0.14); shake = Math.max(shake, large ? 5 : 10);
 camImpact(ev.x, ev.y, 0.26, 0.45);
 addP({ type: 'callout', text: '截', x: ev.x, y: ev.y - 70, life: 0.75, max: 0.75, rgb: '255,225,120', scale: 2.2 });
 SFX.block(); metal(1900, 0.8, 0.1);
@@ -37948,6 +37999,22 @@ if ((isLargeTeam() || isRaid()) && sideFighters(losingTeam).some(f => f.hp > 0))
 M.phase = 'ko'; M.t = 0; M.koWinner = 1 - losingTeam; ev.ko = true;
 }
 function hitStopOf(ev, att) {
+if (isLargeTeam()) {
+const n = allFighters().length;
+const mul = n >= 16 ? 0.14 : (n >= 10 ? 0.2 : 0.28);
+const cap = n >= 16 ? 0.032 : 0.045;
+let hs = 0;
+if (ev.guardBreak) hs = 0.05;
+else if (ev.blk) hs = Math.min(cap * 0.6, ev.hs * 0.5 * mul);
+else if (ev.armor) hs = Math.min(cap * 0.6, ev.hs * 0.45 * mul);
+else {
+hs = Math.min(cap, ev.hs * (att.ch.hitFeel || 1) * mul);
+if (ev.counter) hs = Math.max(hs, Math.min(cap, 0.04));
+if (ev.ko) hs = Math.max(hs, 0.06);
+}
+hitstop = Math.max(hitstop, hs);
+return;
+}
 if (ev.guardBreak) { hitstop = Math.max(hitstop, 0.22); return; }
 if (ev.blk) { hitstop = ev.hs * 0.7; return; }
 if (ev.armor) { hitstop = Math.max(hitstop, ev.hs * 0.6); return; }
@@ -38048,10 +38115,12 @@ addP(atk.ch.id === 'moyu' ? { type: 'ink', x: ev.x, y: ev.y, vx: Math.cos(a) * v
 } }
 if (!ev.blk && !quiet && fighterByIdx(ev.a)) skinHitFX(fighterByIdx(ev.a), ev);
 if (mayhemOn() && !quiet) {
-shake = Math.max(shake, 24);
-flashA = Math.max(flashA, 0.55);
-flashRGB = att.look.slash || '255,215,80';
-ring(ev.x, ev.y, 160, att.look.slash || '255,215,80', 0.42);
+const large = isLargeTeam();
+shake = Math.max(shake, large ? 7 : 24);
+flashA = Math.max(flashA, large ? 0.1 : 0.55);
+if (!large || ev.a === localIdx() || ev.d === localIdx()) flashRGB = att.look.slash || '255,215,80';
+ring(ev.x, ev.y, large ? 115 : 160, att.look.slash || '255,215,80', large ? 0.3 : 0.42);
+if (!large) {
 ring(ev.x, ev.y, 280, '255,240,160', 0.5);
 slashLine(ev.x, ev.y, rand(-0.8, 0.8), att.look.slash);
 slashLine(ev.x, ev.y, rand(-0.8, 0.8), '255,240,160');
@@ -38059,9 +38128,11 @@ if (ev.big || ev.ult) {
 slashLine(ev.x, ev.y, rand(-0.8, 0.8), '255,60,60');
 ring(ev.x, ev.y, 380, '255,220,80', 0.6);
 }
-for (let i = 0; i < 28; i++) {
-const a = rand(0, 6.28), v = rand(280, 720);
-addP({ type: 'spark', x: ev.x, y: ev.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.65, max: 0.65, rgb: i % 2 === 0 ? '255,215,80' : att.look.slash, w: 3.5, drag: 2.6 });
+}
+const spN = large ? 8 : 28;
+for (let i = 0; i < spN; i++) {
+const a = rand(0, 6.28), v = rand(220, large ? 480 : 720);
+addP({ type: 'spark', x: ev.x, y: ev.y, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: large ? 0.4 : 0.65, max: large ? 0.4 : 0.65, rgb: i % 2 === 0 ? '255,215,80' : att.look.slash, w: large ? 2.4 : 3.5, drag: 2.6 });
 }
 }
 if (!quiet && (ev.dd || 0) > 0) {   // 伤害数字：从命中点弹出来往上飘，越重越大
@@ -38559,7 +38630,13 @@ cam.userZoomT = silent ? 0 : 1.2;
 let camPunch = { zoom: 0, x: STAGE_W / 2, y: 0, t: 0, maxT: 0 };
 let camFocusPingT = 0;
 function camImpact(x, y, zoomBoost, duration) {
-if (M.mode === 'watch2v2' || isLargeTeam()) zoomBoost *= 0.6;
+if (isLargeTeam()) {
+if (x !== undefined && Math.abs(x - cam.x) > 420) return;
+zoomBoost = Math.min(zoomBoost * 0.25, 0.08);
+duration = Math.min(duration, 0.22);
+} else if (M.mode === 'watch2v2') {
+zoomBoost *= 0.6;
+}
 if (camPunch.t <= 0 || zoomBoost >= camPunch.zoom) {
 camPunch.zoom = zoomBoost;
 camPunch.x = x !== undefined ? x : cam.x;
@@ -39386,9 +39463,14 @@ const real = Math.min(0.04, (now - last) / 1000); last = now; menuDt = real;
 fpsN++; fpsT += real; if (fpsT >= 0.5) { FPS = Math.round(fpsN / fpsT); fpsN = 0; fpsT = 0; }
 autoQualityTick(now);
 if (!paused) {
+const large = isLargeTeam();
 if (slowmo > 0) slowmo -= real;
 if (typeof swapFreezeTimer !== 'undefined' && swapFreezeTimer > 0) swapFreezeTimer = Math.max(0, swapFreezeTimer - real);
-for (const f of allFighters()) if (!f.hidden && f.state === 'special' && f.sp === 'charge' && f.t < 0.06 && cine.t < 0) { cine.t = 0; cine.owner = f; if (f.idx === localIdx()) MSTAT.ults++; if (AC && MUSIC.gain) { drum(AC.currentTime, 'taiko', 0.8); flute(noteF(12), AC.currentTime + 0.05, 1.1, 0.1); } }
+for (const f of allFighters()) if (!f.hidden && f.state === 'special' && f.sp === 'charge' && f.t < 0.06) {
+if (f.idx === localIdx() && f._ultStatClock !== clock) { f._ultStatClock = clock; MSTAT.ults++; }
+if (!large && cine.t < 0) { cine.t = 0; cine.owner = f; if (AC && MUSIC.gain) { drum(AC.currentTime, 'taiko', 0.8); flute(noteF(12), AC.currentTime + 0.05, 1.1, 0.1); } }
+}
+if (large && cine.t >= 0) { cine.t = -1; cine.owner = null; }
 if (cine.t >= 0) { cine.t += real; if (cine.t > CINE_LEN) { cine.t = -1; cine.owner = null; } }
 updateFireflies(real); updateAim();
 if (TUT && M.mode === 'train' && !paused) tutTick(real);
@@ -39403,11 +39485,16 @@ let n = 0;
 while (acc >= STEP && n < 5) { step(); acc -= STEP; n++; }
 if (n >= 5) acc = 0;
 }
-shake = damp(shake, 0, 10, real);
-shakeDirX = damp(shakeDirX, 0, 14, real);
-shakeDirY = damp(shakeDirY, 0, 14, real);
-flashA = damp(flashA, 0, 8, real);
-dimA = damp(dimA, (superFreeze > 0 || allFighters().some(f => !f.hidden && f.state === 'special')) ? 1 : 0, 10, real);
+if (large) {
+if (shake > 9) shake = 9;
+if (flashA > 0.18) flashA = 0.18;
+}
+shake = damp(shake, 0, large ? 16 : 10, real);
+shakeDirX = damp(shakeDirX, 0, large ? 18 : 14, real);
+shakeDirY = damp(shakeDirY, 0, large ? 18 : 14, real);
+flashA = damp(flashA, 0, large ? 16 : 8, real);
+const anyUlt = superFreeze > 0 || allFighters().some(f => !f.hidden && f.state === 'special');
+dimA = damp(dimA, anyUlt ? (large ? 0.2 : 1) : 0, large ? 14 : 10, real);
 if (announce) {
 announce.t += real;
 if (announce.t >= announce.dur) {
@@ -39532,6 +39619,7 @@ cam.x = clamp(lerp(cam.x, lf.x, 0.35), vw / 2 - 100, STAGE_W + 100 - vw / 2);
 }
 const worldScale = () => (H / 560) * cam.zoom;
 function paperFX() {
+if (isLargeTeam()) return null;
 const f = allFighters().find(x => x && x.state === 'special' && x.ch.ult === 'inkdragon');
 if (!f) return null;
 return { f, a: clamp(f.t / 0.25, 0, 1) * (f.hitDone ? clamp(((f.fuT || 0.95) + 0.5 - f.t) / 0.25, 0, 1) : 1) };
@@ -44320,6 +44408,10 @@ ctx.restore();
 }
 function viewerIdx() { return (M.watchAi || M.mode === 'demo' || M.mode === 'replay' || (M.mode === 'pvp' && !is2v2()) || (M.mode === 'watch2v2' && M.watchAi)) ? -1 : localIdx(); }
 function drawShanshui() {
+if (isLargeTeam()) {
+for (const x of allFighters()) if (x && x.veilT > 0 && x.hp > 0) drawPenglaiMist(x);
+return;
+}
 const f = [A, B].find(x => x && x.state === 'special' && x.sp === 'cast' && x.ch.ult === 'shanshui');   // 起手蓄势那 0.42 秒不画，否则画卷会落两遍
 const vi = viewerIdx(), vf = vi >= 0 ? [A, B][vi] : null;
 for (const x of [A, B]) if (x && x.veilT > 0 && x !== vf && x.hp > 0) drawPenglaiMist(x);
@@ -45474,7 +45566,7 @@ if (ce > 0.01) cineFX(ce);
 { const T = superOwner && superFreeze > 0 && sceneOf(superOwner.skinKey);
 if (T && T.legend) { const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.1, W / 2, H / 2, Math.max(W, H) * 0.7); g.addColorStop(0, `rgba(${T.orbC},0)`); g.addColorStop(1, `rgba(${T.orbC},0.28)`); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); } }
 drawVignette(ce);
-if (flashA > 0.01) { ctx.fillStyle = `rgba(${flashRGB},${flashA * 0.5})`; ctx.fillRect(0, 0, W, H); }
+if (flashA > 0.01) { ctx.fillStyle = `rgba(${flashRGB},${flashA * (isLargeTeam() ? 0.28 : 0.5)})`; ctx.fillRect(0, 0, W, H); }
 drawIdentityEdges(order, sx, sy);
 drawHUD();
 if (typeof drawPhysicsTelemetryHUD === 'function') drawPhysicsTelemetryHUD();
@@ -60981,6 +61073,8 @@ window.addEventListener('mouseup', e => { if (e.button === 0) { if (typeof secre
 cv.addEventListener('wheel', e => {
 if (M.mode === 'demo' || paused || EXT.on || (typeof bastion2dActive === 'function' && bastion2dActive())) return;
 if (document.querySelector('.scr.on')) return;
+if ((typeof teamCmdOpen === 'function' && teamCmdOpen()) || (typeof dummyBarOn === 'function' && dummyBarOn())) return;
+if (document.querySelector('.world-teleport:not(.hidden), .hud-custom-modal[style*="flex"]')) return;
 e.preventDefault();
 const scale = e.deltaMode === 1 ? 0.05 : (e.deltaMode === 2 ? 0.16 : 0.0014);
 const delta = clamp(-e.deltaY * scale, -0.18, 0.18);
@@ -61046,6 +61140,7 @@ refocusGame();
 });
 window.addEventListener('pointerdown', e => {
 if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'SELECT')) return;
+if (e.target && e.target.closest && e.target.closest('#trainLab, #teamCmdPanel, #dummyBar, #trainInspect, #rpBar, .world-teleport, .hud-custom-modal')) return;
 if (M.mode !== 'demo' && !paused && !document.querySelector('.scr.on')) {
 refocusGame();
 }

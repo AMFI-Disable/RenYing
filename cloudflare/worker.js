@@ -2721,8 +2721,8 @@ async function aiTrainingExport(env, after, limit) {
 // 受保护的市场参与、真人与 AI 严格区分及管理接口
 // ===========================================================================
 const AI_USERNAMES_100 = [
-  '6767', '看见你', '墨影清风', '别打我', 'xiaoming9', '清茶', '0419', '晚风轻轻', 'linyi7', '白昼',
-  '8823', '吃口西瓜', 'chen77', '星落', 'k792', '再打一局就睡', 'skycn', '听风', 'm0x3', '菜鸟报道',
+  '6767', '看见你', '不吃香菜', '别打我', 'xiaoming9', 'kk0812', '0419', '晚安玛卡巴卡', 'linyi7', 'yz_07',
+  '8823', '吃口西瓜', 'chen77', '就打一把', 'k792', '再打一局就睡', 'skycn', 'momo酱', 'm0x3', '菜鸟报道',
   'zerok', '阿泽', '9527x', '路过打酱油', 'nova23', '小安', 'a2048', '喝杯奶茶', 'kuro7', '南风',
   'zz77', '熬夜冠军', 'momo123', '北城', 'q1314', '随便玩玩', 'yukis', '晚星', 'x404', '手有点抖',
   'leogg', '半夏', 'n886', '明天再练', 'ace08', '微凉', 'v587', '小透明', 'dusk99', '念安',
@@ -2976,7 +2976,7 @@ function aiRefPrice(itemKey) {
 }
 
 async function ensureAiPlayers(env, now) {
-  const existing = await env.DB.prepare('SELECT uid, status, chronotype, schedule_json, prefs_json, evolution_json, session_until FROM ai_players').all();
+  const existing = await env.DB.prepare('SELECT uid, username, status, chronotype, schedule_json, prefs_json, evolution_json, session_until FROM ai_players').all();
   const rows = (existing && existing.results) || [];
   const byUid = Object.fromEntries(rows.map(r => [r.uid, r]));
   const bj = aiBeijingClock(now);
@@ -2984,6 +2984,12 @@ async function ensureAiPlayers(env, now) {
   let onlineAssigned = rows.filter(r => AI_ONLINE_STATUSES.includes(r.status) && r.session_until > now).length;
   const stmts = [];
   const sampleKeys = Object.keys(C.ITEM || {}).slice(0, 16);
+  const needRename = AI_PLAYER_SEEDS.some(([uid, uname]) => byUid[uid] && byUid[uid].username !== uname);
+  let humanNames = null;
+  if (needRename) {
+    const hRows = (await env.DB.prepare("SELECT LOWER(username) AS u FROM users WHERE password_algo != 'ai-bot-locked'").all()).results || [];
+    humanNames = new Set(hRows.map(x => x.u));
+  }
 
   for (let i = 0; i < AI_PLAYER_SEEDS.length; i++) {
     const [uid, username, profile, activity, chronotype, modes, heroes] = AI_PLAYER_SEEDS[i];
@@ -3026,24 +3032,33 @@ async function ensureAiPlayers(env, now) {
         env.DB.prepare('INSERT OR IGNORE INTO ai_players (uid, username, active, activity_level, behavior_profile, matchmaking_enabled, market_enabled, status, chronotype, schedule_json, prefs_json, evolution_json, current_mode, current_hero, session_until, rest_until, next_market_at, sessions_today, matches_today, training_today, last_active_at, daily_spent, daily_listed, daily_reset_day, updated_at) VALUES (?1, ?2, 1, ?3, ?4, 1, 1, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14, ?15, 0, 0, ?16, 0, 0, ?17, ?16)')
           .bind(uid, username, activity, profile, initStatus, chronotype, JSON.stringify(schedule), JSON.stringify(prefs), JSON.stringify(evo), curMode, curHero, sessionUntil, restUntil, nextMarketAt, AI_ONLINE_STATUSES.includes(initStatus) ? 1 : 0, now, bj.day)
       );
-    } else if (!cur.schedule_json || cur.schedule_json === '{}' || !cur.prefs_json || cur.prefs_json === '{}' || (AI_ONLINE_STATUSES.includes(cur.status) && !cur.session_until)) {
-      // 从旧版迁移过来的 AI 账号：补齐作息与会话计时，并立即分散上下线状态，彻底修复“全部同时在线”
-      const inWin = aiInScheduleWindow(schedule, bj, uid);
-      const initR = aiHash(`${uid}:mig:${bj.day}:${bj.hour}`);
-      let nextStatus = 'offline', sessUntil = 0, restUntil = 0;
-      if (onlineAssigned < targetOnline && inWin && initR < 0.65) {
-        onlineAssigned++;
-        nextStatus = cur.status && AI_ONLINE_STATUSES.includes(cur.status) ? cur.status : 'menu';
-        const sLen = Math.max(8, Math.round((schedule.sessionMin[0] + aiHash(uid + ':slenm') * (schedule.sessionMin[1] - schedule.sessionMin[0])) * 0.6));
-        sessUntil = now + sLen * 60e3;
-      } else if (initR < 0.35) {
-        nextStatus = 'resting';
-        restUntil = now + (schedule.restMin[0] + Math.round(initR * 60)) * 60e3;
+    } else {
+      if (cur.username !== username && (!humanNames || !humanNames.has(username.toLowerCase()))) {
+        const profJson = JSON.stringify({ name: username, isAi: true, behavior: profile, chronotype, owned: prefs.heroes, netWins: 4 + (i % 15), netLosses: 3 + (i % 12) });
+        stmts.push(
+          env.DB.prepare('UPDATE ai_players SET username = ?1, updated_at = ?2 WHERE uid = ?3').bind(username, now, uid),
+          env.DB.prepare("UPDATE users SET username = ?1, profile_json = ?2, updated_at = ?3 WHERE id = ?4 AND password_algo = 'ai-bot-locked'").bind(username, profJson, now, uid)
+        );
       }
-      stmts.push(
-        env.DB.prepare('UPDATE ai_players SET status = ?1, chronotype = ?2, schedule_json = ?3, prefs_json = ?4, evolution_json = ?5, session_until = ?6, rest_until = ?7, next_market_at = ?8, updated_at = ?9 WHERE uid = ?10')
-          .bind(nextStatus, chronotype, JSON.stringify(schedule), JSON.stringify(prefs), JSON.stringify(evo), sessUntil, restUntil, now + schedule.marketCooldownMin * 60e3, now, uid)
-      );
+      if (!cur.schedule_json || cur.schedule_json === '{}' || !cur.prefs_json || cur.prefs_json === '{}' || (AI_ONLINE_STATUSES.includes(cur.status) && !cur.session_until)) {
+        // 从旧版迁移过来的 AI 账号：补齐作息与会话计时，并立即分散上下线状态，彻底修复“全部同时在线”
+        const inWin = aiInScheduleWindow(schedule, bj, uid);
+        const initR = aiHash(`${uid}:mig:${bj.day}:${bj.hour}`);
+        let nextStatus = 'offline', sessUntil = 0, restUntil = 0;
+        if (onlineAssigned < targetOnline && inWin && initR < 0.65) {
+          onlineAssigned++;
+          nextStatus = cur.status && AI_ONLINE_STATUSES.includes(cur.status) ? cur.status : 'menu';
+          const sLen = Math.max(8, Math.round((schedule.sessionMin[0] + aiHash(uid + ':slenm') * (schedule.sessionMin[1] - schedule.sessionMin[0])) * 0.6));
+          sessUntil = now + sLen * 60e3;
+        } else if (initR < 0.35) {
+          nextStatus = 'resting';
+          restUntil = now + (schedule.restMin[0] + Math.round(initR * 60)) * 60e3;
+        }
+        stmts.push(
+          env.DB.prepare('UPDATE ai_players SET status = ?1, chronotype = ?2, schedule_json = ?3, prefs_json = ?4, evolution_json = ?5, session_until = ?6, rest_until = ?7, next_market_at = ?8, updated_at = ?9 WHERE uid = ?10')
+            .bind(nextStatus, chronotype, JSON.stringify(schedule), JSON.stringify(prefs), JSON.stringify(evo), sessUntil, restUntil, now + schedule.marketCooldownMin * 60e3, now, uid)
+        );
+      }
     }
   }
   if (stmts.length) await aiBatchChunked(env, stmts, 40);

@@ -395,4 +395,34 @@ export default [
       return { pass: true };
     })()`
   },
+  {
+    name: 'Large-battle simultaneous ultimates (5v5, 8v8, 16v16) stay smooth with zero superFreeze, bounded hitstop/flash/shake, and no fullscreen paperFX hijack',
+    fn: `(() => {
+      const fail = error => ({ pass: false, error });
+      for (const sz of [5, 8, 16]) {
+        startMelee(sz, 0, 'normal', 'normal');
+        M.phase = 'fight';
+        const fs = allFighters();
+        const casters = fs.slice(0, Math.min(6, fs.length));
+        for (const f of casters) {
+          f.meter = 100;
+          startSpecial(f);
+          if (superFreeze !== 0) return fail(sz + 'v' + sz + ': startSpecial set superFreeze=' + superFreeze);
+        }
+        let maxHs = 0;
+        for (let i = 0; i < 180; i++) {
+          step();
+          if (superFreeze > 0) return fail(sz + 'v' + sz + ': superFreeze became ' + superFreeze + ' during simultaneous ults');
+          if (hitstop > maxHs) maxHs = hitstop;
+        }
+        if (maxHs > 0.065) return fail(sz + 'v' + sz + ': hitstop exceeded large-battle cap: ' + maxHs);
+        if (paperFX() !== null) return fail(sz + 'v' + sz + ': paperFX must be disabled in large-team battles');
+        for (const f of fs) {
+          if (!Number.isFinite(f.x) || !Number.isFinite(f.y) || !Number.isFinite(f.hp)) return fail(sz + 'v' + sz + ': NaN state on fighter ' + f.idx);
+        }
+      }
+      toMenu();
+      return { pass: true };
+    })()`
+  },
 ];

@@ -379,7 +379,7 @@ function render() {
     if (T && T.legend) { const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.1, W / 2, H / 2, Math.max(W, H) * 0.7); g.addColorStop(0, `rgba(${T.orbC},0)`); g.addColorStop(1, `rgba(${T.orbC},0.28)`); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); } }
   // 暗角
   drawVignette(ce);
-  if (flashA > 0.01) { ctx.fillStyle = `rgba(${flashRGB},${flashA * 0.5})`; ctx.fillRect(0, 0, W, H); }
+  if (flashA > 0.01) { ctx.fillStyle = `rgba(${flashRGB},${flashA * (isLargeTeam() ? 0.28 : 0.5)})`; ctx.fillRect(0, 0, W, H); }
   drawIdentityEdges(order, sx, sy);
   drawHUD();
   if (typeof drawPhysicsTelemetryHUD === 'function') drawPhysicsTelemetryHUD();

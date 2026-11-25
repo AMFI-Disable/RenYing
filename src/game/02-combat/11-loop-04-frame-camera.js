@@ -51,9 +51,14 @@ function frameBody(now) {
   fpsN++; fpsT += real; if (fpsT >= 0.5) { FPS = Math.round(fpsN / fpsT); fpsN = 0; fpsT = 0; }
   autoQualityTick(now);
   if (!paused) {
+    const large = isLargeTeam();
     if (slowmo > 0) slowmo -= real;
     if (typeof swapFreezeTimer !== 'undefined' && swapFreezeTimer > 0) swapFreezeTimer = Math.max(0, swapFreezeTimer - real);
-    for (const f of allFighters()) if (!f.hidden && f.state === 'special' && f.sp === 'charge' && f.t < 0.06 && cine.t < 0) { cine.t = 0; cine.owner = f; if (f.idx === localIdx()) MSTAT.ults++; if (AC && MUSIC.gain) { drum(AC.currentTime, 'taiko', 0.8); flute(noteF(12), AC.currentTime + 0.05, 1.1, 0.1); } }
+    for (const f of allFighters()) if (!f.hidden && f.state === 'special' && f.sp === 'charge' && f.t < 0.06) {
+      if (f.idx === localIdx() && f._ultStatClock !== clock) { f._ultStatClock = clock; MSTAT.ults++; }
+      if (!large && cine.t < 0) { cine.t = 0; cine.owner = f; if (AC && MUSIC.gain) { drum(AC.currentTime, 'taiko', 0.8); flute(noteF(12), AC.currentTime + 0.05, 1.1, 0.1); } }
+    }
+    if (large && cine.t >= 0) { cine.t = -1; cine.owner = null; }
     if (cine.t >= 0) { cine.t += real; if (cine.t > CINE_LEN) { cine.t = -1; cine.owner = null; } }
     updateFireflies(real); updateAim();
     if (TUT && M.mode === 'train' && !paused) tutTick(real);
@@ -68,11 +73,16 @@ function frameBody(now) {
       while (acc >= STEP && n < 5) { step(); acc -= STEP; n++; }
       if (n >= 5) acc = 0;
     }
-    shake = damp(shake, 0, 10, real);
-    shakeDirX = damp(shakeDirX, 0, 14, real);
-    shakeDirY = damp(shakeDirY, 0, 14, real);
-    flashA = damp(flashA, 0, 8, real);
-    dimA = damp(dimA, (superFreeze > 0 || allFighters().some(f => !f.hidden && f.state === 'special')) ? 1 : 0, 10, real);
+    if (large) {
+      if (shake > 9) shake = 9;
+      if (flashA > 0.18) flashA = 0.18;
+    }
+    shake = damp(shake, 0, large ? 16 : 10, real);
+    shakeDirX = damp(shakeDirX, 0, large ? 18 : 14, real);
+    shakeDirY = damp(shakeDirY, 0, large ? 18 : 14, real);
+    flashA = damp(flashA, 0, large ? 16 : 8, real);
+    const anyUlt = superFreeze > 0 || allFighters().some(f => !f.hidden && f.state === 'special');
+    dimA = damp(dimA, anyUlt ? (large ? 0.2 : 1) : 0, large ? 14 : 10, real);
     if (announce) {
       announce.t += real;
       if (announce.t >= announce.dur) {
@@ -202,6 +212,7 @@ function updateCamera(dt) {
 const worldScale = () => (H / 560) * cam.zoom;
 // 墨羽大招「符阵」：整张图化作宣纸。返回放符的人和 0~1 的浓淡
 function paperFX() {
+  if (isLargeTeam()) return null;
   const f = allFighters().find(x => x && x.state === 'special' && x.ch.ult === 'inkdragon');
   if (!f) return null;
   return { f, a: clamp(f.t / 0.25, 0, 1) * (f.hitDone ? clamp(((f.fuT || 0.95) + 0.5 - f.t) / 0.25, 0, 1) : 1) };

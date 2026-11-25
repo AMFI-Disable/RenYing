@@ -867,4 +867,14 @@ section('持久化 AI 玩家生态：100 账号、UTC+8 昼夜节律（20~30 在
   const evolved = await adm('POST', '/api/admin/ai-players/update', { tick: true, simHour: 22, withMarket: true, why: '测试跨日演化与市场' });
   const ai02Ev = evolved.list.find(x => x.uid === 'ai_02');
   ok(evolved.ok && ai02Ev.evolution && ai02Ev.evolution.lastEvolvedDay > 0, '跨日演进更新 AI 长期演化状态与心境', ai02Ev.evolution);
+
+  // 前 25 名 AI 玩家使用现代真实昵称，且旧库中的旧昵称在 ensureAiPlayers 时自动安全更名（不与真人重名）
+  const first25 = evolved.list.slice(0, 25);
+  ok(first25[0].uid === 'ai_01' && first25[0].username === '6767' && first25[1].username === '看见你' && first25[2].username === '不吃香菜' && first25[7].username === '晚安玛卡巴卡' && first25[17].username === 'momo酱', '前 25 名 AI 昵称采用现代自然玩家风格', first25.slice(0, 8).map(x => x.username));
+  ENV.DB.raw.prepare("UPDATE ai_players SET username = '旧武侠名03' WHERE uid = 'ai_03'").run();
+  ENV.DB.raw.prepare("UPDATE users SET username = '旧武侠名03' WHERE id = 'ai_03' AND password_algo = 'ai-bot-locked'").run();
+  const synced = await adm('GET', '/api/admin/ai-players');
+  const ai03Row = row("SELECT username, password_algo FROM users WHERE id = 'ai_03'");
+  const ai03List = synced.list.find(x => x.uid === 'ai_03');
+  ok(ai03List && ai03List.username === '不吃香菜' && ai03Row && ai03Row.username === '不吃香菜' && ai03Row.password_algo === 'ai-bot-locked', '旧库中前 25 名 AI 账号自动安全更名并保持 AI 身份标识', { list: ai03List && ai03List.username, db: ai03Row });
 }

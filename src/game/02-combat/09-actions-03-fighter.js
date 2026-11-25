@@ -68,27 +68,42 @@ function startSpecial(f) {
   if (f.ch.passive === 'drunk') f.drunk = Math.min(100, (f.drunk || 0) + 30);
   f.face = faceDir(f, foeOf(f));
   f.meter = 0; f.state = 'special'; f.sp = 'charge'; f.t = 0; f.invul = 99; f.vx = 0; f.spFace = f.face;
-  superFreeze = 0.5; superOwner = f; dimA = 1;
-  flashA = 0.35; flashRGB = f.look.slash;
-  const ultName = skinUltName(f) || ULTS[f.ch.ult].name;
-  say(ultName, 0.9, 'super'); SFX.superOn();
-  const ultPitch = f.ch.stat && f.ch.stat.weight > 1.1 ? 0.8 : 1.15;
-  SFX.voiceUlt(ultPitch);
-  if (CHAR_RARITY[f.ch.id] === 'legend') { ring(f.x, f.y - 60, 210, '233,196,106', 0.6); ring(f.x, f.y - 60, 150, f.look.slash, 0.5); flashRGB = '233,196,106'; }
-  ring(f.x, f.y - 60, 120, f.look.slash, 0.5);
+  const large = isLargeTeam();
+  const isLocal = f.idx === localIdx();
+  // 大型团战（3v3/5v5/8v8/16v16/四象）多人同时开大时跳过全屏定格，保证战场流畅不卡顿
+  if (!large) { superFreeze = 0.5; superOwner = f; }
+  if (!RESIM) {
+    dimA = Math.max(dimA, large ? (isLocal ? 0.28 : 0.14) : 1);
+    flashA = Math.max(flashA, large ? (isLocal ? 0.14 : 0.06) : 0.35);
+    flashRGB = f.look.slash;
+    const ultName = skinUltName(f) || ULTS[f.ch.ult].name;
+    if (!large || isLocal) {
+      say(ultName, large ? 0.65 : 0.9, 'super');
+      SFX.superOn();
+      const ultPitch = f.ch.stat && f.ch.stat.weight > 1.1 ? 0.8 : 1.15;
+      SFX.voiceUlt(ultPitch);
+    } else {
+      addP({ type: 'callout', text: ultName, x: f.x, y: f.y - 125, life: 0.75, max: 0.75, rgb: f.look.slash || '233,196,106', scale: 1.55 });
+    }
+    if (CHAR_RARITY[f.ch.id] === 'legend') { ring(f.x, f.y - 60, large ? 150 : 210, '233,196,106', 0.45); ring(f.x, f.y - 60, large ? 105 : 150, f.look.slash, 0.4); if (!large || isLocal) flashRGB = '233,196,106'; }
+    ring(f.x, f.y - 60, large ? 96 : 120, f.look.slash, 0.42);
+  }
   if (scOn()) { scFire(f, 'ult', foeOf(f)); scFire(foeOf(f), 'foeUlt', f); }
-  if (mayhemOn()) {
-    shake = Math.max(shake, 32);
-    flashA = 0.65;
-    flashRGB = '255,225,120';
-    ring(f.x, f.y - 60, 320, '255,215,80', 0.7);
-    ring(f.x, f.y - 60, 480, f.look.slash, 0.65);
-    slashLine(f.x, f.y - 60, 0, f.look.slash);
-    slashLine(f.x, f.y - 60, Math.PI / 2, '255,240,180');
-    slashLine(f.x, f.y - 60, rand(-0.7, 0.7), f.look.slash);
-    for (let i = 0; i < 30; i++) {
-      const a = rand(0, 6.28), v = rand(240, 720);
-      addP({ type: 'spark', x: f.x, y: f.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: 0.7, max: 0.7, rgb: i % 2 === 0 ? '255,220,100' : f.look.slash, w: 3.2, drag: 2.5 });
+  if (mayhemOn() && !RESIM) {
+    shake = Math.max(shake, large ? (isLocal ? 10 : 5) : 32);
+    flashA = Math.max(flashA, large ? (isLocal ? 0.16 : 0.08) : 0.65);
+    if (!large || isLocal) flashRGB = '255,225,120';
+    ring(f.x, f.y - 60, large ? 170 : 320, '255,215,80', large ? 0.42 : 0.7);
+    if (!large) {
+      ring(f.x, f.y - 60, 480, f.look.slash, 0.65);
+      slashLine(f.x, f.y - 60, 0, f.look.slash);
+      slashLine(f.x, f.y - 60, Math.PI / 2, '255,240,180');
+      slashLine(f.x, f.y - 60, rand(-0.7, 0.7), f.look.slash);
+    }
+    const spN = large ? 10 : 30;
+    for (let i = 0; i < spN; i++) {
+      const a = rand(0, 6.28), v = rand(200, large ? 460 : 720);
+      addP({ type: 'spark', x: f.x, y: f.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) * v, life: large ? 0.45 : 0.7, max: large ? 0.45 : 0.7, rgb: i % 2 === 0 ? '255,220,100' : f.look.slash, w: large ? 2.4 : 3.2, drag: 2.5 });
     }
   }
 }
@@ -508,10 +523,10 @@ function parry(def, att, pt) {
   parryVisual(ev); netEmit(ev);
 }
 function parryVisual(ev) {
-  const d = fighterByIdx(ev.a);
+  const d = fighterByIdx(ev.a), large = isLargeTeam();
   ring(ev.x, ev.y, 110, '255,255,255', 0.35); ring(ev.x, ev.y, 60, d.look.slash, 0.3);
-  slashLine(ev.x, ev.y, -0.6, d.look.slash); flashA = Math.max(flashA, 0.35); flashRGB = '255,255,255';
-  hitstop = Math.max(hitstop, 0.14); shake = Math.max(shake, 10);
+  slashLine(ev.x, ev.y, -0.6, d.look.slash); flashA = Math.max(flashA, large ? 0.1 : 0.35); flashRGB = '255,255,255';
+  hitstop = Math.max(hitstop, large ? 0.04 : 0.14); shake = Math.max(shake, large ? 5 : 10);
   camImpact(ev.x, ev.y, 0.26, 0.45);
   addP({ type: 'callout', text: '截', x: ev.x, y: ev.y - 70, life: 0.75, max: 0.75, rgb: '255,225,120', scale: 2.2 });
   SFX.block(); metal(1900, 0.8, 0.1);
