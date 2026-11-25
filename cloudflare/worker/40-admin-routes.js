@@ -928,15 +928,6 @@ async function handleAdmin(env, request, path, now, ip) {
     }
     return json({ ok: true, op, gboss: await gbNow(env, now), chron: await chronRead(env) });
   }
-  if (path === '/api/admin/ai-players' && request.method === 'GET') {
-    return json(await aiAdminList(env, now));
-  }
-  if (path === '/api/admin/ai-players/update' && request.method === 'POST') {
-    const ew = needWhy(); if (ew) return ew;
-    const res = await aiAdminUpdate(env, body, who, why, now);
-    if (res instanceof Response) return res;
-    return json(res);
-  }
   return error('Not found', 404);
 }
 

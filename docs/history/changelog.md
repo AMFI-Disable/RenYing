@@ -6,6 +6,10 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+### Removed
+
+- **Persistent AI Player System (`cloudflare/worker/55-ai-players.js`, `cloudflare/worker/50-maintenance-and-presence.js`, `cloudflare/worker/40-admin-routes.js`, `cloudflare/admin.html`, `cloudflare/schema.sql`, `cloudflare/migrations/0013_remove_ai_players.sql`, `tools/tests/econ/30-accounts-and-economy-admin.mjs`)**: completely removed the 500-account persistent AI player system, automated activity schedules, AI-only matchmaking simulation, AI marketplace automation, and Admin AI Players tab/endpoints to eliminate D1 free-tier row-write exhaustion (`D1_ERROR`) and `POST /api/presence` latency spikes; added migration `0013_remove_ai_players.sql` to clean up AI-only records (`password_algo = 'ai-bot-locked'`) and drop `ai_players` while preserving all human player data, anonymous `ai_training_matches` uploads, and client-side gameplay/training bots. Needs a Worker redeploy.
+
 ### Fixed
 
 - **D1 Free-Tier Daily Row-Write Exhaustion & `aiMarketStep` `ReferenceError` (`cloudflare/worker/55-ai-players.js`, `cloudflare/worker/00-runtime-and-http.js`, `cloudflare/wrangler.toml`)**: prevented Cloudflare D1 daily row-write quota exhaustion by (1) throttling `aiPresenceCounts` simulation ticks to 5-minute intervals (`AI_TICK_INTERVAL_MS = 5 * 60e3`) coordinated across Worker isolates via `hit(env, 'ai:tick', ...)`, (2) caching per-isolate `ensureAiPlayers` initialization in a `WeakSet` keyed on `env.DB`, and (3) emitting `UPDATE ai_players` statements in `aiTickSimulation` only for rows whose persisted state actually changed instead of rewriting all 500 AI rows every tick; fixed `ReferenceError: uid is not defined` in `aiMarketStep` by generating market transaction/order IDs with `crypto.randomUUID()`; and added `https://bigbraindevbros.github.io` to `CORS_ORIGINS` alongside `amfi-disable.github.io`. Needs a Worker redeploy.
