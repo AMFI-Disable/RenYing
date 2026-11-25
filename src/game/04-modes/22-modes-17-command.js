@@ -47,6 +47,8 @@ function cmdTacticOf(t) {
 }
 const cmdTacName = id => id ? CMD_TACTICS[id].n : '无令';
 
+const cmdRand = (a, b) => a + grnd() * (b - a);
+
 function cmdRoundInit() {
   M.cmd = null;
   if (!isLargeTeam() || M.watchAi || M.mode === 'demo') return;
@@ -56,9 +58,9 @@ function cmdRoundInit() {
     const members = sideFighters(t);
     const humans = members.filter(f => human.includes(f.ctrl));
     const pool = humans.length ? humans : members;   // 有真人就从真人里随机，没有就从电脑里随机
-    const cmdr = pool[(Math.random() * pool.length) | 0];
+    const cmdr = pool[(grnd() * pool.length) | 0];
     C.team.push({
-      cmdr: cmdr ? cmdr.idx : t, tactic: null, since: clock, nextEval: clock + rand(5, 9), focus: -1, focusT: 0,
+      cmdr: cmdr ? cmdr.idx : t, tactic: null, since: clock, nextEval: clock + cmdRand(5, 9), focus: -1, focusT: 0,
       obs: { cx: 0, spread: 0, focus: 0, n: 0 }, dealt: 0, taken: 0, log: [],
     });
   }
@@ -66,7 +68,7 @@ function cmdRoundInit() {
   for (let t = 0; t < tc; t++) {
     const cmdr = FIGHTERS[C.team[t].cmdr];
     if (cmdr) cmdApplyHp(cmdr);
-    if (!cmdIsHumanTeam(t)) { C.team[t].tactic = CMD_ORDER[(Math.random() * 3) | 0]; C.team[t].log.push(C.team[t].tactic); }
+    if (!cmdIsHumanTeam(t)) { C.team[t].tactic = CMD_ORDER[(grnd() * 3) | 0]; C.team[t].log.push(C.team[t].tactic); }
   }
   for (const f of allFighters()) { f.cmdTgt = -1; f.cmdTgtT = 0; f.cmdHitBy = -1; f.cmdHitT = -99; }
   const lt = localTeam();
@@ -302,8 +304,10 @@ function cmdTabUp() {}
 function cmdTick() {
   const C = M.cmd;
   if (C && M.phase === 'intro') {   // 开战前就能下令：按键在这里处理（fight 阶段由 tryTacticalKeys 处理）
-    const hc = cmdFighter(localTeam());
-    if (hc && human.includes(hc.ctrl) && hc.hp > 0) cmdHandleKeys(hc, hc.ctrl);
+    for (let t = 0; t < C.team.length; t++) {
+      const hc = cmdFighter(t);
+      if (hc && human.includes(hc.ctrl) && hc.hp > 0) cmdHandleKeys(hc, hc.ctrl);
+    }
   }
   if (!C || M.phase !== 'fight') return;
   if (clock - C.obsT >= 0.5) {
@@ -345,18 +349,18 @@ function cmdAiEval(t) {
     const d = Math.abs(C.team[k].obs.cx - me.cx);
     if (d < rd) { rd = d; rival = k; }
   }
-  T.nextEval = clock + rand(11, 18);
-  if (rival < 0) { if (!T.tactic) cmdSet(t, CMD_ORDER[(Math.random() * 3) | 0], false); return; }
+  T.nextEval = clock + cmdRand(11, 18);
+  if (rival < 0) { if (!T.tactic) cmdSet(t, CMD_ORDER[(grnd() * 3) | 0], false); return; }
   const o = C.team[rival].obs, n = Math.max(2, o.n);
   let guess = null;
   if (o.n >= 3 && o.focus >= 0.5) guess = 'spear';
   else if (o.spread > 230 + n * 28) guess = 'raid';
   else if (o.spread < 120 + n * 16) guess = 'wall';
-  if (!guess || Math.random() > skill) guess = CMD_ORDER[(Math.random() * 3) | 0];
+  if (!guess || grnd() > skill) guess = CMD_ORDER[(grnd() * 3) | 0];
   let next = CMD_BEATEN_BY[guess];   // 克制 guess 的战术：guess 被谁克，就选谁
   // 这边正占上风就不换（打得好别折腾）
   const winning = T.dealt > T.taken * 1.3;
-  if (T.tactic && winning && Math.random() < 0.6) next = T.tactic;
+  if (T.tactic && winning && grnd() < 0.6) next = T.tactic;
   T.dealt *= 0.4; T.taken *= 0.4;
   cmdSet(t, next, false);
 }
@@ -397,7 +401,7 @@ function cmdFocusOf(t, list, distance) {
     const s = distance(e, base) - (1 - e.hp / e.maxHp) * 420 - (cmdIs(e) ? 140 : 0);   // 近的、残血的、敌帅优先
     if (s < bs) { bs = s; best = e; }
   }
-  if (best) { T.focus = best.idx; T.focusT = clock + rand(3, 5); }
+  if (best) { T.focus = best.idx; T.focusT = clock + cmdRand(3, 5); }
   return best;
 }
 // 谁正在打我方队友：最近 1.2 秒内打中过队友的敌人
