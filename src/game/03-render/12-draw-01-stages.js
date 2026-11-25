@@ -107,20 +107,6 @@ const STORY_BACKDROPS = {
       }
     }
   },
-  youhuang: {
-    sky: ['#130e20', '#272138', '#533c56', '#2b2941'], mist: '168,118,162', orb: 'moon', orbC: '227,182,215',
-    draw() {
-      ctx.strokeStyle = '#221c2d'; ctx.lineWidth = 5;
-      line([-70, -76], [70, -76]);
-      for (const x of [-69, 69]) line([x, 0], [x, -86]);
-      for (const [x, h, color] of [[-62, 48, '#764365'], [-23, 64, '#454970'], [23, 52, '#855775']]) {
-        ctx.fillStyle = color;
-        ctx.beginPath(); ctx.moveTo(x, -74); ctx.lineTo(x + 30, -74);
-        ctx.quadraticCurveTo(x + 24, -55, x + 33, -74 + h);
-        ctx.lineTo(x - 3, -71 + h); ctx.quadraticCurveTo(x + 4, -43, x, -74); ctx.fill();
-      }
-    }
-  },
   xuanji: {
     sky: ['#0b1226', '#192840', '#3b4968', '#202637'], mist: '113,143,192', orb: 'moon', orbC: '197,218,255',
     draw() {
@@ -133,17 +119,18 @@ const STORY_BACKDROPS = {
       ctx.fillStyle = '#635747'; ctx.fillRect(-4, -55, 8, 17);
     }
   },
-  polang: {
-    sky: ['#0c1a27', '#162f41', '#335365', '#223c4e'], mist: '117,182,197', orb: 'moon', orbC: '183,227,228',
+  qingluan: {
+    sky: ['#0a1d1c', '#163532', '#2f5e56', '#17302d'], mist: '110,210,185', orb: 'moon', orbC: '195,250,235',
     draw() {
-      ctx.strokeStyle = '#78939b'; ctx.lineWidth = 1.5;
-      for (const [y, x] of [[-24, -89], [-14, -103], [-7, -81]]) line([x, y], [x + 172, y]);
-      ctx.fillStyle = '#25323d';
-      ctx.beginPath(); ctx.moveTo(-69, -27); ctx.lineTo(70, -27);
-      ctx.lineTo(48, -7); ctx.lineTo(-44, -7); ctx.fill();
-      ctx.strokeStyle = '#273540'; ctx.lineWidth = 5; line([-13, -27], [-13, -101]);
-      ctx.fillStyle = '#62838c'; ctx.beginPath(); ctx.moveTo(-9, -96);
-      ctx.quadraticCurveTo(17, -76, 43, -39); ctx.lineTo(-9, -39); ctx.fill();
+      ctx.strokeStyle = '#1d3632'; ctx.lineWidth = 5;
+      line([-70, -76], [70, -76]);
+      for (const x of [-69, 69]) line([x, 0], [x, -86]);
+      for (const [x, h, color] of [[-62, 48, '#2b6a5e'], [-23, 64, '#3a8474'], [23, 52, '#286458']]) {
+        ctx.fillStyle = color;
+        ctx.beginPath(); ctx.moveTo(x, -74); ctx.lineTo(x + 30, -74);
+        ctx.quadraticCurveTo(x + 24, -55, x + 33, -74 + h);
+        ctx.lineTo(x - 3, -71 + h); ctx.quadraticCurveTo(x + 4, -43, x, -74); ctx.fill();
+      }
     }
   }
 };

@@ -3528,26 +3528,27 @@ border-radius: 8px !important;
 white-space: nowrap;
 }
 .cx-hero-list {
-display: flex;
-flex-wrap: wrap;
+display: grid;
+grid-template-columns: repeat(10, minmax(0, 1fr));
 gap: 6px;
-max-height: 132px;
-overflow-y: auto;
-padding: 2px 4px 4px 0;
-scrollbar-width: thin;
+max-height: none;
+overflow: visible;
+padding: 2px 0 4px;
 }
 .cx-hero-list .cx-hero-btn {
 display: inline-flex;
 align-items: center;
+justify-content: center;
 gap: 5px;
 font-family: var(--title);
-font-size: 18px;
-padding: 5px 13px;
+font-size: 17px;
+padding: 6px 8px;
 border-radius: 8px;
 cursor: pointer;
 background: rgba(255, 255, 255, 0.04);
 border: 1px solid var(--faint);
 white-space: nowrap;
+min-width: 0;
 transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
 }
 .cx-hero-list .cx-hero-btn:hover {
@@ -3604,11 +3605,11 @@ gap: 6px;
 margin-bottom: 6px;
 }
 .bpgrid {
-max-height: clamp(168px, 31vh, 300px);
-overflow-y: auto;
-padding-right: 4px;
+max-height: none;
+overflow-y: visible;
+padding-right: 0;
 scrollbar-width: thin;
---bp-cols: 9;
+--bp-cols: 10;
 }
 .bpw.has-map {
 grid-template-rows: auto auto auto auto minmax(0, 1fr) auto;
@@ -3751,11 +3752,12 @@ grid-template-columns: repeat(4, minmax(0, 1fr));
 gap: 12px;
 }
 .cx-hero-list {
-max-height: 152px;
+grid-template-columns: repeat(10, minmax(0, 1fr));
+max-height: none;
 }
 .bpgrid {
 --bp-cols: 10;
-max-height: clamp(190px, 34vh, 340px);
+max-height: none;
 }
 }
 @media (min-width: 2200px) {
@@ -3782,25 +3784,29 @@ grid-template-columns: repeat(5, minmax(0, 1fr));
 gap: 16px;
 }
 .cx-hero-list {
-max-height: 180px;
+grid-template-columns: repeat(10, minmax(0, 1fr));
+max-height: none;
 gap: 8px;
 }
 .cx-hero-list .cx-hero-btn {
 font-size: 19px;
-padding: 6px 15px;
+padding: 7px 12px;
 }
 #cxBento {
 grid-template-columns: repeat(6, minmax(0, 1fr));
 gap: 14px;
 }
 .bpgrid {
---bp-cols: 12;
-max-height: clamp(220px, 36vh, 380px);
+--bp-cols: 10;
+max-height: none;
 }
 }
 @media (max-width: 1080px) {
+.cx-hero-list {
+grid-template-columns: repeat(5, minmax(0, 1fr));
+}
 .bpgrid {
---bp-cols: 7;
+--bp-cols: 5;
 }
 }
 @media (max-width: 720px) {
@@ -3811,15 +3817,16 @@ align-items: flex-start;
 margin-left: 0;
 }
 .cx-hero-list {
-max-height: 148px;
+grid-template-columns: repeat(4, minmax(0, 1fr));
+max-height: none;
 }
 .cx-hero-list .cx-hero-btn {
 font-size: 15px;
-padding: 4px 10px;
+padding: 5px 6px;
 }
 .bpgrid {
 --bp-cols: 4;
-max-height: 220px;
+max-height: none;
 }
 .hud-custom-modal .hc-row {
 grid-template-columns: 1fr;
@@ -3949,18 +3956,33 @@ grid-template-columns: repeat(5, minmax(0, 1fr));
 .slots.slots-large.bpl-picks.cols-4 {
 grid-template-columns: repeat(4, minmax(0, 1fr));
 }
+.slots.slots-large.bpl-picks.cols-8 {
+grid-template-columns: repeat(8, minmax(0, 1fr));
+gap: 4px;
+}
 .bps.right .slots.slots-large.bpl-picks {
 flex-direction: unset;
 }
 .slots.slots-large .slot2.bpl-slot {
 width: 100%;
 min-width: 0;
-height: 58px;
+height: 56px;
 border-radius: 8px;
 background: rgba(255, 255, 255, 0.035);
 }
 .bpscr.bp-large-8 .slots.slots-large .slot2.bpl-slot {
-height: 48px;
+height: 46px;
+}
+.bpscr.bp-large-16 .slots.slots-large .slot2.bpl-slot {
+height: 38px;
+border-radius: 6px;
+}
+.bpscr.bp-large-16 .slot2.bpl-slot .bpl-role {
+font-size: 9px;
+padding: 0 3px;
+}
+.bpscr.bp-large-16 .slot2.bpl-slot .lab {
+font-size: 10px;
 }
 .slot2.bpl-slot.filled {
 border-style: solid;
@@ -3991,10 +4013,10 @@ bottom: 1px;
 background: linear-gradient(transparent, rgba(6, 7, 16, 0.85));
 }
 .bpscr.bp-large .bpgrid {
-max-height: clamp(160px, 29vh, 290px);
+max-height: none;
 }
 .bpscr.bp-large .bpbot {
-max-height: clamp(150px, 24vh, 230px);
+max-height: clamp(148px, 23vh, 220px);
 }
 @media (max-width: 1080px) {
 .bpscr.bp-large .bph {
@@ -4323,6 +4345,14 @@ color: #efe8d8;
 overflow: hidden;
 }
 .team-cmd-panel.hidden { display: none; }
+.team-cmd-panel.is-dragging { user-select: none; -webkit-user-select: none; }
+.tcp-box {
+display: flex;
+flex-direction: column;
+flex: 1;
+min-height: 0;
+overflow: hidden;
+}
 .tcp-head {
 display: flex;
 align-items: center;
@@ -4332,7 +4362,10 @@ padding: 12px 16px;
 background: linear-gradient(90deg, rgba(233, 196, 106, 0.16), rgba(16, 20, 38, 0.4));
 border-bottom: 1px solid rgba(233, 196, 106, 0.25);
 flex-wrap: wrap;
+cursor: grab;
+touch-action: none;
 }
+.team-cmd-panel.is-dragging .tcp-head { cursor: grabbing; }
 .tcp-title { display: flex; align-items: center; gap: 8px; }
 .tcp-title b { font-family: var(--title); font-size: 20px; color: #e9c46a; letter-spacing: 0.06em; }
 .tcp-badge {
@@ -4409,6 +4442,36 @@ border-radius: 7px;
 background: rgba(0, 0, 0, 0.28);
 border: 1px solid rgba(255, 255, 255, 0.08);
 flex-wrap: wrap;
+cursor: grab;
+touch-action: none;
+}
+.tcp-mate-row.tcp-dragging,
+.tcp-ov-row.tcp-dragging { opacity: 0.45; border-style: dashed; border-color: #e9c46a; }
+.tcp-drag-grip {
+color: rgba(233, 196, 106, 0.65);
+font-style: normal;
+font-size: 12px;
+letter-spacing: -1px;
+cursor: grab;
+user-select: none;
+}
+.tcp-drag-ghost {
+position: fixed;
+z-index: 1200;
+pointer-events: none;
+padding: 5px 12px;
+border-radius: 99px;
+background: rgba(16, 20, 38, 0.96);
+border: 1.5px solid #e9c46a;
+color: #fff6d6;
+font-size: 12.5px;
+font-weight: 700;
+box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+}
+.tcp-drop-over {
+outline: 2px solid #e9c46a !important;
+background: rgba(233, 196, 106, 0.26) !important;
+box-shadow: 0 0 14px rgba(233, 196, 106, 0.38) !important;
 }
 .tcp-mate-info { display: flex; align-items: center; gap: 7px; font-size: 12.5px; min-width: 140px; }
 .tcp-mate-hp { font-size: 11.5px; color: rgba(239, 232, 216, 0.68); font-variant-numeric: tabular-nums; }
@@ -4417,7 +4480,12 @@ flex-wrap: wrap;
 .tcp-overview { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
 .tcp-team-col { padding: 7px 9px; border-radius: 8px; background: rgba(0, 0, 0, 0.26); border: 1px solid rgba(255, 255, 255, 0.08); }
 .tcp-team-col b { display: block; font-size: 12px; margin-bottom: 5px; }
-.tcp-ov-row { display: flex; justify-content: space-between; font-size: 11.5px; padding: 1px 0; font-variant-numeric: tabular-nums; }
+.tcp-ov-row { display: flex; justify-content: space-between; font-size: 11.5px; padding: 3px 5px; border-radius: 5px; font-variant-numeric: tabular-nums; }
+.tcp-ov-row.tcp-draggable { cursor: grab; touch-action: none; }
+.tcp-ov-row.tcp-draggable:hover { background: rgba(111, 224, 255, 0.12); }
+.tcp-ov-row.tcp-enemy-drop { cursor: pointer; }
+.tcp-ov-row.tcp-enemy-drop:hover { background: rgba(255, 120, 120, 0.14); }
+.tcp-ov-row.is-focus { background: rgba(255, 120, 120, 0.22); border: 1px solid rgba(255, 120, 120, 0.55); }
 @media (max-width: 720px) {
 .tcp-body { grid-template-columns: 1fr; }
 }
@@ -8121,25 +8189,9 @@ liying: { style: 'trickster', range: 1.02, schools: ['ying', 'mo'] },
 cixian: { style: 'control', range: 1.08, schools: ['qi', 'jin'] },
 qianji: { style: 'setplay', range: 1.14, schools: ['feng', 'qi'] },
 chixiao: { style: 'brawler', range: 1.04, schools: ['jin', 'xue'] },
-youhuang: { style: 'footsies', range: 1.16, schools: ['ying', 'feng'] },
 xuanji: { style: 'zoner', range: 1.18, schools: ['qi', 'mo'] },
-polang: { style: 'bulwark', range: 0.9, schools: ['jin', 'mo'] },
-cangming: { style: 'brawler', range: 1.08, schools: ['jin', 'xue'] },
 qingluan: { style: 'zoner', range: 1.12, schools: ['feng', 'qi'] },
 xuanwu: { style: 'bulwark', range: 0.92, schools: ['jin', 'mo'] },
-chiyan: { style: 'brawler', range: 0.92, schools: ['xue', 'jin'] },
-yinhu: { style: 'assassin', range: 0.98, schools: ['ying', 'feng'] },
-yunhe: { style: 'zoner', range: 1.16, schools: ['feng', 'qi'] },
-tiangang: { style: 'bulwark', range: 1.1, schools: ['jin', 'feng'] },
-mojie: { style: 'control', range: 1.14, schools: ['ying', 'mo'] },
-baihe: { style: 'footsies', range: 1.06, schools: ['qi', 'feng'] },
-jinpeng: { style: 'assassin', range: 1.06, schools: ['feng', 'xue'] },
-youming: { style: 'assassin', range: 0.96, schools: ['ying', 'xue'] },
-lingxi: { style: 'control', range: 1.16, schools: ['qi', 'feng'] },
-bawang: { style: 'bulwark', range: 1.02, schools: ['jin', 'xue'] },
-fengling: { style: 'zoner', range: 1.12, schools: ['feng', 'qi'] },
-wuya: { style: 'footsies', range: 1.04, schools: ['jin', 'ying'] },
-danqing: { style: 'control', range: 1.14, schools: ['mo', 'ying'] },
 };
 function aiHeroTactic(id) { return AI_HERO_TACTICS[id] || { style: 'balanced', range: 1, schools: [] }; }
 function aiScrollIds(f) {
@@ -9762,25 +9814,9 @@ liying:    { tip: '留下雾身制造双重剑气，利用换位躲招并打出�
 cixian:    { tip: '灵活切换正负极性，负极吸人连段，正极强力击飞破防。', combo: '右键 磁力牵引 → J J J → Q 换极重击' },
 qianji:    { tip: '操控玄铁傀丸双线夹击，借金丝回拉与反弹角度封锁走位。', combo: 'Q 抛球 → J J → 右键 牵引回抽' },
 chixiao:   { tip: '烈焰火耙压制中近距离，附带灼烧持续消耗对手气血。', combo: 'Q 火耙突刺 → J J → 右键 灼热火轮' },
-youhuang:  { tip: '淬药飞针减速拉扯，再用回纹绞带远距离拽近打一套爆发。', combo: 'Q 淬药飞针 → 右键 绞带牵引 → J J J' },
 xuanji:    { tip: '三臂星规中远距消耗，展开星场聚拢敌人并削减架势条。', combo: 'Q 星火一线 → 右键 聚星力场 → J J' },
-polang:    { tip: '重锚霸体强冲，怒涛震锚重创敌方架势后接破浪突进。', combo: 'Q 怒涛震锚 → 右键 破浪冲锋 → J J' },
-cangming:  { tip: '寒渊重剑滞缓对手，用霸体扛住换血后上挑破防打满连招。', combo: 'Q 寒渊斩 → 右键 裂魂斩 → 空中 J K' },
 qingluan:  { tip: '团队治疗与青鸾风场控场，大招兼顾回血与清场击飞。', combo: 'Q 鸾羽灵风 → 右键 翠风斩 → E 鸾鸣九霄' },
 xuanwu:    { tip: '高耐力铁壁坦克，站稳据点用重锤震地与护盾反震拖垮敌军。', combo: 'Q 玄甲震岳 → 右键 龟盾反震 → 重击(U)' },
-chiyan:    { tip: '炽烈拳套贴身猛攻，靠多段灼烧连拳和升龙爆发压制对手。', combo: 'J J J → Q 爆炎冲拳 → 右键 陨火升龙' },
-yinhu:     { tip: '极速影刃绕后刺杀，利用狐步闪烁规避集火并收割残血。', combo: 'Q 幻月闪 → J J J → 右键 银月交叉斩' },
-yunhe:     { tip: '御风滞空支援，从高空发射穿透鹤羽掩护队友推进与抢旗。', combo: 'W 腾空 → Q 云岚羽芒 → 右键 仙鹤旋风' },
-tiangang:  { tip: '阵地长枪先锋，霸体顶住火力并用连环枪影刺穿敌方前排。', combo: 'Q 天罡穿阵 → J J J → 右键 破军重刺' },
-mojie:     { tip: '长毫玄墨封锁走位，用高硬直墨波控制战场再接重笔点杀。', combo: 'Q 玄墨波 → 右键 断魂点印 → J J' },
-baihe:     { tip: '高频细剑突刺，靠极致移速拉扯身位并寻找冰霜破防时机。', combo: 'Q 冰河突刺 → J J J → 右键 霜华回闪' },
-jinpeng:   { tip: '制空突击好手，借高台起跳高速俯冲切入敌阵打乱阵型。', combo: 'W 腾跃 → Q 金翅俯冲 → 右键 烈风翼斩' },
-youming:   { tip: '暗影镰刀聚拢收割，多目标残血时直接切入引爆冥域斩。', combo: 'Q 幽冥步 → 右键 噬魂镰阵 → J J J' },
-lingxi:    { tip: '灵笛音波跨层控场，减速敌军并配合队友完成集火留人。', combo: 'Q 清音震荡 → 右键 灵犀曲波 → E 心音幻境' },
-bawang:    { tip: '重剑霸王强行破阵，凭借高体重与重劈高额破防压制前排。', combo: 'Q 霸王冲锋 → 重击(U) → 右键 裂地重劈' },
-fengling:  { tip: '轻盈双风扇游走辅助，兼具团队回复与双道旋风击退护航。', combo: 'Q 风铃清音 → 右键 樱风旋 → E 万铃和鸣' },
-wuya:      { tip: '居合瞬拔反制流，静待对手进攻一瞬拔刀闪穿并收鞘引爆。', combo: 'Q 居合闪 → J J J → 右键 剑气瞬拔' },
-danqing:   { tip: '丹青画卷多弹道控场，在混战中远程泼墨压制大片敌军。', combo: 'Q 丹青泼墨 → 右键 山河画卷 → J J' },
 };
 const DIFFICULTIES = [
 {
@@ -15035,7 +15071,8 @@ passiveName: '离魂', passiveDesc: '能把一缕魂留在原地化作雾身（�
 stat: { hp: 815, walk: 1.0, speed: 0.92, dmg: 1.0, reach: 1.0, swing: 0.9, jump: 1.0, weight: 0.95, defRating: 1.0, guardMax: 95, guardStab: 1.0, guardChip: 0.10, guardRegen: 28, poise: 1.0, size: 0.95 }, hitFeel: 0.85,
 jumps: 1,
 clone: { max: 10, life: 15, leash: 0, hp: 120, subHp: 60, swapSeal: 0.1, swapLand: 0.08, swapInvul: 0.12, swapArmor: 0.25, swapFreeze: 0.5, swapPathDmg: 65, swapPathPad: 30, breakMeter: 5, waveDmg: 4, waveGuardMul: 0, shadowMarkMax: 25, shadowBurstDmg: 85, shadowExecDmg: 75, shadowExecWindow: 5.0 },
-look: { body: '#1c2a30', shade: '#0e171b', outline: '#7fd6e0', outlineA: .85, scarf: '#5cc8d6', slash: '120,215,225', blade: '#e6fbff', head: 'ponytail', weapon: 'sword' },
+look: { body: '#1c2a30', shade: '#0e171b', outline: '#7fd6e0', outlineA: .85, scarf: '#5cc8d6', slash: '120,215,225', blade: '#e6fbff', hair: '#122026', head: 'mist-veil', weapon: 'willowsaber' },
+profile: { weapon: '雁翎弯刀', bio: '千雾泽孤行刀客，以弧刃雁翎弯刀裁雾留魂，借雾身虚实易位破阵。' },
 ai: { range: [80, 200] }, beats: ['tieshan', 'gouchen'], weakTo: ['lingque', 'yanling'] },
 forest: {
 title: '离影传 · 雾泽寻踪', place: '千雾泽',
@@ -15182,10 +15219,10 @@ id: 'chixiao', skin: 'ch', en: 'Chi Xiao',
 bal: { normal: 0.92, skill: 0.94, ult: 0.95, cd: 1.0, hp: 0.96 },
 char: {
 name: '炽霄', role: "巡火人", diff: 2, escCD: 7.5,
-skill: 'flamehalberd', skill2: 'blazering', ult: 'skyfall', passive: 'armor',
+skill: 'flamehalberd', skill2: 'blazering', ult: 'skyfall', passive: 'scorch',
 profile: { weapon: "三齿火耙", bio: "炽霄曾在百炉坊烧饼，现在带街坊巡火。她说话像报更，句句要人答应；每救出一个人，就在火耙柄上刻一道线。" },
-passiveName: '炉火护身',
-passiveDesc: '重击与蓄力攻击附带短暂霸体；Q 烈焰突刺与 R 炎轮扫荡命中后点燃对手。',
+passiveName: '余烬灼烧',
+passiveDesc: '重击、蓄力斩与技能命中均会点燃对手；攻击燃烧目标时额外造成 12% 灼烧伤害并缩短技能冷却 0.5 秒。',
 stat: { hp: 860, walk: 0.96, speed: 0.95, dmg: 1.04, reach: 1.12, swing: 0.9, jump: 1.0, weight: 1.15, defRating: 1.08, guardMax: 110, guardStab: 1.05, guardChip: 0.08, guardRegen: 27, poise: 1.12, size: 1.04 },
 hitFeel: 1.05,
 look: { body: '#3b1c18', shade: '#1f0d0a', outline: '#ff7a45', outlineA: 0.9, scarf: '#ff4d2e', slash: '255,115,65', blade: '#ffe6d0', hair: '#1d1210', head: 'fire-band', weapon: 'firerake' },
@@ -15232,68 +15269,14 @@ rescue: { title: "把钥匙留下", text: [["", "百炉坊烧掉了三间店。�
 ] },
 });
 defHero({
-id: 'youhuang', skin: 'yu', en: 'You Huang',
-bal: { normal: 0.94, skill: 0.95, ult: 0.94, cd: 1.0, hp: 0.94 },
-char: {
-name: '幽篁', role: "试染师", diff: 3, escCD: 7.0,
-skill: 'venomfan', skill2: 'whiplash', ult: 'thicket', passive: 'none',
-profile: { weapon: "回纹绞带", bio: "幽篁在碱湾染坊做过学徒，记药方只认实测。她把带铅坠的捞布绞带练成了兵器，最烦别人说「大概没毒」。" },
-passiveName: '染坊配方',
-passiveDesc: 'Q 幽篁毒针齐射三枚寒针使对手减速，R 回纹缠带从远处将对手拉近。',
-stat: { hp: 790, walk: 1.06, speed: 1.06, dmg: 0.98, reach: 1.08, swing: 1.06, jump: 1.06, weight: 0.88, defRating: 0.94, guardMax: 95, guardStab: 0.96, guardChip: 0.11, guardRegen: 30, poise: 0.92, size: 0.98 },
-hitFeel: 0.86,
-look: { body: '#352238', shade: '#1d1024', outline: '#f4afcc', outlineA: 0.88, scarf: '#c2528c', slash: '245,137,180', blade: '#fce7cc', hair: '#121c16', head: 'silk-ribbon', weapon: 'dyelash' },
-ai: { range: [120, 270] },
-beats: ['tieshan', 'gouchen'], weakTo: ['feiying', 'yanling']
-},
-forest: {
-title: "幽篁传 · 一缸坏蓝", place: "碱湾染坊",
-synopsis: "碱湾新染料入水变黑，封缸的妖物沿排水渠冒了出来。幽篁带上试纸和绞带，要留一份活证。",
-stageNames: ["取水试色", "封沟隔染", "绞带翻缸", "晾场截污", "留样作证"],
-waveDialogues: [
-"幽篁：「先取样。你倒进去就只剩你的说法了。」",
-"幽篁：「指头变蓝不算中毒。不会弯了才算。」",
-"幽篁：「三枚针是三种剂量。替我记一下，第二枚见效最快。」",
-"幽篁：「我说别碰那缸。好，现在把两只手都举起来给我看。」"
-],
-bossIntro: "幽篁：「你说这水没事？行，拿只白碗来。」"
-},
-saga: {
-title: "幽篁传 · 蓝从何来", motive: "染坊发了新方子，幽篁的师弟照着做，第二天两只手都握不住筷子。",
-nodes: [
-{ place: "碱湾试台", name: "两张纸", fight: { foe: 'moyu', lv: 'easy', goal: 'ko' },
-pre: [["", "墨羽把墨滴在水样里，一张试纸变蓝，一张变灰。"], ["幽篁", "两张都晾着，我要知道哪张先褪色。你守住左边。"]],
-post: [["墨羽", "灰的先褪。那桶水出自夜班。"]] },
-{ place: "晾布架", name: "逆洗", fight: { foe: 'lingque', lv: 'normal', goal: 'survive', time: 45 },
-pre: [["", "凌雀的梭子上挂着一截染坏的布。染坊的人正来收走整批。"], ["幽篁", "借你的梭把样布送过河。我把人拖住。"]],
-post: [["凌雀", "布送过去了。不过排水渠里的颜色更深。"]],
-choice: { q: "原缸可以留作证据，但闸下的污水已经快溢出来了。", opts: [
-{ t: "先藏原缸保住证据", f: "stealth", say: [["幽篁", "带签子一起藏。没有批号，他们会说是我配的。"]] },
-{ t: "先改水道护住下游", f: "direct", say: [["幽篁", "证据以后再找。下游那口井今晚还要有人喝。"]] }] } },
-{ place: "明矾窖", name: "辨味", fight: { foe: 'liying', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [["", "两具雾身守着门。门缝里飘出一股酸味。"], ["离影", "我受托守门。你找谁？"], ["幽篁", "拎药罐的。你若真是雾，最好别先尝。"]],
-post: [["离影", "药罐在窖底。掌柜让我别问，我该问的。"]] },
-{ place: "下游酒摊", name: "停杯", fight: { foe: 'zuixian', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [["", "醉翁正从渠里舀水给酒客煮茶。"], ["幽篁", "锅放下。要比谁先倒，你喝你的，我等你。"]],
-post: [["醉翁", "锅放下了。老朽现在就挨家挨户收水。"]] },
-{ place: "末道滤池", name: "兑方",
-pre: { stealth: [["", "监工拿着同一批染料调出的药，来抢藏在滤池边的原缸。"]],
-direct: [["", "墨羽在滤池边勾出第二道堤。幽篁守着缺口，等他落完最后一笔。"]] },
-fight: { stealth: { foe: 'youhuang', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-direct: { foe: 'moyu', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { stealth: { title: "写清批号", text: [["", "原缸摆到议事桌上，连签子上的指印都还在。"], ["幽篁", "谁配的，谁签。以后连我也一样。"]] },
-direct: { title: "井水无色", text: [["", "原缸里的料冲散了。幽篁带着试纸挨家验井，天亮才收工。"], ["幽篁", "今天的水能喝。明天我还来，记得给我留碗。"]] } } },
-] },
-});
-defHero({
 id: 'xuanji', skin: 'xj', en: 'Xuan Ji',
 bal: { normal: 0.93, skill: 0.95, ult: 0.95, cd: 1.0, hp: 0.95 },
 char: {
 name: '玄机', role: "报时匠", diff: 3, escCD: 7.5,
-skill: 'starorb', skill2: 'gravwell', ult: 'celestial', passive: 'none',
+skill: 'starorb', skill2: 'gravwell', ult: 'celestial', passive: 'gravity',
 profile: { weapon: "三臂星规", bio: "玄机在刻漏城给各街的钟校时，从不接受「差不多」。他用折叠星规观星，随身带着一本小册，专记自己算错的地方。" },
 passiveName: '星枢引力',
-passiveDesc: 'Q 星规流火远程压制，R 天枢重力牵引对手并削减架势，E 星宿归元用连击破阵。',
+passiveDesc: '每第 3 次命中或技能命中都会引动星枢微重力，牵引对手并附带迟缓与额外架势削减。',
 stat: { hp: 810, walk: 1.0, speed: 1.0, dmg: 1.0, reach: 1.05, swing: 0.96, jump: 1.02, weight: 0.96, defRating: 1.0, guardMax: 102, guardStab: 1.0, guardChip: 0.09, guardRegen: 29, poise: 1.0, size: 1.0 },
 hitFeel: 0.92,
 look: { body: '#1b2140', shade: '#0d1126', outline: '#9ea8ff', outlineA: 0.92, scarf: '#6e7bff', slash: '155,170,255', blade: '#eef0ff', hair: '#15182c', head: 'astro-crown', weapon: 'stargauge' },
@@ -15340,130 +15323,24 @@ channel: { title: "一年一刻", text: [["", "以后每年有一夜，全城停
 ] },
 });
 defHero({
-id: 'polang', skin: 'pl', en: 'Po Lang',
-bal: { normal: 0.92, skill: 0.94, ult: 0.94, cd: 1.0, hp: 0.96 },
-char: {
-name: '破浪', role: "捞船人", diff: 2, escCD: 8.0,
-skill: 'tidalslam', skill2: 'undertow', ult: 'maelstrom', passive: 'armor',
-profile: { weapon: "燕尾救生锚", bio: "破浪小时候靠一根空船绳活下来，如今在回头湾捞船也捞人。他一害怕就笑得格外响，还给每条靠岸的船起外号。" },
-passiveName: '沧澜重锚',
-passiveDesc: '重击与蓄力攻击附带短暂霸体；Q 怒涛震锚重创架势并挑飞对手，R 破浪突进携霸体冲锋。',
-stat: { hp: 900, walk: 1.0, speed: 0.9, dmg: 1.06, reach: 1.1, swing: 0.86, jump: 1.04, weight: 1.18, defRating: 1.08, guardMax: 120, guardStab: 1.1, guardChip: 0.07, guardRegen: 26, poise: 1.2, size: 1.08 },
-hitFeel: 1.12,
-look: { body: '#193545', shade: '#0c1c26', outline: '#54d8ff', outlineA: 0.9, scarf: '#2ca8d8', slash: '80,210,255', blade: '#dff8ff', hair: '#142028', head: 'wave-visor', weapon: 'rescueanchor' },
-ai: { range: [75, 215] },
-beats: ['feiying', 'chixiao'], weakTo: ['youhuang', 'xuanji']
-},
-forest: {
-title: "破浪传 · 空船回信", place: "回头湾",
-synopsis: "回头湾漂来一队无人渡船，船底却缠着活人的求救绳。破浪卸下救生锚，一条条把船拉回浅滩。",
-stageNames: ["空船撞岸", "水底牵绳", "双钩挂礁", "接人上滩", "退潮数船"],
-waveDialogues: [
-"破浪：「这艘叫漏勺。漏勺，你给我浮稳了。」",
-"破浪：「绳子扯三下就是有人。扯四下是我没听清。」",
-"破浪：「哈哈哈。听见我笑就把绳攥紧点。」",
-"破浪：「一个个上岸。谁说自己不怕，谁就先帮我扶梯子。」"
-],
-bossIntro: "破浪：「老伙计，把绳借我。水底那位脾气大，咱们别跟他客气。」"
-},
-saga: {
-title: "破浪传 · 捞错一条船", motive: "撤渡那年，破浪亲手割过一条拖绳。如今同一条船空着漂回来，舱里多了正在划动的桨。",
-nodes: [
-{ place: "回头湾旧埠", name: "认船", fight: { foe: 'qingfeng', lv: 'easy', goal: 'ko' },
-pre: [["", "青锋拦下空船，船头露出一道补过的裂痕。"], ["破浪", "是歪嘴。裂的那边是我补的。她还肯回来骂我，真好。"]],
-post: [["青锋", "桨还在划。去看一眼吧，我替你拴住。"]] },
-{ place: "双绳浮桥", name: "回拉", fight: { foe: 'gouchen', lv: 'normal', goal: 'survive', time: 45 },
-pre: [["", "勾陈的链钩扯住了浮桥。每一道浪都把桥往外推一寸。"], ["破浪", "链子借我受个力。你别收劲，让我试试锚会不会脱。"]],
-post: [["勾陈", "锚没脱。可旧渡口和这浮桥，你只能先挂一边。"]],
-choice: { q: "先走旧渡道能赶到空船旁，先系浮桥能给幸存者留一条退路。", opts: [
-{ t: "沿旧渡道追船", f: "eye", say: [["破浪", "这回我上船。该听谁骂，我就在那儿听。"]] },
-{ t: "先把浮桥系牢", f: "beacon", say: [["破浪", "骂我可以等。过桥的人等不了。"]] }] } },
-{ place: "倒潮闸口", name: "等风", fight: { foe: 'liuyun', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [["", "流云站在闸上，风把绳吹得笔直。"], ["破浪", "别把风都收了。绳子松了，我就摸不到回去的路。"]],
-post: [["流云", "我留一股横风。你沿绳走，别顺浪漂。"]] },
-{ place: "翻壳船坞", name: "报数", fight: { foe: 'tieshan', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [["", "铁山顶住翻过来的船壳，下面还有人在敲木板。"], ["破浪", "扛得住多久？说实数。我会笑，手会抖，数不会错。"]],
-post: [["铁山", "够你回返一趟。用你那双钩，别再割绳。"]] },
-{ place: "风眼系缆柱", name: "收绳",
-pre: { eye: [["", "歪嘴船上站着年少的破浪，刀已架在湿透的拖绳上。"]],
-beacon: [["", "勾陈守着桥外一头。破浪扛住内侧浪涌，等众人全部走过浮桥。"]] },
-fight: { eye: { foe: 'polang', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-beacon: { foe: 'gouchen', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { eye: { title: "空船有名", text: [["", "破浪握住自己的手，把刀放下。退潮时，他拖回了歪嘴和满船的旧渡票。"], ["破浪", "往后叫她回来的船。歪嘴这名字，也留着。"]] },
-beacon: { title: "桥上满员", text: [["", "空船不见了，浮桥上却挤满了人。有人问破浪要收多少渡钱。"], ["破浪", "一人喊一声到。听齐了我就收摊。"]] } } },
-] },
-});
-defHero({
-id: 'cangming', skin: 'cm', en: 'Cang Ming', archetype: 'swordsman',
-bal: { normal: 0.93, skill: 0.95, ult: 0.95, cd: 1.0, hp: 0.96 },
-char: {
-name: '苍冥', role: '寒渊剑宗', diff: 2, escCD: 7.5,
-skill: 'abyssslash', skill2: 'soulrift', ult: 'eclipsecleave', passive: 'armor',
-passiveName: '寒渊重剑',
-passiveDesc: '重击与蓄力斩附带短暂霸体；Q 寒渊斩挥出寒渊剑气并迟缓对手，R 裂魂斩蓄势上挑破防浮空。',
-stat: { hp: 875, walk: 0.95, speed: 0.92, dmg: 1.05, reach: 1.12, swing: 0.88, jump: 0.98, weight: 1.18, defRating: 1.08, guardMax: 112, guardStab: 1.08, guardChip: 0.08, guardRegen: 26, poise: 1.15, size: 1.05 },
-hitFeel: 1.08,
-look: { body: '#182438', shade: '#0b121e', outline: '#6ec4ff', outlineA: 0.9, scarf: '#2b6cb0', slash: '110,196,255', blade: '#e0f4ff', hair: '#d8e8f8', head: 'abyss-mane', weapon: 'abyssblade' },
-ai: { range: [95, 235] },
-beats: ['qingfeng', 'qianji'], weakTo: ['feiying', 'lingque']
-},
-forest: {
-title: '苍冥传 · 寒渊斩魔', place: '寒渊剑冢',
-synopsis: '寒渊剑冢封印松动，幽冥群妖蜂拥而出。苍冥背负寒渊重剑独镇谷口，誓以霜寒剑意斩灭邪魔！',
-stageNames: ['渊雪初降', '霜锋试刃', '裂魂破阵', '幽谷寒潮', '冥渊镇魔'],
-waveDialogues: [
-'苍冥：「寒渊剑冢乃清净之地，群妖速速退散！」',
-'苍冥：「重剑无锋，寒意入骨，接我一记寒渊斩！」',
-'苍冥：「区区魔影也敢扰动剑冢灵脉？」',
-'苍冥：「剑意已聚，今日便令尔等葬身渊底！」'
-],
-bossIntro: '苍冥：「融魂魔首，你身上的浊气玷污了寒渊，接我冥蚀断渊！」'
-},
-saga: {
-title: '苍冥传 · 霜剑誓', motive: '寒渊剑宗世代镇守的渊底古碑突现裂痕，苍冥携重剑出山追查异变根源。',
-nodes: [
-{ place: '寒渊山门', name: '雪启', fight: { foe: 'qingfeng', lv: 'easy', goal: 'ko' },
-pre: [['', '风雪漫山，苍冥负剑而立，青锋迎面走来。'], ['青锋', '寒渊剑宗闭山十年，今日出山所为何事？'], ['苍冥', '渊碑生变，恕难久留，请借路一试剑意。']],
-post: [['青锋', '好沉的寒剑！南边雪原近日确有异动。'], ['苍冥', '多谢告知，苍冥告辞。']] },
-{ place: '冻月荒原', name: '霜途', fight: { foe: 'lingshuang', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '冻月荒原寒雾弥漫，凌霜持枪挡在冰桥之上。'], ['凌霜', '此地寒气反常，你这柄重剑脱不了干系！'], ['苍冥', '寒气源自渊底残碑，容我压住你枪势再细说！']],
-post: [['凌霜', '剑意纯粹凛冽，倒是我错怪你了。']],
-choice: { q: '荒原尽头分作两路：左通冰裂古祭坛，右通受寒雾围困的村落。', opts: [
-{ t: '直赴古祭坛查明碑纹', f: 'altar', say: [['苍冥', '唯有先查明古碑异变，方能彻底平息寒灾。']] },
-{ t: '先入村落护送百姓撤离', f: 'village', say: [['苍冥', '剑宗立世以护民为先，先救百姓脱险！']] }] } },
-{ place: '断冰栈道', name: '凛斩', fight: { foe: 'tieshan', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '险峻冰栈上，铁山横刀截住去路。'], ['铁山', '听说寒渊重剑力压群雄，正好比比谁的刃更沉！'], ['苍冥', '既如此，接我裂魂一斩！']],
-post: [['铁山', '痛快！前头寒渊深处寒气逼人，小心些。']] },
-{ place: '冥渊前廊', name: '幽影', fight: { foe: 'liying', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '幽蓝雾气在古廊翻涌，离影自影中缓步现身。'], ['离影', '寒渊里的秘密，可不是一把重剑就能斩开的。'], ['苍冥', '魑魅伎俩，一剑破之！']],
-post: [['离影', '剑气竟能冻住雾身……你进去吧。']] },
-{ place: '寒渊祭坛', name: '镇渊',
-pre: { altar: [['', '古碑裂口黑气喷涌，寒渊心魔凝形而出。'], ['苍冥', '以寒渊剑意重铸古印，斩！']],
-village: [['', '村民已安然撤离，渊底魔影却趁机破封。'], ['苍冥', '百姓无恙，今日便与你决一死战！']] },
-fight: { altar: { foe: 'cangming', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-village: { foe: 'lingshuang', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { altar: { title: '重剑镇渊', text: [['', '裂碑重归完整，寒渊风雪渐歇。'], ['苍冥', '剑在渊宁，霜雪常清。']] },
-village: { title: '霜心护世', text: [['', '劫后余生的村民在山脚燃起灯火。'], ['苍冥', '守碑亦守人，此行无愧剑心。']] } } },
-] },
-});
-defHero({
 id: 'qingluan', skin: 'ql', en: 'Qing Luan', archetype: 'support',
 bal: { normal: 0.94, skill: 0.95, ult: 0.94, cd: 1.0, hp: 0.95 },
 char: {
-name: '青鸾', role: '翠羽医扇', diff: 2, escCD: 7.0,
-skill: 'jadebreeze', skill2: 'luanheal', ult: 'phoenixchorus', passive: 'counter',
-passiveName: '翠羽济世',
-passiveDesc: '灵巧善守的杏林医者；Q 翠羽清风挥出翠风击退并迟缓对手，R 鸾羽回春调息回血并震开贴身之敌。',
-stat: { hp: 800, walk: 1.04, speed: 1.02, dmg: 0.96, reach: 1.02, swing: 1.02, jump: 1.04, weight: 0.9, defRating: 1.0, guardMax: 102, guardStab: 1.02, guardChip: 0.09, guardRegen: 32, poise: 0.98, size: 0.97 },
+name: '青鸾', role: '翠羽铃医', diff: 2, escCD: 7.0,
+skill: 'jadebreeze', skill2: 'luanheal', ult: 'phoenixchorus', passive: 'soothe',
+profile: { weapon: '药灯铃杖', bio: '青鸾药谷传人，以悬灯翠羽铃杖行医济世；清铃起风时既可涤荡邪瘴，也能驰援护佑同袍。' },
+passiveName: '铃风济世',
+passiveDesc: '团队医辅核心；施放 Q/R/E 时震响药灯铃杖，为附近友军提速并回复架势，自身招架反击时亦回血。',
+stat: { hp: 800, walk: 1.04, speed: 1.02, dmg: 0.96, reach: 1.04, swing: 1.02, jump: 1.04, weight: 0.9, defRating: 1.0, guardMax: 102, guardStab: 1.02, guardChip: 0.09, guardRegen: 32, poise: 0.98, size: 0.97 },
 hitFeel: 0.88,
-look: { body: '#163a36', shade: '#0a201e', outline: '#52f0c8', outlineA: 0.9, scarf: '#28c79e', slash: '82,240,200', blade: '#e0fff6', hair: '#182b28', head: 'luan-crest', weapon: 'jadefan' },
+look: { body: '#163a36', shade: '#0a201e', outline: '#52f0c8', outlineA: 0.9, scarf: '#28c79e', slash: '82,240,200', blade: '#e0fff6', hair: '#182b28', head: 'luan-crest', weapon: 'chimestaff' },
 ai: { range: [110, 250] },
-beats: ['chixiao', 'youhuang'], weakTo: ['feiying', 'leiming']
+beats: ['chixiao', 'moyu'], weakTo: ['feiying', 'leiming']
 },
 forest: {
-title: '青鸾传 · 翠扇除瘟', place: '青鸾药谷',
-synopsis: '药谷灵草遭妖瘴侵蚀，瘟气四散。青鸾轻摇翠羽医扇踏入妖林，以清风灵药涤荡魔氛！',
-stageNames: ['药风初起', '翠羽清瘴', '灵扇回春', '百草伏妖', '青鸾济世'],
+title: '青鸾传 · 铃杖除瘟', place: '青鸾药谷',
+synopsis: '药谷灵草遭妖瘴侵蚀，瘟气四散。青鸾轻摇药灯铃杖踏入妖林，以清风灵药涤荡魔氛！',
+stageNames: ['药风初起', '翠羽清瘴', '灵铃回春', '百草伏妖', '青鸾济世'],
 waveDialogues: [
 '青鸾：「药谷灵草不容糟蹋，请诸位退避三舍！」',
 '青鸾：「清风拂面，邪瘴自消，莫要再执迷不悟。」',
@@ -15473,20 +15350,20 @@ waveDialogues: [
 bossIntro: '青鸾：「融魂魔首，你散播的邪毒害苦了谷中生灵，今日便以鸾鸣九霄净你邪祟！」'
 },
 saga: {
-title: '青鸾传 · 翠羽方', motive: '江湖突现无名奇疫，青鸾携青鸾医扇下山采药行医，追寻疫病之源。',
+title: '青鸾传 · 翠羽方', motive: '江湖突现无名奇疫，青鸾携药灯铃杖下山采药行医，追寻疫病之源。',
 nodes: [
 { place: '杏林渡口', name: '问诊', fight: { foe: 'zuixian', lv: 'easy', goal: 'ko' },
-pre: [['', '渡口药香袅袅，醉翁提壶拦在桥头。'], ['醉翁', '小姑娘莫急，老夫以酒克疫，先切磋两招再走！'], ['青鸾', '前辈酒气太重，且看青鸾的清风扇法！']],
+pre: [['', '渡口药香袅袅，醉翁提壶拦在桥头。'], ['醉翁', '小姑娘莫急，老夫以酒克疫，先切磋两招再走！'], ['青鸾', '前辈酒气太重，且看青鸾的清风铃杖！']],
 post: [['醉翁', '好柔韧的风劲！西山药圃近来古怪得很。'], ['青鸾', '多谢前辈指路，晚辈这就去查看。']] },
 { place: '翠微药圃', name: '寻草', fight: { foe: 'liuyun', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '花瓣随风飘落，流云轻摇折扇现身药圃。'], ['流云', '同是用扇之人，让我看看你的医扇有几分火候！'], ['青鸾', '既如此，便以扇会友，请接招！']],
+pre: [['', '花瓣随风飘落，流云轻摇折扇现身药圃。'], ['流云', '听闻你以铃杖御风，让我看看有几分火候！'], ['青鸾', '既如此，便以风会友，请接招！']],
 post: [['流云', '清风化劲，果然名不虚传。']],
 choice: { q: '药圃深处发现两处线索：一处是枯萎的灵泉源头，一处是染疫的商旅营地。', opts: [
 { t: '先查灵泉根除疫源', f: 'spring', say: [['青鸾', '若不截断疫源，只怕更多百姓会染病。']] },
 { t: '先赴营地施药救人', f: 'camp', say: [['青鸾', '救人如救火，先稳住商旅性命要紧！']] }] } },
-{ place: '幽篁山道', name: '解毒', fight: { foe: 'youhuang', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '竹影阴森，幽篁横鞭拦在山道中央。'], ['幽篁', '医者也敢闯毒林？先尝尝我的寒针！'], ['青鸾', '以毒攻毒非正道，看我翠羽清风！']],
-post: [['幽篁', '你的扇风竟能散去毒瘴……往前走吧。']] },
+{ place: '墨林山道', name: '解毒', fight: { foe: 'moyu', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
+pre: [['', '山道墨雾弥漫，墨羽提笔拦在石阶中央。'], ['墨羽', '医者也敢闯瘴林？先接住我的墨符再说！'], ['青鸾', '以瘴封山非正道，看我翠羽清风！']],
+post: [['墨羽', '你的铃风竟能散去墨瘴……往前走吧。']] },
 { place: '古亭药坊', name: '试药', fight: { foe: 'yuxiao', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
 pre: [['', '古亭箫声凄切，玉箫立于石阶之上。'], ['玉箫', '疫气扰心，唯有清音与清风方能安魂，来过招！'], ['青鸾', '请玉先生赐教！']],
 post: [['玉箫', '心静风清，前面便是疫源所在。']] },
@@ -15494,9 +15371,9 @@ post: [['玉箫', '心静风清，前面便是疫源所在。']] },
 pre: { spring: [['', '灵泉黑雾翻滚，疫影化作青鸾模样扑来。'], ['青鸾', '邪不胜正，翠羽回春！']],
 camp: [['', '商旅转危为安，疫源却在灵台凝聚成形。'], ['青鸾', '众生安好，如今该彻底清除你了！']] },
 fight: { spring: { foe: 'qingluan', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-camp: { foe: 'youhuang', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
+camp: { foe: 'moyu', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
 end: { spring: { title: '灵泉清疫', text: [['', '灵泉重现清冽甘甜，山野瘟气一扫而空。'], ['青鸾', '清风拂山岗，人间再无疫苦。']] },
-camp: { title: '仁心济世', text: [['', '商旅康复归乡，沿途传颂翠羽医扇之名。'], ['青鸾', '一扇清风，护得安康便好。']] } } },
+camp: { title: '仁心济世', text: [['', '商旅康复归乡，沿途传颂翠羽铃医之名。'], ['青鸾', '一杖清风，护得安康便好。']] } } },
 ] },
 });
 defHero({
@@ -15504,9 +15381,10 @@ id: 'xuanwu', skin: 'xw', en: 'Xuan Wu', archetype: 'tank',
 bal: { normal: 0.91, skill: 0.94, ult: 0.94, cd: 1.0, hp: 0.97 },
 char: {
 name: '玄武', role: '镇山玄卫', diff: 1, escCD: 8.2,
-skill: 'shellbash', skill2: 'earthfort', ult: 'tortoiseslam', passive: 'armor',
-passiveName: '玄甲不动',
-passiveDesc: '稳如泰山的玄甲重卫；重击附带霸体，Q 玄甲冲撞顶锤突进击退破防，R 镇岳壁垒强化护体霸体并震地反击。',
+skill: 'shellbash', skill2: 'earthfort', ult: 'tortoiseslam', passive: 'shell',
+profile: { weapon: '玄甲重盾', bio: '北境玄岳守关重卫，以玄甲重盾镇守关隘，能借反震之力稳固架势、硬撼千军。' },
+passiveName: '玄甲反震',
+passiveDesc: '重击与技能附带重甲霸体；霸体扛伤时回复 16 点架势并反震近身敌手。',
 stat: { hp: 920, walk: 0.88, speed: 0.88, dmg: 1.0, reach: 1.0, swing: 0.84, jump: 0.94, weight: 1.32, defRating: 1.2, guardMax: 140, guardStab: 1.35, guardChip: 0.04, guardRegen: 32, poise: 1.25, size: 1.1 },
 hitFeel: 1.15,
 look: { body: '#222b26', shade: '#101613', outline: '#8cd48c', outlineA: 0.9, scarf: '#4c7a5a', slash: '140,212,140', blade: '#e4f7dc', hair: '#1b201d', head: 'turtle-crown', weapon: 'bastionshell' },
@@ -15515,11 +15393,11 @@ beats: ['feiying', 'chixiao'], weakTo: ['moyu', 'xuanji']
 },
 forest: {
 title: '玄武传 · 玄甲镇岳', place: '玄岳古关',
-synopsis: '妖潮冲击玄岳古关，山石崩裂。玄武身披玄甲手执镇山重锤，巍然屹立关前寸步不退！',
-stageNames: ['古关列阵', '玄甲御敌', '重锤震岳', '铁壁合围', '镇山伏魔'],
+synopsis: '妖潮冲击玄岳古关，山石崩裂。玄武身披玄甲手执玄甲重盾，巍然屹立关前寸步不退！',
+stageNames: ['古关列阵', '玄甲御敌', '重盾震岳', '铁壁合围', '镇山伏魔'],
 waveDialogues: [
 '玄武：「有我玄武守关，群妖休想踏入半步！」',
-'玄武：「重锤撼地，看看是你们的爪牙硬，还是我的玄甲硬！」',
+'玄武：「重盾撼地，看看是你们的爪牙硬，还是我的玄甲硬！」',
 '玄武：「山岳不动，尔等不过螳臂当车！」',
 '玄武：「妖阵已乱，今日便将你们尽数碾碎！」'
 ],
@@ -15528,9 +15406,9 @@ bossIntro: '玄武：「融魂魔首，来撞撞我这副镇山玄甲吧！」'
 saga: {
 title: '玄武传 · 镇岳铭', motive: '北境玄岳地脉震动，古碑镇山阵摇摇欲坠，玄武奉命巡山查探地裂之因。',
 nodes: [
-{ place: '玄岳山脚', name: '问岳', fight: { foe: 'polang', lv: 'easy', goal: 'ko' },
-pre: [['', '山道碎石滚落，破浪扛着重锚迎面走来。'], ['破浪', '好厚重的甲胄！先让我试试你的下盘稳不稳！'], ['玄武', '沧海重锚？来得正好，接锤！']],
-post: [['破浪', '纹丝不动！山上矿洞刚传来巨响，你快去瞧瞧。'], ['玄武', '多谢相告！']] },
+{ place: '玄岳山脚', name: '问岳', fight: { foe: 'chixiao', lv: 'easy', goal: 'ko' },
+pre: [['', '山道碎石滚落，炽霄扛着三齿火耙迎面走来。'], ['炽霄', '好厚重的玄甲！先让我试试你的下盘稳不稳！'], ['玄武', '百炉坊巡火人？来得正好，接盾！']],
+post: [['炽霄', '纹丝不动！山上矿洞刚传来巨响，你快去瞧瞧。'], ['玄武', '多谢相告！']] },
 { place: '黑石矿道', name: '撼地', fight: { foe: 'gouchen', lv: 'normal', goal: 'survive', time: 45 },
 pre: [['', '矿道深处火光摇曳，勾陈甩动链锤拦住去路。'], ['勾陈', '铁疙瘩走得这么慢，接得住我的锁链吗？'], ['玄武', '任你链锤如雨，我自岿然不动！']],
 post: [['勾陈', '砸得虎口发麻，算你硬气。']],
@@ -15550,695 +15428,6 @@ fight: { core: { foe: 'xuanwu', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste'
 miners: { foe: 'tieshan', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
 end: { core: { title: '玄岳永固', text: [['', '地脉归稳，玄岳古关重归安宁。'], ['玄武', '山岳长存，玄卫不倒。']] },
 miners: { title: '铁甲护生', text: [['', '获救工匠齐声高呼，合众之力重修古阵。'], ['玄武', '护民如护山，这才是玄武之道。']] } } },
-] },
-});
-defHero({
-id: 'chiyan', skin: 'cy', en: 'Chi Yan', archetype: 'fighter',
-bal: { normal: 0.94, skill: 0.95, ult: 0.94, cd: 1.0, hp: 0.95 },
-char: {
-name: '赤焰', role: '焚天拳师', diff: 2, escCD: 7.0,
-skill: 'blazefist', skill2: 'emberupper', ult: 'infernorush', passive: 'combo',
-passiveName: '焚心烈拳',
-passiveDesc: '拳风炽烈的近战猛将；Q 烈焰冲拳疾步轰击引燃对手，R 烬火升龙腾空勾拳挑飞并持续灼烧。',
-stat: { hp: 860, walk: 1.05, speed: 1.06, dmg: 1.03, reach: 0.96, swing: 1.08, jump: 1.05, weight: 1.04, defRating: 1.02, guardMax: 105, guardStab: 1.02, guardChip: 0.09, guardRegen: 29, poise: 1.06, size: 1.02 },
-hitFeel: 1.06,
-look: { body: '#451812', shade: '#240a07', outline: '#ff9638', outlineA: 0.92, scarf: '#ff521b', slash: '255,140,50', blade: '#fff0d6', hair: '#2a0e0a', head: 'flame-spiky', weapon: 'blazegauntlet' },
-ai: { range: [60, 185] },
-beats: ['moyu', 'yuxiao'], weakTo: ['lingshuang', 'xuanji']
-},
-forest: {
-title: '赤焰传 · 烈拳焚妖', place: '炎拳武馆',
-synopsis: '妖众夜袭炎拳武馆，火光冲天。赤焰缠紧赤红拳带冲入敌阵，以焚天双拳打穿群魔！',
-stageNames: ['拳风燃起', '烈焰破围', '烬火连环', '焚天激斗', '赤拳镇魔'],
-waveDialogues: [
-'赤焰：「敢来炎拳馆撒野，先问过我这双拳头！」',
-'赤焰：「热身完毕，接下来可要动真格了！」',
-'赤焰：「拳风如火，烧尽你们这些藏头露尾的妖怪！」',
-'赤焰：「连招不断，火势不熄，全部给我倒下！」'
-],
-bossIntro: '赤焰：「融魂魔首，看我这双焚天铁拳把你轰成灰烬！」'
-},
-saga: {
-title: '赤焰传 · 燃拳路', motive: '炎拳馆失传已久的「焚天拳谱」重现江湖，赤焰踏上武林寻谱试拳之路。',
-nodes: [
-{ place: '烈风演武场', name: '试拳', fight: { foe: 'leiming', lv: 'easy', goal: 'ko' },
-pre: [['', '演武场尘土飞扬，雷鸣双拳带电迎战。'], ['雷鸣', '听说炎拳馆的赤焰出拳比雷还快，来比比！'], ['赤焰', '正合我意，接我烈焰冲拳！']],
-post: [['雷鸣', '拳头真烫手！听说拳谱残页在赤峡客栈露过面。'], ['赤焰', '多谢，我这就去看看！']] },
-{ place: '赤峡客栈', name: '争锋', fight: { foe: 'chixiao', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '客栈门前火星四溅，炽霄提戟挡路。'], ['炽霄', '又是个玩火的？先过我这杆烈焰长戟！'], ['赤焰', '火戟配火拳，正好烧个痛快！']],
-post: [['炽霄', '拳劲刚猛，你这人倒合我胃口。']],
-choice: { q: '客栈掌柜道出线索：拳谱已被分为两半，一半落入黑市拳场，一半藏于古火山庙。', opts: [
-{ t: '闯入黑市拳场夺回残页', f: 'arena', say: [['赤焰', '既然是拳场，那就用拳头把东西赢回来！']] },
-{ t: '直赴古火山庙寻回真本', f: 'temple', say: [['赤焰', '先去火山庙找回师门真本，再算黑市这笔账！']] }] } },
-{ place: '炎石擂台', name: '连击', fight: { foe: 'qianji', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '机关傀儡封锁擂台，千机冷眼俯视。'], ['千机', '血肉之拳也敢碰我的玄铁傀儡？'], ['赤焰', '烧红了照样一拳打穿！']],
-post: [['千机', '好霸道的烈焰拳劲……前面通道打开了。']] },
-{ place: '熔火长廊', name: '破壁', fight: { foe: 'polang', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '热浪滚滚，破浪抡起巨锚拦在廊口。'], ['破浪', '水火不容，接住我这记怒涛震锚！'], ['赤焰', '看我的烬火升龙掀翻你的巨锚！']],
-post: [['破浪', '痛快！后面那关可不简单，挺住！']] },
-{ place: '焚天古殿', name: '登峰',
-pre: { arena: [['', '黑市幕后强敌现身古殿，拳风如飓。'], ['赤焰', '今日便以焚天乱舞，夺回师门拳谱！']],
-temple: [['', '火山神像前烈焰化影，考验炎拳传人。'], ['赤焰', '以我赤心烈拳，承继焚天之道！']] },
-fight: { arena: { foe: 'chiyan', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-temple: { foe: 'leiming', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { arena: { title: '拳震黑市', text: [['', '黑市拳场烟消云散，焚天拳谱重归炎拳馆。'], ['赤焰', '武道在拳，更在堂堂正正！']] },
-temple: { title: '焚天宗师', text: [['', '古殿烈火化作金霞，赤焰悟透焚天真意。'], ['赤焰', '拳焰不熄，江湖再无敌手！']] } } },
-] },
-});
-defHero({
-id: 'yinhu', skin: 'fx', en: 'Yin Hu', archetype: 'assassin',
-bal: { normal: 0.94, skill: 0.95, ult: 0.95, cd: 1.0, hp: 0.93 },
-char: {
-name: '银狐', role: '幻月影刺', diff: 3, escCD: 6.5,
-skill: 'foxstep', skill2: 'miragecut', ult: 'ninestrike', passive: 'stealth',
-passiveName: '幻月狐踪',
-passiveDesc: '身法诡谲的月下刺客；Q 狐步幻移穿影掠至敌后突袭并强化下击，R 幻月双斩凌空双刃连切打断起手。',
-stat: { hp: 785, walk: 1.14, speed: 1.12, dmg: 1.02, reach: 0.96, swing: 1.12, jump: 1.1, weight: 0.84, defRating: 0.92, guardMax: 90, guardStab: 0.94, guardChip: 0.12, guardRegen: 30, poise: 0.9, size: 0.94 },
-hitFeel: 0.86,
-look: { body: '#272038', shade: '#130e1e', outline: '#d4b8ff', outlineA: 0.92, scarf: '#a78bfa', slash: '212,184,255', blade: '#f5f0ff', hair: '#e8e4f5', head: 'silver-ears', weapon: 'foxdaggers' },
-ai: { range: [65, 200] },
-beats: ['xuanji', 'yuxiao'], weakTo: ['tieshan', 'xuanwu']
-},
-forest: {
-title: '银狐传 · 幻月猎妖', place: '幻月幽林',
-synopsis: '残月高悬，妖魅借雾气潜入幻月幽林。银狐戴起狐面手握银月双刃，化影掠林猎杀群魔！',
-stageNames: ['月影潜踪', '狐步穿林', '双刃破雾', '幻夜追猎', '九尾断妖'],
-waveDialogues: [
-'银狐：「月色正好，你们的影子已经出卖了行踪。」',
-'银狐：「看清我的真身了吗？太晚了。」',
-'银狐：「双刃无声，群妖不过是月下猎物！」',
-'银狐：「狐步已至，今夜一个也别想逃！」'
-],
-bossIntro: '银狐：「融魂魔首，躲在暗处这么久，该尝尝九尾绝影的滋味了！」'
-},
-saga: {
-title: '银狐传 · 狐面令', motive: '一枚刻着幻月族徽的密令现身暗市，银狐隐入夜色追查失落族人的下落。',
-nodes: [
-{ place: '夜雾长街', name: '暗影', fight: { foe: 'feiying', lv: 'easy', goal: 'ko' },
-pre: [['', '长街灯火稀疏，屋檐上落下绯影的身影。'], ['绯影', '同行？这枚暗市密令我也盯上了。'], ['银狐', '那便看谁的刀更快吧！']],
-post: [['绯影', '身法真快……密令是从月影楼流出来的。'], ['银狐', '谢了，下次再会。']] },
-{ place: '月影画舫', name: '迷踪', fight: { foe: 'yuehua', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '画舫月光如水，月华手持双月刃拦在船头。'], ['月华', '闯我画舫还戴着狐面，报上名来！'], ['银狐', '借道查人，无意冒犯，接招吧！']],
-post: [['月华', '你的刀光倒有几分月影古族的影子。']],
-choice: { q: '画舫密室查出两份密报：一份指向劫走族人的暗桩，一份指向幕后买主的密会。', opts: [
-{ t: '直扑暗桩先救族人', f: 'rescue', say: [['银狐', '族人安危最重，先拔掉暗桩再说！']] },
-{ t: '潜入密会斩草除根', f: 'syndicate', say: [['银狐', '擒贼先擒王，我要亲手掀翻幕后黑手！']] }] } },
-{ place: '残月石林', name: '狐步', fight: { foe: 'liying', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '石林雾影幢幢，离影自石柱后缓步转出。'], ['离影', '比幻影？你这只小狐狸还嫩了点。'], ['银狐', '那便试试谁的幻术更真！']],
-post: [['离影', '狐步穿雾……确实有点门道。']] },
-{ place: '银霜暗道', name: '绝影', fight: { foe: 'lingque', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '金线封锁暗道，凌雀指间飞梭寒光闪烁。'], ['凌雀', '敢硬闯我的金线阵，胆子不小！'], ['银狐', '双刃断线，看招！']],
-post: [['凌雀', '真难缠的影子……里面的人就在前头。']] },
-{ place: '幻月密殿', name: '明月',
-pre: { rescue: [['', '地牢铁门已开，暗桩首领持双刃堵住退路。'], ['银狐', '带族人走，这里交给我！']],
-syndicate: [['', '密殿烛火摇曳，幕后黑手摘下面具。'], ['银狐', '月下清算，九尾绝影！']] },
-fight: { rescue: { foe: 'yinhu', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-syndicate: { foe: 'feiying', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { rescue: { title: '月影归巢', text: [['', '失散的族人重聚月下，银狐轻轻摘下狐面。'], ['银狐', '只要你们平安，再长的黑夜也值了。']] },
-syndicate: { title: '暗夜清账', text: [['', '幕后密会灰飞烟灭，江湖暗市再无人敢动幻月族。'], ['银狐', '月落无声，账已清矣。']] } } },
-] },
-});
-defHero({
-id: 'yunhe', skin: 'he', en: 'Yun He', archetype: 'support',
-bal: { normal: 0.93, skill: 0.95, ult: 0.94, cd: 1.0, hp: 0.95 },
-char: {
-name: '云鹤', role: '仙羽轻功', diff: 2, escCD: 7.0,
-skill: 'craneglide', skill2: 'cloudmend', ult: 'skywarddance', passive: 'fly',
-passiveName: '仙鹤凌云',
-passiveDesc: '身轻如羽的御风仙客，可凌空滑翔；Q 鹤翼凌空振翅疾掠并射出仙羽，R 云岚沐羽悬空疗伤并震散近身强敌。',
-stat: { hp: 810, walk: 1.08, speed: 1.02, dmg: 0.97, reach: 1.04, swing: 1.02, jump: 1.08, weight: 0.85, defRating: 0.98, guardMax: 98, guardStab: 0.98, guardChip: 0.1, guardRegen: 30, poise: 0.95, size: 0.98 },
-fly: 1.0, hitFeel: 0.88,
-look: { body: '#27384a', shade: '#131d28', outline: '#a8e6ff', outlineA: 0.9, scarf: '#f2d080', slash: '168,230,255', blade: '#ffffff', hair: '#edf6ff', head: 'crane-plume', weapon: 'cranewing' },
-ai: { range: [120, 270] },
-beats: ['tieshan', 'polang'], weakTo: ['lingque', 'yanling']
-},
-forest: {
-title: '云鹤传 · 凌云伏妖', place: '云鹤仙峰',
-synopsis: '黑云蔽日，妖雾漫上云鹤仙峰。云鹤展开仙羽乘风起舞，誓以轻功绝艺驱散漫山妖霾！',
-stageNames: ['云巅初霁', '鹤翼穿雾', '仙羽破阵', '凌风逐妖', '九天澄岚'],
-waveDialogues: [
-'云鹤：「仙峰清静地，岂容妖雾遮天！」',
-'云鹤：「乘风而起，你们连我的衣角都摸不到。」',
-'云鹤：「云岚流转，仙羽所指皆为正道！」',
-'云鹤：「清风已至，群魔该散场了！」'
-],
-bossIntro: '云鹤：「融魂魔首，且看我鹤舞九天，荡尽你这身污浊魔气！」'
-},
-saga: {
-title: '云鹤传 · 听风录', motive: '云鹤仙峰护山风眼骤停，云鹤下山寻访四方风脉，欲重续天地清风。',
-nodes: [
-{ place: '松风崖', name: '起风', fight: { foe: 'yanling', lv: 'easy', goal: 'ko' },
-pre: [['', '崖边松涛阵阵，燕翎收翼落在古松枝头。'], ['燕翎', '同是乘风之辈，让我看看仙峰轻功有多快！'], ['云鹤', '请燕翎兄指教，鹤翼凌空！']],
-post: [['燕翎', '身姿飘逸！东海风口近来死气沉沉，你该去瞧瞧。'], ['云鹤', '多谢指引，云鹤这便启程。']] },
-{ place: '流云渡', name: '问岚', fight: { foe: 'liuyun', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '江面雾气不散，流云立于渡舟之上。'], ['流云', '风势紊乱，连我的折扇都借不到风，你来试试？'], ['云鹤', '以羽引风，请流云兄接招！']],
-post: [['流云', '你的仙羽竟能自生清风，了不得。']],
-choice: { q: '渡口分作两途：高空雷云锁住风眼，低谷商船困于死雾。', opts: [
-{ t: '直上云巅破开雷云', f: 'sky', say: [['云鹤', '先破风眼雷云，天地清风自会重来！']] },
-{ t: '先入低谷引风救船', f: 'valley', say: [['云鹤', '行侠济世岂能袖手，先带商船冲出死雾！']] }] } },
-{ place: '天柱石林', name: '御风', fight: { foe: 'xuanji', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '星阵悬空，玄机转动星仪封锁气脉。'], ['玄机', '风脉异动关乎星象，先过我星枢力场！'], ['云鹤', '星力虽重，难困凌云仙鹤！']],
-post: [['玄机', '好轻灵的身法，风眼就在前峰之上。']] },
-{ place: '断风古桥', name: '清岚', fight: { foe: 'cixian', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '磁石悬空作响，磁仙负手立于桥端。'], ['磁仙', '飞得再高，也逃不出我的磁极牵引！'], ['云鹤', '清风无形，看我破你磁阵！']],
-post: [['磁仙', '顺风借力，果然巧妙，去吧。']] },
-{ place: '九霄风眼', name: '澄空',
-pre: { sky: [['', '云巅狂风倒卷，浊风凝成云鹤虚影。'], ['云鹤', '清浊自分，鹤舞九天！']],
-valley: [['', '商船驶出迷雾，风眼浊气却化作狂岚袭来。'], ['云鹤', '护得人间安渡，再清九霄浊风！']] },
-fight: { sky: { foe: 'yunhe', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-valley: { foe: 'yanling', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { sky: { title: '九霄清岚', text: [['', '乌云散尽，万里长空重现澄澈天光。'], ['云鹤', '清风复归，仙峰无恙。']] },
-valley: { title: '仁风济渡', text: [['', '江上百船齐鸣谢恩，清风吹遍两岸山河。'], ['云鹤', '轻功在身，原该为苍生开路。']] } } },
-] },
-});
-defHero({
-id: 'tiangang', skin: 'tg', en: 'Tian Gang', archetype: 'tank',
-bal: { normal: 0.92, skill: 0.94, ult: 0.95, cd: 1.0, hp: 0.97 },
-char: {
-name: '天罡', role: '破阵铁卫', diff: 2, escCD: 8.0,
-skill: 'gangthrust', skill2: 'ironbulwark', ult: 'heavenbreaker', passive: 'armor',
-passiveName: '天罡铁壁',
-passiveDesc: '军阵出身的铁甲枪卫；重击附带霸体，Q 破阵长驱顶枪霸体突进破防，R 铁壁震枪固守架势并震退近敌。',
-stat: { hp: 910, walk: 0.98, speed: 0.9, dmg: 1.05, reach: 1.28, swing: 0.86, jump: 0.95, weight: 1.28, defRating: 1.08, guardMax: 112, guardStab: 1.12, guardChip: 0.06, guardRegen: 28, poise: 1.1, size: 1.08 },
-hitFeel: 1.12,
-look: { body: '#222b3d', shade: '#111622', outline: '#f0c860', outlineA: 0.92, scarf: '#c83e3b', slash: '240,200,96', blade: '#fff6d6', hair: '#1d1d24', head: 'halberd-plume', weapon: 'gangpike' },
-ai: { range: [100, 250] },
-beats: ['qingfeng', 'feiying'], weakTo: ['moyu', 'youhuang']
-},
-forest: {
-title: '天罡传 · 铁枪破阵', place: '天罡军营',
-synopsis: '妖兵夜袭天罡古营，营垒告急。天罡身着重甲挺起玄铁长枪，单骑破阵誓守军旗不倒！',
-stageNames: ['夜营鸣鼓', '铁壁拒妖', '长驱破阵', '金戈荡寇', '天罡镇营'],
-waveDialogues: [
-'天罡：「军旗在此，妖孽休想越过营门一步！」',
-'天罡：「列阵！看我铁枪挑碎你们的妖阵！」',
-'天罡：「重甲如山，枪出如龙，来多少破多少！」',
-'天罡：「胜负已分，今日便以尔等祭旗！」'
-],
-bossIntro: '天罡：「融魂魔首，你敢犯我天罡营垒，便接我一记天罡破军！」'
-},
-saga: {
-title: '天罡传 · 铁卫令', motive: '边关军饷离奇失踪，天罡奉帅令独行千里，誓查劫饷真凶以安军心。',
-nodes: [
-{ place: '铁马驿站', name: '查踪', fight: { foe: 'chixiao', lv: 'easy', goal: 'ko' },
-pre: [['', '驿站旌旗猎猎，炽霄横戟挡在官道中央。'], ['炽霄', '同为军旅中人，先试过你这杆铁枪的斤两！'], ['天罡', '军务在身，十招之内分胜负！']],
-post: [['炽霄', '枪势沉稳如山！劫饷的马蹄印朝黑风峡去了。'], ['天罡', '多谢兄弟相告！']] },
-{ place: '黑风峡口', name: '破关', fight: { foe: 'lingshuang', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '峡谷寒风凛冽，凌霜长枪斜指拦住山口。'], ['凌霜', '此处已封山，军爷请回吧。'], ['天罡', '军饷关乎十万将士性命，恕难从命，接枪！']],
-post: [['凌霜', '好刚正的枪意，确实不像奸邪之辈。']],
-choice: { q: '峡谷内发现劫匪分兵：一队押运银箱直奔山寨，一队伏击前来接应的粮队。', opts: [
-{ t: '直追银箱端掉贼巢', f: 'vault', say: [['天罡', '夺回军饷捣毁贼巢，方能绝其后患！']] },
-{ t: '回援粮队护住弟兄', f: 'escort', say: [['天罡', '银两可再寻，弟兄性命耽误不得，先救粮队！']] }] } },
-{ place: '断崖寨门', name: '冲阵', fight: { foe: 'gouchen', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '寨门铁索高悬，勾陈冷笑挥动流星锤。'], ['勾陈', '铁卫孤身闯寨？正好拿你试锤！'], ['天罡', '破阵长驱，区区铁链何足挂齿！']],
-post: [['勾陈', '硬吃一锤都不退半步……算你狠。']] },
-{ place: '聚义石台', name: '震军', fight: { foe: 'tieshan', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '石台之上，铁山抱刀而立挡住主殿。'], ['铁山', '想进殿拿人，先破我铁山这一刀！'], ['天罡', '以枪对刀，天罡绝不退缩！']],
-post: [['铁山', '好一条铁骨硬汉，真凶就在殿内。']] },
-{ place: '黑风主殿', name: '归旗',
-pre: { vault: [['', '银箱堆积如山，叛将披甲持枪现身殿中。'], ['天罡', '背叛军魂者，今日以天罡铁枪正法！']],
-escort: [['', '粮队脱困重整旗鼓，叛将恼羞成怒率众杀出。'], ['天罡', '众将随我，天罡破军！']] },
-fight: { vault: { foe: 'tiangang', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-escort: { foe: 'chixiao', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { vault: { title: '铁枪追饷', text: [['', '军饷全数追回，边关军心大振。'], ['天罡', '枪在人在，军魂永存。']] },
-escort: { title: '义护三军', text: [['', '粮队安然归营，众将齐声高呼天罡之名。'], ['天罡', '护得袍泽周全，胜过千金万银。']] } } },
-] },
-});
-defHero({
-id: 'mojie', skin: 'mj', en: 'Mo Jie', archetype: 'controller',
-bal: { normal: 0.94, skill: 0.95, ult: 0.95, cd: 1.0, hp: 0.94 },
-char: {
-name: '墨绝', role: '断魂书生', diff: 3, escCD: 7.2,
-skill: 'inkbind', skill2: 'sealscript', ult: 'abyssscroll', passive: 'combo',
-passiveName: '断魂墨敕',
-passiveDesc: '控场凌厉的墨道书生；Q 断魂墨缚在敌足下布下墨阵禁锢迟缓，R 镇魂敕符挥毫射出墨气符波重创对手。',
-stat: { hp: 820, walk: 1.02, speed: 1.0, dmg: 1.0, reach: 1.1, swing: 1.0, jump: 1.02, weight: 0.92, defRating: 0.96, guardMax: 98, guardStab: 0.98, guardChip: 0.1, guardRegen: 29, poise: 0.96, size: 1.0 },
-hitFeel: 0.92,
-look: { body: '#1f1c2e', shade: '#0e0c18', outline: '#b48eff', outlineA: 0.9, scarf: '#7c4dff', slash: '180,142,255', blade: '#efe6ff', hair: '#181622', head: 'ink-sidepart', weapon: 'soulbrush' },
-ai: { range: [120, 275] },
-beats: ['tieshan', 'xuanwu'], weakTo: ['feiying', 'yinhu']
-},
-forest: {
-title: '墨绝传 · 墨卷镇妖', place: '墨渊书院',
-synopsis: '邪祟潜入墨渊书院污毁古籍，墨气化妖。墨绝提断魂长毫步出藏经阁，以笔为剑镇压群魔！',
-stageNames: ['墨阁起风', '断魂落笔', '敕符破障', '玄卷封妖', '绝墨镇魔'],
-waveDialogues: [
-'墨绝：「书院藏卷不容亵渎，尔等且受墨缚！」',
-'墨绝：「一笔定身，二笔镇魂，何处可逃？」',
-'墨绝：「纸墨虽轻，落笔成阵便重如千钧！」',
-'墨绝：「绝墨魂卷已展，群妖尽入画中吧！」'
-],
-bossIntro: '墨绝：「融魂魔首，今日便以我断魂长毫，将你永封于绝墨魂卷之中！」'
-},
-saga: {
-title: '墨绝传 · 断魂笺', motive: '墨渊书院镇院秘典《断魂笺》失窃，墨绝携长毫入世追回残卷，防其落入邪道。',
-nodes: [
-{ place: '清墨巷', name: '问墨', fight: { foe: 'moyu', lv: 'easy', goal: 'ko' },
-pre: [['', '细雨微凉，墨羽撑伞立于青石巷口。'], ['墨羽', '同为执笔之人，听说你在找《断魂笺》？先切磋一二！'], ['墨绝', '请墨羽兄赐教，看我断魂墨缚！']],
-post: [['墨羽', '笔意凌厉果决！残卷气息往听雨阁去了。'], ['墨绝', '多谢告知，后会有期。']] },
-{ place: '听雨阁', name: '寻笺', fight: { foe: 'yuxiao', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '阁中雨声与箫声交织，玉箫横箫拦在阶前。'], ['玉箫', '阁中藏有异卷，若无定力恐遭反噬，让我试试你！'], ['墨绝', '书生执笔无惧心魔，请出招！']],
-post: [['玉箫', '笔锋稳健，确能镇得住此卷。']],
-choice: { q: '阁中查得残卷已被一分为二：正卷落入邪修之手，副卷正引发周边村镇墨瘴。', opts: [
-{ t: '先追正卷擒拿窃贼', f: 'scroll', say: [['墨绝', '正卷乃秘典核心，绝不能落入邪修之手！']] },
-{ t: '先赴村镇封印墨瘴', f: 'seal', say: [['墨绝', '书院秘典岂能祸及无辜，先封墨瘴救人！']] }] } },
-{ place: '枯墨林', name: '敕符', fight: { foe: 'youhuang', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '林间黑雾弥漫，幽篁挥鞭截住去路。'], ['幽篁', '墨毒与竹毒撞在一起，倒想看看谁更厉害！'], ['墨绝', '镇魂敕符，破你毒瘴！']],
-post: [['幽篁', '好霸道的墨阵……前头便是古碑林。']] },
-{ place: '星墨碑林', name: '破局', fight: { foe: 'xuanji', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '石碑刻满星图，玄机现身阵眼之中。'], ['玄机', '秘典引动天象异常，先破我星仪之阵再谈取卷！'], ['墨绝', '以墨破星，正合我意！']],
-post: [['玄机', '好一招绝墨断势，去取回残卷吧。']] },
-{ place: '墨渊古坛', name: '归卷',
-pre: { scroll: [['', '古坛墨浪翻涌，邪修借正卷化出墨绝心魔。'], ['墨绝', '邪墨岂敢僭越，绝墨魂卷，封！']],
-seal: [['', '村镇墨瘴既除，残卷煞气尽数汇于古坛。'], ['墨绝', '万物归寂，今日便重封《断魂笺》！']] },
-fight: { scroll: { foe: 'mojie', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-seal: { foe: 'moyu', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { scroll: { title: '正卷归院', text: [['', '《断魂笺》重归藏经阁，书院再闻朗朗书声。'], ['墨绝', '笔墨存正气，秘典自长宁。']] },
-seal: { title: '墨镇苍生', text: [['', '漫天墨瘴化作甘霖，村镇重现晴空。'], ['墨绝', '文章济世，墨道亦当如此。']] } } },
-] },
-});
-defHero({
-id: 'baihe', skin: 'bh', en: 'Bai He', archetype: 'swordsman',
-bal: { normal: 0.95, skill: 0.95, ult: 0.95, cd: 1.0, hp: 0.96 },
-char: {
-name: '白河', role: '霜华剑客', diff: 2, escCD: 7.5,
-skill: 'riverpierce', skill2: 'frostparry', ult: 'wintertorrent', passive: 'counter',
-passiveName: '霜华映剑',
-passiveDesc: '精准格挡与反手剑势凝结寒霜；Q 寒江贯虹疾刺减速对手，R 霜华凝镜短暂护体反震近敌。',
-stat: { hp: 835, walk: 1.03, speed: 1.02, dmg: 1.02, reach: 1.06, swing: 1.02, jump: 1.02, weight: 0.98, defRating: 1.02, guardMax: 105, guardStab: 1.04, guardChip: 0.09, guardRegen: 29, poise: 1.02, size: 1.0 },
-hitFeel: 0.96,
-look: { body: '#dcebf7', shade: '#87a8c4', outline: '#5ec8ff', outlineA: 0.9, scarf: '#48b8f0', slash: '125,220,255', blade: '#eefaff', hair: '#182430', head: 'frost-braid', weapon: 'frostrapier' },
-ai: { range: [95, 235] },
-beats: ['chixiao', 'leiming'], weakTo: ['tieshan', 'moyu']
-},
-forest: {
-title: '白河传 · 霜华渡江', place: '寒江渡口',
-synopsis: '寒江渡口冰封千里，妖雾沿水脉蔓延。白河横霜华长剑踏冰而出，誓以清霜荡尽江上妖氛！',
-stageNames: ['寒江初雪', '霜剑破雾', '冰岸截妖', '雪渡连锋', '清霜镇江'],
-waveDialogues: [
-'白河：「江面起雾，正是霜华试剑之时。」',
-'白河：「寒气已入剑锋，莫要近我三步之内。」',
-'白河：「踏冰而行，群妖休想渡过此江！」',
-'白河：「冰雪听令，剑落江平！」'
-],
-bossIntro: '白河：「融魂魔首，寒江清流岂容你玷污，接我霜华一剑！」'
-},
-saga: {
-title: '白河传 · 寒剑誓', motive: '寒江上游一夜冰结异常，白河溯流而上查明水脉异变之源。',
-nodes: [
-{ place: '寒江渡', name: '冰渡', fight: { foe: 'qingfeng', lv: 'easy', goal: 'ko' },
-pre: [['', '寒江雾雪迷蒙，白河收剑立于渡口石阶。'], ['青锋', '好凌厉的寒剑，借你剑气一试风势！'], ['白河', '江路紧急，三招之内分个高下吧。']],
-post: [['青锋', '剑势清冽如江水，上游确有寒煞异动。'], ['白河', '多谢指引，我这便启程。']] },
-{ place: '雪柳岸', name: '霜痕', fight: { foe: 'lingshuang', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '雪岸冰晶遍地，凌霜横枪挡在冰桥前。'], ['凌霜', '此间寒气与你剑意相似，先接我寒枪！'], ['白河', '同为御霜之人，待我接过这阵再细说！']],
-post: [['凌霜', '你的剑意澄澈无杂，看来另有邪修作祟。']],
-choice: { q: '冰河分岔：左岸通往冰窟邪阵，右岸村落正遭冰潮围困。', opts: [
-{ t: '直入冰窟破阵', f: 'cavern', say: [['白河', '毁去源头邪阵，冰潮自解！']] },
-{ t: '先赴村落解围', f: 'village', say: [['白河', '先护百姓周全，再讨伐邪源！']] }] } },
-{ place: '断冰崖', name: '映雪', fight: { foe: 'yuehua', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '霜月当空，月华持月刃立于冰崖之上。'], ['月华', '冰面映月，你的剑能斩破镜影吗？'], ['白河', '寒江无尘，虚实一剑可辨！']],
-post: [['月华', '好一记霜华映剑，前路已开。']] },
-{ place: '玄冰峡', name: '寒涛', fight: { foe: 'polang', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '峡谷冰浪翻涌，破浪挥锚击碎浮冰。'], ['破浪', '想闯玄冰峡？先扛住我的怒涛重锚！'], ['白河', '以霜凝涛，请接剑！']],
-post: [['破浪', '痛快！峡谷深处便是冰核所在。']] },
-{ place: '白河冰源', name: '江清',
-pre: { cavern: [['', '冰窟邪阵轰鸣，寒影魔首凝冰成剑。'], ['白河', '霜华入鞘前，必斩此邪冰！']],
-village: [['', '村落冰潮退去，魔首循迹追至江源。'], ['白河', '百姓已安，今日便与你做个了断！']] },
-fight: { cavern: { foe: 'baihe', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-village: { foe: 'lingshuang', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { cavern: { title: '霜净寒江', text: [['', '邪冰崩解，寒江重归奔流不息。'], ['白河', '江水长清，霜剑亦安。']] },
-village: { title: '寒剑护岸', text: [['', '沿岸渔火重燃，渡口传颂白衣剑客之名。'], ['白河', '守得一江烟火，不负此剑。']] } } },
-] },
-});
-defHero({
-id: 'jinpeng', skin: 'jp', en: 'Jin Peng', archetype: 'fighter',
-bal: { normal: 0.94, skill: 0.95, ult: 0.94, cd: 1.0, hp: 0.96 },
-char: {
-name: '金鹏', role: '裂空武师', diff: 2, escCD: 7.5,
-skill: 'talondive', skill2: 'galestrike', ult: 'roctempest', passive: 'fly',
-passiveName: '扶摇金翼',
-passiveDesc: '双翼御风可滞空搏杀；Q 金鹏裂空可自空中俯冲破敌，R 扶摇罡风振翼齐发金羽烈风。',
-stat: { hp: 845, walk: 1.06, speed: 0.96, dmg: 1.04, reach: 1.02, swing: 0.96, jump: 1.08, weight: 0.94, defRating: 1.0, guardMax: 100, guardStab: 0.98, guardChip: 0.1, guardRegen: 28, poise: 1.04, size: 1.02 },
-fly: 1.0, hitFeel: 0.98,
-look: { body: '#3a2d18', shade: '#1f160a', outline: '#ffc84a', outlineA: 0.92, scarf: '#f0a828', slash: '255,205,85', blade: '#fff4d0', hair: '#1d150a', head: 'roc-crest', weapon: 'rocwing' },
-ai: { range: [90, 250] },
-beats: ['moyu', 'youhuang'], weakTo: ['lingshuang', 'gouchen']
-},
-forest: {
-title: '金鹏传 · 裂空荡魔', place: '扶摇绝壁',
-synopsis: '妖云遮蔽扶摇绝壁，群魔盘踞云巅。金鹏展开金羽双翼破云而上，以裂空武道扫清穹苍！',
-stageNames: ['振翼破云', '金爪裂风', '绝壁逐妖', '罡风扫云', '大鹏镇空'],
-waveDialogues: [
-'金鹏：「区区妖云，也配遮我扶摇九万里之路？」',
-'金鹏：「抬头看！金鹏之影已罩定尔等！」',
-'金鹏：「罡风起处，群魔尽皆坠崖！」',
-'金鹏：「金翼既展，万里长空唯我独尊！」'
-],
-bossIntro: '金鹏：「融魂魔首，躲在黑云里可逃不过金鹏利爪，下来受死！」'
-},
-saga: {
-title: '金鹏传 · 扶摇志', motive: '云巅圣羽碑遭妖风折断，金鹏振翼巡天追索断碑真凶。',
-nodes: [
-{ place: '扶摇台', name: '振羽', fight: { foe: 'yanling', lv: 'easy', goal: 'ko' },
-pre: [['', '云海翻腾，金鹏立于绝壁石碑前。'], ['燕翎', '同为御空武者，敢不敢在云上比试一番？'], ['金鹏', '正要活动筋骨，来战！']],
-post: [['燕翎', '好刚猛的翼风！断碑的妖气飘向了西边风谷。'], ['金鹏', '谢过，我这就振翼追去。']] },
-{ place: '裂风峡', name: '罡翼', fight: { foe: 'liuyun', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '峡谷狂风呼啸，流云摇扇御风而至。'], ['流云', '你的翼风太急，先把这阵狂风稳住再走！'], ['金鹏', '大鹏乘风而起，何惧狂飙！']],
-post: [['流云', '劲力刚柔并济，果真不凡。']],
-choice: { q: '云端岔路：高空可截击妖云先锋，谷底则有被困山民待救。', opts: [
-{ t: '凌空截击妖云', f: 'sky', say: [['金鹏', '直冲云霄，把妖风碾碎在半空！']] },
-{ t: '俯冲护送山民', f: 'ground', say: [['金鹏', '金翼所护，绝不弃山下生灵！']] }] } },
-{ place: '雷云峰', name: '破穹', fight: { foe: 'leiming', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '乌云电闪，雷鸣双拳噼啪作响。'], ['雷鸣', '能穿雷云者，先接我三记雷拳！'], ['金鹏', '金爪破雷，看谁更硬！']],
-post: [['雷鸣', '痛快！云巅祭坛就在上方。']] },
-{ place: '断云桥', name: '逐风', fight: { foe: 'chixiao', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '长桥悬于云海，炽霄火戟映红天际。'], ['炽霄', '风助火势，让我试试你的双翼经不经得起烈焰！'], ['金鹏', '扶摇罡风，正好吹散你的火阵！']],
-post: [['炽霄', '好一记俯冲裂空，去吧！']] },
-{ place: '九霄云巅', name: '鹏举',
-pre: { sky: [['', '妖云汇聚成渊，暗影魔首踞于云端。'], ['金鹏', '今日便以金鹏之翼，重开万里晴空！']],
-ground: [['', '山民脱险，魔首怒卷黑风扑向绝壁。'], ['金鹏', '来得正好，接我扶摇九天一击！']] },
-fight: { sky: { foe: 'jinpeng', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-ground: { foe: 'yanling', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { sky: { title: '万里晴空', text: [['', '妖云尽散，圣羽碑重沐朝阳金光。'], ['金鹏', '长风万里，大鹏展翼永不停歇。']] },
-ground: { title: '金翼护山', text: [['', '云海归于宁静，山谷重闻欢声笑语。'], ['金鹏', '既能凌绝顶，亦当护苍生。']] } } },
-] },
-});
-defHero({
-id: 'youming', skin: 'ym', en: 'You Ming', archetype: 'assassin',
-bal: { normal: 0.94, skill: 0.96, ult: 0.95, cd: 1.0, hp: 0.94 },
-char: {
-name: '幽冥', role: '噬影刺客', diff: 3, escCD: 7.0,
-skill: 'reapdash', skill2: 'soulpull', ult: 'nightmarecut', passive: 'stealth',
-passiveName: '噬影潜行',
-passiveDesc: '身法诡谲难测，双刃连击迅疾致命；Q 噬影掠杀瞬闪穿敌，R 幽冥拘魂扯回中距对手并减速。',
-stat: { hp: 780, walk: 1.11, speed: 1.08, dmg: 1.03, reach: 0.96, swing: 1.1, jump: 1.08, weight: 0.85, defRating: 0.92, guardMax: 90, guardStab: 0.92, guardChip: 0.12, guardRegen: 30, poise: 0.9, size: 0.96 },
-hitFeel: 0.88,
-look: { body: '#1c1528', shade: '#0d0914', outline: '#b26bff', outlineA: 0.9, scarf: '#8f44f5', slash: '180,110,255', blade: '#efe0ff', hair: '#110c1a', head: 'ghost-cowl', weapon: 'reapscythes' },
-ai: { range: [75, 220] },
-beats: ['yuxiao', 'xuanji'], weakTo: ['tieshan', 'polang']
-},
-forest: {
-title: '幽冥传 · 永夜噬影', place: '幽冥鬼市',
-synopsis: '幽冥鬼市灯火骤熄，妖影四起吞噬行人魂魄。幽冥双刃出鞘遁入暗影，以影噬影诛灭群魔！',
-stageNames: ['鬼市灯熄', '暗刃掠影', '幽链拘魂', '夜幕连斩', '永夜诛魔'],
-waveDialogues: [
-'幽冥：「熄了灯，这片黑夜便归我主宰。」',
-'幽冥：「你们的影子，已经出卖了落脚处。」',
-'幽冥：「逃不掉的，幽冥之刃最喜猎杀背影。」',
-'幽冥：「夜幕合拢，魂归幽冥！」'
-],
-bossIntro: '幽冥：「融魂魔首，敢在幽冥地界玩弄暗影，今夜便收了你的魂！」'
-},
-saga: {
-title: '幽冥传 · 暗影契', motive: '幽冥阁镇魂灯失窃，幽冥踏入黑夜追猎盗灯之徒。',
-nodes: [
-{ place: '幽冥巷', name: '夜行', fight: { foe: 'feiying', lv: 'easy', goal: 'ko' },
-pre: [['', '幽暗长街无声无息，幽冥双刃微颤。'], ['绯影', '同在暗处行走，谁的刀更快？'], ['幽冥', '闪开，我的猎物在前面。']],
-post: [['绯影', '好诡异的瞬步，盗灯者往荒坟坡去了。'], ['幽冥', '多谢。']] },
-{ place: '荒坟坡', name: '迷魂', fight: { foe: 'liying', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '鬼火明灭，离影的雾身封住坡顶。'], ['离影', '影与雾，谁才是黑夜的主人？'], ['幽冥', '一试便知！']],
-post: [['离影', '你的杀意比雾更冷，过去吧。']],
-choice: { q: '古庙门前：可潜入密道直取镇魂灯，或正面肃清守阵妖影。', opts: [
-{ t: '潜入密道夺灯', f: 'shadow', say: [['幽冥', '刺客之道，无声取物最省力。']] },
-{ t: '正面肃清妖影', f: 'purge', say: [['幽冥', '留着这些妖影，日后仍是祸患。']] }] } },
-{ place: '黑松林', name: '拘影', fight: { foe: 'lingque', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '林间寒芒四射，凌雀飞梭截住去路。'], ['凌雀', '黑灯瞎火乱闯，先接住我的飞梭！'], ['幽冥', '双刃破梭，接招！']],
-post: [['凌雀', '真难缠的影子，祭坛就在林后。']] },
-{ place: '阴风殿', name: '绝杀', fight: { foe: 'gouchen', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '铁链拖地作响，勾陈守在殿门。'], ['勾陈', '想拿回镇魂灯？先挣脱我的锁链！'], ['幽冥', '暗影无形，链锁何用！']],
-post: [['勾陈', '好快的双刀……灯在里面。']] },
-{ place: '镇魂古坛', name: '归冥',
-pre: { shadow: [['', '镇魂灯近在咫尺，暗影魔首自灯焰中现身。'], ['幽冥', '灯归原主，魂留此处！']],
-purge: [['', '妖影尽灭，魔首暴怒卷起黑潮。'], ['幽冥', '永夜之下，双刃送你归冥！']] },
-fight: { shadow: { foe: 'youming', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-purge: { foe: 'feiying', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { shadow: { title: '幽灯重明', text: [['', '镇魂灯重燃幽蓝微光，鬼市恢复往昔秩序。'], ['幽冥', '影归暗处，灯护幽冥。']] },
-purge: { title: '夜尽魂安', text: [['', '妖影尽散，黑夜重归静谧无声。'], ['幽冥', '有我在夜里，群邪休想妄动。']] } } },
-] },
-});
-defHero({
-id: 'lingxi', skin: 'lx', en: 'Ling Xi', archetype: 'controller',
-bal: { normal: 0.94, skill: 0.95, ult: 0.94, cd: 1.0, hp: 0.95 },
-char: {
-name: '灵犀', role: '音律控场', diff: 3, escCD: 7.5,
-skill: 'mindwave', skill2: 'echostun', ult: 'spiritdomain', passive: 'counter',
-passiveName: '心有灵犀',
-passiveDesc: '以玉笛音律洞察先机、控场制敌；Q 灵犀音波远距扩散减速，R 余音震魄反制暗器并震晕近敌。',
-stat: { hp: 805, walk: 1.02, speed: 1.02, dmg: 0.98, reach: 1.06, swing: 1.02, jump: 1.02, weight: 0.9, defRating: 0.98, guardMax: 100, guardStab: 1.02, guardChip: 0.09, guardRegen: 30, poise: 0.96, size: 0.98 },
-hitFeel: 0.9,
-look: { body: '#e5f5f2', shade: '#8ab8b0', outline: '#4ce6c8', outlineA: 0.9, scarf: '#2ec9aa', slash: '95,235,210', blade: '#e8fffb', hair: '#122420', head: 'flute-twintail', weapon: 'spiritflute' },
-ai: { range: [130, 290] },
-beats: ['feiying', 'lingque'], weakTo: ['chixiao', 'tieshan']
-},
-forest: {
-title: '灵犀传 · 清音涤心', place: '灵犀竹阁',
-synopsis: '魔音侵扰灵犀竹阁，四野妖物躁动不安。灵犀吹响碧玉长笛，以澄明清音荡涤群魔心神！',
-stageNames: ['玉笛初鸣', '清音破障', '余韵定风', '回响困妖', '灵犀镇魔'],
-waveDialogues: [
-'灵犀：「听见这声清笛了吗？心神不宁者，先退三步。」',
-'灵犀：「音波扩散，进退皆在我掌握之中。」',
-'灵犀：「余音绕梁，群妖休想再进一步！」',
-'灵犀：「曲至高潮，魔音尽散！」'
-],
-bossIntro: '灵犀：「融魂魔首，你以浊音乱世，今日便听我一曲灵犀清音！」'
-},
-saga: {
-title: '灵犀传 · 碧笛吟', motive: '江湖突现摄魂魔曲，灵犀携玉笛寻访乐谱残卷以解众生之厄。',
-nodes: [
-{ place: '灵犀阁', name: '听弦', fight: { foe: 'yuxiao', lv: 'easy', goal: 'ko' },
-pre: [['', '竹影摇曳，灵犀横笛静听风声。'], ['玉箫', '同道中人，不如以乐会友，合奏一曲？'], ['灵犀', '正有此意，请指教音律！']],
-post: [['玉箫', '笛音空灵清越，魔曲源头似乎在东岸古亭。'], ['灵犀', '多谢相告。']] },
-{ place: '回音涧', name: '辨律', fight: { foe: 'xuanji', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '山涧回声阵阵，玄机运转星仪测算音脉。'], ['玄机', '星象示警，让我先试探你的笛音是否藏邪！'], ['灵犀', '清浊自明，请听此调！']],
-post: [['玄机', '音律中正平和，确是克制魔曲之法。']],
-choice: { q: '古亭内外：可吹奏安魂调先救中邪乐师，或直入亭中毁去魔琴。', opts: [
-{ t: '先奏安魂救人', f: 'soothe', say: [['灵犀', '曲本为济世，先解诸位乐师之苦！']] },
-{ t: '直入毁去魔琴', f: 'shatter', say: [['灵犀', '魔琴一日不毁，魔音一日不绝！']] }] } },
-{ place: '听涛轩', name: '绝响', fight: { foe: 'cixian', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '磁石悬空嗡鸣，磁仙挡在轩门前。'], ['磁仙', '磁力与音波，看看谁更能扰乱对方心神！'], ['灵犀', '灵犀一动，万籁皆寂！']],
-post: [['磁仙', '好通透的笛音，魔琴就在里间。']] },
-{ place: '翠微台', name: '清韵', fight: { foe: 'moyu', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '墨气翻涌，墨羽挥毫设下墨阵。'], ['墨羽', '以画困音，看看你的笛声能否穿出墨海！'], ['灵犀', '清音无阻，破阵！']],
-post: [['墨羽', '音透纸背，佩服。']] },
-{ place: '古乐残亭', name: '心印',
-pre: { soothe: [['', '乐师苏醒，魔琴化作黑影直扑而来。'], ['灵犀', '人心已安，魔音再无立足之地！']],
-shatter: [['', '魔琴碎裂，怨念凝成魔首咆哮而出。'], ['灵犀', '一曲灵犀，送你归于寂静！']] },
-fight: { soothe: { foe: 'lingxi', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-shatter: { foe: 'yuxiao', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { soothe: { title: '清音济世', text: [['', '亭中重响清雅雅乐，诸位乐师拱手拜谢。'], ['灵犀', '心有灵犀，清音长存。']] },
-shatter: { title: '魔音永寂', text: [['', '魔琴化作尘烟，四方再无摄魂杂音。'], ['灵犀', '浊音已散，天地复明。']] } } },
-] },
-});
-defHero({
-id: 'bawang', skin: 'bw', en: 'Ba Wang', archetype: 'tank',
-bal: { normal: 0.92, skill: 0.94, ult: 0.95, cd: 1.0, hp: 0.98 },
-char: {
-name: '霸王', role: '霸天铁卫', diff: 1, escCD: 8.5,
-skill: 'overlordchop', skill2: 'warroar', ult: 'conquerorslam', passive: 'armor',
-passiveName: '霸王重甲',
-passiveDesc: '重剑挥斩沉猛稳固，出招自带霸体抗压；Q 霸王裂地重劈破防挑空，R 楚歌震军霸体怒吼震退四方。',
-stat: { hp: 930, walk: 0.87, speed: 0.88, dmg: 1.15, reach: 1.14, swing: 0.8, jump: 0.92, weight: 1.32, defRating: 1.08, guardMax: 112, guardStab: 1.05, guardChip: 0.06, guardRegen: 26, poise: 1.28, size: 1.1 },
-hitFeel: 1.16,
-look: { body: '#3c2520', shade: '#1e100d', outline: '#e6b450', outlineA: 0.92, scarf: '#c82e28', slash: '245,180,75', blade: '#f2e4cc', hair: '#1a1210', head: 'overlord-horns', weapon: 'overlordblade' },
-ai: { range: [85, 220] },
-beats: ['feiying', 'lingque'], weakTo: ['youhuang', 'moyu']
-},
-forest: {
-title: '霸王传 · 破阵横戈', place: '乌江古垒',
-synopsis: '妖军压境乌江古垒，铁骑黑压压逼近城壕。霸王提玄铁重剑独当千军，势以霸道重锋踏平魔阵！',
-stageNames: ['古垒点兵', '重剑裂阵', '战吼惊涛', '铁壁横扫', '霸王镇岳'],
-waveDialogues: [
-'霸王：「来多少妖兵都一样，一起上吧！」',
-'霸王：「重剑之下，岂有完卵！」',
-'霸王：「听我一声战吼，尔等胆寒了吗？」',
-'霸王：「力拔山河，万魔皆碎！」'
-],
-bossIntro: '霸王：「融魂魔首，你敢挡在霸王面前，便尝尝这柄重剑的份量！」'
-},
-saga: {
-title: '霸王传 · 霸天誓', motive: '乌江古垒外魔旗再起，霸王披甲提剑踏出营门讨伐群邪。',
-nodes: [
-{ place: '乌江营', name: '披甲', fight: { foe: 'tieshan', lv: 'easy', goal: 'ko' },
-pre: [['', '战鼓低沉，霸王单手提起玄铁重剑。'], ['铁山', '好沉的剑气，先与我比比谁的筋骨更硬！'], ['霸王', '痛快，接我一剑！']],
-post: [['铁山', '名不虚传！魔军主力正在西坡集结。'], ['霸王', '待我前去踏平！']] },
-{ place: '巨石坡', name: '震军', fight: { foe: 'polang', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '山坡滚石遍地，破浪扛着玄铁锚挡路。'], ['破浪', '想领兵冲锋？先接住我的沧澜重锚！'], ['霸王', '重兵相碰，正合我意！']],
-post: [['破浪', '好稳的下盘，果然是霸天铁卫。']],
-choice: { q: '战线分兵：可正面硬撼魔军中军大旗，或驰援侧翼受困守军。', opts: [
-{ t: '正面斩断魔旗', f: 'charge', say: [['霸王', '擒贼先擒王，直冲中军斩旗！']] },
-{ t: '驰援侧翼守军', f: 'defend', say: [['霸王', '绝不让弟兄们孤军奋战！']] }] } },
-{ place: '断戟原', name: '破甲', fight: { foe: 'chixiao', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '原野火光冲天，炽霄横戟立于阵前。'], ['炽霄', '重甲配重剑，且看你扛不扛得住我的赤炎！'], ['霸王', '区区烈火，烧不穿霸王铁甲！']],
-post: [['炽霄', '好刚猛的霸气，魔首就在前方高台。']] },
-{ place: '铁血关', name: '横扫', fight: { foe: 'leiming', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '雷声轰鸣，雷鸣抱拳镇守关口。'], ['雷鸣', '让我见识见识霸王的拳脚与剑势！'], ['霸王', '放马过来！']],
-post: [['雷鸣', '果然势不可挡，高台归你了。']] },
-{ place: '点将魔台', name: '定鼎',
-pre: { charge: [['', '中军大旗已断，魔首怒啸踏上高台。'], ['霸王', '千军已破，现在轮到你了！']],
-defend: [['', '侧翼守军重整旗鼓，魔首亲自杀至。'], ['霸王', '有我霸王在此，寸土不让！']] },
-fight: { charge: { foe: 'bawang', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-defend: { foe: 'tieshan', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { charge: { title: '霸业定疆', text: [['', '魔旗尽倒，乌江古垒欢声雷动。'], ['霸王', '重剑所指，再无敌手。']] },
-defend: { title: '铁卫安邦', text: [['', '守军齐声高呼，古垒安然无恙。'], ['霸王', '铁甲在身，江山无忧。']] } } },
-] },
-});
-defHero({
-id: 'fengling', skin: 'fl', en: 'Feng Ling', archetype: 'support',
-bal: { normal: 0.94, skill: 0.95, ult: 0.94, cd: 1.0, hp: 0.96 },
-char: {
-name: '风铃', role: '听风辅助', diff: 2, escCD: 7.0,
-skill: 'chimegust', skill2: 'windblessing', ult: 'bellharmony', passive: 'counter',
-passiveName: '听风铃语',
-passiveDesc: '借清风与铃音化险为夷；Q 清铃拂风挥扇送出双股疾风击退对手，R 和风祈愿摇铃回气血并震开近敌。',
-stat: { hp: 795, walk: 1.06, speed: 1.04, dmg: 0.95, reach: 1.02, swing: 1.04, jump: 1.06, weight: 0.88, defRating: 0.98, guardMax: 100, guardStab: 1.02, guardChip: 0.09, guardRegen: 32, poise: 0.94, size: 0.96 },
-hitFeel: 0.86,
-look: { body: '#edf6fa', shade: '#9db8c9', outline: '#ffa8c8', outlineA: 0.88, scarf: '#ff85b2', slash: '165,225,255', blade: '#f5fbff', hair: '#1d222b', head: 'chime-ribbons', weapon: 'chimefan' },
-ai: { range: [125, 285] },
-beats: ['tieshan', 'bawang'], weakTo: ['feiying', 'yanling']
-},
-forest: {
-title: '风铃传 · 清风涤尘', place: '听风长廊',
-synopsis: '听风长廊百铃失声，浊风携妖气席卷山寺。风铃轻摇玉铃展开素扇，唤来和风吹散群魔！',
-stageNames: ['铃语初响', '素扇引风', '长廊逐浊', '和风护寺', '万铃净尘'],
-waveDialogues: [
-'风铃：「听，风铃响了，大家要小心脚下哦。」',
-'风铃：「清风拂面，邪气可别想靠近长廊！」',
-'风铃：「铃音所至，浊风退散！」',
-'风铃：「万铃齐鸣，把妖雾全都吹走吧！」'
-],
-bossIntro: '风铃：「融魂魔首，你弄乱了山寺的清风，风铃绝不会放过你！」'
-},
-saga: {
-title: '风铃传 · 听风行', motive: '山寺百枚祈福风铃一夜哑然，风铃循风声下山寻回失落的灵风。',
-nodes: [
-{ place: '听风廊', name: '风起', fight: { foe: 'liuyun', lv: 'easy', goal: 'ko' },
-pre: [['', '廊檐风铃轻晃无声，风铃展开手中素扇。'], ['流云', '小丫头，你的风意还不够稳，让我指点两招！'], ['风铃', '请流云前辈赐教！']],
-post: [['流云', '好灵巧的扇风，灵风的源头在东边山谷。'], ['风铃', '谢谢前辈，我这就去看看！']] },
-{ place: '杏花渡', name: '铃音', fight: { foe: 'yuxiao', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '花瓣随风飞舞，玉箫立于石桥吹奏清调。'], ['玉箫', '铃声与箫声相和，先接我几道音律试试？'], ['风铃', '风铃不会认输的！']],
-post: [['玉箫', '铃声清脆动人，前面山道风势古怪，多加小心。']],
-choice: { q: '山道分岔：一侧吹来受困旅人的呼救声，一侧直通吞风妖窟。', opts: [
-{ t: '先循声救助旅人', f: 'help', say: [['风铃', '听风辨位，先把旅人们带出险境！']] },
-{ t: '直赴妖窟夺回灵风', f: 'cave', say: [['风铃', '只要放回灵风，山谷的风雾自然会散！']] }] } },
-{ place: '清风亭', name: '拂尘', fight: { foe: 'yuehua', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '月色清寒，月华轻抚月刃望向山亭。'], ['月华', '柔风未必敌得过寒月，出招吧。'], ['风铃', '柔风也能吹散寒雾！']],
-post: [['月华', '好温柔却坚定的风势，去吧。']] },
-{ place: '翠屏岭', name: '和鸣', fight: { foe: 'zuixian', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '醉翁倚松小憩，葫芦酒香四溢。'], ['醉翁', '风铃叮当吵醒老夫午睡，先陪我活动活动！'], ['风铃', '前辈别生气，接我一阵清风！']],
-post: [['醉翁', '哈哈，醒酒舒畅！前面便是妖窟了。']] },
-{ place: '灵风古窟', name: '归风',
-pre: { help: [['', '旅人平安离去，吞风魔首怒卷狂飙现身。'], ['风铃', '清风护人，万铃和鸣！']],
-cave: [['', '灵风泉眼被黑雾封锁，魔首自雾中扑出。'], ['风铃', '把山寺的清风还回来！']] },
-fight: { help: { foe: 'fengling', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-cave: { foe: 'liuyun', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { help: { title: '和风护旅', text: [['', '山谷清风徐来，听风长廊百铃再度齐鸣。'], ['风铃', '大家平安就好，风声又温柔起来啦。']] },
-cave: { title: '万铃复鸣', text: [['', '灵风重归山寺，清脆铃声传遍十里青山。'], ['风铃', '听呀，风在向我们道谢呢。']] } } },
-] },
-});
-defHero({
-id: 'wuya', skin: 'wy', en: 'Wu Ya', archetype: 'swordsman',
-bal: { normal: 0.94, skill: 0.95, ult: 0.95, cd: 1.0, hp: 0.96 },
-char: {
-name: '无涯', role: '居合剑圣', diff: 3, escCD: 7.5,
-skill: 'iaidodraw', skill2: 'voidstep', ult: 'endlessblade', passive: 'counter',
-passiveName: '无涯剑意',
-passiveDesc: '收鞘蓄势，出剑即决胜负；Q 无涯居合瞬闪拔刀穿斩，R 踏虚斩影闪避反击并挥出远程剑气。',
-stat: { hp: 850, walk: 1.04, speed: 1.05, dmg: 1.05, reach: 1.08, swing: 1.05, jump: 1.02, weight: 0.98, defRating: 1.02, guardMax: 108, guardStab: 1.06, guardChip: 0.08, guardRegen: 29, poise: 1.05, size: 1.0 },
-hitFeel: 1.02,
-look: { body: '#1a2030', shade: '#0c101a', outline: '#d8e4ff', outlineA: 0.92, scarf: '#7c96d8', slash: '215,230,255', blade: '#f8fbff', hair: '#141822', head: 'iaido-bun', weapon: 'iaidoblade' },
-ai: { range: [95, 245] },
-beats: ['qianji', 'xuanji'], weakTo: ['tieshan', 'bawang']
-},
-forest: {
-title: '无涯传 · 一剑破境', place: '剑冢断崖',
-synopsis: '剑冢断崖魔气冲天，万剑悲鸣不止。无涯按剑归鞘步入妖阵，以无涯居合斩尽群魔！',
-stageNames: ['断崖按剑', '拔刀初鸣', '踏虚斩影', '剑意纵横', '无涯绝境'],
-waveDialogues: [
-'无涯：「剑未出鞘，胜负已分。」',
-'无涯：「看清这一刀的轨迹了吗？」',
-'无涯：「踏虚而行，剑气无涯。」',
-'无涯：「万剑归寂，尔等退散！」'
-],
-bossIntro: '无涯：「融魂魔首，接得住我这一记居合，再谈胜负！」'
-},
-saga: {
-title: '无涯传 · 剑心劫', motive: '剑冢镇山古剑骤裂，无涯携残鞘行走江湖寻找铸剑真意。',
-nodes: [
-{ place: '剑冢口', name: '按鞘', fight: { foe: 'qingfeng', lv: 'easy', goal: 'ko' },
-pre: [['', '风卷落叶，无涯按住腰间剑柄。'], ['青锋', '久闻居合剑圣之名，请赐一剑！'], ['无涯', '出剑吧，莫留余力。']],
-post: [['青锋', '好快的一刀！古剑残气似乎飘向了西岭。'], ['无涯', '承让。']] },
-{ place: '试剑坪', name: '拔锋', fight: { foe: 'liying', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '石坪雾起，离影刀锋隐于白雾。'], ['离影', '雾中分身千百，你这一刀斩向何处？'], ['无涯', '心无旁骛，一刀足以破雾！']],
-post: [['离影', '好纯粹的剑意，佩服。']],
-choice: { q: '西岭剑炉前：可静心重铸残剑以镇魔气，或直追逃逸的剑煞魔影。', opts: [
-{ t: '先镇剑炉重铸', f: 'forge', say: [['无涯', '剑心稳固，方能斩尽外邪。']] },
-{ t: '直追剑煞魔影', f: 'chase', say: [['无涯', '剑煞不除，必祸及沿途生灵！']] }] } },
-{ place: '听剑峡', name: '踏虚', fight: { foe: 'lingshuang', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '峡风如刃，凌霜挺枪迎面而立。'], ['凌霜', '一寸长一寸强，你的拔刀术近得了身吗？'], ['无涯', '踏虚一瞬，便是咫尺！']],
-post: [['凌霜', '好一记踏虚斩影，前路归你。']] },
-{ place: '孤峰台', name: '归寂', fight: { foe: 'chixiao', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '夕阳如血，炽霄火戟直指孤峰。'], ['炽霄', '让我见识居合剑圣的巅峰一斩！'], ['无涯', '接剑！']],
-post: [['炽霄', '痛快，剑煞就在峰顶。']] },
-{ place: '无涯峰顶', name: '剑极',
-pre: { forge: [['', '剑炉重燃清光，剑煞魔首破空袭来。'], ['无涯', '剑已成，请君试锋！']],
-chase: [['', '剑煞被逼至绝崖，化作魔首反扑。'], ['无涯', '剑气无涯，今日彻底了结！']] },
-fight: { forge: { foe: 'wuya', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-chase: { foe: 'qingfeng', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { forge: { title: '剑心澄明', text: [['', '古剑重归剑冢，万剑齐鸣致敬。'], ['无涯', '剑有尽，意无涯。']] },
-chase: { title: '一剑封煞', text: [['', '剑煞消散于云海，孤峰重归寂静。'], ['无涯', '归鞘之日，天下太平。']] } } },
-] },
-});
-defHero({
-id: 'danqing', skin: 'dq', en: 'Dan Qing', archetype: 'controller',
-bal: { normal: 0.94, skill: 0.95, ult: 0.95, cd: 1.0, hp: 0.95 },
-char: {
-name: '丹青', role: '绘卷控场', diff: 3, escCD: 7.5,
-skill: 'vermilionarc', skill2: 'cinnabarward', ult: 'grandpainting', passive: 'combo',
-passiveName: '丹青妙笔',
-passiveDesc: '以朱砂石青绘卷设阵、连绵压制；Q 朱砂画弧挥毫送出丹青弧光减速，R 青绿封卷落墨成阵定身控敌。',
-stat: { hp: 815, walk: 1.01, speed: 1.0, dmg: 1.0, reach: 1.1, swing: 1.0, jump: 1.0, weight: 0.92, defRating: 0.98, guardMax: 102, guardStab: 1.0, guardChip: 0.1, guardRegen: 29, poise: 0.98, size: 1.0 },
-hitFeel: 0.92,
-look: { body: '#2a2220', shade: '#161110', outline: '#ff6448', outlineA: 0.9, scarf: '#3898c8', slash: '245,105,80', blade: '#ffeae4', hair: '#181414', head: 'scroll-cap', weapon: 'vermilionbrush' },
-ai: { range: [125, 285] },
-beats: ['tieshan', 'polang'], weakTo: ['feiying', 'lingque']
-},
-forest: {
-title: '丹青传 · 绘卷镇妖', place: '丹青画苑',
-synopsis: '丹青画苑古卷生魔，山河画境遭墨妖侵蚀。丹青手执朱砂大笔步入画中，以丹青妙笔重绘清明山河！',
-stageNames: ['朱砂落笔', '青绿初开', '画卷困妖', '山河叠影', '丹青净卷'],
-waveDialogues: [
-'丹青：「进了我的画卷，一草一木皆听我调遣。」',
-'丹青：「朱砂点睛，青绿封路，看你们往哪逃！」',
-'丹青：「笔走龙蛇，群妖皆成画中枯骨。」',
-'丹青：「千里江山收于一卷，妖邪退散！」'
-],
-bossIntro: '丹青：「融魂魔首，你敢污我千里江山图，今日便将你永镇画中！」'
-},
-saga: {
-title: '丹青传 · 山河卷', motive: '镇苑名画《千里山河卷》突生裂墨，丹青携笔入江湖寻补画灵矿。',
-nodes: [
-{ place: '丹青苑', name: '研砂', fight: { foe: 'moyu', lv: 'easy', goal: 'ko' },
-pre: [['', '画案朱砂微沸，丹青提笔蘸墨。'], ['墨羽', '水墨与丹青，先比比谁的笔意更沉！'], ['丹青', '请墨先生品鉴这一笔朱砂！']],
-post: [['墨羽', '笔力遒劲，灵矿线索在南边彩石谷。'], ['丹青', '多谢指点。']] },
-{ place: '彩石谷', name: '取青', fight: { foe: 'qianji', lv: 'normal', goal: 'survive', time: 45 },
-pre: [['', '谷中矿石斑斓，千机操控傀丸守在矿脉前。'], ['千机', '这批灵石我要用来铸机关，想拿先过我这关！'], ['丹青', '补画救民，恕不退让！']],
-post: [['千机', '既然为镇压画魔，这方石青便让与你。']],
-choice: { q: '画境裂缝扩大：可先落笔封住外溢妖墨护住城镇，或直入画心修补主卷。', opts: [
-{ t: '先封妖墨护城', f: 'seal', say: [['丹青', '青绿封卷，绝不让妖墨漫出画苑！']] },
-{ t: '直入画心修卷', f: 'core', say: [['丹青', '直补画心，方能一劳永逸！']] }] } },
-{ place: '墨韵桥', name: '设色', fight: { foe: 'xuanji', lv: 'hard', goal: 'ko', foeSc: ['bx_armor'] },
-pre: [['', '长桥星光点点，玄机驻足观摩画气。'], ['玄机', '画境与星象相冲，先接我星仪三式！'], ['丹青', '丹青落笔，山河自定！']],
-post: [['玄机', '笔意浑然天成，去修补古卷吧。']] },
-{ place: '砚池亭', name: '点睛', fight: { foe: 'zuixian', lv: 'hard', goal: 'fast', time: 70, foeSc: ['bx_enrage'] },
-pre: [['', '亭中墨香混着酒香，醉翁大笑举壶。'], ['醉翁', '山水画里岂能无酒？陪老夫过两招再画！'], ['丹青', '前辈好雅兴，请接笔！']],
-post: [['醉翁', '妙哉！这笔山河气势十足。']] },
-{ place: '江山画心', name: '成卷',
-pre: { seal: [['', '城外妖墨已封，墨魔首领在画心现形。'], ['丹青', '百姓无恙，现在由我来为你收笔！']],
-core: [['', '画心裂隙翻涌，魔首企图撕碎古卷。'], ['丹青', '朱砂定魂，千里江山岂容你染指！']] },
-fight: { seal: { foe: 'danqing', lv: 'impossible', goal: 'ko', foeSc: ['bx_haste', 'bx_armor'] },
-core: { foe: 'moyu', lv: 'impossible', goal: 'survive', time: 60, foeSc: ['bx_venom', 'bx_enrage'] } },
-end: { seal: { title: '青绿安民', text: [['', '画苑外烟火如常，古卷重现瑰丽山河。'], ['丹青', '画护苍生，丹青不朽。']] },
-core: { title: '万里丹青', text: [['', '裂墨尽消，千里江山图熠熠生辉。'], ['丹青', '一笔定山河，千秋色不褪。']] } } },
 ] },
 });
 if (window.I18N && I18N.getLang() === 'en') {
@@ -16674,11 +15863,7 @@ const INK_MAX = 100, INK_COST = 15, INK_REGEN = 10, INK_DMG = 24;
 const FU_MAX = 5, FU_INK = 3, FU_BASE = 80, FU_PER = 40;
 const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 36, fists: 16, brush: 66, moonblade: 58, flute: 50, gourd: 16, hammer: 56, spindle: 42, magnet: 16, puppet: 20 };
 Object.assign(WEAPON_LEN, {
-firerake: 88, dyelash: 56, stargauge: 58, rescueanchor: 70,
-abyssblade: 70, jadefan: 36, bastionshell: 56, blazegauntlet: 16,
-foxdaggers: 40, cranewing: 48, gangpike: 88, soulbrush: 66,
-frostrapier: 54, rocwing: 48, reapscythes: 40, spiritflute: 50,
-overlordblade: 70, chimefan: 36, iaidoblade: 54, vermilionbrush: 66
+firerake: 88, stargauge: 58, bastionshell: 56, willowsaber: 56, chimestaff: 62
 });
 const WEAPON_POSE_MODS = {
 wing: { a1: ['aj_wing_1s', 'aj_wing_1a'], a2: ['aj_wing_2s', 'aj_wing_2a'] },
@@ -16695,29 +15880,12 @@ brush: { l1: ['my_stroke', 'my_paint'], l2: ['l2s', 'my_paint'], l4: ['my_stroke
 hammer: { l1: ['gc_wind', 'gc_throw'], l2: ['gc_pull', 'gc_sweep'], l3: ['gc_wind', 'gc_throw'], a1: ['aj_hammer_1s', 'aj_hammer_1a'], a2: ['aj_hammer_2s', 'aj_hammer_2a'] },
 spindle: { l1: ['du_l1s', 'du_l1a'], l2: ['du_l2s', 'du_l2a'], l3: ['du_l1s', 'lca'], hv: ['du_l1s', 'hva'], a1: ['aj_spindle_1s', 'aj_spindle_1a'], a2: ['aj_spindle_2s', 'aj_spindle_2a'] },
 magnet: { l1: ['lm_boxer', 'lm_jab'], l2: ['l2s', 'lm_jab'], l3: ['fn_l1s', 'fn_l1a'], l4: ['lds', 'lm_kick'], hv: ['hvs', 'hva'], a1: ['aj_fists_1s', 'aj_fists_1a'], a2: ['aj_fists_2s', 'aj_fists_2a'] },   // 磁仙：两手各托一块磁石，推掌、拍掌
-};
-Object.assign(WEAPON_POSE_MODS, {
+willowsaber: { l1: ['ib_l1s', 'ib_l1a'], l2: ['ib_l2s', 'ib_l2a'], l3: ['ib_l1s', 'ib_l2a'], hv: ['ib_l1s', 'hva'], a1: ['aj_sword_1s', 'aj_sword_1a'], a2: ['aj_moonblade_2s', 'aj_moonblade_2a'] },
+chimestaff: { l1: ['sf_l1s', 'sf_l1a'], l2: ['jf_l2s', 'jf_l2a'], l3: ['sf_l1s', 'jf_l2a'], hv: ['jf_l2s', 'hva'], a1: ['aj_flute_1s', 'aj_flute_1a'], a2: ['aj_flute_2s', 'aj_flute_2a'] },
 firerake: { l1: ['rk_l1s', 'rk_l1a'], l2: ['rk_l2s', 'rk_l2a'], l3: ['rk_l1s', 'rk_l1a'], l5: ['rk_l2s', 'rk_l2a'], hv: ['rk_l2s', 'ts_slam'], a1: ['aj_spear_1s', 'aj_spear_1a'], a2: ['aj_spear_2s', 'aj_spear_2a'] },
-dyelash: { l1: ['dl_l1s', 'dl_l1a'], l2: ['dl_l2s', 'dl_l2a'], l3: ['dl_l1s', 'dl_l2a'], hv: ['dl_l1s', 'gc_throw'], a1: ['aj_hammer_1s', 'aj_hammer_1a'], a2: ['aj_hammer_2s', 'aj_hammer_2a'] },
 stargauge: { l1: ['sg_l1s', 'sg_l1a'], l2: ['sg_l2s', 'sg_l2a'], l3: ['sg_l1s', 'sg_l2a'], hv: ['sg_l2s', 'hva'], a1: ['aj_moonblade_1s', 'aj_moonblade_1a'], a2: ['aj_moonblade_2s', 'aj_moonblade_2a'] },
-rescueanchor: { l1: ['an_l1s', 'an_l1a'], l2: ['an_l2s', 'an_l2a'], l4: ['an_l1s', 'ts_slam'], hv: ['an_l1s', 'an_l1a'], a1: ['aj_greatsword_1s', 'aj_greatsword_1a'], a2: ['aj_greatsword_2s', 'aj_greatsword_2a'] },
-abyssblade: { l1: ['ab_l1s', 'ab_l1a'], l2: ['ab_l2s', 'ab_l2a'], l4: ['ab_l1s', 'ts_slam'], hv: ['ab_l1s', 'ab_l1a'], a1: ['aj_greatsword_1s', 'aj_greatsword_1a'], a2: ['aj_greatsword_2s', 'aj_greatsword_2a'] },
-jadefan: { l1: ['jf_l1s', 'jf_l1a'], l2: ['jf_l2s', 'jf_l2a'], l3: ['jf_l1s', 'jf_l2a'], hv: ['jf_l2s', 'hva'], a1: ['aj_fan_1s', 'aj_fan_1a'], a2: ['aj_fan_2s', 'aj_fan_2a'] },
 bastionshell: { l1: ['bs_l1s', 'bs_l1a'], l2: ['bs_l2s', 'bs_l2a'], l3: ['bs_l1s', 'bs_l1a'], hv: ['bs_l1s', 'ts_slam'], a1: ['aj_hammer_1s', 'aj_hammer_1a'], a2: ['aj_hammer_2s', 'aj_hammer_2a'] },
-blazegauntlet: { l1: ['bg_l1s', 'bg_l1a'], l2: ['bg_l2s', 'bg_l2a'], l3: ['bg_l1s', 'lm_kick'], l4: ['bg_l2s', 'bg_l2a'], hv: ['bg_l2s', 'bg_l2a'], a1: ['aj_fists_1s', 'aj_fists_1a'], a2: ['aj_fists_2s', 'aj_fists_2a'] },
-foxdaggers: { l1: ['fd_l1s', 'fd_l1a'], l2: ['fd_l2s', 'fd_l2a'], l3: ['fy_crouch', 'fy_xslash'], l4: ['fd_l1s', 'fd_l2a'], a1: ['aj_dual_1s', 'aj_dual_1a'], a2: ['aj_dual_2s', 'aj_dual_2a'] },
-cranewing: { l1: ['cw_l1s', 'cw_l1a'], l2: ['cw_l2s', 'cw_l2a'], l3: ['cw_l1s', 'cw_l2a'], hv: ['cw_l2s', 'hva'], a1: ['aj_wing_1s', 'aj_wing_1a'], a2: ['aj_wing_2s', 'aj_wing_2a'] },
-gangpike: { l1: ['gp_l1s', 'gp_l1a'], l2: ['gp_l2s', 'gp_l2a'], l3: ['gp_l1s', 'ls_thrust'], l5: ['gp_l2s', 'gp_l1a'], a1: ['aj_spear_1s', 'aj_spear_1a'], a2: ['aj_spear_2s', 'aj_spear_2a'] },
-soulbrush: { l1: ['sb_l1s', 'sb_l1a'], l2: ['sb_l2s', 'sb_l2a'], l4: ['sb_l1s', 'lda'], hv: ['sb_l1s', 'hva'], a1: ['aj_brush_1s', 'aj_brush_1a'], a2: ['aj_brush_2s', 'aj_brush_2a'] },
-frostrapier: { l1: ['fr_l1s', 'fr_l1a'], l2: ['fr_l2s', 'fr_l2a'], l3: ['fr_l1s', 'fr_l1a'], hv: ['fr_l2s', 'hva'], a1: ['aj_sword_1s', 'aj_sword_1a'], a2: ['aj_sword_2s', 'aj_sword_2a'] },
-rocwing: { l1: ['rw_l1s', 'rw_l1a'], l2: ['rw_l2s', 'rw_l2a'], l3: ['rw_l1s', 'rw_l2a'], hv: ['rw_l2s', 'hva'], a1: ['aj_wing_1s', 'aj_wing_1a'], a2: ['aj_wing_2s', 'aj_wing_2a'] },
-reapscythes: { l1: ['rs_l1s', 'rs_l1a'], l2: ['rs_l2s', 'rs_l2a'], l3: ['fy_crouch', 'rs_l2a'], l4: ['rs_l1s', 'rs_l2a'], a1: ['aj_dual_1s', 'aj_dual_1a'], a2: ['aj_dual_2s', 'aj_dual_2a'] },
-spiritflute: { l1: ['sf_l1s', 'sf_l1a'], l2: ['sf_l2s', 'sf_l2a'], l3: ['sf_l1s', 'sf_l2a'], hv: ['sf_l2s', 'hva'], a1: ['aj_flute_1s', 'aj_flute_1a'], a2: ['aj_flute_2s', 'aj_flute_2a'] },
-overlordblade: { l1: ['ob_l1s', 'ob_l1a'], l2: ['ob_l2s', 'ob_l2a'], l4: ['ob_l1s', 'ts_slam'], hv: ['ob_l1s', 'ob_l1a'], a1: ['aj_greatsword_1s', 'aj_greatsword_1a'], a2: ['aj_greatsword_2s', 'aj_greatsword_2a'] },
-chimefan: { l1: ['cf_l1s', 'cf_l1a'], l2: ['cf_l2s', 'cf_l2a'], l3: ['cf_l1s', 'cf_l2a'], hv: ['cf_l2s', 'hva'], a1: ['aj_fan_1s', 'aj_fan_1a'], a2: ['aj_fan_2s', 'aj_fan_2a'] },
-iaidoblade: { l1: ['ib_l1s', 'ib_l1a'], l2: ['ib_l2s', 'ib_l2a'], l3: ['ib_l1s', 'ib_l1a'], hv: ['ib_l1s', 'ib_l1a'], a1: ['aj_sword_1s', 'aj_sword_1a'], a2: ['aj_sword_2s', 'aj_sword_2a'] },
-vermilionbrush: { l1: ['vb_l1s', 'vb_l1a'], l2: ['vb_l2s', 'vb_l2a'], l4: ['vb_l1s', 'lda'], hv: ['vb_l1s', 'hva'], a1: ['aj_brush_1s', 'aj_brush_1a'], a2: ['aj_brush_2s', 'aj_brush_2a'] }
-});
+};
 function buildMoves(ch) {
 const out = {}, st = ch.stat;
 const wMods = WEAPON_POSE_MODS[ch.look && ch.look.weapon] || {};
@@ -16800,96 +15968,6 @@ if (f.mChain > 0) { f.mT = (f.mT || 0) + STEP; if (f.mT >= MAG.demagRest) { f.mC
 const SKILLS = {};
 const COUNTER = { dmg: 95, kb: [440, -820], stun: 1.05, hs: 0.2, launch: true, big: true, unblockable: true, noScale: true };
 Object.assign(SKILLS, {
-riverpierce: { name: '寒江贯虹', cd: 5.5, pass: true, nofric: true, desc: '凝霜蓄剑疾步贯刺，穿透对手并施加寒霜减速。',
-start(f) { f.vx = 0; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.08) {
-f.skPh = 1; f.t = 0; f.vx = 1420 * f.face; f.invul = 0.08; f.hitDone = false; SFX.dash();
-if (!RESIM) slashLine(f.x + f.face * 48, f.y - 62, 0.08 * f.face, '125,220,255');
-}
-if (f.skPh === 1) {
-if (strike(f, foe, { box: [-10, -108, 108, 0], dmg: 50, kb: [220, -160], stun: 0.48, hs: 0.1 })) {
-foe.slowT = Math.max(foe.slowT || 0, 1.8);
-}
-if (f.t >= 0.19) { f.skPh = 2; f.t = 0; f.vx *= 0.2; }
-}
-if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['qf_charge', 26] : f.skPh === 1 ? ['qf_thrust', 58] : ['idle', 14],
-ai: (me, foe, d) => d > 110 && d < 330 },
-frostparry: { name: '霜华凝镜', cd: 6, desc: '横剑凝结霜镜护体并反弹飞行道具，随即绽放寒环震退并减速近敌。',
-start(f) { f.vx = 0; f.reflectT = 0.34; f.armorT = 0.26; f.armorHits = 1; SFX.parry(); if (!RESIM) ring(f.x, f.y - 60, 88, '125,220,255', 0.28); },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.14) {
-f.skPh = 1; f.t = 0; SFX.slice();
-if (!RESIM) ring(f.x, f.y - 58, 132, '125,220,255', 0.36);
-if (strike(f, foe, { box: [-112, -124, 112, 0], dmg: 44, kb: [280, -460], stun: 0.48, hs: 0.1, launch: true })) {
-foe.slowT = Math.max(foe.slowT || 0, 2.0);
-}
-}
-if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['yh_mirror', 30] : ['l3a', 52],
-ai: (me, foe, d) => d < 165 },
-});
-Object.assign(SKILLS, {
-overlordchop: { name: '霸王裂地', cd: 6, desc: '身披霸体高举重剑全力劈落，震裂地面重创架势并挑飞对手。',
-start(f) { f.vx = 0; f.armorT = 0.32; f.armorHits = 1; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.16) {
-f.skPh = 1; f.t = 0; SFX.heavy(); SFX.thud(); shake = Math.max(shake, 12);
-if (!RESIM) { ring(f.x + f.face * 76, f.y - 12, 152, '245,180,75', 0.38); dust(f.x + f.face * 76, f.y, 14); }
-strike(f, foe, { box: [-30, -118, 185, 10], dmg: 64, kb: [260, -640], stun: 0.56, hs: 0.14, launch: true, guardDamage: 42 });
-}
-if (f.skPh === 1 && f.t >= 0.32) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['ts_lift', 24] : ['ts_slam', 56],
-ai: (me, foe, d) => d < 190 },
-warroar: { name: '楚歌震军', cd: 6, desc: '霸体怒吼释放雄浑气浪，震退并减速周围所有敌军。',
-start(f) { f.vx = 0; f.armorT = 0.38; f.armorHits = 2; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.12) {
-f.skPh = 1; f.t = 0; SFX.thud(); SFX.heavy(); shake = Math.max(shake, 10);
-if (!RESIM) { ring(f.x, f.y - 62, 165, '245,180,75', 0.42); dust(f.x, f.y, 16); }
-if (strike(f, foe, { box: [-148, -138, 148, 0], dmg: 48, kb: [420, -280], stun: 0.5, hs: 0.11, knock: true, guardDamage: 30 })) {
-foe.slowT = Math.max(foe.slowT || 0, 1.5);
-}
-}
-if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['ts_shoulder', 26] : ['ts_slam', 50],
-ai: (me, foe, d) => d < 170 },
-});
-Object.assign(SKILLS, {
-abyssslash: { name: '寒渊斩', cd: 5.5, desc: '持重剑蓄势挥出寒渊霜气，近身重斩并释放寒波迟缓对手。',
-start(f) { f.vx *= 0.25; f.armorT = 0.22; f.armorHits = 1; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.14) {
-f.skPh = 1; f.t = 0; SFX.heavy();
-if (!RESIM) ring(f.x + f.face * 56, f.y - 62, 118, '110,196,255', 0.34);
-if (strike(f, foe, { box: [-15, -118, 128, 0], dmg: 52, kb: [240, -180], stun: 0.48, hs: 0.11 })) {
-foe.slowT = Math.max(foe.slowT || 0, 1.8);
-}
-spawnProj(f, { kind: 'qi', x: f.x + f.face * 48, y: f.y - 64, vx: f.face * 920, w: 68, h: 64, life: 0.55, dmg: 32, kb: [180, -120], stun: 0.34, hs: 0.06, slow: 1.6 });
-}
-if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['hva', 26] : ['lda', 52],
-ai: (me, foe, d) => d > 90 && d < 360 },
-soulrift: { name: '裂魂斩', cd: 6, desc: '沉肩蓄势以寒渊重剑自下而上裂空重挑，破防并高高挑飞对手。',
-start(f) { f.vx = 0; f.armorT = 0.26; f.armorHits = 1; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.15) {
-f.skPh = 1; f.t = 0; f.vx = 280 * f.face; SFX.heavy(); shake = Math.max(shake, 8);
-if (!RESIM) ring(f.x + f.face * 68, f.y - 52, 136, '110,196,255', 0.38);
-strike(f, foe, { box: [-25, -135, 145, 5], dmg: 58, kb: [210, -680], stun: 0.56, hs: 0.13, launch: true, guardDamage: 36 });
-}
-if (f.skPh === 1 && f.t >= 0.32) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['qf_charge', 24] : ['l3a', 54],
-ai: (me, foe, d) => d < 170 },
-});
-Object.assign(SKILLS, {
 flamehalberd: { name: '烈焰突刺', cd: 6, pass: true, nofric: true, desc: '挺起火耙冲刺，命中引燃对手。',
 start(f) { f.vx = 0; },
 update(f, foe) {
@@ -16918,37 +15996,6 @@ if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['qf_charge', 28] : ['l3a', 52],
 ai: (me, foe, d) => d < 160 },
-});
-Object.assign(SKILLS, {
-blazefist: { name: '烈焰冲拳', cd: 5, pass: true, nofric: true, desc: '双拳燃起烈焰疾步突刺轰击，命中后引燃对手并造成持续灼烧。',
-start(f) { f.vx = 0; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.07) { f.skPh = 1; f.t = 0; f.vx = 1420 * f.face; f.hitDone = false; SFX.dash(); }
-if (f.skPh === 1) {
-if (strike(f, foe, { box: [-12, -104, 96, 0], dmg: 50, kb: [260, -180], stun: 0.48, hs: 0.1 })) {
-foe.burnT = Math.max(foe.burnT || 0, 2.8);
-if (!RESIM) ring(foe.x, foe.y - 60, 88, '255,140,50', 0.28);
-}
-if (f.t >= 0.19) { f.skPh = 2; f.t = 0; f.vx *= 0.2; }
-}
-if (f.skPh === 2 && f.t >= 0.2) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['lm_boxer', 30] : f.skPh === 1 ? ['lm_jab', 58] : ['idle', 16],
-ai: (me, foe, d) => d > 90 && d < 300 },
-emberupper: { name: '烬火升龙', cd: 5.5, desc: '旋身腾空打出灼热升龙勾拳，高高挑飞近身对手并施加烈焰灼烧。',
-start(f) { f.vx = 0; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.09) {
-f.skPh = 1; f.t = 0; f.vx = 220 * f.face; f.vy = -520; f.y = Math.min(f.y, -1); SFX.heavy();
-if (!RESIM) ring(f.x + f.face * 36, f.y - 72, 112, '255,140,50', 0.34);
-if (strike(f, foe, { box: [-35, -138, 108, 0], dmg: 52, kb: [180, -700], stun: 0.54, hs: 0.11, launch: true })) {
-foe.burnT = Math.max(foe.burnT || 0, 2.5);
-}
-}
-if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['lm_boxer', 28] : ['l3a', 54],
-ai: (me, foe, d) => d < 145 },
 });
 Object.assign(SKILLS, {
 polarswap: { name: '极性反转', cd: 6, instant: true, desc: '正极和负极互换，不花出招时间，空中也能用；身上亮起一个大大的红色 ⊕ 或蓝色 ⊖，换完立刻清零「磁极」（R）的冷却。负极普攻消磁了，换一下极性就恢复。',
@@ -17009,34 +16056,6 @@ pose: f => f.skPh === 0 ? ['lm_boxer', 26] : [f.magN > 0 ? 'hva' : 'yx_push', 56
 ai: (me, foe, d) => me.pol > 0 ? d < MAG.rPlusR + 10 : d > 120 && d < MAG.rMinusRange - 40 },
 });
 Object.assign(SKILLS, {
-vermilionarc: { name: '朱砂画弧', cd: 5, desc: '挥动丹青大笔划出朱砂弧光，挥出远程丹青气波压制并减速对手。',
-start(f) { f.vx *= 0.3; },
-update(f) {
-if (f.skPh === 0 && f.t >= 0.1) {
-f.skPh = 1; f.t = 0; SFX.swing();
-if (!RESIM) ring(f.x + f.face * 40, f.y - 66, 86, '245,105,80', 0.28);
-spawnProj(f, { kind: 'qi', x: f.x + f.face * 44, y: f.y - 68, vx: f.face * 860, autoAim: true, w: 78, h: 78, life: 0.68, dmg: 46, kb: [200, -210], stun: 0.4, hs: 0.08, slow: 1.5 });
-}
-if (f.skPh === 1 && f.t >= 0.27) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 52],
-ai: (me, foe, d) => d > 130 && d < 420 },
-cinnabarward: { name: '青绿封卷', cd: 6, desc: '落笔在对手脚下布下青绿画阵，触发后定身困敌并造成伤害。',
-start(f) { f.vx = 0; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.12) {
-f.skPh = 1; f.t = 0; SFX.poof();
-const tx = clamp(f.x + f.face * clamp(Math.abs(foe.x - f.x), 90, 270), WALL, STAGE_W - WALL);
-const ty = foe && Math.abs(foe.x - f.x) < 320 ? gndY(foe) : f.y;
-if (!RESIM) ring(tx, ty - 10, 118, '56,152,200', 0.36);
-spawnProj(f, { kind: 'trap', x: tx, y: ty - 6, groundY: ty, vx: 0, w: 120, h: 32, life: 4.5, delay: 0.2, dmg: 38, kb: [0, 0], stun: 0.52, hs: 0.08, root: true, groundOnly: true });
-}
-if (f.skPh === 1 && f.t >= 0.26) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['my_stroke', 24] : ['my_paint', 44],
-ai: (me, foe, d) => d > 95 && d < 300 },
-});
-Object.assign(SKILLS, {
 blink: { name: '影遁', cd: 11, pass: true, desc: '结印 0.3 秒后入影（结印时站着不动），影子 0.15 秒跨层掠到对手背后施展十字绞杀（只伤血，不让对手僵直）。此后 1.5 秒内，下一击威力暴涨 50%。',
 start() {},
 update(f, foe) {
@@ -17090,37 +16109,6 @@ if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
 pose: f => f.skPh === 0 ? ['fy_seal', 28] : ['fy_crouch', 50], ai: (m, o, d) => d > 140 },
 });
 Object.assign(SKILLS, {
-chimegust: { name: '清铃拂风', cd: 5, desc: '轻展素扇送出双股清风刃，远距压制并吹退逼近之敌。',
-start(f) { f.vx *= 0.3; },
-update(f) {
-if (f.skPh === 0 && f.t >= 0.09) {
-f.skPh = 1; f.t = 0; SFX.swing();
-for (const vy of [-95, 95]) {
-spawnProj(f, { kind: 'wind', x: f.x + f.face * 38, y: f.y - 64, vx: f.face * 1060, vy, autoAim: true, w: 68, h: 56, life: 0.95, dmg: 26, kb: [320, -90], stun: 0.24, hs: 0.04 });
-}
-}
-if (f.skPh === 1 && f.t >= 0.26) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['ly_fanswipe', 30] : ['idle', 18],
-ai: (me, foe, d) => d > 130 && d < 420 },
-windblessing: { name: '和风祈愿', cd: 6.5, desc: '摇响祈福风铃恢复少量气血并反弹暗器，同时唤出清风气环吹开近敌。',
-start(f) { f.vx = 0; f.reflectT = 0.32; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.12) {
-f.skPh = 1; f.t = 0; SFX.note(2);
-f.hp = Math.min(f.maxHp, f.hp + Math.round(52 * HERO_HP_SCALE));
-if (!RESIM) {
-ring(f.x, f.y - 60, 138, '165,225,255', 0.4);
-addP({ type: 'text', text: '✦ 和风祈愿', x: f.x, y: f.y - 115, life: 0.8, max: 0.8, rgb: '255,168,200' });
-}
-strike(f, foe, { box: [-128, -128, 128, 0], dmg: 34, kb: [380, -340], stun: 0.42, hs: 0.08, launch: true });
-}
-if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['yx_play', 28] : ['ly_fanswipe', 48],
-ai: (me, foe, d) => d < 160 || me.hp < me.maxHp * 0.72 },
-});
-Object.assign(SKILLS, {
 hook: { name: '飞锤', cd: 4, air: true, desc: '把链锤朝对手甩出去（射程约 495），锤头砸中就扯链把对手拽到身前，并施加【震魄】：1.2 秒内对手受到的伤害提高 25%。被格挡或被霸体吃掉时带不动。',
 start(f) { f.vx *= 0.2; },
 update(f) {
@@ -17150,39 +16138,6 @@ if (f.t >= 1.2) toNeutral(f);
 },
 pose: f => f.spN >= 5 ? ['gc_throw', 50] : ['gc_spin', 30],
 ai: (me, foe, d) => d < 170 },
-});
-Object.assign(SKILLS, {
-talondive: { name: '金鹏裂空', cd: 5.5, air: true, nofric: true, desc: '振翼腾空并以金爪凌厉俯冲，落地震开罡风气浪击飞范围内对手。',
-start(f) { f.vx = 0; f.vy = Math.min(f.vy, -340); f.plat = -1; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.1) {
-f.skPh = 1; f.t = 0; f.vx = 1180 * f.face; f.vy = 620; f.hitDone = false; SFX.dash();
-}
-if (f.skPh === 1) {
-strike(f, foe, { box: [-25, -105, 102, 14], dmg: 54, kb: [260, -520], stun: 0.5, hs: 0.11, launch: true });
-if (f.t >= 0.22 || f.onGround()) {
-f.skPh = 2; f.t = 0; f.vx *= 0.25;
-if (!RESIM) { ring(f.x, f.y - 36, 130, '255,205,85', 0.34); dust(f.x, f.y, 10); }
-}
-}
-if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['jump', 24] : f.skPh === 1 ? ['yl_dive', 54] : ['getup', 16],
-ai: (me, foe, d) => d > 100 && d < 320 },
-galestrike: { name: '扶摇罡风', cd: 5, air: true, desc: '振开金羽双翼齐发五道贯穿裂空金羽箭，扇形覆盖上下平台层压制中远距离敌军。',
-start(f) { f.vx *= 0.25; if (f.y < 0) f.vy = Math.min(f.vy, 60); },
-update(f) {
-if (f.skPh === 0 && f.t >= 0.1) {
-f.skPh = 1; f.t = 0; SFX.slice();
-for (const a of [-0.24, -0.12, 0, 0.12, 0.24]) {
-spawnProj(f, { kind: 'arrow', x: f.x + f.face * 34, y: f.y - 68, vx: f.face * 1240 * Math.cos(a), vy: 1240 * Math.sin(a), w: 36, h: 20, life: 0.9, dmg: a === 0 ? 22 : 16, kb: [160, -140], stun: 0.3, hs: 0.04, pierce: true, rehit: 0.4, rgb: '255,215,95' });
-}
-if (!RESIM) ring(f.x + f.face * 34, f.y - 68, 86, '255,215,95', 0.26);
-}
-if (f.skPh === 1 && f.t >= 0.22) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['yl_wings', 28] : ['a1a', 52],
-ai: (me, foe, d) => d > 140 && d < 520 },
 });
 Object.assign(SKILLS, {
 drink: { name: '豪饮', cd: 2.6, desc: '仰头灌一大口酒，醉意 +50。', start(f){ f.vx = 0; }, update(f){ if (f.t >= 0.3) toNeutral(f); }, pose: () => ['zx_drink', 24], ai: () => false },
@@ -17453,31 +16408,6 @@ if (f.t >= 2) toNeutral(f);
 pose: () => ['ls_stance', 20], ai: (m, o, d) => d < 150 },
 });
 Object.assign(SKILLS, {
-mindwave: { name: '灵犀音波', cd: 5, desc: '横笛吹出逐渐扩张的灵犀音环，穿透中远距离并减速对手。',
-start(f) { f.vx *= 0.3; },
-update(f) {
-if (f.skPh === 0 && f.t >= 0.1) {
-f.skPh = 1; f.t = 0; SFX.note(1);
-spawnProj(f, { kind: 'note', x: f.x + f.face * 42, y: f.y - 68, vx: f.face * 800, autoAim: true, w: 62, h: 62, grow: 44, life: 0.85, dmg: 42, kb: [190, -180], stun: 0.42, hs: 0.07, slow: 1.5 });
-}
-if (f.skPh === 1 && f.t >= 0.27) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['yx_play', 28] : ['yx_push', 54],
-ai: (me, foe, d) => d > 135 && d < 420 },
-echostun: { name: '余音震魄', cd: 6, desc: '奏响清越强音护体反弹暗器，震晕周围敌军并削减大量架势。',
-start(f) { f.vx = 0; f.reflectT = 0.36; f.armorT = 0.24; f.armorHits = 1; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.12) {
-f.skPh = 1; f.t = 0; SFX.note(3);
-if (!RESIM) ring(f.x, f.y - 60, 148, '95,235,210', 0.4);
-strike(f, foe, { box: [-135, -135, 135, 0], dmg: 46, kb: [240, -520], stun: 0.62, hs: 0.11, launch: true, guardDamage: 34 });
-}
-if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['yx_play', 34] : ['yx_push', 52],
-ai: (me, foe, d) => d < 175 },
-});
-Object.assign(SKILLS, {
 windblade: { name: '风刃', cd: 4.0, air: true, desc: '挥扇生风，一次扇出上下两道风刃（每道 28 伤害）。此招【无长硬直】，附带风暴推力（360 像素击退）；连飞羽轻镖也一并吹散。',
 start() {},
 update(f) {
@@ -17649,35 +16579,6 @@ pose: f => f.skPh === 10 ? ['fy_seal', 55] : f.skPh === 11 ? ['a2', 70] : f.skPh
 ai: me => !!shadowExecReady(me) },
 });
 Object.assign(SKILLS, {
-inkbind: { name: '断魂墨缚', cd: 5.5, desc: '挥毫在敌足下布下断魂墨阵，踏入者陷入禁锢硬直并被墨意迟缓。',
-start(f) { f.vx = 0; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.14) {
-f.skPh = 1; f.t = 0; SFX.poof();
-for (const p of projs) if (p.kind === 'trap' && p.owner === f.idx) p.dead = true;
-const tx = clamp(f.x + f.face * clamp(Math.abs(foe.x - f.x), 85, 290), WALL, STAGE_W - WALL);
-const ty = foe && Math.abs(foe.x - f.x) < 340 ? gndY(foe) : f.y;
-if (!RESIM) ring(tx, ty - 12, 90, '180,142,255', 0.35);
-spawnProj(f, { kind: 'trap', x: tx, y: ty - 6, groundY: ty, vx: 0, w: 120, h: 30, life: 4.5, delay: 0.2, dmg: 38, kb: [0, 0], stun: 0.52, hs: 0.08, root: true, slow: 1.8, groundOnly: true });
-}
-if (f.skPh === 1 && f.t >= 0.24) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 44],
-ai: (me, foe, d) => d > 85 && d < 350 && !projs.some(p => p.kind === 'trap' && p.owner === me.idx) },
-sealscript: { name: '镇魂敕符', cd: 5, desc: '凌空疾书镇魂墨敕，射出一道追踪墨气符波压制中远距离对手。',
-start(f) { f.vx *= 0.25; },
-update(f) {
-if (f.skPh === 0 && f.t >= 0.1) {
-f.skPh = 1; f.t = 0; SFX.swing();
-if (!RESIM) ring(f.x + f.face * 42, f.y - 70, 86, '180,142,255', 0.32);
-spawnProj(f, { kind: 'qi', x: f.x + f.face * 44, y: f.y - 68, vx: f.face * 940, autoAim: true, w: 68, h: 68, life: 0.65, dmg: 44, kb: [200, -220], stun: 0.44, hs: 0.08, slow: 1.5 });
-}
-if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['my_stroke', 28] : ['my_paint', 52],
-ai: (me, foe, d) => d > 130 && d < 420 },
-});
-Object.assign(SKILLS, {
 inktrap: { name: '墨阵', cd: 5.2, desc: '提笔画出一池宽 115 像素的墨阵。踏入者陷入【深墨禁锢】（0.48 秒定身 + 2.8 秒迟缓）；再按 Q 可随时引爆。',
 start(f) { f.vx = 0; },
 update(f) {
@@ -17702,32 +16603,6 @@ addP({ type: 'text', text: `画符 · ${f.fu}/${FU_MAX}`, x: f.x, y: f.y - 140, 
 if (f.skPh === 1 && f.t >= 0.4) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['my_stroke', 26] : ['my_paint', 50], ai: (m, o, d) => d > 260 && (m.fu || 0) < FU_MAX && (m.ink || 0) >= INK_COST * (FU_INK + 1) },   // 电脑留一格墨甩墨团，墨不够就不去画
-});
-Object.assign(SKILLS, {
-tidalslam: { name: '怒涛震锚', cd: 6, desc: '抡起燕尾救生锚砸地，震波削减架势并挑飞对手。',
-start(f) { f.vx = 0; f.armorT = 0.25; f.armorHits = 1; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.16) {
-f.skPh = 1; f.t = 0; SFX.heavy(); shake = Math.max(shake, 10);
-if (!RESIM) ring(f.x + f.face * 70, f.y - 10, 145, '80,210,255', 0.38);
-strike(f, foe, { box: [-40, -110, 175, 10], dmg: 60, kb: [240, -620], stun: 0.55, hs: 0.14, launch: true, guardDamage: 38 });
-}
-if (f.skPh === 1 && f.t >= 0.32) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['hva', 24] : ['lda', 52],
-ai: (me, foe, d) => d < 185 },
-undertow: { name: '破浪突进', cd: 5.5, nofric: true, desc: '以救生锚顶在身前冲锋，凭霸体撞飞对手。',
-start(f) { f.vx = 0; f.armorT = 0.36; f.armorHits = 2; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.08) { f.skPh = 1; f.t = 0; f.vx = 1120 * f.face; f.hitDone = false; SFX.dash(); }
-if (f.skPh === 1) {
-strike(f, foe, { box: [-15, -110, 96, 0], dmg: 52, kb: [380, -240], stun: 0.48, hs: 0.11, knock: true });
-if (f.t >= 0.24) { f.skPh = 2; f.t = 0; f.vx *= 0.25; }
-}
-if (f.skPh === 2 && f.t >= 0.24) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['qf_charge', 24] : f.skPh === 1 ? ['dash', 52] : ['idle', 14],
-ai: (me, foe, d) => d > 110 && d < 320 },
 });
 Object.assign(SKILLS, {
 throwball: { name: '金丝回环', cd: 0, desc: '沿当前朝向放出傀丸。金丝让它在有限距离内持续往返；普攻与蓄力攻击可以击打傀丸，改变方向并加速。傀丸回到身边后会再次出发。',
@@ -17843,35 +16718,6 @@ pose: f => f.skPh === 0 ? ['yh_mirror', 28] : ['ly_fanswipe', 48],
 ai: (me, foe, d) => me.hp < me.maxHp * 0.85 || d < 120 },
 });
 Object.assign(SKILLS, {
-gangthrust: { name: '破阵长驱', cd: 6, nofric: true, desc: '身披铁甲霸体挺枪直驱，超长枪芒贯穿敌阵并大幅削减防御架势。',
-start(f) { f.vx = 0; f.armorT = 0.28; f.armorHits = 1; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.1) { f.skPh = 1; f.t = 0; f.vx = 1240 * f.face; f.hitDone = false; SFX.dash(); }
-if (f.skPh === 1) {
-if (strike(f, foe, { box: [-10, -108, 128, 0], dmg: 56, kb: [320, -200], stun: 0.5, hs: 0.12, guardDamage: 36 })) {
-if (!RESIM) ring(foe.x, foe.y - 60, 96, '240,200,96', 0.3);
-}
-if (f.t >= 0.22) { f.skPh = 2; f.t = 0; f.vx *= 0.2; }
-}
-if (f.skPh === 2 && f.t >= 0.24) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['ls_stance', 26] : f.skPh === 1 ? ['ls_thrust', 56] : ['idle', 14],
-ai: (me, foe, d) => d > 110 && d < 340 },
-ironbulwark: { name: '铁壁震枪', cd: 6.5, desc: '玄铁长枪顿地立起天罡铁壁，获持久霸体与架势回复，并横扫挑飞近身敌军。',
-start(f) { f.vx = 0; f.armorT = 0.65; f.armorHits = 2; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.14) {
-f.skPh = 1; f.t = 0; SFX.heavy(); shake = Math.max(shake, 9);
-f.guard = Math.min(f.guardMax, (f.guard || 0) + 32);
-if (!RESIM) ring(f.x + f.face * 48, f.y - 54, 142, '240,200,96', 0.4);
-strike(f, foe, { box: [-110, -125, 145, 5], dmg: 50, kb: [280, -600], stun: 0.52, hs: 0.12, launch: true, guardDamage: 34 });
-}
-if (f.skPh === 1 && f.t >= 0.3) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['ls_stance', 24] : ['l3a', 52],
-ai: (me, foe, d) => d < 175 },
-});
-Object.assign(SKILLS, {
 quake: { name: '震地', cd: 8, breakout: true, desc: '双手擎刀，怒砸大地，地裂冲击波范围大增（扩大35%）。起手带霸体（抵挡1次攻击），砸地直击施加【撼地重震】（0.45 秒脑震荡），把人掀上云霄。唯腾空者不受地裂所侵。',
 start(f) { f.armorT = 0.28; f.armorHits = 1; f.vx = 0; if (f.y < 0) f.vy = Math.min(f.vy, 0); },
 update(f, foe) {
@@ -17939,34 +16785,6 @@ if (f.t >= 0.25) { f.skPh = 2; f.t = 0; f.vx *= 0.2; f.armorT = 0; }
 if (f.skPh === 2 && f.t >= 0.28) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['ts_shoulder', 26] : ['ts_shoulder', 40], ai: (m, o, d) => d < 260 },
-});
-Object.assign(SKILLS, {
-iaidodraw: { name: '无涯居合', cd: 5.5, pass: true, nofric: true, desc: '按鞘蓄势一瞬拔刀疾闪，以迅雷居合剑光穿透并重创对手。',
-start(f) { f.vx = 0; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.11) {
-f.skPh = 1; f.t = 0; f.vx = 1560 * f.face; f.invul = 0.11; f.hitDone = false; SFX.dash(); SFX.slice();
-if (!RESIM) slashLine(f.x + f.face * 64, f.y - 60, 0.04 * f.face, '215,230,255');
-}
-if (f.skPh === 1) {
-strike(f, foe, { box: [-14, -112, 118, 0], dmg: 56, kb: [240, -220], stun: 0.54, hs: 0.12 });
-if (f.t >= 0.17) { f.skPh = 2; f.t = 0; f.vx *= 0.15; }
-}
-if (f.skPh === 2 && f.t >= 0.22) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['qf_charge', 28] : f.skPh === 1 ? ['qf_thrust', 60] : ['idle', 14],
-ai: (me, foe, d) => d > 110 && d < 340 },
-voidstep: { name: '踏虚斩影', cd: 5.5, desc: '踏虚闪避短暂无敌，随即挥出一道凌厉弯月剑气挑空对手。',
-start(f) { f.vx = -260 * f.face; f.invul = Math.max(f.invul || 0, 0.16); if (!RESIM) smoke(f.x, f.y - 54, 7); SFX.dash(); },
-update(f) {
-if (f.skPh === 0 && f.t >= 0.11) {
-f.skPh = 1; f.t = 0; f.vx = 0; SFX.swing();
-spawnProj(f, { kind: 'qi', x: f.x + f.face * 42, y: f.y - 66, vx: f.face * 940, autoAim: true, w: 88, h: 92, life: 0.52, dmg: 48, kb: [200, -560], stun: 0.36, hs: 0.08, launch: true });
-}
-if (f.skPh === 1 && f.t >= 0.26) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['fy_seal', 30] : ['qf_thrust', 56],
-ai: (me, foe, d) => d > 110 && d < 360 },
 });
 Object.assign(SKILLS, {
 starorb: { name: '星规流火', cd: 5, desc: '让三臂星规对准一线，向中远距离射出星火。',
@@ -18061,103 +16879,6 @@ if (f.skPh === 1 && f.t >= 0.24) toNeutral(f);
 pose: f => f.skPh === 0 ? ['yl_wings', 30] : ['a1a', 60], ai: (m, o, d) => d > 120 },
 });
 Object.assign(SKILLS, {
-foxstep: { name: '狐步幻移', cd: 6, pass: true, nofric: true, desc: '化作银月狐影穿身突袭并强化后续攻击，贴脸瞬间划出幻月双刃斩击。',
-start(f) { f.vx = 0; if (!RESIM) smoke(f.x, f.y - 50, 8); },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.08) {
-f.skPh = 1; f.t = 0; f.vx = 1650 * f.face; f.invul = Math.max(f.invul || 0, 0.14); f.hitDone = false; SFX.poof();
-}
-if (f.skPh === 1) {
-if (strike(f, foe, { box: [-24, -104, 92, 0], dmg: 44, kb: [160, -140], stun: 0.44, hs: 0.08 })) {
-f.buffT = 1.4;
-if (!RESIM) slashLine(foe.x, foe.y - 60, 0.45, '212,184,255');
-}
-if (f.t >= 0.18) { f.skPh = 2; f.t = 0; f.vx *= 0.15; f.face = foe.x >= f.x ? 1 : -1; }
-}
-if (f.skPh === 2 && f.t >= 0.18) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['fy_seal', 32] : f.skPh === 1 ? ['dash', 60] : ['fy_xslash', 42],
-ai: (me, foe, d) => d > 100 && d < 340 },
-miragecut: { name: '幻月双斩', cd: 4.5, air: true, desc: '旋身跃起施展双刃十字连切，出招迅捷，可于空中连段打断对手。',
-start(f) { f.vx = f.face * 320; if (f.onGround()) { f.vy = -260; f.y = -1; } },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.06) {
-f.skPh = 1; f.t = 0; f.hitDone = false; SFX.slice();
-if (!RESIM) slashLine(f.x + f.face * 48, f.y - 62, 0.55, '212,184,255');
-strike(f, foe, { box: [-20, -112, 104, 10], dmg: 24, kb: [120, -180], stun: 0.34, hs: 0.05 });
-}
-if (f.skPh === 1 && f.t >= 0.1) {
-f.skPh = 2; f.t = 0; f.hitDone = false; SFX.slice();
-if (!RESIM) slashLine(f.x + f.face * 54, f.y - 62, -0.55, '212,184,255');
-strike(f, foe, { box: [-20, -112, 110, 10], dmg: 28, kb: [240, -280], stun: 0.42, hs: 0.07 });
-}
-if (f.skPh === 2 && f.t >= 0.2) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['du_l1s', 32] : f.skPh === 1 ? ['du_l1a', 56] : ['fy_xslash', 48],
-ai: (me, foe, d) => d < 150 },
-});
-Object.assign(SKILLS, {
-venomfan: { name: '幽篁毒针', cd: 5, desc: '从袖中齐射三枚淬药细针，命中减速对手。',
-start(f) { f.vx *= 0.3; },
-update(f) {
-if (f.skPh === 0 && f.t >= 0.08) {
-f.skPh = 1; f.t = 0; SFX.swing();
-for (let k = -1; k <= 1; k++) {
-spawnProj(f, { kind: 'dart', x: f.x + f.face * 34, y: f.y - 68 + k * 14, vx: f.face * 1040, vy: k * 90, w: 38, h: 24, life: 0.65, dmg: 18, kb: [110, 0], stun: 0.26, hs: 0.04, slow: 1.4 });
-}
-}
-if (f.skPh === 1 && f.t >= 0.26) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['qf_charge', 30] : ['qf_thrust', 56],
-ai: (me, foe, d) => d > 150 && d < 420 },
-whiplash: { name: '回纹缠带', cd: 5.5, desc: '甩出带坠的绞带，从远处拉近对手并造成硬直。',
-start(f) { f.vx = 0; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.1) {
-f.skPh = 1; f.t = 0; SFX.swing();
-if (strike(f, foe, { box: [10, -108, 220, 0], dmg: 44, kb: [-260, -120], stun: 0.52, hs: 0.09 })) {
-foe.slowT = Math.max(foe.slowT || 0, 1.5);
-}
-}
-if (f.skPh === 1 && f.t >= 0.26) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['qf_charge', 28] : ['gc_throw', 54],
-ai: (me, foe, d) => d > 95 && d < 250 },
-});
-Object.assign(SKILLS, {
-reapdash: { name: '噬影掠杀', cd: 5.5, pass: true, nofric: true, desc: '遁入暗影高速掠过敌身，双刃交叉斩击并留下一团幽雾。',
-start(f) { f.vx = 0; if (!RESIM) smoke(f.x, f.y - 52, 8); SFX.poof(); },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.07) {
-f.skPh = 1; f.t = 0; f.vx = 1520 * f.face; f.invul = 0.14; f.hitDone = false; SFX.dash();
-}
-if (f.skPh === 1) {
-if (strike(f, foe, { box: [-18, -104, 96, 0], dmg: 48, kb: [180, -220], stun: 0.46, hs: 0.09 })) {
-if (!RESIM) { slashLine(foe.x, foe.y - 60, 0.55, '180,110,255'); slashLine(foe.x, foe.y - 60, -0.55, '180,110,255'); }
-SFX.slice();
-}
-if (f.t >= 0.18) { f.skPh = 2; f.t = 0; f.vx *= 0.18; }
-}
-if (f.skPh === 2 && f.t >= 0.2) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['fy_seal', 32] : f.skPh === 1 ? ['dash', 60] : ['fy_xslash', 42],
-ai: (me, foe, d) => d > 95 && d < 320 },
-soulpull: { name: '幽冥拘魂', cd: 5.5, desc: '挥出幽影锁链远距拘魂，命中将对手拽向身前并施加迟缓。',
-start(f) { f.vx = 0; },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.1) {
-f.skPh = 1; f.t = 0; SFX.slice();
-if (!RESIM) ring(f.x + f.face * 95, f.y - 64, 110, '180,110,255', 0.3);
-if (strike(f, foe, { box: [8, -110, 225, 0], dmg: 42, kb: [-280, -140], stun: 0.52, hs: 0.09 })) {
-foe.slowT = Math.max(foe.slowT || 0, 1.6);
-}
-}
-if (f.skPh === 1 && f.t >= 0.25) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['fy_seal', 28] : ['gc_throw', 54],
-ai: (me, foe, d) => d > 90 && d < 245 },
-});
-Object.assign(SKILLS, {
 moonring: { name: '月轮', cd: 4.5, desc: '双月刃体积增大，脱手去程仅为快速轻削（无挑空）；自背后折返的一记附带【背袭破防】（0.78 秒强力击飞与晕眩），专破死守前方的架势。',
 start(f) { f.vx = 0; },
 update(f) {
@@ -18183,50 +16904,6 @@ if (f.t >= 0.42) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['yh_mirror', 40] : f.skPh === 2 ? ['hva', 60] : ['idle', 10],
 ai: () => false },
-});
-Object.assign(SKILLS, {
-craneglide: { name: '鹤翼凌空', cd: 5, air: true, pass: true, nofric: true, desc: '展翅御风向前疾掠，沿途扫击敌人并齐射两道仙羽穿刺牵制。',
-start(f) { if (f.onGround()) { f.vy = -340; f.plat = -1; f.y -= 1; } else { f.vy *= 0.25; } },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.08) {
-f.skPh = 1; f.t = 0; f.vx = 1120 * f.face; f.vy = -60; f.hitDone = false; SFX.dash();
-for (const k of [-1, 0, 1]) {
-spawnProj(f, { kind: 'arrow', x: f.x + f.face * 32, y: f.y - 68 + k * 14, vx: f.face * 1080, vy: k * 75, autoAim: k === 0, w: 34, h: 24, life: 1.15, dmg: 18, pierce: true, maxHits: 1, kb: [120, -60], stun: 0.24, hs: 0.04, rgb: '168,230,255' });
-}
-}
-if (f.skPh === 1) {
-strike(f, foe, { box: [-20, -102, 94, 16], dmg: 38, kb: [220, -240], stun: 0.4, hs: 0.07 });
-if (f.t >= 0.22) { f.skPh = 2; f.t = 0; f.vx *= 0.25; }
-}
-if (f.skPh === 2 && f.t >= 0.2) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['yl_wings', 28] : f.skPh === 1 ? ['yl_dive', 54] : ['a1a', 26],
-ai: (me, foe, d) => d > 110 && d < 360 },
-cloudmend: { name: '云岚沐羽', cd: 9, air: true, desc: '振翅悬空唤出仙岚灵光，回复自身与周围友军气血并震开周身强敌。',
-start(f) { f.vx *= 0.2; f.vy = Math.min(f.vy, -120); },
-update(f, foe) {
-if (f.skPh === 0 && f.t >= 0.13) {
-f.skPh = 1; f.t = 0; SFX.swing();
-const heal = Math.round(86 * HERO_HP_SCALE);
-f.hp = Math.min(f.maxHp, f.hp + heal);
-const allyHeal = Math.round(heal * 0.55);
-for (const ally of allFighters()) {
-if (ally === f || ally.hidden || ally.team !== f.team || ally.hp <= 0) continue;
-if (Math.hypot(ally.x - f.x, ally.y - f.y) <= 280) {
-ally.hp = Math.min(ally.maxHp, ally.hp + allyHeal);
-if (!RESIM) { ring(ally.x, ally.y - 60, 88, '168,230,255', 0.35); addP({ type: 'text', text: `+${allyHeal}`, x: ally.x, y: ally.y - 118, life: 0.8, max: 0.8, rgb: '168,230,255' }); }
-}
-}
-if (!RESIM) {
-ring(f.x, f.y - 64, 134, '168,230,255', 0.4);
-addP({ type: 'text', text: `+${heal}`, x: f.x, y: f.y - 124, life: 0.85, max: 0.85, rgb: '168,230,255' });
-}
-strike(f, foe, { box: [-118, -124, 118, 12], dmg: 28, kb: [320, -260], stun: 0.38, hs: 0.07 });
-}
-if (f.skPh === 1 && f.t >= 0.28) toNeutral(f);
-},
-pose: f => f.skPh === 0 ? ['yl_wings', 26] : ['a1a', 46],
-ai: (me, foe, d) => me.hp < me.maxHp * 0.85 || d < 125 },
 });
 Object.assign(SKILLS, {
 soundwave: { name: '清音', cd: 3.2, air: true, desc: '横箫一吹，放出一道音波。普攻攒下的音律会一次吹尽：每枚音律让音波更大、更快、伤害 +20；三律齐鸣时音波穿透、挑空、不可斩散，并让对手陷入【绕梁 · 失律】（2.2 秒迟缓）。',
@@ -18293,96 +16970,6 @@ ai: (me, foe, d) => (me.drunk || 0) >= 50 && d > 120 && d < 800 && me.hp < me.ma
 });
 const ULTS = {};
 Object.assign(ULTS, {
-wintertorrent: { name: '冰河奔涌', desc: '霜剑引寒疾掠过阵，在所经层高连续凝结四座破土冰晶尖刺并齐射贯穿寒冰长枪，冻结迟缓沿途敌军并将其挑飞。',
-begin(f) {
-f.sp = 'skate'; f.spN = 0; f.vx = f.face * 1340; f.vy = 0; f.spPose = 'qf_thrust'; f.invul = 0.6;
-SFX.dash();
-},
-update(f, foe) {
-if (f.sp === 'skate') {
-if (f.spN < 4 && f.t >= 0.06 + f.spN * 0.08) {
-const sx = clamp(f.x, WALL + 30, STAGE_W - WALL - 30), sy = f.y;
-spawnProj(f, { kind: 'bolt', x: sx, y: sy - 95, groundY: sy, vx: 0, vy: 0, w: 78, h: 210, life: 0.44, delay: 0.09, dmg: 42, kb: [f.face * 180, -620], stun: 0.5, hs: 0.08, launch: true, unblockable: f.spN === 3, ult: true, noScale: true, unbreakable: true, small: true, pierce: true, rehit: 0.45, rgb: '150,235,255' });
-for (const dy of [-0.14, 0, 0.14]) {
-spawnProj(f, { kind: 'ice', x: sx + f.face * 24, y: sy - 64, vx: f.face * 1320 * Math.cos(dy), vy: 1320 * Math.sin(dy), w: 46, h: 22, life: 0.72, dmg: 18, kb: [140, -160], stun: 0.3, hs: 0.04, pierce: true, rehit: 0.4, ult: true, noScale: true, unbreakable: true });
-}
-if (!RESIM) { ring(sx, sy - 16, 94, '150,235,255', 0.36); dust(sx, sy, 8); SFX.slice(); }
-f.spN++;
-}
-if (f.t >= 0.36) { f.sp = 'finish'; f.t = 0; f.vx *= 0.15; }
-} else if (f.sp === 'finish') {
-if (f.t >= 0.26) endSpecial(f);
-}
-} },
-});
-Object.assign(ULTS, {
-conquerorslam: { name: '力拔山兮', desc: '披甲悍然冲阵擒拿敌手高举过顶，再以万钧之势反身重摔贯地，引发当前层巨震波破防击飞周身全部敌军！',
-begin(f) {
-f.sp = 'rush'; f.vx = f.face * 1120; f.vy = 0; f.spPose = 'ts_shoulder'; f.invul = 0.6; f.bwVictimIdx = -1;
-SFX.dash();
-},
-update(f, foe) {
-if (f.sp === 'rush') {
-for (const tf of isMulti() ? foesOf(f) : [foe]) {
-if (!tf || tf.hp <= 0 || invulVs(tf, f) || Math.abs(tf.x - f.x) > 105 || Math.abs(tf.y - f.y) > 95) continue;
-f.sp = 'hoist'; f.t = 0; f.vx = 0; f.bwVictimIdx = tf.idx; f.spPose = 'ts_lift';
-tf.state = 'held'; tf.t = 0; tf.vx = 0; tf.vy = 0; tf.move = null; tf.skill = null; tf.sp = null;
-SFX.heavy(); return;
-}
-if (f.t >= 0.34) { f.sp = 'slam_empty'; f.t = 0; f.vx = 0; f.spPose = 'ts_slam'; }
-} else if (f.sp === 'hoist') {
-const v = f.bwVictimIdx >= 0 ? fighterByIdx(f.bwVictimIdx) : null;
-if (v && v.hp > 0 && v.state === 'held') { v.x = f.x + f.face * 18; v.y = f.y - 98; }
-if (f.t >= 0.34) {
-f.sp = 'slam'; f.t = 0; f.spPose = 'ts_slam';
-if (!RESIM) { shake = Math.max(shake, 26); flashA = 0.38; flashRGB = '255,195,85'; ring(f.x + f.face * 48, f.y - 16, 225, '255,195,85', 0.5); dust(f.x + f.face * 48, f.y, 26); if (typeof debrisBurst === 'function') debrisBurst(f.x + f.face * 48, f.y, 14, '255,195,85'); SFX.ko(); }
-if (v && v.hp > 0) {
-v.x = clamp(f.x + f.face * 56, WALL + 20, STAGE_W - WALL - 20);
-if (f.plat >= 0 && typeof mapPutOn === 'function') mapPutOn(v, f.plat); else { v.y = f.y; v.plat = f.plat; }
-applyHit(f, v, { dmg: 165, kb: [420, -680], stun: 0.78, hs: 0.22, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [v.x, v.y - 40]);
-}
-let splashIdx = 1;
-for (const tf of isMulti() ? foesOf(f) : [foe]) {
-if (!tf || tf === v || tf.hp <= 0 || invulVs(tf, f) || Math.abs(tf.x - f.x) > 225 || Math.abs(tf.y - f.y) > 120) continue;
-const sc = typeof multiTargetScale === 'function' ? multiTargetScale(splashIdx++) : 1;
-applyHit(f, tf, { dmg: Math.max(1, Math.round(85 * sc)), kb: [380, -520], stun: 0.55, hs: 0.08, launch: true, unblockable: true, ult: true, noScale: true, dir: tf.x >= f.x ? 1 : -1 }, [tf.x, tf.y - 45]);
-}
-}
-} else if (f.sp === 'slam_empty' && f.t >= 0.28) {
-endSpecial(f);
-} else if (f.sp === 'slam' && f.t >= 0.42) {
-f.bwVictimIdx = -1; endSpecial(f);
-}
-} },
-});
-Object.assign(ULTS, {
-eclipsecleave: { name: '冥蚀断渊', desc: '释放跨层渊蚀引力将周身敌众牵引至剑锋之前，随即一记不可格挡的断渊斩月横扫斩落并斩出贯穿冥蚀剑浪，重创架势并远距击飞。',
-begin(f) {
-f.sp = 'pull'; f.spN = 0; f.vx = 0; f.spPose = 'ts_lift'; f.invul = 0.65;
-if (!RESIM) { ring(f.x, f.y - 64, 260, '165,115,255', 0.48); SFX.charge(); }
-},
-update(f, foe) {
-if (f.sp === 'pull') {
-for (const tf of isMulti() ? foesOf(f) : [foe]) {
-if (!tf || tf.hidden || tf.hp <= 0 || invulVs(tf, f) || Math.hypot(tf.x - f.x, tf.y - f.y) > 380) continue;
-const pullX = clamp(f.x + f.face * 86, WALL + 20, STAGE_W - WALL - 20);
-tf.x = damp(tf.x, pullX, 11, STEP);
-}
-if (f.t >= 0.34) {
-f.sp = 'cleave'; f.t = 0; f.spPose = 'ts_slam'; f.hitDone = false;
-if (!RESIM) {
-shake = Math.max(shake, 24); flashA = 0.36; flashRGB = '175,115,255';
-slashLine(f.x + f.face * 95, f.y - 68, -0.25 * f.face, '185,125,255');
-addP({ type: 'beam', x: f.x, y: f.y - 64, x2: f.x + f.face * 420, y2: f.y - 64, w: 28, life: 0.24, max: 0.24, rgb: '175,115,255' });
-ring(f.x + f.face * 95, f.y - 64, 220, '175,115,255', 0.45); SFX.ko();
-}
-strikeAoE(f, f.x + f.face * 95, f.y - 62, 195, 135, { dmg: 155, kb: [520, -640], stun: 0.72, hs: 0.2, launch: true, unblockable: true, ult: true, noScale: true, big: true });
-spawnProj(f, { kind: 'wave', x: f.x + f.face * 90, y: f.y - 62, vx: f.face * 1160, vy: 0, w: 110, h: 128, life: 0.65, dmg: 55, kb: [380, -340], stun: 0.45, hs: 0.1, pierce: true, rehit: 0.45, ult: true, noScale: true, unbreakable: true, rgb: '175,120,255' });
-}
-} else if (f.sp === 'cleave' && f.t >= 0.42) endSpecial(f);
-} },
-});
-Object.assign(ULTS, {
 skyfall: { name: '炽霄焚天', desc: '腾跃至半空连掷五道爆裂烈焰火流星轰击敌方各层，随即火戟贯地爆开焚天火环与飞石，造成范围击飞与持续灼烧。',
 begin(f, foe) {
 f.sp = 'rise'; f.spN = 0; f.vy = -720; f.vx = -f.face * 120; f.plat = -1;
@@ -18422,45 +17009,6 @@ tf.burnT = Math.max(tf.burnT || 0, 3.5);
 }
 }
 } else if (f.sp === 'burst' && f.t >= 0.38) endSpecial(f);
-} },
-});
-Object.assign(ULTS, {
-infernorush: { name: '焚天乱舞', desc: '燃起赤炎罡气突进轰拳，命中后立刻接升龙烈拳将敌轰上高空，再跃起回身炎肘重砸引爆烈焰灼烧。',
-begin(f) {
-f.sp = 'charge_in'; f.spN = 0; f.vx = f.face * 1280; f.vy = 0; f.spPose = 'lm_boxer'; f.invul = 0.55; f.hitDone = false;
-SFX.dash();
-},
-update(f, foe) {
-if (f.sp === 'charge_in') {
-if (!RESIM && Math.random() < 0.6) addP({ type: 'spark', x: f.x - f.face * 20, y: f.y - 54, vx: -f.face * 240, vy: rand(-60, 60), life: 0.24, max: 0.24, rgb: '255,110,55', w: 2.5 });
-for (const tf of isMulti() ? foesOf(f) : [foe]) {
-if (!tf || tf.hp <= 0 || invulVs(tf, f) || Math.abs(tf.x - f.x) > 105 || Math.abs(tf.y - f.y) > 95) continue;
-f.sp = 'upper'; f.t = 0; f.vx = f.face * 160; f.vy = -780; f.plat = -1; f.spPose = 'lm_upper';
-applyHit(f, tf, { dmg: 65, kb: [160, -760], stun: 0.6, hs: 0.14, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [tf.x, tf.y - 54]);
-tf.burnT = Math.max(tf.burnT || 0, 3.0);
-if (!RESIM) { ring(tf.x, tf.y - 50, 140, '255,105,50', 0.42); SFX.heavy(); }
-return;
-}
-if (f.t >= 0.3) { f.sp = 'miss'; f.t = 0; f.vx *= 0.25; }
-} else if (f.sp === 'upper') {
-f.vy += GRAV * 0.7 * STEP;
-if (f.t >= 0.28) {
-f.sp = 'slam'; f.t = 0; f.vx = f.face * 220; f.vy = 980; f.spPose = 'ts_slam'; f.hitDone = false;
-SFX.heavy();
-}
-} else if (f.sp === 'slam') {
-f.vy += GRAV * STEP;
-const floor = gndY(f);
-if (f.y >= floor || f.y >= 0 || f.t >= 0.34) {
-f.sp = 'done'; f.t = 0; f.vx = 0; f.vy = 0;
-if (!RESIM) { shake = Math.max(shake, 22); flashA = 0.34; flashRGB = '255,115,55'; ring(f.x, f.y - 24, 195, '255,110,55', 0.45); dust(f.x, f.y, 18); SFX.ko(); }
-for (const tf of isMulti() ? foesOf(f) : [foe]) {
-if (!tf || tf.hp <= 0 || invulVs(tf, f) || Math.abs(tf.x - f.x) > 195 || Math.abs(tf.y - f.y) > 130) continue;
-applyHit(f, tf, { dmg: 85, kb: [420, -480], stun: 0.65, hs: 0.18, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: tf.x >= f.x ? 1 : -1 }, [tf.x, tf.y - 48]);
-tf.burnT = Math.max(tf.burnT || 0, 3.5);
-}
-}
-} else if ((f.sp === 'done' && f.t >= 0.32) || (f.sp === 'miss' && f.t >= 0.3)) endSpecial(f);
 } },
 });
 Object.assign(ULTS, {
@@ -18515,24 +17063,6 @@ if (f.t >= 1.15) { magRelease(f); endSpecial(f); }
 } },
 });
 Object.assign(ULTS, {
-grandpainting: { name: '千里江山', desc: '挥毫展卷泼洒朱砂青绿千里江山图，在目标所在层依次涌起三座墨峰画浪席卷全场，挑飞并压制沿途所有敌手。',
-begin(f, foe) {
-f.sp = 'paint'; f.spN = 0; f.vx = 0; f.spPose = 'my_paint'; f.invul = 0.55;
-f.dqY = foe ? gndY(foe) : f.y;
-if (!RESIM) { ring(f.x + f.face * 60, f.y - 68, 140, '240,105,85', 0.45); SFX.poof(); }
-},
-update(f, foe) {
-if (f.spN < 3 && f.t >= 0.16 + f.spN * 0.18) {
-const last = f.spN === 2;
-const wx = clamp(f.x + f.face * (110 + f.spN * 145), WALL + 40, STAGE_W - WALL - 40);
-spawnProj(f, { kind: 'dragon', x: wx, y: f.dqY - 68, groundY: f.dqY, vx: f.face * 760, vy: 0, w: 112, h: 136, life: 0.72, dmg: last ? 68 : 42, kb: [last ? 440 : 220, last ? -640 : -420], stun: last ? 0.65 : 0.4, hs: last ? 0.16 : 0.08, launch: true, pierce: true, maxHits: 2, unblockable: last, ult: true, noScale: true, unbreakable: true });
-if (!RESIM) { ring(wx, f.dqY - 24, 125, f.spN % 2 === 0 ? '240,100,80' : '75,210,175', 0.4); dust(wx, f.dqY, 14); SFX.heavy(); }
-f.spN++;
-}
-if (f.t >= 0.88) endSpecial(f);
-} },
-});
-Object.assign(ULTS, {
 phoenix: { name: '百鸟朝凤', desc: '原地凝枪，向前连刺八道枪影，一枪远过一枪，末枪一挑把人送上半空（终结75伤害）。此招可挡。',
 begin(f) { f.sp = 'thrusts'; f.spN = 0; f.spPose = 'ls_stance'; f.invul = 0.2; },
 update(f, foe) {
@@ -18551,34 +17081,6 @@ eightimm: { name: '八仙过海', flurry: true, n: 8, iv: 0.085, slash: 12, fin:
 });
 Object.assign(ULTS, {
 shadows: { name: '千影', flurry: true, n: 9, iv: 0.068, slash: 11, fin: 80, dashSpd: 1750, dashT: 0.28, airTrack: true, desc: '结印潜入暗影，贴地瞬步欺身而入（突进距离提升至 1.25 倍；若对手身处空中且在突进射程内，化为暗影腾空追猎）；一击得手，九道猩红残像接连绝杀，收于双刃十字（终结斩80伤害）。绝杀达成触发【暗影绝杀】：重置影瞬与手里剑冷却，并幻化多道迷惑分身隐匿遁形。一旦扑空，任人宰割。' },
-});
-Object.assign(ULTS, {
-bellharmony: { name: '万铃和鸣', desc: '在当前层高悬三枚清风灵铃齐声和鸣，为己方全员回复气血与架势，并向锁定的敌手连射六枚追踪铃音灵弹。',
-begin(f) {
-f.sp = 'chime'; f.spN = 0; f.vx = 0; f.spPose = 'yx_play'; f.invul = 0.55;
-for (const m of sideFighters(fighterTeam(f))) {
-if (!m.hidden && m.hp > 0 && Math.abs(m.x - f.x) < 650) {
-m.hp = Math.min(m.maxHp, m.hp + Math.round(m.maxHp * 0.09));
-m.guard = Math.min(m.maxGuard || 100, (m.guard || 0) + 40);
-}
-}
-if (!RESIM) {
-for (const ox of [-95, 0, 95]) ring(f.x + ox, f.y - 108, 76, '155,245,215', 0.45);
-SFX.chargeFull();
-}
-},
-update(f, foe) {
-if (f.spN < 6 && f.t >= 0.12 + f.spN * 0.1) {
-const ox = ((f.spN % 3) - 1) * 95;
-const sx = f.x + ox, sy = f.y - 108;
-const tx = foe ? foe.x : f.x + f.face * 260, ty = foe ? foe.y - 54 : f.y - 54;
-const dx = tx - sx, dy = ty - sy, d = Math.hypot(dx, dy) || 1;
-spawnProj(f, { kind: 'note', x: sx, y: sy, vx: (dx / d) * 1120, vy: (dy / d) * 1120, w: 38, h: 38, life: 0.85, dmg: 24, kb: [140, -180], stun: 0.32, hs: 0.04, autoAim: true, ult: true, noScale: true, unbreakable: true });
-if (!RESIM) ring(sx, sy, 46, '165,245,220', 0.25);
-SFX.parry(); f.spN++;
-}
-if (f.t >= 0.88) endSpecial(f);
-} },
 });
 Object.assign(ULTS, {
 skynet: { name: '开天一锤', desc: '把链锤甩上天，巨锤在目标所在平台层轰然砸落（40 伤害，不可格挡并震裂碎石），震晕范围敌手 0.9 秒；随后扯链回锤把主目标拽到身前重抡挑空（80 伤害），并重置飞锤冷却！',
@@ -18605,50 +17107,6 @@ addP({ type: 'text', text: '回锤 · 飞锤重置', x: f.x, y: f.y - 120, life:
 } else f.spPose = 'idle';
 }
 if (f.t >= 1.3) endSpecial(f);
-} },
-});
-Object.assign(ULTS, {
-roctempest: { name: '鹏程万里', desc: '金翅振空直冲云霄，齐射八道贯穿金羽箭矢封锁多层空域，随即雷霆俯冲砸向敌阵所在层，激起碎石与双向金色飓风横扫全场。',
-begin(f, foe) {
-f.sp = 'ascend'; f.vy = -1120; f.vx = 0; f.plat = -1; f.spPose = 'yl_spread'; f.invul = 0.75;
-f.jpX = foe ? foe.x : f.x + f.face * 240;
-f.jpY = foe ? gndY(foe) : f.y;
-f.jpVolley = false;
-SFX.dash();
-},
-update(f, foe) {
-if (f.sp === 'ascend') {
-if (foe && foe.hp > 0) { f.jpX = damp(f.jpX, foe.x, 8, STEP); f.jpY = gndY(foe); }
-f.x = damp(f.x, f.jpX, 5, STEP);
-f.vy = damp(f.vy, 0, 8, STEP);
-if (!f.jpVolley && f.t >= 0.16) {
-f.jpVolley = true;
-for (let k = 0; k < 8; k++) {
-const ang = Math.PI * 0.15 + (k / 7) * Math.PI * 0.7;
-spawnProj(f, { kind: 'arrow', x: f.x, y: f.y - 50, vx: Math.cos(ang) * 1240, vy: Math.sin(ang) * 1240, w: 36, h: 20, life: 0.9, dmg: 18, kb: [140, -180], stun: 0.28, hs: 0.04, pierce: true, rehit: 0.4, ult: true, noScale: true, unbreakable: true, rgb: '255,215,95' });
-}
-if (!RESIM) ring(f.x, f.y - 50, 150, '255,215,95', 0.32);
-SFX.slice();
-}
-if (f.t >= 0.36) {
-f.sp = 'dive'; f.t = 0; f.spPose = 'a2';
-const dx = f.jpX - f.x, dy = f.jpY - f.y, d = Math.hypot(dx, dy) || 1;
-f.vx = (dx / d) * 1500; f.vy = Math.max(960, (dy / d) * 1500);
-SFX.heavy();
-}
-} else if (f.sp === 'dive') {
-if (f.y >= f.jpY || f.y >= 0 || f.t >= 0.38) {
-f.sp = 'gust'; f.t = 0; f.y = Math.min(0, f.jpY); f.vx = 0; f.vy = 0;
-if (!RESIM) {
-shake = Math.max(shake, 24); flashA = 0.35; flashRGB = '255,215,105';
-ring(f.x, f.y - 24, 230, '255,215,105', 0.48); dust(f.x, f.y, 22);
-if (typeof debrisBurst === 'function') debrisBurst(f.x, f.y, 12, '185,150,80');
-SFX.ko();
-}
-strikeAoE(f, f.x, f.y - 52, 220, 130, { dmg: 115, kb: [380, -680], stun: 0.65, hs: 0.18, launch: true, unblockable: true, ult: true, noScale: true, big: true });
-for (const sd of [-1, 1]) spawnProj(f, { kind: 'wind', x: f.x + sd * 36, y: f.y - 58, groundY: f.y, vx: sd * 1080, vy: 0, w: 94, h: 102, life: 0.7, dmg: 38, kb: [360, -340], stun: 0.42, hs: 0.08, launch: true, ult: true, noScale: true, unbreakable: true, pierce: true, rehit: 0.45 });
-}
-} else if (f.sp === 'gust' && f.t >= 0.36) endSpecial(f);
 } },
 });
 Object.assign(ULTS, {
@@ -18758,33 +17216,6 @@ if (f.sp === 'done' && f.t >= 0.3) endSpecial(f);
 } },
 });
 Object.assign(ULTS, {
-spiritdomain: { name: '心音幻境', desc: '吹奏灵犀心音释放四圈递进扩散的音波结界，粉碎敌方飞行物、削减架势并施加迟缓，同时为附近队友充能真气。',
-begin(f) {
-f.sp = 'play'; f.spN = 0; f.vx = 0; f.spPose = 'yx_play'; f.invul = 0.6;
-for (const m of sideFighters(fighterTeam(f))) {
-if (m !== f && !m.hidden && m.hp > 0 && Math.abs(m.x - f.x) < 620) m.meter = Math.min(100, (m.meter || 0) + 22);
-}
-SFX.superOn();
-},
-update(f, foe) {
-if (f.spN < 4 && f.t >= 0.14 + f.spN * 0.16) {
-const rad = 140 + f.spN * 68, last = f.spN === 3;
-if (!RESIM) { ring(f.x, f.y - 60, rad, '135,230,255', 0.42); SFX.parry(); }
-for (const p of projs) {
-if (p.owner !== f.idx && !p.dead && !p.ult && !p.unbreakable && Math.hypot(p.x - f.x, p.y - (f.y - 60)) < rad) p.dead = true;
-}
-for (const tf of isMulti() ? foesOf(f) : [foe]) {
-if (!tf || tf.hp <= 0 || invulVs(tf, f) || Math.hypot(tf.x - f.x, tf.y - f.y) > rad) continue;
-tf.slowT = Math.max(tf.slowT || 0, 2.0);
-tf.guard = Math.max(0, (tf.guard || 0) - 22);
-applyHit(f, tf, { dmg: last ? 58 : 28, kb: [last ? 420 : 120, last ? -520 : -140], stun: last ? 0.6 : 0.32, hs: last ? 0.14 : 0.05, launch: last, unblockable: last, ult: true, noScale: true, big: last, dir: tf.x >= f.x ? 1 : -1 }, [tf.x, tf.y - 54]);
-}
-f.spN++;
-}
-if (f.t >= 0.92) endSpecial(f);
-} },
-});
-Object.assign(ULTS, {
 tornado: { name: '龙卷', desc: '舒袖展扇，乘风而起，放出两道接天龙卷横扫全场（每下 16 伤害）。施法激活【扶摇万里】：重置风刃与开扇冷却，空中跳跃次数全额回满，乘风浮空。',
 begin(f) {
 f.sp = 'cast'; f.spPose = 'ly_fanswipe'; f.invul = 0.2; f.spN = 0;
@@ -18835,35 +17266,6 @@ if (f.t >= 0.8) endSpecial(f);
 } },
 });
 Object.assign(ULTS, {
-abyssscroll: { name: '绝墨魂卷', desc: '在敌方所在层展开绝墨判魂大阵，先定身迟缓并大幅削减架势，随即引爆漫天浓墨吞噬阵中敌手。',
-begin(f, foe) {
-f.sp = 'seal'; f.spN = 0; f.vx = 0; f.spPose = 'my_paint'; f.invul = 0.5;
-f.mjX = clamp(foe ? foe.x : f.x + f.face * 240, WALL + 60, STAGE_W - WALL - 60);
-f.mjY = foe ? gndY(foe) : f.y;
-if (!RESIM) { ring(f.mjX, f.mjY - 12, 165, '160,115,255', 0.48); SFX.poof(); }
-},
-update(f, foe) {
-if (f.spN === 0 && f.t >= 0.2) {
-f.spN = 1;
-for (const tf of isMulti() ? foesOf(f) : [foe]) {
-if (!tf || tf.hp <= 0 || invulVs(tf, f) || Math.abs(tf.x - f.mjX) > 175 || Math.abs(tf.y - f.mjY) > 110) continue;
-tf.slowT = Math.max(tf.slowT || 0, 2.5);
-tf.guard = Math.max(0, (tf.guard || 0) - 45);
-applyHit(f, tf, { dmg: 38, kb: [0, 0], stun: 0.55, hs: 0.08, root: true, unblockable: true, ult: true, noScale: true, dir: f.face }, [tf.x, tf.y - 50]);
-}
-}
-if (f.spN === 1 && f.t >= 0.58) {
-f.spN = 2;
-if (!RESIM) { shake = Math.max(shake, 22); flashA = 0.34; flashRGB = '170,120,255'; ring(f.mjX, f.mjY - 40, 225, '170,120,255', 0.5); dust(f.mjX, f.mjY, 22); SFX.ko(); }
-for (const tf of isMulti() ? foesOf(f) : [foe]) {
-if (!tf || tf.hp <= 0 || invulVs(tf, f) || Math.abs(tf.x - f.mjX) > 210 || Math.abs(tf.y - f.mjY) > 140) continue;
-applyHit(f, tf, { dmg: 115, kb: [340, -680], stun: 0.72, hs: 0.18, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: tf.x >= f.mjX ? 1 : -1 }, [tf.x, tf.y - 56]);
-}
-}
-if (f.t >= 0.92) endSpecial(f);
-} },
-});
-Object.assign(ULTS, {
 inkdragon: { name: '符阵', desc: `把攒下的符全部烧掉：整张图化作一张宣纸，全场一览无余，对手被朱砂染红，头顶的符轰然炸开。全图命中、不可格挡，伤害 = ${FU_BASE} + 每张符 ${FU_PER}（最多 ${FU_BASE + FU_PER * FU_MAX}）。`,
 begin(f) {
 f.sp = 'cast'; f.spPose = 'my_stroke'; f.invul = 0.2; SFX.superOn();
@@ -18886,30 +17288,6 @@ addP({ type: 'text', text: n ? `符爆 ×${n}` : '空符一张', x: e.x, y: e.y 
 }
 }
 if (f.hitDone && f.t >= (f.fuT || 0.95) + 0.5) endSpecial(f);
-} },
-});
-Object.assign(ULTS, {
-maelstrom: { name: '沧海倾覆', desc: '重锚顿地崩裂碎石，掀起向两侧席卷的沧海双涛巨浪，强力破防并冲飞沿途所有敌军，同时自身回复满架势并获护体霸体。',
-begin(f) {
-f.sp = 'cast'; f.spN = 0; f.vx = 0; f.spPose = 'ts_lift'; f.invul = 0.5;
-f.guard = f.maxGuard || 100; f.armorT = 2.0; f.armorHits = 3;
-SFX.heavy();
-},
-update(f, foe) {
-if (f.spN === 0 && f.t >= 0.22) {
-f.spN = 1; f.spPose = 'ts_slam';
-if (!RESIM) {
-shake = Math.max(shake, 22); flashA = 0.3; flashRGB = '90,215,255';
-ring(f.x, f.y - 30, 235, '90,215,255', 0.5); dust(f.x, f.y, 24);
-if (typeof debrisBurst === 'function') debrisBurst(f.x, f.y, 12, '105,185,220');
-SFX.ko();
-}
-strikeAoE(f, f.x, f.y - 50, 170, 120, { dmg: 52, kb: [300, -480], stun: 0.5, hs: 0.12, launch: true, unblockable: true, ult: true, noScale: true });
-for (const sd of [-1, 1]) {
-spawnProj(f, { kind: 'wave', x: f.x + sd * 45, y: f.y - 68, groundY: f.y, vx: sd * 960, vy: 0, w: 130, h: 145, life: 0.95, dmg: 95, kb: [560, -520], stun: 0.65, hs: 0.16, launch: true, pierce: true, maxHits: 4, rehit: 0.45, unblockable: true, ult: true, noScale: true, unbreakable: true, rgb: '85,215,255' });
-}
-}
-if (f.t >= 0.72) endSpecial(f);
 } },
 });
 Object.assign(ULTS, {
@@ -18971,26 +17349,6 @@ spawnProj(f, { kind: 'arrow', x: f.x + Math.cos(ang) * 44, y: f.y - 64 + Math.si
 SFX.swing(); f.spN++;
 }
 if (f.t >= 0.84) endSpecial(f);
-} },
-});
-Object.assign(ULTS, {
-heavenbreaker: { name: '天罡破军', desc: '架枪聚罡轰出贯通全场的破军星罡长虹，沿途穿透所有敌手并强破格挡，激起连环罡气枪爆震飞敌军。',
-begin(f) {
-f.sp = 'charge_spear'; f.spN = 0; f.vx = 0; f.spPose = 'ls_thrust'; f.invul = 0.55;
-f.armorT = 1.2; f.armorHits = 2;
-if (!RESIM) { ring(f.x + f.face * 36, f.y - 62, 120, '255,210,115', 0.4); SFX.charge(); }
-},
-update(f, foe) {
-if (f.spN === 0 && f.t >= 0.24) {
-f.spN = 1; f.vx = -f.face * 180;
-if (!RESIM) {
-shake = Math.max(shake, 22); flashA = 0.34; flashRGB = '255,220,130';
-addP({ type: 'beam', x: f.x + f.face * 30, y: f.y - 62, x2: f.x + f.face * 760, y2: f.y - 62, w: 30, life: 0.28, max: 0.28, rgb: '255,215,120' });
-slashLine(f.x + f.face * 240, f.y - 62, 0, '255,215,120'); SFX.ko();
-}
-spawnProj(f, { kind: 'wave', x: f.x + f.face * 55, y: f.y - 62, vx: f.face * 1720, vy: 0, w: 155, h: 86, life: 0.78, dmg: 135, kb: [560, -480], stun: 0.68, hs: 0.18, launch: true, pierce: true, maxHits: 8, rehit: 0.45, aoeR: 95, aoeMul: 0.55, unblockable: true, ult: true, noScale: true, unbreakable: true, rgb: '255,215,120' });
-}
-if (f.t >= 0.72) endSpecial(f);
 } },
 });
 Object.assign(ULTS, {
@@ -19147,51 +17505,6 @@ SFX.chargeFull();
 } },
 });
 Object.assign(ULTS, {
-endlessblade: { name: '剑气无涯', desc: '纳刀入鞘蓄势瞬拔，一闪横穿四百六十像素斩断虚空，收刀瞬间沿途触发三段延迟空间剑爆，不可格挡！',
-begin(f) {
-f.sp = 'sheathe'; f.vx = 0; f.vy = 0; f.spPose = 'qf_charge'; f.invul = 0.65;
-f.wyStartX = f.x; f.wyY = f.y; f.wyBurst = false;
-if (!RESIM) { ring(f.x, f.y - 56, 95, '235,245,255', 0.4); SFX.charge(); }
-},
-update(f, foe) {
-if (f.sp === 'sheathe' && f.t >= 0.28) {
-f.sp = 'flash'; f.t = 0; f.spPose = 'qf_thrust'; f.snap = true;
-const endX = clamp(f.wyStartX + f.face * 460, WALL + 20, STAGE_W - WALL - 20);
-f.x = endX;
-const lo = Math.min(f.wyStartX, endX) - 35, hi = Math.max(f.wyStartX, endX) + 35;
-if (!RESIM) {
-addP({ type: 'beam', x: f.wyStartX, y: f.wyY - 58, x2: endX, y2: f.wyY - 58, w: 20, life: 0.28, max: 0.28, rgb: '235,248,255' });
-for (let k = 0; k < 5; k++) slashLine(lerp(f.wyStartX, endX, k / 4), f.wyY - 58, 0, '235,248,255');
-flashA = 0.34; flashRGB = '235,248,255'; SFX.slice();
-}
-let hitIdx = 0;
-for (const tf of isMulti() ? foesOf(f) : [foe]) {
-if (!tf || tf.hp <= 0 || invulVs(tf, f) || tf.x < lo || tf.x > hi || Math.abs(tf.y - f.wyY) > 105) continue;
-const sc = typeof multiTargetScale === 'function' ? multiTargetScale(hitIdx++) : 1;
-applyHit(f, tf, { dmg: Math.max(1, Math.round(55 * sc)), kb: [0, 0], stun: 0.55, hs: hitIdx === 1 ? 0.1 : 0.03, root: true, unblockable: true, ult: true, noScale: true, dir: f.face }, [tf.x, tf.y - 58]);
-}
-} else if (f.sp === 'flash' && f.t >= 0.24 && !f.wyBurst) {
-f.wyBurst = true; f.snap = false;
-const lo = Math.min(f.wyStartX, f.x) - 45, hi = Math.max(f.wyStartX, f.x) + 45;
-if (!RESIM) {
-shake = Math.max(shake, 22); flashA = 0.36; flashRGB = '255,255,255';
-for (let k = 0; k < 3; k++) {
-const bx = lerp(f.wyStartX, f.x, (k + 0.5) / 3);
-ring(bx, f.wyY - 58, 125, '220,240,255', 0.42);
-slashLine(bx, f.wyY - 58, (k - 1) * 0.55, '255,255,255');
-}
-SFX.ko();
-}
-let hitIdx = 0;
-for (const tf of isMulti() ? foesOf(f) : [foe]) {
-if (!tf || tf.hp <= 0 || invulVs(tf, f) || tf.x < lo || tf.x > hi || Math.abs(tf.y - f.wyY) > 120) continue;
-const sc = typeof multiTargetScale === 'function' ? multiTargetScale(hitIdx++) : 1;
-applyHit(f, tf, { dmg: Math.max(1, Math.round(105 * sc)), kb: [440, -620], stun: 0.72, hs: hitIdx === 1 ? 0.2 : 0.05, launch: true, unblockable: true, ult: true, noScale: true, big: hitIdx === 1, dir: f.face }, [tf.x, tf.y - 58]);
-}
-} else if (f.sp === 'flash' && f.t >= 0.56) endSpecial(f);
-} },
-});
-Object.assign(ULTS, {
 celestial: { name: '星宿归元', desc: '布下北斗七星天枢阵，七道星辉星丸自高空跨层追踪齐射敌阵并引落紫微星雷，同时为自身及附近队友回复气血与满架势。',
 begin(f, foe) {
 f.sp = 'cast'; f.spN = 0; f.vx = 0; f.spPose = 'yx_play'; f.invul = 0.55;
@@ -19294,91 +17607,6 @@ if (f.t >= 1.18) endSpecial(f);
 } },
 });
 Object.assign(ULTS, {
-ninestrike: { name: '九尾绝影', desc: '在敌方所在层幻化三道银狐影身封锁退路，本体三次瞬移绕背交错绝斩，收招刷新闪避与虚招冷却。',
-begin(f, foe) {
-f.sp = 'ambush'; f.spN = 0; f.vx = 0; f.vy = 0; f.spPose = 'fy_blink'; f.invul = 0.75;
-if (foe) {
-for (const off of [-90, 0, 90]) {
-const dx = clamp(foe.x + off, WALL + 20, STAGE_W - WALL - 20);
-decoys.push({ owner: f.idx, sk: f.sk, x0: dx, y0: foe.y, x: dx, y: foe.y, vx: 0, vy: 0, rot: 0, vr: 0, life: 1.2, landed: true, age: 0 });
-}
-}
-SFX.dash();
-},
-update(f, foe) {
-if (f.spN < 3 && f.t >= 0.14 + f.spN * 0.16) {
-const tg = foe && foe.hp > 0 ? foe : null;
-if (tg) {
-const side = f.spN % 2 === 0 ? -1 : 1;
-f.x = clamp(tg.x + side * 78, WALL + 20, STAGE_W - WALL - 20);
-f.y = tg.y; f.plat = tg.plat; f.face = -side; f.snap = true;
-const last = f.spN === 2;
-if (!RESIM) { slashLine(tg.x, tg.y - 54, (f.spN - 1) * 0.65, '220,235,255'); ring(tg.x, tg.y - 54, last ? 150 : 95, '210,230,255', 0.36); SFX.slice(); }
-if (!invulVs(tg, f)) {
-applyHit(f, tg, { dmg: last ? 74 : 42, kb: [last ? -side * 380 : 80, last ? -540 : -120], stun: last ? 0.65 : 0.35, hs: last ? 0.16 : 0.08, launch: last, unblockable: last, ult: true, noScale: true, big: last, dir: -side }, [tg.x, tg.y - 54]);
-}
-}
-f.spN++;
-}
-if (f.t >= 0.78) {
-f.dashCD = 0; f.feintCD = 0; f.snap = false;
-endSpecial(f);
-}
-} },
-});
-Object.assign(ULTS, {
-thicket: { name: '千缕重叠', desc: '掷出碧竹阵符，沿对手所在层依次破土而出五道翠竹枪阵并齐射漫天毒针，连续穿刺挑飞敌众并重置自身闪避与技能冷却。',
-begin(f, foe) {
-f.sp = 'cast'; f.spN = 0; f.vx = 0; f.spPose = 'my_paint'; f.invul = 0.45;
-f.thBaseX = foe ? foe.x : f.x + f.face * 220;
-f.thBaseY = foe ? gndY(foe) : f.y;
-SFX.swing();
-},
-update(f, foe) {
-if (f.spN < 5 && f.t >= 0.09 + f.spN * 0.11) {
-const px = clamp(f.thBaseX + (f.spN - 2) * 88, WALL + 30, STAGE_W - WALL - 30);
-const py = f.thBaseY;
-spawnProj(f, { kind: 'bolt', x: px, y: py - 110, groundY: py, vx: 0, vy: 0, w: 70, h: 230, life: 0.36, delay: 0.05, dmg: 34, kb: [f.face * 120, -620], stun: 0.48, hs: 0.07, launch: true, unblockable: f.spN === 4, ult: true, noScale: true, unbreakable: true, small: true, pierce: true, rehit: 0.45, rgb: '85,235,155' });
-for (const sd of [-1, 1]) {
-spawnProj(f, { kind: 'dart', x: px, y: py - 70, vx: sd * 980, vy: -220, w: 30, h: 16, life: 0.55, dmg: 14, kb: [80, -100], stun: 0.24, hs: 0.03, pierce: true, rehit: 0.4, ult: true, noScale: true, unbreakable: true, rgb: '100,245,165' });
-}
-if (!RESIM) { ring(px, py - 10, 92, '80,225,150', 0.34); dust(px, py, 8); SFX.slice(); }
-f.spN++;
-}
-if (f.t >= 0.85) {
-f.dashCD = 0; f.skillCD = Math.max(0, f.skillCD - 2.5);
-endSpecial(f);
-}
-} },
-});
-Object.assign(ULTS, {
-nightmarecut: { name: '永夜绝斩', desc: '遁入永夜幽影隐身瞬移至目标背后（精准跨层锁定），挥出不可格挡的镰影绝斩，对低血量目标触发高额斩杀！',
-begin(f) {
-f.sp = 'vanish'; f.vx = 0; f.vy = 0; f.spPose = 'fy_blink'; f.invul = 0.72;
-if (!RESIM) { smoke(f.x, f.y - 54, 16); ring(f.x, f.y - 54, 110, '185,95,255', 0.4); SFX.poof(); }
-},
-update(f, foe) {
-if (f.sp === 'vanish' && f.t >= 0.28) {
-f.sp = 'reap'; f.t = 0; f.spPose = 'qf_thrust'; f.snap = true;
-if (foe && foe.hp > 0) {
-const behind = -foe.face || -1;
-f.x = clamp(foe.x + behind * 76, WALL + 20, STAGE_W - WALL - 20);
-if (foe.plat >= 0 && typeof mapPutOn === 'function') mapPutOn(f, foe.plat);
-else { f.y = foe.y; f.plat = foe.plat; }
-f.face = foe.x >= f.x ? 1 : -1;
-if (!RESIM) { shake = Math.max(shake, 22); flashA = 0.38; flashRGB = '195,95,255'; slashLine(foe.x, foe.y - 58, -0.5 * f.face, '200,105,255'); slashLine(foe.x, foe.y - 58, 0.5 * f.face, '255,220,255'); SFX.ko(); }
-if (!invulVs(foe, f)) {
-const lowBonus = foe.hp < foe.maxHp * 0.35 ? 1.32 : 1;
-applyHit(f, foe, { dmg: Math.round(145 * lowBonus), kb: [460, -560], stun: 0.72, hs: 0.2, launch: true, unblockable: true, ult: true, noScale: true, big: true, dir: f.face }, [foe.x, foe.y - 56]);
-if (lowBonus > 1 && !RESIM) addP({ type: 'text', text: '☠ 永夜斩杀!', x: foe.x, y: foe.y - 126, life: 1.0, max: 1.0, rgb: '220,120,255' });
-}
-}
-} else if (f.sp === 'reap' && f.t >= 0.42) {
-f.snap = false; endSpecial(f);
-}
-} },
-});
-Object.assign(ULTS, {
 moonflow: { name: '月华如水', desc: '双手结月印，盘坐入定。月华凝露，回复 135 点生命；月芒震退贴身之敌（75 伤害）。绽放触发【太阴化生】：重置月镜架招与月轮回旋冷却，并获得 4 秒月魄霸体护盾（格挡硬直减伤）。',
 begin(f) {
 f.sp = 'wave'; f.spPose = 'yh_lotus'; f.invul = 0.5; f.hp = Math.min(f.maxHp, f.hp + Math.round(100 * HERO_HP_SCALE)); f.hitDone = false;
@@ -19395,36 +17623,6 @@ if (Math.abs(foe.x - f.x) < 280 && Math.abs(foe.y - f.y) < 220 && !invulVs(foe, 
 applyHit(f, foe, { dmg: 75, kb: [460, -640], stun: 0.6, hs: 0.15, launch: true, big: true, ult: true, noScale: true, dir: foe.x >= f.x ? 1 : -1 }, [foe.x, foe.y - 60]);
 }
 if (f.t >= 0.55) endSpecial(f);
-} },
-});
-Object.assign(ULTS, {
-skywarddance: { name: '鹤舞九天', desc: '凌空振翅化入云霄，滞空滑翔期间连续倾泻六轮双发贯穿白鹤翎箭雨覆盖五层战场，并散落云岚灵息滋养沿途队友。',
-begin(f) {
-f.sp = 'soar'; f.spN = 0; f.vy = -580; f.plat = -1; f.spPose = 'yl_spread'; f.invul = 0.65;
-for (const m of sideFighters(fighterTeam(f))) {
-if (!m.hidden && m.hp > 0 && Math.hypot(m.x - f.x, m.y - f.y) < 520) {
-m.hp = Math.min(m.maxHp, m.hp + Math.round(m.maxHp * 0.07));
-}
-}
-SFX.dash();
-},
-update(f, foe) {
-const c = f.ctrl, dir = c && c.held ? ((c.held.right ? 1 : 0) - (c.held.left ? 1 : 0)) : 0;
-f.vx = damp(f.vx, dir ? dir * 500 : f.face * 240, 8, STEP);
-f.vy = damp(f.vy, -30, 10, STEP);
-if (f.spN < 6 && f.t >= 0.14 + f.spN * 0.11) {
-const pool = isMulti() ? foesOf(f).filter(ef => ef && !ef.hidden && ef.hp > 0) : [foe];
-const tg = pool.length ? pool[f.spN % pool.length] : foe;
-const tx = tg ? tg.x + (f.spN - 2.5) * 44 : f.x + f.face * (140 + f.spN * 50);
-const ty = tg ? tg.y - 48 : 0;
-const baseAng = Math.atan2(ty - (f.y - 50), tx - f.x);
-for (const da of [-0.1, 0.1]) {
-spawnProj(f, { kind: 'arrow', x: f.x, y: f.y - 50, vx: Math.cos(baseAng + da) * 1280, vy: Math.sin(baseAng + da) * 1280, w: 42, h: 24, life: 0.95, dmg: 22, kb: [160, -220], stun: 0.34, hs: 0.05, pierce: true, rehit: 0.4, ult: true, noScale: true, unbreakable: true, rgb: '210,245,255' });
-}
-if (!RESIM) ring(f.x, f.y - 50, 74, '215,245,255', 0.28);
-SFX.slice(); f.spN++;
-}
-if (f.t >= 0.9) endSpecial(f);
 } },
 });
 Object.assign(ULTS, {
@@ -22156,9 +20354,9 @@ liying:     'assassin',
 cixian:     'brawler',
 qianji:     'artificer',
 chixiao:    'light_blade',
-youhuang:   'mystic_float',
 xuanji:     'artificer',
-polang:     'heavy_tank'
+qingluan:   'mystic_float',
+xuanwu:     'heavy_tank'
 };
 var POSTURE_COM_OFFSETS = {
 idle:         { x: 0,   y: -42, areaMul: 1.00, springOmega: 18, springZeta: 0.85 },
@@ -33682,25 +31880,9 @@ const CHAPTERS = [
 { hero: 'cixian', name: '磁石峰', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'cixian', lv: 'impossible' },
 { hero: 'qianji', name: '千机阁', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'qianji', lv: 'impossible' },
 { hero: 'chixiao', name: '赤焰关', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'chixiao', lv: 'impossible' },
-{ hero: 'youhuang', name: '幽篁林', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'youhuang', lv: 'impossible' },
 { hero: 'xuanji', name: '玄机台', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'xuanji', lv: 'impossible' },
-{ hero: 'polang', name: '镇海礁', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'polang', lv: 'impossible' },
-{ hero: 'cangming', name: '寒渊崖', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'cangming', lv: 'impossible' },
 { hero: 'qingluan', name: '翠羽谷', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'qingluan', lv: 'impossible' },
 { hero: 'xuanwu', name: '玄武城', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'xuanwu', lv: 'impossible' },
-{ hero: 'chiyan', name: '熔火炉', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'chiyan', lv: 'impossible' },
-{ hero: 'yinhu', name: '幻月坡', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'yinhu', lv: 'impossible' },
-{ hero: 'yunhe', name: '仙鹤峰', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'yunhe', lv: 'impossible' },
-{ hero: 'tiangang', name: '天罡隘', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'tiangang', lv: 'impossible' },
-{ hero: 'mojie', name: '断魂亭', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'mojie', lv: 'impossible' },
-{ hero: 'baihe', name: '霜河渡', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'baihe', lv: 'impossible' },
-{ hero: 'jinpeng', name: '裂空巅', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'jinpeng', lv: 'impossible' },
-{ hero: 'youming', name: '幽冥渡', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'youming', lv: 'impossible' },
-{ hero: 'lingxi', name: '灵犀台', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'lingxi', lv: 'impossible' },
-{ hero: 'bawang', name: '霸王关', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'bawang', lv: 'impossible' },
-{ hero: 'fengling', name: '听风楼', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'fengling', lv: 'impossible' },
-{ hero: 'wuya', name: '归墟亭', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'wuya', lv: 'impossible' },
-{ hero: 'danqing', name: '丹青阁', pool: ['blade', 'archer', 'owl', 'binder', 'caster'], boss: 'danqing', lv: 'impossible' },
 ];
 const stageId = (c, l) => `${c + 1}.${l + 1}`;   // c 第几章、l 第几关，都从 0 开始
 function stageInfo(c, l) {
@@ -36364,7 +34546,7 @@ if (f.onGround()) { f.juggle = 0; f.huiMaHits = 0; }
 function startAttack(f, name) {
 endEscape(f);
 f.state = 'attack'; f.move = typeof stanceMove === 'function' ? stanceMove(f, name) : f.moves[name]; f.moveName = name; f.t = 0;
-if (f.ch.passive === 'armor' && HEAVY_MOVES.includes(name)) { f.armorT = f.move.su + f.move.ac; f.armorHits = 1; }
+if ((f.ch.passive === 'armor' || f.ch.passive === 'shell') && HEAVY_MOVES.includes(name)) { f.armorT = f.move.su + f.move.ac; f.armorHits = 1; }
 if (chaosNow('armor')) { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.move.ac || 0.15)); f.armorHits = Math.max(f.armorHits, 1); }
 f.lunged = false; f.hitDone = false; f.hitTargets = []; f.hitConfirmed = false;
 const foe = foeOf(f), h = f.ctrl && f.ctrl.held, dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0, a = dir || (h && h.aim);
@@ -36758,6 +34940,16 @@ if (!S) return;
 if (S.can && !S.can(f)) { if (f.idx === localIdx()) addP({ type: 'text', text: S.lack ? S.lack(f) : '还不能用', x: f.x, y: f.y - 120, life: 0.6, max: 0.6, rgb: '255,190,90' }); return; }
 endEscape(f);
 if (f.ch.passive === 'drunk' && !S.can) f.drunk = Math.min(100, (f.drunk || 0) + 30);   // 醉翁：放技能添酒
+if (f.ch.passive === 'soothe') {
+for (const ally of allFighters()) {
+if (ally === f || ally.hidden || ally.team !== f.team || ally.hp <= 0) continue;
+if (Math.hypot(ally.x - f.x, ally.y - f.y) <= 320) {
+ally.guard = Math.min(ally.maxGuard || 100, (ally.guard || 0) + 14);
+ally.slowT = 0;
+if (!RESIM) ring(ally.x, ally.y - 54, 64, '82,240,200', 0.25);
+}
+}
+}
 f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.skHitSet = []; f.move = null; f.skAir = !f.onGround();
 const smod = typeof skillModFor === 'function' ? skillModFor(f, slot) : { cd: 1 };
 const petCdMul = f.petId === 'mechfinch' ? (1 - 0.08 * (PET_TIER_MUL[f.petTier] || 1)) : 1;
@@ -37703,6 +35895,11 @@ shake = Math.max(shake, 6);
 ring(pt[0], pt[1], 130, '120,230,255', 0.4);
 for (let i = 0; i < 6; i++) addP({ type: 'spark', x: pt[0], y: pt[1], vx: rand(-240, 240), vy: rand(-240, 240), rgb: '120,230,255', life: 0.22, max: 0.22 });
 addP({ type: 'text', text: '🛡️ 精准招架', x: def.x, y: def.y - 110, life: 0.9, max: 0.9, rgb: '120,230,255' });
+if (def.ch && def.ch.passive === 'soothe') {
+const sh = Math.round(def.maxHp * 0.04);
+def.hp = Math.min(def.maxHp, def.hp + sh);
+if (!RESIM) addP({ type: 'text', text: `+${sh}`, x: def.x, y: def.y - 132, life: 0.7, max: 0.7, rgb: '110,245,195' });
+}
 ev.justGuard = true;
 if (typeof applyCombatBadgeGuard === 'function') applyCombatBadgeGuard(def, ev);
 if (typeof TUT !== 'undefined' && TUT && def.idx === 0) TUT.justGuards = (TUT.justGuards || 0) + 1;
@@ -37785,7 +35982,7 @@ def.hp -= dmg; def.sinceHit = 0; def.lagDelay = 0.5;
 if (--def.armorHits <= 0) def.armorT = 0;
 if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.16 * mm);
 def.meter = Math.min(100, def.meter + m.dmg * 0.14);
-armorPerk(def);   // 各位霸体侠客扛住一下的回报不一样，见 10-hits-03-signatures.js
+armorPerk(def, att);   // 各位霸体侠客扛住一下的回报不一样，见 10-hits-03-signatures.js
 if (typeof applyCombatBadgeHit === 'function') applyCombatBadgeHit(att, def, m, ev);
 ev.armor = true; ev.dd = dmg;
 hitVisual(ev); netEmit(ev);
@@ -37852,6 +36049,24 @@ if (att.ch.passive === 'rhythm' && !m.isProj && !m.ult && att.state === 'attack'
 if (att.ch.passive === 'drunk' && !m.ult) att.drunk = Math.min(100, (att.drunk || 0) + 4);
 if (m.shadowMark > 0 && att.ch.passive === 'mist' && typeof addShadowMark === 'function') {
 addShadowMark(att, def, m.shadowMark);
+}
+if (att.ch.passive === 'scorch' && !m.ult) {
+if (def.burnT > 0) {
+dmg *= 1.12;
+att.skillCD = Math.max(0, att.skillCD - 0.5);
+att.skill2CD = Math.max(0, att.skill2CD - 0.5);
+}
+if (HEAVY_MOVES.includes(m.name) || m.skill || att.state === 'skill') def.burnT = Math.max(def.burnT || 0, 2.5);
+}
+if (att.ch.passive === 'gravity' && !m.ult) {
+att.gravHits = (att.gravHits || 0) + 1;
+if (att.gravHits >= 3 || m.skill || att.state === 'skill') {
+att.gravHits = 0;
+def.slowT = Math.max(def.slowT || 0, 1.0);
+if (def.guard !== undefined) def.guard = Math.max(0, def.guard - 9);
+def.vx = damp(def.vx, Math.sign(att.x - def.x) * 180, 12, STEP);
+if (!RESIM) ring(pt[0], pt[1], 68, '155,170,255', 0.24);
+}
 }
 if (att.ch.passive === 'needlemark') {
 if (m.name === 'cs1' || m.name === 'cs2' || att.moveName === 'cs1' || att.moveName === 'cs2') {
@@ -38245,20 +36460,19 @@ else if (f1.x >= STAGE_W - WALL - 1 && !fix2) f2.x = clamp(f2.x - pushRem, WALL,
 const ARMOR_PERK_DEFAULT = { meter: 2.5, cd: 0.4 };
 const ARMOR_PERK = {
 tieshan: { meter: 2.5, cd: 0.7 },             // 铁山：借力打力，技能转得最快
-xuanwu: { meter: 1.0, guard: 16 },            // 玄武：龟壳，扛住一下就把架势补回来一截
-tiangang: { meter: 1.0, cd: 0.9 },            // 天罡：破阵，两个技能冷却回得最多
-bawang: { meter: 5.0, cd: 0.2 },              // 霸王：越挨越怒，大招气攒得最快
-polang: { meter: 1.0, heal: 9 },              // 破浪：潮涌，扛住一下回一点血
-cangming: { meter: 1.5, cd: 0.5, guard: 8 },  // 苍冥：寒渊，冷却和架势各回一点
-chixiao: { meter: 3.0, cd: 0.3 },             // 炽霄：炎势，攒气偏快
+xuanwu: { meter: 1.0, guard: 16, reflect: 10 }, // 玄武：玄甲反震，补架势并反震近身攻击者
 };
-function armorPerk(def) {
-if (!def || !def.ch || def.ch.passive !== 'armor') return;
+function armorPerk(def, att) {
+if (!def || !def.ch || (def.ch.passive !== 'armor' && def.ch.passive !== 'shell')) return;
 const p = ARMOR_PERK[def.ch.id] || ARMOR_PERK_DEFAULT;
 if (p.meter) def.meter = Math.min(100, def.meter + p.meter);
 if (p.cd) { def.skillCD = Math.max(0, def.skillCD - p.cd); def.skill2CD = Math.max(0, def.skill2CD - p.cd); }
 if (p.guard && def.guard !== undefined) def.guard = Math.min(def.maxGuard, def.guard + p.guard);
-if (p.heal && def.hp > 0) { def.hp = Math.min(def.maxHp, def.hp + p.heal); def.lagHp = Math.max(def.lagHp || 0, def.hp); }
+if (p.reflect && att && att !== def && att.hp > 1 && Math.abs(att.x - def.x) <= 175) {
+att.hp = Math.max(1, att.hp - p.reflect);
+att.vx = Math.sign(att.x - def.x || -def.face) * 210;
+if (!RESIM) addP({ type: 'text', text: `反震 -${p.reflect}`, x: att.x, y: att.y - 110, life: 0.6, max: 0.6, rgb: '140,212,140' });
+}
 if (!RESIM) ring(def.x, def.y - 60, 90, def.look && def.look.slash ? def.look.slash : '255,200,120', 0.25);
 }
 const AIR_SKILL_POSE = {
@@ -38291,11 +36505,7 @@ shadowdash: { du_l1s: 'ak_shadowdash0', dash: 'ak_shadowdash1' }
 };
 const CHARGE_POSES = {
 qingfeng: 'qf_charge', feiying: 'fy_seal', tieshan: 'ts_lift', lingshuang: 'ls_stance', liuyun: 'ly_fanswipe', leiming: 'lm_boxer', moyu: 'my_stroke', yuehua: 'yh_lotus', yanling: 'yl_wings', yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_wind', cixian: 'lm_boxer', qianji: 'qf_charge',
-chixiao: 'rk_l2s', youhuang: 'dl_l1s', xuanji: 'sg_l1s', polang: 'an_l1s',
-cangming: 'ab_l1s', qingluan: 'jf_l2s', xuanwu: 'bs_l1s', chiyan: 'bg_l1s',
-yinhu: 'fd_l1s', yunhe: 'cw_l2s', tiangang: 'gp_l1s', mojie: 'sb_l1s',
-baihe: 'fr_l1s', jinpeng: 'rw_l2s', youming: 'rs_l1s', lingxi: 'sf_l1s',
-bawang: 'ob_l1s', fengling: 'cf_l2s', wuya: 'ib_l1s', danqing: 'vb_l1s'
+chixiao: 'rk_l2s', xuanji: 'sg_l1s', qingluan: 'jf_l2s', xuanwu: 'bs_l1s', liying: 'ib_l1s'
 };
 const _TP_OUT = { sw: 0, k: 16, hip: [0, 0], neck: [0, 0], hf: [0, 0], hb: [0, 0], ff: [0, 0], fb: [0, 0] };
 function targetPose(f) {
@@ -38363,13 +36573,12 @@ const b = Math.sin(clock * 3.2 + f.idx) * 1.8;
 out.hip[1] += b; out.neck[1] += b * 1.35; out.hf[1] += b * 1.1; out.hb[1] += b * 0.9;
 out.sw += Math.sin(clock * 2.1 + f.idx) * 0.05;
 if (s === 'idle') {
-if (hid === 'wuya') { out.hip[1] += 6; out.neck[0] += 5; out.neck[1] += 6; out.hf = [6, -48]; out.sw = 2.85; }
-else if (hid === 'yinhu' || hid === 'youming' || arch === 'assassin') { out.hip[1] += 5; out.neck[0] += 7; out.neck[1] += 6; out.hf[0] += 6; out.hb[0] -= 6; out.sw += 0.35; }
-else if (hid === 'xuanwu' || hid === 'bawang' || hid === 'tiangang' || arch === 'tank') { out.hip[1] += 3; out.ff[0] += 4; out.fb[0] -= 4; out.hf[1] -= 4; out.sw -= 0.25; }
-else if (hid === 'yunhe' || hid === 'jinpeng' || hid === 'qingluan' || hid === 'fengling') { const fl = Math.sin(clock * 2.6 + f.idx) * 3.5; out.hip[1] -= 4 + fl * 0.5; out.neck[1] -= 4 + fl * 0.5; out.hf[1] -= 8 + fl; out.hb[0] -= 8; }
-else if (hid === 'chiyan' || hid === 'leiming') { out.hip[1] += 4; out.neck[0] += 8; out.hf = [28, -76]; out.hb = [10, -74]; out.sw = 0; }
-else if (hid === 'lingxi' || hid === 'yuxiao') { out.hf = [16, -82]; out.hb = [10, -82]; out.sw = 1.25; }
-else if (hid === 'mojie' || hid === 'danqing' || hid === 'xuanji') { out.neck[0] -= 2; out.hf[1] -= 10; out.hb[0] -= 8; out.sw -= 0.4; }
+if (arch === 'assassin') { out.hip[1] += 5; out.neck[0] += 7; out.neck[1] += 6; out.hf[0] += 6; out.hb[0] -= 6; out.sw += 0.35; }
+else if (hid === 'xuanwu' || arch === 'tank') { out.hip[1] += 3; out.ff[0] += 4; out.fb[0] -= 4; out.hf[1] -= 4; out.sw -= 0.25; }
+else if (hid === 'qingluan') { const fl = Math.sin(clock * 2.6 + f.idx) * 3.5; out.hip[1] -= 4 + fl * 0.5; out.neck[1] -= 4 + fl * 0.5; out.hf[1] -= 8 + fl; out.hb[0] -= 8; }
+else if (hid === 'leiming') { out.hip[1] += 4; out.neck[0] += 8; out.hf = [28, -76]; out.hb = [10, -74]; out.sw = 0; }
+else if (hid === 'yuxiao') { out.hf = [16, -82]; out.hb = [10, -82]; out.sw = 1.25; }
+else if (hid === 'xuanji') { out.neck[0] -= 2; out.hf[1] -= 10; out.hb[0] -= 8; out.sw -= 0.4; }
 }
 } else if (s === 'walk') {
 const ph = f.walkPh, sn = Math.sin(ph), cs = Math.cos(ph);
@@ -39730,20 +37939,6 @@ ctx.beginPath(); ctx.ellipse(x, -2, 12, 19, 0, Math.PI, 0); ctx.fill();
 }
 }
 },
-youhuang: {
-sky: ['#130e20', '#272138', '#533c56', '#2b2941'], mist: '168,118,162', orb: 'moon', orbC: '227,182,215',
-draw() {
-ctx.strokeStyle = '#221c2d'; ctx.lineWidth = 5;
-line([-70, -76], [70, -76]);
-for (const x of [-69, 69]) line([x, 0], [x, -86]);
-for (const [x, h, color] of [[-62, 48, '#764365'], [-23, 64, '#454970'], [23, 52, '#855775']]) {
-ctx.fillStyle = color;
-ctx.beginPath(); ctx.moveTo(x, -74); ctx.lineTo(x + 30, -74);
-ctx.quadraticCurveTo(x + 24, -55, x + 33, -74 + h);
-ctx.lineTo(x - 3, -71 + h); ctx.quadraticCurveTo(x + 4, -43, x, -74); ctx.fill();
-}
-}
-},
 xuanji: {
 sky: ['#0b1226', '#192840', '#3b4968', '#202637'], mist: '113,143,192', orb: 'moon', orbC: '197,218,255',
 draw() {
@@ -39756,17 +37951,18 @@ line([0, -84], [0, -92]); line([0, -84], [6, -81]);
 ctx.fillStyle = '#635747'; ctx.fillRect(-4, -55, 8, 17);
 }
 },
-polang: {
-sky: ['#0c1a27', '#162f41', '#335365', '#223c4e'], mist: '117,182,197', orb: 'moon', orbC: '183,227,228',
+qingluan: {
+sky: ['#0a1d1c', '#163532', '#2f5e56', '#17302d'], mist: '110,210,185', orb: 'moon', orbC: '195,250,235',
 draw() {
-ctx.strokeStyle = '#78939b'; ctx.lineWidth = 1.5;
-for (const [y, x] of [[-24, -89], [-14, -103], [-7, -81]]) line([x, y], [x + 172, y]);
-ctx.fillStyle = '#25323d';
-ctx.beginPath(); ctx.moveTo(-69, -27); ctx.lineTo(70, -27);
-ctx.lineTo(48, -7); ctx.lineTo(-44, -7); ctx.fill();
-ctx.strokeStyle = '#273540'; ctx.lineWidth = 5; line([-13, -27], [-13, -101]);
-ctx.fillStyle = '#62838c'; ctx.beginPath(); ctx.moveTo(-9, -96);
-ctx.quadraticCurveTo(17, -76, 43, -39); ctx.lineTo(-9, -39); ctx.fill();
+ctx.strokeStyle = '#1d3632'; ctx.lineWidth = 5;
+line([-70, -76], [70, -76]);
+for (const x of [-69, 69]) line([x, 0], [x, -86]);
+for (const [x, h, color] of [[-62, 48, '#2b6a5e'], [-23, 64, '#3a8474'], [23, 52, '#286458']]) {
+ctx.fillStyle = color;
+ctx.beginPath(); ctx.moveTo(x, -74); ctx.lineTo(x + 30, -74);
+ctx.quadraticCurveTo(x + 24, -55, x + 33, -74 + h);
+ctx.lineTo(x - 3, -71 + h); ctx.quadraticCurveTo(x + 4, -43, x, -74); ctx.fill();
+}
 }
 }
 };
@@ -42394,6 +40590,21 @@ ctx.beginPath(); ctx.arc(h[0] + ux * 2, h[1] + uy * 2, 12 + grow, Math.atan2(uy,
 if (!outline) ctx.fillStyle = L.helmC || '#9a9ea8'; ctx.fill();
 if (!outline) { ctx.fillStyle = L.scarf; ctx.beginPath(); ctx.arc(h[0] + ux * 14, h[1] + uy * 14, 3.5, 0, 7); ctx.fill(); }
 break;
+case 'mist-veil': {  // 离影：披散长发 + 雾青半面轻纱 + 脑后双垂雾带
+const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
+ctx.lineWidth = 4.5 + grow; ctx.lineCap = 'round';
+if (!outline) ctx.strokeStyle = L.hair || '#122026';
+const w = Math.sin(clock * 4.5) * 3;
+ctx.beginPath(); ctx.moveTo(...P(8, -5)); ctx.quadraticCurveTo(...P(2, -16), ...P(-12, -14 + w)); ctx.stroke();
+ctx.beginPath(); ctx.moveTo(...P(5, -7)); ctx.quadraticCurveTo(...P(-4, -13), ...P(-16, -9 - w * 0.6)); ctx.stroke();
+if (!outline) {
+ctx.fillStyle = 'rgba(92,200,214,0.45)';
+ctx.beginPath(); ctx.moveTo(...P(-1, 2)); ctx.lineTo(...P(-1, 10)); ctx.lineTo(...P(-11, 8)); ctx.lineTo(...P(-9, 0)); ctx.closePath(); ctx.fill();
+ctx.strokeStyle = '#5cc8d6'; ctx.lineWidth = 2.0;
+line(P(7, -8), P(7, 8));
+}
+break;
+}
 case 'ponytail': {
 ctx.lineWidth = 5 + grow; ctx.lineCap = 'round';
 const a = [h[0] + ux * 6 + bk * 6, h[1] + uy * 6], b = [a[0] + bk * 16, a[1] + 10 + Math.sin(clock * 5) * 3], c = [b[0] + bk * 8, b[1] + 16];
@@ -42735,26 +40946,11 @@ break;
 }
 }
 const HERO_BASE_DECO = {
+liying: { sash: '#5cc8d6', cape: '#102026' },
 chixiao: { shoulder: '#6b241c', sash: '#ff4d2e', cape: '#3b1510' },
-youhuang: { dress: ['#352238', '#c2528c'], sash: '#6cf0c2', back: 'ribbon' },
 xuanji: { robe: 'starry', robeC: '#1b2140', breastplate: '#d8b660', back: 'chakra' },
-polang: { shoulder: '#2ca8d8', breastplate: '#1c4257', cape: '#132a38' },
-cangming: { robe: 'blizzard', robeC: '#182438', shoulder: '#2b6cb0', cape: '#122036', back: 'icewings' },
 qingluan: { robe: 'phoenix', robeC: '#163a36', cape: '#0e2b27', back: 'peacock' },
 xuanwu: { robe: 'heavy', breastplate: '#4a5c4e', shoulder: '#384a3d', back: 'crystals' },
-chiyan: { shoulder: '#ff521b', breastplate: '#5a1e14', sash: '#ff9638', aura: 'ember' },
-yinhu: { robe: 'spirit', shoulder: '#4b386e', cape: '#1e1630', back: 'foxtails' },
-yunhe: { robe: 'celestial', robeC: '#27384a', cape: '#edf6ff', back: 'wings' },
-tiangang: { robe: 'heavy', breastplate: '#3a4a68', shoulder: '#d8aa4a', cape: '#8f2220' },
-mojie: { robe: 'jade_master', robeC: '#1f1c2e', sash: '#7c4dff', back: 'scroll' },
-baihe: { breastplate: '#a8d4f0', shoulder: '#5ec8ff', cape: '#2a5a7a', trail: 'snow' },
-jinpeng: { robe: 'gold', breastplate: '#b88228', shoulder: '#d49a2a', back: 'crowwings' },
-youming: { robe: 'dark', shoulder: '#381e54', cape: '#140c20', back: 'voidshards' },
-lingxi: { dress: ['#e5f5f2', '#2ec9aa'], sash: '#4ce6c8', back: 'notering' },
-bawang: { robe: 'crimson', breastplate: '#5a221c', shoulder: '#b8862d', cape: '#6e1614' },
-fengling: { dress: ['#edf6fa', '#ff85b2'], cape: '#f5c0d4', back: 'koi' },
-wuya: { robe: 'dark', shoulder: '#2c3858', cape: '#101624', back: 'flysword' },
-danqing: { robe: 'jade_master', robeC: '#2a2220', sash: '#ff6448', cape: '#1c4054', back: 'scroll' },
 };
 const FLAIL = new WeakMap();
 let DRAW_F = null;
@@ -43476,21 +41672,38 @@ glow(At(g, 10 + ph * 46, 0), 7, '110,196,255', 0.52);
 }
 }
 };
-SKIN_WEAP.jadefan = ({ hl, g, t, bar, glow, o, flash, live, T, L }) => {
-const dx = t[0] - g[0], dy = t[1] - g[1], a = Math.atan2(dy, dx), r = 34;
-ctx.fillStyle = o ? L.outline : flash ? '#fff' : '#18544a';
-ctx.beginPath(); ctx.moveTo(g[0], g[1]); ctx.arc(g[0], g[1], r, a - 0.85, a + 0.85); ctx.closePath(); ctx.fill();
-bar(hl, g, 3.5, o ? L.outline : flash ? '#fff' : '#0f3630');
+SKIN_WEAP.willowsaber = ({ hl, g, t, At, bar, poly, glow, o, flash, live, T, L }) => {
+bar(hl, g, 3.6, o ? L.outline : flash ? '#fff' : '#12262e');
+const ringP = At(hl, -4, 0);
+ctx.strokeStyle = o ? L.outline : flash ? '#fff' : '#5cc8d6';
+ctx.lineWidth = o ? 3.2 : 1.8;
+ctx.beginPath(); ctx.arc(ringP[0], ringP[1], 4.2, 0, Math.PI * 2); ctx.stroke();
+bar(At(g, 0, -5), At(g, 0, 5), 3.0, o ? L.outline : flash ? '#fff' : '#5cc8d6');
+poly([At(g, 1, -3), At(g, 24, -5.5), At(t, -8, -4.5), At(t, 4, 0.5), At(t, -10, 4.5), At(g, 22, 2.2), At(g, 1, 2.5)], o ? L.outline : flash ? '#fff' : '#1b3844');
 if (!o && !flash) {
-ctx.strokeStyle = '#52f0c8'; ctx.lineWidth = 2.0;
-ctx.beginPath(); ctx.arc(g[0], g[1], r * 0.78, a - 0.78, a + 0.78); ctx.stroke();
-for (let i = -3; i <= 3; i++) {
-const k = a + i * 0.24;
-bar(g, [g[0] + Math.cos(k) * r, g[1] + Math.sin(k) * r], 1.5, i === 0 ? '#e0fff6' : '#28c79e');
-}
-if (live) glow([g[0] + Math.cos(a) * r * 0.65, g[1] + Math.sin(a) * r * 0.65], 7, '82,240,200', 0.36 + 0.16 * Math.sin(T * 5));
+poly([At(g, 4, -2.6), At(g, 26, -4.8), At(t, -6, -3.6), At(t, 4, 0.5), At(t, -10, 1.2)], '#d8fbff');
+if (live) glow(At(t, -8, -1), 7, '120,215,225', 0.42 + 0.16 * Math.sin(T * 6));
 }
 };
+SKIN_WEAP.chimestaff = ({ hl, g, t, At, bar, glow, o, flash, live, T, L }) => {
+bar(At(hl, -12, 0), At(t, -4, 0), o ? 6.2 : 4.0, o ? L.outline : flash ? '#fff' : '#164d42');
+const head = At(t, -2, 0), hook = At(t, 5, -7), lamp = At(t, 6, 3 + Math.sin(T * 5) * 1.5);
+ctx.strokeStyle = o ? L.outline : flash ? '#fff' : '#52f0c8';
+ctx.lineWidth = o ? 4.4 : 2.4;
+ctx.beginPath(); ctx.moveTo(head[0], head[1]); ctx.quadraticCurveTo(hook[0], hook[1], lamp[0], lamp[1] - 5); ctx.stroke();
+ctx.fillStyle = o ? L.outline : flash ? '#fff' : '#28c79e';
+ctx.beginPath(); ctx.arc(lamp[0], lamp[1], o ? 6.8 : 5.2, 0, Math.PI * 2); ctx.fill();
+if (!o && !flash) {
+ctx.fillStyle = '#e6fff8'; ctx.beginPath(); ctx.arc(lamp[0], lamp[1], 2.6, 0, Math.PI * 2); ctx.fill();
+for (const d of [-10, -18]) {
+const r = At(t, d, 4);
+ctx.strokeStyle = '#ffd97d'; ctx.lineWidth = 1.4;
+ctx.beginPath(); ctx.arc(r[0], r[1], 2.5, 0, Math.PI * 2); ctx.stroke();
+}
+if (live) glow(lamp, 11, '82,240,200', 0.48 + 0.18 * Math.sin(T * 5));
+}
+};
+SKIN_WEAP.jadefan = SKIN_WEAP.chimestaff;
 SKIN_WEAP.blazegauntlet = ({ sk, glow, o, flash, live, T, L }) => {
 for (const h of [sk.hf, sk.hb]) {
 ctx.fillStyle = o ? L.outline : flash ? '#fff' : '#6e2014';
@@ -47869,92 +46082,28 @@ lingque: { passive: '飞梭织悬丝，碰一下就留下印记。', light: '子
 };
 Object.assign(PASSIVE_SHORT, {
 chixiao: '重击蓄力霸体 · 烈焰突刺与炎轮点燃对手(860血)',
-youhuang: '移速灵巧 · 毒针迟缓与回纹绞带拉拽控制(790血)',
 xuanji: '三臂星规控距 · 星火压制与重力场削减架势(810血)',
-polang: '沧澜重锚霸体 · 震锚削防与冲锋撞飞(920血)',
-cangming: '寒渊重剑霸体 · 霜气迟缓与裂魂破防挑空(875血)',
 qingluan: '翠羽济世回春 · 清风击退迟缓与近身护体(805血)',
 xuanwu: '玄甲不动霸体 · 冲撞削防与镇岳壁垒回势(940血)',
-chiyan: '焚心烈拳连打 · 冲拳升龙附带持续烈焰灼烧(845血)',
-yinhu: '幻月狐踪极速 · 穿身强化与空中十字双刃连切(785血)',
-yunhe: '仙鹤凌云御风 · 展翅齐射仙羽与云岚回血(800血)',
-tiangang: '天罡铁壁长枪 · 霸体长驱破阵与震枪横扫(915血)',
-mojie: '断魂墨敕控场 · 墨阵禁锢与追踪墨符压制(810血)',
-baihe: '霜华映剑凝霜 · 寒江贯刺减速与霜镜弹反(830血)',
-jinpeng: '扶摇金翼制空 · 俯冲罡风与三道裂空金羽(825血)',
-youming: '噬影潜行突袭 · 暗影掠杀与幽影锁链拘魂(790血)',
-lingxi: '心有灵犀音律 · 扩张音环减速与余音弹反震晕(805血)',
-bawang: '霸王重甲撼岳 · 霸体裂地破防与楚歌气浪减速(935血)',
-fengling: '听风铃语轻灵 · 双风刃压制与风铃回血弹反(795血)',
-wuya: '无涯剑意居合 · 按鞘瞬闪拔刀与踏虚无敌斩影(835血)',
-danqing: '丹青妙笔绘卷 · 朱砂远波迟缓与青绿画阵定身(815血)',
 });
 Object.assign(ADV_SHORT, {
 chixiao: 'Q 烈焰突刺近身点燃后，立刻接 R 炎轮扫荡挑空追击',
-youhuang: '先用 Q 毒针减速，再甩 R 回纹缠带将对手拽回身前打连段',
 xuanji: 'R 天枢重力把敌人拉进中距削防后，接 Q 星规流火精准补伤',
-polang: '先用 R 破浪霸体突进贴脸，落地立刻接 Q 怒涛震锚破防挑飞',
-cangming: 'Q 寒渊斩近身重斩并挂寒霜迟缓，再以 R 裂魂斩蓄势破防浮空',
 qingluan: '中距用 Q 翠羽清风控场拉扯，被贴身时用 R 鸾羽回春震退回血',
 xuanwu: '先开 R 镇岳壁垒拿霸体与架势回复，再用 Q 玄甲冲撞顶飞对手',
-chiyan: 'Q 烈焰冲拳突入点燃后，顺势接 R 烬火升龙勾拳追空连打',
-yinhu: 'Q 狐步幻移穿身绕后强化下一击，立刻接 R 幻月双斩打出爆发',
-yunhe: '利用 Q 鹤翼凌空齐射仙羽抢先手，被反打时开 R 云岚沐羽稳血线',
-tiangang: 'Q 破阵长驱远端削防，对手反扑时用 R 铁壁震枪霸体横扫挑飞',
-mojie: '先用 Q 断魂墨缚禁锢走位，再用 R 镇魂敕符远程追踪压制',
-baihe: 'R 霜华凝镜弹反暗器并震退减速，再接 Q 寒江贯虹极速穿刺',
-jinpeng: '中远距用 R 扶摇罡风压制跳跃，抓住破绽以 Q 金鹏裂空俯冲收割',
-youming: 'R 幽冥拘魂把远敌拉至身前减速，立刻接 Q 噬影掠杀十字穿斩',
-lingxi: 'Q 灵犀音波远距扩张减速，对手近身或出暗器时用 R 余音震魄反制',
-bawang: '先用 R 楚歌震军震退减速，再接 Q 霸王裂地霸体劈落瓦解防线',
-fengling: 'Q 清铃拂风双风刃保持安全距离，被压制时用 R 和风祈愿回血反推',
-wuya: 'R 踏虚斩影借短暂无敌躲招挑空，再以 Q 无涯居合瞬闪收尾',
-danqing: '先用 R 青绿封卷定身困敌，接 Q 朱砂画弧远程气波连环压制',
 });
 Object.assign(HERO_METER_EXPLAIN, {
 chixiao: '【火耙炙魂 · 灼烧积怒】三齿火耙重击霸体换血与持续点燃稳定攒气；奥义「炽霄焚天」六连火星连斩接跃起火耙重劈。',
-youhuang: '【绞带控距 · 连抽蓄势】毒针远程牵制与回纹绞带拉拽连击快速充能；奥义「千缕重叠」七连绞带鞭抽接坠锤终结。',
 xuanji: '【星枢牵引 · 刻线聚元】星规流火与重力力场持续削防攒气；奥义「星宿归元」循星轨六连斩后合拢三臂重击。',
-polang: '【重锚抗压 · 破浪蓄怒】高体量重锚霸体承伤与震锚破防高效聚气；奥义「沧海倾覆」五记重锚连砸接双钩覆海。',
-cangming: '【寒渊重剑 · 断渊蓄威】重剑霸体硬扛与寒波减速稳步蓄能；奥义「冥蚀断渊」五道幽蓝霜剑连环破防并裂地终结。',
 qingluan: '【翠羽灵风 · 绵延聚气】远程清风拉扯与回春续航持久作战；奥义「鸾鸣九霄」六道清风扇影连扫接鸾鸣风爆。',
 xuanwu: '【玄甲承伤 · 镇岳积威】顶级气血与玄甲壁垒承伤攒气极快；奥义「玄武镇岳」四记撼岳重锤连震后泰山压顶。',
-chiyan: '【烈焰连拳 · 灼心暴怒】高频烈拳与灼烧伤害迅速拉满怒气；奥义「焚天乱舞」八记疾风烈焰连拳接赤焰爆裂冲拳。',
-yinhu: '【狐步瞬影 · 疾刃充能】极速连段与穿身背袭高速攒气；奥义「九尾绝影」九道银月残影疾斩接交叉封喉。',
-yunhe: '【御风仙羽 · 凌云蓄势】制空仙羽穿透与云岚续航稳健充能；奥义「鹤舞九天」六道云岚羽芒凌空连击接九天俯冲。',
-tiangang: '【长驱破阵 · 铁壁蓄锋】超长枪芒贯穿与霸体抗压高效攒气；奥义「天罡破军」五道金戈枪芒贯杀接天罡坠世。',
-mojie: '【断魂敕墨 · 阵法聚元】墨缚禁锢与追踪墨符持续压制积怒；奥义「绝墨魂卷」在目标所在层布阵，先定身削减架势，再引爆画阵。',
-baihe: '【霜镜凝华 · 寒江聚锋】霜镜弹反暗器与寒江贯刺灵动攒气；奥义「冰河奔涌」六道清霜剑影连斩接冰封江面。',
-jinpeng: '【裂空金羽 · 扶摇蓄势】三羽远程消耗与俯冲突袭迅猛积怒；奥义「鹏程万里」七道裂空罡风撕扯接大鹏压顶。',
-youming: '【暗影锁魂 · 永夜积煞】拘魂拉拽接双镰掠杀极速充能；奥义「永夜绝斩」八道幽冥双镰瞬息交错接噬影断魂。',
-lingxi: '【灵犀音环 · 余音聚气】音环远程穿透与余音弹反稳步蓄能；奥义「心音幻境」四圈音波粉碎敌方飞行物、削减架势并迟缓敌人，同时为附近队友充能。',
-bawang: '【霸王悍勇 · 裂地积威】重甲霸体换血与震军气浪高效充能；奥义「力拔山兮」五记雷霆重劈接力拔山河压垮敌军。',
-fengling: '【清铃和风 · 轻灵充能】双风刃安全消耗与风铃回血弹反稳健攒气；奥义「万铃和鸣」六道和风刃影连斩接万铃共振。',
-wuya: '【无涯剑心 · 居合积势】踏虚闪避与疾闪居合节奏明快；奥义「剑气无涯」七道银月居合连闪接万道剑气爆发。',
-danqing: '【丹青点墨 · 画卷聚意】远程朱砂气波与青绿封卷控场攒气；奥义「千里江山」在目标所在层依次掀起三重墨浪挑飞敌人。',
 });
 (() => {
 const EXP_HEROES = [
 ['chixiao', 'rk', '三齿火耙连挑', '烈焰重耙', '凌空火耙', '烈焰突刺', '炎轮扫荡', '炽霄焚天', '火耙腾跃', 'dash', 'mid', 'gale', 'quake', 'avalanche', '点燃灼烧', '炎轮挑空', '六连火耙重劈', '火耙不是农具，烧起来比刀还烫。', '三齿齐出，火星子能点亮整条街。'],
-['youhuang', 'dl', '绞带连抽', '坠锤重甩', '空甩绞带', '幽篁毒针', '回纹缠带', '千缕重叠', '绞带借力', 'ranged', 'ranged', 'kunai', 'proj', 'shadows', '淬药减速', '绞带拉拽', '七连抽击重砸', '染坊出来的带子，甩在身上顺带染色。', '别躲，三枚细针总有一枚认得你。'],
 ['xuanji', 'sg', '星规弧斩', '三臂合击', '凌空测影', '星规流火', '天枢重力', '星宿归元', '星轨撤步', 'ranged', 'trap', 'proj', 'inktrap', 'timestop', '星火穿刺', '重力削防', '六连星轨合击', '他打架前先量距离，误差不超过半寸。', '星规一合，重力场里谁都跑不快。'],
-['polang', 'an', '重锚沉砸', '沧澜蓄锚', '高空坠锚', '怒涛震锚', '破浪突进', '沧海倾覆', '锚链腾跃', 'mid', 'dash', 'quake', 'ironwall', 'avalanche', '震锚挑飞', '霸体撞飞', '五连重锚覆海', '两百斤的救生锚，救船也顺便救对手清醒。', '别跳了，浪打过来站都站不稳。'],
-['cangming', 'ab', '寒渊重剑五斩', '霜渊蓄劈', '凌空霜斩', '寒渊斩', '裂魂斩', '冥蚀断渊', '渊雪撤步', 'mid', 'melee', 'swordqi', 'quake', 'crescent', '寒波迟缓', '破防挑空', '五道幽蓝断渊', '重剑无锋，但寒气已经透进骨头里了。', '接完寒渊斩再接裂魂斩，脚都不沾地。'],
 ['qingluan', 'jf', '翠羽扇舞', '青鸾蓄风', '御风轻扇', '翠羽清风', '鸾羽回春', '鸾鸣九霄', '翠羽腾空', 'ranged', 'counter', 'windblade', 'moonflow', 'tornado', '清风迟缓', '回春震退', '六道鸾风扫荡', '医扇既能救人，也能把人扇出三丈远。', '别急着贴脸，回春扇一震你就飞了。'],
 ['xuanwu', 'bs', '玄甲重盾砸', '镇岳蓄撞', '凌空龟甲压', '玄甲冲撞', '镇岳壁垒', '玄武镇岳', '玄甲腾跃', 'dash', 'counter', 'ironwall', 'mirror', 'avalanche', '霸体撞飞', '壁垒回势', '四记撼岳重锤', '玄武龟甲敲起来咚咚响，震麻的是你的手。', '开起镇岳壁垒，你先打完一套我再动。'],
-['chiyan', 'bg', '烈焰连拳', '赤焰重炮', '空坠火拳', '烈焰冲拳', '烬火升龙', '焚天乱舞', '炎步后撤', 'dash', 'melee', 'thunderfist', 'quake', 'thunder', '烈焰灼烧', '升龙挑空', '八连赤焰轰击', '拳套自带火炉，冬天打架最暖和。', '先冲拳再升龙，火候刚刚好。'],
-['yinhu', 'fd', '银狐双匕连刺', '幻月蓄刺', '空翻狐刃', '狐步幻移', '幻月双斩', '九尾绝影', '狐步遁影', 'dash', 'melee', 'blink', 'shadows', 'shadows', '穿身强化', '十字连切', '九道银月绝影', '银狐出手前，你看到的只是上一秒的影子。', '九尾残影齐出，数清之前胜负已分。'],
-['yunhe', 'cw', '仙羽清拂', '云翼蓄掠', '凌云翔击', '鹤翼凌空', '云岚沐羽', '鹤舞九天', '鹤翼腾空', 'dash', 'counter', 'feather', 'moonflow', 'featherstorm', '双羽穿刺', '云岚回血', '六道羽芒俯冲', '云鹤在天上盘旋，地面上的招式全扑空。', '打完一套顺手回口血，优雅得很。'],
-['tiangang', 'gp', '天罡长枪连刺', '金戈蓄刺', '凌空点枪', '破阵长驱', '铁壁震枪', '天罡破军', '持枪退步', 'dash', 'counter', 'backthrust', 'spin', 'timestop', '霸体破防', '铁壁挑飞', '五道金戈贯杀', '一杆天罡枪立在阵前，千军万马都得绕道。', '红缨一抖，枪尖已经抵到眉心。'],
-['mojie', 'sb', '断魂墨毫五式', '魂笔重印', '凌空书敕', '断魂墨缚', '镇魂敕符', '绝墨魂卷', '墨影撤步', 'trap', 'ranged', 'inktrap', 'inkblob', 'inkdragon', '墨阵禁锢', '追踪墨符', '绝墨判魂大阵', '一笔定生死，画完这卷就送你上路。', '脚下的墨圈别乱踩，踩进去可拔不出脚。'],
-['baihe', 'fr', '霜华细剑连刺', '寒芒蓄刺', '冰河空刺', '寒江贯虹', '霜华凝镜', '冰河奔涌', '踏霜撤步', 'dash', 'counter', 'gale', 'mirror', 'timestop', '贯刺减速', '霜镜弹反', '六道清霜冰封', '剑身细如冰棱，出手快得连霜花都追不上。', '暗器飞过来？霜镜原路奉还。'],
-['jinpeng', 'rw', '金翼疾掠连击', '金爪蓄扑', '苍穹展翅', '金鹏裂空', '扶摇罡风', '鹏程万里', '振翼腾空', 'dash', 'ranged', 'dive', 'feather', 'featherstorm', '俯冲罡风', '三羽裂空', '七道罡风压顶', '大鹏一日同风起，俯冲下来地都抖三抖。', '三道金羽封走位，天上地下无处可逃。'],
-['youming', 'rs', '幽冥双镰连割', '噬魂蓄镰', '空旋冥镰', '噬影掠杀', '幽冥拘魂', '永夜绝斩', '幽雾遁身', 'dash', 'ranged', 'blink', 'proj', 'shadows', '暗影穿斩', '锁链拘魂', '八道永夜绝斩', '双镰划过不留血，只留一团散不去的幽雾。', '跑远了？幽影锁链把你乖乖请回来。'],
-['lingxi', 'sf', '灵犀玉笛连点', '清音蓄扫', '凌空吹笛', '灵犀音波', '余音震魄', '心音幻境', '踏音后撤', 'ranged', 'counter', 'note', 'mirror', 'guangling', '音环减速', '余音震晕', '四重音波结界', '一曲灵犀吹罢，对手连招式节拍都乱了。', '笛声听着柔和，震在架势上可一点不客气。'],
-['bawang', 'ob', '霸王重刃连劈', '撼山蓄劈', '凌空断岳', '霸王裂地', '楚歌震军', '力拔山兮', '重甲后撤', 'mid', 'mid', 'quake', 'ironwall', 'avalanche', '裂地挑飞', '怒吼减速', '五记雷霆重劈', '力拔山兮气盖世，重刃落下谁敢硬接？', '一声楚歌震军，方圆三丈都得矮三分。'],
-['fengling', 'cf', '素扇清铃舞', '和风蓄扇', '踏风轻掠', '清铃拂风', '和风祈愿', '万铃和鸣', '听风撤步', 'ranged', 'counter', 'windblade', 'moonflow', 'tornado', '双风刃击退', '祈愿回血', '六道和风共振', '风铃叮当一响，双道清风已经吹到脸上。', '别看扇子小，吹退强敌顺带回血两不误。'],
-['wuya', 'ib', '无涯快刀五斩', '纳鞘蓄居合', '凌空拔刀', '无涯居合', '踏虚斩影', '剑气无涯', '踏虚瞬撤', 'dash', 'dash', 'gale', 'swordqi', 'crescent', '瞬闪居合', '无敌弯月', '七道银月剑气', '刀未出鞘，胜负已在按鞘的一瞬注定。', '踏虚闪过你的大招，反手就是一道弯月。'],
-['danqing', 'vb', '丹青五韵连画', '朱砂重笔', '凌空点彩', '朱砂画弧', '青绿封卷', '千里江山', '踏墨退避', 'ranged', 'trap', 'inkblob', 'inktrap', 'shanshui', '朱砂减速', '画阵定身', '三座墨峰画浪', '挥毫泼出千里江山，顺便把对手裱进画里。', '朱砂勾轮廓，青绿封退路，妥妥一幅名画。'],
 ];
 for (const [id, pfx, lName, cName, aName, qName, rName, eName, escName, qType, rType, qFx, rFx, eFx, qTag, rTag, eTag, fun1, fun2] of EXP_HEROES) {
 const s1 = pfx + '_l1s', a1 = pfx + '_l1a', s2 = pfx + '_l2s', a2 = pfx + '_l2a';
@@ -48086,12 +46235,12 @@ return rows;
 }
 const HERO_ARCH_NAMES = { all: '全部', swordsman: '剑客', assassin: '刺客', tank: '铁卫', fighter: '武师', support: '辅助', controller: '控场' };
 const HERO_ARCH_MAP = {
-qingfeng: 'swordsman', lingshuang: 'swordsman', yuehua: 'swordsman', cangming: 'swordsman', baihe: 'swordsman', wuya: 'swordsman',
-feiying: 'assassin', lingque: 'assassin', liying: 'assassin', youhuang: 'assassin', yinhu: 'assassin', youming: 'assassin',
-tieshan: 'tank', gouchen: 'tank', polang: 'tank', xuanwu: 'tank', tiangang: 'tank', bawang: 'tank',
-leiming: 'fighter', zuixian: 'fighter', chixiao: 'fighter', yanling: 'fighter', chiyan: 'fighter', jinpeng: 'fighter',
-liuyun: 'support', yuxiao: 'support', xuanji: 'support', qingluan: 'support', yunhe: 'support', fengling: 'support',
-moyu: 'controller', cixian: 'controller', qianji: 'controller', mojie: 'controller', lingxi: 'controller', danqing: 'controller',
+qingfeng: 'swordsman', lingshuang: 'swordsman', yuehua: 'swordsman',
+feiying: 'assassin', lingque: 'assassin', liying: 'assassin',
+tieshan: 'tank', gouchen: 'tank', xuanwu: 'tank',
+leiming: 'fighter', zuixian: 'fighter', chixiao: 'fighter', yanling: 'fighter',
+liuyun: 'support', yuxiao: 'support', qingluan: 'support',
+moyu: 'controller', cixian: 'controller', qianji: 'controller', xuanji: 'controller',
 };
 let cxArch = 'all';
 function heroArchetype(id) { return HERO_ARCH_MAP[id] || 'fighter'; }
@@ -48415,7 +46564,7 @@ if (S.rarity === 'rare') return 20;
 }
 return 10;
 }
-const CHAR_RARITY = { yuxiao: 'legend', zuixian: 'rare', gouchen: 'rare', lingque: 'rare', liying: 'rare', cixian: 'rare', qianji: 'rare', chixiao: 'rare', youhuang: 'rare', xuanji: 'legend', polang: 'rare', cangming: 'legend', qingluan: 'rare', xuanwu: 'rare', chiyan: 'rare', yinhu: 'legend', yunhe: 'rare', tiangang: 'rare', mojie: 'legend', baihe: 'rare', jinpeng: 'legend', youming: 'rare', lingxi: 'rare', bawang: 'legend', fengling: 'rare', wuya: 'legend', danqing: 'rare', qingfeng: 'starter', tieshan: 'common', leiming: 'common', feiying: 'rare', liuyun: 'rare', lingshuang: 'rare', moyu: 'legend', yuehua: 'legend', yanling: 'legend' };
+const CHAR_RARITY = { yuxiao: 'legend', zuixian: 'rare', gouchen: 'rare', lingque: 'rare', liying: 'rare', cixian: 'rare', qianji: 'rare', chixiao: 'rare', xuanji: 'legend', qingluan: 'rare', xuanwu: 'rare', qingfeng: 'starter', tieshan: 'common', leiming: 'common', feiying: 'rare', liuyun: 'rare', lingshuang: 'rare', moyu: 'legend', yuehua: 'legend', yanling: 'legend' };
 function getWeeklyRotation() {
 const now = new Date();
 const d = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
@@ -55555,7 +53704,8 @@ for (let i = 0; i < total; i++) {
 const f = FIGHTERS[i];
 const side = i % 2, slot = Math.floor(i / 2);
 const draftedCid = hasDraft && Number.isInteger(drafted[side][slot]) && drafted[side][slot] >= 0 ? drafted[side][slot] : -1;
-const cid = draftedCid >= 0 ? draftedCid : (i === 0 ? (heroIdx | 0) : ((heroIdx + i * (sz > 8 ? 5 : 3)) % CHARS.length));
+const stride = side === 0 ? 3 : 7;
+const cid = draftedCid >= 0 ? draftedCid : (i === 0 ? (heroIdx | 0) : ((heroIdx + (side ? 1 : 0) + slot * stride) % CHARS.length));
 f.setChar(cid);
 f.ctrl = i === 0 ? human[0] : new AICtrl(M.level);
 f.hidden = false;
@@ -55679,7 +53829,8 @@ for (let i = 0; i < total; i++) {
 const f = FIGHTERS[i];
 const side = i % 2, slot = Math.floor(i / 2);
 const draftedCid = hasDraft && Number.isInteger(drafted[side][slot]) && drafted[side][slot] >= 0 ? drafted[side][slot] : -1;
-f.setChar(draftedCid >= 0 ? draftedCid : (i === 0 ? (heroIdx | 0) : ((heroIdx + i * 2 + 1) % CHARS.length)));
+const stride = side === 0 ? 3 : 7;
+f.setChar(draftedCid >= 0 ? draftedCid : (i === 0 ? (heroIdx | 0) : ((heroIdx + (side ? 1 : 0) + slot * stride) % CHARS.length)));
 f.ctrl = i === 0 ? human[0] : new AICtrl(M.level);
 f.hidden = false;
 }
@@ -56176,41 +54327,156 @@ const dead = e.hp <= 0;
 const pct = Math.max(0, Math.round((e.hp / Math.max(1, e.maxHp)) * 100));
 return `<button type="button" class="tcp-btn${curFocus === e.idx ? ' sel' : ''}${dead ? ' dead' : ''}" data-tcp-focus="${e.idx}"${dead ? ' disabled' : ''}>${escapeHTML(cvT(e.look.name))} <small>${dead ? cvT('阵亡') : pct + '%'}</small></button>`;
 }).join('');
-const allRoleBtns = CMD_ROLES.map((r, ri) => `<button type="button" class="tcp-btn" data-tcp-role-all="${ri}">${cvT('全队')}${cvT(r.n)}</button>`).join('');
+const allRoleBtns = CMD_ROLES.map((r, ri) => `<button type="button" class="tcp-btn tcp-role-drop" data-tcp-role-all="${ri}" data-tcp-drop-role="${ri}">${cvT('全队')}${cvT(r.n)}</button>`).join('');
 const mateRows = mates.length ? mates.map(m => {
 const curR = (M.cmd && M.cmd.role ? M.cmd.role[m.idx] : (M.teamRoles ? M.teamRoles[m.idx] : 0)) || 0;
 const pct = Math.max(0, Math.round((m.hp / Math.max(1, m.maxHp)) * 100));
-return `<div class="tcp-mate-row"><div class="tcp-mate-info"><b>${escapeHTML(cvT(m.look.name))}</b><span class="tcp-mate-hp">${m.hp <= 0 ? cvT('阵亡') : `${Math.round(m.hp)}/${m.maxHp} (${pct}%)`}</span></div><div class="tcp-role-grp">${CMD_ROLES.map((r, ri) => `<button type="button" class="tcp-btn${curR === ri ? ' sel' : ''}" data-tcp-mate="${m.idx}" data-tcp-role="${ri}">${cvT(r.n)}</button>`).join('')}</div></div>`;
+return `<div class="tcp-mate-row" data-tcp-drag-mate="${m.idx}" data-tcp-mate-name="${escapeHTML(cvT(m.look.name))}"><div class="tcp-mate-info"><span class="tcp-drag-grip" title="${cvT('拖拽至分工或敌方目标')}">⋮⋮</span><b>${escapeHTML(cvT(m.look.name))}</b><span class="tcp-mate-hp">${m.hp <= 0 ? cvT('阵亡') : `${Math.round(m.hp)}/${m.maxHp} (${pct}%)`}</span></div><div class="tcp-role-grp">${CMD_ROLES.map((r, ri) => `<button type="button" class="tcp-btn${curR === ri ? ' sel' : ''}" data-tcp-mate="${m.idx}" data-tcp-role="${ri}" data-tcp-drop-role="${ri}">${cvT(r.n)}</button>`).join('')}</div></div>`;
 }).join('') : `<div class="tcp-mate-hp">${cvT('当前队伍暂无 AI 队友')}</div>`;
 const tc = isLargeTeam() ? teamCount() : 2;
 const ovCols = Array.from({ length: tc }, (_, ti) => {
 const list = sideFighters(ti).filter(f => !f.hidden);
 const title = tc > 2 ? cvT(QUAD_TEAMS[ti].n) + (ti === t ? ' (' + cvT('我方') + ')' : '') : cvT(ti === t ? '我方阵营' : '敌方阵营');
 const col = tc > 2 ? QUAD_TEAMS[ti].hex : (ti === t ? '#6fe0ff' : '#ff7878');
-return `<div class="tcp-team-col"><b style="color:${col}">${title}</b>${list.map(f => `<div class="tcp-ov-row"><span>${f.idx === localIdx() ? '★ ' : ''}${cmdIs(f) ? cvT('帅') + ' ' : ''}${escapeHTML(cvT(f.look.name))}</span><span>${f.hp <= 0 ? cvT('阵亡') : `${Math.round(f.hp)}/${f.maxHp}`}</span></div>`).join('')}</div>`;
+return `<div class="tcp-team-col"><b style="color:${col}">${title}</b>${list.map(f => {
+const isAllyAi = ti === t && !human.includes(f.ctrl) && f.hp > 0;
+const isEnemyAlive = ti !== t && f.hp > 0;
+const dragAttr = isAllyAi ? ` data-tcp-drag-mate="${f.idx}" data-tcp-mate-name="${escapeHTML(cvT(f.look.name))}"` : '';
+const dropAttr = isEnemyAlive ? ` data-tcp-drop-focus="${f.idx}"` : '';
+const cls = `tcp-ov-row${isAllyAi ? ' tcp-draggable' : ''}${isEnemyAlive ? ' tcp-enemy-drop' : ''}${curFocus === f.idx ? ' is-focus' : ''}`;
+return `<div class="${cls}"${dragAttr}${dropAttr}><span>${isAllyAi ? '<i class="tcp-drag-grip">⋮⋮</i> ' : ''}${f.idx === localIdx() ? '★ ' : ''}${cmdIs(f) ? cvT('帅') + ' ' : ''}${escapeHTML(cvT(f.look.name))}</span><span>${f.hp <= 0 ? cvT('阵亡') : `${Math.round(f.hp)}/${f.maxHp}`}</span></div>`;
+}).join('')}</div>`;
 }).join('');
 body.innerHTML = `
 <section class="tcp-sec"><div class="tcp-sec-h"><span>${cvT('战队战术')}</span><small>${cvT('锋矢 > 铁壁 > 游袭 > 锋矢')}</small></div><div class="tcp-btns">${tacBtns}</div></section>
 <section class="tcp-sec"><div class="tcp-sec-h"><span>${cvT('阵型与集结')}</span><small>${cvT('控制 AI 队友站位与聚散')}</small></div><div class="tcp-btns">${formBtns}</div></section>
-<section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('目标集火')}</span><small>${cvT('指定全队 AI 优先攻击的目标')}</small></div><div class="tcp-btns">${focusBtns}</div></section>
+<section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('目标集火')}</span><small>${cvT('点击或将队友拖至目标以指定集火')}</small></div><div class="tcp-btns">${focusBtns}</div></section>
 <section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('队友分工')}</span><div class="tcp-btns">${allRoleBtns}</div></div><div class="tcp-mates">${mateRows}</div></section>
-<section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('战况总览')}</span></div><div class="tcp-overview">${ovCols}</div></section>
+<section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('战况总览')}</span><small>${cvT('可拖动标题栏移动面板 · 拖动队友至分工或敌方目标')}</small></div><div class="tcp-overview">${ovCols}</div></section>
 `;
 }
 if (typeof document !== 'undefined') {
 const tcpEl = $id('teamCmdPanel');
-if (tcpEl) tcpEl.addEventListener('click', e => {
+let tcpDrag = null;
+const clearTcpDropHover = () => {
+if (!tcpEl) return;
+for (const el of tcpEl.querySelectorAll('.tcp-drop-over')) el.classList.remove('tcp-drop-over');
+};
+const endTcpDrag = () => {
+if (!tcpDrag) return;
+if (tcpDrag.ghost && tcpDrag.ghost.parentNode) tcpDrag.ghost.parentNode.removeChild(tcpDrag.ghost);
+if (tcpDrag.srcEl) tcpDrag.srcEl.classList.remove('tcp-dragging');
+if (tcpEl) tcpEl.classList.remove('is-dragging');
+clearTcpDropHover();
+tcpDrag = null;
+};
+if (tcpEl) {
+tcpEl.addEventListener('pointerdown', e => {
+if (e.button !== 0 && e.pointerType === 'mouse') return;
+const head = e.target.closest('.tcp-head');
+if (head && !e.target.closest('button')) {
+const rect = tcpEl.getBoundingClientRect();
+tcpDrag = {
+kind: 'panel', pid: e.pointerId, moved: false,
+sx: e.clientX, sy: e.clientY, left: rect.left, top: rect.top, w: rect.width, h: rect.height,
+};
+if (tcpEl.setPointerCapture) try { tcpEl.setPointerCapture(e.pointerId); } catch (_) {}
+e.stopPropagation();
+return;
+}
+const mateEl = e.target.closest('[data-tcp-drag-mate]');
+if (mateEl && !e.target.closest('button')) {
+tcpDrag = {
+kind: 'mate', pid: e.pointerId, moved: false,
+sx: e.clientX, sy: e.clientY,
+mateIdx: +mateEl.dataset.tcpDragMate,
+mateName: mateEl.dataset.tcpMateName || '',
+srcEl: mateEl, ghost: null,
+};
+if (tcpEl.setPointerCapture) try { tcpEl.setPointerCapture(e.pointerId); } catch (_) {}
+e.stopPropagation();
+}
+});
+tcpEl.addEventListener('pointermove', e => {
+if (!tcpDrag || e.pointerId !== tcpDrag.pid) return;
+const dx = e.clientX - tcpDrag.sx, dy = e.clientY - tcpDrag.sy;
+if (!tcpDrag.moved && Math.hypot(dx, dy) < 6) return;
+if (!tcpDrag.moved) {
+tcpDrag.moved = true;
+tcpEl.classList.add('is-dragging');
+if (tcpDrag.kind === 'panel') {
+tcpEl.style.transform = 'none';
+tcpEl.style.left = `${tcpDrag.left}px`;
+tcpEl.style.top = `${tcpDrag.top}px`;
+} else if (tcpDrag.kind === 'mate') {
+if (tcpDrag.srcEl) tcpDrag.srcEl.classList.add('tcp-dragging');
+const g = document.createElement('div');
+g.className = 'tcp-drag-ghost';
+g.textContent = tcpDrag.mateName || cvT('队友');
+document.body.appendChild(g);
+tcpDrag.ghost = g;
+}
+}
+e.preventDefault();
+e.stopPropagation();
+if (tcpDrag.kind === 'panel') {
+const vw = window.innerWidth || 1280, vh = window.innerHeight || 720;
+const nx = clamp(tcpDrag.left + dx, 8, Math.max(8, vw - tcpDrag.w - 8));
+const ny = clamp(tcpDrag.top + dy, 8, Math.max(8, vh - tcpDrag.h - 8));
+tcpEl.style.left = `${nx}px`;
+tcpEl.style.top = `${ny}px`;
+} else if (tcpDrag.kind === 'mate' && tcpDrag.ghost) {
+tcpDrag.ghost.style.left = `${e.clientX + 12}px`;
+tcpDrag.ghost.style.top = `${e.clientY - 12}px`;
+clearTcpDropHover();
+const under = document.elementFromPoint(e.clientX, e.clientY);
+const dropEl = under && under.closest && under.closest('[data-tcp-drop-role],[data-tcp-drop-focus],[data-tcp-focus]');
+if (dropEl && tcpEl.contains(dropEl)) dropEl.classList.add('tcp-drop-over');
+}
+});
+tcpEl.addEventListener('pointerup', e => {
+if (!tcpDrag || e.pointerId !== tcpDrag.pid) return;
+const d = tcpDrag;
+if (tcpEl.releasePointerCapture) try { tcpEl.releasePointerCapture(e.pointerId); } catch (_) {}
+if (d.moved && d.kind === 'mate') {
+if (d.ghost) d.ghost.style.display = 'none';
+const under = document.elementFromPoint(e.clientX, e.clientY);
+const roleDrop = under && under.closest && under.closest('[data-tcp-drop-role]');
+const focusDrop = under && under.closest && under.closest('[data-tcp-drop-focus],[data-tcp-focus]');
+endTcpDrag();
+if (roleDrop && tcpEl.contains(roleDrop)) {
+teamCmdSetRole(d.mateIdx, +roleDrop.dataset.tcpDropRole);
+} else if (focusDrop && tcpEl.contains(focusDrop)) {
+const foeIdx = +(focusDrop.dataset.tcpDropFocus ?? focusDrop.dataset.tcpFocus);
+if (Number.isInteger(foeIdx)) {
+const mate = FIGHTERS[d.mateIdx];
+if (mate && foeIdx >= 0) { mate.cmdTgt = foeIdx; mate.cmdTgtT = clock + 6; }
+teamCmdSetFocus(foeIdx);
+}
+}
+e.stopPropagation();
+return;
+}
+endTcpDrag();
+});
+tcpEl.addEventListener('pointercancel', endTcpDrag);
+tcpEl.addEventListener('click', e => {
 const tBtn = e.target.closest('[data-tcp-tac]');
 if (tBtn) { teamCmdSetTactic(tBtn.dataset.tcpTac); return; }
 const fBtn = e.target.closest('[data-tcp-form]');
 if (fBtn) { teamCmdSetFormation(fBtn.dataset.tcpForm); return; }
-const fcBtn = e.target.closest('[data-tcp-focus]');
-if (fcBtn) { teamCmdSetFocus(+fcBtn.dataset.tcpFocus); return; }
+const fcBtn = e.target.closest('[data-tcp-focus],[data-tcp-drop-focus]');
+if (fcBtn) {
+const idx = +(fcBtn.dataset.tcpFocus ?? fcBtn.dataset.tcpDropFocus);
+if (Number.isInteger(idx)) teamCmdSetFocus(idx);
+return;
+}
 const raBtn = e.target.closest('[data-tcp-role-all]');
 if (raBtn) { teamCmdSetRole(-1, +raBtn.dataset.tcpRoleAll); return; }
 const mrBtn = e.target.closest('[data-tcp-mate]');
 if (mrBtn) { teamCmdSetRole(+mrBtn.dataset.tcpMate, +mrBtn.dataset.tcpRole); return; }
 });
+}
 const tcpClose = $id('tcpCloseBtn');
 if (tcpClose) tcpClose.addEventListener('click', () => teamCmdClose());
 }
@@ -58679,7 +56945,7 @@ requestAnimationFrame(tick);
 };
 requestAnimationFrame(tick);
 }
-const CARD_POSE = { yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_throw', lingque: 'du_l1a', cixian: 'yx_push', qianji: 'qf_charge', chixiao: 'qf_thrust', youhuang: 'gc_throw', xuanji: 'yx_play', polang: 'hva', cangming: 'hva', qingluan: 'l2a', xuanwu: 'lda', chiyan: 'l3a', yinhu: 'dash', yunhe: 'a1a', tiangang: 'qf_thrust', mojie: 'a2s', baihe: 'l3a', jinpeng: 'a1a', youming: 'fy_seal', lingxi: 'yx_play', bawang: 'hva', fengling: 'l2a', wuya: 'qf_charge', danqing: 'a2s', qingfeng: 'hva', feiying: 'dash', tieshan: 'lda', lingshuang: 'l3a', liuyun: 'l2a', leiming: 'l3a', moyu: 'a2s', yuehua: 'victory', yanling: 'a1a', liying: 'fy_seal' };
+const CARD_POSE = { yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_throw', lingque: 'du_l1a', cixian: 'yx_push', qianji: 'qf_charge', chixiao: 'qf_thrust', xuanji: 'yx_play', qingluan: 'l2a', xuanwu: 'lda', qingfeng: 'hva', feiying: 'dash', tieshan: 'lda', lingshuang: 'l3a', liuyun: 'l2a', leiming: 'l3a', moyu: 'a2s', yuehua: 'victory', yanling: 'a1a', liying: 'fy_seal' };
 function makeCardArt(i, CW, CH, skin) {
 const c = document.createElement('canvas'); c.width = CW; c.height = CH;
 const g = c.getContext && c.getContext('2d'); if (!g) return c;
@@ -59126,16 +57392,23 @@ bpSel = -1; bpCpuT = bpCpuDelayForStep();
 showScreen('bp'); renderBP();
 if (mode === 'net') send({ bps: BP });
 }
+function bpAllowMirror() {
+if (!BP || !isMultiPickBP()) return false;
+const totalPicks = (BP.picks[0] ? BP.picks[0].length : 0) + (BP.picks[1] ? BP.picks[1].length : 0);
+const totalBans = Array.isArray(BP.bans) ? BP.bans.length : 0;
+return totalPicks + totalBans > CHARS.length;
+}
 function bpValid(i) {
 if (!BP || BP.step >= bpSteps().length || i < 0 || i >= CHARS.length) return false;
 if (Array.isArray(BP.bans) && BP.bans.includes(i)) return false;
 const stepDef = bpSteps()[BP.step];
 if (!stepDef) return false;
+const mirror = bpAllowMirror();
 if (stepDef[1] === 'ban' && isMultiPickBP() && [...BP.picks[0], ...BP.picks[1]].includes(i)) return false;   // 已经选定的人不能禁
 if (stepDef[1] === 'pick') {
 if (isMultiPickBP()) {
-const allPicked = [...(BP.picks[0] || []), ...(BP.picks[1] || [])];
-if (allPicked.includes(i)) return false;
+const taken = mirror ? (BP.picks[stepDef[0]] || []) : [...(BP.picks[0] || []), ...(BP.picks[1] || [])];
+if (taken.includes(i)) return false;
 } else if (Array.isArray(BP.picks) && BP.picks.includes(i)) {
 return false;
 }
@@ -59143,7 +57416,9 @@ return false;
 if (stepDef[1] === 'pick') {
 const av = BP.avail && BP.avail[stepDef[0]];
 const currentBans = Array.isArray(BP.bans) ? BP.bans : [];
-const currentPicks = isMultiPickBP() ? [...(BP.picks[0] || []), ...(BP.picks[1] || [])] : (Array.isArray(BP.picks) ? BP.picks : []);
+const currentPicks = isMultiPickBP()
+? (mirror ? (BP.picks[stepDef[0]] || []) : [...(BP.picks[0] || []), ...(BP.picks[1] || [])])
+: (Array.isArray(BP.picks) ? BP.picks : []);
 if (av && av.length && av.some(k => !currentBans.includes(k) && !currentPicks.includes(k)) && !av.includes(i)) return false;
 }
 return true;
@@ -59583,7 +57858,8 @@ const bpScrEl = $id('bp');
 if (bpScrEl) {
 bpScrEl.classList.toggle('bp-large', isLargeBP && largeTeamN >= 5);
 bpScrEl.classList.toggle('bp-large-5', isLargeBP && largeTeamN === 5);
-bpScrEl.classList.toggle('bp-large-8', isLargeBP && largeTeamN >= 6);
+bpScrEl.classList.toggle('bp-large-8', isLargeBP && largeTeamN >= 6 && largeTeamN <= 8);
+bpScrEl.classList.toggle('bp-large-16', isLargeBP && largeTeamN > 8);
 }
 const isTag3BP = !isLargeBP && (bpMode === 'tag3' || !!(multiPick && BP.picks[0] && BP.picks[0].length === 3));
 let stepTitle = '';
@@ -59651,7 +57927,7 @@ const isActive = !done && side === sd && type === 'pick' && (pickedCnt === slotI
 const role = LARGE_ROLES[slotIdx] || `${slotIdx + 1}将`;
 return `<div class="slot2 pick bpl-slot${isActive ? ' on' : ''}${idx >= 0 ? ' filled' : ''}"><span class="bpl-role">${role}</span>${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${CHARS[idx].name}</span>` : `<span class="bpl-empty">待选</span>`}</div>`;
 }).join('');
-const colCls = picks.length <= 5 ? 'cols-5' : 'cols-4';
+const colCls = picks.length <= 5 ? 'cols-5' : picks.length > 8 ? 'cols-8' : 'cols-4';
 el.innerHTML = `<div class="bpl-panel side-${sd}">
 <div class="bpl-head">
 <span class="who" style="color:${sd === 0 ? 'var(--p1)' : 'var(--p2)'}">${escapeHTML(bpSideName(sd))}</span>
@@ -59696,13 +57972,19 @@ return `<button type="button" class="arch-pill${window._bpArch === k ? ' sel' : 
 }).join('');
 }
 const focusI = document.activeElement && document.activeElement.closest && document.activeElement.closest('#bpGrid .bpcard') ? +document.activeElement.dataset.i : -1;   // 重画后键盘选中框留在同一张卡上
+const mirrorMode = typeof bpAllowMirror === 'function' && bpAllowMirror();
 document.getElementById('bpGrid').innerHTML = CHARS.map((c, i) => {
 if (window._bpArch !== 'all' && typeof heroArchetype === 'function' && heroArchetype(c.id) !== window._bpArch) return '';
 let banned = false, pickedBy = -1;
 if (Array.isArray(BP.bans)) banned = BP.bans.includes(i);
 if (multiPick) {
+if (mirrorMode) {
+if (BP.picks[my] && BP.picks[my].includes(i)) pickedBy = my;
+else if (BP.picks[1 - my] && BP.picks[1 - my].includes(i)) pickedBy = 1 - my;
+} else {
 if (BP.picks[0] && BP.picks[0].includes(i)) pickedBy = 0;
 else if (BP.picks[1] && BP.picks[1].includes(i)) pickedBy = 1;
+}
 } else if (Array.isArray(BP.picks)) {
 pickedBy = BP.picks.indexOf(i);
 }
@@ -59711,10 +57993,11 @@ const myAv = BP.avail && BP.avail[my];
 const lock = !OFFLINE_BUILD && myAv && !myAv.includes(i);
 const free = !OFFLINE_BUILD && !heroesFree() && !ownsHero(c.id) && (PROF.rotation || []).includes(c.id);
 const fav = !!bpFav(c);   // 山河异境：这张图的地利侠客
+const isPickedBlocked = pickedBy >= 0 && (!mirrorMode || pickedBy === my);
 const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : fav ? '<span class="tag fav">地利</span>' : '';
 const state = (banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : '') + (fav ? '，本局地利' : '');
 const aria = `${c.name}，${c.role}${state}${bpSel === i ? '，已选中' : ''}${can ? '' : '，当前不可选'}`;
-return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}${fav ? ' fav' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
+return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${isPickedBlocked ? ' picked' : ''}${bpSel === i ? ' sel' : ''}${fav ? ' fav' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
 <span class="bp-shortcut">${i + 1}</span>${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
 }).join('');
 if (focusI >= 0) { const fc = document.querySelector(`#bpGrid .bpcard[data-i="${focusI}"]`); if (fc) fc.focus({ preventScroll: true }); }
@@ -61450,25 +59733,9 @@ liying: { name: '照影式', en: 'Reflected Mist', kind: 'control', desc: '攻�
 cixian: { name: '双仪式', en: 'Twin Poles', kind: 'power', desc: '重击更重，前后摇都更长。' },
 qianji: { name: '游线式', en: 'Tether Flow', kind: 'reach', desc: '攻击更远，伤害略低，出招稍慢。' },
 chixiao: { name: '焚野式', en: 'Firebreak Stance', kind: 'power', desc: '重击与蓄力更猛，前后摇略长。' },
-youhuang: { name: '翠影式', en: 'Emerald Lash', kind: 'swift', desc: '轻击与空中出招更快，收招略长。' },
 xuanji: { name: '星枢式', en: 'Astral Pivot', kind: 'control', desc: '命中硬直更久，伤害略低，距离略缩。' },
-polang: { name: '镇涛式', en: 'Tide Anchor', kind: 'guard', desc: '攻击略低，静止调息时架势恢复更快。' },
-cangming: { name: '渊斩式', en: 'Abyssal Edge', kind: 'power', desc: '重剑蓄力更猛，后摇略长。' },
 qingluan: { name: '翠岚式', en: 'Jade Breeze', kind: 'swift', desc: '身法更灵动，攻距略收。' },
 xuanwu: { name: '镇岳式', en: 'Bastion Shell', kind: 'guard', desc: '架势更稳固，移动略沉。' },
-chiyan: { name: '焚拳式', en: 'Inferno Fist', kind: 'swift', desc: '拳势连段更迅疾，单击略轻。' },
-yinhu: { name: '幻尾式', en: 'Mirage Tail', kind: 'swift', desc: '冲刺更疾，格挡耐久略减。' },
-yunhe: { name: '扶摇式', en: 'Soaring Crane', kind: 'precision', desc: '空中打击与滞空更稳，地面略轻。' },
-tiangang: { name: '破阵式', en: 'Vanguard Pike', kind: 'reach', desc: '长枪突刺更远，起手略缓。' },
-mojie: { name: '判魂式', en: 'Verdict Brush', kind: 'control', desc: '硬直压制更长，单次伤害略降。' },
-baihe: { name: '霜锋式', en: 'Frost Rapier', kind: 'reach', desc: '细剑点刺更远，收招略长。' },
-jinpeng: { name: '裂穹式', en: 'Sky Roc', kind: 'swift', desc: '空中俯冲更凌厉，落地略沉。' },
-youming: { name: '噬影式', en: 'Shadow Reap', kind: 'swift', desc: '高速绕背，护体略薄。' },
-lingxi: { name: '清韵式', en: 'Resonant Flute', kind: 'control', desc: '音波压制更久，伤害略降。' },
-bawang: { name: '霸天式', en: 'Overlord Might', kind: 'power', desc: '重击破防大增，移速略缓。' },
-fengling: { name: '听风式', en: 'Wind Chime', kind: 'swift', desc: '轻快游走，攻距略短。' },
-wuya: { name: '瞬拔式', en: 'Quickdraw Iaido', kind: 'precision', desc: '居合起手极快，防反窗口更准。' },
-danqing: { name: '泼彩式', en: 'Vermilion Scroll', kind: 'control', desc: '控场连携更强，单击略轻。' },
 };
 var COMBAT_BADGES = {
 flowing: { n: '连势', en: 'Flow', trigger: '连续普攻第 3 击命中', effect: '打开连段追步窗口；紫金阶可改接技能。', tiers: ['0.65 秒内可用冲刺取消收招。', '窗口延长 15%。', '窗口延长 30%，并可用一次技能取消收招。'] },
@@ -63142,7 +61409,7 @@ C.ZOD_WEEK = 1;                              // 星座武器箱也是每周 1 �
 C.DROP_P = 0.15, C.DROP_CAP = 4, C.SUPPLY_GAMES = 5;
 C.MATCH_MIN_MS = 20000, C.MATCH_MAX_MS = 45 * 60000, C.MATCH_GAP_MS = 15000, C.MATCH_DAY_CAP = 60;
 C.KO_MAX = 12;                               // 一局最多记 12 斩（三人车轮战也够了）
-C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji', 'chixiao', 'youhuang', 'xuanji', 'polang', 'cangming', 'qingluan', 'xuanwu', 'chiyan', 'yinhu', 'yunhe', 'tiangang', 'mojie', 'baihe', 'jinpeng', 'youming', 'lingxi', 'bawang', 'fengling', 'wuya', 'danqing'];
+C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji', 'chixiao', 'xuanji', 'qingluan', 'xuanwu'];
 C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem', 'melee', 'ctf', 'gauntlet'];
 C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
 C.BADGE_CATS = { all: '全部', offense: '进攻', defense: '防御', mobility: '身法', mastery: '绝技', team: '团队' };
@@ -63367,15 +61634,15 @@ mil: [], res: [], cla: ['my_qinglv', 'yl_kongque', 'ly_jinli'], cov: ['ts_liuli'
 c8: { name: '星座', price: 1500, emblem: '星', col: '170,150,255', prem: true, ok: 'zod.', lim: 'zodWeek', cnt: 'zw', odds: { mil: 0, res: 0, cla: 0.65, cov: 0.28, gold: 0.07 },
 mil: [], res: [], cla: zodKeys(0), cov: zodKeys(1), gold: zodKeys(2) },
 c9: { name: '山海星陨', price: 320, emblem: '陨', col: '130,155,255', themed: true, odds: { mil: 0.48, res: 0.30, cla: 0.15, cov: 0.07, gold: 0 },
-mil: ['ch_sf1', 'yu_sf1', 'xj_sf1', 'pl_sf1'], res: ['qf_sf2', 'fy_sf2', 'qj_sf2'], cla: ['ch_sf3', 'xj_sf3', 'ls_sf3'], cov: ['xj_sf4', 'ch_sf4'], gold: [] },
+mil: ['ch_sf1', 'ql_sf1', 'xj_sf1', 'xw_sf1'], res: ['qf_sf2', 'fy_sf2', 'qj_sf2'], cla: ['ch_sf3', 'xj_sf3', 'ls_sf3'], cov: ['xj_sf4', 'ch_sf4'], gold: [] },
 c10: { name: '墨韵丹青', price: 320, emblem: '丹', col: '235,95,80', themed: true, odds: { mil: 0.48, res: 0.30, cla: 0.15, cov: 0.07, gold: 0 },
-mil: ['qf_ic1', 'my_ic1', 'yu_ic1', 'pl_ic1'], res: ['ch_ic2', 'xj_ic2', 'yh_ic2'], cla: ['yu_ic3', 'my_ic3', 'li_ic3'], cov: ['yu_ic4', 'qf_ic4'], gold: [] },
+mil: ['qf_ic1', 'my_ic1', 'ql_ic1', 'xw_ic1'], res: ['ch_ic2', 'xj_ic2', 'yh_ic2'], cla: ['ql_ic3', 'my_ic3', 'li_ic3'], cov: ['ql_ic4', 'qf_ic4'], gold: [] },
 c11: { name: '沧澜雷霆', price: 320, emblem: '澜', col: '80,210,245', themed: true, odds: { mil: 0.48, res: 0.30, cla: 0.15, cov: 0.07, gold: 0 },
-mil: ['pl_st1', 'lm_st1', 'ch_st1', 'ts_st1'], res: ['pl_st2', 'ly_st2', 'cx_st2'], cla: ['pl_st3', 'lm_st3', 'gc_st3'], cov: ['pl_st4', 'lm_st4'], gold: [] },
+mil: ['xw_st1', 'lm_st1', 'ch_st1', 'ts_st1'], res: ['xw_st2', 'ly_st2', 'cx_st2'], cla: ['xw_st3', 'lm_st3', 'gc_st3'], cov: ['xw_st4', 'lm_st4'], gold: [] },
 c12: { name: '九霄剑阁', price: 360, emblem: '霄', col: '245,205,110', themed: true, odds: { mil: 0.46, res: 0.31, cla: 0.16, cov: 0.07, gold: 0 },
 mil: ['qf_jx1', 'ls_jx1', 'yl_jx1', 'yx_jx1'], res: ['ch_jx2', 'xj_jx2', 'lq_jx2'], cla: ['qf_jx3', 'ls_jx3', 'zx_jx3'], cov: ['qf_jx4', 'xj_jx4'], gold: [] },
 c13: { name: '幽冥玄煞', price: 360, emblem: '冥', col: '185,95,255', themed: true, odds: { mil: 0.46, res: 0.31, cla: 0.16, cov: 0.07, gold: 0 },
-mil: ['fy_ym1', 'yu_ym1', 'li_ym1', 'gc_ym1'], res: ['yu_ym2', 'fy_ym2', 'qj_ym2'], cla: ['yu_ym3', 'li_ym3', 'ts_ym3'], cov: ['yu_ym4', 'fy_ym4'], gold: [] },
+mil: ['fy_ym1', 'xw_ym1', 'li_ym1', 'gc_ym1'], res: ['xw_ym2', 'fy_ym2', 'qj_ym2'], cla: ['ql_ym3', 'li_ym3', 'ts_ym3'], cov: ['li_ym4', 'fy_ym4'], gold: [] },
 };
 C.CASES = Object.keys(C.COLS);
 C.REG = C.CASES.filter(c => !C.COLS[c].prem);   // 普通武器箱与主题套装箱
@@ -63483,7 +61750,7 @@ C.isItem = k => Object.prototype.hasOwnProperty.call(C.ITEM, k);
 C.ofTier = t => Object.keys(C.ITEM).filter(k => C.ITEM[k].tier === t);
 C.isPrem = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].prem;
 C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座武器箱的靠开箱、市场、货郎、熔铸
-const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque', li: 'liying', cx: 'cixian', qj: 'qianji', ch: 'chixiao', yu: 'youhuang', xj: 'xuanji', pl: 'polang', cm: 'cangming', ql: 'qingluan', xw: 'xuanwu', cy: 'chiyan', fx: 'yinhu', he: 'yunhe', tg: 'tiangang', mj: 'mojie', bh: 'baihe', jp: 'jinpeng', ym: 'youming', lx: 'lingxi', bw: 'bawang', fl: 'fengling', wy: 'wuya', dq: 'danqing' };
+const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque', li: 'liying', cx: 'cixian', qj: 'qianji', ch: 'chixiao', xj: 'xuanji', ql: 'qingluan', xw: 'xuanwu' };
 C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
 const hexRGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
 const rgbS = h => hexRGB(h).join(',');
@@ -63516,7 +61783,7 @@ qf: 'renying_blade', fy: 'butterfly_daggers', ts: 'crystal_greatsword', ls: 'tia
 ly: 'koi_fan', lm: 'jiuxiao_gauntlet', my: 'jade_brush', yh: 'guanghan_moon',
 yl: 'peacock_feather', yx: 'tianlai_flute', zx: 'moon_gourd', gc: 'frost_hammer',
 lq: 'peacock_feather', li: 'butterfly_daggers', cx: 'guanghan_moon', qj: 'frost_hammer',
-ch: 'tianhe_spear', yu: 'frost_hammer', xj: 'guanghan_moon', pl: 'crystal_greatsword',
+ch: 'tianhe_spear', xj: 'guanghan_moon', ql: 'koi_fan', xw: 'crystal_greatsword',
 };
 const SET_THEMES = {
 sf: {
@@ -64197,12 +62464,12 @@ giveInk(env, 50000);
 return { ok: true, badgeId: chosen, tier: 'purpgold', ink: 50000, sigils: 50 };
 };
 const HERO_ARCH = {
-qingfeng: 'swordsman', lingshuang: 'swordsman', yuehua: 'swordsman', cangming: 'swordsman', baihe: 'swordsman', wuya: 'swordsman',
-feiying: 'assassin', lingque: 'assassin', liying: 'assassin', youhuang: 'assassin', yinhu: 'assassin', youming: 'assassin',
-tieshan: 'tank', gouchen: 'tank', polang: 'tank', xuanwu: 'tank', tiangang: 'tank', bawang: 'tank',
-leiming: 'fighter', zuixian: 'fighter', chixiao: 'fighter', yanling: 'fighter', chiyan: 'fighter', jinpeng: 'fighter',
-liuyun: 'support', yuxiao: 'support', xuanji: 'support', qingluan: 'support', yunhe: 'support', fengling: 'support',
-moyu: 'controller', cixian: 'controller', qianji: 'controller', mojie: 'controller', lingxi: 'controller', danqing: 'controller',
+qingfeng: 'swordsman', lingshuang: 'swordsman', yuehua: 'swordsman',
+feiying: 'assassin', lingque: 'assassin', liying: 'assassin',
+tieshan: 'tank', gouchen: 'tank', xuanwu: 'tank',
+leiming: 'fighter', zuixian: 'fighter', chixiao: 'fighter', yanling: 'fighter',
+liuyun: 'support', yuxiao: 'support', qingluan: 'support',
+moyu: 'controller', cixian: 'controller', qianji: 'controller', xuanji: 'controller',
 };
 A.badgeAutoAssign = (s) => {
 const owned = Object.entries(s.badgeOwned || {})

@@ -122,7 +122,8 @@ function startCtf(teamSize = 4, heroIdx = 0, level = 'normal', drafted = null, m
     const f = FIGHTERS[i];
     const side = i % 2, slot = Math.floor(i / 2);
     const draftedCid = hasDraft && Number.isInteger(drafted[side][slot]) && drafted[side][slot] >= 0 ? drafted[side][slot] : -1;
-    f.setChar(draftedCid >= 0 ? draftedCid : (i === 0 ? (heroIdx | 0) : ((heroIdx + i * 2 + 1) % CHARS.length)));
+    const stride = side === 0 ? 3 : 7;
+    f.setChar(draftedCid >= 0 ? draftedCid : (i === 0 ? (heroIdx | 0) : ((heroIdx + (side ? 1 : 0) + slot * stride) % CHARS.length)));
     f.ctrl = i === 0 ? human[0] : new AICtrl(M.level);
     f.hidden = false;
   }

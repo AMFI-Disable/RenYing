@@ -38,7 +38,7 @@
   C.DROP_P = 0.15, C.DROP_CAP = 4, C.SUPPLY_GAMES = 5;
   C.MATCH_MIN_MS = 20000, C.MATCH_MAX_MS = 45 * 60000, C.MATCH_GAP_MS = 15000, C.MATCH_DAY_CAP = 60;
   C.KO_MAX = 12;                               // 一局最多记 12 斩（三人车轮战也够了）
-  C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji', 'chixiao', 'youhuang', 'xuanji', 'polang', 'cangming', 'qingluan', 'xuanwu', 'chiyan', 'yinhu', 'yunhe', 'tiangang', 'mojie', 'baihe', 'jinpeng', 'youming', 'lingxi', 'bawang', 'fengling', 'wuya', 'danqing'];
+  C.HERO_IDS = ['qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua', 'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji', 'chixiao', 'xuanji', 'qingluan', 'xuanwu'];
   C.MODES = ['cpu', 'net', '2v2', 'tower', 'chaos', 'tag3', 'mayhem', 'melee', 'ctf', 'gauntlet'];
   C.LEVELS = ['easy', 'normal', 'hard', 'impossible', 'god'];
   C.BADGE_CATS = { all: '全部', offense: '进攻', defense: '防御', mobility: '身法', mastery: '绝技', team: '团队' };
@@ -285,17 +285,17 @@
       mil: [], res: [], cla: ['my_qinglv', 'yl_kongque', 'ly_jinli'], cov: ['ts_liuli', 'yx_tianlai'], gold: ['ls_tianhe', 'fy_huandie', 'lq_star', 'li_star', 'cx_star'] },
     c8: { name: '星座', price: 1500, emblem: '星', col: '170,150,255', prem: true, ok: 'zod.', lim: 'zodWeek', cnt: 'zw', odds: { mil: 0, res: 0, cla: 0.65, cov: 0.28, gold: 0.07 },
       mil: [], res: [], cla: zodKeys(0), cov: zodKeys(1), gold: zodKeys(2) },
-    // 三套全新主题系列套装武器箱（精铁至赤霄四档，不含独立绝世单皮）
+    // 五套主题系列套装武器箱（精铁至赤霄四档，不含独立绝世单皮）
     c9: { name: '山海星陨', price: 320, emblem: '陨', col: '130,155,255', themed: true, odds: { mil: 0.48, res: 0.30, cla: 0.15, cov: 0.07, gold: 0 },
-      mil: ['ch_sf1', 'yu_sf1', 'xj_sf1', 'pl_sf1'], res: ['qf_sf2', 'fy_sf2', 'qj_sf2'], cla: ['ch_sf3', 'xj_sf3', 'ls_sf3'], cov: ['xj_sf4', 'ch_sf4'], gold: [] },
+      mil: ['ch_sf1', 'ql_sf1', 'xj_sf1', 'xw_sf1'], res: ['qf_sf2', 'fy_sf2', 'qj_sf2'], cla: ['ch_sf3', 'xj_sf3', 'ls_sf3'], cov: ['xj_sf4', 'ch_sf4'], gold: [] },
     c10: { name: '墨韵丹青', price: 320, emblem: '丹', col: '235,95,80', themed: true, odds: { mil: 0.48, res: 0.30, cla: 0.15, cov: 0.07, gold: 0 },
-      mil: ['qf_ic1', 'my_ic1', 'yu_ic1', 'pl_ic1'], res: ['ch_ic2', 'xj_ic2', 'yh_ic2'], cla: ['yu_ic3', 'my_ic3', 'li_ic3'], cov: ['yu_ic4', 'qf_ic4'], gold: [] },
+      mil: ['qf_ic1', 'my_ic1', 'ql_ic1', 'xw_ic1'], res: ['ch_ic2', 'xj_ic2', 'yh_ic2'], cla: ['ql_ic3', 'my_ic3', 'li_ic3'], cov: ['ql_ic4', 'qf_ic4'], gold: [] },
     c11: { name: '沧澜雷霆', price: 320, emblem: '澜', col: '80,210,245', themed: true, odds: { mil: 0.48, res: 0.30, cla: 0.15, cov: 0.07, gold: 0 },
-      mil: ['pl_st1', 'lm_st1', 'ch_st1', 'ts_st1'], res: ['pl_st2', 'ly_st2', 'cx_st2'], cla: ['pl_st3', 'lm_st3', 'gc_st3'], cov: ['pl_st4', 'lm_st4'], gold: [] },
+      mil: ['xw_st1', 'lm_st1', 'ch_st1', 'ts_st1'], res: ['xw_st2', 'ly_st2', 'cx_st2'], cla: ['xw_st3', 'lm_st3', 'gc_st3'], cov: ['xw_st4', 'lm_st4'], gold: [] },
     c12: { name: '九霄剑阁', price: 360, emblem: '霄', col: '245,205,110', themed: true, odds: { mil: 0.46, res: 0.31, cla: 0.16, cov: 0.07, gold: 0 },
       mil: ['qf_jx1', 'ls_jx1', 'yl_jx1', 'yx_jx1'], res: ['ch_jx2', 'xj_jx2', 'lq_jx2'], cla: ['qf_jx3', 'ls_jx3', 'zx_jx3'], cov: ['qf_jx4', 'xj_jx4'], gold: [] },
     c13: { name: '幽冥玄煞', price: 360, emblem: '冥', col: '185,95,255', themed: true, odds: { mil: 0.46, res: 0.31, cla: 0.16, cov: 0.07, gold: 0 },
-      mil: ['fy_ym1', 'yu_ym1', 'li_ym1', 'gc_ym1'], res: ['yu_ym2', 'fy_ym2', 'qj_ym2'], cla: ['yu_ym3', 'li_ym3', 'ts_ym3'], cov: ['yu_ym4', 'fy_ym4'], gold: [] },
+      mil: ['fy_ym1', 'xw_ym1', 'li_ym1', 'gc_ym1'], res: ['xw_ym2', 'fy_ym2', 'qj_ym2'], cla: ['ql_ym3', 'li_ym3', 'ts_ym3'], cov: ['li_ym4', 'fy_ym4'], gold: [] },
   };
   C.CASES = Object.keys(C.COLS);
   C.REG = C.CASES.filter(c => !C.COLS[c].prem);   // 普通武器箱与主题套装箱
@@ -420,7 +420,7 @@
   C.ofTier = t => Object.keys(C.ITEM).filter(k => C.ITEM[k].tier === t);
   C.isPrem = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].prem;
   C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座武器箱的靠开箱、市场、货郎、熔铸
-  const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque', li: 'liying', cx: 'cixian', qj: 'qianji', ch: 'chixiao', yu: 'youhuang', xj: 'xuanji', pl: 'polang', cm: 'cangming', ql: 'qingluan', xw: 'xuanwu', cy: 'chiyan', fx: 'yinhu', he: 'yunhe', tg: 'tiangang', mj: 'mojie', bh: 'baihe', jp: 'jinpeng', ym: 'youming', lx: 'lingxi', bw: 'bawang', fl: 'fengling', wy: 'wuya', dq: 'danqing' };
+  const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque', li: 'liying', cx: 'cixian', qj: 'qianji', ch: 'chixiao', xj: 'xuanji', ql: 'qingluan', xw: 'xuanwu' };
   C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
 
   // 星座武器箱的 36 款：按 C.ZODIAC 的配色和 C.ZOD_OF 的分配生成。
@@ -457,7 +457,7 @@
     ly: 'koi_fan', lm: 'jiuxiao_gauntlet', my: 'jade_brush', yh: 'guanghan_moon',
     yl: 'peacock_feather', yx: 'tianlai_flute', zx: 'moon_gourd', gc: 'frost_hammer',
     lq: 'peacock_feather', li: 'butterfly_daggers', cx: 'guanghan_moon', qj: 'frost_hammer',
-    ch: 'tianhe_spear', yu: 'frost_hammer', xj: 'guanghan_moon', pl: 'crystal_greatsword',
+    ch: 'tianhe_spear', xj: 'guanghan_moon', ql: 'koi_fan', xw: 'crystal_greatsword',
   };
   const SET_THEMES = {
     sf: {
@@ -1175,12 +1175,12 @@
     return { ok: true, badgeId: chosen, tier: 'purpgold', ink: 50000, sigils: 50 };
   };
   const HERO_ARCH = {
-    qingfeng: 'swordsman', lingshuang: 'swordsman', yuehua: 'swordsman', cangming: 'swordsman', baihe: 'swordsman', wuya: 'swordsman',
-    feiying: 'assassin', lingque: 'assassin', liying: 'assassin', youhuang: 'assassin', yinhu: 'assassin', youming: 'assassin',
-    tieshan: 'tank', gouchen: 'tank', polang: 'tank', xuanwu: 'tank', tiangang: 'tank', bawang: 'tank',
-    leiming: 'fighter', zuixian: 'fighter', chixiao: 'fighter', yanling: 'fighter', chiyan: 'fighter', jinpeng: 'fighter',
-    liuyun: 'support', yuxiao: 'support', xuanji: 'support', qingluan: 'support', yunhe: 'support', fengling: 'support',
-    moyu: 'controller', cixian: 'controller', qianji: 'controller', mojie: 'controller', lingxi: 'controller', danqing: 'controller',
+    qingfeng: 'swordsman', lingshuang: 'swordsman', yuehua: 'swordsman',
+    feiying: 'assassin', lingque: 'assassin', liying: 'assassin',
+    tieshan: 'tank', gouchen: 'tank', xuanwu: 'tank',
+    leiming: 'fighter', zuixian: 'fighter', chixiao: 'fighter', yanling: 'fighter',
+    liuyun: 'support', yuxiao: 'support', qingluan: 'support',
+    moyu: 'controller', cixian: 'controller', qianji: 'controller', xuanji: 'controller',
   };
   A.badgeAutoAssign = (s) => {
     const owned = Object.entries(s.badgeOwned || {})

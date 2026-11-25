@@ -180,9 +180,9 @@ var RYPhysics = (typeof window !== 'undefined' ? (window.RYPhysics = window.RYPh
     cixian:     'brawler',
     qianji:     'artificer',
     chixiao:    'light_blade',
-    youhuang:   'mystic_float',
     xuanji:     'artificer',
-    polang:     'heavy_tank'
+    qingluan:   'mystic_float',
+    xuanwu:     'heavy_tank'
   };
 
   // Posture-dependent local Center-of-Mass offsets (relative to body origin at feet-center)

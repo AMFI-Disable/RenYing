@@ -104,6 +104,11 @@ function applyHit(att, def, m, pt) {
       ring(pt[0], pt[1], 130, '120,230,255', 0.4);
       for (let i = 0; i < 6; i++) addP({ type: 'spark', x: pt[0], y: pt[1], vx: rand(-240, 240), vy: rand(-240, 240), rgb: '120,230,255', life: 0.22, max: 0.22 });
       addP({ type: 'text', text: '🛡️ 精准招架', x: def.x, y: def.y - 110, life: 0.9, max: 0.9, rgb: '120,230,255' });
+      if (def.ch && def.ch.passive === 'soothe') {
+        const sh = Math.round(def.maxHp * 0.04);
+        def.hp = Math.min(def.maxHp, def.hp + sh);
+        if (!RESIM) addP({ type: 'text', text: `+${sh}`, x: def.x, y: def.y - 132, life: 0.7, max: 0.7, rgb: '110,245,195' });
+      }
       ev.justGuard = true;
       if (typeof applyCombatBadgeGuard === 'function') applyCombatBadgeGuard(def, ev);
       if (typeof TUT !== 'undefined' && TUT && def.idx === 0) TUT.justGuards = (TUT.justGuards || 0) + 1;
@@ -192,7 +197,7 @@ function applyHit(att, def, m, pt) {
     if (--def.armorHits <= 0) def.armorT = 0;
     if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.16 * mm);
     def.meter = Math.min(100, def.meter + m.dmg * 0.14);
-    armorPerk(def);   // 各位霸体侠客扛住一下的回报不一样，见 10-hits-03-signatures.js
+    armorPerk(def, att);   // 各位霸体侠客扛住一下的回报不一样，见 10-hits-03-signatures.js
     if (typeof applyCombatBadgeHit === 'function') applyCombatBadgeHit(att, def, m, ev);
     ev.armor = true; ev.dd = dmg;
     hitVisual(ev); netEmit(ev);
@@ -261,6 +266,24 @@ function applyHit(att, def, m, pt) {
   if (att.ch.passive === 'drunk' && !m.ult) att.drunk = Math.min(100, (att.drunk || 0) + 4);
   if (m.shadowMark > 0 && att.ch.passive === 'mist' && typeof addShadowMark === 'function') {
     addShadowMark(att, def, m.shadowMark);
+  }
+  if (att.ch.passive === 'scorch' && !m.ult) {
+    if (def.burnT > 0) {
+      dmg *= 1.12;
+      att.skillCD = Math.max(0, att.skillCD - 0.5);
+      att.skill2CD = Math.max(0, att.skill2CD - 0.5);
+    }
+    if (HEAVY_MOVES.includes(m.name) || m.skill || att.state === 'skill') def.burnT = Math.max(def.burnT || 0, 2.5);
+  }
+  if (att.ch.passive === 'gravity' && !m.ult) {
+    att.gravHits = (att.gravHits || 0) + 1;
+    if (att.gravHits >= 3 || m.skill || att.state === 'skill') {
+      att.gravHits = 0;
+      def.slowT = Math.max(def.slowT || 0, 1.0);
+      if (def.guard !== undefined) def.guard = Math.max(0, def.guard - 9);
+      def.vx = damp(def.vx, Math.sign(att.x - def.x) * 180, 12, STEP);
+      if (!RESIM) ring(pt[0], pt[1], 68, '155,170,255', 0.24);
+    }
   }
   if (att.ch.passive === 'needlemark') {
     if (m.name === 'cs1' || m.name === 'cs2' || att.moveName === 'cs1' || att.moveName === 'cs2') {

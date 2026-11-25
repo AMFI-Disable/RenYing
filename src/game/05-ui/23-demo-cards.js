@@ -426,7 +426,7 @@ function demoLoop(canvas, getIdx, isOn, getSkin, getMoveKey) {
   requestAnimationFrame(tick);
 }
 // ======================= 立绘卡面 =======================
-const CARD_POSE = { yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_throw', lingque: 'du_l1a', cixian: 'yx_push', qianji: 'qf_charge', chixiao: 'qf_thrust', youhuang: 'gc_throw', xuanji: 'yx_play', polang: 'hva', cangming: 'hva', qingluan: 'l2a', xuanwu: 'lda', chiyan: 'l3a', yinhu: 'dash', yunhe: 'a1a', tiangang: 'qf_thrust', mojie: 'a2s', baihe: 'l3a', jinpeng: 'a1a', youming: 'fy_seal', lingxi: 'yx_play', bawang: 'hva', fengling: 'l2a', wuya: 'qf_charge', danqing: 'a2s', qingfeng: 'hva', feiying: 'dash', tieshan: 'lda', lingshuang: 'l3a', liuyun: 'l2a', leiming: 'l3a', moyu: 'a2s', yuehua: 'victory', yanling: 'a1a', liying: 'fy_seal' };
+const CARD_POSE = { yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_throw', lingque: 'du_l1a', cixian: 'yx_push', qianji: 'qf_charge', chixiao: 'qf_thrust', xuanji: 'yx_play', qingluan: 'l2a', xuanwu: 'lda', qingfeng: 'hva', feiying: 'dash', tieshan: 'lda', lingshuang: 'l3a', liuyun: 'l2a', leiming: 'l3a', moyu: 'a2s', yuehua: 'victory', yanling: 'a1a', liying: 'fy_seal' };
 function makeCardArt(i, CW, CH, skin) {
   const c = document.createElement('canvas'); c.width = CW; c.height = CH;
   const g = c.getContext && c.getContext('2d'); if (!g) return c;

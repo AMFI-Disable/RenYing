@@ -14,7 +14,8 @@ defHero({
     stat: { hp: 815, walk: 1.0, speed: 0.92, dmg: 1.0, reach: 1.0, swing: 0.9, jump: 1.0, weight: 0.95, defRating: 1.0, guardMax: 95, guardStab: 1.0, guardChip: 0.10, guardRegen: 28, poise: 1.0, size: 0.95 }, hitFeel: 0.85,
     jumps: 1,
     clone: { max: 10, life: 15, leash: 0, hp: 120, subHp: 60, swapSeal: 0.1, swapLand: 0.08, swapInvul: 0.12, swapArmor: 0.25, swapFreeze: 0.5, swapPathDmg: 65, swapPathPad: 30, breakMeter: 5, waveDmg: 4, waveGuardMul: 0, shadowMarkMax: 25, shadowBurstDmg: 85, shadowExecDmg: 75, shadowExecWindow: 5.0 },
-    look: { body: '#1c2a30', shade: '#0e171b', outline: '#7fd6e0', outlineA: .85, scarf: '#5cc8d6', slash: '120,215,225', blade: '#e6fbff', head: 'ponytail', weapon: 'sword' },
+    look: { body: '#1c2a30', shade: '#0e171b', outline: '#7fd6e0', outlineA: .85, scarf: '#5cc8d6', slash: '120,215,225', blade: '#e6fbff', hair: '#122026', head: 'mist-veil', weapon: 'willowsaber' },
+    profile: { weapon: '雁翎弯刀', bio: '千雾泽孤行刀客，以弧刃雁翎弯刀裁雾留魂，借雾身虚实易位破阵。' },
     ai: { range: [80, 200] }, beats: ['tieshan', 'gouchen'], weakTo: ['lingque', 'yanling'] },
   // ---- 斩妖列传：五关的名字、四波台词、首领出场白 ----
   forest: {

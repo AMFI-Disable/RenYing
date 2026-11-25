@@ -860,9 +860,9 @@ section('持久化 AI 玩家生态：500 账号、UTC+8 昼夜节律（75~155 �
   ok(findAll.ok && Array.isArray(findAll.users) && !findAll.users.some(r => names.has(r.username)) && findAi.ok && Array.isArray(findAi.users) && !findAi.users.some(r => r.username === '6767'), '管理后台「玩家」标签仅显示真人玩家，彻底排除 AI 账号', [findAll.total, findAi.users && findAi.users.length]);
 
   // 管理员修改作息类型与偏好并生效，且跨日演化更新 evolution_json
-  const upd = await adm('POST', '/api/admin/ai-players/update', { uid: 'ai_02', chronotype: 'night_owl', behaviorProfile: 'tactical', preferredModes: ['ranked', 'quickmatch', 'train'], preferredHeroes: ['qingfeng', 'wuya'], why: '测试调整 AI 作息与偏好' });
+  const upd = await adm('POST', '/api/admin/ai-players/update', { uid: 'ai_02', chronotype: 'night_owl', behaviorProfile: 'tactical', preferredModes: ['ranked', 'quickmatch', 'train'], preferredHeroes: ['qingfeng', 'xuanwu'], why: '测试调整 AI 作息与偏好' });
   const ai02 = upd.list.find(x => x.uid === 'ai_02');
-  ok(upd.ok && ai02.chronotype === 'night_owl' && ai02.behaviorProfile === 'tactical' && ai02.prefs.heroes.includes('wuya'), '管理员可独立调整单个 AI 的作息类型、行为流派与模式/侠客偏好', ai02);
+  ok(upd.ok && ai02.chronotype === 'night_owl' && ai02.behaviorProfile === 'tactical' && ai02.prefs.heroes.includes('xuanwu'), '管理员可独立调整单个 AI 的作息类型、行为流派与模式/侠客偏好', ai02);
   ENV.DB.raw.prepare("UPDATE ai_players SET daily_reset_day = daily_reset_day - 10 WHERE uid = 'ai_02'").run();
   const evolved = await adm('POST', '/api/admin/ai-players/update', { tick: true, simHour: 22, withMarket: true, why: '测试跨日演化与市场' });
   const ai02Ev = evolved.list.find(x => x.uid === 'ai_02');

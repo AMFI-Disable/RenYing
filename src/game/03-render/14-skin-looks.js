@@ -663,6 +663,21 @@ function headAcc(sk, grow, color, L) {
       if (!outline) ctx.fillStyle = L.helmC || '#9a9ea8'; ctx.fill();
       if (!outline) { ctx.fillStyle = L.scarf; ctx.beginPath(); ctx.arc(h[0] + ux * 14, h[1] + uy * 14, 3.5, 0, 7); ctx.fill(); }
       break;
+    case 'mist-veil': {  // 离影：披散长发 + 雾青半面轻纱 + 脑后双垂雾带
+      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
+      ctx.lineWidth = 4.5 + grow; ctx.lineCap = 'round';
+      if (!outline) ctx.strokeStyle = L.hair || '#122026';
+      const w = Math.sin(clock * 4.5) * 3;
+      ctx.beginPath(); ctx.moveTo(...P(8, -5)); ctx.quadraticCurveTo(...P(2, -16), ...P(-12, -14 + w)); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(...P(5, -7)); ctx.quadraticCurveTo(...P(-4, -13), ...P(-16, -9 - w * 0.6)); ctx.stroke();
+      if (!outline) {
+        ctx.fillStyle = 'rgba(92,200,214,0.45)';
+        ctx.beginPath(); ctx.moveTo(...P(-1, 2)); ctx.lineTo(...P(-1, 10)); ctx.lineTo(...P(-11, 8)); ctx.lineTo(...P(-9, 0)); ctx.closePath(); ctx.fill();
+        ctx.strokeStyle = '#5cc8d6'; ctx.lineWidth = 2.0;
+        line(P(7, -8), P(7, 8));
+      }
+      break;
+    }
     case 'ponytail': {
       ctx.lineWidth = 5 + grow; ctx.lineCap = 'round';
       const a = [h[0] + ux * 6 + bk * 6, h[1] + uy * 6], b = [a[0] + bk * 16, a[1] + 10 + Math.sin(clock * 5) * 3], c = [b[0] + bk * 8, b[1] + 16];
@@ -1004,26 +1019,11 @@ function headAcc(sk, grow, color, L) {
   }
 }
 const HERO_BASE_DECO = {
+  liying: { sash: '#5cc8d6', cape: '#102026' },
   chixiao: { shoulder: '#6b241c', sash: '#ff4d2e', cape: '#3b1510' },
-  youhuang: { dress: ['#352238', '#c2528c'], sash: '#6cf0c2', back: 'ribbon' },
   xuanji: { robe: 'starry', robeC: '#1b2140', breastplate: '#d8b660', back: 'chakra' },
-  polang: { shoulder: '#2ca8d8', breastplate: '#1c4257', cape: '#132a38' },
-  cangming: { robe: 'blizzard', robeC: '#182438', shoulder: '#2b6cb0', cape: '#122036', back: 'icewings' },
   qingluan: { robe: 'phoenix', robeC: '#163a36', cape: '#0e2b27', back: 'peacock' },
   xuanwu: { robe: 'heavy', breastplate: '#4a5c4e', shoulder: '#384a3d', back: 'crystals' },
-  chiyan: { shoulder: '#ff521b', breastplate: '#5a1e14', sash: '#ff9638', aura: 'ember' },
-  yinhu: { robe: 'spirit', shoulder: '#4b386e', cape: '#1e1630', back: 'foxtails' },
-  yunhe: { robe: 'celestial', robeC: '#27384a', cape: '#edf6ff', back: 'wings' },
-  tiangang: { robe: 'heavy', breastplate: '#3a4a68', shoulder: '#d8aa4a', cape: '#8f2220' },
-  mojie: { robe: 'jade_master', robeC: '#1f1c2e', sash: '#7c4dff', back: 'scroll' },
-  baihe: { breastplate: '#a8d4f0', shoulder: '#5ec8ff', cape: '#2a5a7a', trail: 'snow' },
-  jinpeng: { robe: 'gold', breastplate: '#b88228', shoulder: '#d49a2a', back: 'crowwings' },
-  youming: { robe: 'dark', shoulder: '#381e54', cape: '#140c20', back: 'voidshards' },
-  lingxi: { dress: ['#e5f5f2', '#2ec9aa'], sash: '#4ce6c8', back: 'notering' },
-  bawang: { robe: 'crimson', breastplate: '#5a221c', shoulder: '#b8862d', cape: '#6e1614' },
-  fengling: { dress: ['#edf6fa', '#ff85b2'], cape: '#f5c0d4', back: 'koi' },
-  wuya: { robe: 'dark', shoulder: '#2c3858', cape: '#101624', back: 'flysword' },
-  danqing: { robe: 'jade_master', robeC: '#2a2220', sash: '#ff6448', cape: '#1c4054', back: 'scroll' },
 };
 // 武器：sword 剑 dual 双刀 greatsword 巨剑 spear 长枪 fan 扇 fists 拳套 brush 大笔 moonblade 月刃
 const FLAIL = new WeakMap();

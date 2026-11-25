@@ -237,26 +237,24 @@ if (runAll || args.includes('--rollback')) {
   const ord = new vm.Script(`hashState({ a: 1, b: { x: 2, y: [3, { p: 1, q: 2 }] } }) === hashState({ b: { y: [3, { q: 2, p: 1 }], x: 2 }, a: 1 })`).runInContext(w);
   assert(ord === true, 'State hash does not depend on field order (a rolled-back peer and a non-rolled-back peer agree)');
 
-  // 回归检查（#47）：霸王大招擒拿（bwVictimIdx）、铁山五层山崩（avaSlammedLayers）及循环引用图在回滚克隆时不能栈溢出
+  // 回归检查（#47）：铁山五层山崩（avaSlammedLayers）、玄武玄甲反震及循环引用图在回滚克隆时不能栈溢出
   const rb47 = new vm.Script(`(() => {
-    const BW = CHARS.findIndex(c => c.id === 'bawang');
+    const XW = CHARS.findIndex(c => c.id === 'xuanwu');
     const TS = CHARS.findIndex(c => c.id === 'tieshan');
-    rollStart([BW, TS], 4747); M.phase = 'fight';
+    rollStart([XW, TS], 4747); M.phase = 'fight';
     A.x = 500; B.x = 560; A.face = 1; B.face = -1; A.meter = 100; A.invul = 0; B.invul = 0;
     startSpecial(A);
-    let hoisted = false;
     for (let f = 0; f < 90; f++) {
       ROLL.loc[f] = { h: 0, p: [] };
       ROLL.rem[f] = { h: 0, p: [] };
       ROLL.remLast = 90;
       rollFrame(f); ROLL.F = f + 1;
-      if (A.sp === 'hoist' && A.bwVictimIdx === B.idx) hoisted = true;
     }
-    const beforeBw = hashState(capState());
+    const beforeXw = hashState(capState());
     ROLL.pend = 30; rollResim();
-    const afterBw = hashState(capState());
+    const afterXw = hashState(capState());
 
-    rollStart([TS, BW], 4748); M.phase = 'fight';
+    rollStart([TS, XW], 4748); M.phase = 'fight';
     A.x = 500; B.x = 540; A.meter = 100;
     startSpecial(A);
     for (let f = 0; f < 90; f++) {
@@ -275,10 +273,10 @@ if (runAll || args.includes('--rollback')) {
     const cycSafe = clonedCyc !== cyc && clonedCyc.self === clonedCyc && clonedCyc.a === 1;
     const fRef = fastClone({ ref: A });
     const fighterSafe = fRef.ref && fRef.ref.__f === A.idx;
-    return { hoisted, bwMatch: beforeBw === afterBw, tsArray, tsMatch: beforeTs === afterTs, cycSafe, fighterSafe };
+    return { xwMatch: beforeXw === afterXw, tsArray, tsMatch: beforeTs === afterTs, cycSafe, fighterSafe };
   })()`).runInContext(w);
-  assert(rb47.hoisted && rb47.bwMatch && rb47.tsArray && rb47.tsMatch && rb47.cycSafe && rb47.fighterSafe,
-    'Issue #47: Bawang hoist grab, Tie Shan avalanche layers, and circular graphs clone & resimulate without stack overflow', JSON.stringify(rb47));
+  assert(rb47.xwMatch && rb47.tsArray && rb47.tsMatch && rb47.cycSafe && rb47.fighterSafe,
+    'Issue #47: Xuanwu ultimate, Tie Shan avalanche layers, and circular graphs clone & resimulate without stack overflow', JSON.stringify(rb47));
 }
 
 // 2. QingFengXing (青锋行) 3D Action Mode Verification

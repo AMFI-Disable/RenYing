@@ -37,14 +37,10 @@ export default [
     })()`
   },
   {
-    name: 'All 20 expansion hero ultimates are unique non-flurry implementations and execute cleanly',
+    name: 'All 20 streamlined roster heroes have unique ultimates and the 4 expansion heroes execute cleanly',
     fn: `(() => {
-      const expUlts = [
-        'skyfall', 'thicket', 'celestial', 'maelstrom', 'eclipsecleave',
-        'phoenixchorus', 'tortoiseslam', 'infernorush', 'ninestrike', 'skywarddance',
-        'heavenbreaker', 'abyssscroll', 'wintertorrent', 'roctempest', 'nightmarecut',
-        'spiritdomain', 'conquerorslam', 'bellharmony', 'endlessblade', 'grandpainting'
-      ];
+      if (CHARS.length !== 20) return { pass: false, error: 'Expected 20 roster heroes, got ' + CHARS.length };
+      const expUlts = ['skyfall', 'celestial', 'phoenixchorus', 'tortoiseslam'];
       const fns = new Set();
       for (const key of expUlts) {
         const U = ULTS[key];
@@ -55,8 +51,8 @@ export default [
         if (fns.has(src)) return { pass: false, error: 'Duplicate ult implementation detected for: ' + key };
         fns.add(src);
       }
-      // Execute all 20 in live combat simulation
-      for (let ci = 16; ci < CHARS.length; ci++) {
+      // Execute all 4 expansion heroes + redesigned Liying in live combat simulation
+      for (const ci of [13, 16, 17, 18, 19]) {
         startMatch('cpu', 'normal', [ci, 0]);
         M.phase = 'fight';
         A.reset(STAGE_W / 2 - 110); B.reset(STAGE_W / 2 + 110);

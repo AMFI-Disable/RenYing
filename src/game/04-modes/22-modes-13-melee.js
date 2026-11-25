@@ -68,7 +68,8 @@ function startMelee(teamSize = 5, heroIdx = 0, level = 'normal', mut = 'normal',
     const f = FIGHTERS[i];
     const side = i % 2, slot = Math.floor(i / 2);
     const draftedCid = hasDraft && Number.isInteger(drafted[side][slot]) && drafted[side][slot] >= 0 ? drafted[side][slot] : -1;
-    const cid = draftedCid >= 0 ? draftedCid : (i === 0 ? (heroIdx | 0) : ((heroIdx + i * (sz > 8 ? 5 : 3)) % CHARS.length));
+    const stride = side === 0 ? 3 : 7;
+    const cid = draftedCid >= 0 ? draftedCid : (i === 0 ? (heroIdx | 0) : ((heroIdx + (side ? 1 : 0) + slot * stride) % CHARS.length));
     f.setChar(cid);
     f.ctrl = i === 0 ? human[0] : new AICtrl(M.level);
     f.hidden = false;

@@ -27,12 +27,12 @@ function statRows(c) {
 // 图鉴静态说明、招式数据与演示序列见 18-codex-content.js。
 const HERO_ARCH_NAMES = { all: '全部', swordsman: '剑客', assassin: '刺客', tank: '铁卫', fighter: '武师', support: '辅助', controller: '控场' };
 const HERO_ARCH_MAP = {
-  qingfeng: 'swordsman', lingshuang: 'swordsman', yuehua: 'swordsman', cangming: 'swordsman', baihe: 'swordsman', wuya: 'swordsman',
-  feiying: 'assassin', lingque: 'assassin', liying: 'assassin', youhuang: 'assassin', yinhu: 'assassin', youming: 'assassin',
-  tieshan: 'tank', gouchen: 'tank', polang: 'tank', xuanwu: 'tank', tiangang: 'tank', bawang: 'tank',
-  leiming: 'fighter', zuixian: 'fighter', chixiao: 'fighter', yanling: 'fighter', chiyan: 'fighter', jinpeng: 'fighter',
-  liuyun: 'support', yuxiao: 'support', xuanji: 'support', qingluan: 'support', yunhe: 'support', fengling: 'support',
-  moyu: 'controller', cixian: 'controller', qianji: 'controller', mojie: 'controller', lingxi: 'controller', danqing: 'controller',
+  qingfeng: 'swordsman', lingshuang: 'swordsman', yuehua: 'swordsman',
+  feiying: 'assassin', lingque: 'assassin', liying: 'assassin',
+  tieshan: 'tank', gouchen: 'tank', xuanwu: 'tank',
+  leiming: 'fighter', zuixian: 'fighter', chixiao: 'fighter', yanling: 'fighter',
+  liuyun: 'support', yuxiao: 'support', qingluan: 'support',
+  moyu: 'controller', cixian: 'controller', qianji: 'controller', xuanji: 'controller',
 };
 let cxArch = 'all';
 function heroArchetype(id) { return HERO_ARCH_MAP[id] || 'fighter'; }

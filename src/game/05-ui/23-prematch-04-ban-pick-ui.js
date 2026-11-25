@@ -194,7 +194,8 @@ function renderBP() {
   if (bpScrEl) {
     bpScrEl.classList.toggle('bp-large', isLargeBP && largeTeamN >= 5);
     bpScrEl.classList.toggle('bp-large-5', isLargeBP && largeTeamN === 5);
-    bpScrEl.classList.toggle('bp-large-8', isLargeBP && largeTeamN >= 6);
+    bpScrEl.classList.toggle('bp-large-8', isLargeBP && largeTeamN >= 6 && largeTeamN <= 8);
+    bpScrEl.classList.toggle('bp-large-16', isLargeBP && largeTeamN > 8);
   }
   const isTag3BP = !isLargeBP && (bpMode === 'tag3' || !!(multiPick && BP.picks[0] && BP.picks[0].length === 3));
 
@@ -268,7 +269,7 @@ function renderBP() {
         const role = LARGE_ROLES[slotIdx] || `${slotIdx + 1}将`;
         return `<div class="slot2 pick bpl-slot${isActive ? ' on' : ''}${idx >= 0 ? ' filled' : ''}"><span class="bpl-role">${role}</span>${idx >= 0 ? `<img src="${PORTRAITS[idx] || ''}" alt=""><span class="lab">${CHARS[idx].name}</span>` : `<span class="bpl-empty">待选</span>`}</div>`;
       }).join('');
-      const colCls = picks.length <= 5 ? 'cols-5' : 'cols-4';
+      const colCls = picks.length <= 5 ? 'cols-5' : picks.length > 8 ? 'cols-8' : 'cols-4';
       el.innerHTML = `<div class="bpl-panel side-${sd}">
         <div class="bpl-head">
           <span class="who" style="color:${sd === 0 ? 'var(--p1)' : 'var(--p2)'}">${escapeHTML(bpSideName(sd))}</span>
@@ -314,13 +315,19 @@ function renderBP() {
     }).join('');
   }
   const focusI = document.activeElement && document.activeElement.closest && document.activeElement.closest('#bpGrid .bpcard') ? +document.activeElement.dataset.i : -1;   // 重画后键盘选中框留在同一张卡上
+  const mirrorMode = typeof bpAllowMirror === 'function' && bpAllowMirror();
   document.getElementById('bpGrid').innerHTML = CHARS.map((c, i) => {
     if (window._bpArch !== 'all' && typeof heroArchetype === 'function' && heroArchetype(c.id) !== window._bpArch) return '';
     let banned = false, pickedBy = -1;
     if (Array.isArray(BP.bans)) banned = BP.bans.includes(i);
     if (multiPick) {
-      if (BP.picks[0] && BP.picks[0].includes(i)) pickedBy = 0;
-      else if (BP.picks[1] && BP.picks[1].includes(i)) pickedBy = 1;
+      if (mirrorMode) {
+        if (BP.picks[my] && BP.picks[my].includes(i)) pickedBy = my;
+        else if (BP.picks[1 - my] && BP.picks[1 - my].includes(i)) pickedBy = 1 - my;
+      } else {
+        if (BP.picks[0] && BP.picks[0].includes(i)) pickedBy = 0;
+        else if (BP.picks[1] && BP.picks[1].includes(i)) pickedBy = 1;
+      }
     } else if (Array.isArray(BP.picks)) {
       pickedBy = BP.picks.indexOf(i);
     }
@@ -329,10 +336,11 @@ function renderBP() {
     const lock = !OFFLINE_BUILD && myAv && !myAv.includes(i);
     const free = !OFFLINE_BUILD && !heroesFree() && !ownsHero(c.id) && (PROF.rotation || []).includes(c.id);
     const fav = !!bpFav(c);   // 山河异境：这张图的地利侠客
+    const isPickedBlocked = pickedBy >= 0 && (!mirrorMode || pickedBy === my);
     const tag = banned ? '<span class="tag">禁</span>' : pickedBy >= 0 ? `<span class="tag p">${escapeHTML(bpSideName(pickedBy))}</span>` : lock ? '<span class="tag lk">未拥有</span>' : free ? '<span class="tag free">限免</span>' : fav ? '<span class="tag fav">地利</span>' : '';
     const state = (banned ? '，已禁用' : pickedBy >= 0 ? '，已被选择' : lock ? '，未拥有' : free ? '，本周限免' : '') + (fav ? '，本局地利' : '');
     const aria = `${c.name}，${c.role}${state}${bpSel === i ? '，已选中' : ''}${can ? '' : '，当前不可选'}`;
-    return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${pickedBy >= 0 ? ' picked' : ''}${bpSel === i ? ' sel' : ''}${fav ? ' fav' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
+    return `<button class="bpcard${lock ? ' lock' : ''}${banned ? ' banned' : ''}${isPickedBlocked ? ' picked' : ''}${bpSel === i ? ' sel' : ''}${fav ? ' fav' : ''}" data-i="${i}" aria-label="${aria}" ${can ? '' : 'aria-disabled="true"'}>
       <span class="bp-shortcut">${i + 1}</span>${tag}<img src="${PORTRAITS[i] || ''}" alt=""><div class="nm" style="color:rgb(${c.look.slash})">${c.name}</div><div class="rl">${c.role}</div></button>`;
   }).join('');
   if (focusI >= 0) { const fc = document.querySelector(`#bpGrid .bpcard[data-i="${focusI}"]`); if (fc) fc.focus({ preventScroll: true }); }

@@ -49,16 +49,23 @@ function bpStart(mode, customOpts = null) {
   showScreen('bp'); renderBP();
   if (mode === 'net') send({ bps: BP });
 }
+function bpAllowMirror() {
+  if (!BP || !isMultiPickBP()) return false;
+  const totalPicks = (BP.picks[0] ? BP.picks[0].length : 0) + (BP.picks[1] ? BP.picks[1].length : 0);
+  const totalBans = Array.isArray(BP.bans) ? BP.bans.length : 0;
+  return totalPicks + totalBans > CHARS.length;
+}
 function bpValid(i) {
   if (!BP || BP.step >= bpSteps().length || i < 0 || i >= CHARS.length) return false;
   if (Array.isArray(BP.bans) && BP.bans.includes(i)) return false;
   const stepDef = bpSteps()[BP.step];
   if (!stepDef) return false;
+  const mirror = bpAllowMirror();
   if (stepDef[1] === 'ban' && isMultiPickBP() && [...BP.picks[0], ...BP.picks[1]].includes(i)) return false;   // 已经选定的人不能禁
   if (stepDef[1] === 'pick') {
     if (isMultiPickBP()) {
-      const allPicked = [...(BP.picks[0] || []), ...(BP.picks[1] || [])];
-      if (allPicked.includes(i)) return false;
+      const taken = mirror ? (BP.picks[stepDef[0]] || []) : [...(BP.picks[0] || []), ...(BP.picks[1] || [])];
+      if (taken.includes(i)) return false;
     } else if (Array.isArray(BP.picks) && BP.picks.includes(i)) {
       return false;
     }
@@ -66,7 +73,9 @@ function bpValid(i) {
   if (stepDef[1] === 'pick') {
     const av = BP.avail && BP.avail[stepDef[0]];
     const currentBans = Array.isArray(BP.bans) ? BP.bans : [];
-    const currentPicks = isMultiPickBP() ? [...(BP.picks[0] || []), ...(BP.picks[1] || [])] : (Array.isArray(BP.picks) ? BP.picks : []);
+    const currentPicks = isMultiPickBP()
+      ? (mirror ? (BP.picks[stepDef[0]] || []) : [...(BP.picks[0] || []), ...(BP.picks[1] || [])])
+      : (Array.isArray(BP.picks) ? BP.picks : []);
     if (av && av.length && av.some(k => !currentBans.includes(k) && !currentPicks.includes(k)) && !av.includes(i)) return false;
   }
   return true;

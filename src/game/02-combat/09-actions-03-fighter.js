@@ -21,7 +21,7 @@ function toNeutral(f) {
 function startAttack(f, name) {
   endEscape(f);
   f.state = 'attack'; f.move = typeof stanceMove === 'function' ? stanceMove(f, name) : f.moves[name]; f.moveName = name; f.t = 0;
-  if (f.ch.passive === 'armor' && HEAVY_MOVES.includes(name)) { f.armorT = f.move.su + f.move.ac; f.armorHits = 1; }
+  if ((f.ch.passive === 'armor' || f.ch.passive === 'shell') && HEAVY_MOVES.includes(name)) { f.armorT = f.move.su + f.move.ac; f.armorHits = 1; }
   if (chaosNow('armor')) { f.armorT = Math.max(f.armorT, (f.move.su || 0.15) + (f.move.ac || 0.15)); f.armorHits = Math.max(f.armorHits, 1); }
   f.lunged = false; f.hitDone = false; f.hitTargets = []; f.hitConfirmed = false;
   const foe = foeOf(f), h = f.ctrl && f.ctrl.held, dir = h ? ((h.right ? 1 : 0) - (h.left ? 1 : 0)) : 0, a = dir || (h && h.aim);
@@ -425,6 +425,16 @@ function startSkill(f, foe, slot) {
   if (S.can && !S.can(f)) { if (f.idx === localIdx()) addP({ type: 'text', text: S.lack ? S.lack(f) : '还不能用', x: f.x, y: f.y - 120, life: 0.6, max: 0.6, rgb: '255,190,90' }); return; }
   endEscape(f);
   if (f.ch.passive === 'drunk' && !S.can) f.drunk = Math.min(100, (f.drunk || 0) + 30);   // 醉翁：放技能添酒
+  if (f.ch.passive === 'soothe') {
+    for (const ally of allFighters()) {
+      if (ally === f || ally.hidden || ally.team !== f.team || ally.hp <= 0) continue;
+      if (Math.hypot(ally.x - f.x, ally.y - f.y) <= 320) {
+        ally.guard = Math.min(ally.maxGuard || 100, (ally.guard || 0) + 14);
+        ally.slowT = 0;
+        if (!RESIM) ring(ally.x, ally.y - 54, 64, '82,240,200', 0.25);
+      }
+    }
+  }
   f.state = 'skill'; f.skill = id; f.t = 0; f.skPh = 0; f.hitDone = false; f.skHitSet = []; f.move = null; f.skAir = !f.onGround();
   const smod = typeof skillModFor === 'function' ? skillModFor(f, slot) : { cd: 1 };
   const petCdMul = f.petId === 'mechfinch' ? (1 - 0.08 * (PET_TIER_MUL[f.petTier] || 1)) : 1;

@@ -11,7 +11,7 @@ export default [
       if (sideFighters(0).length !== 16 || sideFighters(1).length !== 16) return fail('Teams are not 16 and 16');
       if (STAGE_W < 5000) return fail('16v16 arena is too small: ' + STAGE_W);
       if (M.melee.tickets[0] !== 48 || M.melee.tickets[1] !== 48) return fail('Expected 48 tickets per team');
-      if (new Set(allFighters().map(f => f.chIdx)).size < 30) return fail('Quick 16v16 reuses too many heroes');
+      if (new Set(sideFighters(0).map(f => f.chIdx)).size !== 16 || new Set(sideFighters(1).map(f => f.chIdx)).size !== 16) return fail('Quick 16v16 reuses heroes on the same team');
       M.phase = 'fight';
       for (let i = 0; i < 600; i++) step();
       for (const f of allFighters()) {
@@ -29,15 +29,19 @@ export default [
     })()`
   },
   {
-    name: '16v16 draft: 1 ban and 16 picks per side from 34 distinct heroes, launched into melee and rematched with the same teams',
+    name: '16v16 draft: 1 ban and 16 distinct non-banned picks per side (mirror allowed across opposing teams), launched into melee and rematched',
     fn: `(() => {
       const fail = error => ({ pass: false, error });
       bpStart('melee', { teamSize: 16, level: 'normal' });
       if (!BP || BP.bansBySide[0].length !== 1 || BP.bansBySide[1].length !== 1) return fail('Expected one ban per side');
       if (BP.picks[0].length !== 16 || BP.picks[1].length !== 16) return fail('Expected 16 picks per side');
       while (BP && BP.step < bpSteps().length) bpApply(bpCpuChoice());
-      const all = [...BP.bans, ...BP.picks[0], ...BP.picks[1]];
-      if (all.some(x => x < 0) || new Set(all).size !== 34) return fail('The 16v16 draft did not end with 34 distinct heroes');
+      const banned = new Set(BP.bans);
+      if (banned.size !== 2 || BP.bans.some(x => x < 0)) return fail('16v16 draft bans invalid');
+      for (const side of [0, 1]) {
+        const team = BP.picks[side];
+        if (team.some(x => x < 0 || banned.has(x)) || new Set(team).size !== 16) return fail('Team ' + side + ' did not draft 16 distinct non-banned heroes');
+      }
       const teams = BP.picks.map(t => t.slice());
       bpFinish();
       if (M.mode !== 'melee' || M.teamSize !== 16) return fail('bpFinish did not start 16v16');

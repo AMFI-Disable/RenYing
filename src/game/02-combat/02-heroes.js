@@ -28,13 +28,9 @@ const INK_MAX = 100, INK_COST = 15, INK_REGEN = 10, INK_DMG = 24;
 // 墨羽的符：R 画一张花 FU_INK 格墨水，最多 FU_MAX 张；大招全部烧掉，伤害 FU_BASE + FU_PER × 张数
 const FU_MAX = 5, FU_INK = 3, FU_BASE = 80, FU_PER = 40;
 const WEAPON_LEN = { wing: 48, sword: 54, dual: 40, greatsword: 70, spear: 88, fan: 36, fists: 16, brush: 66, moonblade: 58, flute: 50, gourd: 16, hammer: 56, spindle: 42, magnet: 16, puppet: 20 };
-// 新兵器沿用原有骨架长度，保持招式轨迹与距离。
+// 其余 kept 侠客专属兵器长度（保持招式轨迹与手感区分）
 Object.assign(WEAPON_LEN, {
-  firerake: 88, dyelash: 56, stargauge: 58, rescueanchor: 70,
-  abyssblade: 70, jadefan: 36, bastionshell: 56, blazegauntlet: 16,
-  foxdaggers: 40, cranewing: 48, gangpike: 88, soulbrush: 66,
-  frostrapier: 54, rocwing: 48, reapscythes: 40, spiritflute: 50,
-  overlordblade: 70, chimefan: 36, iaidoblade: 54, vermilionbrush: 66
+  firerake: 88, stargauge: 58, bastionshell: 56, willowsaber: 56, chimestaff: 62
 });
 // 按兵器流派定制专属普攻武学动作映射
 const WEAPON_POSE_MODS = {
@@ -52,29 +48,12 @@ const WEAPON_POSE_MODS = {
   hammer: { l1: ['gc_wind', 'gc_throw'], l2: ['gc_pull', 'gc_sweep'], l3: ['gc_wind', 'gc_throw'], a1: ['aj_hammer_1s', 'aj_hammer_1a'], a2: ['aj_hammer_2s', 'aj_hammer_2a'] },
   spindle: { l1: ['du_l1s', 'du_l1a'], l2: ['du_l2s', 'du_l2a'], l3: ['du_l1s', 'lca'], hv: ['du_l1s', 'hva'], a1: ['aj_spindle_1s', 'aj_spindle_1a'], a2: ['aj_spindle_2s', 'aj_spindle_2a'] },
   magnet: { l1: ['lm_boxer', 'lm_jab'], l2: ['l2s', 'lm_jab'], l3: ['fn_l1s', 'fn_l1a'], l4: ['lds', 'lm_kick'], hv: ['hvs', 'hva'], a1: ['aj_fists_1s', 'aj_fists_1a'], a2: ['aj_fists_2s', 'aj_fists_2a'] },   // 磁仙：两手各托一块磁石，推掌、拍掌
-};
-Object.assign(WEAPON_POSE_MODS, {
+  willowsaber: { l1: ['ib_l1s', 'ib_l1a'], l2: ['ib_l2s', 'ib_l2a'], l3: ['ib_l1s', 'ib_l2a'], hv: ['ib_l1s', 'hva'], a1: ['aj_sword_1s', 'aj_sword_1a'], a2: ['aj_moonblade_2s', 'aj_moonblade_2a'] },
+  chimestaff: { l1: ['sf_l1s', 'sf_l1a'], l2: ['jf_l2s', 'jf_l2a'], l3: ['sf_l1s', 'jf_l2a'], hv: ['jf_l2s', 'hva'], a1: ['aj_flute_1s', 'aj_flute_1a'], a2: ['aj_flute_2s', 'aj_flute_2a'] },
   firerake: { l1: ['rk_l1s', 'rk_l1a'], l2: ['rk_l2s', 'rk_l2a'], l3: ['rk_l1s', 'rk_l1a'], l5: ['rk_l2s', 'rk_l2a'], hv: ['rk_l2s', 'ts_slam'], a1: ['aj_spear_1s', 'aj_spear_1a'], a2: ['aj_spear_2s', 'aj_spear_2a'] },
-  dyelash: { l1: ['dl_l1s', 'dl_l1a'], l2: ['dl_l2s', 'dl_l2a'], l3: ['dl_l1s', 'dl_l2a'], hv: ['dl_l1s', 'gc_throw'], a1: ['aj_hammer_1s', 'aj_hammer_1a'], a2: ['aj_hammer_2s', 'aj_hammer_2a'] },
   stargauge: { l1: ['sg_l1s', 'sg_l1a'], l2: ['sg_l2s', 'sg_l2a'], l3: ['sg_l1s', 'sg_l2a'], hv: ['sg_l2s', 'hva'], a1: ['aj_moonblade_1s', 'aj_moonblade_1a'], a2: ['aj_moonblade_2s', 'aj_moonblade_2a'] },
-  rescueanchor: { l1: ['an_l1s', 'an_l1a'], l2: ['an_l2s', 'an_l2a'], l4: ['an_l1s', 'ts_slam'], hv: ['an_l1s', 'an_l1a'], a1: ['aj_greatsword_1s', 'aj_greatsword_1a'], a2: ['aj_greatsword_2s', 'aj_greatsword_2a'] },
-  abyssblade: { l1: ['ab_l1s', 'ab_l1a'], l2: ['ab_l2s', 'ab_l2a'], l4: ['ab_l1s', 'ts_slam'], hv: ['ab_l1s', 'ab_l1a'], a1: ['aj_greatsword_1s', 'aj_greatsword_1a'], a2: ['aj_greatsword_2s', 'aj_greatsword_2a'] },
-  jadefan: { l1: ['jf_l1s', 'jf_l1a'], l2: ['jf_l2s', 'jf_l2a'], l3: ['jf_l1s', 'jf_l2a'], hv: ['jf_l2s', 'hva'], a1: ['aj_fan_1s', 'aj_fan_1a'], a2: ['aj_fan_2s', 'aj_fan_2a'] },
   bastionshell: { l1: ['bs_l1s', 'bs_l1a'], l2: ['bs_l2s', 'bs_l2a'], l3: ['bs_l1s', 'bs_l1a'], hv: ['bs_l1s', 'ts_slam'], a1: ['aj_hammer_1s', 'aj_hammer_1a'], a2: ['aj_hammer_2s', 'aj_hammer_2a'] },
-  blazegauntlet: { l1: ['bg_l1s', 'bg_l1a'], l2: ['bg_l2s', 'bg_l2a'], l3: ['bg_l1s', 'lm_kick'], l4: ['bg_l2s', 'bg_l2a'], hv: ['bg_l2s', 'bg_l2a'], a1: ['aj_fists_1s', 'aj_fists_1a'], a2: ['aj_fists_2s', 'aj_fists_2a'] },
-  foxdaggers: { l1: ['fd_l1s', 'fd_l1a'], l2: ['fd_l2s', 'fd_l2a'], l3: ['fy_crouch', 'fy_xslash'], l4: ['fd_l1s', 'fd_l2a'], a1: ['aj_dual_1s', 'aj_dual_1a'], a2: ['aj_dual_2s', 'aj_dual_2a'] },
-  cranewing: { l1: ['cw_l1s', 'cw_l1a'], l2: ['cw_l2s', 'cw_l2a'], l3: ['cw_l1s', 'cw_l2a'], hv: ['cw_l2s', 'hva'], a1: ['aj_wing_1s', 'aj_wing_1a'], a2: ['aj_wing_2s', 'aj_wing_2a'] },
-  gangpike: { l1: ['gp_l1s', 'gp_l1a'], l2: ['gp_l2s', 'gp_l2a'], l3: ['gp_l1s', 'ls_thrust'], l5: ['gp_l2s', 'gp_l1a'], a1: ['aj_spear_1s', 'aj_spear_1a'], a2: ['aj_spear_2s', 'aj_spear_2a'] },
-  soulbrush: { l1: ['sb_l1s', 'sb_l1a'], l2: ['sb_l2s', 'sb_l2a'], l4: ['sb_l1s', 'lda'], hv: ['sb_l1s', 'hva'], a1: ['aj_brush_1s', 'aj_brush_1a'], a2: ['aj_brush_2s', 'aj_brush_2a'] },
-  frostrapier: { l1: ['fr_l1s', 'fr_l1a'], l2: ['fr_l2s', 'fr_l2a'], l3: ['fr_l1s', 'fr_l1a'], hv: ['fr_l2s', 'hva'], a1: ['aj_sword_1s', 'aj_sword_1a'], a2: ['aj_sword_2s', 'aj_sword_2a'] },
-  rocwing: { l1: ['rw_l1s', 'rw_l1a'], l2: ['rw_l2s', 'rw_l2a'], l3: ['rw_l1s', 'rw_l2a'], hv: ['rw_l2s', 'hva'], a1: ['aj_wing_1s', 'aj_wing_1a'], a2: ['aj_wing_2s', 'aj_wing_2a'] },
-  reapscythes: { l1: ['rs_l1s', 'rs_l1a'], l2: ['rs_l2s', 'rs_l2a'], l3: ['fy_crouch', 'rs_l2a'], l4: ['rs_l1s', 'rs_l2a'], a1: ['aj_dual_1s', 'aj_dual_1a'], a2: ['aj_dual_2s', 'aj_dual_2a'] },
-  spiritflute: { l1: ['sf_l1s', 'sf_l1a'], l2: ['sf_l2s', 'sf_l2a'], l3: ['sf_l1s', 'sf_l2a'], hv: ['sf_l2s', 'hva'], a1: ['aj_flute_1s', 'aj_flute_1a'], a2: ['aj_flute_2s', 'aj_flute_2a'] },
-  overlordblade: { l1: ['ob_l1s', 'ob_l1a'], l2: ['ob_l2s', 'ob_l2a'], l4: ['ob_l1s', 'ts_slam'], hv: ['ob_l1s', 'ob_l1a'], a1: ['aj_greatsword_1s', 'aj_greatsword_1a'], a2: ['aj_greatsword_2s', 'aj_greatsword_2a'] },
-  chimefan: { l1: ['cf_l1s', 'cf_l1a'], l2: ['cf_l2s', 'cf_l2a'], l3: ['cf_l1s', 'cf_l2a'], hv: ['cf_l2s', 'hva'], a1: ['aj_fan_1s', 'aj_fan_1a'], a2: ['aj_fan_2s', 'aj_fan_2a'] },
-  iaidoblade: { l1: ['ib_l1s', 'ib_l1a'], l2: ['ib_l2s', 'ib_l2a'], l3: ['ib_l1s', 'ib_l1a'], hv: ['ib_l1s', 'ib_l1a'], a1: ['aj_sword_1s', 'aj_sword_1a'], a2: ['aj_sword_2s', 'aj_sword_2a'] },
-  vermilionbrush: { l1: ['vb_l1s', 'vb_l1a'], l2: ['vb_l2s', 'vb_l2a'], l4: ['vb_l1s', 'lda'], hv: ['vb_l1s', 'hva'], a1: ['aj_brush_1s', 'aj_brush_1a'], a2: ['aj_brush_2s', 'aj_brush_2a'] }
-});
+};
 // 按角色属性生成每个角色自己的招式表
 function buildMoves(ch) {
   const out = {}, st = ch.stat;

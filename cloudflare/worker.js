@@ -2802,9 +2802,7 @@ const AI_CHRONO_CFG = {
 const AI_DEFAULT_HERO_POOL = [
   'qingfeng', 'feiying', 'tieshan', 'lingshuang', 'liuyun', 'leiming', 'moyu', 'yuehua',
   'yanling', 'yuxiao', 'zuixian', 'gouchen', 'lingque', 'liying', 'cixian', 'qianji',
-  'chixiao', 'youhuang', 'xuanji', 'polang', 'cangming', 'qingluan', 'xuanwu', 'chiyan',
-  'yinhu', 'yunhe', 'tiangang', 'mojie', 'baihe', 'jinpeng', 'youming', 'lingxi',
-  'bawang', 'fengling', 'wuya', 'danqing',
+  'chixiao', 'xuanji', 'qingluan', 'xuanwu',
 ];
 
 function safeJson(s, fallback) {

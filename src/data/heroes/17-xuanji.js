@@ -4,10 +4,10 @@ defHero({
   bal: { normal: 0.93, skill: 0.95, ult: 0.95, cd: 1.0, hp: 0.95 },
   char: {
     name: '玄机', role: "报时匠", diff: 3, escCD: 7.5,
-    skill: 'starorb', skill2: 'gravwell', ult: 'celestial', passive: 'none',
+    skill: 'starorb', skill2: 'gravwell', ult: 'celestial', passive: 'gravity',
     profile: { weapon: "三臂星规", bio: "玄机在刻漏城给各街的钟校时，从不接受「差不多」。他用折叠星规观星，随身带着一本小册，专记自己算错的地方。" },
     passiveName: '星枢引力',
-    passiveDesc: 'Q 星规流火远程压制，R 天枢重力牵引对手并削减架势，E 星宿归元用连击破阵。',
+    passiveDesc: '每第 3 次命中或技能命中都会引动星枢微重力，牵引对手并附带迟缓与额外架势削减。',
     stat: { hp: 810, walk: 1.0, speed: 1.0, dmg: 1.0, reach: 1.05, swing: 0.96, jump: 1.02, weight: 0.96, defRating: 1.0, guardMax: 102, guardStab: 1.0, guardChip: 0.09, guardRegen: 29, poise: 1.0, size: 1.0 },
     hitFeel: 0.92,
     look: { body: '#1b2140', shade: '#0d1126', outline: '#9ea8ff', outlineA: 0.92, scarf: '#6e7bff', slash: '155,170,255', blade: '#eef0ff', hair: '#15182c', head: 'astro-crown', weapon: 'stargauge' },

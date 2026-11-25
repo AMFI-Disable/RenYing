@@ -705,21 +705,40 @@ SKIN_WEAP.abyssblade = ({ hl, g, t, At, bar, poly, glow, o, flash, live, T, L })
     }
   }
 };
-SKIN_WEAP.jadefan = ({ hl, g, t, bar, glow, o, flash, live, T, L }) => {
-  const dx = t[0] - g[0], dy = t[1] - g[1], a = Math.atan2(dy, dx), r = 34;
-  ctx.fillStyle = o ? L.outline : flash ? '#fff' : '#18544a';
-  ctx.beginPath(); ctx.moveTo(g[0], g[1]); ctx.arc(g[0], g[1], r, a - 0.85, a + 0.85); ctx.closePath(); ctx.fill();
-  bar(hl, g, 3.5, o ? L.outline : flash ? '#fff' : '#0f3630');
+SKIN_WEAP.willowsaber = ({ hl, g, t, At, bar, poly, glow, o, flash, live, T, L }) => {
+  // 离影 · 雁翎弯刀：弧形单刃刀身 + 环形刀首 + 雾青刃口
+  bar(hl, g, 3.6, o ? L.outline : flash ? '#fff' : '#12262e');
+  const ringP = At(hl, -4, 0);
+  ctx.strokeStyle = o ? L.outline : flash ? '#fff' : '#5cc8d6';
+  ctx.lineWidth = o ? 3.2 : 1.8;
+  ctx.beginPath(); ctx.arc(ringP[0], ringP[1], 4.2, 0, Math.PI * 2); ctx.stroke();
+  bar(At(g, 0, -5), At(g, 0, 5), 3.0, o ? L.outline : flash ? '#fff' : '#5cc8d6');
+  poly([At(g, 1, -3), At(g, 24, -5.5), At(t, -8, -4.5), At(t, 4, 0.5), At(t, -10, 4.5), At(g, 22, 2.2), At(g, 1, 2.5)], o ? L.outline : flash ? '#fff' : '#1b3844');
   if (!o && !flash) {
-    ctx.strokeStyle = '#52f0c8'; ctx.lineWidth = 2.0;
-    ctx.beginPath(); ctx.arc(g[0], g[1], r * 0.78, a - 0.78, a + 0.78); ctx.stroke();
-    for (let i = -3; i <= 3; i++) {
-      const k = a + i * 0.24;
-      bar(g, [g[0] + Math.cos(k) * r, g[1] + Math.sin(k) * r], 1.5, i === 0 ? '#e0fff6' : '#28c79e');
-    }
-    if (live) glow([g[0] + Math.cos(a) * r * 0.65, g[1] + Math.sin(a) * r * 0.65], 7, '82,240,200', 0.36 + 0.16 * Math.sin(T * 5));
+    poly([At(g, 4, -2.6), At(g, 26, -4.8), At(t, -6, -3.6), At(t, 4, 0.5), At(t, -10, 1.2)], '#d8fbff');
+    if (live) glow(At(t, -8, -1), 7, '120,215,225', 0.42 + 0.16 * Math.sin(T * 6));
   }
 };
+SKIN_WEAP.chimestaff = ({ hl, g, t, At, bar, glow, o, flash, live, T, L }) => {
+  // 青鸾 · 药灯铃杖：翠竹药杖 + 悬垂药灯与双风铃环
+  bar(At(hl, -12, 0), At(t, -4, 0), o ? 6.2 : 4.0, o ? L.outline : flash ? '#fff' : '#164d42');
+  const head = At(t, -2, 0), hook = At(t, 5, -7), lamp = At(t, 6, 3 + Math.sin(T * 5) * 1.5);
+  ctx.strokeStyle = o ? L.outline : flash ? '#fff' : '#52f0c8';
+  ctx.lineWidth = o ? 4.4 : 2.4;
+  ctx.beginPath(); ctx.moveTo(head[0], head[1]); ctx.quadraticCurveTo(hook[0], hook[1], lamp[0], lamp[1] - 5); ctx.stroke();
+  ctx.fillStyle = o ? L.outline : flash ? '#fff' : '#28c79e';
+  ctx.beginPath(); ctx.arc(lamp[0], lamp[1], o ? 6.8 : 5.2, 0, Math.PI * 2); ctx.fill();
+  if (!o && !flash) {
+    ctx.fillStyle = '#e6fff8'; ctx.beginPath(); ctx.arc(lamp[0], lamp[1], 2.6, 0, Math.PI * 2); ctx.fill();
+    for (const d of [-10, -18]) {
+      const r = At(t, d, 4);
+      ctx.strokeStyle = '#ffd97d'; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.arc(r[0], r[1], 2.5, 0, Math.PI * 2); ctx.stroke();
+    }
+    if (live) glow(lamp, 11, '82,240,200', 0.48 + 0.18 * Math.sin(T * 5));
+  }
+};
+SKIN_WEAP.jadefan = SKIN_WEAP.chimestaff;
 SKIN_WEAP.blazegauntlet = ({ sk, glow, o, flash, live, T, L }) => {
   for (const h of [sk.hf, sk.hb]) {
     ctx.fillStyle = o ? L.outline : flash ? '#fff' : '#6e2014';

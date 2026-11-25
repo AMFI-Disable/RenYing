@@ -4,10 +4,10 @@ defHero({
   bal: { normal: 0.92, skill: 0.94, ult: 0.95, cd: 1.0, hp: 0.96 },
   char: {
     name: '炽霄', role: "巡火人", diff: 2, escCD: 7.5,
-    skill: 'flamehalberd', skill2: 'blazering', ult: 'skyfall', passive: 'armor',
+    skill: 'flamehalberd', skill2: 'blazering', ult: 'skyfall', passive: 'scorch',
     profile: { weapon: "三齿火耙", bio: "炽霄曾在百炉坊烧饼，现在带街坊巡火。她说话像报更，句句要人答应；每救出一个人，就在火耙柄上刻一道线。" },
-    passiveName: '炉火护身',
-    passiveDesc: '重击与蓄力攻击附带短暂霸体；Q 烈焰突刺与 R 炎轮扫荡命中后点燃对手。',
+    passiveName: '余烬灼烧',
+    passiveDesc: '重击、蓄力斩与技能命中均会点燃对手；攻击燃烧目标时额外造成 12% 灼烧伤害并缩短技能冷却 0.5 秒。',
     stat: { hp: 860, walk: 0.96, speed: 0.95, dmg: 1.04, reach: 1.12, swing: 0.9, jump: 1.0, weight: 1.15, defRating: 1.08, guardMax: 110, guardStab: 1.05, guardChip: 0.08, guardRegen: 27, poise: 1.12, size: 1.04 },
     hitFeel: 1.05,
     look: { body: '#3b1c18', shade: '#1f0d0a', outline: '#ff7a45', outlineA: 0.9, scarf: '#ff4d2e', slash: '255,115,65', blade: '#ffe6d0', hair: '#1d1210', head: 'fire-band', weapon: 'firerake' },
