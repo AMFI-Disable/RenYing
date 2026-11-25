@@ -12,6 +12,8 @@
 | :--- | :--- |
 | [Getting Started / 新手指南](getting-started.md) | Online and offline editions, language, controls, your first match |
 | [Game Modes / 游戏模式](game-modes.md) | Every mode, what it needs, and how it plays |
+| [Commander And Tactics / 指挥与战术](commander-and-tactics.md) | 1/2/3 tactics, counters, teammate tasks and the Tab command panel |
+| [Training Grounds / 训练场](training-grounds.md) | Move lessons, dummy practice, AI sparring, scenario drills and AI Watch |
 | [Heroes And Combat / 侠客与战斗](heroes-and-combat.md) | All 16 heroes, their skills, guard, parry and meter |
 | [Armory And Marketplace / 武库与市场](armory-and-marketplace.md) | Ink, weapon cases, tiers, reforges, the player market |
 | [Accounts And Cloud Saves / 账号与云存档](accounts-and-cloud-saves.md) | Guest, local and cloud accounts, devices, sync, privacy |

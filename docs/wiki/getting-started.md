@@ -60,7 +60,7 @@ Turn the device sideways. A virtual stick appears on the left and action buttons
 2. Pick an AI level. **入门 / Easy** is a good start.
 3. The draft screen (点将台) opens: pick your hero and confirm.
 4. First to win **2 rounds** takes the match (at most 5 rounds).
-5. The tutorial (新手教学) and the training dummy (木人桩) are the best places to learn combos.
+5. The tutorial (新手教学) and [Training Grounds](training-grounds.md) (训练场) are the best places to learn combos.
 
 中文步骤：
 
@@ -68,7 +68,7 @@ Turn the device sideways. A virtual stick appears on the left and action buttons
 2. 选电脑难度，新手先选 **入门**。
 3. 进入点将台，选好侠客确认。
 4. 先赢 **2 回合** 的一方获胜（最多 5 回合）。
-5. 想练连招就去新手教学和木人桩。
+5. 想练连招就去新手教学和[训练场](training-grounds.md)。
 
 ## Play With A Friend / 和朋友联机
 

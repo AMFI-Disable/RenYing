@@ -27,6 +27,44 @@
 | 5 | 绝顶 Impossible | |
 | 6 | 天道 Transcendent | The strongest; driven by a trained model |
 
+## Large Team Battles / 大型团战
+
+### 群雄会战 · Grand Melee (3v3–16v16)
+
+Three to sixteen heroes a side fight on one screen, up to 32 fighters in all. Choose 3v3, 5v5, 8v8 or 16v16, then take the draft: you ban and pick your own hero and the AI fills the other slots at speed.
+
+三人一队到十六人一队同屏混战，最多 32 人。选 3v3 / 5v5 / 8v8 / 16v16 后进点将台：自己禁人、选本命侠客，其余位置由 AI 快速补齐。
+
+| Scale | Arena |
+| :--- | :--- |
+| 3v3 | 2,600 px open ground |
+| 5v5 | 2,800 px, three levels (演武楼阁) linked by four staircases |
+| 8v8 | 3,600 px, five levels |
+| 16v16 | 6,400 px battlefield |
+
+- Each team starts with **three tickets per hero** (size × 3, shown as 兵力). Every knockout costs one ticket and brings you back after 3.2 seconds.
+- The match ends when one team's tickets reach zero, or when the **3-minute** timer runs out. The team with more tickets wins; equal tickets are a draw.
+- Each team has a commander with `1` / `2` / `3` tactics and teammate tasks. See [Commander And Tactics](commander-and-tactics.md).
+- The mouse wheel zooms the camera (middle click resets it). The HUD adds a minimap and every team's health.
+- 16v16 needs more picks than the current roster has heroes, so the two teams may pick the same hero; smaller scales keep every hero unique.
+
+每队初始兵力是「人数 × 3」。每倒下一次扣一点，3.2 秒后在己方阵地复活；一方兵力归零或 3 分钟到时比赛结束，兵力多的一方获胜，相同为平手。每队一名统帅，按 `1`/`2`/`3` 下令，用法见 [指挥与战术](commander-and-tactics.md)。滚轮缩放镜头、中键复位，顶部有小地图和各队血条。16v16 要选的人数超过当前侠客总数，双方可以选到同一名侠客；小规模仍然一人一份。
+
+### 四象争锋 · Quad Clash (4v4v4v4)
+
+Four teams of four — 苍龙 Azure Dragon, 朱雀 Vermilion Bird, 玄武 Black Tortoise and 白虎 White Tiger — fight at the same time on the five-level 3,600 px arena. You pick only your own hero; your three teammates and the other three teams are AI.
+
+苍龙、朱雀、玄武、白虎四队各四人在五层立体战场上同时开打。你只选自己的侠客，三名队友和三支敌队都是电脑。
+
+- Each team spawns on one of four points: ground left, ground right, top left, top right. Which team gets which point is shuffled every match.
+- **Three tickets per hero.** A knockout costs one ticket; respawning takes 3.2 seconds.
+- A team is eliminated when its tickets are gone and none of its members is alive.
+- The last team standing wins. If the **3½-minute** timer runs out first, teams rank by tickets and then by total remaining health.
+- If your team is eliminated the match ends and shows your place out of four. There is no Ink payout, only the ranking.
+- Every team has a commander, and the enemy orders stay hidden.
+
+四个出生点（地面左、地面右、顶层左、顶层右）每局随机分配。每队兵力为「人数 × 3」，倒下一次扣一点，3.2 秒后复活；兵力清零且无人存活时覆灭。最后一支站着的队伍夺魁；3 分 30 秒到时按兵力、再按剩余总气血排名。我方覆灭即结束并显示四队名次，只排名次、不发墨锭。每队都有统帅，敌方战术不可见。
+
 ## Single-Player Content / 单人内容
 
 | Mode | How it plays |
@@ -34,7 +72,7 @@
 | **守关挑战 · Stages** | Chapters of five stages; each stage gives up to three stars and Ink. |
 | **侠客列传 · Hero Chronicles** | A five-part story for every hero. One choice in part 2 or 3 decides the final fight and which of two endings you get. |
 | **问剑密卷 · Sword Pagoda** | Climb a tower and pick scrolls (秘卷) between floors to build your run. |
-| **木人桩 · Dummy** | Practice against a training dummy you can configure (fixed, moving, infinite guard). |
+| **训练场 · Training Grounds** | Move lessons, a configurable dummy, AI sparring with standard stats, six scenario drills and every AI exhibition. See [Training Grounds](training-grounds.md). |
 | **新手教学 · Tutorial** | Teaches the basics step by step on a straw dummy, including the perfect parry. |
 
 ## Co-op And Server Modes / 合作与全服模式
@@ -56,7 +94,7 @@
 
 ## Watching And Replays / 观战与回放
 
-- **AI exhibitions:** watch two AIs duel, 2v2, 3v3, Chaos, Mayhem, Terrain Clash, or the AI climbing the tower.
+- **AI exhibitions:** every computer-vs-computer match is under 习武 → 训练场 → AI 观战: 1v1, 2v2, 3v3 relay, Chaos, Ink Ball, Terrain Clash and Mayhem. See [Training Grounds](training-grounds.md).
 - **Replays:** matches can be saved, exported as a file and imported again (对战回放 · 导入回放).
 
 ## 青锋行 · Qingfengxing

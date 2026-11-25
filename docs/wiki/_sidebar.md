@@ -4,6 +4,8 @@
 
 - [Getting Started / 新手指南](getting-started.md)
 - [Game Modes / 游戏模式](game-modes.md)
+- [Commander And Tactics / 指挥与战术](commander-and-tactics.md)
+- [Training Grounds / 训练场](training-grounds.md)
 - [Heroes And Combat / 侠客与战斗](heroes-and-combat.md)
 - [Armory And Marketplace / 武库与市场](armory-and-marketplace.md)
 - [Accounts And Cloud Saves / 账号与云存档](accounts-and-cloud-saves.md)
