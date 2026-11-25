@@ -11,26 +11,40 @@ function hitbox(f, b) {
 }
 function hurtbox(f) {
   const s = f.size || 1;
-  if (f.state === 'knockdown') return [f.x - 40 * s, f.y - 20 * s, f.x + 40 * s, f.y];
+  if (f.state === 'knockdown') return [f.x - 44 * s, f.y - 48 * s, f.x + 44 * s, f.y];   // 躺着的人框高一点，站着的普攻也能补到刀
   if (f.state === 'launched' || f.state === 'held') return [f.x - 28 * s, f.y - 92 * s, f.x + 28 * s, f.y + 4];
   if (f.state === 'block' || f.state === 'blockstun' || f.state === 'getup') return [f.x - 18 * s, f.y - 92 * s, f.x + 18 * s, f.y];
   return [f.x - 18 * s, f.y - 112 * s, f.x + 18 * s, f.y];
 }
 const overlap = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
 
-// 命中带来的短暂无敌（挑飞保护、倒地保护、浮空脱离）只防「打出这一下的人」。
-// 多人对局里别的对手照样能打到：以前这类无敌把所有人都挡在外面，围攻时看起来只有一个人的伤害生效。
+// 命中带来的短暂无敌（挑飞保护、格挡卸力）只防「打出这一下的人」。
+//   1v1 照旧写进 def.invul；多人对局记在 def.hitGuard[打的人]，别的对手照样能打，电脑队友看 def.invul 也不会以为他无敌而不出手。
+//   以前这里只记一个人：谁最后打中谁就「接管」了保护，前一个人反而打不到，围攻时看起来只有一个人的伤害生效。
 // 闪避、大招这类自己带来的无敌不受影响，仍然防所有人。
-function markHitInvul(def, att) {
-  def.hitInvulBy = att ? att.idx : -1;
-  def.hitInvulEnd = clock + def.invul;
+function hitInvul(def, att, dur) {
+  if (isMulti() && att && att !== def) { (def.hitGuard || (def.hitGuard = {}))[att.idx] = clock + dur; return; }
+  def.invul = dur;
 }
-function invulVs(def, att) {
-  if (!(def.invul > 0)) return false;
-  if (!att || def.hitInvulBy === undefined || def.hitInvulBy < 0 || att.idx === def.hitInvulBy || !isMulti()) return true;
-  // 剩下的无敌不超过命中给的那一份，才算命中无敌；之后叠上更长的无敌（闪避、大招）照常防所有人
-  return def.invul > (def.hitInvulEnd - clock) + 0.03;
+// 倒地追击：被打倒、被摔在地上的人以前整段倒地都无敌，现在能补刀，但有上限，免得一直压着打。
+//   mul：补刀伤害倍率；solo：1v1 每次倒地最多挨几下；team：多人对局每次倒地最多挨几下（每个对手各一下）
+//   补刀不会把人重新打飞、也不重置倒地时间，起身照常。格挡满蓄力斩被压倒的「快速起身」不能补刀。
+const OTG = { mul: 0.7, solo: 1, team: 3 };
+function otgOpen(def, att) {
+  if (def.state !== 'knockdown' || !(def.hp > 0) || def.escInvul || def.quickGetup || def.quickGetupPhase) return false;
+  if (typeof cujuOn === 'function' && cujuOn()) return false;   // 墨球蹴鞠不比气血，倒地照旧整段无敌，大家去抢球
+  const by = def.otgBy || [];
+  if (!isMulti()) return by.length < OTG.solo;
+  return by.length < OTG.team && !(att && by.includes(att.idx));
 }
+// 对这个出手的人来说还剩多少秒无敌（0 就是打得到）。电脑出手前也看这个
+function invulLeft(def, att) {
+  const g = att && def.hitGuard ? def.hitGuard[att.idx] : 0;
+  const own = g > clock ? g - clock : 0;
+  if (def.state === 'knockdown' && otgOpen(def, att)) return own;
+  return Math.max(own, def.invul > 0 ? def.invul : 0);
+}
+function invulVs(def, att) { return invulLeft(def, att) > 0; }
 
 // 多目标伤害衰减：1v1 与 2v2 保持 100% 原始平衡；大型团战（>=6人）同时命中多敌时平滑递减避免瞬间团灭
 function multiTargetScale(hitIndex) {
@@ -271,7 +285,7 @@ function tryHit(f, foe, m) {
   const hitSet = f.hitTargets || (f.hitTargets = []);
   const targets = isMulti()
     ? findTargetsInBox(f, hb, { exclude: hitSet })
-    : (foe && foe.invul <= 0 && foe.hp > 0 && !hitSet.includes(foe.idx) && overlap(hb, hurtbox(foe)) ? [foe] : []);
+    : (foe && !invulVs(foe, f) && foe.hp > 0 && !hitSet.includes(foe.idx) && overlap(hb, hurtbox(foe)) ? [foe] : []);
   if (!targets.length) return;
   const primary = targets[0];
 

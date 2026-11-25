@@ -27,6 +27,8 @@ function aiBlendLevel(k) {
 // role：rush 冲过去打、proj 飞行道具、counter 架招、trap 陷阱、zone 范围、self 自身增益
 // combo：打中后能否接在普攻连段后面取消出来   air：空中能用   anti：能打空中的人   follow：放完立刻接的动作
 // use(me, foe, d, B)：额外的使用条件（B 是大脑，可读 B.frame 等）
+// 对手对「我」还剩多少秒无敌：多人对局里别人打出的挑飞保护不挡我，倒地的人也能补刀（见 10-hits-01-collision.js）
+const aiInv = (foe, me) => typeof invulLeft === 'function' ? invulLeft(foe, me) : (foe.invul || 0);
 const AI_KIT = {
   gale: { role: 'rush', combo: true, follow: 'swordqi' },
   swordqi: { role: 'proj', combo: true, anti: true },
@@ -61,7 +63,7 @@ const AI_KIT = {
   mistswap: { role: 'self', combo: false, use: () => false },
   // 磁仙：Q 换极性（不花时间、清零 R）——R 在冷却、身边的人想换种打法时用；R 正极贴身弹开，负极把中距离的人吸过来接负极连段
   polarswap: { role: 'self', combo: true, air: true, use: (m, o, d, B) => !(B && B.L.combo >= 3) && ((m.pol < 0 && (m.mChain || 0) >= MAG.chainCap) || (m.skill2CD > 1.2 && (m.pol > 0 ? d > 220 && d < MAG.rMinusRange - 60 : d < 150))) },   // 寻常以上换极性交给 cixianRoute
-  magfield: { role: 'zone', combo: true, use: (m, o, d) => o.invul <= 0 && (m.pol > 0 ? d < MAG.rPlusR : d > 130 && d < MAG.rMinusRange - 40) },
+  magfield: { role: 'zone', combo: true, use: (m, o, d) => aiInv(o, m) <= 0 && (m.pol > 0 ? d < MAG.rPlusR : d > 130 && d < MAG.rMinusRange - 40) },
   // 千机：金丝回环与穿丝急袭
   throwball: { role: 'proj', combo: true, use: (m, o, d) => !projs.some(p => p.kind === 'ironball' && p.owner === m.idx && !p.dead) && d > 120 },
   ballspike: { role: 'rush', combo: true, breakout: true, use: (m, o, d) => {
@@ -109,16 +111,16 @@ const AI_ULT = {
   // 万线归宗全场必中、挂印记、清零换影：留着续连段用（换影在冷却、对手身上没印记时放最值），对手残血就直接放
   needlestorm: { far: true, sure: (m, o) => o.hp / Math.max(1, o.maxHp) < 0.18 || ((o.needleMark || 0) <= 0 && m.skill2CD > 0.5) },
   // 天地磁合全场都夹得到，只怕对手正在无敌里：等对手的腾空闪用掉、或者正在挨打 / 收招时放
-  sandwich: { far: true, sure: (m, o) => o.invul <= 0 && (o.breakCD > 0.6 || AI_HURT.includes(o.state) || o.hp / Math.max(1, o.maxHp) < 0.15) },
+  sandwich: { far: true, sure: (m, o) => aiInv(o, m) <= 0 && (o.breakCD > 0.6 || AI_HURT.includes(o.state) || o.hp / Math.max(1, o.maxHp) < 0.15) },
   moonflow: { contact: true, heal: true, sure: (m, o, d) => d < 240 || m.hp < m.maxHp * 0.5 },
   // 万影归一：雾身越多刀越多，至少攒一个雾身再放（对手残血就直接放）
   mistarray: { far: true, sure: (m, o) => (m.clones || []).length >= 1 || o.hp / Math.max(1, o.maxHp) < 0.12 },
   // 机轮三穿：用三次全场穿击逼迫对手交闪避
-  recallball: { far: true, sure: (m, o) => o.invul <= 0 && (AI_HURT.includes(o.state) || o.breakCD > 0.8 || o.hp / Math.max(1, o.maxHp) < 0.35) },
+  recallball: { far: true, sure: (m, o) => aiInv(o, m) <= 0 && (AI_HURT.includes(o.state) || o.breakCD > 0.8 || o.hp / Math.max(1, o.maxHp) < 0.35) },
   // 赤霄·天火坠：灼烧加成或中距离压制收割
-  skyfall: { far: true, sure: (m, o, d) => o.invul <= 0 && (d < 460 || (o.burnT || 0) > 0 || AI_HURT.includes(o.state)) },
+  skyfall: { far: true, sure: (m, o, d) => aiInv(o, m) <= 0 && (d < 460 || (o.burnT || 0) > 0 || AI_HURT.includes(o.state)) },
   // 玄机·周天星阵：对手交闪或硬直时释放
-  celestial: { far: true, sure: (m, o) => o.invul <= 0 && (o.breakCD > 0.5 || AI_HURT.includes(o.state) || o.hp / Math.max(1, o.maxHp) < 0.3) },
+  celestial: { far: true, sure: (m, o) => aiInv(o, m) <= 0 && (o.breakCD > 0.5 || AI_HURT.includes(o.state) || o.hp / Math.max(1, o.maxHp) < 0.3) },
   // 青鸾·百鸟朝凤：团队残血或自身血线吃紧时释放回复并反打
   phoenixchorus: { far: true, heal: true, sure: (m, o, d) => m.hp < m.maxHp * 0.68 || (typeof sideFighters === 'function' && typeof fighterTeam === 'function' && sideFighters(fighterTeam(m)).some(a => a !== m && !a.hidden && a.hp > 0 && a.hp < a.maxHp * 0.6)) || d < 380 },
   // 玄武·玄龟镇岳：近身地面重压
@@ -525,7 +527,7 @@ class AIBrain {
     // 4. 墨羽墨阵：对手踩上就引爆
     if (me.ch.skill === 'inktrap' && me.skillCD <= 0) {
       const p = projs.find(q => q.kind === 'trap' && q.owner === me.idx && !q.dead && q.delay <= 0);
-      if (p && foe.invul <= 0 && Math.abs(foe.x - p.x) < 90 && foe.y > -120 && this.seen) { this.press('skill'); }
+      if (p && aiInv(foe, me) <= 0 && Math.abs(foe.x - p.x) < 90 && foe.y > -120 && this.seen) { this.press('skill'); }
     }
     // 5. 绯影影遁后：1.5 秒内打不中就影归
     return false;
@@ -540,7 +542,7 @@ class AIBrain {
     if (Math.abs(gl - gr) > 20) this.dir = gr > gl ? 1 : -1; else this.dir = -to;
     const a1 = me.moves.a1, danger = Math.max(aiFrame(foe, 'l1').max, aiFrame(foe, 'dl').max) + 40;
     if (this.L.read >= 0.7 && me.escMode !== 'hover' && me.vy > 0 && me.y > -(a1.su + a1.ac) * me.vy - 30 && me.y < -30
-      && Math.max(gl, gr) < danger && Math.abs(foe.x - me.x) < a1.box[2] + 30 && foe.invul <= 0 && foe.onGround()) {
+      && Math.max(gl, gr) < danger && Math.abs(foe.x - me.x) < a1.box[2] + 30 && aiInv(foe, me) <= 0 && foe.onGround()) {
       this.dir = to; this.press('light', 'escLand');
     }
   }
@@ -1039,7 +1041,7 @@ class AIBrain {
 
   // ----- 挑飞后追击：走到落点下面，算好对手落进刀口的那一刻再出手（以前按固定节奏跳起来挥两刀，几乎全空） -----
   juggle(me, foe, d, to) {
-    if (clock > (this.jugT || 0) || foe.state !== 'launched' || foe.invul > 0.02 || foe.hp <= 0 || (foe.juggle || 0) >= 2) return false;
+    if (clock > (this.jugT || 0) || foe.state !== 'launched' || aiInv(foe, me) > 0.02 || foe.hp <= 0 || (foe.juggle || 0) >= 2) return false;
     const land = aiLandTime(foe);
     let best = null, bv = 0;
     const tryKey = (key, v) => {
@@ -1073,7 +1075,7 @@ class AIBrain {
     const L = this.L;
     if (!AI_FREE.includes(me.state) || !me.onGround()) return false;
     if (this.juggle(me, foe, d, to)) return true;
-    if (foe.invul > 0.02 || foe.hp <= 0) return false;
+    if (aiInv(foe, me) > 0.02 || foe.hp <= 0) return false;
     let window = -1;   // 对手还要多久才能动
     if (afterBlock && foe.state === 'attack' && foe.move) window = foe.move.su + foe.move.ac + foe.move.rc - foe.t;
     else if (foe.state === 'attack' && foe.move && foe.t > foe.move.su + foe.move.ac && !foe.hitConfirmed) window = foe.move.su + foe.move.ac + foe.move.rc - foe.t;
@@ -1157,6 +1159,13 @@ class AIBrain {
       else if (Math.random() < g.okiCharge * 0.5 * L.oki) how = 'charge';
       this.okiPlan = { how, t0: clock };
     }
+    // 倒地还能补一刀（多人对局里每人一刀）：够得着就先补
+    if (foe.state === 'knockdown' && foe.t > 0.05 && aiInv(foe, me) <= 0) {
+      const F0 = aiFrame(me, 'l1');
+      this.dir = d > F0.max - 10 ? to : d < F0.min ? -to : 0;
+      if (aiInRange(F0, d, foe)) { this.dir = 0; this.press('light'); }
+      return;
+    }
     const P = this.okiPlan;
     // 对手起来了 / 闪走了：结束
     if (foe.escInvul) { this.mode = 'bait'; this.modeT = clock; return; }
@@ -1220,7 +1229,7 @@ class AIBrain {
     const dx = Math.abs(pf.x - pm.x), dy = pf.y - pm.y, reach = a1.box[2] + 18 * (foe.size || 1) - 8;
     // 低难度出手时机不准（提前或拖后），高难度算好双方落点再挥
     const slop = (1 - L.skill) * 70;
-    if (dx < reach + slop && dy < 112 + a1.box[3] - 6 + slop && dy > a1.box[1] + 6 - slop && foe.invul <= 0.05 && Math.random() < 0.25 + 0.75 * L.aggr) this.press('light');
+    if (dx < reach + slop && dy < 112 + a1.box[3] - 6 + slop && dy > a1.box[1] + 6 - slop && aiInv(foe, me) <= 0.05 && Math.random() < 0.25 + 0.75 * L.aggr) this.press('light');
     // 燕翎：低空就飞起来
     if (me.ch.fly && me.vy > -100 && me.y > -120 && d > 220 && Math.random() < 0.05) this.flyUntil = clock + rand(0.3, 0.9);
   }
@@ -1409,7 +1418,7 @@ class AIBrain {
     const riskMod = rushing ? 1.6 : hpRatio < -0.2 ? 1.25 : hpRatio > 0.25 ? 0.85 : 1.0;
     const aggr = Math.min(1, L.aggr * (0.45 + g.aggr) * riskMod * (cm ? cm.aggr : 1));
     const foeBusy = foe.state === 'walk' || (foe.state === 'attack' && foe.t > foe.move.su) || foe.state === 'air';
-    const go = bestKey && foe.invul <= 0.05 && Math.random() < aggr * (foeBusy ? 1 : 0.7) && bv > 18 * (1.2 - aggr);
+    const go = bestKey && aiInv(foe, me) <= 0.05 && Math.random() < aggr * (foeBusy ? 1 : 0.7) && bv > 18 * (1.2 - aggr);
     if (go) { this.attacks++; return this.doAct(me, foe, d, to, bestKey); }
     // 站位：往理想距离走，偶尔后撤诱招、原地格挡
     const profile = aiHeroTactic(me.ch.id);
@@ -1510,7 +1519,7 @@ class AIBrain {
   }
   ultWouldHit(me, foe, d, inCombo) {
     const U = AI_ULT[me.ch.ult] || {}, F = aiFrame(me, 'special');
-    if (foe.invul > 0.1 || foe.hp <= 0) return false;
+    if (aiInv(foe, me) > 0.1 || foe.hp <= 0) return false;
     if (U.sure && !U.sure(me, foe, d)) return false;
     if (U.heal) return true;
     // 对手腾空闪好了：全屏大招可能被闪掉，等对手闪用掉或被定住再放
@@ -1586,7 +1595,7 @@ class AIBrain {
     if (me.pol > 0 && qReady && roll(L.skill)) { this.stopAll(); this.press('skill', 'cixian'); return true; }
     if (me.pol > 0) return false;
     const free = AI_FREE.includes(me.state) || me.state === 'air';
-    if (!free || foe.invul > 0 || !this.seen || clock < (this.cxNext || 0)) return false;
+    if (!free || aiInv(foe, me) > 0 || !this.seen || clock < (this.cxNext || 0)) return false;
     // 2. 负极、R 好了、对手在吸得到的距离：吸过来（挡不住），接负极长连
     const counter = foe.state === 'skill' && AI_KIT[foe.skill] && AI_KIT[foe.skill].role === 'counter';
     if (rReady && me.onGround() && d > 120 && d < MAG.rMinusRange - 40 && Math.abs(foe.y - me.y) < 220 && !counter && roll(L.skill)) {
@@ -1783,7 +1792,7 @@ class AIBrain {
   }
   lingqueRoute(me, foe, d, to) {
     const L = this.L, free = AI_FREE.includes(me.state) || me.state === 'air';
-    if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen) return false;
+    if (!free || foe.hp <= 0 || aiInv(foe, me) > 0 || !this.seen) return false;
     if (clock < (this.lqNext || 0)) return false;
     const mark = foe.needleMark || 0, rReady = me.skill2CD <= 0, qReady = me.skillCD <= 0;
     const markTime = (foe.needleMarkT !== undefined && foe.needleMarkT > 0) ? foe.needleMarkT : mark;

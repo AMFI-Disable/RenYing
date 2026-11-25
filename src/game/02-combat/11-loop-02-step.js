@@ -127,7 +127,7 @@ function simTick(real) {
   if (slowmo > 0) slowmo -= real;
   if (REPLAY.on) return replayTick(real);
   if (trainingInspectTick(real)) return;
-  acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
+  acc += real * GAME_SPEED * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
   if (acc > STEP * 5) acc = STEP * 5;
   let n = 0;
   while (acc >= STEP && n < 5) { step(); acc -= STEP; n++; }

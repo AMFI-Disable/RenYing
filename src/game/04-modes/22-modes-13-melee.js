@@ -1,15 +1,26 @@
 // ======================= 群雄会战：3v3 ~ 16v16 大型同屏团战 =======================
-// 支持 3v3 ~ 16v16（最多 32 人同屏），带兵力积分、复活机制、战术指令与自标定位。
+// 支持 3v3 ~ 16v16（最多 32 人同屏），带兵力积分、复活机制（每人复活一次，统帅只有一条命）、战术指令与自标定位。
 const meleeOn = () => M.mode === 'melee' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && (REPLAY.m.mode === 'melee' || REPLAY.m.room === 'melee'))) || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'melee');
+
+// 复活规则（群雄会战、四象争锋共用）：每人一共两条命（倒下能复活一次），统帅只有一条命，倒下就不再回来。
+// 兵力 = 这一队所有人还剩的命数（场上活着的那条也算），兵力清零就是全队覆灭。
+const TEAM_LIVES = 2, CMDR_LIVES = 1;
+const teamLivesOf = f => (typeof cmdIs === 'function' && cmdIs(f)) ? CMDR_LIVES : TEAM_LIVES;
+function teamLivesLeft(S, f) { return Math.max(0, teamLivesOf(f) - (S.deaths[f.idx] || 0)); }
+function teamTickets(S, team) { return sideFighters(team).reduce((n, f) => n + teamLivesLeft(S, f), 0); }
 
 function meleeRoundInit() {
   const sz = clamp(M.teamSize || 5, 3, 16);
   M.melee = {
     size: sz,
-    tickets: [sz * 3, sz * 3],
-    maxTickets: sz * 3,
+    tickets: [0, 0],
+    maxTickets: 0,
     respawn: new Array(MAX_FIGHTERS).fill(0),
+    deaths: new Array(MAX_FIGHTERS).fill(0),
   };
+  const S = M.melee;
+  S.tickets = [teamTickets(S, 0), teamTickets(S, 1)];
+  S.maxTickets = Math.max(S.tickets[0], S.tickets[1]);
   M.timer = 180;
 }
 
@@ -23,14 +34,14 @@ function meleeMatch() {
     if (f.hidden) continue;
     if (f.hp <= 0) {
       if (S.respawn[f.idx] <= 0) {
-        const team = fighterTeam(f);
-        S.tickets[team] = Math.max(0, S.tickets[team] - 1);
-        S.respawn[f.idx] = 3.2;
+        S.deaths[f.idx] = (S.deaths[f.idx] || 0) + 1;
+        const canReturn = teamLivesLeft(S, f) > 0;
+        S.respawn[f.idx] = canReturn ? 3.2 : 1e9;   // 命用完了：不再复活
         if (typeof cmdOnFall === 'function') cmdOnFall(f);
-        if (!RESIM && f.idx === localIdx()) say('即将重返战场…', 1.1, 'go');
+        if (!RESIM && f.idx === localIdx()) say(canReturn ? '即将重返战场…（最后一条命）' : '阵亡 · 观战队友', 1.3, 'go');
       } else {
         S.respawn[f.idx] -= STEP;
-        if (S.respawn[f.idx] <= 0 && S.tickets[fighterTeam(f)] > 0) {
+        if (S.respawn[f.idx] <= 0 && teamLivesLeft(S, f) > 0) {
           const team = fighterTeam(f);
           const slot = Math.floor(f.idx / 2);
           const bm = typeof battleMapDef === 'function' ? battleMapDef() : null;
@@ -57,8 +68,10 @@ function meleeMatch() {
       }
     }
   }
+  S.tickets[0] = teamTickets(S, 0); S.tickets[1] = teamTickets(S, 1);
   if (S.tickets[0] <= 0 || S.tickets[1] <= 0 || M.timer <= 0) {
-    const winner = S.tickets[0] > S.tickets[1] ? 0 : S.tickets[1] > S.tickets[0] ? 1 : -1;
+    const hp = t => sideFighters(t).reduce((n, f) => n + Math.max(0, f.hp), 0);
+    const winner = S.tickets[0] > S.tickets[1] ? 0 : S.tickets[1] > S.tickets[0] ? 1 : hp(0) > hp(1) ? 0 : hp(1) > hp(0) ? 1 : -1;
     M.phase = 'ko'; M.t = 0; M.koWinner = winner;
     sayNet(winner < 0 ? '平手' : winner === localTeam() ? '大军凯旋！' : '惜败收兵', 1.4, 'big', 'gong');
   }

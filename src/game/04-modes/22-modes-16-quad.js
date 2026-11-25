@@ -1,7 +1,7 @@
 // ======================= 四象争锋：4v4v4v4 四方混战 =======================
 // 四支队伍各 N 人（默认 4 人）同屏混战：苍龙、朱雀、玄武、白虎。你带着苍龙；另外三方和你的队友都由电脑补齐。
 // 战场是五层立体战场：两队在地面左右，两队在顶层左右（每局随机排位，不是永远在同一个角落）。
-// 每队有兵力积分（人数 × 3），倒下一次扣一点，兵力清零又没人活着就覆灭；最后一支站着的队伍夺魁，时间到按兵力和剩余气血排名。
+// 每人能复活一次（统帅只有一条命），兵力 = 全队还剩的命数，兵力清零就覆灭；最后一支站着的队伍夺魁，时间到按兵力和剩余气血排名。
 // 队伍编号 = 侠客编号 % 4（fighterTeam 在 08-fighter-01-entity.js）。
 // 找 bug 提示：队伍分错先看 teamCount / fighterTeam；开局站位不对看 quadSpawn；结算不对看 quadMatch / quadShowEnd。
 const quadOn = () => M.mode === 'quad' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && (REPLAY.m.mode === 'quad' || REPLAY.m.room === 'quad'))) || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'quad');
@@ -12,7 +12,6 @@ const QUAD_TEAMS = [
   { n: '玄武', rgb: '181,140,255', hex: '#b58cff' },
   { n: '白虎', rgb: '255,198,90', hex: '#ffc65a' },
 ];
-const QUAD_TICKETS_PER_HERO = 3;
 const QUAD_MATCH_TIME = 210;
 const QUAD_RESPAWN_TIME = 3.2;
 // 阵营的颜色：四象争锋里每队一种，其余模式里「我方青、敌方红」
@@ -46,16 +45,19 @@ function quadSpawn(f, offsetSlot) {
 
 function quadRoundInit() {
   const sz = clamp(M.teamSize || 4, 2, 8);
-  const tk = sz * QUAD_TICKETS_PER_HERO;
   M.quad = {
     size: sz,
-    tickets: [tk, tk, tk, tk],
-    maxTickets: tk,
+    tickets: [0, 0, 0, 0],
+    maxTickets: 0,
     respawn: new Array(MAX_FIGHTERS).fill(0),
     wait: new Array(MAX_FIGHTERS).fill(false),   // 倒下了、正在等复活
+    deaths: new Array(MAX_FIGHTERS).fill(0),     // 倒下过几次：每人能复活一次，统帅只有一条命（规则在 22-modes-13-melee.js 的 TEAM_LIVES）
     out: [false, false, false, false],           // 覆灭的队伍
     dmg: [0, 0, 0, 0],
   };
+  const S = M.quad;
+  for (let t = 0; t < 4; t++) S.tickets[t] = teamTickets(S, t);
+  S.maxTickets = Math.max(...S.tickets);
   M.timer = QUAD_MATCH_TIME;
 }
 
@@ -86,13 +88,14 @@ function quadMatch() {
     if (f.hp <= 0) {
       if (!S.wait[f.idx]) {
         S.wait[f.idx] = true;
-        S.tickets[team] = Math.max(0, S.tickets[team] - 1);
-        S.respawn[f.idx] = QUAD_RESPAWN_TIME;
-        if (!RESIM && f.idx === localIdx()) say('即将重返战场…', 1.1, 'go');
+        S.deaths[f.idx] = (S.deaths[f.idx] || 0) + 1;
+        const canReturn = teamLivesLeft(S, f) > 0;
+        S.respawn[f.idx] = canReturn ? QUAD_RESPAWN_TIME : 1e9;   // 命用完了：不再复活
+        if (!RESIM && f.idx === localIdx()) say(canReturn ? '即将重返战场…（最后一条命）' : '阵亡 · 观战队友', 1.3, 'go');
         if (typeof cmdOnFall === 'function') cmdOnFall(f);
       } else {
         S.respawn[f.idx] -= STEP;
-        if (S.respawn[f.idx] <= 0 && S.tickets[team] > 0) {
+        if (S.respawn[f.idx] <= 0 && teamLivesLeft(S, f) > 0) {
           const prevRelic = f.relicStance;
           S.wait[f.idx] = false;
           quadSpawn(f, Math.floor(f.idx / 4));
@@ -106,6 +109,7 @@ function quadMatch() {
       }
     }
   }
+  for (let t = 0; t < 4; t++) S.tickets[t] = teamTickets(S, t);
   // 兵力清零又没人活着：这一队覆灭
   for (let t = 0; t < 4; t++) {
     if (S.out[t]) continue;

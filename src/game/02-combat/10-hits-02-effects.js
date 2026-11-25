@@ -38,6 +38,11 @@ function applyHit(att, def, m, pt) {
   if (att.ch.passive === 'magnet' && att.state === 'attack' && att.pol && !m.isProj && !m.ult) m = magHit(att, def, m);   // 磁仙的普攻按正负极改（03-skills.js）
   def.drinkT = 0;
   if (isClient()) { predictHit(att, def, m, pt); return; }   // 联机时由房主判定；加入方先播放自己出手的效果
+  // 倒地补刀：伤害打折，不打飞、不重置倒地（上限见 10-hits-01-collision.js 的 OTG）
+  if (def.state === 'knockdown' && def.hp > 0 && att !== def && !cujuOn()) {
+    (def.otgBy || (def.otgBy = [])).push(att.idx);
+    m = { ...m, dmg: m.dmg * OTG.mul, launch: false, knock: false, spike: false, root: false, hold: false, kb: [0, 0], noStun: true, unblockable: true, otg: true };
+  }
   const fx = m.dir || att.face, sx = m.srcX !== undefined ? m.srcX : att.x;
   const impactSide = Math.sign(sx - def.x) || -fx || def.face;
   const backAttack = !!m.backAttack && impactSide !== def.face;
@@ -155,6 +160,11 @@ function applyHit(att, def, m, pt) {
     if (def.guard <= 0) {
       def.guard = 0;
       if (scOn()) scFire(att, 'gb', def);
+      // 破防的这一下照实打出伤害：以前只算了格挡磨血，看起来破了防却没掉血
+      const gbDmg = Math.max(0, m.dmg * (1 - chipFrac * (bm ? bm.chip : 1))) / ((def.ch && def.ch.stat && def.ch.stat.defRating) || 1);
+      const hpBeforeGb = def.hp;
+      def.hp = Math.max(1, def.hp - gbDmg); def.sinceHit = 0; def.lagDelay = 0.5;
+      ev.dd += hpBeforeGb - def.hp;
       def.state = 'hitstun'; def.t = 0; def.stun = 0.85; def.rooted = true;
       def.vx = fx * 140;
       def.ballGuardBreakT = Math.max(def.ballGuardBreakT || 0, 0.85);
@@ -378,7 +388,7 @@ function applyHit(att, def, m, pt) {
     def.vy = 0;
     def.y = gndY(def);
     def.rot = 0;
-    def.invul = 0.45; markHitInvul(def, att);
+    hitInvul(def, att, 0.45);
     def.spiked = false;
     def.juggle = 0;
     def.comboHits = 0;
@@ -390,19 +400,24 @@ function applyHit(att, def, m, pt) {
     addP({ type: 'text', text: '格挡卸力 · 快速起身', x: def.x, y: def.y - 110, life: 0.85, max: 0.85, rgb: '170,220,255' });
   }
   else if (m.noStun && def.hp > 0) { /* 不僵直：只掉血，对手手上的动作照常 */ }
-  else if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.plat = -1; def.y = Math.min(def.y - 1, -1); def.invul = 1.5; markHitInvul(def, att); def.spiked = false; def.juggle = 0; ev.knock = true; }
+  else if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.plat = -1; def.y = Math.min(def.y - 1, -1); hitInvul(def, att, 1.5); def.spiked = false; def.juggle = 0; ev.knock = true; }
   else if (m.root && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = m.stun; def.vx = 0; def.rooted = true; ev.root = true; }
   else if (m.hold) { def.state = 'held'; }
   else {
     const air = airH(def) > 2 || def.state === 'launched' || def.state === 'held';
     if (m.launch || air || def.hp <= 0) {
+      if (!(def.juggle > 0)) def.jugBy = [];
+      if (!def.jugBy) def.jugBy = [];
+      if (!def.jugBy.includes(att.idx)) def.jugBy.push(att.idx);
       def.juggle++;
-      if (def.juggle >= 3 && def.hp > 0) {
+      // 浮空连击上限：一个人打 3 下就挣脱；多人围攻时每多一个人多挨一下（最多 5 下），每个人的伤害都能打进去
+      const jugCap = isMulti() ? Math.min(5, 2 + def.jugBy.length) : 3;
+      if (def.juggle >= jugCap && def.hp > 0) {
         def.state = 'launched'; def.t = 0;
         def.vx = fx * 560 * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio)));
         def.vy = -180;
         def.plat = -1;
-        def.invul = 0.65; markHitInvul(def, att);
+        def.invul = 0.65;   // 浮空脱离是挨打的人自己挣脱，防所有人
         def.spiked = false;
         def.airRecover = true;
         def.juggle = 0;

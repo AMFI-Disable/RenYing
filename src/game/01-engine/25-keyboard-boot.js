@@ -238,7 +238,7 @@ function updateBgAiTicker() {
         const dt = Math.min(0.1, (now - lastBgTime) / 1000);
         lastBgTime = now;
         if (!isAiVsAi()) { simTick(dt); return; }
-        acc += dt * (slowmo > 0 ? 0.28 : 1);
+        acc += dt * GAME_SPEED * (slowmo > 0 ? 0.28 : 1);
         if (acc > STEP * 10) acc = STEP * 10;
         let n = 0;
         while (acc >= STEP && n < 10) {

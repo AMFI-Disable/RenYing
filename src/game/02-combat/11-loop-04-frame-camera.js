@@ -67,7 +67,7 @@ function frameBody(now) {
     else if (ROLL.on && M.mode === 'net') rollTick(real);
     else if (REPLAY.on) replayTick(real);
     else if (!trainingInspectTick(real)) {
-      acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
+      acc += real * GAME_SPEED * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
       if (acc > STEP * 5) acc = STEP * 5;
       let n = 0;
       while (acc >= STEP && n < 5) { step(); acc -= STEP; n++; }

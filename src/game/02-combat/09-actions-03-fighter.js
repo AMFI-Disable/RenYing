@@ -926,7 +926,7 @@ function updateFighter(f, foe) {
     case 'knockdown': {
       const kdDur = (f.knockdownDur != null) ? f.knockdownDur : (f.quickGetup ? 0.22 : 0.6);
       if (f.t >= kdDur && f.hp > 0 && M.phase !== 'end') {
-        f.state = 'getup'; f.t = 0; f.invul = 0.35; f.comboHits = 0; f.juggle = 0;
+        f.state = 'getup'; f.t = 0; f.invul = 0.35; f.comboHits = 0; f.juggle = 0; f.otgBy = [];
         if (f.quickGetup) f.quickGetupPhase = true;
         f.quickGetup = false; delete f.knockdownDur;
         f.beaconT = 0.5;
@@ -1089,7 +1089,7 @@ function onLand(f) {
       return;
     }
 
-    f.state = 'knockdown'; f.t = 0; f.vx *= 0.3; f.invul = 99; f.rot = 0;
+    f.state = 'knockdown'; f.t = 0; f.vx *= 0.3; f.invul = 99; f.rot = 0; f.otgBy = [];   // 倒地整段无敌，但留出几下补刀（otgOpen）
     dust(f.x, f.y, 12); shake = Math.max(shake, 5); SFX.thud();
     return;
   }

@@ -260,15 +260,80 @@ export default [
       applyHit = orig;
       if (!seen.includes(0) || !seen.includes(2)) return { pass: false, error: 'both attackers should land a hit, got ' + seen };
       // 2. 一人的挑飞无敌只防他自己，队友照样能打；别人的真无敌（闪避）仍然防所有人
-      setup(); B.invul = 1.5; markHitInvul(B, A);
+      setup(); hitInvul(B, A, 1.5);
       let hp0 = B.hp; startAttack(C, 'l1'); for (let i = 0; i < 30; i++) step();
       if (!(B.hp < hp0)) return { pass: false, error: 'hit-granted invulnerability from A must not block C' };
-      setup(); B.invul = 1.5; markHitInvul(B, A);
+      setup(); hitInvul(B, A, 1.5);
       if (!invulVs(B, A)) return { pass: false, error: 'the attacker who caused the invulnerability must stay blocked' };
       setup(); B.invul = 1.5;
       hp0 = B.hp; startAttack(C, 'l1'); for (let i = 0; i < 30; i++) step();
       if (B.hp !== hp0) return { pass: false, error: 'real invulnerability (not from a hit) must block everyone' };
       return { pass: true, error: null };
+    })()`
+  },
+  {
+    name: 'Knockdown follow-ups: a downed fighter takes one reduced hit in 1v1 and one per attacker (max 3) in team fights, without being relaunched',
+    fn: `(() => {
+      const fail = error => ({ pass: false, error });
+      const hit = (a, d) => { const h = d.hp; applyHit(a, d, { dmg: 20, kb: [200, -300], stun: 0.3, hs: 0.04, launch: true }, [d.x, d.y - 20]); return h - d.hp; };
+      startMatch('train', 'stand', [0, 1]); showScreen(null); paused = false; M.mode = 'cpu'; M.phase = 'fight';
+      B.ctrl = new Ctrl(); B.dummy = false; B.reset(1000); A.reset(940);
+      const d0 = hit(A, B);   // 同样一下打在站着的人身上，作为对照（别的倍率、天机异变都一样算进去）
+      B.reset(1000); B.state = 'knockdown'; B.t = 0; B.invul = 99; B.otgBy = [];
+      if (invulVs(B, A)) return fail('1v1: a fresh knockdown should allow one follow-up');
+      const d1 = hit(A, B);
+      if (!(d1 > 0) || Math.abs(d1 / d0 - OTG.mul) > 0.08) return fail('1v1 follow-up damage should be about ' + OTG.mul + ' of a normal hit, got ' + d1 + ' vs ' + d0);
+      if (B.state !== 'knockdown' || B.t > 0.01 && B.t < 0) return fail('Follow-up must not relaunch the downed fighter: ' + B.state);
+      if (!invulVs(B, A)) return fail('1v1: only one follow-up per knockdown');
+      // getup clears it
+      B.t = 5; updateFighter(B, A);
+      if (B.state !== 'getup' || (B.otgBy || []).length) return fail('Getting up should reset follow-ups');
+      // 团战：每个对手各一刀，最多 3 刀
+      startMelee(4, 0, 'normal', 'normal'); showScreen(null); paused = false; M.phase = 'fight';
+      const foe = FIGHTERS[1], atk = [FIGHTERS[0], FIGHTERS[2], FIGHTERS[4], FIGHTERS[6]];
+      for (const f of allFighters()) f.ctrl = new Ctrl();
+      foe.state = 'knockdown'; foe.t = 0; foe.invul = 99; foe.otgBy = [];
+      for (let i = 0; i < 3; i++) { if (invulVs(foe, atk[i])) return fail('Attacker ' + i + ' could not follow up'); if (!(hit(atk[i], foe) > 0)) return fail('Follow-up ' + i + ' dealt no damage'); }
+      if (!invulVs(foe, atk[0])) return fail('The same attacker followed up twice');
+      if (!invulVs(foe, atk[3])) return fail('More than three follow-ups were allowed');
+      if (foe.state !== 'knockdown') return fail('Team follow-ups relaunched the target');
+      return { pass: true };
+    })()`
+  },
+  {
+    name: 'Guard break: the hit that shatters the guard deals its full damage instead of only chip',
+    fn: `(() => {
+      const fail = error => ({ pass: false, error });
+      startMatch('train', 'stand', [0, 1]); showScreen(null); paused = false; M.mode = 'cpu'; M.phase = 'fight';
+      B.ctrl = new Ctrl(); B.dummy = false; B.reset(1000); A.reset(940); A.face = 1; B.face = -1;
+      B.state = 'block'; B.ctrl.held.down = true; B.guard = 1; B.blockT = 1;   // 早就按住了格挡，不是精准招架
+      const h = B.hp;
+      applyHit(A, B, { dmg: 30, kb: [200, 0], stun: 0.3, hs: 0.05 }, [B.x, B.y - 60]);
+      if (B.guard !== 0 || B.state !== 'hitstun') return fail('Guard did not break');
+      const want = 30 / ((B.ch.stat && B.ch.stat.defRating) || 1);
+      if (h - B.hp < want * 0.85) return fail('Guard-break hit dealt ' + (h - B.hp).toFixed(1) + ', expected about ' + want.toFixed(1));
+      return { pass: true };
+    })()`
+  },
+  {
+    name: 'Gang-up protection is per attacker: a second attacker does not take over the launch protection of the first, and the juggle cap grows with the crowd',
+    fn: `(() => {
+      const fail = error => ({ pass: false, error });
+      start2v2LocalCoop(0, 2, 1, 3, 'normal'); showScreen(null); paused = false; M.phase = 'fight';
+      for (const f of [A, B, C, D]) f.ctrl = new Ctrl();
+      hitInvul(B, A, 1.5); hitInvul(B, C, 0.45);
+      if (!invulVs(B, A) || !invulVs(B, C)) return fail('Each attacker keeps their own protection window');
+      if (invulVs(B, D)) return fail('A third fighter should not be blocked by the others\\' protection');
+      if (B.invul > 0) return fail('Team-fight launch protection must not raise the shared invulnerability');
+      if (aiInv(B, D) !== 0 || !(aiInv(B, A) > 1)) return fail('CPU fighters should see per-attacker invulnerability');
+      // 浮空连击上限：一个人 3 下，两个人 4 下
+      B.reset(1200); B.hitGuard = {}; B.juggle = 0; B.jugBy = [];
+      const air = a => { B.state = 'launched'; B.y = -120; B.plat = -1; B.invul = 0; applyHit(a, B, { dmg: 5, kb: [50, -300], stun: 0.3, hs: 0.02 }, [B.x, B.y - 40]); return B.airRecover; };
+      air(A); air(C); air(A);
+      if (B.airRecover) return fail('Two attackers should get a 4th juggle hit before the escape');
+      air(C);
+      if (!B.airRecover) return fail('Juggle escape did not trigger at the crowd cap');
+      return { pass: true };
     })()`
   },
   {

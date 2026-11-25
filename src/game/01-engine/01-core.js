@@ -158,6 +158,8 @@ function refocusGame() {
 let ctx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 const STEP = 1 / 120;                 // 逻辑每秒 120 次，在高刷屏上更顺
+// 整体节奏：游戏世界比真实时间快这么多（走路、出招、倒地、回合计时一起变快，手感比例不变）。联机两边用同一个值，回放也按这个速度放
+const GAME_SPEED = 1.2;
 let STAGE_W = 1800;
 const WALL = 60;
 const GRAV = 2700, WALK = 280, JUMP_V = 980, DJUMP_V = 860, DASH_V = 840, DASH_T = 0.2, BUF = 0.16;

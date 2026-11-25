@@ -688,7 +688,7 @@ function replayFrame() {
 }
 function replayTick(real) {
   if (REPLAY.paused || M.phase === 'end') return;
-  REPLAY.frameAcc += real * Math.max(1, Math.min(120, REPLAY.hz || 120)) * REPLAY.speed;
+  REPLAY.frameAcc += real * Math.max(1, Math.min(120, REPLAY.hz || 120)) * REPLAY.speed * GAME_SPEED;
   let n = 0;
   while (REPLAY.frameAcc >= 1 && n < 48) { replayFrame(); REPLAY.frameAcc -= 1; n++; if (M.phase === 'end' || !REPLAY.on) break; }
   if (n >= 48) REPLAY.frameAcc = 0;

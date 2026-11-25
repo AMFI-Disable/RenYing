@@ -85,7 +85,7 @@ Object.assign(UI_COPY_EN, {
   "同袍肉鸽 · 二十侠客斩妖列传": "Co-op Roguelike · 20-Hero Demon Hunt",
   "单骑迎战源源不断的江湖群雄，每击破一波恢复部分气血并迎战更高境界强敌，挑战个人极限连胜！": "Ride alone against an endless stream of fighters. Each wave you clear restores some HP and brings stronger foes. How long can your streak go?",
   "双方阵地各立战旗，深入敌阵夺取敌旗并护送回己方阵地即得 1 分，率先夺得 3 旗的一方获胜！": "Each side plants a flag at its base. Grab the enemy flag and bring it home for 1 point. The first side to capture 3 flags wins!",
-  "支持 3v3（6人）、5v5（10人三层楼阁）、8v8（16人五层战场）、10v10（20人全侠客无镜像五层大殿）与 16v16（32人玄岳大战场）！由统帅下令，配备兵力积分、前沿复活与滚轮镜头缩放。": "Supports 3v3 (6), 5v5 (10, 3-tier pavilion), 8v8 (16, 5-tier arena), 10v10 (20 unique heroes, 5-tier grand hall) and 16v16 (32, 5-tier battlefield)! Commander orders, troop points, forward respawns and scroll-wheel camera zoom.",
+  "支持 3v3（6人）、5v5（10人三层楼阁）、8v8（16人五层战场）、10v10（20人全侠客无镜像五层大殿）与 16v16（32人玄岳大战场）！由统帅下令，每人可复活一次，统帅只有一条命，另有前沿复活与滚轮镜头缩放。": "Supports 3v3 (6), 5v5 (10, 3-tier pavilion), 8v8 (16, 5-tier arena), 10v10 (20 unique heroes, 5-tier grand hall) and 16v16 (32, 5-tier battlefield)! Commander orders, one respawn per fighter (commanders get a single life), forward respawns and scroll-wheel camera zoom.",
   "10v10 全 20 位侠客无镜像齐上阵；16v16 自动启用镜像选人，减少等待即刻开战。": "10v10 fields all 20 unique heroes without mirrors; 16v16 enables cross-team mirror picks so the battle starts fast.",
   "进入点将台挑选最擅长的侠客单枪匹马迎战无尽车轮试炼。": "Head to the draft, pick the hero you play best, and take on the endless trial alone.",
   "进入点将台 (BP) · 开启夺旗争锋": "Go to the draft (BP) · Start Capture the Flag",

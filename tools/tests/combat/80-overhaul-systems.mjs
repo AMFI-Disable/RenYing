@@ -81,6 +81,8 @@ export default [
       if (!battleMapOn()) return { pass: false, error: 'BATTLE_MAP not active in 8v8 melee' };
       // Start Tie Shan on ground (y=0) to prove he launches above all 5 layers (-528) before plummeting through all 5
       for (const f of allFighters()) f.ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
+      // 其余人开局分在各层楼上：挪到场边地面，别挡在这次测试的几个人中间
+      for (const f of allFighters()) if (f !== A) { f.reset(f.idx % 2 ? STAGE_W - WALL - 40 - f.idx * 6 : WALL + 40 + f.idx * 6); f.y = 0; f.plat = -1; }
       const lx = STAGE_W / 2;
       A.reset(lx); A.y = 0; A.plat = -1; A.meter = 100; A.face = 1;
       const foes = sideFighters(1);
@@ -222,6 +224,8 @@ export default [
       const zxIdx = CHARS.findIndex(c => c.id === 'zuixian');
       startMelee(8, gcIdx, 'normal', 'normal');
       M.phase = 'fight';
+      // 只看勾陈和被勾的人：其余人不动，挪到场边地面
+      for (const f of allFighters()) if (f !== A && f !== B) { f.ctrl = new Ctrl(); f.reset(f.idx % 2 ? STAGE_W - WALL - 40 - f.idx * 6 : WALL + 40 + f.idx * 6); f.y = 0; f.plat = -1; }
       // Put Gouchen on layer -264 and enemy on layer -264 nearby, verify hook pulls to -264 (not 0)
       A.reset(STAGE_W / 2 - 120); A.y = -264; A.plat = 2; A.face = 1;
       B.reset(STAGE_W / 2 + 80); B.y = -264; B.plat = 2; B.invul = 0; B.ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
@@ -232,6 +236,7 @@ export default [
       // Zuixian Q pavilion on elevated layer -132 should store jailY near -132 (not 0)
       startMelee(8, zxIdx, 'normal', 'normal');
       M.phase = 'fight';
+      for (const f of allFighters()) if (f !== A && f !== B) { f.ctrl = new Ctrl(); f.reset(f.idx % 2 ? STAGE_W - WALL - 40 - f.idx * 6 : WALL + 40 + f.idx * 6); f.y = 0; f.plat = -1; }
       A.reset(STAGE_W / 2 - 140); A.y = -132; A.plat = 3; A.face = 1;
       B.reset(STAGE_W / 2 + 40); B.y = -132; B.plat = 3; B.invul = 0; B.ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
       startSkill(A, B);
@@ -384,6 +389,8 @@ export default [
       startMelee(8, lyIdx, 'normal', 'normal');
       M.phase = 'fight';
       for (const f of allFighters()) f.ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
+      // 其余人开局分在各层楼上：挪到场边地面，别挡在这次测试的几个人中间
+      for (const f of allFighters()) if (f !== A) { f.reset(f.idx % 2 ? STAGE_W - WALL - 40 - f.idx * 6 : WALL + 40 + f.idx * 6); f.y = 0; f.plat = -1; }
       const lx = STAGE_W / 2;
       A.reset(lx - 120); A.y = 0; A.plat = -1; A.face = 1;
       const foes = sideFighters(1);

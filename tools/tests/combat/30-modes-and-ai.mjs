@@ -33,14 +33,16 @@ export default [
         def.reset(def.x);
         def.invul = 0;
         def.hp = 1;
-        applyHit(att, def, { dmg: 50, kb: [200, -200], stun: 0.3, hs: 0.06 }, [def.x, def.y - 40]);
+        applyHit(att, def, { dmg: 50, kb: [200, -200], stun: 0.3, hs: 0.06, unblockable: true }, [def.x, def.y - 40]);
         return def.hp === 0 && M.phase === 'fight';
       };
       startMelee(8);
+      const lives0 = M.melee.tickets[1];
       if (!down(A, B)) return fail('A melee knockout ended the fight');
       updateMatch();
-      if (M.phase !== 'fight' || M.melee.tickets[1] !== 23) return fail('Melee did not debit one ticket');
-      M.melee.tickets[1] = 1;
+      if (M.phase !== 'fight' || M.melee.tickets[1] !== lives0 - 1) return fail('Melee did not debit one ticket');
+      // 只剩 D 的最后一条命：其余敌人全部用完了命
+      for (const f of sideFighters(1)) { M.melee.deaths[f.idx] = teamLivesOf(f) - (f === D ? 1 : 0); if (f !== D) f.hp = 0; M.melee.respawn[f.idx] = f === D ? 0 : 1e9; }
       if (!down(A, D)) return fail('Melee settled before processing the last ticket');
       updateMatch();
       if (M.phase !== 'ko' || M.koWinner !== 0) return fail('Melee ignored ticket exhaustion');

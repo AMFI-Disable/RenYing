@@ -5030,7 +5030,7 @@ window.RYBoot = (function () {
           <h3 class="spt">群雄会战 · 大型同屏混战</h3>
           <span class="sub-badge">6–32人同屏 · 3v3 至 16v16 立体战场</span>
         </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">支持 3v3（6人）、5v5（10人三层楼阁）、8v8（16人五层战场）、10v10（20人全侠客无镜像五层大殿）与 16v16（32人玄岳大战场）！由统帅下令，配备兵力积分、前沿复活与滚轮镜头缩放。</p>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">支持 3v3（6人）、5v5（10人三层楼阁）、8v8（16人五层战场）、10v10（20人全侠客无镜像五层大殿）与 16v16（32人玄岳大战场）！由统帅下令，每人可复活一次，统帅只有一条命，另有前沿复活与滚轮镜头缩放。</p>
         <div class="sec-sub-label" style="text-align:left;margin-top:6px">团战规模</div>
         <div class="seg m2-seg" id="meleeSizeSeg" style="margin-bottom:12px">
           <button type="button" data-lsize="3">3v3 · 6人</button>
@@ -5084,7 +5084,7 @@ window.RYBoot = (function () {
           <h3 class="spt">四象争锋 · 四方混战</h3>
           <span class="sub-badge">8–32人同屏 · 统帅战术相克</span>
         </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">苍龙、朱雀、玄武、白虎四队同屏混战，你是苍龙统帅：用 1/2/3 或 Tab 切换锋矢、固守、游袭战术，敌方统帅的战术不可见，最后存活的队伍夺魁！</p>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">苍龙、朱雀、玄武、白虎四队同屏混战，你是苍龙统帅：用 1/2/3 或 Tab 切换锋矢、固守、游袭战术，敌方统帅的战术不可见；每人可复活一次，统帅只有一条命，最后存活的队伍夺魁！</p>
         <div class="sec-sub-label" style="text-align:left;margin-top:6px">四方规模</div>
         <div class="seg m2-seg" id="quadSizeSeg" style="margin-bottom:12px">
           <button type="button" data-qsize="2">2v2v2v2 · 8人</button>
@@ -8151,6 +8151,7 @@ out[key] = Array.isArray(x) ? [x[0] + (y[0] - x[0]) * t, x[1] + (y[1] - x[1]) * 
 }
 return out;
 }
+const aiInv = (foe, me) => typeof invulLeft === 'function' ? invulLeft(foe, me) : (foe.invul || 0);
 const AI_KIT = {
 gale: { role: 'rush', combo: true, follow: 'swordqi' },
 swordqi: { role: 'proj', combo: true, anti: true },
@@ -8181,7 +8182,7 @@ shadowdash: { role: 'rush', combo: true, invul: true, air: true, use: (m, o, d, 
 mistmark: { role: 'self', combo: false, use: (m, o, d) => m.onGround() && (m.clones || []).length < 4 && d > 140 && d < 480 && !['attack', 'skill', 'special'].includes(o.state) },
 mistswap: { role: 'self', combo: false, use: () => false },
 polarswap: { role: 'self', combo: true, air: true, use: (m, o, d, B) => !(B && B.L.combo >= 3) && ((m.pol < 0 && (m.mChain || 0) >= MAG.chainCap) || (m.skill2CD > 1.2 && (m.pol > 0 ? d > 220 && d < MAG.rMinusRange - 60 : d < 150))) },   // 寻常以上换极性交给 cixianRoute
-magfield: { role: 'zone', combo: true, use: (m, o, d) => o.invul <= 0 && (m.pol > 0 ? d < MAG.rPlusR : d > 130 && d < MAG.rMinusRange - 40) },
+magfield: { role: 'zone', combo: true, use: (m, o, d) => aiInv(o, m) <= 0 && (m.pol > 0 ? d < MAG.rPlusR : d > 130 && d < MAG.rMinusRange - 40) },
 throwball: { role: 'proj', combo: true, use: (m, o, d) => !projs.some(p => p.kind === 'ironball' && p.owner === m.idx && !p.dead) && d > 120 },
 ballspike: { role: 'rush', combo: true, breakout: true, use: (m, o, d) => {
 const ball = projs.find(p => p.kind === 'ironball' && p.owner === m.idx && !p.dead);
@@ -8220,12 +8221,12 @@ guangling: { far: true },
 shanshui: { far: true },
 skynet: { far: true },
 needlestorm: { far: true, sure: (m, o) => o.hp / Math.max(1, o.maxHp) < 0.18 || ((o.needleMark || 0) <= 0 && m.skill2CD > 0.5) },
-sandwich: { far: true, sure: (m, o) => o.invul <= 0 && (o.breakCD > 0.6 || AI_HURT.includes(o.state) || o.hp / Math.max(1, o.maxHp) < 0.15) },
+sandwich: { far: true, sure: (m, o) => aiInv(o, m) <= 0 && (o.breakCD > 0.6 || AI_HURT.includes(o.state) || o.hp / Math.max(1, o.maxHp) < 0.15) },
 moonflow: { contact: true, heal: true, sure: (m, o, d) => d < 240 || m.hp < m.maxHp * 0.5 },
 mistarray: { far: true, sure: (m, o) => (m.clones || []).length >= 1 || o.hp / Math.max(1, o.maxHp) < 0.12 },
-recallball: { far: true, sure: (m, o) => o.invul <= 0 && (AI_HURT.includes(o.state) || o.breakCD > 0.8 || o.hp / Math.max(1, o.maxHp) < 0.35) },
-skyfall: { far: true, sure: (m, o, d) => o.invul <= 0 && (d < 460 || (o.burnT || 0) > 0 || AI_HURT.includes(o.state)) },
-celestial: { far: true, sure: (m, o) => o.invul <= 0 && (o.breakCD > 0.5 || AI_HURT.includes(o.state) || o.hp / Math.max(1, o.maxHp) < 0.3) },
+recallball: { far: true, sure: (m, o) => aiInv(o, m) <= 0 && (AI_HURT.includes(o.state) || o.breakCD > 0.8 || o.hp / Math.max(1, o.maxHp) < 0.35) },
+skyfall: { far: true, sure: (m, o, d) => aiInv(o, m) <= 0 && (d < 460 || (o.burnT || 0) > 0 || AI_HURT.includes(o.state)) },
+celestial: { far: true, sure: (m, o) => aiInv(o, m) <= 0 && (o.breakCD > 0.5 || AI_HURT.includes(o.state) || o.hp / Math.max(1, o.maxHp) < 0.3) },
 phoenixchorus: { far: true, heal: true, sure: (m, o, d) => m.hp < m.maxHp * 0.68 || (typeof sideFighters === 'function' && typeof fighterTeam === 'function' && sideFighters(fighterTeam(m)).some(a => a !== m && !a.hidden && a.hp > 0 && a.hp < a.maxHp * 0.6)) || d < 380 },
 tortoiseslam: { contact: true, sure: (m, o, d) => d < 280 && (o.onGround() || o.y > -90) },
 };
@@ -8573,7 +8574,7 @@ if (this.defend(me, foe, d, to)) return true;
 if (this.defendOthers(me, foe)) return true;
 if (me.ch.skill === 'inktrap' && me.skillCD <= 0) {
 const p = projs.find(q => q.kind === 'trap' && q.owner === me.idx && !q.dead && q.delay <= 0);
-if (p && foe.invul <= 0 && Math.abs(foe.x - p.x) < 90 && foe.y > -120 && this.seen) { this.press('skill'); }
+if (p && aiInv(foe, me) <= 0 && Math.abs(foe.x - p.x) < 90 && foe.y > -120 && this.seen) { this.press('skill'); }
 }
 return false;
 }
@@ -8584,7 +8585,7 @@ const gl = gap(me.x - span), gr = gap(me.x + span);
 if (Math.abs(gl - gr) > 20) this.dir = gr > gl ? 1 : -1; else this.dir = -to;
 const a1 = me.moves.a1, danger = Math.max(aiFrame(foe, 'l1').max, aiFrame(foe, 'dl').max) + 40;
 if (this.L.read >= 0.7 && me.escMode !== 'hover' && me.vy > 0 && me.y > -(a1.su + a1.ac) * me.vy - 30 && me.y < -30
-&& Math.max(gl, gr) < danger && Math.abs(foe.x - me.x) < a1.box[2] + 30 && foe.invul <= 0 && foe.onGround()) {
+&& Math.max(gl, gr) < danger && Math.abs(foe.x - me.x) < a1.box[2] + 30 && aiInv(foe, me) <= 0 && foe.onGround()) {
 this.dir = to; this.press('light', 'escLand');
 }
 }
@@ -8996,7 +8997,7 @@ const k = Math.max(1, Math.round(this.model.escN ? this.model.escHits : 3));
 return hits >= k - 1 && hits >= 1 && Math.random() < L.bait * g.bait * (this.model.escN ? 0.9 : 0.35);
 }
 juggle(me, foe, d, to) {
-if (clock > (this.jugT || 0) || foe.state !== 'launched' || foe.invul > 0.02 || foe.hp <= 0 || (foe.juggle || 0) >= 2) return false;
+if (clock > (this.jugT || 0) || foe.state !== 'launched' || aiInv(foe, me) > 0.02 || foe.hp <= 0 || (foe.juggle || 0) >= 2) return false;
 const land = aiLandTime(foe);
 let best = null, bv = 0;
 const tryKey = (key, v) => {
@@ -9026,7 +9027,7 @@ punish(me, foe, d, to, afterBlock) {
 const L = this.L;
 if (!AI_FREE.includes(me.state) || !me.onGround()) return false;
 if (this.juggle(me, foe, d, to)) return true;
-if (foe.invul > 0.02 || foe.hp <= 0) return false;
+if (aiInv(foe, me) > 0.02 || foe.hp <= 0) return false;
 let window = -1;   // 对手还要多久才能动
 if (afterBlock && foe.state === 'attack' && foe.move) window = foe.move.su + foe.move.ac + foe.move.rc - foe.t;
 else if (foe.state === 'attack' && foe.move && foe.t > foe.move.su + foe.move.ac && !foe.hitConfirmed) window = foe.move.su + foe.move.ac + foe.move.rc - foe.t;
@@ -9103,6 +9104,12 @@ else if (top === 'block' && L.read > 0.3 && Math.random() < 0.3 + 0.5 * g.okiCha
 else if (Math.random() < g.okiCharge * 0.5 * L.oki) how = 'charge';
 this.okiPlan = { how, t0: clock };
 }
+if (foe.state === 'knockdown' && foe.t > 0.05 && aiInv(foe, me) <= 0) {
+const F0 = aiFrame(me, 'l1');
+this.dir = d > F0.max - 10 ? to : d < F0.min ? -to : 0;
+if (aiInRange(F0, d, foe)) { this.dir = 0; this.press('light'); }
+return;
+}
 const P = this.okiPlan;
 if (foe.escInvul) { this.mode = 'bait'; this.modeT = clock; return; }
 if (!(foe.state === 'knockdown' || foe.state === 'getup' || foe.state === 'launched')) { this.mode = 'neutral'; this.okiPlan = null; return; }
@@ -9154,7 +9161,7 @@ if (K.role === 'proj' && d > 140 && Math.random() < L.skill * 0.06 * (0.5 + this
 const a1 = me.moves.a1, T = a1.su + a1.ac * 0.5, pm = aiPredict(me, T), pf = aiPredict(foe, T);
 const dx = Math.abs(pf.x - pm.x), dy = pf.y - pm.y, reach = a1.box[2] + 18 * (foe.size || 1) - 8;
 const slop = (1 - L.skill) * 70;
-if (dx < reach + slop && dy < 112 + a1.box[3] - 6 + slop && dy > a1.box[1] + 6 - slop && foe.invul <= 0.05 && Math.random() < 0.25 + 0.75 * L.aggr) this.press('light');
+if (dx < reach + slop && dy < 112 + a1.box[3] - 6 + slop && dy > a1.box[1] + 6 - slop && aiInv(foe, me) <= 0.05 && Math.random() < 0.25 + 0.75 * L.aggr) this.press('light');
 if (me.ch.fly && me.vy > -100 && me.y > -120 && d > 220 && Math.random() < 0.05) this.flyUntil = clock + rand(0.3, 0.9);
 }
 actValue(f, opp, key, d) {
@@ -9310,7 +9317,7 @@ const rushing = L.lead > 0 && hpRatio < -0.03 && !M.ot && M.timer < 18;
 const riskMod = rushing ? 1.6 : hpRatio < -0.2 ? 1.25 : hpRatio > 0.25 ? 0.85 : 1.0;
 const aggr = Math.min(1, L.aggr * (0.45 + g.aggr) * riskMod * (cm ? cm.aggr : 1));
 const foeBusy = foe.state === 'walk' || (foe.state === 'attack' && foe.t > foe.move.su) || foe.state === 'air';
-const go = bestKey && foe.invul <= 0.05 && Math.random() < aggr * (foeBusy ? 1 : 0.7) && bv > 18 * (1.2 - aggr);
+const go = bestKey && aiInv(foe, me) <= 0.05 && Math.random() < aggr * (foeBusy ? 1 : 0.7) && bv > 18 * (1.2 - aggr);
 if (go) { this.attacks++; return this.doAct(me, foe, d, to, bestKey); }
 const profile = aiHeroTactic(me.ch.id);
 let want = map.want * profile.range * (cm ? cm.range : 1);
@@ -9395,7 +9402,7 @@ return (q && q.role === 'proj') || (r && r.role === 'proj') || !!f.ch.inkShot;
 }
 ultWouldHit(me, foe, d, inCombo) {
 const U = AI_ULT[me.ch.ult] || {}, F = aiFrame(me, 'special');
-if (foe.invul > 0.1 || foe.hp <= 0) return false;
+if (aiInv(foe, me) > 0.1 || foe.hp <= 0) return false;
 if (U.sure && !U.sure(me, foe, d)) return false;
 if (U.heal) return true;
 const stuck = AI_HURT.includes(foe.state) || foe.state === 'getup' || foe.jailT > 0 || foe.rooted || (foe.state === 'attack' && foe.t > foe.move.su) || foe.state === 'skill';
@@ -9452,7 +9459,7 @@ const rReady = me.skill2CD <= 0, qReady = me.skillCD <= 0, roll = p => Math.rand
 if (me.pol > 0 && qReady && roll(L.skill)) { this.stopAll(); this.press('skill', 'cixian'); return true; }
 if (me.pol > 0) return false;
 const free = AI_FREE.includes(me.state) || me.state === 'air';
-if (!free || foe.invul > 0 || !this.seen || clock < (this.cxNext || 0)) return false;
+if (!free || aiInv(foe, me) > 0 || !this.seen || clock < (this.cxNext || 0)) return false;
 const counter = foe.state === 'skill' && AI_KIT[foe.skill] && AI_KIT[foe.skill].role === 'counter';
 if (rReady && me.onGround() && d > 120 && d < MAG.rMinusRange - 40 && Math.abs(foe.y - me.y) < 220 && !counter && roll(L.skill)) {
 this.stopAll(); this.press('skill2', 'cixian'); this.cxNext = clock + 0.5; return true;
@@ -9631,7 +9638,7 @@ return false;
 }
 lingqueRoute(me, foe, d, to) {
 const L = this.L, free = AI_FREE.includes(me.state) || me.state === 'air';
-if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen) return false;
+if (!free || foe.hp <= 0 || aiInv(foe, me) > 0 || !this.seen) return false;
 if (clock < (this.lqNext || 0)) return false;
 const mark = foe.needleMark || 0, rReady = me.skill2CD <= 0, qReady = me.skillCD <= 0;
 const markTime = (foe.needleMarkT !== undefined && foe.needleMarkT > 0) ? foe.needleMarkT : mark;
@@ -13191,11 +13198,11 @@ Object.assign(UI_COPY_EN, {
 "4v4v4v4 · 16人": "4v4v4v4 · 16 players",
 "5v5v5v5 · 20人": "5v5v5v5 · 20 players",
 "8v8v8v8 · 32人": "8v8v8v8 · 32 players",
-"苍龙、朱雀、玄武、白虎四队同屏混战，你是苍龙统帅：用 1/2/3 或 Tab 切换锋矢、固守、游袭战术，敌方统帅的战术不可见，最后存活的队伍夺魁！": "Azure Dragon, Vermilion Bird, Black Tortoise and White Tiger fight at once. You command the Azure Dragon: press 1/2/3 or Tab to switch between Spearhead, Hold and Raiders. Enemy tactics stay hidden. The last team standing wins.",
+"苍龙、朱雀、玄武、白虎四队同屏混战，你是苍龙统帅：用 1/2/3 或 Tab 切换锋矢、固守、游袭战术，敌方统帅的战术不可见；每人可复活一次，统帅只有一条命，最后存活的队伍夺魁！": "Azure Dragon, Vermilion Bird, Black Tortoise and White Tiger fight at once. You command the Azure Dragon: press 1/2/3 or Tab to switch between Spearhead, Hold and Raiders. Enemy tactics stay hidden. Everyone can respawn once and commanders have a single life. The last team standing wins.",
 "进入点将台挑选你的侠客，其余队友与三支敌队随机组成（5v5v5v5 恰好 20 位侠客各登场一次）。": "Pick your hero. Your teammates and the three enemy teams are chosen at random (5v5v5v5 fields all 20 unique heroes).",
 "进入点将台 · 开启四象争锋": "Enter the Draft · Start Quad Clash",
 "四象争锋 · 玩法说明": "Quad Clash · How to Play",
-"四队各四人同屏混战。你是本队统帅：按 1/2/3 或 Tab 切换锋矢、固守、游袭战术（锋矢克固守、固守克游袭、游袭克锋矢），Y 选中队友、N 分派主攻/牵制/破连。最后存活的队伍夺魁。": "Four teams of four fight at once. You command your team: press 1/2/3 or Tab to switch between Spearhead, Hold and Raiders (Spearhead beats Hold, Hold beats Raiders, Raiders beat Spearhead). Press Y to select a teammate and N to assign Main attack, Distract or Break combos. The last team standing wins.",
+"四队各四人同屏混战。你是本队统帅：按 1/2/3 或 Tab 切换锋矢、固守、游袭战术（锋矢克固守、固守克游袭、游袭克锋矢），Y 选中队友、N 分派主攻/牵制/破连。每人可复活一次，统帅只有一条命，最后存活的队伍夺魁。": "Four teams of four fight at once. You command your team: press 1/2/3 or Tab to switch between Spearhead, Hold and Raiders (Spearhead beats Hold, Hold beats Raiders, Raiders beat Spearhead). Press Y to select a teammate and N to assign Main attack, Distract or Break combos. Everyone can respawn once and commanders have a single life. The last team standing wins.",
 "覆灭": "Eliminated",
 "覆灭！": "Eliminated!",
 "夺魁": "takes first place",
@@ -13239,6 +13246,9 @@ Object.assign(UI_COPY_EN, {
 "你是统帅 · 1/2/3 或 Tab 下令": "You are the commander · press 1/2/3 or Tab to give orders",
 "统帅：选中队友（Y）": "Commander: select teammate (Y)",
 "统帅：分派任务（N）": "Commander: assign task (N)",
+"即将重返战场…（最后一条命）": "Returning to the field… (last life)",
+"阵亡 · 观战队友": "Out of lives · watching your team",
+"3v3 / 5v5（专属三层演武楼阁）/ 8v8（五层立体战场）/ 16v16 大型同屏混战。支持完整战略禁选（BP）、统帅战术与滚轮镜头缩放；人越多战场越宽、楼层越多。每人可复活一次，统帅只有一条命。": "3v3 / 5v5 (dedicated three-floor pavilion) / 8v8 (five-floor arena) / 16v16 battles on one screen, with a full ban-and-pick draft, commander tactics and mouse-wheel camera zoom. More fighters means a wider arena with more floors. Everyone can respawn once and commanders have a single life.",
 });
 Object.assign(UI_COPY_EN, {
 "AI 观战": "AI Watch",
@@ -13336,7 +13346,7 @@ Object.assign(UI_COPY_EN, {
 "同袍肉鸽 · 二十侠客斩妖列传": "Co-op Roguelike · 20-Hero Demon Hunt",
 "单骑迎战源源不断的江湖群雄，每击破一波恢复部分气血并迎战更高境界强敌，挑战个人极限连胜！": "Ride alone against an endless stream of fighters. Each wave you clear restores some HP and brings stronger foes. How long can your streak go?",
 "双方阵地各立战旗，深入敌阵夺取敌旗并护送回己方阵地即得 1 分，率先夺得 3 旗的一方获胜！": "Each side plants a flag at its base. Grab the enemy flag and bring it home for 1 point. The first side to capture 3 flags wins!",
-"支持 3v3（6人）、5v5（10人三层楼阁）、8v8（16人五层战场）、10v10（20人全侠客无镜像五层大殿）与 16v16（32人玄岳大战场）！由统帅下令，配备兵力积分、前沿复活与滚轮镜头缩放。": "Supports 3v3 (6), 5v5 (10, 3-tier pavilion), 8v8 (16, 5-tier arena), 10v10 (20 unique heroes, 5-tier grand hall) and 16v16 (32, 5-tier battlefield)! Commander orders, troop points, forward respawns and scroll-wheel camera zoom.",
+"支持 3v3（6人）、5v5（10人三层楼阁）、8v8（16人五层战场）、10v10（20人全侠客无镜像五层大殿）与 16v16（32人玄岳大战场）！由统帅下令，每人可复活一次，统帅只有一条命，另有前沿复活与滚轮镜头缩放。": "Supports 3v3 (6), 5v5 (10, 3-tier pavilion), 8v8 (16, 5-tier arena), 10v10 (20 unique heroes, 5-tier grand hall) and 16v16 (32, 5-tier battlefield)! Commander orders, one respawn per fighter (commanders get a single life), forward respawns and scroll-wheel camera zoom.",
 "10v10 全 20 位侠客无镜像齐上阵；16v16 自动启用镜像选人，减少等待即刻开战。": "10v10 fields all 20 unique heroes without mirrors; 16v16 enables cross-team mirror picks so the battle starts fast.",
 "进入点将台挑选最擅长的侠客单枪匹马迎战无尽车轮试炼。": "Head to the draft, pick the hero you play best, and take on the endless trial alone.",
 "进入点将台 (BP) · 开启夺旗争锋": "Go to the draft (BP) · Start Capture the Flag",
@@ -15720,6 +15730,7 @@ try { window.focus(); } catch (e) {}
 let ctx = cv.getContext('2d');
 let W = 0, H = 0, DPR = 1;
 const STEP = 1 / 120;                 // 逻辑每秒 120 次，在高刷屏上更顺
+const GAME_SPEED = 1.2;
 let STAGE_W = 1800;
 const WALL = 60;
 const GRAV = 2700, WALK = 280, JUMP_V = 980, DJUMP_V = 860, DASH_V = 840, DASH_T = 0.2, BUF = 0.16;
@@ -26659,7 +26670,7 @@ Object.assign(this, { x, y: 0, vx: 0, vy: 0, face: (this.idx % 2 === 0) ? 1 : -1
 skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, escMode: '', escT: 0, bbX: 0, bbT: 0, twinT: 0, diveAir: false, diveChained: false, skAir: false, flyT: this.ch.fly || 0, flying: false, armorT: 0, armorHits: 0, parryT: 0, thunderGuardT: 0, buffT: 0, sinceHit: 0, regenLeft: Math.round(135 * HERO_HP_SCALE), spN: 0, spPose: null, rooted: false, slowT: 0, defDebuffT: 0, swapFreezeT: 0,
 notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, needleMarkT: 0, lqNormHits: 0, shadowMarks: 0, shadowMarkT: 0, shadowExecTarget: -1, shadowExecT: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0, pol: 0, polT: 0, magN: 0, magTg: -1, mChain: 0, mT: 0, sw: null, squashT: 0,
 guard: this.maxGuard, sinceBlock: 0,
-state: 'idle', t: 0, move: null, invul: 0, hitInvulBy: -1, hitInvulEnd: 0, lastHitByIdx: -1, lastHitByT: -99, lastLandIdx: -1, lastLandT: -99, comboT0: -99, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
+state: 'idle', t: 0, move: null, invul: 0, hitGuard: {}, otgBy: [], jugBy: [], lastHitByIdx: -1, lastHitByT: -99, lastLandIdx: -1, lastLandT: -99, comboT0: -99, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
 stance: 0, stanceUnlocked: false, stanceT: 0, relicStance: 0, relicStanceUnlocked: false, relicStanceT: 0, relicStanceCd: 0, relicCounterT: 0, badgeId: '', badgeTier: '', badgeDashT: 0,
 badgeLinkT: 0, badgePressureT: 0, badgePressureSkill: 0, badgeRiposteT: 0, badgeBreakT: 0, badgeAirSkillT: 0, badgeExitT: 0, badgeAirUsed: 0, badgeAirSkillUsed: 0,
 ballGuardBreakT: 0,
@@ -29820,7 +29831,7 @@ break;
 case 'knockdown': {
 const kdDur = (f.knockdownDur != null) ? f.knockdownDur : (f.quickGetup ? 0.22 : 0.6);
 if (f.t >= kdDur && f.hp > 0 && M.phase !== 'end') {
-f.state = 'getup'; f.t = 0; f.invul = 0.35; f.comboHits = 0; f.juggle = 0;
+f.state = 'getup'; f.t = 0; f.invul = 0.35; f.comboHits = 0; f.juggle = 0; f.otgBy = [];
 if (f.quickGetup) f.quickGetupPhase = true;
 f.quickGetup = false; delete f.knockdownDur;
 f.beaconT = 0.5;
@@ -29978,7 +29989,7 @@ dust(f.x, f.y, 12); SFX.dash();
 addP({ type: 'text', text: '受身', x: f.x, y: f.y - 70, life: 0.55, max: 0.55, rgb: '170,230,255' });
 return;
 }
-f.state = 'knockdown'; f.t = 0; f.vx *= 0.3; f.invul = 99; f.rot = 0;
+f.state = 'knockdown'; f.t = 0; f.vx *= 0.3; f.invul = 99; f.rot = 0; f.otgBy = [];   // 倒地整段无敌，但留出几下补刀（otgOpen）
 dust(f.x, f.y, 12); shake = Math.max(shake, 5); SFX.thud();
 return;
 }
@@ -30010,21 +30021,31 @@ return [Math.min(x0, x1), Math.min(y0, y1), Math.max(x0, x1), Math.max(y0, y1)];
 }
 function hurtbox(f) {
 const s = f.size || 1;
-if (f.state === 'knockdown') return [f.x - 40 * s, f.y - 20 * s, f.x + 40 * s, f.y];
+if (f.state === 'knockdown') return [f.x - 44 * s, f.y - 48 * s, f.x + 44 * s, f.y];   // 躺着的人框高一点，站着的普攻也能补到刀
 if (f.state === 'launched' || f.state === 'held') return [f.x - 28 * s, f.y - 92 * s, f.x + 28 * s, f.y + 4];
 if (f.state === 'block' || f.state === 'blockstun' || f.state === 'getup') return [f.x - 18 * s, f.y - 92 * s, f.x + 18 * s, f.y];
 return [f.x - 18 * s, f.y - 112 * s, f.x + 18 * s, f.y];
 }
 const overlap = (a, b) => a[0] < b[2] && a[2] > b[0] && a[1] < b[3] && a[3] > b[1];
-function markHitInvul(def, att) {
-def.hitInvulBy = att ? att.idx : -1;
-def.hitInvulEnd = clock + def.invul;
+function hitInvul(def, att, dur) {
+if (isMulti() && att && att !== def) { (def.hitGuard || (def.hitGuard = {}))[att.idx] = clock + dur; return; }
+def.invul = dur;
 }
-function invulVs(def, att) {
-if (!(def.invul > 0)) return false;
-if (!att || def.hitInvulBy === undefined || def.hitInvulBy < 0 || att.idx === def.hitInvulBy || !isMulti()) return true;
-return def.invul > (def.hitInvulEnd - clock) + 0.03;
+const OTG = { mul: 0.7, solo: 1, team: 3 };
+function otgOpen(def, att) {
+if (def.state !== 'knockdown' || !(def.hp > 0) || def.escInvul || def.quickGetup || def.quickGetupPhase) return false;
+if (typeof cujuOn === 'function' && cujuOn()) return false;   // 墨球蹴鞠不比气血，倒地照旧整段无敌，大家去抢球
+const by = def.otgBy || [];
+if (!isMulti()) return by.length < OTG.solo;
+return by.length < OTG.team && !(att && by.includes(att.idx));
 }
+function invulLeft(def, att) {
+const g = att && def.hitGuard ? def.hitGuard[att.idx] : 0;
+const own = g > clock ? g - clock : 0;
+if (def.state === 'knockdown' && otgOpen(def, att)) return own;
+return Math.max(own, def.invul > 0 ? def.invul : 0);
+}
+function invulVs(def, att) { return invulLeft(def, att) > 0; }
 function multiTargetScale(hitIndex) {
 if (hitIndex <= 0) return 1;
 const total = typeof allFighters === 'function' ? allFighters().length : 2;
@@ -30247,7 +30268,7 @@ echoCloneAttack(f, hb, m, 'basic');
 const hitSet = f.hitTargets || (f.hitTargets = []);
 const targets = isMulti()
 ? findTargetsInBox(f, hb, { exclude: hitSet })
-: (foe && foe.invul <= 0 && foe.hp > 0 && !hitSet.includes(foe.idx) && overlap(hb, hurtbox(foe)) ? [foe] : []);
+: (foe && !invulVs(foe, f) && foe.hp > 0 && !hitSet.includes(foe.idx) && overlap(hb, hurtbox(foe)) ? [foe] : []);
 if (!targets.length) return;
 const primary = targets[0];
 if (!m.isProj && !m.ult && !m.unblockable && primary.state === 'attack' && primary.move && primary.move.box && !primary.hitDone) {
@@ -30365,6 +30386,10 @@ m = { ...m, kb: [m.kb[0] * 1.2, m.kb[1]] };
 if (att.ch.passive === 'magnet' && att.state === 'attack' && att.pol && !m.isProj && !m.ult) m = magHit(att, def, m);   // 磁仙的普攻按正负极改（03-skills.js）
 def.drinkT = 0;
 if (isClient()) { predictHit(att, def, m, pt); return; }   // 联机时由房主判定；加入方先播放自己出手的效果
+if (def.state === 'knockdown' && def.hp > 0 && att !== def && !cujuOn()) {
+(def.otgBy || (def.otgBy = [])).push(att.idx);
+m = { ...m, dmg: m.dmg * OTG.mul, launch: false, knock: false, spike: false, root: false, hold: false, kb: [0, 0], noStun: true, unblockable: true, otg: true };
+}
 const fx = m.dir || att.face, sx = m.srcX !== undefined ? m.srcX : att.x;
 const impactSide = Math.sign(sx - def.x) || -fx || def.face;
 const backAttack = !!m.backAttack && impactSide !== def.face;
@@ -30470,6 +30495,10 @@ if (def.guard <= 0 && scOn() && scAny(def, 'brk', att)) { hitVisual(ev); netEmit
 if (def.guard <= 0) {
 def.guard = 0;
 if (scOn()) scFire(att, 'gb', def);
+const gbDmg = Math.max(0, m.dmg * (1 - chipFrac * (bm ? bm.chip : 1))) / ((def.ch && def.ch.stat && def.ch.stat.defRating) || 1);
+const hpBeforeGb = def.hp;
+def.hp = Math.max(1, def.hp - gbDmg); def.sinceHit = 0; def.lagDelay = 0.5;
+ev.dd += hpBeforeGb - def.hp;
 def.state = 'hitstun'; def.t = 0; def.stun = 0.85; def.rooted = true;
 def.vx = fx * 140;
 def.ballGuardBreakT = Math.max(def.ballGuardBreakT || 0, 0.85);
@@ -30683,7 +30712,7 @@ if (typeof applyCombatBadgeBlock === 'function') applyCombatBadgeBlock(att, def)
 def.vy = 0;
 def.y = gndY(def);
 def.rot = 0;
-def.invul = 0.45; markHitInvul(def, att);
+hitInvul(def, att, 0.45);
 def.spiked = false;
 def.juggle = 0;
 def.comboHits = 0;
@@ -30695,19 +30724,23 @@ SFX.thud();
 addP({ type: 'text', text: '格挡卸力 · 快速起身', x: def.x, y: def.y - 110, life: 0.85, max: 0.85, rgb: '170,220,255' });
 }
 else if (m.noStun && def.hp > 0) { /* 不僵直：只掉血，对手手上的动作照常 */ }
-else if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.plat = -1; def.y = Math.min(def.y - 1, -1); def.invul = 1.5; markHitInvul(def, att); def.spiked = false; def.juggle = 0; ev.knock = true; }
+else if (m.knock && def.hp > 0) { def.state = 'launched'; def.t = 0; def.vx = m.kb[0] * fx * 0.5 * Math.sqrt(massRatio); def.vy = -300; def.plat = -1; def.y = Math.min(def.y - 1, -1); hitInvul(def, att, 1.5); def.spiked = false; def.juggle = 0; ev.knock = true; }
 else if (m.root && def.hp > 0) { def.state = 'hitstun'; def.t = 0; def.stun = m.stun; def.vx = 0; def.rooted = true; ev.root = true; }
 else if (m.hold) { def.state = 'held'; }
 else {
 const air = airH(def) > 2 || def.state === 'launched' || def.state === 'held';
 if (m.launch || air || def.hp <= 0) {
+if (!(def.juggle > 0)) def.jugBy = [];
+if (!def.jugBy) def.jugBy = [];
+if (!def.jugBy.includes(att.idx)) def.jugBy.push(att.idx);
 def.juggle++;
-if (def.juggle >= 3 && def.hp > 0) {
+const jugCap = isMulti() ? Math.min(5, 2 + def.jugBy.length) : 3;
+if (def.juggle >= jugCap && def.hp > 0) {
 def.state = 'launched'; def.t = 0;
 def.vx = fx * 560 * Math.min(1.4, Math.max(0.7, Math.sqrt(massRatio)));
 def.vy = -180;
 def.plat = -1;
-def.invul = 0.65; markHitInvul(def, att);
+def.invul = 0.65;   // 浮空脱离是挨打的人自己挣脱，防所有人
 def.spiked = false;
 def.airRecover = true;
 def.juggle = 0;
@@ -31512,7 +31545,7 @@ if (ROLL.on && M.mode === 'net') return rollTick(real);
 if (slowmo > 0) slowmo -= real;
 if (REPLAY.on) return replayTick(real);
 if (trainingInspectTick(real)) return;
-acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
+acc += real * GAME_SPEED * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
 if (acc > STEP * 5) acc = STEP * 5;
 let n = 0;
 while (acc >= STEP && n < 5) { step(); acc -= STEP; n++; }
@@ -32244,7 +32277,7 @@ if (REPLAY.on && M.phase !== 'end' && +seg.frames > 0 && replayFrameNo >= +seg.f
 }
 function replayTick(real) {
 if (REPLAY.paused || M.phase === 'end') return;
-REPLAY.frameAcc += real * Math.max(1, Math.min(120, REPLAY.hz || 120)) * REPLAY.speed;
+REPLAY.frameAcc += real * Math.max(1, Math.min(120, REPLAY.hz || 120)) * REPLAY.speed * GAME_SPEED;
 let n = 0;
 while (REPLAY.frameAcc >= 1 && n < 48) { replayFrame(); REPLAY.frameAcc -= 1; n++; if (M.phase === 'end' || !REPLAY.on) break; }
 if (n >= 48) REPLAY.frameAcc = 0;
@@ -32368,7 +32401,7 @@ if (document.hidden && backgroundLocalActive() && (bgWorker || bgAiTimer)) { /* 
 else if (ROLL.on && M.mode === 'net') rollTick(real);
 else if (REPLAY.on) replayTick(real);
 else if (!trainingInspectTick(real)) {
-acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
+acc += real * GAME_SPEED * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
 if (acc > STEP * 5) acc = STEP * 5;
 let n = 0;
 while (acc >= STEP && n < 5) { step(); acc -= STEP; n++; }
@@ -32840,7 +32873,7 @@ ctx.moveTo(left + w + 8, top - 4); ctx.quadraticCurveTo(left + w, top + 3, left 
 ctx.stroke();
 }
 }
-if (mp === BATTLE_MAP || mp === BATTLE5_MAP) {
+if (battleMapOn() && mp === battleMapDef()) {
 for (const perk of M.battlePerks || []) {
 if (perk.cooldown > 0) continue;
 const y = perk.y - 30, r = perk.large ? 15 : 9;
@@ -39216,8 +39249,8 @@ const XIWU_MODE_INFO = {
 cpu: { title: '对战电脑 · 玩法说明', body: '标准三局两胜（BO3）1v1 对决。先在上方选好电脑境界与战场规则（常规标准已融合动态天机异变），点击「进入选人 · 开战」即可开打；也可观战 AI 对决或开启新手教学。' },
 tag3: { title: '3v3 车轮战 · 玩法说明', body: '双方各选三名侠客并排定先锋、中坚、大将顺序。每局胜者保留残血小幅调息迎战下一位对手，先把对方三将全数击破的一方获胜。' },
 watch2v2: { title: '2v2 组队 · 玩法说明', body: '四人同屏大场地混战（2600px 宽）。支持「你 + 电脑队友」、本地双人打两电脑、本地四人互打，以及全 AI 天道演武观战。' },
-melee: { title: '群雄会战 · 玩法说明', body: '3v3 / 5v5（专属三层演武楼阁）/ 8v8（五层立体战场）/ 16v16 大型同屏混战。支持完整战略禁选（BP）、统帅战术、兵力积分、战损复活与滚轮镜头缩放。' },
-quad: { title: '四象争锋 · 玩法说明', body: '四队各四人同屏混战。你是本队统帅：按 1/2/3 或 Tab 切换锋矢、固守、游袭战术（锋矢克固守、固守克游袭、游袭克锋矢），Y 选中队友、N 分派主攻/牵制/破连。最后存活的队伍夺魁。' },
+melee: { title: '群雄会战 · 玩法说明', body: '3v3 / 5v5（专属三层演武楼阁）/ 8v8（五层立体战场）/ 16v16 大型同屏混战。支持完整战略禁选（BP）、统帅战术与滚轮镜头缩放；人越多战场越宽、楼层越多。每人可复活一次，统帅只有一条命。' },
+quad: { title: '四象争锋 · 玩法说明', body: '四队各四人同屏混战。你是本队统帅：按 1/2/3 或 Tab 切换锋矢、固守、游袭战术（锋矢克固守、固守克游袭、游袭克锋矢），Y 选中队友、N 分派主攻/牵制/破连。每人可复活一次，统帅只有一条命，最后存活的队伍夺魁。' },
 ctf: { title: '夺旗争锋 · 玩法说明', body: '2v2–8v8 团队夺旗战。深入敌阵夺取敌旗并护送回己方阵地得分，率先夺得 3 旗的一方获胜。' },
 gauntlet: { title: '无尽试炼 · 玩法说明', body: '单骑迎战逐波递增的江湖群雄，每波获胜小幅调息并迎战更高境界强敌，挑战个人极限连胜。' },
 cuju: { title: '墨球蹴鞠 · 玩法说明', body: '双方不扣气血，比谁先把墨球打进对方球门（默认先 3 球，可选 5/7 球）。普攻与技能可抽射/挑射墨球，格挡可扑救，精准格挡触发神扑！' },
@@ -42808,7 +42841,7 @@ send(msg);
 }
 function rollTick(real) {
 const R = ROLL;
-acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
+acc += real * GAME_SPEED * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
 if (acc > STEP * 5) acc = STEP * 5;
 let n = 0;
 while (acc >= STEP && n < 5) { if (!rollAdvance()) { acc = 0; break; } acc -= STEP; n++; }
@@ -48553,14 +48586,22 @@ if (opts.space) bastionSwitchSpace(opts.space, opts.tier || 1);
 bastionSyncHUD();
 }
 const meleeOn = () => M.mode === 'melee' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && (REPLAY.m.mode === 'melee' || REPLAY.m.room === 'melee'))) || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'melee');
+const TEAM_LIVES = 2, CMDR_LIVES = 1;
+const teamLivesOf = f => (typeof cmdIs === 'function' && cmdIs(f)) ? CMDR_LIVES : TEAM_LIVES;
+function teamLivesLeft(S, f) { return Math.max(0, teamLivesOf(f) - (S.deaths[f.idx] || 0)); }
+function teamTickets(S, team) { return sideFighters(team).reduce((n, f) => n + teamLivesLeft(S, f), 0); }
 function meleeRoundInit() {
 const sz = clamp(M.teamSize || 5, 3, 16);
 M.melee = {
 size: sz,
-tickets: [sz * 3, sz * 3],
-maxTickets: sz * 3,
+tickets: [0, 0],
+maxTickets: 0,
 respawn: new Array(MAX_FIGHTERS).fill(0),
+deaths: new Array(MAX_FIGHTERS).fill(0),
 };
+const S = M.melee;
+S.tickets = [teamTickets(S, 0), teamTickets(S, 1)];
+S.maxTickets = Math.max(S.tickets[0], S.tickets[1]);
 M.timer = 180;
 }
 function meleeMatch() {
@@ -48573,14 +48614,14 @@ for (const f of fs) {
 if (f.hidden) continue;
 if (f.hp <= 0) {
 if (S.respawn[f.idx] <= 0) {
-const team = fighterTeam(f);
-S.tickets[team] = Math.max(0, S.tickets[team] - 1);
-S.respawn[f.idx] = 3.2;
+S.deaths[f.idx] = (S.deaths[f.idx] || 0) + 1;
+const canReturn = teamLivesLeft(S, f) > 0;
+S.respawn[f.idx] = canReturn ? 3.2 : 1e9;   // 命用完了：不再复活
 if (typeof cmdOnFall === 'function') cmdOnFall(f);
-if (!RESIM && f.idx === localIdx()) say('即将重返战场…', 1.1, 'go');
+if (!RESIM && f.idx === localIdx()) say(canReturn ? '即将重返战场…（最后一条命）' : '阵亡 · 观战队友', 1.3, 'go');
 } else {
 S.respawn[f.idx] -= STEP;
-if (S.respawn[f.idx] <= 0 && S.tickets[fighterTeam(f)] > 0) {
+if (S.respawn[f.idx] <= 0 && teamLivesLeft(S, f) > 0) {
 const team = fighterTeam(f);
 const slot = Math.floor(f.idx / 2);
 const bm = typeof battleMapDef === 'function' ? battleMapDef() : null;
@@ -48606,8 +48647,10 @@ if (typeof cmdAfterReset === 'function') cmdAfterReset(f);
 }
 }
 }
+S.tickets[0] = teamTickets(S, 0); S.tickets[1] = teamTickets(S, 1);
 if (S.tickets[0] <= 0 || S.tickets[1] <= 0 || M.timer <= 0) {
-const winner = S.tickets[0] > S.tickets[1] ? 0 : S.tickets[1] > S.tickets[0] ? 1 : -1;
+const hp = t => sideFighters(t).reduce((n, f) => n + Math.max(0, f.hp), 0);
+const winner = S.tickets[0] > S.tickets[1] ? 0 : S.tickets[1] > S.tickets[0] ? 1 : hp(0) > hp(1) ? 0 : hp(1) > hp(0) ? 1 : -1;
 M.phase = 'ko'; M.t = 0; M.koWinner = winner;
 sayNet(winner < 0 ? '平手' : winner === localTeam() ? '大军凯旋！' : '惜败收兵', 1.4, 'big', 'gong');
 }
@@ -48842,7 +48885,6 @@ const QUAD_TEAMS = [
 { n: '玄武', rgb: '181,140,255', hex: '#b58cff' },
 { n: '白虎', rgb: '255,198,90', hex: '#ffc65a' },
 ];
-const QUAD_TICKETS_PER_HERO = 3;
 const QUAD_MATCH_TIME = 210;
 const QUAD_RESPAWN_TIME = 3.2;
 const teamHexOf = f => quadOn() ? (QUAD_TEAMS[fighterTeam(f)] || QUAD_TEAMS[0]).hex : (fighterTeam(f) === localTeam() ? '#6fe0ff' : '#ff6470');
@@ -48872,16 +48914,19 @@ f.face = p.face;
 }
 function quadRoundInit() {
 const sz = clamp(M.teamSize || 4, 2, 8);
-const tk = sz * QUAD_TICKETS_PER_HERO;
 M.quad = {
 size: sz,
-tickets: [tk, tk, tk, tk],
-maxTickets: tk,
+tickets: [0, 0, 0, 0],
+maxTickets: 0,
 respawn: new Array(MAX_FIGHTERS).fill(0),
 wait: new Array(MAX_FIGHTERS).fill(false),   // 倒下了、正在等复活
+deaths: new Array(MAX_FIGHTERS).fill(0),     // 倒下过几次：每人能复活一次，统帅只有一条命（规则在 22-modes-13-melee.js 的 TEAM_LIVES）
 out: [false, false, false, false],           // 覆灭的队伍
 dmg: [0, 0, 0, 0],
 };
+const S = M.quad;
+for (let t = 0; t < 4; t++) S.tickets[t] = teamTickets(S, t);
+S.maxTickets = Math.max(...S.tickets);
 M.timer = QUAD_MATCH_TIME;
 }
 function quadTeamAlive(team) { return sideFighters(team).filter(f => f.hp > 0).length; }
@@ -48908,13 +48953,14 @@ if (S.out[team]) continue;
 if (f.hp <= 0) {
 if (!S.wait[f.idx]) {
 S.wait[f.idx] = true;
-S.tickets[team] = Math.max(0, S.tickets[team] - 1);
-S.respawn[f.idx] = QUAD_RESPAWN_TIME;
-if (!RESIM && f.idx === localIdx()) say('即将重返战场…', 1.1, 'go');
+S.deaths[f.idx] = (S.deaths[f.idx] || 0) + 1;
+const canReturn = teamLivesLeft(S, f) > 0;
+S.respawn[f.idx] = canReturn ? QUAD_RESPAWN_TIME : 1e9;   // 命用完了：不再复活
+if (!RESIM && f.idx === localIdx()) say(canReturn ? '即将重返战场…（最后一条命）' : '阵亡 · 观战队友', 1.3, 'go');
 if (typeof cmdOnFall === 'function') cmdOnFall(f);
 } else {
 S.respawn[f.idx] -= STEP;
-if (S.respawn[f.idx] <= 0 && S.tickets[team] > 0) {
+if (S.respawn[f.idx] <= 0 && teamLivesLeft(S, f) > 0) {
 const prevRelic = f.relicStance;
 S.wait[f.idx] = false;
 quadSpawn(f, Math.floor(f.idx / 4));
@@ -48928,6 +48974,7 @@ if (typeof cmdAfterReset === 'function') cmdAfterReset(f);
 }
 }
 }
+for (let t = 0; t < 4; t++) S.tickets[t] = teamTickets(S, t);
 for (let t = 0; t < 4; t++) {
 if (S.out[t]) continue;
 if (S.tickets[t] <= 0 && quadTeamAlive(t) === 0) {
@@ -54422,7 +54469,7 @@ const now = performance.now();
 const dt = Math.min(0.1, (now - lastBgTime) / 1000);
 lastBgTime = now;
 if (!isAiVsAi()) { simTick(dt); return; }
-acc += dt * (slowmo > 0 ? 0.28 : 1);
+acc += dt * GAME_SPEED * (slowmo > 0 ? 0.28 : 1);
 if (acc > STEP * 10) acc = STEP * 10;
 let n = 0;
 while (acc >= STEP && n < 10) {

@@ -355,7 +355,7 @@ function drawMapGround() {
       ctx.stroke();
     }
   }
-  if (mp === BATTLE_MAP || mp === BATTLE5_MAP) {
+  if (battleMapOn() && mp === battleMapDef()) {
     for (const perk of M.battlePerks || []) {
       if (perk.cooldown > 0) continue;
       const y = perk.y - 30, r = perk.large ? 15 : 9;

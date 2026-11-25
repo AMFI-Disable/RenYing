@@ -253,7 +253,7 @@ function rollSend() {
 }
 function rollTick(real) {
   const R = ROLL;
-  acc += real * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
+  acc += real * GAME_SPEED * (slowmo > 0 ? 0.28 : 1) * cineSpeed();
   if (acc > STEP * 5) acc = STEP * 5;
   let n = 0;
   while (acc >= STEP && n < 5) { if (!rollAdvance()) { acc = 0; break; } acc -= STEP; n++; }

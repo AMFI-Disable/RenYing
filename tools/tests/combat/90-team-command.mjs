@@ -10,7 +10,7 @@ export default [
       if (allFighters().length !== 32) return fail('Expected 32 visible fighters, got ' + allFighters().length);
       if (sideFighters(0).length !== 16 || sideFighters(1).length !== 16) return fail('Teams are not 16 and 16');
       if (STAGE_W < 5000) return fail('16v16 arena is too small: ' + STAGE_W);
-      if (M.melee.tickets[0] !== 48 || M.melee.tickets[1] !== 48) return fail('Expected 48 tickets per team');
+      if (M.melee.tickets[0] !== 31 || M.melee.tickets[1] !== 31) return fail('Expected 31 lives per team (15 fighters x 2 + a one-life commander), got ' + M.melee.tickets);
       if (new Set(sideFighters(0).map(f => f.chIdx)).size !== 16 || new Set(sideFighters(1).map(f => f.chIdx)).size !== 16) return fail('Quick 16v16 reuses heroes on the same team');
       M.phase = 'fight';
       for (let i = 0; i < 600; i++) step();
@@ -74,13 +74,15 @@ export default [
       const mate = FIGHTERS[4];
       if (findTargetsInBox(A, [mate.x - 50, mate.y - 120, mate.x + 50, mate.y], {}).includes(mate)) return fail('A teammate is hittable');
       // 兵力：打倒一个扣一点
+      const victim = FIGHTERS[10];
+      if (victim.hp <= 0) { victim.reset(victim.x); M.quad.wait[victim.idx] = false; M.quad.deaths[victim.idx] = 0; updateMatch(); }   // 前面混战里可能已经倒下在等复活
       const before = M.quad.tickets[2];
-      const victim = FIGHTERS[10]; victim.invul = 0; victim.hp = 1;
-      applyHit(A, victim, { dmg: 50, kb: [100, -100], stun: 0.3, hs: 0.05 }, [victim.x, victim.y - 40]);
+      victim.invul = 0; victim.hp = 1;
+      applyHit(A, victim, { dmg: 50, kb: [100, -100], stun: 0.3, hs: 0.05, unblockable: true }, [victim.x, victim.y - 40]);
       updateMatch();
       if (M.phase !== 'fight' || M.quad.tickets[2] !== before - 1) return fail('Quad did not debit one ticket');
       // 把三方的兵力清零并打倒全部：只剩你这一队
-      for (const t of [1, 2, 3]) { M.quad.tickets[t] = 0; for (const f of sideFighters(t)) f.hp = 0; }
+      for (const t of [1, 2, 3]) for (const f of sideFighters(t)) { M.quad.deaths[f.idx] = teamLivesOf(f) - 1; M.quad.wait[f.idx] = false; f.hp = 0; }
       updateMatch();
       if (M.phase !== 'ko' || M.koWinner !== 0) return fail('The last team standing did not win');
       endRound();
@@ -88,12 +90,14 @@ export default [
       if (M.quad.rank[0] !== 0) return fail('Ranking is wrong');
       // 全军覆没：你这队没了，立刻结束，名次里没有你的第一
       startQuad(4, 0, 'normal'); M.phase = 'fight';
-      M.quad.tickets[0] = 0; for (const f of sideFighters(0)) f.hp = 0;
+      for (const f of sideFighters(0)) { M.quad.deaths[f.idx] = teamLivesOf(f) - 1; f.hp = 0; }
       updateMatch();
       if (M.phase !== 'ko' || M.koWinner === 0) return fail('Losing the whole team did not end the match with another winner');
       // 时间到：兵力多的赢
       startQuad(4, 0, 'normal'); M.phase = 'fight';
-      M.quad.tickets = [5, 9, 7, 3]; M.timer = 0.001;
+      // 兵力 = 剩下的命：每队有几个普通侠客已经用掉了复活（苍龙 2 人、朱雀 0、玄武 1、白虎 3）
+      [2, 0, 1, 3].forEach((n, t) => sideFighters(t).filter(f => !cmdIs(f)).slice(0, n).forEach(f => { M.quad.deaths[f.idx] = 1; }));
+      M.timer = 0.001;
       updateMatch();
       if (M.phase !== 'ko' || M.koWinner !== 1) return fail('Time-up did not rank by tickets, winner ' + M.koWinner);
       endRound();
@@ -135,11 +139,21 @@ export default [
       if (seen.size < 3) return fail('Enemy commander is not random: ' + seen.size + ' distinct picks in 40 rounds');
       startMelee(8, 0, 'normal', 'normal'); M.phase = 'fight';
       const c = FIGHTERS[M.cmd.team[1].cmdr];
+      // 统帅只有一条命：倒下就不再回来；普通侠客能复活一次，第二次倒下就出局
+      const t0 = M.melee.tickets[1];
       c.hp = 0; updateMatch();
-      c.hp = 0; for (let i = 0; i < 400; i++) { M.melee.respawn[c.idx] -= 0.01; updateMatch(); if (c.hp > 0) break; }
-      if (c.hp <= 0) return fail('Commander did not respawn');
-      const base2 = Math.round(c.ch.stat.hp * ((BAL[c.ch.id] || {}).hp || 1) * HERO_HP_SCALE);
-      if (c.maxHp !== Math.round(base2 * CMD_HP_BONUS)) return fail('Commander lost the HP bonus after respawn');
+      for (let i = 0; i < 600; i++) { c.hp = Math.min(c.hp, 0); updateMatch(); if (c.hp > 0) break; }
+      if (c.hp > 0) return fail('The commander respawned, but a commander has only one life');
+      if (M.melee.tickets[1] !== t0 - 1) return fail('A fallen commander should cost exactly one ticket');
+      const s = sideFighters(1).find(f => f !== c);
+      s.hp = 0; updateMatch();
+      for (let i = 0; i < 600 && s.hp <= 0; i++) updateMatch();
+      if (s.hp <= 0) return fail('A regular fighter did not use their one respawn');
+      if (s.hp !== s.maxHp) return fail('Respawned fighter did not return at full HP');
+      s.hp = 0; updateMatch();
+      for (let i = 0; i < 600; i++) { updateMatch(); if (s.hp > 0) break; }
+      if (s.hp > 0) return fail('A regular fighter respawned twice');
+      if (M.melee.tickets[1] !== t0 - 3) return fail('Tickets should track remaining lives: ' + M.melee.tickets[1] + ' vs ' + (t0 - 3));
       toMenu();
       return { pass: true };
     })()`
@@ -425,6 +439,41 @@ export default [
           if (!Number.isFinite(f.x) || !Number.isFinite(f.y) || !Number.isFinite(f.hp)) return fail(sz + 'v' + sz + ': NaN state on fighter ' + f.idx);
         }
       }
+      toMenu();
+      return { pass: true };
+    })()`
+  },
+  {
+    name: 'Team-fight arenas scale with the head count: bigger battles get wider multi-floor maps with spirit perks on them',
+    fn: `(() => {
+      const fail = error => ({ pass: false, error });
+      let lastW = 0;
+      for (const n of [5, 8, 10, 16]) {
+        startMelee(n, 0, 'normal', 'normal');
+        const bm = battleMapDef();
+        if (!bm || STAGE_W !== bm.w) return fail(n + 'v' + n + ' has no sized battle map (STAGE_W ' + STAGE_W + ')');
+        if (bm.w < lastW) return fail(n + 'v' + n + ' map is narrower than a smaller battle: ' + bm.w + ' < ' + lastW);
+        lastW = bm.w;
+        for (const p of bm.stairs) if (Math.min(p.bottomX, p.topX) < WALL || Math.max(p.bottomX, p.topX) > bm.w - WALL) return fail('A stair sticks out of the ' + n + 'v' + n + ' arena');
+        if (!(M.battlePerks || []).length) return fail(n + 'v' + n + ' arena has no spirit perks');
+      }
+      startQuad(8, 0, 'normal');
+      if (battleMapDef() !== BATTLE16_MAP) return fail('8-per-team Quad Clash should use the 32-player battlefield');
+      toMenu();
+      return { pass: true };
+    })()`
+  },
+  {
+    name: 'Game pace: the simulation runs GAME_SPEED times faster than real time',
+    fn: `(() => {
+      const fail = error => ({ pass: false, error });
+      if (!(GAME_SPEED > 1 && GAME_SPEED <= 1.5)) return fail('GAME_SPEED out of range: ' + GAME_SPEED);
+      startMatch('cpu', 'cpu', [0, 1]); showScreen(null); paused = false; M.phase = 'fight';
+      slowmo = 0; hitstop = 0; superFreeze = 0; cine.t = -1; cine.owner = null; if (typeof swapFreezeTimer !== 'undefined') swapFreezeTimer = 0;   // 只量正常节奏，不算慢镜头和大招特写
+      const c0 = clock; acc = 0;
+      for (let i = 0; i < 100; i++) simTick(1 / 100);
+      const ratio = (clock - c0) / 1;
+      if (Math.abs(ratio - GAME_SPEED) > 0.03) return fail('One real second advanced ' + ratio.toFixed(3) + ' game seconds');
       toMenu();
       return { pass: true };
     })()`
