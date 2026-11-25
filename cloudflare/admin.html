@@ -185,10 +185,8 @@
   /* 经济数值 */
   fieldset.grp { border: 1px solid var(--line); border-radius: 10px; padding: 4px 12px 8px; margin: 12px 0 0; min-width: 0; }
   fieldset.grp legend { font-family: var(--title); font-size: 16px; color: var(--gold2); padding: 0 6px; }
-  .cfgrow { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(150px, 1fr) minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 8px 0 8px 10px; border-bottom: 1px dashed var(--line); border-left: 2px solid transparent; }
+  .cfgrow { display: grid; grid-template-columns: minmax(0, 1.4fr) minmax(150px, 1fr) minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 8px 0; border-bottom: 1px dashed var(--line); }
   .cfgrow:last-of-type { border-bottom: 0; }
-  .cfgrow.mod { border-left-color: rgba(233, 196, 106, .55); }
-  .cfgrow.dirty { border-left-color: var(--ok); background: linear-gradient(90deg, rgba(116, 217, 173, .07), transparent 60%); }
   .cfgrow label { font-size: 13.5px; }
   .cfgin { display: flex; align-items: center; gap: 8px; }
   .cfgin input { max-width: 140px; }
@@ -619,7 +617,7 @@ async function vHome() {
       ${tile('市场在卖', unit(s.open, '单'), '玩家挂出来的')}
       ${tile('24 小时成交', unit(s.deals24, '单'), '成交额 ' + fmtN(s.dealInk24) + ' 墨锭')}
       ${tile('封禁 / 软删', H`${fmtN(s.banned)}<small>封</small> / ${fmtN(s.deleted || 0)}<small>删</small>`, '处罚与回收站')}
-      ${tile('经济数值', s.cfgId ? '已调整' : '默认', s.cfgId ? '改过' : '没改过')}
+      ${tile('经济数值', '在线可调', '价格与爆率配置')}
     </div>
     ${(S.role === 'econ' || S.role === 'all') ? H`<div class="card"><div class="row between wrap"><h2>全服找回去向不明的饰品</h2><button class="btn ghost" data-act="scanlost">扫描全部账号</button></div><p class="hint">只查流水中有获得记录、但库存和挂单中没有且没有去向记录的饰品；已售出、熔铸和收走的不会自动找回。扫描不会修改账号。</p>${S.lostScan ? H`<p>已扫描 ${S.lostScan.scanned} 个账号；${S.lostScan.matches.length} 个账号共 ${S.lostScan.matches.reduce((n, x) => n + x.ids.length, 0)} 件可找回。</p>${S.lostScan.matches.length ? H`<div class="chips">${S.lostScan.matches.map(x => H`<label class="chip"><input type="checkbox" name="lostAccount" value="${x.uid}"> ${x.username} · ${x.ids.length} 件</label>`)}</div><div class="row wrap"><button class="btn ghost" data-act="selectlostaccounts">全选账号</button><button class="btn" data-act="restoreunknown">找回所选账号…</button></div>` : ''}` : ''}</div>` : ''}
     ${drawSparkline(s.signups7d)}
@@ -1035,52 +1033,41 @@ async function vCfg() {
   }
   const sumKey = grp => grp.rows.every(x => ODDS_RE.test(x.k)) ? grp.rows[0].k.split('.')[0] : '';
   return H`<form class="card" data-form="cfg" novalidate>
-    <div class="row between wrap"><h2>经济数值</h2><span class="badge${r.id ? ' gold' : ''}">${r.id ? '已调整' : '默认数值'}</span></div>
+    <h2>经济数值</h2>
     <p class="hint">保存后半分钟内全服生效，玩家的武库下一次操作后显示新数值。这里只有经济数值，伤害、血量、技能这些在代码里改。</p>
     ${groups.map(g => { const sk = sumKey(g); return H`<fieldset class="grp"><legend>${g.name}</legend>
-      ${g.rows.map(x => H`<div class="cfgrow${x.cur !== x.def ? ' mod' : ''}" data-row="${x.k}">
-        <label for="cfg_${x.k}">${x.desc}${x.cur !== x.def ? H` <span class="badge gold">改过</span>` : ''}</label>
+      ${g.rows.map(x => H`<div class="cfgrow" data-row="${x.k}">
+        <label for="cfg_${x.k}">${x.desc}</label>
         <div class="cfgin"><input id="cfg_${x.k}" name="${x.k}" type="number" inputmode="${x.isInt ? 'numeric' : 'decimal'}" step="${x.isInt ? 1 : 'any'}" value="${x.cur}"><span class="pct" data-pct="${x.k}"></span></div>
         <span class="hint">默认 ${x.def}</span>
         <button type="button" class="btn ghost sm" data-act="cfgdef" data-k="${x.k}">用默认</button>
       </div>`)}
       ${sk ? H`<div class="sum" data-sum="${sk}"></div>` : ''}
     </fieldset>`; })}
-    <div class="row end"><span class="hint" id="cfgDirty"></span><button class="btn" id="cfgSave" disabled>检查并保存…</button></div>
+    <div class="row end"><button class="btn" id="cfgSave">保存经济数值…</button></div>
   </form>
   `;
 }
-function histCard(r) {
-  const diff = c => Object.entries(c).map(([k, v]) => cfgName(k) + ' ' + v).join('，') || '全是默认值';
-  return H`<div class="card"><div class="row between wrap"><h2>改过的版本 <small>最近 30 版</small></h2>${Object.keys(r.cfg).length ? H`<button class="btn ghost sm" data-act="cfgundo" data-to="0">全部回到默认值…</button>` : ''}</div>
-    ${r.hist.length ? H`<div class="tw"><table><thead><tr><th>版本</th><th>谁</th><th>时间</th><th>原因</th><th>和默认值不一样的</th><th></th></tr></thead><tbody>
-      ${r.hist.map(h => H`<tr><td class="nowrap">第 ${h.id} 版${h.id === r.id ? H` <span class="badge gold">现在用的</span>` : ''}</td><td>${h.by}</td><td class="nowrap">${fmtT(h.at)}</td><td>${h.note}</td><td class="detail">${diff(h.cfg)}</td>
-        <td>${h.id === r.id ? '' : H`<button class="btn ghost sm" data-act="cfgundo" data-to="${h.id}">退回到这一版…</button>`}</td></tr>`)}
-    </tbody></table></div>` : H`<p class="empty">还没改过，用的都是默认值</p>`}
-  </div>`;
-}
 function cfgLive(f) {
-  const { info, cfg: cur } = S.cfg, sums = {};
-  let dirty = 0;
+  const { info } = S.cfg, sums = {};
   for (const [k, def] of info) {
     const inp = f.elements[k];
     if (!inp) continue;
-    const v = inp.value.trim() === '' ? def : Number(inp.value), was = Object.prototype.hasOwnProperty.call(cur, k) ? cur[k] : def;
+    const v = inp.value.trim() === '' ? def : Number(inp.value);
     const row = f.querySelector('[data-row="' + k + '"]'), pe = f.querySelector('[data-pct="' + k + '"]');
-    if (v !== was) dirty++;
-    row.classList.toggle('dirty', v !== was);
     $('[data-act=cfgdef]', row).disabled = v === def;
     if (pe) pe.textContent = isPct(k) && Number.isFinite(v) ? '= ' + +(v * 100).toFixed(2) + '%' : /^term\.(lo|hi)$/.test(k) ? '× 基准价' : '';
     const g = k.split('.')[0];
     if (ODDS_RE.test(k)) sums[g] = (sums[g] || 0) + v;
   }
+  let sumsOk = true;
   for (const [g, s] of Object.entries(sums)) {
     const el = f.querySelector('[data-sum="' + g + '"]'), good = Math.abs(s - 1) <= 1e-6;
+    if (!good) sumsOk = false;
     el.className = 'sum ' + (good ? 'ok' : 'bad');
     el.textContent = '几档加起来是 ' + (Number.isFinite(s) ? +s.toFixed(6) : '?') + (good ? '，正好是 1' : '，要正好是 1 才能保存');
   }
-  $('#cfgDirty').textContent = dirty ? '改了 ' + dirty + ' 项，还没保存' : '还没有改动';
-  $('#cfgSave').disabled = !dirty;
+  $('#cfgSave').disabled = !sumsOk;
 }
 
 /* ---------- 操作记录与智能归档 ---------- */
@@ -1915,12 +1902,6 @@ const ACTS = {
     if (!f) return;
     const a = await ask({ title: '改功能开关 ' + f.k, lines: [f.desc, FLAG_MODE[f.mode] + ' → ' + FLAG_MODE[mode]], ok: '改', danger: mode === 'all' });
     if (a) await busy(b, async () => { await api('flags', { k: f.k, mode, why: a.why }); toast('改好了'); render(); });
-  },
-  cfgundo: async b => {
-    const to = +b.dataset.to, h = S.cfg.hist.find(x => x.id === to);
-    const what = to ? '第 ' + to + ' 版：' + (Object.entries((h || {}).cfg || {}).map(([k, v]) => cfgName(k) + ' ' + v).join('，') || '全是默认值') : '所有经济数值回到代码里写的默认值';
-    const a = await ask({ title: to ? '退回到第 ' + to + ' 版' : '全部回到默认值', lines: [what, '会存成新的一版，之后还能再退回来'], ok: '退回' });
-    if (a) await busy(b, async () => { const r = await api('cfg/undo', { to, why: a.why }); toast('退回好了，现在是第 ' + r.id + ' 版'); render(); });
   },
 };
 document.addEventListener('click', e => {
