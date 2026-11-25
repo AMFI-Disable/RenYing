@@ -413,7 +413,7 @@
 .keypanel-meta { font-size: 12px; color: var(--dim); }
 .keycat-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 .keycat-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 6px; border: 1px solid var(--faint); background: rgba(255,255,255,.03); color: var(--dim); font: 12.5px var(--body); cursor: pointer; transition: all .14s; }
-.keycat-btn small { font-size: 11px; opacity: .7; }
+.keycat-btn small { font-size: 12px; opacity: .7; }
 .keycat-btn:hover { color: var(--ink); border-color: rgba(233,196,106,.45); }
 .keycat-btn.sel { color: #12101a; background: var(--gold); border-color: var(--gold); font-weight: 700; }
 .keygrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 8px; margin: 2px 0 4px; text-align: left; }

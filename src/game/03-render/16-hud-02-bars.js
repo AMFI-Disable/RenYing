@@ -375,7 +375,7 @@ function drawLocalCard() {
       ctx.fillText(`${cvT('指令')}: ${cvT(ordMap[M.squadOrders?.[localTeam()] || 'auto'])} [1/2/3 · Tab${cvT('指挥')}]`, px + 8, py + 61);
     }
   }
-  if (chaosOn()) drawChaosHUD(cx, H - 22, true);
+  if (chaosOn()) drawChaosHUD(W / 2, H - 22, true);
   ctx.restore();
 }
 function drawSquadTacticalBar() {
@@ -391,14 +391,14 @@ function drawSquadTacticalBar() {
   ctx.save();
   ctx.fillStyle = 'rgba(8,10,24,0.82)'; ctx.fillRect(px, py, cw, ch);
   ctx.strokeStyle = 'rgba(233,196,106,0.55)'; ctx.lineWidth = 1.2; ctx.strokeRect(px, py, cw, ch);
-  ctx.font = `bold 11.5px ${TITLE_FONT}`; ctx.fillStyle = '#e9c46a'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+  ctx.font = `bold 12px ${TITLE_FONT}`; ctx.fillStyle = '#e9c46a'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   ctx.fillText(`${cvT('战队指令')}  [Tab ${cvT('指挥面板')}]`, px + 8, py + 5);
   const bw = (cw - 16 - 12) / 3;
   opts.forEach(([id, k, n, rgb], i) => {
     const x = px + 8 + i * (bw + 6), on = ord === id;
     ctx.fillStyle = on ? `rgba(${rgb},0.34)` : 'rgba(255,255,255,0.05)'; ctx.fillRect(x, py + 23, bw, 22);
     ctx.strokeStyle = on ? `rgb(${rgb})` : 'rgba(255,255,255,0.18)'; ctx.lineWidth = on ? 1.8 : 1; ctx.strokeRect(x, py + 23, bw, 22);
-    ctx.font = `bold 11.5px ${BODY_FONT}`; ctx.fillStyle = on ? '#ffffff' : 'rgba(239,232,216,0.82)'; ctx.textAlign = 'center';
+    ctx.font = `bold 12px ${BODY_FONT}`; ctx.fillStyle = on ? '#ffffff' : 'rgba(239,232,216,0.82)'; ctx.textAlign = 'center';
     ctx.fillText(`${k} ${cvT(n)}`, x + bw / 2, py + 28);
   });
   ctx.restore();

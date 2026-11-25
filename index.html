@@ -985,7 +985,7 @@ to { opacity: 1; box-shadow: 0 0 12px rgba(255,215,0,.7); }
 .keypanel-meta { font-size: 12px; color: var(--dim); }
 .keycat-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
 .keycat-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 6px; border: 1px solid var(--faint); background: rgba(255,255,255,.03); color: var(--dim); font: 12.5px var(--body); cursor: pointer; transition: all .14s; }
-.keycat-btn small { font-size: 11px; opacity: .7; }
+.keycat-btn small { font-size: 12px; opacity: .7; }
 .keycat-btn:hover { color: var(--ink); border-color: rgba(233,196,106,.45); }
 .keycat-btn.sel { color: #12101a; background: var(--gold); border-color: var(--gold); font-weight: 700; }
 .keygrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 8px; margin: 2px 0 4px; text-align: left; }
@@ -3644,7 +3644,7 @@ font-size: 12.5px;
 .cx-badge-cnt {
 margin-left: 6px;
 font-weight: 400;
-font-size: 11.5px;
+font-size: 12px;
 color: var(--dim);
 }
 .cx-badge-acts {
@@ -4203,7 +4203,7 @@ font-size: 13px;
 color: var(--ink);
 }
 .xiwu-preset-lbl {
-font-size: 11.5px;
+font-size: 12px;
 font-weight: 700;
 padding: 2px 8px;
 border-radius: 99px;
@@ -35566,13 +35566,13 @@ ctx.strokeStyle = isAct ? 'rgba(255, 45, 65, 0.95)' : isStart ? 'rgba(255, 195, 
 ctx.fillStyle = isAct ? 'rgba(255, 45, 65, 0.28)' : isStart ? 'rgba(255, 195, 50, 0.12)' : 'rgba(80, 160, 255, 0.12)';
 ctx.fillRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
 ctx.strokeRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
-ctx.font = 'bold 11px monospace';
+ctx.font = 'bold 12px monospace';
 ctx.fillStyle = isAct ? '#ff4055' : isStart ? '#ffc040' : '#60b0ff';
 ctx.textAlign = 'center';
 const frameTxt = isAct ? `活跃帧 [${Math.round((f.t - su) / STEP)}/${Math.round(ac / STEP)}F]` : isStart ? `前摇 [${Math.round(f.t / STEP)}/${Math.round(su / STEP)}F]` : `收招 [${Math.round((f.t - su - ac) / STEP)}/${Math.round(rec / STEP)}F]`;
 ctx.fillText(frameTxt, (hb[0] + hb[2]) / 2, hb[1] - 8);
 }
-ctx.font = 'bold 11px monospace';
+ctx.font = 'bold 12px monospace';
 ctx.textAlign = 'center';
 let advText = '';
 const other = foeOf ? foeOf(f) : null;
@@ -43218,7 +43218,7 @@ ctx.fillStyle = '#e9c46a';
 ctx.fillText(`${cvT('指令')}: ${cvT(ordMap[M.squadOrders?.[localTeam()] || 'auto'])} [1/2/3 · Tab${cvT('指挥')}]`, px + 8, py + 61);
 }
 }
-if (chaosOn()) drawChaosHUD(cx, H - 22, true);
+if (chaosOn()) drawChaosHUD(W / 2, H - 22, true);
 ctx.restore();
 }
 function drawSquadTacticalBar() {
@@ -43234,14 +43234,14 @@ const opts = [
 ctx.save();
 ctx.fillStyle = 'rgba(8,10,24,0.82)'; ctx.fillRect(px, py, cw, ch);
 ctx.strokeStyle = 'rgba(233,196,106,0.55)'; ctx.lineWidth = 1.2; ctx.strokeRect(px, py, cw, ch);
-ctx.font = `bold 11.5px ${TITLE_FONT}`; ctx.fillStyle = '#e9c46a'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+ctx.font = `bold 12px ${TITLE_FONT}`; ctx.fillStyle = '#e9c46a'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
 ctx.fillText(`${cvT('战队指令')}  [Tab ${cvT('指挥面板')}]`, px + 8, py + 5);
 const bw = (cw - 16 - 12) / 3;
 opts.forEach(([id, k, n, rgb], i) => {
 const x = px + 8 + i * (bw + 6), on = ord === id;
 ctx.fillStyle = on ? `rgba(${rgb},0.34)` : 'rgba(255,255,255,0.05)'; ctx.fillRect(x, py + 23, bw, 22);
 ctx.strokeStyle = on ? `rgb(${rgb})` : 'rgba(255,255,255,0.18)'; ctx.lineWidth = on ? 1.8 : 1; ctx.strokeRect(x, py + 23, bw, 22);
-ctx.font = `bold 11.5px ${BODY_FONT}`; ctx.fillStyle = on ? '#ffffff' : 'rgba(239,232,216,0.82)'; ctx.textAlign = 'center';
+ctx.font = `bold 12px ${BODY_FONT}`; ctx.fillStyle = on ? '#ffffff' : 'rgba(239,232,216,0.82)'; ctx.textAlign = 'center';
 ctx.fillText(`${k} ${cvT(n)}`, x + bw / 2, py + 28);
 });
 ctx.restore();

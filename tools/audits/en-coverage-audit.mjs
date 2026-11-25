@@ -171,7 +171,7 @@ for (const [name, js, tabs] of PANELS) {
   if (err && name === 'armory') auditFailure(`Armory could not open: ${err}`);
   if (err) { console.log(`${name}: could not open (${err})`); continue; }
   await sleep(700);
-  if (name === 'large' && !(await ev(`$id('largeStartMelee').checkVisibility() && $id('largeStartCtf').checkVisibility() && $id('largeStartGauntlet').checkVisibility()`))) {
+  if (name === 'large' && !(await ev(`(() => { const ok = [['melee', 'largeStartMelee'], ['ctf', 'largeStartCtf'], ['gauntlet', 'largeStartGauntlet']].every(([tab, id]) => { singleSec(tab); return $id(id).checkVisibility(); }); singleSec('melee'); return ok; })()`))) {
     auditFailure('Large Battles opened without its launch buttons');
   }
   note(name, await ev(PROBE));

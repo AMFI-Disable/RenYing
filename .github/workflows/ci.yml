@@ -138,6 +138,8 @@ jobs:
           node tools/tests/rollback-test.mjs --schema
           node tools/tests/predeploy-check.mjs
           node tools/tests/predeploy-check.mjs --source
+          # wrangler.toml 在 cloudflare/ 里，要在这个目录跑，不然 wrangler 找不到配置会直接失败
+          cd cloudflare
           npx --yes wrangler@4.154.0 deploy --dry-run --env="" --outdir "$RUNNER_TEMP/wrangler-prod"
           npx --yes wrangler@4.154.0 deploy --dry-run --env staging --outdir "$RUNNER_TEMP/wrangler-staging"
 

@@ -99,14 +99,14 @@ function drawHitboxOverlay(fighters) {
       ctx.fillRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
       ctx.strokeRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
 
-      ctx.font = 'bold 11px monospace';
+      ctx.font = 'bold 12px monospace';
       ctx.fillStyle = isAct ? '#ff4055' : isStart ? '#ffc040' : '#60b0ff';
       ctx.textAlign = 'center';
       const frameTxt = isAct ? `活跃帧 [${Math.round((f.t - su) / STEP)}/${Math.round(ac / STEP)}F]` : isStart ? `前摇 [${Math.round(f.t / STEP)}/${Math.round(su / STEP)}F]` : `收招 [${Math.round((f.t - su - ac) / STEP)}/${Math.round(rec / STEP)}F]`;
       ctx.fillText(frameTxt, (hb[0] + hb[2]) / 2, hb[1] - 8);
     }
 
-    ctx.font = 'bold 11px monospace';
+    ctx.font = 'bold 12px monospace';
     ctx.textAlign = 'center';
     let advText = '';
     const other = foeOf ? foeOf(f) : null;
