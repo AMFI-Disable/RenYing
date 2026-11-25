@@ -6,6 +6,10 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+### Fixed
+
+- **GitHub Pages Build Failure & Local/CI Strict-Copy Parity (`src/data/30-ui-copy-20-gaps.js`, `tools/build.py`, `index.html`, `renying-offline.html`)**: fixed the orphaned English UI copy key in `src/data/30-ui-copy-20-gaps.js` that caused `python3 tools/build.py --check` to fail under `CI=true` (`data-check.mjs --strict-copy`) during GitHub Pages deployment after the `c14` Armory refresh notice update, and updated `tools/build.py` so local `python3 tools/build.py --check` always enforces `--strict-copy` identically to GitHub Actions. No Worker change.
+
 ### Added
 
 - **Heirloom Skin Collection (`《天工传世 · 器灵纪》` / `c14`), Exclusive Dual Stance System (`攻守双境`) & Redesigned Codex Badge Drawer (`src/armory-core.js`, `src/armory.js`, `src/game/01-engine/05-audio.js`, `src/game/01-engine/06-input-net.js`, `src/game/02-combat/08-fighter-01-entity.js`, `src/game/02-combat/09-actions-03-fighter.js`, `src/game/02-combat/10-hits-02-effects.js`, `src/game/03-render/13-skins.js`, `src/game/03-render/14-skin-looks.js`, `src/game/03-render/15-skin-weapons.js`, `src/game/03-render/16-hud-02-bars.js`, `src/game/05-ui/17-home-04-settings.js`, `src/game/05-ui/18-codex.js`, `src/game/05-ui/27-combat-loadouts.js`, `src/styles/80-studio-display-and-overhaul.css`, `cloudflare/worker/00-runtime-and-http.js`, `cloudflare/worker/20-economy-and-profiles.js`, `tools/tests/`)**:

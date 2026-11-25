@@ -420,7 +420,7 @@ def _run(args, stdin=None):
     return r.returncode, r.stdout, r.stderr
 
 
-def check_js():
+def check_js(strict_copy=False):
     """有 node 的话检查一下 JS 语法（包括压缩后的产物，没有 node 就跳过）
 
     每个检查都是一次独立的 `node --check`，互不依赖，所以放进线程池并发跑（以前一个一个跑要 3~4 秒）。
@@ -441,8 +441,8 @@ def check_js():
         jobs.append((f"src/{'/'.join(part)} 语法错误：", [node, "--check", os.path.join(SRC, *part)], None, None))
     jobs.append(("src/data/ + src/game/ 拼起来压缩后语法错误：", [node, "--check", "-"], compact_js(game_source()), None))
     # src/data/ 的数据表：必填字段、不认识的字段、编号唯一、引用存在（tools/checks/data-check.mjs），有错就不生成网页
-    # CI 里再加 --strict-copy：英文词条的中文在源码里找不到也算错；本机只提醒
-    strict = ["--strict-copy"] if os.environ.get("CI") else []
+    # --check 与 CI 一律启用 --strict-copy，确保本机校验与 GitHub Actions/Pages 行为完全一致
+    strict = ["--strict-copy"] if (strict_copy or os.environ.get("CI")) else []
     jobs.append((None, [node, os.path.join(ROOT, "tools", "checks", "data-check.mjs"), *strict], None, None))
     # 青锋行的各个文件共用一个闭包，拼起来再查
     qfx_game = "".join(read(QFX, n) for n in qfx_modules())
@@ -478,7 +478,7 @@ def check_js():
 # ===========================================================================
 def main():
     check = "--check" in sys.argv[1:]
-    if not check_js():
+    if not check_js(strict_copy=check):
         return 1
     stale = []
     for name, text in outputs().items():
