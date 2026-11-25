@@ -150,11 +150,11 @@ const BAN_MS = 24 * 3600e3;
 const CODE_USES = 100000;              // 一个兑换码最多让这么多个号领
 const RDM_MAX = 10, RDM_IP_MAX = 30;   // 一小时里输错这么多次兑换码就先锁一小时（每个号、每个 IP）
 // 游戏里写死的几个码（src/game.js 的 redeemCode 先认它们）：服务器上不建同名的，不然玩家永远领不到
-const CODE_LOCAL = ['LOCK', 'RELOCK', 'RENYING666', 'RENYING888', 'SWORD2026', 'MOYUGIFT', 'ZODIAC2026STAR', C.UNIVERSAL_PROMO_CODE];
+const CODE_LOCAL = ['LOCK', 'RELOCK', 'RENYING666', 'RENYING888', 'SWORD2026', 'MOYUGIFT', 'ZODIAC2026STAR', C.UNIVERSAL_PROMO_CODE, C.HEIRLOOM_PROMO_CODE];
 // 以前不进库存的“绑定”皮肤（关卡奖励、老账号带过来的）：这一天之前建的号，第一次动武库时一次性换成库存里的饰品，
 // 之后能卖能熔铸。之后建的号不换：网页报上来的皮肤服务器核对不了，换成能卖的饰品就等于能凭空变出墨锭
 const LEGACY_CUTOFF = Date.UTC(2026, 9, 31);
-// 全服通用解锁码：动态解锁当前与未来新增的所有侠客、皮肤、徽记、灵宠、招式流派及资源，每个号领一次资源，后续新增内容自动补齐
+// 全服通用解锁码与天工传世专属典藏码：由服务器核验，不重复发放
 const CODE_BUILTIN = {
   [C.UNIVERSAL_PROMO_CODE]: () => ({
     note: '全服全内容解锁礼',
@@ -164,6 +164,14 @@ const CODE_BUILTIN = {
     term: 10,
     tags: 10,
     sigils: 100,
+  }),
+  [C.HEIRLOOM_PROMO_CODE]: () => ({
+    note: '天工传世 · 器灵典藏全集',
+    heirloomPromo: true,
+    ink: 0,
+    cases: {},
+    term: 0,
+    tags: 0,
   }),
 };
 // 作废以前领过的号：码送的饰品（src 'code'）在库存里的、挂在市场上还没卖出的，第一次动武库时收回（记在 srv.zv）
@@ -800,10 +808,10 @@ async function handleEcon(env, auth, body, now, ip) {
     if ((await peek(env, 'rdm:' + uid, now)) >= RDM_MAX || (await peek(env, 'rdmip:' + ip, now)) >= RDM_IP_MAX) return error('兑换码输错太多次了，一小时后再试', 429);
     const k = codeKey(args.code);
     if (k && CODE_BUILTIN[k]) {
-      // 每个号只领一次资源；全服通用解锁码若已领过，则在后续有新内容更新时自动补齐新增项（不重发资源、不补卖掉的旧饰品）
+      // 每个号只领一次资源；全服通用解锁码与天工传世典藏码若已领过，则在后续有新内容更新时补齐新增项（不重发资源、不补卖掉的旧饰品）
       const alreadyGot = !!(await env.DB.prepare('SELECT 1 FROM code_got WHERE code = ? AND uid = ?').bind(k, uid).first());
       const def = CODE_BUILTIN[k]();
-      if (alreadyGot && !def.promoAll) return error('这个兑换码你已经领过了');
+      if (alreadyGot && !def.promoAll && !def.heirloomPromo) return error('这个兑换码你已经领过了');
       code = { code: k, ink: 0, cases: {}, term: 0, tags: 0, builtin: true, alreadyGot, ...def };
     }
     const row = code ? null : k ? await env.DB.prepare('SELECT code, ink, items_json, note, until, uses, got, off, EXISTS (SELECT 1 FROM code_got x WHERE x.code = code.code AND x.uid = ?) AS mine FROM code WHERE code = ?').bind(uid, k).first() : null;
@@ -899,7 +907,12 @@ async function handleEcon(env, auth, body, now, ip) {
         C.addItem(state0, C.mkItem(state0, k, src, rnd, { st }), E);
       }
     }   // 全服肉鸽发的星座皮肤：放一件进库存，能卖能熔铸
-    if (code && code.promoAll) {
+    if (code && code.heirloomPromo) {
+      const hrRes = C.applyHeirloomPromo(state0, E);
+      if (code.alreadyGot && !hrRes.changed) return error('这个兑换码你已经领过了');
+      code.n = hrRes.added;
+      code.synced = !!code.alreadyGot;
+    } else if (code && code.promoAll) {
       const promoRes = C.applyPromoAll(state0, E, { firstClaim: !code.alreadyGot && !state0.promoAll });
       if (code.alreadyGot && !promoRes.changed) return error('这个兑换码你已经领过了');
       code.n = promoRes.addedSkins;

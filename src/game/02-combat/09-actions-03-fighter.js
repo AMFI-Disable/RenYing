@@ -110,6 +110,7 @@ function startSpecial(f) {
 function neutral(f, foe) {
   const c = f.ctrl, onG = f.onGround();
   if (typeof trySwitchStance === 'function' && onG && trySwitchStance(f)) return;
+  if (typeof trySwitchRelicStance === 'function' && onG && trySwitchRelicStance(f)) return;
   if (onG && f.state !== 'victory') f.face = faceDir(f, foe);
   if (M.phase !== 'fight') {
     if (onG && f.state !== 'victory') { f.state = 'idle'; }
@@ -779,6 +780,8 @@ function updateFighter(f, foe) {
   f.t += STEP;
   f.dashCD = Math.max(0, f.dashCD - STEP);
   f.stanceT = Math.max(0, (f.stanceT || 0) - STEP);
+  f.relicStanceT = Math.max(0, (f.relicStanceT || 0) - STEP);
+  f.relicStanceCd = Math.max(0, (f.relicStanceCd || 0) - STEP);
   f.feintCD = Math.max(0, (f.feintCD || 0) - STEP);
   f.qiParryCD = Math.max(0, (f.qiParryCD || 0) - STEP);
   f.qiParryT = Math.max(0, (f.qiParryT || 0) - STEP);
@@ -856,7 +859,8 @@ function updateFighter(f, foe) {
     const hpFactor = clamp(0.55 + 0.45 * (f.hp / f.maxHp), 0.55, 1.0);
     const stateBonus = (f.state === 'idle' && f.onGround()) ? 1.25 : (['walk', 'air'].includes(f.state) ? 0.8 : 0.5);
     const stanceRegen = f.stance && f.stanceUnlocked && ['tieshan', 'yuehua'].includes(f.ch.id) ? 1.2 : 1;
-    const regen = baseRegen * hpFactor * stateBonus * stanceRegen * STEP;
+    const relicRegen = f.relicStance === 2 ? 1.22 : 1;
+    const regen = baseRegen * hpFactor * stateBonus * stanceRegen * relicRegen * STEP;
     f.guard = Math.min(f.maxGuard, (f.guard !== undefined ? f.guard : f.maxGuard) + regen);
   }
   if (f.state === 'skill' && f.skill === 'mirror') f.parryT = Math.max(0, f.parryT - STEP);

@@ -282,10 +282,10 @@ async function handleEcon(env, auth, body, now, ip) {
     if ((await peek(env, 'rdm:' + uid, now)) >= RDM_MAX || (await peek(env, 'rdmip:' + ip, now)) >= RDM_IP_MAX) return error('兑换码输错太多次了，一小时后再试', 429);
     const k = codeKey(args.code);
     if (k && CODE_BUILTIN[k]) {
-      // 每个号只领一次资源；全服通用解锁码若已领过，则在后续有新内容更新时自动补齐新增项（不重发资源、不补卖掉的旧饰品）
+      // 每个号只领一次资源；全服通用解锁码与天工传世典藏码若已领过，则在后续有新内容更新时补齐新增项（不重发资源、不补卖掉的旧饰品）
       const alreadyGot = !!(await env.DB.prepare('SELECT 1 FROM code_got WHERE code = ? AND uid = ?').bind(k, uid).first());
       const def = CODE_BUILTIN[k]();
-      if (alreadyGot && !def.promoAll) return error('这个兑换码你已经领过了');
+      if (alreadyGot && !def.promoAll && !def.heirloomPromo) return error('这个兑换码你已经领过了');
       code = { code: k, ink: 0, cases: {}, term: 0, tags: 0, builtin: true, alreadyGot, ...def };
     }
     const row = code ? null : k ? await env.DB.prepare('SELECT code, ink, items_json, note, until, uses, got, off, EXISTS (SELECT 1 FROM code_got x WHERE x.code = code.code AND x.uid = ?) AS mine FROM code WHERE code = ?').bind(uid, k).first() : null;
@@ -381,7 +381,12 @@ async function handleEcon(env, auth, body, now, ip) {
         C.addItem(state0, C.mkItem(state0, k, src, rnd, { st }), E);
       }
     }   // 全服肉鸽发的星座皮肤：放一件进库存，能卖能熔铸
-    if (code && code.promoAll) {
+    if (code && code.heirloomPromo) {
+      const hrRes = C.applyHeirloomPromo(state0, E);
+      if (code.alreadyGot && !hrRes.changed) return error('这个兑换码你已经领过了');
+      code.n = hrRes.added;
+      code.synced = !!code.alreadyGot;
+    } else if (code && code.promoAll) {
       const promoRes = C.applyPromoAll(state0, E, { firstClaim: !code.alreadyGot && !state0.promoAll });
       if (code.alreadyGot && !promoRes.changed) return error('这个兑换码你已经领过了');
       code.n = promoRes.addedSkins;

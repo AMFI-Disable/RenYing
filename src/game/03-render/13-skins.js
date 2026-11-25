@@ -325,7 +325,12 @@ function skinTierHit(atk, ev, p, out) {
   for (let i = 0; i < 10; i++) { const a = i / 10 * 6.283 + rand(-0.15, 0.15), sp = rand(700, 1100) * p; addP({ type: 'streak', x: x + Math.cos(a) * 10, y: y + Math.sin(a) * 10, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, drag: 7, life: 0.2, max: 0.2, rgb: i % 2 ? c : '255,255,255', ng: 1 }); }
   shake = Math.max(shake, 7 * p);
   const now = performance.now();
-  if (now - TIER_SFX_T > 70) { TIER_SFX_T = now; if (tr >= 4) SFX.shine(clamp(ev.dmg / 8, 0.6, 1.4)); else SFX.shing(clamp(ev.dmg / 8, 0.6, 1.3)); }   // 连击时别叠成一片
+  if (now - TIER_SFX_T > 70) {
+    TIER_SFX_T = now;
+    if (L.deco && L.deco.relicMat && typeof SFX !== 'undefined' && SFX.relicAccent) SFX.relicAccent(L.deco.relicMat, clamp(ev.dmg / 8, 0.6, 1.3));
+    else if (tr >= 4) SFX.shine(clamp(ev.dmg / 8, 0.6, 1.4));
+    else SFX.shing(clamp(ev.dmg / 8, 0.6, 1.3));
+  }   // 连击时别叠成一片
   if (tr < 4) return;
   addP({ type: 'glyph', g2: 'star8', x, y, r: 44 * p, life: 0.42, max: 0.42, rgb: '255,214,120', rot: rand(0, 1), spin: 1.5, ng: 1 });
   out((vx, vy) => addP({ type: 'glint', x, y, vx: vx * 0.75, vy: vy * 0.75 - 40, drag: 3.5, life: rand(0.45, 0.8), max: 0.8, r: rand(4, 8) * p, rgb: Math.random() < 0.5 ? '255,226,150' : '255,255,255', ng: 1 }), 8);
@@ -336,17 +341,23 @@ function skinIntroFX(f) {
   const S = SKINS[f.skinKey], L = f.look; if (!S || !L.fx) return;
   const tr = tierRank(L), T = TIER_TXT[L.tier];
   const leg = S.rarity === 'legend', c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || skinTh(L).amb;
-  const name = () => addP({ type: 'text', text: `${T ? T[0] : S.rarity === 'legend' ? '传说' : '精英'} · ${S.name}`, x: f.x, y: f.y - 175, life: 2.2 + (tr >= 4 ? 0.6 : 0), max: 2.2 + (tr >= 4 ? 0.6 : 0), rgb: T ? T[1] : S.rarity === 'legend' ? '233,196,106' : '150,200,255' });
-  for (let i = 0; i < (leg ? 34 : 12) + (tr >= 3 ? 16 : 0); i++) skinSpawn(kind, f.x + rand(-40, 40), rand(-110, -4), c, c2, 1.2, true);
+  const isHeir = !!(S.heirloom || (L.deco && L.deco.transform === 'heirloom'));
+  const crowded = typeof fighters !== 'undefined' && fighters.length > 6;
+  const name = () => addP({ type: 'text', text: isHeir ? `★ 天工传世 · ${S.name}` : `${T ? T[0] : S.rarity === 'legend' ? '传说' : '精英'} · ${S.name}`, x: f.x, y: f.y - 175, life: 2.2 + (tr >= 4 ? 0.6 : 0), max: 2.2 + (tr >= 4 ? 0.6 : 0), rgb: isHeir ? '255,222,130' : T ? T[1] : S.rarity === 'legend' ? '233,196,106' : '150,200,255' });
+  const pCount = Math.round(((leg ? 34 : 12) + (tr >= 3 ? 16 : 0)) * (crowded ? 0.4 : 1));
+  for (let i = 0; i < pCount; i++) skinSpawn(kind, f.x + rand(-40, 40), rand(-110, -4), c, c2, 1.2, true);
   if (!leg && tr < 2) { name(); return; }
   addP({ type: 'glow', x: f.x, y: f.y - 60, r: 90, life: 0.6, max: 0.6, rgb: c, ng: tr >= 2 ? 1 : 0 });   // 品质皮肤的不进泛光：开场一下别把人照成白的
   ring(f.x, f.y - 60, 120, c, 0.55);
-  if (tr >= 3) { addP({ type: 'ring', x: f.x, y: f.y - 60, r: 190, life: 0.8, max: 0.8, rgb: c2, ng: 1 }); for (let i = 0; i < 14; i++) addP({ type: 'glint', x: f.x + rand(-60, 60), y: f.y - rand(10, 170), vx: 0, vy: -rand(10, 40), life: rand(0.6, 1.2), max: 1.2, r: rand(4, 8), rgb: Math.random() < 0.5 ? c2 : '255,255,255', ng: 1 }); }
+  if (tr >= 3) { addP({ type: 'ring', x: f.x, y: f.y - 60, r: 190, life: 0.8, max: 0.8, rgb: c2, ng: 1 }); for (let i = 0; i < (crowded ? 6 : 14); i++) addP({ type: 'glint', x: f.x + rand(-60, 60), y: f.y - rand(10, 170), vx: 0, vy: -rand(10, 40), life: rand(0.6, 1.2), max: 1.2, r: rand(4, 8), rgb: Math.random() < 0.5 ? c2 : '255,255,255', ng: 1 }); }
   if (tr >= 4) {   // 绝世：一道柔光从天上落到脚下，脚下亮起金星印，一串铃音
     addP({ type: 'pillar', x: f.x, y: f.y, r: 40, life: 1.5, max: 1.5, rgb: rgbMix(c, '255,226,150', 0.5), ng: 1 });
     addP({ type: 'glyph', g2: 'star8', x: f.x, y: f.y - 70, r: 78, life: 0.9, max: 0.9, rgb: '255,214,120', rot: 0, spin: 0.8, ng: 1 });
     addP({ type: 'ring', x: f.x, y: f.y - 4, r: 150, life: 0.9, max: 0.9, rgb: '255,226,150', ng: 1 });
-    if (!RESIM) SFX.sparkle();
+    if (!RESIM) {
+      if (isHeir && L.deco && L.deco.relicMat && typeof SFX !== 'undefined' && SFX.relicAccent) SFX.relicAccent(L.deco.relicMat, 1.2);
+      SFX.sparkle();
+    }
   } else if (tr >= 3 && !RESIM) SFX.shing(1.2);
   name();   // 名号最后加：画在光柱、光环上面，不会被盖住
 }
@@ -354,13 +365,17 @@ function skinIntroFX(f) {
 function skinVictoryFX(f) {
   const S = SKINS[f.skinKey], L = f.look; if (!S || !L.fx) return;
   const leg = S.rarity === 'legend', tr = tierRank(L), c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || skinTh(L).amb;
+  const isHeir = !!(S.heirloom || (L.deco && L.deco.transform === 'heirloom'));
   for (let i = 0; i < (leg ? 40 : 16) + tr * 6; i++) { const a = rand(-Math.PI * 0.85, -Math.PI * 0.15), v = rand(250, 650); skinSpawn(kind, f.x, f.y - 60, c, c2, 1.3, true); const q = particles[particles.length - 1]; if (q) { q.vx = Math.cos(a) * v; q.vy = Math.sin(a) * v; q.g = 420; q.life = q.max = rand(1, 1.8); } }
   if (leg) addP({ type: 'glow', x: f.x, y: f.y - 80, r: 110, life: 0.8, max: 0.8, rgb: c });
   if (tr >= 3) for (let i = 0; i < 18; i++) { const a = rand(-Math.PI * 0.9, -Math.PI * 0.1), v = rand(200, 520); addP({ type: 'glint', x: f.x, y: f.y - 70, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 300, drag: 1.2, life: rand(0.9, 1.6), max: 1.6, r: rand(4, 8), rgb: tr >= 4 ? (Math.random() < 0.6 ? '255,226,150' : '255,255,255') : (Math.random() < 0.5 ? c2 : '255,255,255'), ng: 1 }); }
   if (tr >= 4) {
     addP({ type: 'pillar', x: f.x, y: f.y, r: 46, life: 1.7, max: 1.7, rgb: rgbMix(c, '255,226,150', 0.5), ng: 1 });
     addP({ type: 'glyph', g2: 'star8', x: f.x, y: f.y - 80, r: 92, life: 1.1, max: 1.1, rgb: '255,214,120', rot: 0, spin: 0.6, ng: 1 });
-    if (!RESIM) SFX.sparkle();
+    if (!RESIM) {
+      if (isHeir && L.deco && L.deco.relicMat && typeof SFX !== 'undefined' && SFX.relicAccent) SFX.relicAccent(L.deco.relicMat, 1.25);
+      SFX.sparkle();
+    }
   }
 }
 // 新粒子的画法（drawParticles 里调用）

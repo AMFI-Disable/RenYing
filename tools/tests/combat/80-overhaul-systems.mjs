@@ -518,4 +518,39 @@ export default [
       return { pass: true };
     })()`
   },
+  {
+    name: 'Heirloom (天工传世) skins unlock configurable Dual Stance (攻守双境) with balanced combat modifiers and rollback sync fields',
+    fn: `(() => {
+      if (DEFAULT_1P_KEYS.relicStance !== 'KeyM') return { pass: false, error: 'Expected DEFAULT_1P_KEYS.relicStance === KeyM, got ' + DEFAULT_1P_KEYS.relicStance };
+      if (!FK.includes('relicStance') || !FK.includes('relicStanceUnlocked')) return { pass: false, error: 'FK missing relicStance rollback fields' };
+      startMatch('cpu', 'normal', [0, 1]);
+      M.phase = 'fight';
+      A.ctrl = human[0];
+      A.skinKey = '';
+      A.look = { ...(A.look || {}), deco: null };
+      applyCombatLoadouts(A);
+      if (A.relicStanceUnlocked || A.relicStance !== 0) return { pass: false, error: 'Ordinary skin should not unlock relic stance' };
+      const baseWk = wk(A);
+      human[0].buf.relicStance = clock;
+      if (trySwitchRelicStance(A)) return { pass: false, error: 'Ordinary skin should not allow switching relic stance' };
+      delete human[0].buf.relicStance;
+      A.skinKey = 'qf_porcelain';
+      A.look = { ...(A.look || {}), deco: { transform: 'heirloom' } };
+      applyCombatLoadouts(A);
+      if (!A.relicStanceUnlocked || A.relicStance !== 1) return { pass: false, error: 'Heirloom skin did not unlock Aggressive stance (1)' };
+      const atkWk = wk(A);
+      if (!(atkWk > baseWk * 1.04)) return { pass: false, error: 'Aggressive stance walk speed not boosted: base=' + baseWk + ' atk=' + atkWk };
+      A.relicStanceCd = 0;
+      human[0].buf.relicStance = clock;
+      const switched = trySwitchRelicStance(A);
+      if (!switched || A.relicStance !== 2 || !(A.relicStanceCd > 0)) return { pass: false, error: 'Failed to switch to Defensive stance (2)' };
+      const defWk = wk(A);
+      if (!(defWk < baseWk * 0.98)) return { pass: false, error: 'Defensive stance walk speed not reduced: base=' + baseWk + ' def=' + defWk };
+      human[0].buf.relicStance = clock;
+      if (trySwitchRelicStance(A)) return { pass: false, error: 'Cooldown did not prevent immediate double switch' };
+      delete human[0].buf.relicStance;
+      toMenu();
+      return { pass: true };
+    })()`
+  },
 ];

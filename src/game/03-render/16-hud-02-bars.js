@@ -3,8 +3,9 @@
 // 中线只留给计时器；"👁️ 2v2 天道演武 · 禁选" 挪到屏幕底部，避免与任何顶部信息打架。
 function combatLoadoutLabel(f) {
   const stance = f && f.stance && HERO_STANCES[f.ch.id] ? HERO_STANCES[f.ch.id].name : '本式';
+  const relic = f && f.relicStanceUnlocked && f.relicStance ? (f.relicStance === 1 ? '攻境' : '守境') : '';
   const badge = f && f.badgeId && COMBAT_BADGES[f.badgeId] ? `${COMBAT_BADGES[f.badgeId].n} · ${f.badgeTier === 'purpgold' ? '紫金' : f.badgeTier === 'gold' ? '金' : '银'}` : '';
-  return [stance, badge].filter(Boolean).map(cvT).join(' · ');
+  return [stance, relic, badge].filter(Boolean).map(cvT).join(' · ');
 }
 function drawHUD2v2() {
   const bh = Math.max(12, H * 0.02);

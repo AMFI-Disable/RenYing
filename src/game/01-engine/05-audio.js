@@ -161,6 +161,35 @@ const SFX = {
   sparkle() { [1318.5, 1661.2, 1975.5, 2637, 3322.4].forEach((f, i) => bellAt(f, i * 0.075, 1.2 - i * 0.1, 0.075)); },
   shine(p = 1) { bellAt(2093, 0, 0.55, 0.05 * p); bellAt(3136, 0.025, 0.4, 0.028 * p); },
   shing(p = 1) { sNoise(0.05, 9500, 6000, 0.8, 0.12 * p, 'highpass'); metal(1850, 0.3, 0.035 * p); },
+  // 天工传世 · 器灵纪：材质分层音效（瓷、青铜、古琴、铁花、珐琅、琉璃、绸纸、漆木）与攻守双境切换音效
+  relicAccent(mat, p = 1) {
+    if (!AC || muted) return;
+    const v = clamp(p, 0.4, 1.3);
+    if (mat === 'porcelain' || mat === 'celadon' || mat === 'sancai') {
+      bellAt(2349, 0, 0.42, 0.055 * v); bellAt(3520, 0.018, 0.28, 0.03 * v);
+    } else if (mat === 'bronze' || mat === 'compass' || mat === 'armillary') {
+      metal(392, 0.65, 0.09 * v); bellAt(784, 0.015, 0.45, 0.04 * v);
+    } else if (mat === 'guqin' || mat === 'dunhuang') {
+      sTone(440, 436, 0.38, 0.12 * v, 'triangle'); bellAt(1318.5, 0.02, 0.35, 0.035 * v);
+    } else if (mat === 'ironfire') {
+      sNoise(0.11, 8800, 2600, 1.8, 0.22 * v, 'highpass'); metal(1480, 0.28, 0.06 * v);
+    } else if (mat === 'enamel' || mat === 'liuli' || mat === 'goldleaf') {
+      bellAt(1975.5, 0, 0.45, 0.05 * v); bellAt(2960, 0.02, 0.32, 0.03 * v);
+    } else if (mat === 'silk' || mat === 'papercut' || mat === 'puppet' || mat === 'kingfisher') {
+      sNoise(0.09, 5400, 1800, 2.2, 0.14 * v, 'bandpass'); bellAt(1760, 0.01, 0.22, 0.025 * v);
+    } else {
+      sTone(310, 150, 0.14, 0.16 * v, 'triangle'); bellAt(1568, 0.015, 0.3, 0.035 * v);
+    }
+  },
+  relicStance(mode) {
+    if (!AC || muted) return;
+    if (mode === 1) {   // 攻境：利刃出鞘升调清鸣
+      sNoise(0.14, 2400, 6800, 3.2, 0.16, 'bandpass');
+      bellAt(1174.7, 0, 0.35, 0.06); bellAt(1760, 0.045, 0.42, 0.065);
+    } else {            // 守境：古钟沉稳护体和鸣
+      metal(330, 0.7, 0.09); bellAt(523.25, 0, 0.55, 0.06); bellAt(784, 0.05, 0.5, 0.045);
+    }
+  },
 };
 // 铃：一个基音加两个不成整数倍的泛音，起音快、尾音长（delay 秒后响）
 function bellAt(f, delay, dur, vol) {

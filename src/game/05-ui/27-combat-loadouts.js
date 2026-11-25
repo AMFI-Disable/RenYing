@@ -128,6 +128,10 @@ function applyCombatLoadouts(fighter = null) {
     f.badgeLinkT = f.badgePressureT = f.badgeRiposteT = f.badgeBreakT = f.badgeAirSkillT = f.badgeExitT = 0;
     f.badgePressureSkill = 0; f.badgeAirUsed = f.badgeAirSkillUsed = 0;
     f.stanceT = 0;
+    const skMeta = f.skinKey && typeof SKINS !== 'undefined' && SKINS[f.skinKey];
+    f.relicStanceUnlocked = !!(skMeta && skMeta.heirloom) || !!(f.look && f.look.deco && f.look.deco.transform === 'heirloom');
+    f.relicStance = f.relicStanceUnlocked ? 1 : 0;
+    f.relicStanceT = 0; f.relicStanceCd = 0;
   }
 }
 function badgeDuration(f, base) { return base * (BADGE_WINDOW_SCALE[f && f.badgeTier] || 1); }
@@ -301,6 +305,28 @@ function trySwitchStance(f) {
   }
   addP({ type: 'text', text: stName, x: f.x, y: f.y - 130, life: 0.7, max: 0.7, rgb: f.look.slash || '230,210,150' });
   ring(f.x, f.y - 54, 62, f.look.slash || '230,210,150', 0.28);
+  return true;
+}
+function trySwitchRelicStance(f) {
+  const c = f && f.ctrl;
+  if (!c || !f.relicStanceUnlocked || (f.relicStanceCd || 0) > 0 || M.phase !== 'fight' || !c.consume('relicStance')) return false;
+  f.relicStance = f.relicStance === 1 ? 2 : 1;
+  f.relicStanceT = 0.55; f.relicStanceCd = 0.85;
+  f.stanceT = 0.14; f.state = 'stance'; f.t = 0; f.move = null; f.skill = null; f.sp = null; f.vx *= 0.25;
+  const skMeta = f.skinKey && typeof SKINS !== 'undefined' && SKINS[f.skinKey];
+  const relic = skMeta && skMeta.relic;
+  const isAtk = f.relicStance === 1;
+  const label = isAtk ? `攻境 · ${(relic && relic.stanceAtk) || '破阵'}` : `守境 · ${(relic && relic.stanceDef) || '镇岳'}`;
+  const rgb = isAtk ? '255,112,72' : '110,230,205';
+  if (!RESIM) {
+    if (typeof SFX !== 'undefined' && SFX.relicStance) SFX.relicStance(f.relicStance);
+    if (M.mode === 'train' && f.idx === 0) {
+      TRAIN.lastStanceT = clock;
+      if (typeof trainLogEvent === 'function') trainLogEvent('stance', label, isAtk ? '攻势 +6% · 移速 +6% · 聚气 +10% · 受击 +6%' : '减伤 -7% · 架势稳定 +15% · 回势 +22% · 反击 +10%');
+    }
+    addP({ type: 'text', text: label, x: f.x, y: f.y - 142, life: 0.85, max: 0.85, rgb });
+    ring(f.x, f.y - 54, 86, rgb, 0.34);
+  }
   return true;
 }
 function applyCombatBadgeHit(att, def, move, ev) {

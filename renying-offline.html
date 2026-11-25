@@ -3569,32 +3569,153 @@ background: #d9a6ff;
 box-shadow: 0 0 6px rgba(217, 166, 255, 0.85);
 flex: none;
 }
+.cx-relic-banner {
+margin-top: 8px;
+padding: 8px 10px;
+border-radius: 8px;
+background: linear-gradient(135deg, rgba(218, 175, 92, 0.16), rgba(32, 24, 48, 0.72));
+border: 1px solid rgba(233, 196, 106, 0.45);
+display: flex;
+flex-direction: column;
+gap: 5px;
+}
+.cx-relic-top {
+display: flex;
+align-items: center;
+flex-wrap: wrap;
+gap: 8px;
+font-size: 12px;
+}
+.cx-relic-top b { color: #f6d586; font-weight: 700; }
+.cx-relic-top span { color: var(--ink); opacity: 0.9; }
+.cx-relic-top small {
+margin-left: auto;
+padding: 1px 7px;
+border-radius: 99px;
+background: rgba(233, 196, 106, 0.2);
+color: #ffe399;
+font-size: 11px;
+}
+.cx-relic-stances {
+display: flex;
+align-items: center;
+flex-wrap: wrap;
+gap: 6px;
+font-size: 11.5px;
+}
+.cx-relic-stances .rs-atk {
+padding: 2px 8px;
+border-radius: 6px;
+background: rgba(255, 112, 72, 0.18);
+border: 1px solid rgba(255, 112, 72, 0.45);
+color: #ffb8a2;
+}
+.cx-relic-stances .rs-def {
+padding: 2px 8px;
+border-radius: 6px;
+background: rgba(110, 230, 205, 0.16);
+border: 1px solid rgba(110, 230, 205, 0.45);
+color: #a6f5e6;
+}
+.cx-relic-stances .rs-key {
+margin-left: auto;
+color: var(--dim);
+font-size: 11px;
+}
 .cx-badge-box {
 margin-top: 10px;
-padding-top: 8px;
-border-top: 1px solid rgba(239, 232, 216, 0.12);
+padding: 8px 10px;
+border-radius: 8px;
+background: rgba(255, 255, 255, 0.03);
+border: 1px solid rgba(239, 232, 216, 0.12);
 }
 .cx-badge-head {
 display: flex;
 justify-content: space-between;
 align-items: center;
 gap: 8px;
-margin-bottom: 6px;
+flex-wrap: wrap;
 }
 .cx-badge-cur {
 color: var(--gold);
 font-weight: 700;
 font-size: 12.5px;
 }
-.cx-badge-clear {
+.cx-badge-cnt {
+margin-left: 6px;
+font-weight: 400;
+font-size: 11.5px;
+color: var(--dim);
+}
+.cx-badge-acts {
+display: flex;
+align-items: center;
+gap: 6px;
+}
+.cx-badge-clear,
+.cx-badge-toggle {
 padding: 2px 10px !important;
 font-size: 12px !important;
 }
 .cx-badge-desc {
-margin-top: 6px;
+margin-top: 5px;
 font-size: 12px;
 color: var(--dim);
 line-height: 1.45;
+}
+.cx-badge-cats {
+display: flex;
+flex-wrap: wrap;
+gap: 5px;
+margin: 8px 0 6px;
+padding-top: 7px;
+border-top: 1px solid rgba(239, 232, 216, 0.1);
+}
+.cx-badge-cat {
+display: inline-flex;
+align-items: center;
+gap: 4px;
+padding: 2px 8px;
+border-radius: 99px;
+font-size: 11.5px;
+background: rgba(255, 255, 255, 0.04);
+border: 1px solid rgba(239, 232, 216, 0.18);
+color: var(--dim);
+cursor: pointer;
+}
+.cx-badge-cat small { opacity: 0.72; font-size: 10.5px; }
+.cx-badge-cat.sel {
+background: rgba(233, 196, 106, 0.22);
+border-color: var(--gold);
+color: var(--gold);
+font-weight: 700;
+}
+.cx-badge-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+gap: 5px;
+max-height: 148px;
+overflow-y: auto;
+overscroll-behavior: contain;
+padding-right: 3px;
+scrollbar-width: thin;
+}
+.cx-badge-item {
+display: inline-flex !important;
+align-items: center;
+justify-content: flex-start;
+gap: 4px;
+padding: 4px 7px !important;
+font-size: 11.5px !important;
+white-space: nowrap;
+overflow: hidden;
+text-overflow: ellipsis;
+}
+.cx-badge-item em {
+font-style: normal;
+font-size: 10.5px;
+opacity: 0.78;
+margin-left: auto;
 }
 .bp-arch-bar {
 display: flex;
@@ -17547,6 +17668,34 @@ sNoise(0.35, 2400, 800, 2.4, 0.35, 'bandpass');
 sparkle() { [1318.5, 1661.2, 1975.5, 2637, 3322.4].forEach((f, i) => bellAt(f, i * 0.075, 1.2 - i * 0.1, 0.075)); },
 shine(p = 1) { bellAt(2093, 0, 0.55, 0.05 * p); bellAt(3136, 0.025, 0.4, 0.028 * p); },
 shing(p = 1) { sNoise(0.05, 9500, 6000, 0.8, 0.12 * p, 'highpass'); metal(1850, 0.3, 0.035 * p); },
+relicAccent(mat, p = 1) {
+if (!AC || muted) return;
+const v = clamp(p, 0.4, 1.3);
+if (mat === 'porcelain' || mat === 'celadon' || mat === 'sancai') {
+bellAt(2349, 0, 0.42, 0.055 * v); bellAt(3520, 0.018, 0.28, 0.03 * v);
+} else if (mat === 'bronze' || mat === 'compass' || mat === 'armillary') {
+metal(392, 0.65, 0.09 * v); bellAt(784, 0.015, 0.45, 0.04 * v);
+} else if (mat === 'guqin' || mat === 'dunhuang') {
+sTone(440, 436, 0.38, 0.12 * v, 'triangle'); bellAt(1318.5, 0.02, 0.35, 0.035 * v);
+} else if (mat === 'ironfire') {
+sNoise(0.11, 8800, 2600, 1.8, 0.22 * v, 'highpass'); metal(1480, 0.28, 0.06 * v);
+} else if (mat === 'enamel' || mat === 'liuli' || mat === 'goldleaf') {
+bellAt(1975.5, 0, 0.45, 0.05 * v); bellAt(2960, 0.02, 0.32, 0.03 * v);
+} else if (mat === 'silk' || mat === 'papercut' || mat === 'puppet' || mat === 'kingfisher') {
+sNoise(0.09, 5400, 1800, 2.2, 0.14 * v, 'bandpass'); bellAt(1760, 0.01, 0.22, 0.025 * v);
+} else {
+sTone(310, 150, 0.14, 0.16 * v, 'triangle'); bellAt(1568, 0.015, 0.3, 0.035 * v);
+}
+},
+relicStance(mode) {
+if (!AC || muted) return;
+if (mode === 1) {   // 攻境：利刃出鞘升调清鸣
+sNoise(0.14, 2400, 6800, 3.2, 0.16, 'bandpass');
+bellAt(1174.7, 0, 0.35, 0.06); bellAt(1760, 0.045, 0.42, 0.065);
+} else {            // 守境：古钟沉稳护体和鸣
+metal(330, 0.7, 0.09); bellAt(523.25, 0, 0.55, 0.06); bellAt(784, 0.05, 0.5, 0.045);
+}
+},
 };
 function bellAt(f, delay, dur, vol) {
 if (!AC || muted || ![f, delay, dur, vol].every(Number.isFinite)) return;
@@ -17743,7 +17892,7 @@ const DEFAULT_1P_KEYS = {
 left: 'KeyA', right: 'KeyD', jump: 'KeyW', jump2: 'Space', down: 'KeyS',
 atk: 'KeyX', dash: 'ShiftLeft', special: 'KeyE', skill: 'KeyQ', skill2: 'KeyR',
 heavyStrike: 'KeyU', lowKick: 'KeyI', iaido: 'KeyO', grapple: 'KeyH',
-stance: 'KeyZ', feint: 'KeyC', parry: 'KeyF', pet: 'KeyV',
+stance: 'KeyZ', relicStance: 'KeyM', feint: 'KeyC', parry: 'KeyF', pet: 'KeyV',
 lock: 'KeyG', beacon: 'KeyB', rally: 'KeyT', scoreboard: 'Tab',
 orderFocus: 'Digit1', orderProtect: 'Digit2', orderSpread: 'Digit3',
 cmdSelect: 'KeyY', cmdRole: 'KeyN'   // 统帅：选队友 / 给他分任务（Tab 轻点换战术在 25-keyboard-boot.js）
@@ -18043,7 +18192,7 @@ netStatus(rkMsg || '对局已中断（未完成，不扣分）。可重新建房
 if (rkMsg) toast(rkMsg);
 NET.lastResult = '';
 }
-const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits', 'stance', 'stanceUnlocked', 'stanceT', 'badgeId', 'badgeTier', 'badgeDashT',
+const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits', 'stance', 'stanceUnlocked', 'stanceT', 'relicStance', 'relicStanceUnlocked', 'relicStanceT', 'relicStanceCd', 'badgeId', 'badgeTier', 'badgeDashT',
 'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
 'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'defDebuffT', 'swapFreezeT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir', 'clones', 'cloneN', 'swapId', 'shadowMarks', 'shadowMarkT', 'shadowExecTarget', 'shadowExecT',
 'badgeLinkT', 'badgePressureT', 'badgePressureSkill', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'badgeAirUsed', 'badgeAirSkillUsed', 'ballGuardBreakT', 'quickGetup', 'quickGetupPhase', 'knockdownDur'];
@@ -32151,7 +32300,7 @@ skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, es
 notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, needleMarkT: 0, lqNormHits: 0, shadowMarks: 0, shadowMarkT: 0, shadowExecTarget: -1, shadowExecT: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0, pol: 0, polT: 0, magN: 0, magTg: -1, mChain: 0, mT: 0, sw: null, squashT: 0,
 guard: this.maxGuard, sinceBlock: 0,
 state: 'idle', t: 0, move: null, invul: 0, hitInvulBy: -1, hitInvulEnd: 0, lastHitByIdx: -1, lastHitByT: -99, lastLandIdx: -1, lastLandT: -99, comboT0: -99, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
-stance: 0, stanceUnlocked: false, stanceT: 0, badgeId: '', badgeTier: '', badgeDashT: 0,
+stance: 0, stanceUnlocked: false, stanceT: 0, relicStance: 0, relicStanceUnlocked: false, relicStanceT: 0, relicStanceCd: 0, badgeId: '', badgeTier: '', badgeDashT: 0,
 badgeLinkT: 0, badgePressureT: 0, badgePressureSkill: 0, badgeRiposteT: 0, badgeBreakT: 0, badgeAirSkillT: 0, badgeExitT: 0, badgeAirUsed: 0, badgeAirSkillUsed: 0,
 ballGuardBreakT: 0,
 juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
@@ -32339,7 +32488,7 @@ if (dist < minDist) { best = list[i]; minDist = dist; }
 f.target = best;
 return best;
 };
-const wk = f => WALK * f.ch.stat.walk * ((f.slowT || 0) > 0 ? 0.6 : 1) * (scOn() ? scSpd(f) : 1) * (M.cmd ? cmdSpeedMul(f) : 1);   // 爬塔里秘卷、霜冻会改移速
+const wk = f => WALK * f.ch.stat.walk * (f.relicStance === 1 ? 1.06 : f.relicStance === 2 ? 0.96 : 1) * ((f.slowT || 0) > 0 ? 0.6 : 1) * (scOn() ? scSpd(f) : 1) * (M.cmd ? cmdSpeedMul(f) : 1);   // 爬塔里秘卷、霜冻会改移速
 function setChars(a, b) { A.setChar(a); B.setChar(b); }
 const ARENA2V2 = {
 geysers: [{ x: 460, cd: 0 }, { x: 2140, cd: 0 }],
@@ -34372,6 +34521,7 @@ addP({ type: 'spark', x: f.x, y: f.y - 60, vx: Math.cos(a) * v, vy: Math.sin(a) 
 function neutral(f, foe) {
 const c = f.ctrl, onG = f.onGround();
 if (typeof trySwitchStance === 'function' && onG && trySwitchStance(f)) return;
+if (typeof trySwitchRelicStance === 'function' && onG && trySwitchRelicStance(f)) return;
 if (onG && f.state !== 'victory') f.face = faceDir(f, foe);
 if (M.phase !== 'fight') {
 if (onG && f.state !== 'victory') { f.state = 'idle'; }
@@ -35017,6 +35167,8 @@ holdBuf(f);
 f.t += STEP;
 f.dashCD = Math.max(0, f.dashCD - STEP);
 f.stanceT = Math.max(0, (f.stanceT || 0) - STEP);
+f.relicStanceT = Math.max(0, (f.relicStanceT || 0) - STEP);
+f.relicStanceCd = Math.max(0, (f.relicStanceCd || 0) - STEP);
 f.feintCD = Math.max(0, (f.feintCD || 0) - STEP);
 f.qiParryCD = Math.max(0, (f.qiParryCD || 0) - STEP);
 f.qiParryT = Math.max(0, (f.qiParryT || 0) - STEP);
@@ -35091,7 +35243,8 @@ const baseRegen = ((f.ch && f.ch.stat && f.ch.stat.guardRegen) || 26);
 const hpFactor = clamp(0.55 + 0.45 * (f.hp / f.maxHp), 0.55, 1.0);
 const stateBonus = (f.state === 'idle' && f.onGround()) ? 1.25 : (['walk', 'air'].includes(f.state) ? 0.8 : 0.5);
 const stanceRegen = f.stance && f.stanceUnlocked && ['tieshan', 'yuehua'].includes(f.ch.id) ? 1.2 : 1;
-const regen = baseRegen * hpFactor * stateBonus * stanceRegen * STEP;
+const relicRegen = f.relicStance === 2 ? 1.22 : 1;
+const regen = baseRegen * hpFactor * stateBonus * stanceRegen * relicRegen * STEP;
 f.guard = Math.min(f.maxGuard, (f.guard !== undefined ? f.guard : f.maxGuard) + regen);
 }
 if (f.state === 'skill' && f.skill === 'mirror') f.parryT = Math.max(0, f.parryT - STEP);
@@ -35653,7 +35806,8 @@ if (m.shadowMark > 0 && att && att.ch && att.ch.passive === 'mist' && typeof add
 addShadowMark(att, def, m.shadowMark);
 }
 const defVuln = (def.defDebuffT > 0 || (m && m.isWave)) ? 1.5 : 1.0;
-let guardLoss = (m.noGuardDrain || m.cloneEcho) ? 0 : (((m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1)) * defVuln);
+const relicGuardStab = def.relicStance === 2 ? 1.15 : def.relicStance === 1 ? 0.92 : 1;
+let guardLoss = (m.noGuardDrain || m.cloneEcho) ? 0 : (((m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / (((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1) * relicGuardStab)) * defVuln);
 if (!m.noGuardDrain && !m.cloneEcho) guardLoss += Math.max(0, m.blockGuardDamage || 0);
 if (chaosNow('guard_stab')) guardLoss *= chaosNow('guard_stab').val;
 if (m.guardDeplete) guardLoss = Math.max(def.maxGuard || 100, (def.guard !== undefined ? def.guard : def.maxGuard) + 1);
@@ -35749,6 +35903,11 @@ def.comboHits++;
 const isCounter = !m.isProj && ((def.state === 'attack' && def.move && def.moveName !== 'dl' && def.t < (def.move.su || 0.15)) || (def.state === 'skill' && def.t < 0.2));
 const scale = m.noScale ? 1 : Math.max(0.35, 1 - (att.ch.scaling || 0.08) * (def.comboHits - 1));
 let dmg = (m.dmg * scale * balDmg(att, m)) / defRating;
+if (att.relicStance === 1) dmg *= 1.06;
+else if (att.relicStance === 2) dmg *= 0.94;
+if (def.relicStance === 2) dmg *= 0.93;
+else if (def.relicStance === 1) dmg *= 1.06;
+if (att.relicStance === 2 && (isCounter || att.badgeRiposteT > 0 || (att.qiParryCD || 0) > 2.0)) dmg *= 1.10;
 if (isBlockedCs2) {
 dmg *= 0.45; // 格挡满蓄力斩：伤害大幅降低（较非格挡减少55%）
 if (def.guard !== undefined) def.guard = Math.max(0, def.guard - 35);
@@ -35866,7 +36025,8 @@ att.hitConfirmed = true;
 if (!(clock - brainT(att.lastLandT) < BRAIN.commit && att.lastLandIdx === def.idx)) att.comboT0 = clock;
 att.lastLandIdx = def.idx; att.lastLandT = clock; def.lastHitByIdx = att.idx; def.lastHitByT = clock;
 const chaosMeterMul = (chaosNow('meter_gain') || { val: 1 }).val;
-if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul);
+const relicMeterMul = att.relicStance === 1 ? 1.10 : 1;
+if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul * relicMeterMul);
 def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.08 : 0.14));
 if (typeof applyCombatBadgeHit === 'function') applyCombatBadgeHit(att, def, m, ev);
 if (!m.noStun || def.hp <= 0) def.move = null;
@@ -38994,7 +39154,12 @@ addP({ type: 'ring', x, y, r: 86 * p, life: 0.3, max: 0.3, rgb: c2, ng: 1 });
 for (let i = 0; i < 10; i++) { const a = i / 10 * 6.283 + rand(-0.15, 0.15), sp = rand(700, 1100) * p; addP({ type: 'streak', x: x + Math.cos(a) * 10, y: y + Math.sin(a) * 10, vx: Math.cos(a) * sp, vy: Math.sin(a) * sp, drag: 7, life: 0.2, max: 0.2, rgb: i % 2 ? c : '255,255,255', ng: 1 }); }
 shake = Math.max(shake, 7 * p);
 const now = performance.now();
-if (now - TIER_SFX_T > 70) { TIER_SFX_T = now; if (tr >= 4) SFX.shine(clamp(ev.dmg / 8, 0.6, 1.4)); else SFX.shing(clamp(ev.dmg / 8, 0.6, 1.3)); }   // 连击时别叠成一片
+if (now - TIER_SFX_T > 70) {
+TIER_SFX_T = now;
+if (L.deco && L.deco.relicMat && typeof SFX !== 'undefined' && SFX.relicAccent) SFX.relicAccent(L.deco.relicMat, clamp(ev.dmg / 8, 0.6, 1.3));
+else if (tr >= 4) SFX.shine(clamp(ev.dmg / 8, 0.6, 1.4));
+else SFX.shing(clamp(ev.dmg / 8, 0.6, 1.3));
+}   // 连击时别叠成一片
 if (tr < 4) return;
 addP({ type: 'glyph', g2: 'star8', x, y, r: 44 * p, life: 0.42, max: 0.42, rgb: '255,214,120', rot: rand(0, 1), spin: 1.5, ng: 1 });
 out((vx, vy) => addP({ type: 'glint', x, y, vx: vx * 0.75, vy: vy * 0.75 - 40, drag: 3.5, life: rand(0.45, 0.8), max: 0.8, r: rand(4, 8) * p, rgb: Math.random() < 0.5 ? '255,226,150' : '255,255,255', ng: 1 }), 8);
@@ -39004,30 +39169,40 @@ function skinIntroFX(f) {
 const S = SKINS[f.skinKey], L = f.look; if (!S || !L.fx) return;
 const tr = tierRank(L), T = TIER_TXT[L.tier];
 const leg = S.rarity === 'legend', c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || skinTh(L).amb;
-const name = () => addP({ type: 'text', text: `${T ? T[0] : S.rarity === 'legend' ? '传说' : '精英'} · ${S.name}`, x: f.x, y: f.y - 175, life: 2.2 + (tr >= 4 ? 0.6 : 0), max: 2.2 + (tr >= 4 ? 0.6 : 0), rgb: T ? T[1] : S.rarity === 'legend' ? '233,196,106' : '150,200,255' });
-for (let i = 0; i < (leg ? 34 : 12) + (tr >= 3 ? 16 : 0); i++) skinSpawn(kind, f.x + rand(-40, 40), rand(-110, -4), c, c2, 1.2, true);
+const isHeir = !!(S.heirloom || (L.deco && L.deco.transform === 'heirloom'));
+const crowded = typeof fighters !== 'undefined' && fighters.length > 6;
+const name = () => addP({ type: 'text', text: isHeir ? `★ 天工传世 · ${S.name}` : `${T ? T[0] : S.rarity === 'legend' ? '传说' : '精英'} · ${S.name}`, x: f.x, y: f.y - 175, life: 2.2 + (tr >= 4 ? 0.6 : 0), max: 2.2 + (tr >= 4 ? 0.6 : 0), rgb: isHeir ? '255,222,130' : T ? T[1] : S.rarity === 'legend' ? '233,196,106' : '150,200,255' });
+const pCount = Math.round(((leg ? 34 : 12) + (tr >= 3 ? 16 : 0)) * (crowded ? 0.4 : 1));
+for (let i = 0; i < pCount; i++) skinSpawn(kind, f.x + rand(-40, 40), rand(-110, -4), c, c2, 1.2, true);
 if (!leg && tr < 2) { name(); return; }
 addP({ type: 'glow', x: f.x, y: f.y - 60, r: 90, life: 0.6, max: 0.6, rgb: c, ng: tr >= 2 ? 1 : 0 });   // 品质皮肤的不进泛光：开场一下别把人照成白的
 ring(f.x, f.y - 60, 120, c, 0.55);
-if (tr >= 3) { addP({ type: 'ring', x: f.x, y: f.y - 60, r: 190, life: 0.8, max: 0.8, rgb: c2, ng: 1 }); for (let i = 0; i < 14; i++) addP({ type: 'glint', x: f.x + rand(-60, 60), y: f.y - rand(10, 170), vx: 0, vy: -rand(10, 40), life: rand(0.6, 1.2), max: 1.2, r: rand(4, 8), rgb: Math.random() < 0.5 ? c2 : '255,255,255', ng: 1 }); }
+if (tr >= 3) { addP({ type: 'ring', x: f.x, y: f.y - 60, r: 190, life: 0.8, max: 0.8, rgb: c2, ng: 1 }); for (let i = 0; i < (crowded ? 6 : 14); i++) addP({ type: 'glint', x: f.x + rand(-60, 60), y: f.y - rand(10, 170), vx: 0, vy: -rand(10, 40), life: rand(0.6, 1.2), max: 1.2, r: rand(4, 8), rgb: Math.random() < 0.5 ? c2 : '255,255,255', ng: 1 }); }
 if (tr >= 4) {   // 绝世：一道柔光从天上落到脚下，脚下亮起金星印，一串铃音
 addP({ type: 'pillar', x: f.x, y: f.y, r: 40, life: 1.5, max: 1.5, rgb: rgbMix(c, '255,226,150', 0.5), ng: 1 });
 addP({ type: 'glyph', g2: 'star8', x: f.x, y: f.y - 70, r: 78, life: 0.9, max: 0.9, rgb: '255,214,120', rot: 0, spin: 0.8, ng: 1 });
 addP({ type: 'ring', x: f.x, y: f.y - 4, r: 150, life: 0.9, max: 0.9, rgb: '255,226,150', ng: 1 });
-if (!RESIM) SFX.sparkle();
+if (!RESIM) {
+if (isHeir && L.deco && L.deco.relicMat && typeof SFX !== 'undefined' && SFX.relicAccent) SFX.relicAccent(L.deco.relicMat, 1.2);
+SFX.sparkle();
+}
 } else if (tr >= 3 && !RESIM) SFX.shing(1.2);
 name();   // 名号最后加：画在光柱、光环上面，不会被盖住
 }
 function skinVictoryFX(f) {
 const S = SKINS[f.skinKey], L = f.look; if (!S || !L.fx) return;
 const leg = S.rarity === 'legend', tr = tierRank(L), c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || skinTh(L).amb;
+const isHeir = !!(S.heirloom || (L.deco && L.deco.transform === 'heirloom'));
 for (let i = 0; i < (leg ? 40 : 16) + tr * 6; i++) { const a = rand(-Math.PI * 0.85, -Math.PI * 0.15), v = rand(250, 650); skinSpawn(kind, f.x, f.y - 60, c, c2, 1.3, true); const q = particles[particles.length - 1]; if (q) { q.vx = Math.cos(a) * v; q.vy = Math.sin(a) * v; q.g = 420; q.life = q.max = rand(1, 1.8); } }
 if (leg) addP({ type: 'glow', x: f.x, y: f.y - 80, r: 110, life: 0.8, max: 0.8, rgb: c });
 if (tr >= 3) for (let i = 0; i < 18; i++) { const a = rand(-Math.PI * 0.9, -Math.PI * 0.1), v = rand(200, 520); addP({ type: 'glint', x: f.x, y: f.y - 70, vx: Math.cos(a) * v, vy: Math.sin(a) * v, g: 300, drag: 1.2, life: rand(0.9, 1.6), max: 1.6, r: rand(4, 8), rgb: tr >= 4 ? (Math.random() < 0.6 ? '255,226,150' : '255,255,255') : (Math.random() < 0.5 ? c2 : '255,255,255'), ng: 1 }); }
 if (tr >= 4) {
 addP({ type: 'pillar', x: f.x, y: f.y, r: 46, life: 1.7, max: 1.7, rgb: rgbMix(c, '255,226,150', 0.5), ng: 1 });
 addP({ type: 'glyph', g2: 'star8', x: f.x, y: f.y - 80, r: 92, life: 1.1, max: 1.1, rgb: '255,214,120', rot: 0, spin: 0.6, ng: 1 });
-if (!RESIM) SFX.sparkle();
+if (!RESIM) {
+if (isHeir && L.deco && L.deco.relicMat && typeof SFX !== 'undefined' && SFX.relicAccent) SFX.relicAccent(L.deco.relicMat, 1.25);
+SFX.sparkle();
+}
 }
 }
 function drawSkinParticle(p, k) {
@@ -39828,6 +40003,33 @@ ctx.beginPath(); ctx.moveTo(p0[0], p0[1]); ctx.quadraticCurveTo(c1[0], c1[1], p1
 const e2 = [sk.eb[0] + back * (14 + Math.abs(sway)), sk.eb[1] + 22 + sway];   // 另一头从后臂垂下来
 ctx.strokeStyle = `rgba(${D.shawl},0.5)`; ctx.lineWidth = 3;
 ctx.beginPath(); ctx.moveTo(p1[0], p1[1]); ctx.quadraticCurveTo(sk.eb[0] + back * 4, sk.eb[1], e2[0], e2[1]); ctx.stroke();
+}
+if (D.transform === 'heirloom') {
+const crowded = typeof fighters !== 'undefined' && fighters.length > 6;
+const sc = f.relicStance === 2 ? '110,230,205' : f.relicStance === 1 ? '255,112,72' : (L.fx && L.fx.c) || '238,196,102';
+const hc = [bc[0] - sk.face * 4, bc[1] - 12], hr = crowded ? 22 : 28;
+ctx.save(); ctx.globalCompositeOperation = 'lighter';
+ctx.strokeStyle = `rgba(${sc},${crowded ? 0.35 : 0.55})`; ctx.lineWidth = crowded ? 1.3 : 1.8;
+ctx.beginPath(); ctx.arc(hc[0], hc[1], hr, t * 0.6, t * 0.6 + Math.PI * 1.65); ctx.stroke();
+if (!crowded) {
+ctx.strokeStyle = 'rgba(255,228,150,0.42)'; ctx.lineWidth = 1.1; ctx.setLineDash([4, 5]);
+ctx.beginPath(); ctx.arc(hc[0], hc[1], hr + 5, -t * 0.45, -t * 0.45 + Math.PI * 1.8); ctx.stroke();
+ctx.setLineDash([]);
+}
+if (D.relicGlyph) {
+ctx.font = `700 ${crowded ? 13 : 16}px ${TITLE_FONT}`;
+ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+ctx.fillStyle = `rgba(${sc},${crowded ? 0.45 : 0.72})`;
+ctx.fillText(D.relicGlyph, hc[0], hc[1] + Math.sin(t * 2.2) * 1.5);
+}
+if (f.relicStance === 1 || f.relicStance === 2) {
+const pulse = f.relicStanceT > 0 ? 1 + (f.relicStanceT / 0.55) * 0.55 : 1;
+const gr = (crowded ? 28 : 38) * pulse;
+ctx.strokeStyle = f.relicStance === 1 ? `rgba(255,112,72,${0.48 * pulse})` : `rgba(110,230,205,${0.48 * pulse})`;
+ctx.lineWidth = f.relicStance === 1 ? 2.2 : 2.6;
+ctx.beginPath(); ctx.ellipse(f.x, f.y - 2, gr, gr * 0.24, 0, 0, Math.PI * 2); ctx.stroke();
+}
+ctx.restore();
 }
 ctx.restore(); return;
 }
@@ -41313,6 +41515,226 @@ circle([sk.hf[0] - Math.cos(ph) * 12, sk.hf[1] - Math.sin(ph) * 12], 1.8);
 const HAMMER_LOOK = {
 crimson_hammer: { chain: ['#6a2a22', '#b0503a'], head: '#4a1610', band: '#ff6a2a', crack: '255,120,50', spikes: '#2a0c08' },
 underworld_hammer: { chain: ['#4a2a7a', '#b48cff'], head: '#2a1840', band: '#a855f7', crack: '185,105,255', ghost: true },
+relic_kintsugi: { chain: ['#221a16', '#f4c542'], head: '#161214', band: '#f4c542', crack: '248,198,66', spikes: '#d8a432' },
+};
+SKIN_WEAP.relic_porcelain = W => {
+const { P, poly, bar, live, t, T, hl, g } = W;
+bar(hl, g, 4.4, '#1a3668');
+poly([P(0, -2.8), P(0.88, -2.5), t, P(0.88, 2.5), P(0, 2.8)], W.lg(g, t, [[0, '#dce8f8'], [0.45, '#f7fbff'], [1, '#ffffff']]));
+poly([P(0.03, -8), P(-0.04, -9.5), P(-0.06, 0), P(-0.04, 9.5), P(0.03, 8), P(0, 0)], '#d8b464');
+if (!live) return;
+ctx.strokeStyle = '#1e4fa3'; ctx.lineWidth = 1.2; ctx.beginPath();
+for (let i = 0; i <= 14; i++) { const k = 0.06 + i / 14 * 0.78, q = P(k, Math.sin(k * 18 - T * 3.5) * 1.1); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }
+ctx.stroke();
+ctx.fillStyle = '#2c6be0'; circle(P(-0.01, 0), 2.2);
+ctx.globalCompositeOperation = 'lighter'; W.glow(t, 8, '64,132,235', 0.48);
+};
+SKIN_WEAP.relic_puppet = W => {
+const pr = dualPair(W);
+W.bar(W.hl, W.g, 3.8, '#3b180e');
+for (const [a, b, sg] of pr) {
+const ex = b[0] - a[0], ey = b[1] - a[1], el = Math.hypot(ex, ey) || 1, nx = -ey / el * W.pf * sg, ny = ex / el * W.pf * sg;
+const mid = [a[0] + ex * 0.55 + nx * 6.5, a[1] + ey * 0.55 + ny * 6.5];
+W.poly([a, [a[0] + ex * 0.35 + nx * 4, a[1] + ey * 0.35 + ny * 4], mid, b, [a[0] + ex * 0.45 - nx * 2, a[1] + ey * 0.45 - ny * 2]], W.lg(a, b, [[0, '#7a2214'], [0.55, '#e6552e'], [1, '#ffe6b8']]));
+if (W.live) {
+ctx.strokeStyle = '#ffd27a'; ctx.lineWidth = 1; line(a, b);
+ctx.fillStyle = '#241410'; circle([a[0] + ex * 0.52 + nx * 1.5, a[1] + ey * 0.52 + ny * 1.5], 1.8);
+}
+}
+};
+SKIN_WEAP.relic_bronze = W => {
+const { P, poly, bar, live, t } = W;
+bar(W.hl, W.g, 5.4, '#1e322e');
+poly([P(0, -5.8), P(0.86, -6.2), t, P(0.86, 6.4), P(0, 5.8)], W.lg(P(0.5, -6), P(0.5, 6), [[0, '#355c54'], [0.5, '#76b8a4'], [1, '#2b4742']]));
+poly([P(0.04, -12), P(-0.05, -13), P(-0.05, 13), P(0.04, 12)], '#d4a64a');
+if (!live) return;
+ctx.strokeStyle = '#d4a64a'; ctx.lineWidth = 1.1; line(P(0.05, 0), P(0.84, 0));
+for (const s of [0.18, 0.38, 0.58]) ctx.strokeRect(P(s, -2.5)[0] - 2, P(s, -2.5)[1] - 2, 4, 4);
+ctx.fillStyle = '#78e6c8'; circle(P(0, 0), 2.5);
+};
+SKIN_WEAP.relic_celadon = W => {
+const { At, t, bar, live, T } = W, back = At(W.g, -36);
+bar(back, At(t, -24), 3.4, '#3f686b');
+for (const s of [-30, -58, -86]) bar(At(t, s, -2.2), At(t, s, 2.2), 2.2, '#e0bc7a');
+W.poly([t, At(t, -10, 4.2), At(t, -22, 3), At(t, -26, 0), At(t, -22, -3), At(t, -10, -4.2)], W.lg(At(t, -26), t, [[0, '#7fa8a8'], [0.55, '#cfe6e4'], [1, '#f4ffff']]));
+if (!live) return;
+ctx.strokeStyle = 'rgba(224,188,122,0.85)'; ctx.lineWidth = 0.9;
+line(At(t, -20, -1.2), At(t, -12, 1.5)); line(At(t, -14, -2), At(t, -7, 0.8));
+const r0 = At(t, -26), sw = Math.sin(T * 4) * 2.4;
+ctx.strokeStyle = '#f0cfa0'; ctx.lineWidth = 1.6;
+ctx.beginPath(); ctx.moveTo(r0[0], r0[1]); ctx.quadraticCurveTo(r0[0] - W.ux * 7, r0[1] + 6, r0[0] - W.ux * 10 + sw, r0[1] + 15); ctx.stroke();
+};
+SKIN_WEAP.relic_embroidery = W => {
+const { g, live, T } = W, a = Math.atan2(W.uy, W.ux);
+W.bar(W.hl, g, 3.6, '#7a2434');
+const q = ctx.createRadialGradient(g[0], g[1], 4, g[0], g[1], 32);
+q.addColorStop(0, '#fff5e6'); q.addColorStop(0.55, '#f29ab0'); q.addColorStop(1, '#a82a44');
+W.fillWith(() => fanSector(W, 32, a - 0.76, a + 0.76), q);
+if (!live) return;
+ctx.strokeStyle = '#f0c464'; ctx.lineWidth = 1.1;
+for (let i = -3; i <= 3; i++) { const b = a + i * 0.22; line([g[0] + Math.cos(b) * 5, g[1] + Math.sin(b) * 5], [g[0] + Math.cos(b) * 31, g[1] + Math.sin(b) * 31]); }
+ctx.strokeStyle = '#ffd278'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(g[0], g[1], 31, a - 0.76, a + 0.76); ctx.stroke();
+const sw = Math.sin(T * 4) * 2.5; ctx.strokeStyle = '#d94862'; ctx.lineWidth = 1.5;
+line(W.hl, [W.hl[0] + sw, W.hl[1] + 13]);
+};
+SKIN_WEAP.relic_cloisonne = W => {
+fistPlates(W, (Q, h) => {
+W.poly([Q(7.5, 6.8), Q(7.5, -6.8), Q(-5.5, -5.8), Q(-6.5, 0), Q(-5.5, 5.8)], '#143878');
+if (!W.live) return;
+ctx.strokeStyle = '#f5c242'; ctx.lineWidth = 1.4;
+line(Q(7, -6.2), Q(7, 6.2)); line(Q(1, -5.5), Q(1, 5.5)); line(Q(-3.5, -4.5), Q(5.5, 0)); line(Q(-3.5, 4.5), Q(5.5, 0));
+ctx.fillStyle = '#38c8ff'; circle(Q(3, 0), 2.2);
+ctx.globalCompositeOperation = 'lighter'; W.glow(h, 9, '82,172,255', 0.42);
+ctx.globalCompositeOperation = 'source-over';
+});
+};
+SKIN_WEAP.relic_woodblock = W => {
+const { At, t, hl, bar, live, T } = W;
+bar(hl, At(t, -12), 4.6, '#3e2618');
+brushTip(W, W.lg(At(t, -13), At(t, 3), [[0, '#1e1612'], [0.6, '#8a1e18'], [1, '#e03e32']]));
+bar(At(t, -15), At(t, -12), 5.6, '#d8b464');
+if (!live) return;
+ctx.fillStyle = '#c82e24'; ctx.fillRect(hl[0] - 3.5, hl[1] - 3.5, 7, 7);
+ctx.strokeStyle = '#f0e6d2'; ctx.lineWidth = 0.8; ctx.strokeRect(hl[0] - 2.4, hl[1] - 2.4, 4.8, 4.8);
+const dp = (T * 1.2) % 1; ctx.fillStyle = `rgba(220,62,50,${0.9 - dp * 0.7})`; circle([t[0], t[1] + 3 + dp * 9], 1.5);
+};
+SKIN_WEAP.relic_liuli = W => {
+moonBlade(W, W.lg(W.g, W.t, [[0, '#2c4688'], [0.55, '#88f0ff'], [1, '#f2fdff']]), '#1a2450');
+const [c, a] = moonCrescent(W, 12, W.lg(W.At(W.t, -15), W.At(W.t, 7), [[0, '#88f0ff'], [0.55, '#c4a2ff'], [1, '#ffffff']]));
+if (!W.live) return;
+ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.arc(c[0], c[1], 10.6, a - 1.5, a + 1.5); ctx.stroke();
+ctx.globalCompositeOperation = 'lighter'; W.glow(W.t, 9, '142,232,255', 0.5);
+};
+SKIN_WEAP.relic_kingfisher = W => {
+W.bar(W.hl, W.g, 4.2, '#093440');
+const V = featherVane(W, 12.5, 3, 12, (i, u) => (i % 2 && i < 11 ? 2.4 : 0) * Math.sin(Math.PI * u));
+W.fillWith(() => { ctx.moveTo(...W.g); for (const q of V.outer) ctx.lineTo(q[0], q[1]); ctx.quadraticCurveTo(V.c2[0], V.c2[1], ...W.g); }, W.lg(W.g, W.t, [[0, '#0d4a58'], [0.5, '#14c8c0'], [1, '#e8fffb']]));
+if (!W.live) return;
+ctx.strokeStyle = '#f5c84c'; ctx.lineWidth = 1.5; line(W.g, W.t);
+ctx.strokeStyle = 'rgba(245,200,76,0.75)'; ctx.lineWidth = 0.9;
+for (const u of [0.3, 0.55, 0.78]) { const p = V.bz(V.c1, u); line(W.P(u, 0), p); }
+};
+SKIN_WEAP.relic_guqin = W => {
+const F = fluteBody(W, '#2c1e16', [0.1, 0.5, 0.9], '#e6c278');
+if (!W.live) return;
+ctx.fillStyle = '#e6c278';
+for (let i = 0; i < 7; i++) circle(F(0.2 + i * 0.1, -2.1), 1.0);
+ctx.strokeStyle = 'rgba(238,198,118,0.8)'; ctx.lineWidth = 0.8; line(F(0.12, 1.8), F(0.88, 1.8));
+const sw = Math.sin(W.T * 3.2) * 2.8; ctx.strokeStyle = '#e6c278'; ctx.lineWidth = 1.4;
+line(W.hl, [W.hl[0] + sw, W.hl[1] + 13]);
+};
+SKIN_WEAP.relic_sancai = W => {
+const G = gourdParts(W); if (!G) return;
+const { top, bot, mid } = G;
+const fillG = (c, r) => { const q = ctx.createLinearGradient(c[0] - r, c[1] - r, c[0] + r, c[1] + r); q.addColorStop(0, '#fff6e0'); q.addColorStop(0.45, '#e89a2c'); q.addColorStop(1, '#2e9e66'); ctx.fillStyle = W.flash ? '#fff' : q; circle(c, r); };
+fillG(bot, 8.8); fillG(top, 5.8);
+if (!W.live) return;
+ctx.fillStyle = '#d84828'; ctx.fillRect(mid[0] - 3.5, mid[1] - 1.2, 7, 2.4);
+ctx.fillStyle = 'rgba(255,255,255,0.48)'; circle([bot[0] - 2.8, bot[1] - 2.8], 2.2);
+};
+SKIN_WEAP.relic_papercut = W => {
+const { sk, L, o, flash, ux, uy, g } = W;
+const spinDraw = (pt, ang) => {
+ctx.save(); ctx.translate(pt[0], pt[1]); ctx.rotate(ang);
+if (o) { ctx.fillStyle = L.outline; ctx.beginPath(); ctx.ellipse(0, 0, 18, 5.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); return; }
+ctx.fillStyle = flash ? '#fff' : '#e62e2d';
+ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(-6, -5); ctx.lineTo(0, -2.5); ctx.lineTo(6, -5); ctx.lineTo(18, 0); ctx.lineTo(6, 5); ctx.lineTo(0, 2.5); ctx.lineTo(-6, 5); ctx.closePath(); ctx.fill();
+ctx.strokeStyle = '#f5c24a'; ctx.lineWidth = 1.1; ctx.stroke();
+ctx.fillStyle = '#fff6ee'; circle([0, 0], 2.1);
+ctx.restore();
+};
+spinDraw(g, Math.atan2(uy, ux)); spinDraw(sk.hb, Math.atan2(uy, ux) + 0.2);
+if (!o) { ctx.strokeStyle = 'rgba(245,62,62,0.85)'; ctx.lineWidth = 1.3; line(sk.hf, sk.hb); }
+};
+SKIN_WEAP.relic_screen = W => {
+const { P, poly, bar, live, t, g, hl } = W;
+bar(hl, g, 4.4, '#382a14');
+poly([P(0.03, -7.5), P(-0.04, -5), P(-0.04, 5), P(0.03, 7.5)], '#ffd65c');
+poly([P(0, -2.6), P(0.6, -3.6), P(0.92, -2.4), t, P(0.88, 2.4), P(0, 2.6)], W.lg(g, t, [[0, '#241e14'], [0.45, '#b88a24'], [0.85, '#ffd65c'], [1, '#fff8dc']]));
+if (!live) return;
+ctx.strokeStyle = '#fff6d0'; ctx.lineWidth = 1.1; line(P(0.06, -1.6), P(0.86, -1.2));
+ctx.globalCompositeOperation = 'lighter'; W.glow(t, 8, '255,214,92', 0.5);
+};
+SKIN_WEAP.relic_compass = W => {
+const { sk, L, o, flash, live, T } = W;
+if (o) { ctx.fillStyle = L.outline; circle(sk.hf, 11.5); circle(sk.hb, 10.5); return; }
+const pol = sk.pol || 1;
+for (const [p, r] of [[sk.hf, 9.2], [sk.hb, 7.8]]) {
+ctx.fillStyle = flash ? '#fff' : '#1e2838'; circle(p, r + 1.5);
+ctx.strokeStyle = '#e2b862'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(p[0], p[1], r + 1.5, 0, Math.PI * 2); ctx.stroke();
+ctx.fillStyle = pol > 0 ? '#58d8ff' : '#e2b862'; circle(p, r * 0.55);
+}
+const a = T * 2.5 * pol;
+ctx.strokeStyle = '#dff8ff'; ctx.lineWidth = 1.8;
+line([sk.hf[0] - Math.cos(a) * 8, sk.hf[1] - Math.sin(a) * 8], [sk.hf[0] + Math.cos(a) * 9, sk.hf[1] + Math.sin(a) * 9]);
+if (live) { ctx.globalCompositeOperation = 'lighter'; W.glow(sk.hf, 11, '96,218,255', 0.48); }
+};
+SKIN_WEAP.relic_marionette = W => {
+const { sk, L, o, flash, live, T } = W;
+if (o) { ctx.fillStyle = L.outline; circle(sk.hf, 10.5); return; }
+ctx.fillStyle = flash ? '#fff' : '#4a2b1e'; circle(sk.hf, 8.6);
+ctx.strokeStyle = '#f0b858'; ctx.lineWidth = 1.8;
+const a = T * 1.8;
+for (let k = 0; k < 4; k++) { const b = a + k * Math.PI / 2; line(sk.hf, [sk.hf[0] + Math.cos(b) * 10, sk.hf[1] + Math.sin(b) * 10]); }
+ctx.fillStyle = '#fae6c0'; circle(sk.hf, 3.2);
+if (live) { ctx.globalCompositeOperation = 'lighter'; W.glow(sk.hf, 9, '240,184,88', 0.45); }
+};
+SKIN_WEAP.relic_ironfire = W => {
+const { At, g, t, bar, poly, live, T } = W, crown = At(t, -18);
+bar(At(g, -30), crown, 4.4, '#3c1810');
+bar(At(crown, 0, -14), At(crown, 0, 14), 5.2, '#ff7a22');
+for (const side of [-1, 0, 1]) {
+const w = side * 12, length = side ? 15 : 20;
+poly([At(crown, -3, w - 2.6), At(crown, length - 4, w - 3.6), At(crown, length, w + 1), At(crown, length - 6, w + 3.6), At(crown, -3, w + 2.6)], W.lg(crown, At(crown, length, w), [[0, '#ff7a22'], [0.6, '#ffd25a'], [1, '#fff8e0']]));
+}
+if (!live) return;
+ctx.globalCompositeOperation = 'lighter'; W.glow(t, 12 + Math.sin(T * 14) * 2, '255,140,48', 0.6);
+};
+SKIN_WEAP.relic_armillary = W => {
+const { At, hl, t, bar, poly, live, T } = W, hub = At(t, -22);
+bar(hl, At(hub, -8), 4.2, '#2a2440');
+ctx.strokeStyle = W.o ? W.L.outline : W.flash ? '#fff' : '#f2c864'; ctx.lineWidth = W.o ? 4.5 : 2.2;
+ctx.beginPath(); ctx.arc(hub[0], hub[1], 14, 0, Math.PI * 2); ctx.stroke();
+ctx.beginPath(); ctx.ellipse(hub[0], hub[1], 14, 6, T * 0.9, 0, Math.PI * 2); ctx.stroke();
+ctx.beginPath(); ctx.ellipse(hub[0], hub[1], 14, 6, -T * 0.7 + 1.2, 0, Math.PI * 2); ctx.stroke();
+poly([At(hub, 6), At(hub, 0, 5), At(hub, -6), At(hub, 0, -5)], '#92b8ff');
+if (!live) return;
+ctx.globalCompositeOperation = 'lighter'; W.glow(hub, 12, '242,200,100', 0.5);
+};
+SKIN_WEAP.relic_dunhuang = W => {
+const { hl, t, At, bar, glow, o, flash, live, T, L } = W;
+bar(At(hl, -12, 0), At(t, -4, 0), o ? 6.4 : 4.2, o ? L.outline : flash ? '#fff' : '#7a4222');
+const head = At(t, -2, 0), lamp = At(t, 6, 3 + Math.sin(T * 5) * 1.5);
+ctx.strokeStyle = o ? L.outline : flash ? '#fff' : '#eab84a'; ctx.lineWidth = o ? 4.4 : 2.5;
+ctx.beginPath(); ctx.moveTo(head[0], head[1]); ctx.quadraticCurveTo(At(t, 5, -8)[0], At(t, 5, -8)[1], lamp[0], lamp[1] - 5); ctx.stroke();
+ctx.fillStyle = o ? L.outline : flash ? '#fff' : '#28889e'; circle(lamp, o ? 7.2 : 5.6);
+if (!o && !flash) {
+ctx.strokeStyle = '#eab84a'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(lamp[0], lamp[1], 5.6, 0, Math.PI * 2); ctx.stroke();
+ctx.fillStyle = '#fff2d2'; circle(lamp, 2.5);
+if (live) glow(lamp, 12, '245,196,86', 0.54);
+}
+};
+SKIN_WEAP.relic_cinnabar = W => {
+const { sk, L, o, flash, live, T } = W;
+const s = flailSim(sk, L, 0); if (!s) return;
+const pts = s.p, hd = pts[pts.length - 1];
+if (o) {
+ctx.strokeStyle = L.outline; ctx.lineWidth = 5.8;
+ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.stroke();
+circle(hd, 12.5); return;
+}
+for (let i = 0; i < pts.length - 1; i++) {
+ctx.strokeStyle = flash ? '#fff' : (i % 2 ? '#f0c458' : '#7c1816'); ctx.lineWidth = 3.2; line(pts[i], pts[i + 1]);
+}
+ctx.fillStyle = flash ? '#fff' : '#8e1c1a';
+ctx.beginPath();
+for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + T * 1.4; const q = [hd[0] + Math.cos(a) * 11, hd[1] + Math.sin(a) * 11]; k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }
+ctx.closePath(); ctx.fill();
+if (!flash) {
+ctx.strokeStyle = '#f0c458'; ctx.lineWidth = 1.8; ctx.stroke();
+ctx.fillStyle = '#f0c458'; circle(hd, 3.6);
+if (live) { ctx.globalCompositeOperation = 'lighter'; W.glow(hd, 12, '232,68,58', 0.42); }
+}
 };
 SKIN_WEAP.firerake = ({ At, g, t, bar, poly, L }) => {
 const crown = At(t, -18);
@@ -41563,7 +41985,8 @@ const dx = t[0] - g[0], dy = t[1] - g[1], dl = Math.hypot(dx, dy) || 1, ux = dx 
 const blade = flash ? '#fff' : L.blade;
 const ws = (L.deco && L.deco.weapStyle) || L.weapon;
 ctx.lineCap = 'round';
-if (L.weapon !== 'hammer' && L.weapon !== 'dyelash' && L.weapon !== 'bastionshell' && (skinWeapon(ws, sk, L, outline, flash, f) ||
+const isRelicWeap = typeof ws === 'string' && ws.startsWith('relic_');
+if (L.weapon !== 'hammer' && L.weapon !== 'dyelash' && (L.weapon !== 'bastionshell' || isRelicWeap) && (skinWeapon(ws, sk, L, outline, flash, f) ||
 (ws !== L.weapon && skinWeapon(L.weapon, sk, L, outline, flash, f)))) return;
 const guardBar = (w, col = L.metal || '#d9b36a') => { ctx.strokeStyle = col; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(g[0] - px * w, g[1] - py * w); ctx.lineTo(g[0] + px * w, g[1] + py * w); ctx.stroke(); };
 switch (L.weapon) {
@@ -42437,8 +42860,9 @@ ctx.restore();
 }
 function combatLoadoutLabel(f) {
 const stance = f && f.stance && HERO_STANCES[f.ch.id] ? HERO_STANCES[f.ch.id].name : '本式';
+const relic = f && f.relicStanceUnlocked && f.relicStance ? (f.relicStance === 1 ? '攻境' : '守境') : '';
 const badge = f && f.badgeId && COMBAT_BADGES[f.badgeId] ? `${COMBAT_BADGES[f.badgeId].n} · ${f.badgeTier === 'purpgold' ? '紫金' : f.badgeTier === 'gold' ? '金' : '银'}` : '';
-return [stance, badge].filter(Boolean).map(cvT).join(' · ');
+return [stance, relic, badge].filter(Boolean).map(cvT).join(' · ');
 }
 function drawHUD2v2() {
 const bh = Math.max(12, H * 0.02);
@@ -44436,6 +44860,7 @@ const KEY_ACTIONS = [
 ['skill', '门派绝学', 'combat'],
 ['skill2', '特殊突进', 'combat'],
 ['stance', '切换架势', 'combat'],
+['relicStance', '器灵双境', 'combat'],
 ['feint', '虚招翻滚', 'combat'],
 ['parry', '聚气弹反', 'combat'],
 ['pet', '灵宠秘技', 'combat'],
@@ -45980,7 +46405,7 @@ leiming: 'fighter', zuixian: 'fighter', chixiao: 'fighter', yanling: 'fighter',
 liuyun: 'support', yuxiao: 'support', qingluan: 'support',
 moyu: 'controller', cixian: 'controller', qianji: 'controller', xuanji: 'controller',
 };
-let cxArch = 'all';
+let cxArch = 'all', cxBadgeCat = 'all', cxBadgeOpen = false;
 function heroArchetype(id) { return HERO_ARCH_MAP[id] || 'fighter'; }
 function renderCodex() {
 const c = CHARS[cxIdx], m = CHAR_MOVES[cxIdx], S = SKILLS[c.skill], S2 = SKILLS[c.skill2], U = ULTS[c.ult];
@@ -46022,26 +46447,38 @@ const lockHint = ' · 武库';
 return `<button data-sk="${k}" class="sk-g${skin === k ? ' sel' : ''}${has ? '' : ' lock'}" style="--tc:${g.c}" title="${g.n}"><i class="sk-dot"></i>${v.name}${has ? ((PROF.skins || []).includes(k) || OFFLINE_BUILD ? '' : ' · 限免') : lockHint}</button>`;
 };
 const defaultBtn = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>`;
+const relicKey = typeof keyLabel === 'function' && typeof custom1PKeys !== 'undefined' ? keyLabel(custom1PKeys.relicStance || 'KeyM') : 'M';
+const relicBanner = skMeta && skMeta.relic
+? `<div class="cx-relic-banner"><div class="cx-relic-top"><b>★ 天工传世 · ${skMeta.relic.craft}</b><span>${skMeta.relic.title}</span><small>仅存斩数版</small></div><div class="cx-relic-stances"><span class="rs-atk">攻境 · ${skMeta.relic.stanceAtk}</span><span class="rs-def">守境 · ${skMeta.relic.stanceDef}</span><span class="rs-key">战中按 ${relicKey} 切换</span></div></div>`
+: '';
 let badgeBar = '';
 if (typeof window.armoryBadgeState === 'function') {
 const bs = window.armoryBadgeState(), ownedList = Object.entries(bs.owned || {});
 const eqId = (bs.equip && bs.equip[c.id]) || '';
 const eqMeta = eqId && bs.badges && bs.badges[eqId];
 const tierLbl = t => t === 'purpgold' ? '✦紫金' : t === 'gold' ? '赤金' : '银徽';
+const tierOrd = { purpgold: 3, gold: 2, silver: 1 };
 const holderOf = bid => {
 const ent = Object.entries(bs.equip || {}).find(([, id]) => id === bid);
 if (!ent || ent[0] === c.id) return '';
 const h = CHARS.find(x => x.id === ent[0]);
-return h ? ` (${h.name})` : '';
+return h ? `·${h.name}` : '';
 };
-const bBtns = ownedList.map(([bid, tier]) => {
+const BADGE_CATS = [['all', '全部'], ['offense', '进攻'], ['defense', '防御'], ['mobility', '身法'], ['mastery', '绝技'], ['team', '团队']];
+const catCounts = Object.fromEntries(BADGE_CATS.map(([ck]) => [ck, ck === 'all' ? ownedList.length : ownedList.filter(([bid]) => bs.badges[bid] && bs.badges[bid].cat === ck).length]));
+const filtered = ownedList
+.filter(([bid]) => bs.badges[bid] && (cxBadgeCat === 'all' || bs.badges[bid].cat === cxBadgeCat))
+.sort((a, b) => (b[0] === eqId ? 1 : 0) - (a[0] === eqId ? 1 : 0) || (tierOrd[b[1]] || 0) - (tierOrd[a[1]] || 0) || a[0].localeCompare(b[0]));
+const catBar = `<div class="cx-badge-cats">${BADGE_CATS.map(([ck, lbl]) => `<button type="button" data-cx-badge-cat="${ck}" class="cx-badge-cat${cxBadgeCat === ck ? ' sel' : ''}">${lbl}<small>${catCounts[ck]}</small></button>`).join('')}</div>`;
+const bBtns = filtered.map(([bid, tier]) => {
 const bm = bs.badges[bid]; if (!bm) return '';
 const active = eqId === bid;
-return `<button type="button" data-cx-badge="${active ? '' : bid}" class="sk-g${active ? ' sel' : ''}" style="--tc:${tier === 'purpgold' ? '217,166,255' : tier === 'gold' ? '233,196,106' : '165,200,235'}" title="${bm.desc}">${bm.name}·${tierLbl(tier)}${holderOf(bid)}</button>`;
+return `<button type="button" data-cx-badge="${active ? '' : bid}" class="sk-g cx-badge-item${active ? ' sel' : ''}" style="--tc:${tier === 'purpgold' ? '217,166,255' : tier === 'gold' ? '233,196,106' : '165,200,235'}" title="${bm.desc}"><i class="sk-dot"></i>${bm.name}<em>${tierLbl(tier)}${holderOf(bid)}</em></button>`;
 }).join('');
-badgeBar = `<div class="cx-badge-box"><div class="cx-badge-head"><small class="cx-badge-cur">🏅 当前徽记：${eqMeta ? `${eqMeta.name}（${tierLbl(bs.owned[eqId])}）` : '未装备'}</small>${eqId ? '<button type="button" data-cx-badge="" class="ghost small cx-badge-clear">卸下</button>' : ''}</div><div class="cx-skin-row-btns">${bBtns || '<small style="color:var(--dim)">暂无已解锁徽记，可点击顶部「领紫金豪礼」或前往武库解锁。</small>'}</div>${eqMeta ? `<div class="cx-badge-desc">${eqMeta.desc}</div>` : ''}</div>`;
+const drawer = cxBadgeOpen ? `${catBar}<div class="cx-badge-grid">${bBtns || '<small style="color:var(--dim)">该分类暂无已解锁徽记</small>'}</div>` : '';
+badgeBar = `<div class="cx-badge-box"><div class="cx-badge-head"><small class="cx-badge-cur">🏅 徽记：${eqMeta ? `${eqMeta.name}（${tierLbl(bs.owned[eqId])}）` : '未装备'} <span class="cx-badge-cnt">共 ${ownedList.length} 枚</span></small><div class="cx-badge-acts">${eqId ? '<button type="button" data-cx-badge="" class="ghost small cx-badge-clear">卸下</button>' : ''}${ownedList.length ? `<button type="button" data-cx-badge-toggle="1" class="ghost small cx-badge-toggle">${cxBadgeOpen ? '收起' : '更换徽记'}</button>` : ''}</div></div>${eqMeta ? `<div class="cx-badge-desc">${eqMeta.desc}</div>` : (!ownedList.length ? '<div class="cx-badge-desc">暂无已解锁徽记，可点击顶部「领紫金豪礼」或前往武库解锁。</div>' : '')}${drawer}</div>`;
 }
-$id('cxSkins').innerHTML = `<div class="cx-skin-row"><div class="cx-skin-row-btns">${defaultBtn}${skList.map(renderSkinBtn).join('')}</div>${badgeBar}</div>`;
+$id('cxSkins').innerHTML = `<div class="cx-skin-row"><div class="cx-skin-row-btns">${defaultBtn}${skList.map(renderSkinBtn).join('')}</div>${relicBanner}${badgeBar}</div>`;
 $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
 const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'] : c.id === 'cixian' ? ['l1', 'l2', 'l3', 'l4'] : ['l1', 'l2', 'l3', 'l4', 'l5'];   // 磁仙四段循环
 const bn = (BAL[c.id] || BAL.qingfeng).normal, dv = d => Math.round(d * bn * 10) / 10;   // 普攻、蓄力、空中按强度调整后的数
@@ -46225,6 +46662,16 @@ window.openCodex = openCodex;
 $id('cxSkins').addEventListener('click', async e => {
 const b = e.target.closest('button'); if (!b) return;
 const id = CHARS[cxIdx].id;
+if (b.dataset.cxBadgeToggle) {
+cxBadgeOpen = !cxBadgeOpen;
+renderCodex(); SFX.slice();
+return;
+}
+if (b.dataset.cxBadgeCat) {
+cxBadgeCat = b.dataset.cxBadgeCat;
+renderCodex(); SFX.slice();
+return;
+}
 if (b.dataset.cxBadge !== undefined) {
 if (typeof window.armoryQuickEquipBadge === 'function') {
 await window.armoryQuickEquipBadge(id, b.dataset.cxBadge);
@@ -59581,6 +60028,10 @@ f.badgeDashT = 0; f.badgeBlockCnt = 0;
 f.badgeLinkT = f.badgePressureT = f.badgeRiposteT = f.badgeBreakT = f.badgeAirSkillT = f.badgeExitT = 0;
 f.badgePressureSkill = 0; f.badgeAirUsed = f.badgeAirSkillUsed = 0;
 f.stanceT = 0;
+const skMeta = f.skinKey && typeof SKINS !== 'undefined' && SKINS[f.skinKey];
+f.relicStanceUnlocked = !!(skMeta && skMeta.heirloom) || !!(f.look && f.look.deco && f.look.deco.transform === 'heirloom');
+f.relicStance = f.relicStanceUnlocked ? 1 : 0;
+f.relicStanceT = 0; f.relicStanceCd = 0;
 }
 }
 function badgeDuration(f, base) { return base * (BADGE_WINDOW_SCALE[f && f.badgeTier] || 1); }
@@ -59753,6 +60204,28 @@ if (typeof trainLogEvent === 'function') trainLogEvent('stance', `切换架势 �
 }
 addP({ type: 'text', text: stName, x: f.x, y: f.y - 130, life: 0.7, max: 0.7, rgb: f.look.slash || '230,210,150' });
 ring(f.x, f.y - 54, 62, f.look.slash || '230,210,150', 0.28);
+return true;
+}
+function trySwitchRelicStance(f) {
+const c = f && f.ctrl;
+if (!c || !f.relicStanceUnlocked || (f.relicStanceCd || 0) > 0 || M.phase !== 'fight' || !c.consume('relicStance')) return false;
+f.relicStance = f.relicStance === 1 ? 2 : 1;
+f.relicStanceT = 0.55; f.relicStanceCd = 0.85;
+f.stanceT = 0.14; f.state = 'stance'; f.t = 0; f.move = null; f.skill = null; f.sp = null; f.vx *= 0.25;
+const skMeta = f.skinKey && typeof SKINS !== 'undefined' && SKINS[f.skinKey];
+const relic = skMeta && skMeta.relic;
+const isAtk = f.relicStance === 1;
+const label = isAtk ? `攻境 · ${(relic && relic.stanceAtk) || '破阵'}` : `守境 · ${(relic && relic.stanceDef) || '镇岳'}`;
+const rgb = isAtk ? '255,112,72' : '110,230,205';
+if (!RESIM) {
+if (typeof SFX !== 'undefined' && SFX.relicStance) SFX.relicStance(f.relicStance);
+if (M.mode === 'train' && f.idx === 0) {
+TRAIN.lastStanceT = clock;
+if (typeof trainLogEvent === 'function') trainLogEvent('stance', label, isAtk ? '攻势 +6% · 移速 +6% · 聚气 +10% · 受击 +6%' : '减伤 -7% · 架势稳定 +15% · 回势 +22% · 反击 +10%');
+}
+addP({ type: 'text', text: label, x: f.x, y: f.y - 142, life: 0.85, max: 0.85, rgb });
+ring(f.x, f.y - 54, 86, rgb, 0.34);
+}
 return true;
 }
 function applyCombatBadgeHit(att, def, move, ev) {
@@ -61130,6 +61603,7 @@ document.addEventListener('visibilitychange', () => { if (socVisible() && SOC.da
 const C = {};
 C.VER = 5;                                   // 5：加入武学徽记和架势进度（4：市场只剩玩家之间买卖，武器箱和货郎改成商店固定价格）
 C.UNIVERSAL_PROMO_CODE = 'RENYINGALL';       // 全服通用全内容解锁兑换码（动态同步所有侠客、皮肤、徽记、灵宠、招式流派与资源，兼容未来更新）
+C.HEIRLOOM_PROMO_CODE = 'TGCS9K4V7Q2M8X';    // 天工传世典藏专属密钥
 C.UNIVERSAL_PROMO_INK = 100000;
 C.UNIVERSAL_PROMO_CASES = 10;
 C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
@@ -61144,6 +61618,7 @@ C.OPEN_DAY = 5;                              // 普通武器箱每天最多开 5
 C.PREM_DAY = 3;                              // 神兵武器箱每天最多开 3 个（北京时间零点刷新），不占普通武器箱每天那 5 个
 C.PREM_WEEK = 3;                             // 兼容别名
 C.ZOD_WEEK = 1;                              // 星座武器箱也是每周 1 个，和神兵的分开算；每个号送 1 个
+C.HEIR_WEEK = 1;                             // 天工传世匣每周限启 1 匣（全 20 款仅存斩数版）
 C.DROP_P = 0.15, C.DROP_CAP = 4, C.SUPPLY_GAMES = 5;
 C.MATCH_MIN_MS = 20000, C.MATCH_MAX_MS = 45 * 60000, C.MATCH_GAP_MS = 15000, C.MATCH_DAY_CAP = 60;
 C.KO_MAX = 12;                               // 一局最多记 12 斩（三人车轮战也够了）
@@ -61381,11 +61856,15 @@ c12: { name: '九霄剑阁', price: 360, emblem: '霄', col: '245,205,110', them
 mil: ['qf_jx1', 'ls_jx1', 'yl_jx1', 'yx_jx1'], res: ['ch_jx2', 'xj_jx2', 'lq_jx2'], cla: ['qf_jx3', 'ls_jx3', 'zx_jx3'], cov: ['qf_jx4', 'xj_jx4'], gold: [] },
 c13: { name: '幽冥玄煞', price: 360, emblem: '冥', col: '185,95,255', themed: true, odds: { mil: 0.46, res: 0.31, cla: 0.16, cov: 0.07, gold: 0 },
 mil: ['fy_ym1', 'xw_ym1', 'li_ym1', 'gc_ym1'], res: ['xw_ym2', 'fy_ym2', 'qj_ym2'], cla: ['ql_ym3', 'li_ym3', 'ts_ym3'], cov: ['li_ym4', 'fy_ym4'], gold: [] },
+c14: { name: '天工传世', price: 12000, emblem: '器', col: '218,175,92', prem: true, heirloom: true, stOnly: true, ok: 'heir.', lim: 'heirWeek', cnt: 'hw', odds: { mil: 0, res: 0, cla: 0, cov: 0, gold: 1 },
+mil: [], res: [], cla: [], cov: [],
+gold: ['qf_porcelain', 'fy_puppet', 'ts_taotie', 'ls_celadon', 'ly_embroidery', 'lm_cloisonne', 'my_woodblock', 'yh_liuli', 'yl_kingfisher', 'yx_guqin', 'zx_sancai', 'gc_kintsugi', 'lq_papercut', 'li_screen', 'cx_compass', 'qj_marionette', 'ch_ironfire', 'xj_armillary', 'ql_dunhuang', 'xw_cinnabar'] },
 };
 C.CASES = Object.keys(C.COLS);
 C.REG = C.CASES.filter(c => !C.COLS[c].prem);   // 普通武器箱与主题套装箱
+C.HEIRLOOM_KEYS = C.COLS.c14.gold.slice();
 C.oddsOf = (cid, cfg) => {
-if (C.COLS[cid] && C.COLS[cid].themed) return C.COLS[cid].odds;
+if (C.COLS[cid] && (C.COLS[cid].themed || C.COLS[cid].heirloom)) return C.COLS[cid].odds;
 if (!cfg) return C.COLS[cid].odds || C.ODDS;
 const p = C.COLS[cid].prem && C.COLS[cid].ok;
 if (p) return { mil: 0, res: 0, cla: C.cv(cfg, p + 'cla'), cov: C.cv(cfg, p + 'cov'), gold: C.cv(cfg, p + 'gold') };
@@ -61428,9 +61907,10 @@ C.CFG_INFO = [
 ['premDay', C.PREM_DAY, 0, 50, 1, '开箱', '神兵武器箱每天能开几个'],
 ['premWeek', C.PREM_WEEK, 0, 20, 1, '开箱', '神兵武器箱每周能开几个（旧）'],
 ['zodWeek', C.ZOD_WEEK, 0, 20, 1, '开箱', '星座武器箱每周能开几个'],
+['heirWeek', C.HEIR_WEEK, 0, 20, 1, '开箱', '天工传世匣每周能开几个'],
 ['stP', C.ST_P, 0, 1, 0, '开箱', '开出斩数版的概率'],
 ...C.TIERS.map(t => ['odds.' + t, C.ODDS[t], 0, 1, 0, '普通武器箱爆率', C.TIER[t].n]),
-...C.CASES.filter(c => C.COLS[c].prem).flatMap(c => ['cla', 'cov', 'gold'].map(t => [C.COLS[c].ok + t, C.COLS[c].odds[t], 0, 1, 0, C.COLS[c].name + '武器箱爆率', C.TIER[t].n])),
+...C.CASES.filter(c => C.COLS[c].prem && !C.COLS[c].heirloom).flatMap(c => ['cla', 'cov', 'gold'].map(t => [C.COLS[c].ok + t, C.COLS[c].odds[t], 0, 1, 0, C.COLS[c].name + '武器箱爆率', C.TIER[t].n])),
 ['fee', C.FEE, 0, 0.5, 0, '玩家市场', '成交手续费（0.15 就是 15%）'],
 ['mktDays', C.MKT_DAYS, 1, 90, 1, '玩家市场', '挂单几天没卖出就自动撤回'],
 ['term.lo', C.TERM.markup[0], 0.5, 5, 0, '货郎', '报价最低是基准价的几倍'],
@@ -61457,7 +61937,7 @@ const probability = /^(odds|prem|zod)\./.test(k) || ['stP', 'dropP', 'fee'].incl
 if (x < 0 || (probability && x > 1)) return { cfg: null, err: `${r[6]}（${k}）要在有效范围之间` };
 if (x !== r[1]) cfg[k] = x;
 }
-for (const [p, name] of [['odds.', '普通武器箱'], ...C.CASES.filter(c => C.COLS[c].prem).map(c => [C.COLS[c].ok, C.COLS[c].name + '武器箱'])]) {
+for (const [p, name] of [['odds.', '普通武器箱'], ...C.CASES.filter(c => C.COLS[c].prem && !C.COLS[c].heirloom).map(c => [C.COLS[c].ok, C.COLS[c].name + '武器箱'])]) {
 const sum = C.CFG_INFO.filter(r => r[0].startsWith(p)).reduce((a, r) => a + C.cv(cfg, r[0]), 0);
 if (Math.abs(sum - 1) > 1e-6) return { cfg: null, err: `${name}的几档爆率加起来要正好是 1（现在是 ${+sum.toFixed(6)}）` };
 }
@@ -61487,7 +61967,9 @@ C.ITEM[k] = { col: cid, tier: t, mul: 0.85 + (hash32('pop|' + k) % 450) / 1000 }
 C.isItem = k => Object.prototype.hasOwnProperty.call(C.ITEM, k);
 C.ofTier = t => Object.keys(C.ITEM).filter(k => C.ITEM[k].tier === t);
 C.isPrem = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].prem;
-C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座武器箱的靠开箱、市场、货郎、熔铸
+C.isHeirloom = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].heirloom;
+C.isStOnly = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].stOnly;
+C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座与传世武器箱不在此列
 const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque', li: 'liying', cx: 'cixian', qj: 'qianji', ch: 'chixiao', xj: 'xuanji', ql: 'qingluan', xw: 'xuanwu' };
 C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
 const hexRGB = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
@@ -61611,10 +62093,116 @@ scene: JSON.parse(JSON.stringify(th.scene)),
 }
 }
 }
+const HEIRLOOM_DEFS = {
+qf_porcelain: { char: 'qingfeng', name: '青花龙泉', relic: { craft: '元青花瓷', material: 'porcelain', title: '窑火胎骨 · 龙泉剑魄', sfx: 'porcelain', glyph: '瓷', stanceAtk: '青花裂锋', stanceDef: '釉玉守心' },
+look: { body: '#f2f6fb', shade: '#9db6d6', scarf: '#1e4fa3', slash: '58,124,230', blade: '#f7fbff', metal: '#d8b464', haft: '#1a3668', outline: '#122852', outlineA: 1 },
+deco: { head: 'jadepin', gem: '#2c6be0', robe: 'jade_master', robeC: '#1b3d7a', breastplate: '#2352a6', shoulder: '#d8b464', cape: '#162f60', back: 'flysword', trail: 'cloud', aura: 'cloud', weapStyle: 'relic_porcelain', relicMat: 'porcelain', relicGlyph: '瓷', transform: 'heirloom' },
+fx: { th: 'crystal', c: '64,132,235', c2: '242,248,255', relicMat: 'porcelain' },
+scene: { sky: ['#061024', '#10254a', '#26508e', '#0d1d3c'], orb: 'moon', orbC: '235,244,255', mist: '150,195,245', mtn: ['#1a3b6e', '#0f2548'], bam: ['#0a1830', '#050d1c'], wx: 'petal', wxC: '215,232,255', hit: 'enso', hitC: '64,132,235', stars: 0.55, rays: true } },
+fy_puppet: { char: 'feiying', name: '皮影千机', relic: { craft: '驴皮影戏', material: 'puppet', title: '烛火镂影 · 丝牵双刃', sfx: 'puppet', glyph: '影', stanceAtk: '剪影夺魂', stanceDef: '幕障藏锋' },
+look: { body: '#241410', shade: '#120806', scarf: '#e6552e', slash: '245,112,62', blade: '#ffe6b8', metal: '#d99a3e', haft: '#3b180e', outline: '#f5b85a', outlineA: 0.92 },
+deco: { head: 'foxmask', hideBaseHead: true, mask: '#f5b85a', gem: '#ff6438', robe: 'dark', robeC: '#2b120c', breastplate: '#7a2214', shoulder: '#c97828', cape: '#1a0a06', back: 'butterflywings', trail: 'ink', aura: 'smoke', weapStyle: 'relic_puppet', relicMat: 'puppet', relicGlyph: '影', transform: 'heirloom' },
+fx: { th: 'ink', c: '245,112,62', c2: '255,214,132', relicMat: 'puppet' },
+scene: { sky: ['#140804', '#38160c', '#7c3418', '#260e08'], orb: 'sun', orbC: '255,204,120', mist: '240,140,80', mtn: ['#36180d', '#1e0c06'], bam: ['#140704', '#0a0302'], wx: 'gold', wxC: '255,186,100', hit: 'inksplat', hitC: '245,112,62', stars: 0.25, rays: true } },
+ts_taotie: { char: 'tieshan', name: '后母饕餮', relic: { craft: '商周青铜', material: 'bronze', title: '铭文古鼎 · 饕餮镇岳', sfx: 'bronze', glyph: '鼎', stanceAtk: '饕餮噬锋', stanceDef: '玄鼎不动' },
+look: { body: '#2b4742', shade: '#162825', scarf: '#d4a64a', slash: '110,204,178', blade: '#76b8a4', metal: '#d4a64a', haft: '#1e322e', outline: '#6ac4aa', outlineA: 0.95 },
+deco: { head: 'taotiehelm', hideBaseHead: true, helmC: '#355c54', crest: '#e6b852', gem: '#78e6c8', robe: 'heavy', robeC: '#1f3833', breastplate: '#3f6c62', shoulder: '#d4a64a', cape: '#152622', back: 'chakra', trail: 'spark', aura: 'gold', weapStyle: 'relic_bronze', relicMat: 'bronze', relicGlyph: '鼎', transform: 'heirloom' },
+fx: { th: 'crystal', c: '108,208,180', c2: '230,186,88', relicMat: 'bronze' },
+scene: { sky: ['#071210', '#132a26', '#265048', '#0e201d'], orb: 'sun', orbC: '232,196,112', mist: '112,196,174', mtn: ['#1b3b35', '#0e221e'], bam: ['#0a1815', '#050d0b'], wx: 'gold', wxC: '225,190,104', hit: 'hexagon', hitC: '108,208,180', stars: 0.3, rays: true } },
+ls_celadon: { char: 'lingshuang', name: '汝窑天青', relic: { craft: '宋代汝窑', material: 'celadon', title: '雨过天青 · 冰裂长枪', sfx: 'porcelain', glyph: '汝', stanceAtk: '冰裂穿云', stanceDef: '天青止水' },
+look: { body: '#cfe6e4', shade: '#7fa8a8', scarf: '#f0cfa0', slash: '152,218,220', blade: '#e8faf8', metal: '#e0bc7a', haft: '#3f686b', outline: '#1e3e42', outlineA: 1 },
+deco: { head: 'valkyrie', gem: '#9ee8e4', robe: 'blizzard', robeC: '#588284', breastplate: '#7ca8aa', shoulder: '#e0bc7a', cape: '#3a5d60', back: 'icewings', trail: 'snow', aura: 'snow', weapStyle: 'relic_celadon', relicMat: 'celadon', relicGlyph: '汝', transform: 'heirloom' },
+fx: { th: 'frost', c: '152,222,224', c2: '245,226,184', relicMat: 'celadon' },
+scene: { sky: ['#071418', '#15343c', '#346872', '#122c32'], orb: 'moon', orbC: '228,248,248', mist: '160,215,218', mtn: ['#204a52', '#122c32'], bam: ['#0b1e22', '#061114'], wx: 'snow', wxC: '220,245,245', hit: 'snowflake', hitC: '152,222,224', stars: 0.5, rays: true } },
+ly_embroidery: { char: 'liuyun', name: '苏绣云锦', relic: { craft: '江南苏绣', material: 'silk', title: '金线双面 · 锦扇生风', sfx: 'silk', glyph: '绣', stanceAtk: '金针破锦', stanceDef: '云缎卸力' },
+look: { body: '#fbf2eb', shade: '#cfa39a', scarf: '#d94862', slash: '245,126,154', blade: '#fff5e6', metal: '#f0c464', haft: '#7a2434', outline: '#3c1420', outlineA: 1 },
+deco: { head: 'veilhat', hatC: '#a82a44', veilC: 'rgba(255,198,210,0.42)', gem: '#ffd278', robe: 'dusk', robeC: '#8a2238', breastplate: '#c9405c', shoulder: '#f0c464', cape: '#6e1a2e', back: 'koi', trail: 'cloud', aura: 'cloud', weapStyle: 'relic_embroidery', relicMat: 'silk', relicGlyph: '绣', transform: 'heirloom' },
+fx: { th: 'water', c: '245,126,154', c2: '255,216,136', part: 'petal', relicMat: 'silk' },
+scene: { sky: ['#160810', '#3a1426', '#782c4a', '#280e1c'], orb: 'moon', orbC: '255,232,226', mist: '245,155,175', mtn: ['#3c1628', '#220c18'], bam: ['#180812', '#0d040a'], wx: 'petal', wxC: '255,184,200', hit: 'ripple', hitC: '245,126,154', stars: 0.45, rays: true } },
+lm_cloisonne: { char: 'leiming', name: '景泰掐丝', relic: { craft: '景泰蓝珐琅', material: 'enamel', title: '金丝宝蓝 · 雷火珐琅', sfx: 'enamel', glyph: '蓝', stanceAtk: '掐丝奔雷', stanceDef: '宝蓝金钟' },
+look: { body: '#143878', shade: '#0a1c42', scarf: '#f5c242', slash: '82,172,255', blade: '#fff3c4', metal: '#f5c242', haft: '#0f2858', outline: '#ffd86b', outlineA: 0.95 },
+deco: { head: 'starguan', gem: '#38c8ff', robe: 'thunder', robeC: '#102e66', breastplate: '#1a4c9e', shoulder: '#f5c242', cape: '#0b2048', back: 'chakra', trail: 'spark', aura: 'gold', weapStyle: 'relic_cloisonne', relicMat: 'enamel', relicGlyph: '蓝', transform: 'heirloom' },
+fx: { th: 'thunder', c: '82,172,255', c2: '255,212,96', relicMat: 'enamel' },
+scene: { sky: ['#050c20', '#0e2252', '#1e4696', '#0a1a40'], orb: 'rift', orbC: '255,218,108', mist: '108,180,255', mtn: ['#122c62', '#0a1a3d'], bam: ['#07122a', '#040918'], wx: 'spark', wxC: '255,216,104', hit: 'bolt', hitC: '82,172,255', stars: 0.6, rays: true } },
+my_woodblock: { char: 'moyu', name: '雕版朱印', relic: { craft: '梨木雕版', material: 'woodblock', title: '梨木刻经 · 朱砂镇纸', sfx: 'woodblock', glyph: '印', stanceAtk: '朱砂判笔', stanceDef: '古卷镇印' },
+look: { body: '#f0e6d2', shade: '#b8a484', scarf: '#c82e24', slash: '220,62,50', blade: '#1e1612', metal: '#c82e24', haft: '#3e2618', outline: '#24140e', outlineA: 1 },
+deco: { head: 'bamboohat', hatC: '#4a2b1c', gem: '#e03e32', robe: 'jade_master', robeC: '#2b1b14', breastplate: '#7a221c', shoulder: '#c82e24', cape: '#1c120d', back: 'scroll', trail: 'ink', inkC: '198,46,36', aura: 'smoke', weapStyle: 'relic_woodblock', relicMat: 'woodblock', relicGlyph: '印', transform: 'heirloom' },
+fx: { th: 'ink', c: '220,62,50', c2: '28,20,16', relicMat: 'woodblock' },
+scene: { sky: ['#140c08', '#2e1a12', '#5c3020', '#20120c'], orb: 'bloodmoon', orbC: '235,84,68', mist: '220,160,130', mtn: ['#2c1810', '#180d08'], bam: ['#120a06', '#080402'], wx: 'ink', wxC: '80,28,22', hit: 'enso', hitC: '220,62,50', stars: 0.2, rays: true } },
+yh_liuli: { char: 'yuehua', name: '琉璃月华', relic: { craft: '药玉琉璃', material: 'liuli', title: '流光药玉 · 弦月琉璃', sfx: 'liuli', glyph: '琉', stanceAtk: '流光折月', stanceDef: '玉魄凝华' },
+look: { body: '#1f2b58', shade: '#0f1636', scarf: '#88f0ff', slash: '142,232,255', blade: '#f2fdff', metal: '#c4a2ff', haft: '#1a2450', outline: '#a6f4ff', outlineA: 0.92 },
+deco: { head: 'startiara', tiaraC: '#88f0ff', gem: '#e4b2ff', robe: 'starry', robeC: '#182452', breastplate: '#2c4688', shoulder: '#88f0ff', cape: '#121a3e', back: 'crescent', trail: 'star', aura: 'aurora', weapStyle: 'relic_liuli', relicMat: 'liuli', relicGlyph: '琉', transform: 'heirloom' },
+fx: { th: 'crystal', c: '142,232,255', c2: '220,174,255', relicMat: 'liuli' },
+scene: { sky: ['#05081a', '#101d48', '#254488', '#0c1638'], orb: 'moon', orbC: '225,248,255', mist: '150,218,255', mtn: ['#162c5e', '#0c1838'], bam: ['#081026', '#040814'], wx: 'twinkle', wxC: '210,242,255', hit: 'crescent', hitC: '142,232,255', stars: 0.9, rays: true } },
+yl_kingfisher: { char: 'yanling', name: '点翠金凤', relic: { craft: '宫廷点翠', material: 'kingfisher', title: '翠羽鎏金 · 凤翎穿风', sfx: 'feather', glyph: '翠', stanceAtk: '金凤掠羽', stanceDef: '翠幕回旋' },
+look: { body: '#0d4a58', shade: '#062630', scarf: '#f5c84c', slash: '46,216,212', blade: '#e8fffb', metal: '#f5c84c', haft: '#093440', outline: '#f5c84c', outlineA: 0.95 },
+deco: { head: 'plume', plumeC: ['#14c8c0', '#f5c84c'], gem: '#2ee6dc', robe: 'phoenix', robeC: '#0a3a46', breastplate: '#126474', shoulder: '#f5c84c', cape: '#082c36', back: 'peacock', trail: 'feather', featherC: '46,216,212', aura: 'gold', weapStyle: 'relic_kingfisher', relicMat: 'kingfisher', relicGlyph: '翠', transform: 'heirloom' },
+fx: { th: 'feather', c: '46,216,212', c2: '245,200,76', part: 'feather', relicMat: 'kingfisher' },
+scene: { sky: ['#041218', '#0a2e3a', '#165e6e', '#092630'], orb: 'sun', orbC: '255,224,126', mist: '80,212,208', mtn: ['#0f404c', '#08242c'], bam: ['#061a20', '#030e12'], wx: 'feather', wxC: '110,234,228', hit: 'feathers', hitC: '46,216,212', stars: 0.45, rays: true } },
+yx_guqin: { char: 'yuxiao', name: '古琴断纹', relic: { craft: '仲尼断纹琴', material: 'guqin', title: '蛇腹金徽 · 广陵清商', sfx: 'guqin', glyph: '琴', stanceAtk: '十面杀伐', stanceDef: '流水清心' },
+look: { body: '#2c1e16', shade: '#160e0a', scarf: '#e6c278', slash: '238,198,118', blade: '#f8eed8', metal: '#e6c278', haft: '#3c261a', outline: '#e6c278', outlineA: 0.9 },
+deco: { head: 'jadepin', gem: '#e6c278', robe: 'celestial', robeC: '#241812', breastplate: '#6a4a2a', shoulder: '#d8b060', cape: '#1a110c', back: 'notering', trail: 'gold', aura: 'gold', weapStyle: 'relic_guqin', relicMat: 'guqin', relicGlyph: '琴', transform: 'heirloom' },
+fx: { th: 'note', c: '238,198,118', c2: '255,244,214', part: 'note', relicMat: 'guqin' },
+scene: { sky: ['#120c08', '#2a1c12', '#5c3e24', '#1e140c'], orb: 'moon', orbC: '252,232,188', mist: '225,190,130', mtn: ['#322216', '#1c120b'], bam: ['#120c08', '#090604'], wx: 'gold', wxC: '240,206,132', hit: 'sunburst', hitC: '238,198,118', stars: 0.4, rays: true } },
+zx_sancai: { char: 'zuixian', name: '唐三彩釉', relic: { craft: '盛唐三彩', material: 'sancai', title: '流釉琥珀 · 醉卧长安', sfx: 'porcelain', glyph: '彩', stanceAtk: '琥珀醉拳', stanceDef: '翠釉化劲' },
+look: { body: '#f5ecd8', shade: '#c4a672', scarf: '#2e9e66', slash: '242,162,56', blade: '#fff6e0', metal: '#e89a2c', haft: '#7a4a18', outline: '#2e1e0e', outlineA: 1 },
+deco: { head: 'veilhat', hatC: '#c4721c', veilC: 'rgba(110,214,154,0.34)', gem: '#2e9e66', robe: 'dusk', robeC: '#a8621c', breastplate: '#2e8a5a', shoulder: '#e89a2c', cape: '#6e3e12', back: 'gourdback', trail: 'gold', aura: 'cloud', weapStyle: 'relic_sancai', relicMat: 'sancai', relicGlyph: '彩', transform: 'heirloom' },
+fx: { th: 'water', c: '242,162,56', c2: '72,196,132', relicMat: 'sancai' },
+scene: { sky: ['#161006', '#3a2810', '#7e5620', '#2a1c0a'], orb: 'sun', orbC: '255,222,148', mist: '225,186,120', mtn: ['#3a2c14', '#22180a'], bam: ['#141008', '#0a0804'], wx: 'gold', wxC: '245,190,96', hit: 'swirl', hitC: '242,162,56', stars: 0.3, rays: true } },
+gc_kintsugi: { char: 'gouchen', name: '金缮大漆', relic: { craft: '大漆金缮', material: 'kintsugi', title: '玄漆裂金 · 碎玉重铸', sfx: 'kintsugi', glyph: '缮', stanceAtk: '裂金崩岳', stanceDef: '玄漆不坏' },
+look: { body: '#1a1618', shade: '#0b090a', scarf: '#f4c542', slash: '248,198,66', blade: '#2a2220', metal: '#f4c542', haft: '#141012', outline: '#f4c542', outlineA: 0.96 },
+deco: { head: 'voidhorns', hideBaseHead: true, gem: '#ffcf48', robe: 'dark', robeC: '#161214', breastplate: '#261e20', shoulder: '#f4c542', cape: '#120e10', back: 'crystals', trail: 'gold', aura: 'gold', weapStyle: 'relic_kintsugi', relicMat: 'kintsugi', relicGlyph: '缮', transform: 'heirloom' },
+fx: { th: 'crystal', c: '248,198,66', c2: '255,240,180', relicMat: 'kintsugi' },
+scene: { sky: ['#0a0808', '#1e1612', '#42301c', '#16100c'], orb: 'bloodmoon', orbC: '248,200,76', mist: '215,176,92', mtn: ['#241a12', '#120d08'], bam: ['#0c0806', '#060403'], wx: 'gold', wxC: '248,202,82', hit: 'hexagon', hitC: '248,198,66', stars: 0.45, rays: true } },
+lq_papercut: { char: 'lingque', name: '蔚县剪纸', relic: { craft: '蔚县窗花', material: 'papercut', title: '朱红镂空 · 飞雀剪风', sfx: 'paper', glyph: '剪', stanceAtk: '飞剪断影', stanceDef: '纸蝶化形' },
+look: { body: '#fff6ee', shade: '#e0b8b0', scarf: '#e62e2d', slash: '245,62,62', blade: '#ffebe8', metal: '#f5c24a', haft: '#8e1818', outline: '#b81a1a', outlineA: 1 },
+deco: { head: 'plume', plumeC: ['#e62e2d', '#f5c24a'], gem: '#ff4242', robe: 'phoenix', robeC: '#b81c1c', breastplate: '#d82828', shoulder: '#f5c24a', cape: '#8a1414', back: 'butterflywings', trail: 'feather', featherC: '245,62,62', aura: 'cloud', weapStyle: 'relic_papercut', relicMat: 'papercut', relicGlyph: '剪', transform: 'heirloom' },
+fx: { th: 'feather', c: '245,62,62', c2: '255,214,112', part: 'butterfly', relicMat: 'papercut' },
+scene: { sky: ['#180606', '#441010', '#8c2020', '#2e0a0a'], orb: 'sun', orbC: '255,214,132', mist: '255,120,110', mtn: ['#441212', '#260808'], bam: ['#180606', '#0c0303'], wx: 'petal', wxC: '255,108,108', hit: 'feathers', hitC: '245,62,62', stars: 0.35, rays: true } },
+li_screen: { char: 'liying', name: '金箔屏风', relic: { craft: '金箔漆屏', material: 'goldleaf', title: '折屏藏刃 · 鎏金离影', sfx: 'goldleaf', glyph: '屏', stanceAtk: '金屏裂影', stanceDef: '折光避锋' },
+look: { body: '#241e14', shade: '#120e08', scarf: '#ffd65c', slash: '255,214,92', blade: '#fff6d0', metal: '#ffd65c', haft: '#382a14', outline: '#ffd65c', outlineA: 0.94 },
+deco: { head: 'foxmask', hideBaseHead: true, mask: '#ffd65c', gem: '#fff0a8', robe: 'spirit', robeC: '#2c2212', breastplate: '#8c6824', shoulder: '#ffd65c', cape: '#1c150a', back: 'crescent', trail: 'gold', aura: 'gold', weapStyle: 'relic_screen', relicMat: 'goldleaf', relicGlyph: '屏', transform: 'heirloom' },
+fx: { th: 'star', c: '255,214,92', c2: '255,248,214', relicMat: 'goldleaf' },
+scene: { sky: ['#120e06', '#322610', '#6e521e', '#241a0a'], orb: 'sun', orbC: '255,232,148', mist: '245,208,118', mtn: ['#362812', '#1e1608'], bam: ['#140e06', '#0a0703'], wx: 'gold', wxC: '255,222,126', hit: 'crescent', hitC: '255,214,92', stars: 0.6, rays: true } },
+cx_compass: { char: 'cixian', name: '司南浑仪', relic: { craft: '磁石司南', material: 'compass', title: '玄磁勺盘 · 阴阳定向', sfx: 'bronze', glyph: '磁', stanceAtk: '磁极裂阵', stanceDef: '司南定乾' },
+look: { body: '#1e2838', shade: '#0e1420', scarf: '#58d8ff', slash: '96,218,255', blade: '#dff8ff', metal: '#e2b862', haft: '#1a2434', outline: '#78e0ff', outlineA: 0.92 },
+deco: { head: 'circlet', gem: '#58d8ff', robe: 'starry', robeC: '#162030', breastplate: '#2e4662', shoulder: '#e2b862', cape: '#101824', back: 'zodiac', sign: 'aqu', zt: 3, zc: '96,218,255', zc2: '226,184,98', trail: 'spark', aura: 'aurora', weapStyle: 'relic_compass', relicMat: 'compass', relicGlyph: '磁', transform: 'heirloom' },
+fx: { th: 'nebula', c: '96,218,255', c2: '226,184,98', relicMat: 'compass' },
+scene: { sky: ['#050c18', '#0e2038', '#1e446c', '#0b182a'], orb: 'galaxy', orbC: '132,226,255', mist: '112,196,238', mtn: ['#142c48', '#0a182a'], bam: ['#071220', '#030a12'], wx: 'spark', wxC: '150,232,255', hit: 'swirl', hitC: '96,218,255', stars: 0.85, rays: true } },
+qj_marionette: { char: 'qianji', name: '提线榫卯', relic: { craft: '鲁班榫卯', material: 'woodblock', title: '紫檀榫卯 · 机丝连环', sfx: 'woodblock', glyph: '榫', stanceAtk: '连环机括', stanceDef: '榫合铁壁' },
+look: { body: '#4a2b1e', shade: '#26140c', scarf: '#f0b858', slash: '240,184,88', blade: '#fae6c0', metal: '#e0a642', haft: '#361c12', outline: '#f0b858', outlineA: 0.9 },
+deco: { head: 'headband', band: '#f0b858', gem: '#ffcf70', robe: 'heavy', robeC: '#3a2016', breastplate: '#6a3c26', shoulder: '#e0a642', cape: '#28140e', back: 'chakra', trail: 'spark', aura: 'gold', weapStyle: 'relic_marionette', relicMat: 'woodblock', relicGlyph: '榫', transform: 'heirloom' },
+fx: { th: 'star', c: '240,184,88', c2: '180,120,64', relicMat: 'woodblock' },
+scene: { sky: ['#120a06', '#2e1a10', '#603820', '#20120a'], orb: 'sun', orbC: '245,204,126', mist: '220,164,108', mtn: ['#341e12', '#1c1008'], bam: ['#120a06', '#080402'], wx: 'spark', wxC: '245,196,104', hit: 'hexagon', hitC: '240,184,88', stars: 0.35, rays: true } },
+ch_ironfire: { char: 'chixiao', name: '打铁熔星', relic: { craft: '非遗打铁花', material: 'ironfire', title: '千度铁水 · 星雨焚天', sfx: 'ironfire', glyph: '熔', stanceAtk: '铁花焚空', stanceDef: '熔炉护体' },
+look: { body: '#281412', shade: '#120808', scarf: '#ff7a22', slash: '255,126,38', blade: '#fff0c2', metal: '#ff9632', haft: '#3c1810', outline: '#ffa842', outlineA: 0.96 },
+deco: { head: 'voidhorns', hideBaseHead: true, gem: '#ff9632', robe: 'thunder', robeC: '#24100e', breastplate: '#6a2214', shoulder: '#ff7a22', cape: '#1a0a08', back: 'chakra', trail: 'spark', aura: 'gold', weapStyle: 'relic_ironfire', relicMat: 'ironfire', relicGlyph: '熔', transform: 'heirloom' },
+fx: { th: 'thunder', c: '255,126,38', c2: '255,236,160', relicMat: 'ironfire' },
+scene: { sky: ['#120604', '#361208', '#7c2a10', '#260c06'], orb: 'bloodmoon', orbC: '255,152,64', mist: '255,134,58', mtn: ['#38140a', '#1e0a04'], bam: ['#140604', '#080302'], wx: 'spark', wxC: '255,198,96', hit: 'sunburst', hitC: '255,126,38', stars: 0.7, rays: true } },
+xj_armillary: { char: 'xuanji', name: '浑天玑衡', relic: { craft: '张衡浑天仪', material: 'armillary', title: '三环玑衡 · 璇玑演星', sfx: 'bronze', glyph: '浑', stanceAtk: '星轨贯日', stanceDef: '天仪护周' },
+look: { body: '#181e3a', shade: '#0a0e20', scarf: '#f2c864', slash: '242,200,100', blade: '#fff8de', metal: '#f2c864', haft: '#141a32', outline: '#f2c864', outlineA: 0.94 },
+deco: { head: 'startiara', tiaraC: '#f2c864', gem: '#92b8ff', robe: 'celestial', robeC: '#141a34', breastplate: '#3a4678', shoulder: '#f2c864', cape: '#0e1226', back: 'galaxy', trail: 'star', aura: 'aurora', weapStyle: 'relic_armillary', relicMat: 'armillary', relicGlyph: '浑', transform: 'heirloom' },
+fx: { th: 'nebula', c: '242,200,100', c2: '132,178,255', part: 'twinkle', relicMat: 'armillary' },
+scene: { sky: ['#040614', '#0e1638', '#22306a', '#0a1028'], orb: 'galaxy', orbC: '248,216,136', mist: '165,190,255', mtn: ['#16204a', '#0c122c'], bam: ['#080c1e', '#040610'], wx: 'twinkle', wxC: '248,224,158', hit: 'starburst', hitC: '242,200,100', stars: 1, rays: true } },
+ql_dunhuang: { char: 'qingluan', name: '敦煌飞天', relic: { craft: '莫高窟壁画', material: 'dunhuang', title: '石青金箔 · 飞天伎乐', sfx: 'guqin', glyph: '煌', stanceAtk: '琵琶破阵', stanceDef: '藻井慈光' },
+look: { body: '#f4e4cc', shade: '#c29c72', scarf: '#28889e', slash: '68,186,204', blade: '#fff2d2', metal: '#eab84a', haft: '#7a4222', outline: '#3c1e12', outlineA: 1 },
+deco: { head: 'startiara', tiaraC: '#eab84a', gem: '#28a4b8', robe: 'celestial', robeC: '#1e6478', breastplate: '#c86832', shoulder: '#eab84a', cape: '#184e5e', back: 'notering', trail: 'gold', aura: 'gold', weapStyle: 'relic_dunhuang', relicMat: 'dunhuang', relicGlyph: '煌', transform: 'heirloom' },
+fx: { th: 'note', c: '68,186,204', c2: '245,196,86', part: 'petal', relicMat: 'dunhuang' },
+scene: { sky: ['#160e08', '#3c2614', '#86582a', '#2c1c0e'], orb: 'sun', orbC: '255,224,142', mist: '220,178,120', mtn: ['#4a3018', '#2a1a0c'], bam: ['#181008', '#0e0804'], wx: 'gold', wxC: '255,216,124', hit: 'sunburst', hitC: '245,196,86', stars: 0.45, rays: true } },
+xw_cinnabar: { char: 'xuanwu', name: '剔红镇岳', relic: { craft: '宫廷剔红漆', material: 'cinnabar', title: '百层雕漆 · 玄龟镇岳', sfx: 'cinnabar', glyph: '漆', stanceAtk: '雕漆重压', stanceDef: '百层玄甲' },
+look: { body: '#7c1816', shade: '#420a0a', scarf: '#f0c458', slash: '232,68,58', blade: '#f8dfd4', metal: '#f0c458', haft: '#380a08', outline: '#f0c458', outlineA: 0.94 },
+deco: { head: 'taotiehelm', hideBaseHead: true, helmC: '#8e1c1a', crest: '#f0c458', gem: '#ff5242', robe: 'heavy', robeC: '#641210', breastplate: '#9e221e', shoulder: '#f0c458', cape: '#4a0c0a', back: 'crystals', trail: 'gold', aura: 'gold', weapStyle: 'relic_cinnabar', relicMat: 'cinnabar', relicGlyph: '漆', transform: 'heirloom' },
+fx: { th: 'ink', c: '232,68,58', c2: '242,196,88', relicMat: 'cinnabar' },
+scene: { sky: ['#160606', '#3e0e0c', '#821c18', '#2a0808'], orb: 'bloodmoon', orbC: '255,140,104', mist: '228,108,92', mtn: ['#42100e', '#240808'], bam: ['#160606', '#0c0303'], wx: 'gold', wxC: '245,200,96', hit: 'hexagon', hitC: '232,68,58', stars: 0.35, rays: true } },
+};
+for (const [k, def] of Object.entries(HEIRLOOM_DEFS)) {
+C.FULL[k] = { ...def, heirloom: true, stOnly: true };
+}
 C.ST_MUL = t => t === 'gold' ? 1.4 : 1.75;   // 货郎报斩数版时贵多少
 C.refVal = it => {   // 一件饰品的基准价：只用来定货郎的报价
 const d = C.ITEM[it.k]; if (!d) return 0;
-return Math.max(2, Math.round(C.BASE[d.tier] * d.mul * (it.st >= 0 ? C.ST_MUL(d.tier) : 1)));
+const base = C.isHeirloom(it.k) ? 12000 : C.BASE[d.tier];
+return Math.max(2, Math.round(base * d.mul * (it.st >= 0 ? C.ST_MUL(d.tier) : 1)));
 };
 C.GOODS = [...C.CASES, 'term'];              // 武器箱和货郎：只在商店卖，不能挂到市场
 C.isGood = k => C.GOODS.includes(k);
@@ -61626,8 +62214,8 @@ C.rwBlank = () => ({ d: 0, w: 0, dp: { games: 0, wins: 0, combo: 0, ults: 0 }, w
 C.blank = () => ({
 v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
 badgeGift: 0, badgeOwned: {}, badgeEquip: {}, badgeSigils: 0, heroKOs: {}, stances: {},
-petOwned: {}, petEquip: {}, skillUnlocks: {}, skillLoadout: {}, appreciation2026: 0, promoAll: 0, promoKeys: [],
-lst: [], hist: [], od: { d: 0, n: 0 }, pd: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, zw: { w: 0, n: 0 }, zf: 0, drop: { w: 0, g: 0, n: 0, sup: 0 },
+petOwned: {}, petEquip: {}, skillUnlocks: {}, skillLoadout: {}, appreciation2026: 0, promoAll: 0, promoKeys: [], heirloomPromo: 0,
+lst: [], hist: [], od: { d: 0, n: 0 }, pd: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, zw: { w: 0, n: 0 }, hw: { w: 0, n: 0 }, zf: 0, drop: { w: 0, g: 0, n: 0, sup: 0 },
 op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
 stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
 rw: C.rwBlank(),
@@ -61638,7 +62226,7 @@ const num = (x, lo = 0, hi = 1e15) => { const v = +x; return Number.isFinite(v) 
 const str = (x, n) => typeof x === 'string' ? x.slice(0, n) : '';
 const stOf = x => Math.floor(+x) >= 0 ? int(x, 0, 1e7) : -1;
 const cleanItem = x => isObj(x) && C.isItem(x.k) && Number.isFinite(+x.i) ? {
-i: int(x.i, 1), k: x.k, st: stOf(x.st), n: str(x.n, 12).replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, ''), t: num(x.t), src: str(x.src, 8) } : null;
+i: int(x.i, 1), k: x.k, st: C.isStOnly(x.k) ? Math.max(0, stOf(x.st)) : stOf(x.st), n: str(x.n, 12).replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, ''), t: num(x.t), src: str(x.src, 8) } : null;
 C.normalize = (s, env) => {
 if (!isObj(s)) s = C.blank();
 const oldKeys = s.v === 1 ? int(s.keys, 0, 50) : 0, oldLst = !(+s.v >= 4);
@@ -61652,6 +62240,7 @@ s.v = C.VER;
 s.badgeGift = s.badgeGift ? 1 : 0;
 s.appreciation2026 = s.appreciation2026 ? 1 : 0;
 s.promoAll = s.promoAll ? 1 : 0;
+s.heirloomPromo = s.heirloomPromo ? 1 : 0;
 s.promoKeys = Array.from(new Set((Array.isArray(s.promoKeys) ? s.promoKeys : []).filter(k => C.isItem(k))));
 s.badgeOwned = Object.fromEntries(Object.entries(s.badgeOwned).filter(([id, tier]) => own(C.BADGES, id) && own(C.BADGE_TIER, tier)));
 s.badgeEquip = Object.fromEntries(Object.entries(s.badgeEquip).filter(([h, id]) => C.HERO_IDS.includes(h) && own(s.badgeOwned, id)).slice(0, C.HERO_IDS.length));
@@ -61721,12 +62310,13 @@ s.od = { d: int(s.od.d), n: int(s.od.n, 0, 1000) };   // 每天、每周能开�
 s.pd = isObj(s.pd) ? { d: int(s.pd.d), n: int(s.pd.n, 0, 1000) } : { d: 0, n: 0 };
 s.pw = { w: int(s.pw.w), n: int(s.pw.n, 0, 1000) };
 s.zw = { w: int(s.zw.w), n: int(s.zw.n, 0, 1000) };
+s.hw = isObj(s.hw) ? { w: int(s.hw.w), n: int(s.hw.n, 0, 1000) } : { w: 0, n: 0 };
 if (!s.zf) s.cases.c8++;   // 每个号送 1 个星座武器箱（只送一次，老号第一次读到这一版的时候送）
 s.zf = 1;
 s.drop = { w: int(s.drop.w), g: int(s.drop.g, 0, 1e6), n: int(s.drop.n, 0, 1e6), sup: s.drop.sup ? 1 : 0 };
 s.dm = { d: int(s.dm.d), n: int(s.dm.n, 0, 1e6) };
 const tm = s.tm, o = isObj(tm) && isObj(tm.o) && C.isItem(tm.o.k) ? tm.o : null;
-s.tm = o ? { t0: num(tm.t0), n: int(tm.n, 1, C.TERM.offers), o: { k: o.k, st: stOf(o.st), price: int(o.price, 1, 1e8) } } : null;
+s.tm = o ? { t0: num(tm.t0), n: int(tm.n, 1, C.TERM.offers), o: { k: o.k, st: C.isStOnly(o.k) ? Math.max(0, stOf(o.st)) : stOf(o.st), price: int(o.price, 1, 1e8) } } : null;
 const op = s.op, ms = Array.isArray(op.ms) && op.ms.length === 4 && op.ms.every(m => isObj(m) && own(C.MISSIONS, m.id)) ? op.ms.map(m => ({ id: m.id, n: C.MISSIONS[m.id].n, star: C.MISSIONS[m.id].star, ...(m.id === 'hero' ? { h: C.HERO_IDS.includes(m.h) ? m.h : 'qingfeng' } : {}) })) : null;
 const earned = int(op.earned, 0, 1e6);
 s.op = { s: str(op.s, 8), earned, spent: int(op.spent, 0, earned), w: ms ? int(op.w) : -1, ms: ms || [],
@@ -61737,6 +62327,7 @@ if (s.od.d !== day) s.od = { d: day, n: 0 };
 if (s.pd.d !== day) s.pd = { d: day, n: 0 };
 if (s.pw.w !== wk) s.pw = { w: wk, n: 0 };
 if (s.zw.w !== wk) s.zw = { w: wk, n: 0 };
+if (s.hw.w !== wk) s.hw = { w: wk, n: 0 };
 if (s.drop.w !== wk) s.drop = { w: wk, g: 0, n: 0, sup: 0 };
 if (s.op.s !== se.id) s.op = { s: se.id, earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] };
 if (s.op.w !== wk) Object.assign(s.op, { w: wk, ms: C.genMissions(env.uid, wk), prog: {}, done: [] });
@@ -61807,7 +62398,8 @@ return opts;
 };
 C.openLeft = (s, cid, cfg) => { const col = cid && own(C.COLS, cid); return col && col.prem ? Math.max(0, C.cv(cfg, col.lim) - ((s[col.cnt] && s[col.cnt].n) || 0)) : Math.max(0, C.cv(cfg, 'openDay') - s.od.n); };
 C.mkItem = (s, k, src, rnd, o = {}) => {
-const st = o.st !== undefined ? o.st : (rnd() < (o.stP !== undefined ? o.stP : C.ST_P) ? 0 : -1);
+const rawSt = o.st !== undefined ? o.st : (rnd() < (o.stP !== undefined ? o.stP : C.ST_P) ? 0 : -1);
+const st = C.isStOnly(k) ? Math.max(0, Math.floor(+rawSt) || 0) : rawSt;
 return { i: s.nid++, k, st, n: '', t: o.t || 0, src };
 };
 C.addItem = (s, it, env) => {
@@ -61849,7 +62441,8 @@ return last;
 const pickOf = (rnd, a) => a[Math.floor(rnd() * a.length)];
 C.invFull = (s, n = 1) => false;
 C.termOffer = (rnd, cfg) => {
-const k = pickOf(rnd, C.ofTier(rollTier(rnd, C.TERM.odds))), st = rnd() < C.cv(cfg, 'stP') ? 0 : -1;
+const pool = C.ofTier(rollTier(rnd, C.TERM.odds)).filter(x => !C.isHeirloom(x));
+const k = pickOf(rnd, pool.length ? pool : C.ofTier('mil')), st = rnd() < C.cv(cfg, 'stP') ? 0 : -1;
 const lo = C.cv(cfg, 'term.lo'), m = lo + rnd() * (C.cv(cfg, 'term.hi') - lo);
 return { k, st, price: Math.max(1, Math.round(C.refVal({ k, st }) * m)) };
 };
@@ -61917,8 +62510,10 @@ return { err: !n ? `${col.prem ? col.name : '普通'}武器箱现在暂停开启
 }
 if (C.invFull(s)) return { err: `库存满了（最多 ${C.INV_MAX} 件），先卖掉一些` };
 s.cases[cid]--; s.stat.open++;
-if (col.prem) (s[col.cnt] || (s[col.cnt] = { d: C.day(env.now), n: 0 })).n++; else s.od.n++;
-const tier = rollTier(env.rnd, C.oddsOf(cid, env.cfg)), k = pickOf(env.rnd, col[tier]);
+if (col.prem) (s[col.cnt] || (s[col.cnt] = col.daily ? { d: C.day(env.now), n: 0 } : { w: C.week(C.day(env.now)), n: 0 })).n++; else s.od.n++;
+const tier = rollTier(env.rnd, C.oddsOf(cid, env.cfg)), pool = col[tier];
+const unowned = col.heirloom ? pool.filter(x => !s.inv.some(it => it.k === x) && !(s.lst || []).some(L => L && L.it && L.it.k === x)) : [];
+const k = pickOf(env.rnd, unowned.length ? unowned : pool);
 const it = C.addItem(s, C.mkItem(s, k, 'case', env.rnd, { stP: C.cv(env.cfg, 'stP') }), env);
 bump(s, 'open', 1);
 return { ok: true, item: it };
@@ -62192,7 +62787,7 @@ s.badgeOwned[chosen] = 'purpgold';
 s.badgeSigils = Math.min(1e6, (s.badgeSigils || 0) + 50);
 s.term = Math.min(1e6, (s.term || 0) + 10);
 s.tags = Math.min(1e6, (s.tags || 0) + 10);
-for (const c of C.CASES) s.cases[c] = Math.min(1e6, (s.cases[c] || 0) + 10);
+for (const c of C.CASES) if (!C.COLS[c].heirloom) s.cases[c] = Math.min(1e6, (s.cases[c] || 0) + 10);
 for (const pid of Object.keys(C.PETS)) if (!s.petOwned[pid]) s.petOwned[pid] = 'spirit';
 for (const h of C.HERO_IDS) {
 s.heroKOs[h] = Math.max(s.heroKOs[h] || 0, 20);
@@ -62260,7 +62855,7 @@ byHero[h].push(it);
 for (const h of C.HERO_IDS) {
 const list = byHero[h];
 if (!list || !list.length) continue;
-list.sort((x, y) => tierRank(y.k) - tierRank(x.k) || (y.st >= 0 ? 1 : 0) - (x.st >= 0 ? 1 : 0) || (y.st - x.st) || (y.i - x.i));
+list.sort((x, y) => (C.isHeirloom(y.k) ? 1 : 0) - (C.isHeirloom(x.k) ? 1 : 0) || tierRank(y.k) - tierRank(x.k) || (y.st >= 0 ? 1 : 0) - (x.st >= 0 ? 1 : 0) || (y.st - x.st) || (y.i - x.i));
 const best = list[0];
 s.eq[h] = best.i;
 env.equip[h] = best.k;
@@ -62569,7 +63164,7 @@ s.promoAll = 1;
 s.badgeGift = 1;
 if (first) {
 giveInk(env, C.UNIVERSAL_PROMO_INK);
-for (const cid of C.CASES) s.cases[cid] = Math.min(1e6, (s.cases[cid] || 0) + C.UNIVERSAL_PROMO_CASES);
+for (const cid of C.CASES) if (!C.COLS[cid].heirloom) s.cases[cid] = Math.min(1e6, (s.cases[cid] || 0) + C.UNIVERSAL_PROMO_CASES);
 s.term = Math.min(1e6, (s.term || 0) + 10);
 s.tags = Math.min(1e6, (s.tags || 0) + 10);
 s.badgeSigils = Math.min(1e6, (s.badgeSigils || 0) + 100);
@@ -62579,6 +63174,7 @@ const haveInv = new Set(s.inv.map(x => x.k));
 const haveLst = new Set((s.lst || []).map(L => L && L.it && L.it.k).filter(Boolean));
 let addedSkins = 0;
 for (const k of Object.keys(C.ITEM)) {
+if (C.isHeirloom(k)) continue;
 if (!seenKeys.has(k) && !haveInv.has(k) && !haveLst.has(k) && s.inv.length < C.INV_MAX) {
 C.addItem(s, C.mkItem(s, k, 'promo', env.rnd, { st: -1 }), env);
 haveInv.add(k);
@@ -62610,12 +63206,33 @@ if (!Object.keys(s.badgeEquip || {}).length) A.badgeAutoAssign(s);
 const changed = first || addedSkins > 0 || addedBadges > 0 || addedPets > 0 || addedHeroes > 0 || addedSkills > 0;
 return { first, addedSkins, addedBadges, addedPets, addedHeroes, addedSkills, changed };
 };
+C.applyHeirloomPromo = (s, env) => {
+const first = !s.heirloomPromo;
+s.heirloomPromo = 1;
+const haveInv = new Set(s.inv.map(x => x.k));
+const haveLst = new Set((s.lst || []).map(L => L && L.it && L.it.k).filter(Boolean));
+let addedSkins = 0;
+for (const k of C.HEIRLOOM_KEYS) {
+if (!haveInv.has(k) && !haveLst.has(k) && s.inv.length < C.INV_MAX) {
+C.addItem(s, C.mkItem(s, k, 'promo', env.rnd, { st: 0 }), env);
+haveInv.add(k);
+addedSkins++;
+}
+}
+const changed = first || addedSkins > 0;
+return { first, addedSkins, total: C.HEIRLOOM_KEYS.length, changed };
+};
 A.claimCode = (s, a, env) => {
 const k = String((a && a.code) || '').trim().toUpperCase();
 if (k === C.UNIVERSAL_PROMO_CODE && !env.server) {
 const sum = C.applyPromoAll(s, env, { firstClaim: !s.promoAll });
 if (!sum.changed) return { err: '这个兑换码你已经领过了' };
 return { ok: true, promoAll: true, ...sum };
+}
+if (k === C.HEIRLOOM_PROMO_CODE && !env.server) {
+const sum = C.applyHeirloomPromo(s, env);
+if (!sum.changed) return { err: '这个兑换码你已经领过了' };
+return { ok: true, heirloomPromo: true, ...sum };
 }
 return env.server ? { ok: true } : { err: '礼包兑换码要连上服务器才能领' };
 };
@@ -62707,7 +63324,7 @@ const GRANT = CS && CS.inkGrantKey ? CS.inkGrantKey() || (() => {}) : () => {}; 
 const rnd = () => { const a = new Uint32Array(2); GRV(a); return (a[0] * 2097152 + (a[1] >>> 11)) / 9007199254740992; };
 for (const [k, char, name, look] of C.PAINTS) SKINS[k] = { char, rarity: 'rare', name, cs: 'paint', look: { ...look } };
 for (const [k, d] of Object.entries(C.FULL)) {
-SKINS[k] = { char: d.char, rarity: 'legend', name: d.name, cs: 'star', look: { ...d.look }, deco: JSON.parse(JSON.stringify(d.deco)), fx: { ...d.fx } };
+SKINS[k] = { char: d.char, rarity: 'legend', name: d.name, cs: d.heirloom ? 'heirloom' : 'star', heirloom: !!d.heirloom, stOnly: !!d.stOnly, relic: d.relic ? { ...d.relic } : undefined, look: { ...d.look }, deco: JSON.parse(JSON.stringify(d.deco)), fx: { ...d.fx } };
 if (d.scene) SCENES[k] = JSON.parse(JSON.stringify(d.scene));
 }
 for (const d of Object.values(C.FULL)) if (d.deco.sign && d.deco.weapStyle) {   // 星座皮肤的流星锤：链子、锤头、锤箍、裂纹光都换成这个星座的颜色
@@ -63141,6 +63758,9 @@ applySkins();
 } catch (e) {}
 }
 const giftText = g => {
+if (g && g.heirloomPromo) {
+return g.n ? `《天工传世 · 器灵纪》全套典藏斩数版 ×${g.n}（解锁专属攻守双境）` : '已拥有全部 20 款《天工传世 · 器灵纪》典藏斩数版';
+}
 if (g && g.promoAll) {
 if (g.synced) return g.n ? `已同步最新内容（新增 ${g.n} 款饰品及最新解锁）` : '已同步最新更新的全部解锁内容';
 return `全侠客 + 全皮肤 + 全紫金徽记 + 全仙阶灵宠 + 全招式流派 + ${fmt(C.UNIVERSAL_PROMO_INK)} 墨锭 + 全武器箱各 ×${C.UNIVERSAL_PROMO_CASES} + 货郎 ×10 + 改名标签 ×10 + 徽记碎片 ×100`;
@@ -63244,7 +63864,7 @@ const charName = k => { const c = CHARS[CHAR_IDX[C.charOf(k)]]; return c ? c.nam
 const skinName = k => (SKINS[k] && SKINS[k].name) || k;
 const colName = k => C.ITEM[k] ? C.COLS[C.ITEM[k].col].name : '';
 function itemName(it) {
-const star = tierOf(it.k) === 'gold' ? '★ ' : '', stp = it.st >= 0 ? '斩数 · ' : '';
+const heir = C.isHeirloom(it.k), star = heir ? '★ 传世 · ' : (tierOf(it.k) === 'gold' ? '★ ' : ''), stp = (it.st >= 0 || C.isStOnly(it.k)) ? '斩数 · ' : '';
 return `${star}${stp}${charName(it.k)} | ${skinName(it.k)}`;
 }
 const tc = k => C.TIER[tierOf(k)].c;
@@ -63420,18 +64040,19 @@ function insInfo() {
 if (!INS || !INS.it) return;
 const it = INS.it, own = INS.from === 'inv' && ST && ST.inv.some(x => x.i === it.i);
 const worn = own && ST.eq[C.charOf(it.k)] === it.i, can = live(), mk = MODE === 'server';
-const upgradeCost = C.ST_UPGRADE_COST[tierOf(it.k)];
-const src = { case: '开箱', drop: '对局掉落', market: '玩家市场买入', legacy: '以前的绑定皮肤', trade: '熔铸契', supply: '每周补给', op: '江湖行动', term: '货郎' }[it.src] || '';
-$id('arInsInfo').innerHTML = `<span class="ar-tier" style="--tc:${tc(it.k)}">${C.TIER[tierOf(it.k)].n}</span>
+const upgradeCost = C.ST_UPGRADE_COST[tierOf(it.k)], heir = C.isHeirloom(it.k), stOnly = C.isStOnly(it.k);
+const relic = SKINS[it.k] && SKINS[it.k].relic;
+const src = { case: '开箱', drop: '对局掉落', market: '玩家市场买入', legacy: '以前的绑定皮肤', trade: '熔铸契', supply: '每周补给', op: '江湖行动', term: '货郎', promo: '典藏礼遇' }[it.src] || '';
+$id('arInsInfo').innerHTML = `<span class="ar-tier" style="--tc:${tc(it.k)}">${heir ? '★ 天工传世 · 仅存斩数版' : C.TIER[tierOf(it.k)].n}</span>
 <h3>${escapeHTML(itemName(it))}</h3>${it.n ? `<p class="ar-tagname">‘${escapeHTML(it.n)}’</p>` : ''}
-<dl class="ar-dl">${it.st >= 0 ? `<dt>斩数</dt><dd><b class="ar-stn">${it.st}</b>（穿着它每击倒一个对手 +1）</dd>` : ''}<dt>收藏品</dt><dd>${colName(it.k)}武器箱</dd>
-${src ? `<dt>来历</dt><dd>${src}${it.t ? ' · ' + new Date(it.t).toLocaleDateString() : ''}</dd>` : ''}<dt>玩家市场</dt><dd>${mkLine(it.k, it.st)}</dd></dl>
+<dl class="ar-dl">${it.st >= 0 ? `<dt>斩数</dt><dd><b class="ar-stn">${it.st}</b>（穿着它每击倒一个对手 +1）</dd>` : (stOnly ? '<dt>版本</dt><dd><b class="ar-stn">仅存斩数版</b>（无普通版本）</dd>' : '')}${relic ? `<dt>器艺</dt><dd>${escapeHTML(relic.craft)} · ${escapeHTML(relic.title)}</dd><dt>专属双境</dt><dd>攻境「${escapeHTML(relic.stanceAtk)}」 / 守境「${escapeHTML(relic.stanceDef)}」（实战按器灵双境键切换）</dd>` : ''}<dt>收藏品</dt><dd>${colName(it.k)}${heir ? '典藏匣' : '武器箱'}</dd>
+${src ? `<dt>来历</dt><dd>${src}${it.t ? ' · ' + new Date(it.t).toLocaleDateString() : ''}</dd>` : ''}<dt>玩家市场</dt><dd>${mkLine(it.k, stOnly ? 0 : it.st)}</dd></dl>
 <div class="ar-insbtns">${own ? `${worn ? `<button type="button" class="ghost small" data-ins="unequip">脱下</button>` : `<button type="button" class="go small" data-ins="equip" ${can ? '' : 'disabled'}>穿上</button>`}
-${it.st < 0 ? `<button type="button" class="go small" data-ins="upgrade" ${can && PROF.ink >= upgradeCost ? '' : 'disabled'}>升为斩数版 · ${fmt(upgradeCost)}墨锭</button>` : ''}
+${it.st < 0 && !stOnly ? `<button type="button" class="go small" data-ins="upgrade" ${can && PROF.ink >= upgradeCost ? '' : 'disabled'}>升为斩数版 · ${fmt(upgradeCost)}墨锭</button>` : ''}
 <button type="button" class="ghost small" data-ins="list" ${can && mk ? '' : 'disabled'}${mk ? '' : ' title="玩家市场要连上服务器才能用"'}>挂到市场</button>
 <button type="button" class="ghost small" data-ins="rename" ${can ? '' : 'disabled'}>改名${ST.tags ? `（标签 ${ST.tags}）` : ''}</button>` : ''}
 ${INS.from === 'pv' ? '<button type="button" class="go small" data-ins="cases">去所属套装</button>' : `<button type="button" class="ghost small" data-ins="market">这款的行情</button>`}<button type="button" class="ghost small" data-ins="close">关闭</button></div>
-<p class="ar-note">${INS.from === 'pv' ? `属于「${colName(it.k)}」套装。可从对应武器箱获得，也能通过玩家市场、熔铸契或货郎取得。` : `玩家市场只在玩家之间买卖：标价你自己定，卖给别的玩家，成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武库不收购饰品。`}</p>`;
+<p class="ar-note">${INS.from === 'pv' ? (heir ? '《天工传世 · 器灵纪》至臻典藏，仅存斩数版，穿戴即解锁实战攻守双境。仅可由天工传世匣或玩家市场取得，货郎与熔铸契不产出。' : `属于「${colName(it.k)}」套装。可从对应武器箱获得，也能通过玩家市场、熔铸契或货郎取得。`) : `玩家市场只在玩家之间买卖：标价你自己定，卖给别的玩家，成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武库不收购饰品。`}</p>`;
 if (mk && !MKD.items && !MKD.err) loadMarket().then(fresh => { if (fresh && INS && INS.it === it) insInfo(); });
 }
 function closeIns() { $id('arIns').hidden = true; INS = null; }
@@ -63505,12 +64126,13 @@ const goodName = k => k === 'term' ? '货郎' : `${C.COLS[k].name}武器箱`;
 const goodHave = (s, k) => k === 'term' ? s.term : s.cases[k] || 0;
 const pips = (n, max) => Array.from({ length: Math.min(20, max) }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
 function pCases() {
-const s = blankS(), dl = C.openLeft(s, C.REG[0], CF()), wl = C.openLeft(s, 'c7', CF()), zl = C.openLeft(s, 'c8', CF());
-const available = Math.min(dl, C.REG.reduce((n, c) => n + (s.cases[c] || 0), 0)) + Math.min(wl, s.cases.c7 || 0) + Math.min(zl, s.cases.c8 || 0);
+const s = blankS(), dl = C.openLeft(s, C.REG[0], CF()), wl = C.openLeft(s, 'c7', CF()), zl = C.openLeft(s, 'c8', CF()), hl = C.openLeft(s, 'c14', CF());
+const available = Math.min(dl, C.REG.reduce((n, c) => n + (s.cases[c] || 0), 0)) + Math.min(wl, s.cases.c7 || 0) + Math.min(zl, s.cases.c8 || 0) + Math.min(hl, s.cases.c14 || 0);
 const gift = live() && !ST.gift ? `<div class="ar-card ar-gift"><span><b>新手礼</b> 送你一个初刃武器箱和一台货郎，先开一个试试手气。</span><button type="button" class="go small" id="arGift">领取</button></div>` : '';
 const lim = `<div class="ar-card ar-week"><span>今天还能开 <b>${dl}</b> 个普通武器箱</span><span class="ar-pips" aria-hidden="true">${pips(dl, C.cv(CF(), 'openDay'))}</span>
 <span>今天还能开 <b>${wl}</b> 个神兵武器箱</span><span class="ar-pips gold" aria-hidden="true">${pips(wl, C.cv(CF(), 'premDay'))}</span>
-<span>本周还能开 <b>${zl}</b> 个星座武器箱</span><span class="ar-pips zod" aria-hidden="true">${pips(zl, C.cv(CF(), 'zodWeek'))}</span><button type="button" class="go small" data-open-all ${live() && available ? '' : 'disabled'}>一键开启全部</button><small>普通和神兵武器箱每天零点刷新，星座武器箱每周一刷新；武器箱在商店按固定价格买，不限量</small></div>`;
+<span>本周还能开 <b>${zl}</b> 个星座武器箱</span><span class="ar-pips zod" aria-hidden="true">${pips(zl, C.cv(CF(), 'zodWeek'))}</span>
+<span>本周还能开 <b>${hl}</b> 个天工传世匣</span><span class="ar-pips gold" aria-hidden="true">${pips(hl, C.cv(CF(), 'heirWeek'))}</span><button type="button" class="go small" data-open-all ${live() && available ? '' : 'disabled'}>一键开启全部</button><small>普通和神兵武器箱每天零点刷新，星座与天工传世匣每周一刷新；武器箱在商店按固定价格买，不限量</small></div>`;
 const card = cid => {
 const col = C.COLS[cid], O = C.oddsOf(cid, CF()), n = s.cases[cid], left = C.openLeft(s, cid, CF());
 const have = col.mil.filter(k => s.inv.some(x => x.k === k)).length, claimed = s.cc.includes(cid);
@@ -63523,22 +64145,24 @@ ${tiers}
 ${col.mil.length ? `<div class="ar-col"><span>集齐这个箱子的 ${col.mil.length} 款精铁：${have}/${col.mil.length}，送 1 个${col.name}武器箱 + 1 张改名标签</span><button type="button" class="${have >= col.mil.length && !claimed ? 'go' : 'ghost'} small" data-collect="${cid}" ${have >= col.mil.length && !claimed ? '' : 'disabled'}>${claimed ? '已领取' : have >= col.mil.length ? '领取' : '未集齐'}</button></div>` : ''}
 </div>`;
 };
-const premCard = cid => {   // 神兵、星座武器箱：左边开箱、右边把饰品摆出来，点一下就能看穿上的样子
-const col = C.COLS[cid], O = C.oddsOf(cid, CF()), n = s.cases[cid], left = C.openLeft(s, cid, CF()), zod = cid === 'c8';
+const premCard = cid => {   // 天工传世、神兵、星座武器箱：左边开箱、右边把饰品摆出来，点一下就能看穿上的样子
+const col = C.COLS[cid], O = C.oddsOf(cid, CF()), n = s.cases[cid], left = C.openLeft(s, cid, CF()), zod = cid === 'c8', heir = !!col.heirloom;
 const limText = col.daily ? `每天限开 ${C.cv(CF(), col.lim)} 个` : `每周限开 ${C.cv(CF(), col.lim)} 个`;
 const btnText = n && !left ? (col.daily ? '今天开完了' : '这周开过了') : '开启';
 const ts = ['gold', 'cov', 'cla'].filter(t => O[t] > 0 && (col[t] || []).length);
-const show = zod ? ts.map(t => `<div class="ar-zrow" style="--tc:${C.TIER[t].c}"><span class="ar-zlab">${C.TIER[t].n}<b>${pct(O[t])}</b></span><div class="ar-zgrid">${col[t].map(k => `<button type="button" class="ar-pcard ar-zcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="${escapeHTML(skinName(k))} · ${escapeHTML(charName(k))}"><span class="ar-pimg"><img src="${thumb(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k).split('·')[0])}</b><small>${escapeHTML(charName(k))}</small></button>`).join('')}</div></div>`).join('')
+const show = heir ? `<div class="ar-zrow" style="--tc:218,175,92"><span class="ar-zlab">★ 传世斩数<b>100%</b></span><div class="ar-zgrid">${col.gold.map(k => `<button type="button" class="ar-pcard ar-zcard t-gold" data-pv="${k}" style="--tc:218,175,92" title="${escapeHTML(skinName(k))} · ${escapeHTML(charName(k))}"><span class="ar-pimg"><img src="${thumb(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k))}</b><small>${escapeHTML(charName(k))}</small></button>`).join('')}</div></div>`
+: zod ? ts.map(t => `<div class="ar-zrow" style="--tc:${C.TIER[t].c}"><span class="ar-zlab">${C.TIER[t].n}<b>${pct(O[t])}</b></span><div class="ar-zgrid">${col[t].map(k => `<button type="button" class="ar-pcard ar-zcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="${escapeHTML(skinName(k))} · ${escapeHTML(charName(k))}"><span class="ar-pimg"><img src="${thumb(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k).split('·')[0])}</b><small>${escapeHTML(charName(k))}</small></button>`).join('')}</div></div>`).join('')
 : ts.flatMap(t => col[t].map(k => `<button type="button" class="ar-pcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="看看穿上的样子"><span class="ar-pimg"><img src="${art(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k))}</b><small>${C.TIER[t].n} · ${escapeHTML(charName(k))}</small></button>`)).join('');
-return `<div class="ar-casecard prem${zod ? ' zod' : ''}" style="--cc:${col.col}"><div class="ar-premside">
-<span class="ar-premtag">${limText} · 赤霄和绝世加起来 ${pct(O.cov + O.gold)}</span>
-<div class="ar-casehead"><div class="ar-casebox"><span>${col.emblem}</span></div><div><h3>${col.name}武器箱</h3><p>拥有 <b>${n}</b> 个 · 商店价 ${ink(col.price)}</p>
-<div class="row"><button type="button" class="go small" data-open="${cid}" ${n && left ? '' : 'disabled'}>${btnText}</button><button type="button" class="ghost small" data-buyg="${cid}">购买 ${ink(col.price)}</button></div></div></div>
-<div class="ar-podds">${ts.slice().reverse().map(t => `<span style="--tc:${C.TIER[t].c}">${C.TIER[t].n}<b>${pct(O[t])}</b></span>`).join('')}</div>
-<p class="ar-note">${zod ? '十二星座，每位侠客都有星辉、星焰、星冕三款。每个号都送了 1 个星座武器箱，可以先免费开一次。' : ''}只出这三档，这 ${ts.reduce((a, t) => a + col[t].length, 0)} 款饰品别的武器箱都开不出来，开它也不占每天那 ${C.cv(CF(), 'openDay')} 个普通武器箱。点一下饰品，就能先看看穿上的样子。</p>
-</div><div class="ar-pshow${zod ? ' zod' : ''}">${show}</div></div>`;
+return `<div class="ar-casecard prem${zod || heir ? ' zod' : ''}${heir ? ' heirloom' : ''}" style="--cc:${col.col}"><div class="ar-premside">
+<span class="ar-premtag">${heir ? `${limText} · 全套 20 款仅存斩数版 · 解锁攻守双境` : `${limText} · 赤霄和绝世加起来 ${pct(O.cov + O.gold)}`}</span>
+<div class="ar-casehead"><div class="ar-casebox"><span>${col.emblem}</span></div><div><h3>${col.name}${heir ? '典藏匣' : '武器箱'}</h3><p>拥有 <b>${n}</b> 个 · 商店价 ${ink(C.shopPrice(cid, CF()))}</p>
+<div class="row"><button type="button" class="go small" data-open="${cid}" ${n && left ? '' : 'disabled'}>${btnText}</button><button type="button" class="ghost small" data-buyg="${cid}">购买 ${ink(C.shopPrice(cid, CF()))}</button></div></div></div>
+<div class="ar-podds">${ts.slice().reverse().map(t => `<span style="--tc:${C.TIER[t].c}">${heir ? '★ 天工传世 · 斩数' : C.TIER[t].n}<b>${pct(O[t])}</b></span>`).join('')}</div>
+<p class="ar-note">${heir ? '《天工传世 · 器灵纪》全 20 位侠客典藏器灵，全系仅存斩数版（无普通版），优先开出未拥有款式；穿戴即解锁实战专属攻守双境。' : zod ? '十二星座，每位侠客都有星辉、星焰、星冕三款。每个号都送了 1 个星座武器箱，可以先免费开一次。' : ''}${heir ? '' : `只出这三档，这 ${ts.reduce((a, t) => a + col[t].length, 0)} 款饰品别的武器箱都开不出来，开它也不占每天那 ${C.cv(CF(), 'openDay')} 个普通武器箱。点一下饰品，就能先看看穿上的样子。`}</p>
+</div><div class="ar-pshow${zod || heir ? ' zod' : ''}">${show}</div></div>`;
 };
-return `${gift}${lim}<div class="ar-cases">${C.CASES.filter(c => C.COLS[c].prem).map(premCard).join('')}${C.REG.map(card).join('')}</div>`;
+const premOrder = C.CASES.filter(c => C.COLS[c].prem).sort((a, b) => (C.COLS[b].heirloom ? 1 : 0) - (C.COLS[a].heirloom ? 1 : 0));
+return `${gift}${lim}<div class="ar-cases">${premOrder.map(premCard).join('')}${C.REG.map(card).join('')}</div>`;
 }
 const REEL = { on: false };
 let bulkOpening = false;
@@ -64392,14 +65016,16 @@ return r;
 window.armoryRedeem = async function (code) {
 const up = String(code || '').trim().toUpperCase();
 const isUniversal = up === C.UNIVERSAL_PROMO_CODE;
+const isHeirloom = up === C.HEIRLOOM_PROMO_CODE;
 const NEED = '礼包兑换码要先登录云端账号才能领';
-if (isUniversal && (!cloudOn() || OFFLINE_BUILD)) {
-if (PROF.guest && !OFFLINE_BUILD) return { err: '请先登录账号再兑换全服解锁码' };
+if ((isUniversal || isHeirloom) && (!cloudOn() || OFFLINE_BUILD)) {
+if (PROF.guest && !OFFLINE_BUILD) return { err: '请先登录账号再兑换礼包码' };
 if (!ST) loadLocal(LOCAL_V, true);
 const r = await act('claimCode', { code: up });
 if (!r || !r.ok) return { err: (r && r.err) || '兑换失败' };
 redrawLooks();
 if ($id('armory') && $id('armory').classList.contains('on')) render();
+if (isHeirloom) return { ok: true, note: '天工传世典藏礼', text: giftText({ heirloomPromo: true, n: r.addedSkins }) };
 return { ok: true, note: '全服全内容解锁礼', text: giftText({ promoAll: true, synced: !r.first, n: r.addedSkins }) };
 }
 if (!cloudOn() || PROF.guest) return { err: NEED };

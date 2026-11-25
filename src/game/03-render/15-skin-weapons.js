@@ -604,6 +604,227 @@ SKIN_WEAP.star_magnet = W => {   // 极星乾坤（★绝世）：掌托阴阳�
 const HAMMER_LOOK = {
   crimson_hammer: { chain: ['#6a2a22', '#b0503a'], head: '#4a1610', band: '#ff6a2a', crack: '255,120,50', spikes: '#2a0c08' },
   underworld_hammer: { chain: ['#4a2a7a', '#b48cff'], head: '#2a1840', band: '#a855f7', crack: '185,105,255', ghost: true },
+  relic_kintsugi: { chain: ['#221a16', '#f4c542'], head: '#161214', band: '#f4c542', crack: '248,198,66', spikes: '#d8a432' },
+};
+// ---------- 天工传世 · 器灵纪 20 款专属国宝兵器 ----------
+SKIN_WEAP.relic_porcelain = W => {
+  const { P, poly, bar, live, t, T, hl, g } = W;
+  bar(hl, g, 4.4, '#1a3668');
+  poly([P(0, -2.8), P(0.88, -2.5), t, P(0.88, 2.5), P(0, 2.8)], W.lg(g, t, [[0, '#dce8f8'], [0.45, '#f7fbff'], [1, '#ffffff']]));
+  poly([P(0.03, -8), P(-0.04, -9.5), P(-0.06, 0), P(-0.04, 9.5), P(0.03, 8), P(0, 0)], '#d8b464');
+  if (!live) return;
+  ctx.strokeStyle = '#1e4fa3'; ctx.lineWidth = 1.2; ctx.beginPath();
+  for (let i = 0; i <= 14; i++) { const k = 0.06 + i / 14 * 0.78, q = P(k, Math.sin(k * 18 - T * 3.5) * 1.1); i ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }
+  ctx.stroke();
+  ctx.fillStyle = '#2c6be0'; circle(P(-0.01, 0), 2.2);
+  ctx.globalCompositeOperation = 'lighter'; W.glow(t, 8, '64,132,235', 0.48);
+};
+SKIN_WEAP.relic_puppet = W => {
+  const pr = dualPair(W);
+  W.bar(W.hl, W.g, 3.8, '#3b180e');
+  for (const [a, b, sg] of pr) {
+    const ex = b[0] - a[0], ey = b[1] - a[1], el = Math.hypot(ex, ey) || 1, nx = -ey / el * W.pf * sg, ny = ex / el * W.pf * sg;
+    const mid = [a[0] + ex * 0.55 + nx * 6.5, a[1] + ey * 0.55 + ny * 6.5];
+    W.poly([a, [a[0] + ex * 0.35 + nx * 4, a[1] + ey * 0.35 + ny * 4], mid, b, [a[0] + ex * 0.45 - nx * 2, a[1] + ey * 0.45 - ny * 2]], W.lg(a, b, [[0, '#7a2214'], [0.55, '#e6552e'], [1, '#ffe6b8']]));
+    if (W.live) {
+      ctx.strokeStyle = '#ffd27a'; ctx.lineWidth = 1; line(a, b);
+      ctx.fillStyle = '#241410'; circle([a[0] + ex * 0.52 + nx * 1.5, a[1] + ey * 0.52 + ny * 1.5], 1.8);
+    }
+  }
+};
+SKIN_WEAP.relic_bronze = W => {
+  const { P, poly, bar, live, t } = W;
+  bar(W.hl, W.g, 5.4, '#1e322e');
+  poly([P(0, -5.8), P(0.86, -6.2), t, P(0.86, 6.4), P(0, 5.8)], W.lg(P(0.5, -6), P(0.5, 6), [[0, '#355c54'], [0.5, '#76b8a4'], [1, '#2b4742']]));
+  poly([P(0.04, -12), P(-0.05, -13), P(-0.05, 13), P(0.04, 12)], '#d4a64a');
+  if (!live) return;
+  ctx.strokeStyle = '#d4a64a'; ctx.lineWidth = 1.1; line(P(0.05, 0), P(0.84, 0));
+  for (const s of [0.18, 0.38, 0.58]) ctx.strokeRect(P(s, -2.5)[0] - 2, P(s, -2.5)[1] - 2, 4, 4);
+  ctx.fillStyle = '#78e6c8'; circle(P(0, 0), 2.5);
+};
+SKIN_WEAP.relic_celadon = W => {
+  const { At, t, bar, live, T } = W, back = At(W.g, -36);
+  bar(back, At(t, -24), 3.4, '#3f686b');
+  for (const s of [-30, -58, -86]) bar(At(t, s, -2.2), At(t, s, 2.2), 2.2, '#e0bc7a');
+  W.poly([t, At(t, -10, 4.2), At(t, -22, 3), At(t, -26, 0), At(t, -22, -3), At(t, -10, -4.2)], W.lg(At(t, -26), t, [[0, '#7fa8a8'], [0.55, '#cfe6e4'], [1, '#f4ffff']]));
+  if (!live) return;
+  ctx.strokeStyle = 'rgba(224,188,122,0.85)'; ctx.lineWidth = 0.9;
+  line(At(t, -20, -1.2), At(t, -12, 1.5)); line(At(t, -14, -2), At(t, -7, 0.8));
+  const r0 = At(t, -26), sw = Math.sin(T * 4) * 2.4;
+  ctx.strokeStyle = '#f0cfa0'; ctx.lineWidth = 1.6;
+  ctx.beginPath(); ctx.moveTo(r0[0], r0[1]); ctx.quadraticCurveTo(r0[0] - W.ux * 7, r0[1] + 6, r0[0] - W.ux * 10 + sw, r0[1] + 15); ctx.stroke();
+};
+SKIN_WEAP.relic_embroidery = W => {
+  const { g, live, T } = W, a = Math.atan2(W.uy, W.ux);
+  W.bar(W.hl, g, 3.6, '#7a2434');
+  const q = ctx.createRadialGradient(g[0], g[1], 4, g[0], g[1], 32);
+  q.addColorStop(0, '#fff5e6'); q.addColorStop(0.55, '#f29ab0'); q.addColorStop(1, '#a82a44');
+  W.fillWith(() => fanSector(W, 32, a - 0.76, a + 0.76), q);
+  if (!live) return;
+  ctx.strokeStyle = '#f0c464'; ctx.lineWidth = 1.1;
+  for (let i = -3; i <= 3; i++) { const b = a + i * 0.22; line([g[0] + Math.cos(b) * 5, g[1] + Math.sin(b) * 5], [g[0] + Math.cos(b) * 31, g[1] + Math.sin(b) * 31]); }
+  ctx.strokeStyle = '#ffd278'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(g[0], g[1], 31, a - 0.76, a + 0.76); ctx.stroke();
+  const sw = Math.sin(T * 4) * 2.5; ctx.strokeStyle = '#d94862'; ctx.lineWidth = 1.5;
+  line(W.hl, [W.hl[0] + sw, W.hl[1] + 13]);
+};
+SKIN_WEAP.relic_cloisonne = W => {
+  fistPlates(W, (Q, h) => {
+    W.poly([Q(7.5, 6.8), Q(7.5, -6.8), Q(-5.5, -5.8), Q(-6.5, 0), Q(-5.5, 5.8)], '#143878');
+    if (!W.live) return;
+    ctx.strokeStyle = '#f5c242'; ctx.lineWidth = 1.4;
+    line(Q(7, -6.2), Q(7, 6.2)); line(Q(1, -5.5), Q(1, 5.5)); line(Q(-3.5, -4.5), Q(5.5, 0)); line(Q(-3.5, 4.5), Q(5.5, 0));
+    ctx.fillStyle = '#38c8ff'; circle(Q(3, 0), 2.2);
+    ctx.globalCompositeOperation = 'lighter'; W.glow(h, 9, '82,172,255', 0.42);
+    ctx.globalCompositeOperation = 'source-over';
+  });
+};
+SKIN_WEAP.relic_woodblock = W => {
+  const { At, t, hl, bar, live, T } = W;
+  bar(hl, At(t, -12), 4.6, '#3e2618');
+  brushTip(W, W.lg(At(t, -13), At(t, 3), [[0, '#1e1612'], [0.6, '#8a1e18'], [1, '#e03e32']]));
+  bar(At(t, -15), At(t, -12), 5.6, '#d8b464');
+  if (!live) return;
+  ctx.fillStyle = '#c82e24'; ctx.fillRect(hl[0] - 3.5, hl[1] - 3.5, 7, 7);
+  ctx.strokeStyle = '#f0e6d2'; ctx.lineWidth = 0.8; ctx.strokeRect(hl[0] - 2.4, hl[1] - 2.4, 4.8, 4.8);
+  const dp = (T * 1.2) % 1; ctx.fillStyle = `rgba(220,62,50,${0.9 - dp * 0.7})`; circle([t[0], t[1] + 3 + dp * 9], 1.5);
+};
+SKIN_WEAP.relic_liuli = W => {
+  moonBlade(W, W.lg(W.g, W.t, [[0, '#2c4688'], [0.55, '#88f0ff'], [1, '#f2fdff']]), '#1a2450');
+  const [c, a] = moonCrescent(W, 12, W.lg(W.At(W.t, -15), W.At(W.t, 7), [[0, '#88f0ff'], [0.55, '#c4a2ff'], [1, '#ffffff']]));
+  if (!W.live) return;
+  ctx.strokeStyle = 'rgba(255,255,255,0.9)'; ctx.lineWidth = 1.1; ctx.beginPath(); ctx.arc(c[0], c[1], 10.6, a - 1.5, a + 1.5); ctx.stroke();
+  ctx.globalCompositeOperation = 'lighter'; W.glow(W.t, 9, '142,232,255', 0.5);
+};
+SKIN_WEAP.relic_kingfisher = W => {
+  W.bar(W.hl, W.g, 4.2, '#093440');
+  const V = featherVane(W, 12.5, 3, 12, (i, u) => (i % 2 && i < 11 ? 2.4 : 0) * Math.sin(Math.PI * u));
+  W.fillWith(() => { ctx.moveTo(...W.g); for (const q of V.outer) ctx.lineTo(q[0], q[1]); ctx.quadraticCurveTo(V.c2[0], V.c2[1], ...W.g); }, W.lg(W.g, W.t, [[0, '#0d4a58'], [0.5, '#14c8c0'], [1, '#e8fffb']]));
+  if (!W.live) return;
+  ctx.strokeStyle = '#f5c84c'; ctx.lineWidth = 1.5; line(W.g, W.t);
+  ctx.strokeStyle = 'rgba(245,200,76,0.75)'; ctx.lineWidth = 0.9;
+  for (const u of [0.3, 0.55, 0.78]) { const p = V.bz(V.c1, u); line(W.P(u, 0), p); }
+};
+SKIN_WEAP.relic_guqin = W => {
+  const F = fluteBody(W, '#2c1e16', [0.1, 0.5, 0.9], '#e6c278');
+  if (!W.live) return;
+  ctx.fillStyle = '#e6c278';
+  for (let i = 0; i < 7; i++) circle(F(0.2 + i * 0.1, -2.1), 1.0);
+  ctx.strokeStyle = 'rgba(238,198,118,0.8)'; ctx.lineWidth = 0.8; line(F(0.12, 1.8), F(0.88, 1.8));
+  const sw = Math.sin(W.T * 3.2) * 2.8; ctx.strokeStyle = '#e6c278'; ctx.lineWidth = 1.4;
+  line(W.hl, [W.hl[0] + sw, W.hl[1] + 13]);
+};
+SKIN_WEAP.relic_sancai = W => {
+  const G = gourdParts(W); if (!G) return;
+  const { top, bot, mid } = G;
+  const fillG = (c, r) => { const q = ctx.createLinearGradient(c[0] - r, c[1] - r, c[0] + r, c[1] + r); q.addColorStop(0, '#fff6e0'); q.addColorStop(0.45, '#e89a2c'); q.addColorStop(1, '#2e9e66'); ctx.fillStyle = W.flash ? '#fff' : q; circle(c, r); };
+  fillG(bot, 8.8); fillG(top, 5.8);
+  if (!W.live) return;
+  ctx.fillStyle = '#d84828'; ctx.fillRect(mid[0] - 3.5, mid[1] - 1.2, 7, 2.4);
+  ctx.fillStyle = 'rgba(255,255,255,0.48)'; circle([bot[0] - 2.8, bot[1] - 2.8], 2.2);
+};
+SKIN_WEAP.relic_papercut = W => {
+  const { sk, L, o, flash, ux, uy, g } = W;
+  const spinDraw = (pt, ang) => {
+    ctx.save(); ctx.translate(pt[0], pt[1]); ctx.rotate(ang);
+    if (o) { ctx.fillStyle = L.outline; ctx.beginPath(); ctx.ellipse(0, 0, 18, 5.5, 0, 0, Math.PI * 2); ctx.fill(); ctx.restore(); return; }
+    ctx.fillStyle = flash ? '#fff' : '#e62e2d';
+    ctx.beginPath(); ctx.moveTo(-18, 0); ctx.lineTo(-6, -5); ctx.lineTo(0, -2.5); ctx.lineTo(6, -5); ctx.lineTo(18, 0); ctx.lineTo(6, 5); ctx.lineTo(0, 2.5); ctx.lineTo(-6, 5); ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = '#f5c24a'; ctx.lineWidth = 1.1; ctx.stroke();
+    ctx.fillStyle = '#fff6ee'; circle([0, 0], 2.1);
+    ctx.restore();
+  };
+  spinDraw(g, Math.atan2(uy, ux)); spinDraw(sk.hb, Math.atan2(uy, ux) + 0.2);
+  if (!o) { ctx.strokeStyle = 'rgba(245,62,62,0.85)'; ctx.lineWidth = 1.3; line(sk.hf, sk.hb); }
+};
+SKIN_WEAP.relic_screen = W => {
+  const { P, poly, bar, live, t, g, hl } = W;
+  bar(hl, g, 4.4, '#382a14');
+  poly([P(0.03, -7.5), P(-0.04, -5), P(-0.04, 5), P(0.03, 7.5)], '#ffd65c');
+  poly([P(0, -2.6), P(0.6, -3.6), P(0.92, -2.4), t, P(0.88, 2.4), P(0, 2.6)], W.lg(g, t, [[0, '#241e14'], [0.45, '#b88a24'], [0.85, '#ffd65c'], [1, '#fff8dc']]));
+  if (!live) return;
+  ctx.strokeStyle = '#fff6d0'; ctx.lineWidth = 1.1; line(P(0.06, -1.6), P(0.86, -1.2));
+  ctx.globalCompositeOperation = 'lighter'; W.glow(t, 8, '255,214,92', 0.5);
+};
+SKIN_WEAP.relic_compass = W => {
+  const { sk, L, o, flash, live, T } = W;
+  if (o) { ctx.fillStyle = L.outline; circle(sk.hf, 11.5); circle(sk.hb, 10.5); return; }
+  const pol = sk.pol || 1;
+  for (const [p, r] of [[sk.hf, 9.2], [sk.hb, 7.8]]) {
+    ctx.fillStyle = flash ? '#fff' : '#1e2838'; circle(p, r + 1.5);
+    ctx.strokeStyle = '#e2b862'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.arc(p[0], p[1], r + 1.5, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = pol > 0 ? '#58d8ff' : '#e2b862'; circle(p, r * 0.55);
+  }
+  const a = T * 2.5 * pol;
+  ctx.strokeStyle = '#dff8ff'; ctx.lineWidth = 1.8;
+  line([sk.hf[0] - Math.cos(a) * 8, sk.hf[1] - Math.sin(a) * 8], [sk.hf[0] + Math.cos(a) * 9, sk.hf[1] + Math.sin(a) * 9]);
+  if (live) { ctx.globalCompositeOperation = 'lighter'; W.glow(sk.hf, 11, '96,218,255', 0.48); }
+};
+SKIN_WEAP.relic_marionette = W => {
+  const { sk, L, o, flash, live, T } = W;
+  if (o) { ctx.fillStyle = L.outline; circle(sk.hf, 10.5); return; }
+  ctx.fillStyle = flash ? '#fff' : '#4a2b1e'; circle(sk.hf, 8.6);
+  ctx.strokeStyle = '#f0b858'; ctx.lineWidth = 1.8;
+  const a = T * 1.8;
+  for (let k = 0; k < 4; k++) { const b = a + k * Math.PI / 2; line(sk.hf, [sk.hf[0] + Math.cos(b) * 10, sk.hf[1] + Math.sin(b) * 10]); }
+  ctx.fillStyle = '#fae6c0'; circle(sk.hf, 3.2);
+  if (live) { ctx.globalCompositeOperation = 'lighter'; W.glow(sk.hf, 9, '240,184,88', 0.45); }
+};
+SKIN_WEAP.relic_ironfire = W => {
+  const { At, g, t, bar, poly, live, T } = W, crown = At(t, -18);
+  bar(At(g, -30), crown, 4.4, '#3c1810');
+  bar(At(crown, 0, -14), At(crown, 0, 14), 5.2, '#ff7a22');
+  for (const side of [-1, 0, 1]) {
+    const w = side * 12, length = side ? 15 : 20;
+    poly([At(crown, -3, w - 2.6), At(crown, length - 4, w - 3.6), At(crown, length, w + 1), At(crown, length - 6, w + 3.6), At(crown, -3, w + 2.6)], W.lg(crown, At(crown, length, w), [[0, '#ff7a22'], [0.6, '#ffd25a'], [1, '#fff8e0']]));
+  }
+  if (!live) return;
+  ctx.globalCompositeOperation = 'lighter'; W.glow(t, 12 + Math.sin(T * 14) * 2, '255,140,48', 0.6);
+};
+SKIN_WEAP.relic_armillary = W => {
+  const { At, hl, t, bar, poly, live, T } = W, hub = At(t, -22);
+  bar(hl, At(hub, -8), 4.2, '#2a2440');
+  ctx.strokeStyle = W.o ? W.L.outline : W.flash ? '#fff' : '#f2c864'; ctx.lineWidth = W.o ? 4.5 : 2.2;
+  ctx.beginPath(); ctx.arc(hub[0], hub[1], 14, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(hub[0], hub[1], 14, 6, T * 0.9, 0, Math.PI * 2); ctx.stroke();
+  ctx.beginPath(); ctx.ellipse(hub[0], hub[1], 14, 6, -T * 0.7 + 1.2, 0, Math.PI * 2); ctx.stroke();
+  poly([At(hub, 6), At(hub, 0, 5), At(hub, -6), At(hub, 0, -5)], '#92b8ff');
+  if (!live) return;
+  ctx.globalCompositeOperation = 'lighter'; W.glow(hub, 12, '242,200,100', 0.5);
+};
+SKIN_WEAP.relic_dunhuang = W => {
+  const { hl, t, At, bar, glow, o, flash, live, T, L } = W;
+  bar(At(hl, -12, 0), At(t, -4, 0), o ? 6.4 : 4.2, o ? L.outline : flash ? '#fff' : '#7a4222');
+  const head = At(t, -2, 0), lamp = At(t, 6, 3 + Math.sin(T * 5) * 1.5);
+  ctx.strokeStyle = o ? L.outline : flash ? '#fff' : '#eab84a'; ctx.lineWidth = o ? 4.4 : 2.5;
+  ctx.beginPath(); ctx.moveTo(head[0], head[1]); ctx.quadraticCurveTo(At(t, 5, -8)[0], At(t, 5, -8)[1], lamp[0], lamp[1] - 5); ctx.stroke();
+  ctx.fillStyle = o ? L.outline : flash ? '#fff' : '#28889e'; circle(lamp, o ? 7.2 : 5.6);
+  if (!o && !flash) {
+    ctx.strokeStyle = '#eab84a'; ctx.lineWidth = 1.4; ctx.beginPath(); ctx.arc(lamp[0], lamp[1], 5.6, 0, Math.PI * 2); ctx.stroke();
+    ctx.fillStyle = '#fff2d2'; circle(lamp, 2.5);
+    if (live) glow(lamp, 12, '245,196,86', 0.54);
+  }
+};
+SKIN_WEAP.relic_cinnabar = W => {
+  const { sk, L, o, flash, live, T } = W;
+  const s = flailSim(sk, L, 0); if (!s) return;
+  const pts = s.p, hd = pts[pts.length - 1];
+  if (o) {
+    ctx.strokeStyle = L.outline; ctx.lineWidth = 5.8;
+    ctx.beginPath(); ctx.moveTo(pts[0][0], pts[0][1]); for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]); ctx.stroke();
+    circle(hd, 12.5); return;
+  }
+  for (let i = 0; i < pts.length - 1; i++) {
+    ctx.strokeStyle = flash ? '#fff' : (i % 2 ? '#f0c458' : '#7c1816'); ctx.lineWidth = 3.2; line(pts[i], pts[i + 1]);
+  }
+  ctx.fillStyle = flash ? '#fff' : '#8e1c1a';
+  ctx.beginPath();
+  for (let k = 0; k < 6; k++) { const a = k * Math.PI / 3 + T * 1.4; const q = [hd[0] + Math.cos(a) * 11, hd[1] + Math.sin(a) * 11]; k ? ctx.lineTo(q[0], q[1]) : ctx.moveTo(q[0], q[1]); }
+  ctx.closePath(); ctx.fill();
+  if (!flash) {
+    ctx.strokeStyle = '#f0c458'; ctx.lineWidth = 1.8; ctx.stroke();
+    ctx.fillStyle = '#f0c458'; circle(hd, 3.6);
+    if (live) { ctx.globalCompositeOperation = 'lighter'; W.glow(hd, 12, '232,68,58', 0.42); }
+  }
 };
 // ---------- 新侠客的原装兵器 ----------
 SKIN_WEAP.firerake = ({ At, g, t, bar, poly, L }) => {
@@ -861,7 +1082,8 @@ function weapon(sk, L, outline, flash, f) {
   const blade = flash ? '#fff' : L.blade;
   const ws = (L.deco && L.deco.weapStyle) || L.weapon;
   ctx.lineCap = 'round';
-  if (L.weapon !== 'hammer' && L.weapon !== 'dyelash' && L.weapon !== 'bastionshell' && (skinWeapon(ws, sk, L, outline, flash, f) ||
+  const isRelicWeap = typeof ws === 'string' && ws.startsWith('relic_');
+  if (L.weapon !== 'hammer' && L.weapon !== 'dyelash' && (L.weapon !== 'bastionshell' || isRelicWeap) && (skinWeapon(ws, sk, L, outline, flash, f) ||
       (ws !== L.weapon && skinWeapon(L.weapon, sk, L, outline, flash, f)))) return;
   const guardBar = (w, col = L.metal || '#d9b36a') => { ctx.strokeStyle = col; ctx.lineWidth = 2.4; ctx.beginPath(); ctx.moveTo(g[0] - px * w, g[1] - py * w); ctx.lineTo(g[0] + px * w, g[1] + py * w); ctx.stroke(); };
   switch (L.weapon) {

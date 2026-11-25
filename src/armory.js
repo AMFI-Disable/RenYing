@@ -28,7 +28,7 @@
   /* ---------- 新皮肤：24 款涂装、5 款 ★、神兵武器箱的 7 款、星座武器箱的 36 款 ---------- */
   for (const [k, char, name, look] of C.PAINTS) SKINS[k] = { char, rarity: 'rare', name, cs: 'paint', look: { ...look } };
   for (const [k, d] of Object.entries(C.FULL)) {
-    SKINS[k] = { char: d.char, rarity: 'legend', name: d.name, cs: 'star', look: { ...d.look }, deco: JSON.parse(JSON.stringify(d.deco)), fx: { ...d.fx } };
+    SKINS[k] = { char: d.char, rarity: 'legend', name: d.name, cs: d.heirloom ? 'heirloom' : 'star', heirloom: !!d.heirloom, stOnly: !!d.stOnly, relic: d.relic ? { ...d.relic } : undefined, look: { ...d.look }, deco: JSON.parse(JSON.stringify(d.deco)), fx: { ...d.fx } };
     if (d.scene) SCENES[k] = JSON.parse(JSON.stringify(d.scene));
   }
   for (const d of Object.values(C.FULL)) if (d.deco.sign && d.deco.weapStyle) {   // 星座皮肤的流星锤：链子、锤头、锤箍、裂纹光都换成这个星座的颜色
@@ -476,6 +476,9 @@
   }
   // 一份补偿里有什么：「500 墨锭、初刃武器箱 ×2、货郎 ×1」
   const giftText = g => {
+    if (g && g.heirloomPromo) {
+      return g.n ? `《天工传世 · 器灵纪》全套典藏斩数版 ×${g.n}（解锁专属攻守双境）` : '已拥有全部 20 款《天工传世 · 器灵纪》典藏斩数版';
+    }
     if (g && g.promoAll) {
       if (g.synced) return g.n ? `已同步最新内容（新增 ${g.n} 款饰品及最新解锁）` : '已同步最新更新的全部解锁内容';
       return `全侠客 + 全皮肤 + 全紫金徽记 + 全仙阶灵宠 + 全招式流派 + ${fmt(C.UNIVERSAL_PROMO_INK)} 墨锭 + 全武器箱各 ×${C.UNIVERSAL_PROMO_CASES} + 货郎 ×10 + 改名标签 ×10 + 徽记碎片 ×100`;
@@ -581,7 +584,7 @@
   const skinName = k => (SKINS[k] && SKINS[k].name) || k;
   const colName = k => C.ITEM[k] ? C.COLS[C.ITEM[k].col].name : '';
   function itemName(it) {
-    const star = tierOf(it.k) === 'gold' ? '★ ' : '', stp = it.st >= 0 ? '斩数 · ' : '';
+    const heir = C.isHeirloom(it.k), star = heir ? '★ 传世 · ' : (tierOf(it.k) === 'gold' ? '★ ' : ''), stp = (it.st >= 0 || C.isStOnly(it.k)) ? '斩数 · ' : '';
     return `${star}${stp}${charName(it.k)} | ${skinName(it.k)}`;
   }
   const tc = k => C.TIER[tierOf(k)].c;
@@ -771,18 +774,19 @@
     if (!INS || !INS.it) return;
     const it = INS.it, own = INS.from === 'inv' && ST && ST.inv.some(x => x.i === it.i);
     const worn = own && ST.eq[C.charOf(it.k)] === it.i, can = live(), mk = MODE === 'server';
-    const upgradeCost = C.ST_UPGRADE_COST[tierOf(it.k)];
-    const src = { case: '开箱', drop: '对局掉落', market: '玩家市场买入', legacy: '以前的绑定皮肤', trade: '熔铸契', supply: '每周补给', op: '江湖行动', term: '货郎' }[it.src] || '';
-    $id('arInsInfo').innerHTML = `<span class="ar-tier" style="--tc:${tc(it.k)}">${C.TIER[tierOf(it.k)].n}</span>
+    const upgradeCost = C.ST_UPGRADE_COST[tierOf(it.k)], heir = C.isHeirloom(it.k), stOnly = C.isStOnly(it.k);
+    const relic = SKINS[it.k] && SKINS[it.k].relic;
+    const src = { case: '开箱', drop: '对局掉落', market: '玩家市场买入', legacy: '以前的绑定皮肤', trade: '熔铸契', supply: '每周补给', op: '江湖行动', term: '货郎', promo: '典藏礼遇' }[it.src] || '';
+    $id('arInsInfo').innerHTML = `<span class="ar-tier" style="--tc:${tc(it.k)}">${heir ? '★ 天工传世 · 仅存斩数版' : C.TIER[tierOf(it.k)].n}</span>
       <h3>${escapeHTML(itemName(it))}</h3>${it.n ? `<p class="ar-tagname">‘${escapeHTML(it.n)}’</p>` : ''}
-      <dl class="ar-dl">${it.st >= 0 ? `<dt>斩数</dt><dd><b class="ar-stn">${it.st}</b>（穿着它每击倒一个对手 +1）</dd>` : ''}<dt>收藏品</dt><dd>${colName(it.k)}武器箱</dd>
-      ${src ? `<dt>来历</dt><dd>${src}${it.t ? ' · ' + new Date(it.t).toLocaleDateString() : ''}</dd>` : ''}<dt>玩家市场</dt><dd>${mkLine(it.k, it.st)}</dd></dl>
+      <dl class="ar-dl">${it.st >= 0 ? `<dt>斩数</dt><dd><b class="ar-stn">${it.st}</b>（穿着它每击倒一个对手 +1）</dd>` : (stOnly ? '<dt>版本</dt><dd><b class="ar-stn">仅存斩数版</b>（无普通版本）</dd>' : '')}${relic ? `<dt>器艺</dt><dd>${escapeHTML(relic.craft)} · ${escapeHTML(relic.title)}</dd><dt>专属双境</dt><dd>攻境「${escapeHTML(relic.stanceAtk)}」 / 守境「${escapeHTML(relic.stanceDef)}」（实战按器灵双境键切换）</dd>` : ''}<dt>收藏品</dt><dd>${colName(it.k)}${heir ? '典藏匣' : '武器箱'}</dd>
+      ${src ? `<dt>来历</dt><dd>${src}${it.t ? ' · ' + new Date(it.t).toLocaleDateString() : ''}</dd>` : ''}<dt>玩家市场</dt><dd>${mkLine(it.k, stOnly ? 0 : it.st)}</dd></dl>
       <div class="ar-insbtns">${own ? `${worn ? `<button type="button" class="ghost small" data-ins="unequip">脱下</button>` : `<button type="button" class="go small" data-ins="equip" ${can ? '' : 'disabled'}>穿上</button>`}
-        ${it.st < 0 ? `<button type="button" class="go small" data-ins="upgrade" ${can && PROF.ink >= upgradeCost ? '' : 'disabled'}>升为斩数版 · ${fmt(upgradeCost)}墨锭</button>` : ''}
+        ${it.st < 0 && !stOnly ? `<button type="button" class="go small" data-ins="upgrade" ${can && PROF.ink >= upgradeCost ? '' : 'disabled'}>升为斩数版 · ${fmt(upgradeCost)}墨锭</button>` : ''}
         <button type="button" class="ghost small" data-ins="list" ${can && mk ? '' : 'disabled'}${mk ? '' : ' title="玩家市场要连上服务器才能用"'}>挂到市场</button>
         <button type="button" class="ghost small" data-ins="rename" ${can ? '' : 'disabled'}>改名${ST.tags ? `（标签 ${ST.tags}）` : ''}</button>` : ''}
         ${INS.from === 'pv' ? '<button type="button" class="go small" data-ins="cases">去所属套装</button>' : `<button type="button" class="ghost small" data-ins="market">这款的行情</button>`}<button type="button" class="ghost small" data-ins="close">关闭</button></div>
-      <p class="ar-note">${INS.from === 'pv' ? `属于「${colName(it.k)}」套装。可从对应武器箱获得，也能通过玩家市场、熔铸契或货郎取得。` : `玩家市场只在玩家之间买卖：标价你自己定，卖给别的玩家，成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武库不收购饰品。`}</p>`;
+      <p class="ar-note">${INS.from === 'pv' ? (heir ? '《天工传世 · 器灵纪》至臻典藏，仅存斩数版，穿戴即解锁实战攻守双境。仅可由天工传世匣或玩家市场取得，货郎与熔铸契不产出。' : `属于「${colName(it.k)}」套装。可从对应武器箱获得，也能通过玩家市场、熔铸契或货郎取得。`) : `玩家市场只在玩家之间买卖：标价你自己定，卖给别的玩家，成交扣 ${Math.round(C.cv(CF(), 'fee') * 100)}% 手续费。武库不收购饰品。`}</p>`;
     if (mk && !MKD.items && !MKD.err) loadMarket().then(fresh => { if (fresh && INS && INS.it === it) insInfo(); });
   }
   function closeIns() { $id('arIns').hidden = true; INS = null; }
@@ -858,12 +862,13 @@
   const goodHave = (s, k) => k === 'term' ? s.term : s.cases[k] || 0;
   const pips = (n, max) => Array.from({ length: Math.min(20, max) }, (_, i) => `<i class="${i < n ? 'on' : ''}"></i>`).join('');
   function pCases() {
-    const s = blankS(), dl = C.openLeft(s, C.REG[0], CF()), wl = C.openLeft(s, 'c7', CF()), zl = C.openLeft(s, 'c8', CF());
-    const available = Math.min(dl, C.REG.reduce((n, c) => n + (s.cases[c] || 0), 0)) + Math.min(wl, s.cases.c7 || 0) + Math.min(zl, s.cases.c8 || 0);
+    const s = blankS(), dl = C.openLeft(s, C.REG[0], CF()), wl = C.openLeft(s, 'c7', CF()), zl = C.openLeft(s, 'c8', CF()), hl = C.openLeft(s, 'c14', CF());
+    const available = Math.min(dl, C.REG.reduce((n, c) => n + (s.cases[c] || 0), 0)) + Math.min(wl, s.cases.c7 || 0) + Math.min(zl, s.cases.c8 || 0) + Math.min(hl, s.cases.c14 || 0);
     const gift = live() && !ST.gift ? `<div class="ar-card ar-gift"><span><b>新手礼</b> 送你一个初刃武器箱和一台货郎，先开一个试试手气。</span><button type="button" class="go small" id="arGift">领取</button></div>` : '';
     const lim = `<div class="ar-card ar-week"><span>今天还能开 <b>${dl}</b> 个普通武器箱</span><span class="ar-pips" aria-hidden="true">${pips(dl, C.cv(CF(), 'openDay'))}</span>
       <span>今天还能开 <b>${wl}</b> 个神兵武器箱</span><span class="ar-pips gold" aria-hidden="true">${pips(wl, C.cv(CF(), 'premDay'))}</span>
-      <span>本周还能开 <b>${zl}</b> 个星座武器箱</span><span class="ar-pips zod" aria-hidden="true">${pips(zl, C.cv(CF(), 'zodWeek'))}</span><button type="button" class="go small" data-open-all ${live() && available ? '' : 'disabled'}>一键开启全部</button><small>普通和神兵武器箱每天零点刷新，星座武器箱每周一刷新；武器箱在商店按固定价格买，不限量</small></div>`;
+      <span>本周还能开 <b>${zl}</b> 个星座武器箱</span><span class="ar-pips zod" aria-hidden="true">${pips(zl, C.cv(CF(), 'zodWeek'))}</span>
+      <span>本周还能开 <b>${hl}</b> 个天工传世匣</span><span class="ar-pips gold" aria-hidden="true">${pips(hl, C.cv(CF(), 'heirWeek'))}</span><button type="button" class="go small" data-open-all ${live() && available ? '' : 'disabled'}>一键开启全部</button><small>普通和神兵武器箱每天零点刷新，星座与天工传世匣每周一刷新；武器箱在商店按固定价格买，不限量</small></div>`;
     const card = cid => {
       const col = C.COLS[cid], O = C.oddsOf(cid, CF()), n = s.cases[cid], left = C.openLeft(s, cid, CF());
       const have = col.mil.filter(k => s.inv.some(x => x.k === k)).length, claimed = s.cc.includes(cid);
@@ -876,23 +881,24 @@
         ${col.mil.length ? `<div class="ar-col"><span>集齐这个箱子的 ${col.mil.length} 款精铁：${have}/${col.mil.length}，送 1 个${col.name}武器箱 + 1 张改名标签</span><button type="button" class="${have >= col.mil.length && !claimed ? 'go' : 'ghost'} small" data-collect="${cid}" ${have >= col.mil.length && !claimed ? '' : 'disabled'}>${claimed ? '已领取' : have >= col.mil.length ? '领取' : '未集齐'}</button></div>` : ''}
       </div>`;
     };
-    const premCard = cid => {   // 神兵、星座武器箱：左边开箱、右边把饰品摆出来，点一下就能看穿上的样子
-      const col = C.COLS[cid], O = C.oddsOf(cid, CF()), n = s.cases[cid], left = C.openLeft(s, cid, CF()), zod = cid === 'c8';
+    const premCard = cid => {   // 天工传世、神兵、星座武器箱：左边开箱、右边把饰品摆出来，点一下就能看穿上的样子
+      const col = C.COLS[cid], O = C.oddsOf(cid, CF()), n = s.cases[cid], left = C.openLeft(s, cid, CF()), zod = cid === 'c8', heir = !!col.heirloom;
       const limText = col.daily ? `每天限开 ${C.cv(CF(), col.lim)} 个` : `每周限开 ${C.cv(CF(), col.lim)} 个`;
       const btnText = n && !left ? (col.daily ? '今天开完了' : '这周开过了') : '开启';
       const ts = ['gold', 'cov', 'cla'].filter(t => O[t] > 0 && (col[t] || []).length);
-      // 神兵的 10 款摆成一排；星座的 36 款按品质分三行，每行十二个侠客
-      const show = zod ? ts.map(t => `<div class="ar-zrow" style="--tc:${C.TIER[t].c}"><span class="ar-zlab">${C.TIER[t].n}<b>${pct(O[t])}</b></span><div class="ar-zgrid">${col[t].map(k => `<button type="button" class="ar-pcard ar-zcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="${escapeHTML(skinName(k))} · ${escapeHTML(charName(k))}"><span class="ar-pimg"><img src="${thumb(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k).split('·')[0])}</b><small>${escapeHTML(charName(k))}</small></button>`).join('')}</div></div>`).join('')
+      const show = heir ? `<div class="ar-zrow" style="--tc:218,175,92"><span class="ar-zlab">★ 传世斩数<b>100%</b></span><div class="ar-zgrid">${col.gold.map(k => `<button type="button" class="ar-pcard ar-zcard t-gold" data-pv="${k}" style="--tc:218,175,92" title="${escapeHTML(skinName(k))} · ${escapeHTML(charName(k))}"><span class="ar-pimg"><img src="${thumb(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k))}</b><small>${escapeHTML(charName(k))}</small></button>`).join('')}</div></div>`
+        : zod ? ts.map(t => `<div class="ar-zrow" style="--tc:${C.TIER[t].c}"><span class="ar-zlab">${C.TIER[t].n}<b>${pct(O[t])}</b></span><div class="ar-zgrid">${col[t].map(k => `<button type="button" class="ar-pcard ar-zcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="${escapeHTML(skinName(k))} · ${escapeHTML(charName(k))}"><span class="ar-pimg"><img src="${thumb(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k).split('·')[0])}</b><small>${escapeHTML(charName(k))}</small></button>`).join('')}</div></div>`).join('')
         : ts.flatMap(t => col[t].map(k => `<button type="button" class="ar-pcard t-${t}" data-pv="${k}" style="--tc:${C.TIER[t].c}" title="看看穿上的样子"><span class="ar-pimg"><img src="${art(k)}" alt="" loading="lazy"></span><b>${escapeHTML(skinName(k))}</b><small>${C.TIER[t].n} · ${escapeHTML(charName(k))}</small></button>`)).join('');
-      return `<div class="ar-casecard prem${zod ? ' zod' : ''}" style="--cc:${col.col}"><div class="ar-premside">
-        <span class="ar-premtag">${limText} · 赤霄和绝世加起来 ${pct(O.cov + O.gold)}</span>
-        <div class="ar-casehead"><div class="ar-casebox"><span>${col.emblem}</span></div><div><h3>${col.name}武器箱</h3><p>拥有 <b>${n}</b> 个 · 商店价 ${ink(col.price)}</p>
-          <div class="row"><button type="button" class="go small" data-open="${cid}" ${n && left ? '' : 'disabled'}>${btnText}</button><button type="button" class="ghost small" data-buyg="${cid}">购买 ${ink(col.price)}</button></div></div></div>
-        <div class="ar-podds">${ts.slice().reverse().map(t => `<span style="--tc:${C.TIER[t].c}">${C.TIER[t].n}<b>${pct(O[t])}</b></span>`).join('')}</div>
-        <p class="ar-note">${zod ? '十二星座，每位侠客都有星辉、星焰、星冕三款。每个号都送了 1 个星座武器箱，可以先免费开一次。' : ''}只出这三档，这 ${ts.reduce((a, t) => a + col[t].length, 0)} 款饰品别的武器箱都开不出来，开它也不占每天那 ${C.cv(CF(), 'openDay')} 个普通武器箱。点一下饰品，就能先看看穿上的样子。</p>
-      </div><div class="ar-pshow${zod ? ' zod' : ''}">${show}</div></div>`;
+      return `<div class="ar-casecard prem${zod || heir ? ' zod' : ''}${heir ? ' heirloom' : ''}" style="--cc:${col.col}"><div class="ar-premside">
+        <span class="ar-premtag">${heir ? `${limText} · 全套 20 款仅存斩数版 · 解锁攻守双境` : `${limText} · 赤霄和绝世加起来 ${pct(O.cov + O.gold)}`}</span>
+        <div class="ar-casehead"><div class="ar-casebox"><span>${col.emblem}</span></div><div><h3>${col.name}${heir ? '典藏匣' : '武器箱'}</h3><p>拥有 <b>${n}</b> 个 · 商店价 ${ink(C.shopPrice(cid, CF()))}</p>
+          <div class="row"><button type="button" class="go small" data-open="${cid}" ${n && left ? '' : 'disabled'}>${btnText}</button><button type="button" class="ghost small" data-buyg="${cid}">购买 ${ink(C.shopPrice(cid, CF()))}</button></div></div></div>
+        <div class="ar-podds">${ts.slice().reverse().map(t => `<span style="--tc:${C.TIER[t].c}">${heir ? '★ 天工传世 · 斩数' : C.TIER[t].n}<b>${pct(O[t])}</b></span>`).join('')}</div>
+        <p class="ar-note">${heir ? '《天工传世 · 器灵纪》全 20 位侠客典藏器灵，全系仅存斩数版（无普通版），优先开出未拥有款式；穿戴即解锁实战专属攻守双境。' : zod ? '十二星座，每位侠客都有星辉、星焰、星冕三款。每个号都送了 1 个星座武器箱，可以先免费开一次。' : ''}${heir ? '' : `只出这三档，这 ${ts.reduce((a, t) => a + col[t].length, 0)} 款饰品别的武器箱都开不出来，开它也不占每天那 ${C.cv(CF(), 'openDay')} 个普通武器箱。点一下饰品，就能先看看穿上的样子。`}</p>
+      </div><div class="ar-pshow${zod || heir ? ' zod' : ''}">${show}</div></div>`;
     };
-    return `${gift}${lim}<div class="ar-cases">${C.CASES.filter(c => C.COLS[c].prem).map(premCard).join('')}${C.REG.map(card).join('')}</div>`;
+    const premOrder = C.CASES.filter(c => C.COLS[c].prem).sort((a, b) => (C.COLS[b].heirloom ? 1 : 0) - (C.COLS[a].heirloom ? 1 : 0));
+    return `${gift}${lim}<div class="ar-cases">${premOrder.map(premCard).join('')}${C.REG.map(card).join('')}</div>`;
   }
   // 开箱滚轮：结果已经由服务器（或本机）定好了，滚轮只是把它转出来
   const REEL = { on: false };
@@ -1772,14 +1778,16 @@
   window.armoryRedeem = async function (code) {
     const up = String(code || '').trim().toUpperCase();
     const isUniversal = up === C.UNIVERSAL_PROMO_CODE;
+    const isHeirloom = up === C.HEIRLOOM_PROMO_CODE;
     const NEED = '礼包兑换码要先登录云端账号才能领';
-    if (isUniversal && (!cloudOn() || OFFLINE_BUILD)) {
-      if (PROF.guest && !OFFLINE_BUILD) return { err: '请先登录账号再兑换全服解锁码' };
+    if ((isUniversal || isHeirloom) && (!cloudOn() || OFFLINE_BUILD)) {
+      if (PROF.guest && !OFFLINE_BUILD) return { err: '请先登录账号再兑换礼包码' };
       if (!ST) loadLocal(LOCAL_V, true);
       const r = await act('claimCode', { code: up });
       if (!r || !r.ok) return { err: (r && r.err) || '兑换失败' };
       redrawLooks();
       if ($id('armory') && $id('armory').classList.contains('on')) render();
+      if (isHeirloom) return { ok: true, note: '天工传世典藏礼', text: giftText({ heirloomPromo: true, n: r.addedSkins }) };
       return { ok: true, note: '全服全内容解锁礼', text: giftText({ promoAll: true, synced: !r.first, n: r.addedSkins }) };
     }
     if (!cloudOn() || PROF.guest) return { err: NEED };

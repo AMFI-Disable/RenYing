@@ -324,7 +324,8 @@ section('兑换码：管理后台建、玩家在游戏的兑换框输入；每�
 section('全服通用全内容解锁码 RENYINGALL：新老玩家皆可领、无重复、防市场刷取、兼容未来新内容更新');
 {
   const claim = (tok, code, ip = '2.3.0.1', n = nonce()) => call('POST', '/api/econ', { act: 'claimCode', args: { code }, nonce: n }, tok, ip);
-  const allItemKeys = Object.keys(C.ITEM);
+  const allItemKeys = Object.keys(C.ITEM).filter(k => !C.isHeirloom(k));
+  const promoCases = C.CASES.filter(c => !C.COLS[c].heirloom);
   const allBadgeIds = Object.keys(C.BADGES);
   const allPetIds = Object.keys(C.PETS);
   // 管理员不能建同名的普通兑换码
@@ -337,8 +338,8 @@ section('全服通用全内容解锁码 RENYINGALL：新老玩家皆可领、无
   const nr1 = await claim(N1.token, 'renyingall', '2.3.0.2');
   const ns1 = stateOf(N1.uid), np1 = profOf(N1.uid);
   ok(nr1.ok && nr1.res.ok && nr1.code && nr1.code.promoAll === true && !nr1.code.synced, '新玩家输入 RENYINGALL 兑换成功', nr1.code);
-  ok(inkOf(N1.uid) === ni0 + C.UNIVERSAL_PROMO_INK && ns1.term === 10 && ns1.tags === 10 && ns1.badgeSigils === 100 && C.CASES.every(c => ns1.cases[c] >= C.UNIVERSAL_PROMO_CASES), '新玩家收到 100,000 墨锭、全武器箱各 10 个、货郎/改名标签/徽记碎片', [inkOf(N1.uid) - ni0, ns1.term, ns1.tags, ns1.badgeSigils]);
-  ok(ns1.inv.length === allItemKeys.length && new Set(ns1.inv.map(x => x.k)).size === allItemKeys.length && allItemKeys.every(k => np1.skins.includes(k)), '全部饰品解锁且无任何重复', [ns1.inv.length, allItemKeys.length]);
+  ok(inkOf(N1.uid) === ni0 + C.UNIVERSAL_PROMO_INK && ns1.term === 10 && ns1.tags === 10 && ns1.badgeSigils === 100 && promoCases.every(c => ns1.cases[c] >= C.UNIVERSAL_PROMO_CASES) && !ns1.cases.c14, '新玩家收到 100,000 墨锭、常规/尊享武器箱各 10 个（不含天工传世）、货郎/改名标签/徽记碎片', [inkOf(N1.uid) - ni0, ns1.term, ns1.tags, ns1.badgeSigils]);
+  ok(ns1.inv.length === allItemKeys.length && new Set(ns1.inv.map(x => x.k)).size === allItemKeys.length && allItemKeys.every(k => np1.skins.includes(k)) && !ns1.inv.some(x => C.isHeirloom(x.k)), '全部非天工传世饰品解锁且无任何重复', [ns1.inv.length, allItemKeys.length]);
   ok(allBadgeIds.every(b => ns1.badgeOwned[b] === 'purpgold') && allPetIds.every(p => ns1.petOwned[p] === 'immortal') && Object.keys(ns1.badgeEquip).length > 0, '全部徽记满阶紫金、全部灵宠满阶仙阶，且自动装配徽记');
   ok(C.HERO_IDS.every(h => np1.owned.includes(h) && (ns1.heroKOs[h] || 0) >= 300 && C.SKILL_SLOTS.every(sl => ns1.skillUnlocks[h][sl].includes('swift') && ns1.skillUnlocks[h][sl].includes('heavy'))), '全部侠客、二式架势与招式流派全部解锁');
   ok(row('SELECT 1 AS x FROM code_got WHERE code = ? AND uid = ?', C.UNIVERSAL_PROMO_CODE, N1.uid) && row("SELECT 1 AS x FROM econ_log WHERE uid = ? AND act = 'code_got'", N1.uid), '云端数据库已记录 code_got 与流水');

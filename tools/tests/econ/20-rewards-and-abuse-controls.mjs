@@ -460,7 +460,7 @@ section('感恩盛典一键领取全部豪礼（claimAppreciation）：发放全
   ok(s1.appreciation2026 === 1 && s1.badgeGift === 1, '标记已领取感恩盛典与新手徽记');
   ok(s1.badgeOwned.ironwall === 'purpgold', '指定徽记为紫金阶位', s1.badgeOwned);
   ok(s1.badgeSigils === (s0.badgeSigils || 0) + 50 && s1.term === (s0.term || 0) + 10 && s1.tags === (s0.tags || 0) + 10, '碎片 +50、货郎 +10、改名标签 +10', [s1.badgeSigils, s1.term, s1.tags]);
-  ok(C.CASES.every(cid => (s1.cases[cid] || 0) === (s0.cases[cid] || 0) + 10), '全系列武器箱各 +10', s1.cases);
+  ok(C.CASES.filter(cid => !C.COLS[cid].heirloom).every(cid => (s1.cases[cid] || 0) === (s0.cases[cid] || 0) + 10) && (s1.cases.c14 || 0) === (s0.cases.c14 || 0), '常规与尊享武器箱各 +10（天工传世典藏匣不含在感恩礼内）', s1.cases);
   ok(Object.keys(C.PETS).every(pid => s1.petOwned[pid] === 'spirit'), '全部灵宠解锁至灵阶', s1.petOwned);
   ok(C.HERO_IDS.every(h => (s1.heroKOs[h] || 0) >= 20 && ['q', 'r', 'e'].every(sl => (s1.skillUnlocks[h][sl] || []).includes('swift') && (s1.skillUnlocks[h][sl] || []).includes('heavy'))), '全侠客解锁第二架势与全部招式流派');
 

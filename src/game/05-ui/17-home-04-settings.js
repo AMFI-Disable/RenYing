@@ -47,6 +47,7 @@ const KEY_ACTIONS = [
   ['skill', '门派绝学', 'combat'],
   ['skill2', '特殊突进', 'combat'],
   ['stance', '切换架势', 'combat'],
+  ['relicStance', '器灵双境', 'combat'],
   ['feint', '虚招翻滚', 'combat'],
   ['parry', '聚气弹反', 'combat'],
   ['pet', '灵宠秘技', 'combat'],

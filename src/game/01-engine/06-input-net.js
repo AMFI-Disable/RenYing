@@ -28,7 +28,7 @@ const DEFAULT_1P_KEYS = {
   left: 'KeyA', right: 'KeyD', jump: 'KeyW', jump2: 'Space', down: 'KeyS',
   atk: 'KeyX', dash: 'ShiftLeft', special: 'KeyE', skill: 'KeyQ', skill2: 'KeyR',
   heavyStrike: 'KeyU', lowKick: 'KeyI', iaido: 'KeyO', grapple: 'KeyH',
-  stance: 'KeyZ', feint: 'KeyC', parry: 'KeyF', pet: 'KeyV',
+  stance: 'KeyZ', relicStance: 'KeyM', feint: 'KeyC', parry: 'KeyF', pet: 'KeyV',
   lock: 'KeyG', beacon: 'KeyB', rally: 'KeyT', scoreboard: 'Tab',
   orderFocus: 'Digit1', orderProtect: 'Digit2', orderSpread: 'Digit3',
   cmdSelect: 'KeyY', cmdRole: 'KeyN'   // 统帅：选队友 / 给他分任务（Tab 轻点换战术在 25-keyboard-boot.js）
@@ -349,7 +349,7 @@ function netLost() {
   NET.lastResult = '';
 }
 // 状态快照：房主每帧发一次
-const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits', 'stance', 'stanceUnlocked', 'stanceT', 'badgeId', 'badgeTier', 'badgeDashT',
+const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits', 'stance', 'stanceUnlocked', 'stanceT', 'relicStance', 'relicStanceUnlocked', 'relicStanceT', 'relicStanceCd', 'badgeId', 'badgeTier', 'badgeDashT',
   'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
   'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'defDebuffT', 'swapFreezeT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir', 'clones', 'cloneN', 'swapId', 'shadowMarks', 'shadowMarkT', 'shadowExecTarget', 'shadowExecT',
   'badgeLinkT', 'badgePressureT', 'badgePressureSkill', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'badgeAirUsed', 'badgeAirSkillUsed', 'ballGuardBreakT', 'quickGetup', 'quickGetupPhase', 'knockdownDur'];

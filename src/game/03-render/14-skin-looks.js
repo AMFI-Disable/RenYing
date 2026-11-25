@@ -141,6 +141,34 @@ function drawDeco(sk, f, L, layer) {
       ctx.strokeStyle = `rgba(${D.shawl},0.5)`; ctx.lineWidth = 3;
       ctx.beginPath(); ctx.moveTo(p1[0], p1[1]); ctx.quadraticCurveTo(sk.eb[0] + back * 4, sk.eb[1], e2[0], e2[1]); ctx.stroke();
     }
+    // 天工传世 · 器灵纪：国宝印记灵环与攻守双境气场（团战多于 6 人自动精简以保流畅）
+    if (D.transform === 'heirloom') {
+      const crowded = typeof fighters !== 'undefined' && fighters.length > 6;
+      const sc = f.relicStance === 2 ? '110,230,205' : f.relicStance === 1 ? '255,112,72' : (L.fx && L.fx.c) || '238,196,102';
+      const hc = [bc[0] - sk.face * 4, bc[1] - 12], hr = crowded ? 22 : 28;
+      ctx.save(); ctx.globalCompositeOperation = 'lighter';
+      ctx.strokeStyle = `rgba(${sc},${crowded ? 0.35 : 0.55})`; ctx.lineWidth = crowded ? 1.3 : 1.8;
+      ctx.beginPath(); ctx.arc(hc[0], hc[1], hr, t * 0.6, t * 0.6 + Math.PI * 1.65); ctx.stroke();
+      if (!crowded) {
+        ctx.strokeStyle = 'rgba(255,228,150,0.42)'; ctx.lineWidth = 1.1; ctx.setLineDash([4, 5]);
+        ctx.beginPath(); ctx.arc(hc[0], hc[1], hr + 5, -t * 0.45, -t * 0.45 + Math.PI * 1.8); ctx.stroke();
+        ctx.setLineDash([]);
+      }
+      if (D.relicGlyph) {
+        ctx.font = `700 ${crowded ? 13 : 16}px ${TITLE_FONT}`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillStyle = `rgba(${sc},${crowded ? 0.45 : 0.72})`;
+        ctx.fillText(D.relicGlyph, hc[0], hc[1] + Math.sin(t * 2.2) * 1.5);
+      }
+      if (f.relicStance === 1 || f.relicStance === 2) {
+        const pulse = f.relicStanceT > 0 ? 1 + (f.relicStanceT / 0.55) * 0.55 : 1;
+        const gr = (crowded ? 28 : 38) * pulse;
+        ctx.strokeStyle = f.relicStance === 1 ? `rgba(255,112,72,${0.48 * pulse})` : `rgba(110,230,205,${0.48 * pulse})`;
+        ctx.lineWidth = f.relicStance === 1 ? 2.2 : 2.6;
+        ctx.beginPath(); ctx.ellipse(f.x, f.y - 2, gr, gr * 0.24, 0, 0, Math.PI * 2); ctx.stroke();
+      }
+      ctx.restore();
+    }
     ctx.restore(); return;
   }
   // ---------- 前面一层：差异化定制头饰 ----------

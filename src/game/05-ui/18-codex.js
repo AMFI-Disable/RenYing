@@ -34,7 +34,7 @@ const HERO_ARCH_MAP = {
   liuyun: 'support', yuxiao: 'support', qingluan: 'support',
   moyu: 'controller', cixian: 'controller', qianji: 'controller', xuanji: 'controller',
 };
-let cxArch = 'all';
+let cxArch = 'all', cxBadgeCat = 'all', cxBadgeOpen = false;
 function heroArchetype(id) { return HERO_ARCH_MAP[id] || 'fighter'; }
 function renderCodex() {
   const c = CHARS[cxIdx], m = CHAR_MOVES[cxIdx], S = SKILLS[c.skill], S2 = SKILLS[c.skill2], U = ULTS[c.ult];
@@ -79,26 +79,38 @@ function renderCodex() {
   };
 
   const defaultBtn = `<button data-sk="" class="${skin ? '' : 'sel'}">默认</button>`;
+  const relicKey = typeof keyLabel === 'function' && typeof custom1PKeys !== 'undefined' ? keyLabel(custom1PKeys.relicStance || 'KeyM') : 'M';
+  const relicBanner = skMeta && skMeta.relic
+    ? `<div class="cx-relic-banner"><div class="cx-relic-top"><b>★ 天工传世 · ${skMeta.relic.craft}</b><span>${skMeta.relic.title}</span><small>仅存斩数版</small></div><div class="cx-relic-stances"><span class="rs-atk">攻境 · ${skMeta.relic.stanceAtk}</span><span class="rs-def">守境 · ${skMeta.relic.stanceDef}</span><span class="rs-key">战中按 ${relicKey} 切换</span></div></div>`
+    : '';
   let badgeBar = '';
   if (typeof window.armoryBadgeState === 'function') {
     const bs = window.armoryBadgeState(), ownedList = Object.entries(bs.owned || {});
     const eqId = (bs.equip && bs.equip[c.id]) || '';
     const eqMeta = eqId && bs.badges && bs.badges[eqId];
     const tierLbl = t => t === 'purpgold' ? '✦紫金' : t === 'gold' ? '赤金' : '银徽';
+    const tierOrd = { purpgold: 3, gold: 2, silver: 1 };
     const holderOf = bid => {
       const ent = Object.entries(bs.equip || {}).find(([, id]) => id === bid);
       if (!ent || ent[0] === c.id) return '';
       const h = CHARS.find(x => x.id === ent[0]);
-      return h ? ` (${h.name})` : '';
+      return h ? `·${h.name}` : '';
     };
-    const bBtns = ownedList.map(([bid, tier]) => {
+    const BADGE_CATS = [['all', '全部'], ['offense', '进攻'], ['defense', '防御'], ['mobility', '身法'], ['mastery', '绝技'], ['team', '团队']];
+    const catCounts = Object.fromEntries(BADGE_CATS.map(([ck]) => [ck, ck === 'all' ? ownedList.length : ownedList.filter(([bid]) => bs.badges[bid] && bs.badges[bid].cat === ck).length]));
+    const filtered = ownedList
+      .filter(([bid]) => bs.badges[bid] && (cxBadgeCat === 'all' || bs.badges[bid].cat === cxBadgeCat))
+      .sort((a, b) => (b[0] === eqId ? 1 : 0) - (a[0] === eqId ? 1 : 0) || (tierOrd[b[1]] || 0) - (tierOrd[a[1]] || 0) || a[0].localeCompare(b[0]));
+    const catBar = `<div class="cx-badge-cats">${BADGE_CATS.map(([ck, lbl]) => `<button type="button" data-cx-badge-cat="${ck}" class="cx-badge-cat${cxBadgeCat === ck ? ' sel' : ''}">${lbl}<small>${catCounts[ck]}</small></button>`).join('')}</div>`;
+    const bBtns = filtered.map(([bid, tier]) => {
       const bm = bs.badges[bid]; if (!bm) return '';
       const active = eqId === bid;
-      return `<button type="button" data-cx-badge="${active ? '' : bid}" class="sk-g${active ? ' sel' : ''}" style="--tc:${tier === 'purpgold' ? '217,166,255' : tier === 'gold' ? '233,196,106' : '165,200,235'}" title="${bm.desc}">${bm.name}·${tierLbl(tier)}${holderOf(bid)}</button>`;
+      return `<button type="button" data-cx-badge="${active ? '' : bid}" class="sk-g cx-badge-item${active ? ' sel' : ''}" style="--tc:${tier === 'purpgold' ? '217,166,255' : tier === 'gold' ? '233,196,106' : '165,200,235'}" title="${bm.desc}"><i class="sk-dot"></i>${bm.name}<em>${tierLbl(tier)}${holderOf(bid)}</em></button>`;
     }).join('');
-    badgeBar = `<div class="cx-badge-box"><div class="cx-badge-head"><small class="cx-badge-cur">🏅 当前徽记：${eqMeta ? `${eqMeta.name}（${tierLbl(bs.owned[eqId])}）` : '未装备'}</small>${eqId ? '<button type="button" data-cx-badge="" class="ghost small cx-badge-clear">卸下</button>' : ''}</div><div class="cx-skin-row-btns">${bBtns || '<small style="color:var(--dim)">暂无已解锁徽记，可点击顶部「领紫金豪礼」或前往武库解锁。</small>'}</div>${eqMeta ? `<div class="cx-badge-desc">${eqMeta.desc}</div>` : ''}</div>`;
+    const drawer = cxBadgeOpen ? `${catBar}<div class="cx-badge-grid">${bBtns || '<small style="color:var(--dim)">该分类暂无已解锁徽记</small>'}</div>` : '';
+    badgeBar = `<div class="cx-badge-box"><div class="cx-badge-head"><small class="cx-badge-cur">🏅 徽记：${eqMeta ? `${eqMeta.name}（${tierLbl(bs.owned[eqId])}）` : '未装备'} <span class="cx-badge-cnt">共 ${ownedList.length} 枚</span></small><div class="cx-badge-acts">${eqId ? '<button type="button" data-cx-badge="" class="ghost small cx-badge-clear">卸下</button>' : ''}${ownedList.length ? `<button type="button" data-cx-badge-toggle="1" class="ghost small cx-badge-toggle">${cxBadgeOpen ? '收起' : '更换徽记'}</button>` : ''}</div></div>${eqMeta ? `<div class="cx-badge-desc">${eqMeta.desc}</div>` : (!ownedList.length ? '<div class="cx-badge-desc">暂无已解锁徽记，可点击顶部「领紫金豪礼」或前往武库解锁。</div>' : '')}${drawer}</div>`;
   }
-  $id('cxSkins').innerHTML = `<div class="cx-skin-row"><div class="cx-skin-row-btns">${defaultBtn}${skList.map(renderSkinBtn).join('')}</div>${badgeBar}</div>`;
+  $id('cxSkins').innerHTML = `<div class="cx-skin-row"><div class="cx-skin-row-btns">${defaultBtn}${skList.map(renderSkinBtn).join('')}</div>${relicBanner}${badgeBar}</div>`;
   $id('cxStats').innerHTML = statRows(c).map(([n, v, max, t]) => `<div class="st"><span>${n}</span><div class="bar"><i style="width:${Math.round(clamp(v / max, 0.05, 1) * 100)}%;background:${col}"></i></div><span class="v">${t}</span></div>`).join('');
   const lk = c.id === 'leiming' ? ['l1', 'l2', 'l3', 'l4', 'l5', 'l6'] : c.id === 'cixian' ? ['l1', 'l2', 'l3', 'l4'] : ['l1', 'l2', 'l3', 'l4', 'l5'];   // 磁仙四段循环
   const bn = (BAL[c.id] || BAL.qingfeng).normal, dv = d => Math.round(d * bn * 10) / 10;   // 普攻、蓄力、空中按强度调整后的数
@@ -287,6 +299,16 @@ window.openCodex = openCodex;
 $id('cxSkins').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
   const id = CHARS[cxIdx].id;
+  if (b.dataset.cxBadgeToggle) {
+    cxBadgeOpen = !cxBadgeOpen;
+    renderCodex(); SFX.slice();
+    return;
+  }
+  if (b.dataset.cxBadgeCat) {
+    cxBadgeCat = b.dataset.cxBadgeCat;
+    renderCodex(); SFX.slice();
+    return;
+  }
   if (b.dataset.cxBadge !== undefined) {
     if (typeof window.armoryQuickEquipBadge === 'function') {
       await window.armoryQuickEquipBadge(id, b.dataset.cxBadge);

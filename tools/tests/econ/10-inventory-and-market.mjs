@@ -12,7 +12,7 @@ section('皮肤都在箱子里：游戏里原有的皮肤和武库的新皮肤�
   ok(orig.every(([k, ch]) => C.charOf(k) === ch), '每款的侠客对得上');
   const classicReg = C.REG.filter(c => !C.COLS[c].themed);
   const themedReg = C.REG.filter(c => C.COLS[c].themed);
-  ok(C.CASES.length === 13 && classicReg.length === 6 && themedReg.length === 5 && classicReg.every(c => C.TIERS.every(t => (C.COLS[c][t] || []).length)) && themedReg.every(c => ['mil', 'res', 'cla', 'cov'].every(t => (C.COLS[c][t] || []).length) && !(C.COLS[c].gold || []).length), '十三个武器箱：六个普通箱五档齐全，五套主题套装箱不含独立绝世单皮');
+  ok(C.CASES.length === 14 && classicReg.length === 6 && themedReg.length === 5 && C.COLS.c14 && C.COLS.c14.heirloom && C.COLS.c14.stOnly && C.COLS.c14.gold.length === 20 && classicReg.every(c => C.TIERS.every(t => (C.COLS[c][t] || []).length)) && themedReg.every(c => ['mil', 'res', 'cla', 'cov'].every(t => (C.COLS[c][t] || []).length) && !(C.COLS[c].gold || []).length), '十四个武器箱：六个普通箱五档齐全，五套主题套装箱不含独立绝世单皮，天工传世含 20 款全员典藏');
   const P = C.COLS.c7, pk = ['cla', 'cov', 'gold'].flatMap(t => P[t]);
   ok(P.prem && !P.mil.length && !P.res.length && pk.length === 10 && P.odds.mil === 0 && P.odds.res === 0 && Math.abs(P.odds.cov + P.odds.gold - 0.3) < 1e-9, '神兵武器箱没有精铁和碧玉，赤霄加绝世一共 30%', P.odds);
   ok(pk.every(k => C.isItem(k) && C.ITEM[k].col === 'c7') && !C.REG.some(c => C.TIERS.some(t => C.COLS[c][t].some(k => pk.includes(k)))), '神兵武器箱的 10 款只在这个箱子里出');
@@ -197,7 +197,7 @@ section('星章兑换：只从普通武器箱里出，神兵武器箱的 10 款�
   const R = C.rng(77), env = () => ({ now: T, rnd: R, uid: 'star', ink: 0, skins: [], equip: {}, server: true });
   const rich = () => { const s = C.blank(); Object.assign(s.op, { s: C.season(C.day(T)).id, earned: 999 }); return s; };
   const prem = Object.keys(C.ITEM).filter(C.isPrem);
-  ok(prem.length === 46 && prem.filter(k => C.ITEM[k].col === 'c7').length === 10 && prem.filter(k => C.ITEM[k].col === 'c8').length === 36, '神兵武器箱 10 款、星座武器箱 36 款，都只在自己的箱子里', prem.length);
+  ok(prem.length === 66 && prem.filter(k => C.ITEM[k].col === 'c7').length === 10 && prem.filter(k => C.ITEM[k].col === 'c8').length === 36 && prem.filter(k => C.ITEM[k].col === 'c14').length === 20, '神兵 10 款、星座 36 款、天工传世 20 款，都只在自己的箱子里', prem.length);
   const pc = C.ofTier('cov').find(C.isPrem), rc = C.ofTierReg('cov')[0];
   const r1 = C.run(rich(), 'star', { id: 'cov', k: pc }, env()).res;
   ok(r1.err === '要从普通武器箱的赤霄级里挑一件', `自选赤霄挑神兵武器箱的 ${pc} 被拒绝`, r1);
@@ -209,6 +209,30 @@ section('星章兑换：只从普通武器箱里出，神兵武器箱的 10 款�
   let cbad = 0;
   for (let i = 0; i < 300; i++) { const r = C.run(rich(), 'star', { id: 'case' }, env()).res; if (!C.REG.includes(r.c)) cbad++; }
   ok(cbad === 0, '随机武器箱换 300 次，一次都没出神兵武器箱', cbad);
+}
+
+section('天工传世 · 器灵纪：12,000 墨锭、20 侠客专属、仅斩数版、每周限开 1 个、专属密令一键解锁全套');
+{
+  const H = C.COLS.c14;
+  ok(H && H.heirloom && H.stOnly && H.price === 12000 && H.gold.length === 20 && !H.mil.length && !H.res.length && !H.cla.length && !H.cov.length, '天工传世典藏匣：12,000 墨锭，仅 20 款绝世且仅存斩数版', H && [H.price, H.gold.length]);
+  ok(C.HERO_IDS.every(h => H.gold.filter(k => C.charOf(k) === h).length === 1), '20 位侠客每人正好一款天工传世皮肤');
+  ok(H.gold.every(k => C.isStOnly(k) && C.isHeirloom(k) && C.FULL[k] && C.FULL[k].fx && C.FULL[k].fx.relicMat && (C.FULL[k].weapStyle || (C.FULL[k].deco && C.FULL[k].deco.weapStyle))), '全部 20 款均标记 stOnly / heirloom 并具备独立材质与兵刃');
+  const R = C.rng(202614), s0 = C.normalize(C.blank(), { now: T, uid: 'hl' });
+  s0.cases.c14 = 3;
+  const envH = { now: T, rnd: R, uid: 'hl', ink: 0, skins: [], equip: {}, server: true };
+  const h1 = C.run(s0, 'open', { c: 'c14' }, envH);
+  const h2 = C.run(h1.state, 'open', { c: 'c14' }, envH);
+  ok(h1.res.ok && h1.res.item.st === 0 && H.gold.includes(h1.res.item.k) && h2.res.err && h2.res.err.includes('每周'), '开出必定为斩数版（st=0），每周限开 1 个', [h1.res, h2.res]);
+  const normSt = C.normalize({ inv: [{ i: 1, k: H.gold[0], st: -1, n: '', t: T, src: 'case' }], nid: 2 }, { now: T, uid: 'hln' });
+  ok(normSt.inv[0].st === 0, '存档归一化强制将天工传世普通版修正为斩数版（st=0）', normSt.inv[0]);
+  const u = await newUser('heirloom-promo', { ink: 100 });
+  await econ(u.token, 'sync');
+  const pc1 = await econ(u.token, 'claimCode', { code: C.HEIRLOOM_PROMO_CODE });
+  const pc2 = await econ(u.token, 'claimCode', { code: C.HEIRLOOM_PROMO_CODE });
+  const uSt = stateOf(u.uid);
+  const ownedHeirloom = uSt.inv.filter(it => C.isHeirloom(it.k));
+  ok(pc1.ok && pc1.res.ok && ownedHeirloom.length === 20 && ownedHeirloom.every(it => it.st === 0) && H.gold.every(k => profOf(u.uid).skins.includes(k)), '专属密令一次解锁全部 20 款斩数版天工传世皮肤', pc1.res);
+  ok(!pc2.ok || (pc2.res && pc2.res.err) || ownedHeirloom.length === 20, '重复兑换专属密令不会重复发放或产生重复饰品', [pc2.status, stateOf(u.uid).inv.filter(it => C.isHeirloom(it.k)).length]);
 }
 
 section('重放：同一个请求编号发两次只算一次');

@@ -126,7 +126,8 @@ function applyHit(att, def, m, pt) {
 
     // 消耗架势耐力（Guard Posture）：影击（noGuardDrain / cloneEcho）不削减架势；影落破势（guardDeplete）直接清零全部架势
     const defVuln = (def.defDebuffT > 0 || (m && m.isWave)) ? 1.5 : 1.0;
-    let guardLoss = (m.noGuardDrain || m.cloneEcho) ? 0 : (((m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / ((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1)) * defVuln);
+    const relicGuardStab = def.relicStance === 2 ? 1.15 : def.relicStance === 1 ? 0.92 : 1;
+    let guardLoss = (m.noGuardDrain || m.cloneEcho) ? 0 : (((m.dmg * 1.5 * Math.sqrt(massRatio) * (m.guardBreakMul || (m.big ? 1.35 : 1)) * (bm ? bm.guardMul : 1)) / (((def.ch && def.ch.stat && def.ch.stat.guardStab) || 1) * relicGuardStab)) * defVuln);
     if (!m.noGuardDrain && !m.cloneEcho) guardLoss += Math.max(0, m.blockGuardDamage || 0);
     if (chaosNow('guard_stab')) guardLoss *= chaosNow('guard_stab').val;
     if (m.guardDeplete) guardLoss = Math.max(def.maxGuard || 100, (def.guard !== undefined ? def.guard : def.maxGuard) + 1);
@@ -227,6 +228,11 @@ function applyHit(att, def, m, pt) {
   const isCounter = !m.isProj && ((def.state === 'attack' && def.move && def.moveName !== 'dl' && def.t < (def.move.su || 0.15)) || (def.state === 'skill' && def.t < 0.2));
   const scale = m.noScale ? 1 : Math.max(0.35, 1 - (att.ch.scaling || 0.08) * (def.comboHits - 1));
   let dmg = (m.dmg * scale * balDmg(att, m)) / defRating;
+  if (att.relicStance === 1) dmg *= 1.06;
+  else if (att.relicStance === 2) dmg *= 0.94;
+  if (def.relicStance === 2) dmg *= 0.93;
+  else if (def.relicStance === 1) dmg *= 1.06;
+  if (att.relicStance === 2 && (isCounter || att.badgeRiposteT > 0 || (att.qiParryCD || 0) > 2.0)) dmg *= 1.10;
   if (isBlockedCs2) {
     dmg *= 0.45; // 格挡满蓄力斩：伤害大幅降低（较非格挡减少55%）
     if (def.guard !== undefined) def.guard = Math.max(0, def.guard - 35);
@@ -350,7 +356,8 @@ function applyHit(att, def, m, pt) {
   if (!(clock - brainT(att.lastLandT) < BRAIN.commit && att.lastLandIdx === def.idx)) att.comboT0 = clock;
   att.lastLandIdx = def.idx; att.lastLandT = clock; def.lastHitByIdx = att.idx; def.lastHitByT = clock;
   const chaosMeterMul = (chaosNow('meter_gain') || { val: 1 }).val;
-  if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul);
+  const relicMeterMul = att.relicStance === 1 ? 1.10 : 1;
+  if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul * relicMeterMul);
   def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.08 : 0.14));
   if (typeof applyCombatBadgeHit === 'function') applyCombatBadgeHit(att, def, m, ev);
   if (!m.noStun || def.hp <= 0) def.move = null;

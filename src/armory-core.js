@@ -19,6 +19,7 @@
   const C = {};
   C.VER = 5;                                   // 5：加入武学徽记和架势进度（4：市场只剩玩家之间买卖，武器箱和货郎改成商店固定价格）
   C.UNIVERSAL_PROMO_CODE = 'RENYINGALL';       // 全服通用全内容解锁兑换码（动态同步所有侠客、皮肤、徽记、灵宠、招式流派与资源，兼容未来更新）
+  C.HEIRLOOM_PROMO_CODE = 'TGCS9K4V7Q2M8X';    // 天工传世典藏专属密钥
   C.UNIVERSAL_PROMO_INK = 100000;
   C.UNIVERSAL_PROMO_CASES = 10;
   C.DAY0 = 20748;                              // 北京时间 2026-10-22，第一个行动季第一天
@@ -35,6 +36,7 @@
   C.PREM_DAY = 3;                              // 神兵武器箱每天最多开 3 个（北京时间零点刷新），不占普通武器箱每天那 5 个
   C.PREM_WEEK = 3;                             // 兼容别名
   C.ZOD_WEEK = 1;                              // 星座武器箱也是每周 1 个，和神兵的分开算；每个号送 1 个
+  C.HEIR_WEEK = 1;                             // 天工传世匣每周限启 1 匣（全 20 款仅存斩数版）
   C.DROP_P = 0.15, C.DROP_CAP = 4, C.SUPPLY_GAMES = 5;
   C.MATCH_MIN_MS = 20000, C.MATCH_MAX_MS = 45 * 60000, C.MATCH_GAP_MS = 15000, C.MATCH_DAY_CAP = 60;
   C.KO_MAX = 12;                               // 一局最多记 12 斩（三人车轮战也够了）
@@ -296,12 +298,17 @@
       mil: ['qf_jx1', 'ls_jx1', 'yl_jx1', 'yx_jx1'], res: ['ch_jx2', 'xj_jx2', 'lq_jx2'], cla: ['qf_jx3', 'ls_jx3', 'zx_jx3'], cov: ['qf_jx4', 'xj_jx4'], gold: [] },
     c13: { name: '幽冥玄煞', price: 360, emblem: '冥', col: '185,95,255', themed: true, odds: { mil: 0.46, res: 0.31, cla: 0.16, cov: 0.07, gold: 0 },
       mil: ['fy_ym1', 'xw_ym1', 'li_ym1', 'gc_ym1'], res: ['xw_ym2', 'fy_ym2', 'qj_ym2'], cla: ['ql_ym3', 'li_ym3', 'ts_ym3'], cov: ['li_ym4', 'fy_ym4'], gold: [] },
+    // 典藏至臻：天工传世 · 器灵纪（全 20 位侠客各 1 款，仅存斩数版，解锁专属攻守双境）
+    c14: { name: '天工传世', price: 12000, emblem: '器', col: '218,175,92', prem: true, heirloom: true, stOnly: true, ok: 'heir.', lim: 'heirWeek', cnt: 'hw', odds: { mil: 0, res: 0, cla: 0, cov: 0, gold: 1 },
+      mil: [], res: [], cla: [], cov: [],
+      gold: ['qf_porcelain', 'fy_puppet', 'ts_taotie', 'ls_celadon', 'ly_embroidery', 'lm_cloisonne', 'my_woodblock', 'yh_liuli', 'yl_kingfisher', 'yx_guqin', 'zx_sancai', 'gc_kintsugi', 'lq_papercut', 'li_screen', 'cx_compass', 'qj_marionette', 'ch_ironfire', 'xj_armillary', 'ql_dunhuang', 'xw_cinnabar'] },
   };
   C.CASES = Object.keys(C.COLS);
   C.REG = C.CASES.filter(c => !C.COLS[c].prem);   // 普通武器箱与主题套装箱
+  C.HEIRLOOM_KEYS = C.COLS.c14.gold.slice();
   // 爆率：cfg 是服务器上管理员改过的经济数值（见下面的 C.CFG_INFO），不传就是上面写死的
   C.oddsOf = (cid, cfg) => {
-    if (C.COLS[cid] && C.COLS[cid].themed) return C.COLS[cid].odds;
+    if (C.COLS[cid] && (C.COLS[cid].themed || C.COLS[cid].heirloom)) return C.COLS[cid].odds;
     if (!cfg) return C.COLS[cid].odds || C.ODDS;
     const p = C.COLS[cid].prem && C.COLS[cid].ok;
     if (p) return { mil: 0, res: 0, cla: C.cv(cfg, p + 'cla'), cov: C.cv(cfg, p + 'cov'), gold: C.cv(cfg, p + 'gold') };
@@ -353,9 +360,10 @@
     ['premDay', C.PREM_DAY, 0, 50, 1, '开箱', '神兵武器箱每天能开几个'],
     ['premWeek', C.PREM_WEEK, 0, 20, 1, '开箱', '神兵武器箱每周能开几个（旧）'],
     ['zodWeek', C.ZOD_WEEK, 0, 20, 1, '开箱', '星座武器箱每周能开几个'],
+    ['heirWeek', C.HEIR_WEEK, 0, 20, 1, '开箱', '天工传世匣每周能开几个'],
     ['stP', C.ST_P, 0, 1, 0, '开箱', '开出斩数版的概率'],
     ...C.TIERS.map(t => ['odds.' + t, C.ODDS[t], 0, 1, 0, '普通武器箱爆率', C.TIER[t].n]),
-    ...C.CASES.filter(c => C.COLS[c].prem).flatMap(c => ['cla', 'cov', 'gold'].map(t => [C.COLS[c].ok + t, C.COLS[c].odds[t], 0, 1, 0, C.COLS[c].name + '武器箱爆率', C.TIER[t].n])),
+    ...C.CASES.filter(c => C.COLS[c].prem && !C.COLS[c].heirloom).flatMap(c => ['cla', 'cov', 'gold'].map(t => [C.COLS[c].ok + t, C.COLS[c].odds[t], 0, 1, 0, C.COLS[c].name + '武器箱爆率', C.TIER[t].n])),
     ['fee', C.FEE, 0, 0.5, 0, '玩家市场', '成交手续费（0.15 就是 15%）'],
     ['mktDays', C.MKT_DAYS, 1, 90, 1, '玩家市场', '挂单几天没卖出就自动撤回'],
     ['term.lo', C.TERM.markup[0], 0.5, 5, 0, '货郎', '报价最低是基准价的几倍'],
@@ -384,7 +392,7 @@
       if (x < 0 || (probability && x > 1)) return { cfg: null, err: `${r[6]}（${k}）要在有效范围之间` };
       if (x !== r[1]) cfg[k] = x;
     }
-    for (const [p, name] of [['odds.', '普通武器箱'], ...C.CASES.filter(c => C.COLS[c].prem).map(c => [C.COLS[c].ok, C.COLS[c].name + '武器箱'])]) {
+    for (const [p, name] of [['odds.', '普通武器箱'], ...C.CASES.filter(c => C.COLS[c].prem && !C.COLS[c].heirloom).map(c => [C.COLS[c].ok, C.COLS[c].name + '武器箱'])]) {
       const sum = C.CFG_INFO.filter(r => r[0].startsWith(p)).reduce((a, r) => a + C.cv(cfg, r[0]), 0);
       if (Math.abs(sum - 1) > 1e-6) return { cfg: null, err: `${name}的几档爆率加起来要正好是 1（现在是 ${+sum.toFixed(6)}）` };
     }
@@ -419,7 +427,9 @@
   C.isItem = k => Object.prototype.hasOwnProperty.call(C.ITEM, k);
   C.ofTier = t => Object.keys(C.ITEM).filter(k => C.ITEM[k].tier === t);
   C.isPrem = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].prem;
-  C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座武器箱的靠开箱、市场、货郎、熔铸
+  C.isHeirloom = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].heirloom;
+  C.isStOnly = k => C.isItem(k) && !!C.COLS[C.ITEM[k].col].stOnly;
+  C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座与传世武器箱不在此列
   const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque', li: 'liying', cx: 'cixian', qj: 'qianji', ch: 'chixiao', xj: 'xuanji', ql: 'qingluan', xw: 'xuanwu' };
   C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
 
@@ -548,13 +558,121 @@
     }
   }
 
+  // ---------- 典藏至臻：天工传世 · 器灵纪（全 20 位侠客专属，各承一脉非遗国宝器艺，解锁攻守双境） ----------
+  const HEIRLOOM_DEFS = {
+    qf_porcelain: { char: 'qingfeng', name: '青花龙泉', relic: { craft: '元青花瓷', material: 'porcelain', title: '窑火胎骨 · 龙泉剑魄', sfx: 'porcelain', glyph: '瓷', stanceAtk: '青花裂锋', stanceDef: '釉玉守心' },
+      look: { body: '#f2f6fb', shade: '#9db6d6', scarf: '#1e4fa3', slash: '58,124,230', blade: '#f7fbff', metal: '#d8b464', haft: '#1a3668', outline: '#122852', outlineA: 1 },
+      deco: { head: 'jadepin', gem: '#2c6be0', robe: 'jade_master', robeC: '#1b3d7a', breastplate: '#2352a6', shoulder: '#d8b464', cape: '#162f60', back: 'flysword', trail: 'cloud', aura: 'cloud', weapStyle: 'relic_porcelain', relicMat: 'porcelain', relicGlyph: '瓷', transform: 'heirloom' },
+      fx: { th: 'crystal', c: '64,132,235', c2: '242,248,255', relicMat: 'porcelain' },
+      scene: { sky: ['#061024', '#10254a', '#26508e', '#0d1d3c'], orb: 'moon', orbC: '235,244,255', mist: '150,195,245', mtn: ['#1a3b6e', '#0f2548'], bam: ['#0a1830', '#050d1c'], wx: 'petal', wxC: '215,232,255', hit: 'enso', hitC: '64,132,235', stars: 0.55, rays: true } },
+    fy_puppet: { char: 'feiying', name: '皮影千机', relic: { craft: '驴皮影戏', material: 'puppet', title: '烛火镂影 · 丝牵双刃', sfx: 'puppet', glyph: '影', stanceAtk: '剪影夺魂', stanceDef: '幕障藏锋' },
+      look: { body: '#241410', shade: '#120806', scarf: '#e6552e', slash: '245,112,62', blade: '#ffe6b8', metal: '#d99a3e', haft: '#3b180e', outline: '#f5b85a', outlineA: 0.92 },
+      deco: { head: 'foxmask', hideBaseHead: true, mask: '#f5b85a', gem: '#ff6438', robe: 'dark', robeC: '#2b120c', breastplate: '#7a2214', shoulder: '#c97828', cape: '#1a0a06', back: 'butterflywings', trail: 'ink', aura: 'smoke', weapStyle: 'relic_puppet', relicMat: 'puppet', relicGlyph: '影', transform: 'heirloom' },
+      fx: { th: 'ink', c: '245,112,62', c2: '255,214,132', relicMat: 'puppet' },
+      scene: { sky: ['#140804', '#38160c', '#7c3418', '#260e08'], orb: 'sun', orbC: '255,204,120', mist: '240,140,80', mtn: ['#36180d', '#1e0c06'], bam: ['#140704', '#0a0302'], wx: 'gold', wxC: '255,186,100', hit: 'inksplat', hitC: '245,112,62', stars: 0.25, rays: true } },
+    ts_taotie: { char: 'tieshan', name: '后母饕餮', relic: { craft: '商周青铜', material: 'bronze', title: '铭文古鼎 · 饕餮镇岳', sfx: 'bronze', glyph: '鼎', stanceAtk: '饕餮噬锋', stanceDef: '玄鼎不动' },
+      look: { body: '#2b4742', shade: '#162825', scarf: '#d4a64a', slash: '110,204,178', blade: '#76b8a4', metal: '#d4a64a', haft: '#1e322e', outline: '#6ac4aa', outlineA: 0.95 },
+      deco: { head: 'taotiehelm', hideBaseHead: true, helmC: '#355c54', crest: '#e6b852', gem: '#78e6c8', robe: 'heavy', robeC: '#1f3833', breastplate: '#3f6c62', shoulder: '#d4a64a', cape: '#152622', back: 'chakra', trail: 'spark', aura: 'gold', weapStyle: 'relic_bronze', relicMat: 'bronze', relicGlyph: '鼎', transform: 'heirloom' },
+      fx: { th: 'crystal', c: '108,208,180', c2: '230,186,88', relicMat: 'bronze' },
+      scene: { sky: ['#071210', '#132a26', '#265048', '#0e201d'], orb: 'sun', orbC: '232,196,112', mist: '112,196,174', mtn: ['#1b3b35', '#0e221e'], bam: ['#0a1815', '#050d0b'], wx: 'gold', wxC: '225,190,104', hit: 'hexagon', hitC: '108,208,180', stars: 0.3, rays: true } },
+    ls_celadon: { char: 'lingshuang', name: '汝窑天青', relic: { craft: '宋代汝窑', material: 'celadon', title: '雨过天青 · 冰裂长枪', sfx: 'porcelain', glyph: '汝', stanceAtk: '冰裂穿云', stanceDef: '天青止水' },
+      look: { body: '#cfe6e4', shade: '#7fa8a8', scarf: '#f0cfa0', slash: '152,218,220', blade: '#e8faf8', metal: '#e0bc7a', haft: '#3f686b', outline: '#1e3e42', outlineA: 1 },
+      deco: { head: 'valkyrie', gem: '#9ee8e4', robe: 'blizzard', robeC: '#588284', breastplate: '#7ca8aa', shoulder: '#e0bc7a', cape: '#3a5d60', back: 'icewings', trail: 'snow', aura: 'snow', weapStyle: 'relic_celadon', relicMat: 'celadon', relicGlyph: '汝', transform: 'heirloom' },
+      fx: { th: 'frost', c: '152,222,224', c2: '245,226,184', relicMat: 'celadon' },
+      scene: { sky: ['#071418', '#15343c', '#346872', '#122c32'], orb: 'moon', orbC: '228,248,248', mist: '160,215,218', mtn: ['#204a52', '#122c32'], bam: ['#0b1e22', '#061114'], wx: 'snow', wxC: '220,245,245', hit: 'snowflake', hitC: '152,222,224', stars: 0.5, rays: true } },
+    ly_embroidery: { char: 'liuyun', name: '苏绣云锦', relic: { craft: '江南苏绣', material: 'silk', title: '金线双面 · 锦扇生风', sfx: 'silk', glyph: '绣', stanceAtk: '金针破锦', stanceDef: '云缎卸力' },
+      look: { body: '#fbf2eb', shade: '#cfa39a', scarf: '#d94862', slash: '245,126,154', blade: '#fff5e6', metal: '#f0c464', haft: '#7a2434', outline: '#3c1420', outlineA: 1 },
+      deco: { head: 'veilhat', hatC: '#a82a44', veilC: 'rgba(255,198,210,0.42)', gem: '#ffd278', robe: 'dusk', robeC: '#8a2238', breastplate: '#c9405c', shoulder: '#f0c464', cape: '#6e1a2e', back: 'koi', trail: 'cloud', aura: 'cloud', weapStyle: 'relic_embroidery', relicMat: 'silk', relicGlyph: '绣', transform: 'heirloom' },
+      fx: { th: 'water', c: '245,126,154', c2: '255,216,136', part: 'petal', relicMat: 'silk' },
+      scene: { sky: ['#160810', '#3a1426', '#782c4a', '#280e1c'], orb: 'moon', orbC: '255,232,226', mist: '245,155,175', mtn: ['#3c1628', '#220c18'], bam: ['#180812', '#0d040a'], wx: 'petal', wxC: '255,184,200', hit: 'ripple', hitC: '245,126,154', stars: 0.45, rays: true } },
+    lm_cloisonne: { char: 'leiming', name: '景泰掐丝', relic: { craft: '景泰蓝珐琅', material: 'enamel', title: '金丝宝蓝 · 雷火珐琅', sfx: 'enamel', glyph: '蓝', stanceAtk: '掐丝奔雷', stanceDef: '宝蓝金钟' },
+      look: { body: '#143878', shade: '#0a1c42', scarf: '#f5c242', slash: '82,172,255', blade: '#fff3c4', metal: '#f5c242', haft: '#0f2858', outline: '#ffd86b', outlineA: 0.95 },
+      deco: { head: 'starguan', gem: '#38c8ff', robe: 'thunder', robeC: '#102e66', breastplate: '#1a4c9e', shoulder: '#f5c242', cape: '#0b2048', back: 'chakra', trail: 'spark', aura: 'gold', weapStyle: 'relic_cloisonne', relicMat: 'enamel', relicGlyph: '蓝', transform: 'heirloom' },
+      fx: { th: 'thunder', c: '82,172,255', c2: '255,212,96', relicMat: 'enamel' },
+      scene: { sky: ['#050c20', '#0e2252', '#1e4696', '#0a1a40'], orb: 'rift', orbC: '255,218,108', mist: '108,180,255', mtn: ['#122c62', '#0a1a3d'], bam: ['#07122a', '#040918'], wx: 'spark', wxC: '255,216,104', hit: 'bolt', hitC: '82,172,255', stars: 0.6, rays: true } },
+    my_woodblock: { char: 'moyu', name: '雕版朱印', relic: { craft: '梨木雕版', material: 'woodblock', title: '梨木刻经 · 朱砂镇纸', sfx: 'woodblock', glyph: '印', stanceAtk: '朱砂判笔', stanceDef: '古卷镇印' },
+      look: { body: '#f0e6d2', shade: '#b8a484', scarf: '#c82e24', slash: '220,62,50', blade: '#1e1612', metal: '#c82e24', haft: '#3e2618', outline: '#24140e', outlineA: 1 },
+      deco: { head: 'bamboohat', hatC: '#4a2b1c', gem: '#e03e32', robe: 'jade_master', robeC: '#2b1b14', breastplate: '#7a221c', shoulder: '#c82e24', cape: '#1c120d', back: 'scroll', trail: 'ink', inkC: '198,46,36', aura: 'smoke', weapStyle: 'relic_woodblock', relicMat: 'woodblock', relicGlyph: '印', transform: 'heirloom' },
+      fx: { th: 'ink', c: '220,62,50', c2: '28,20,16', relicMat: 'woodblock' },
+      scene: { sky: ['#140c08', '#2e1a12', '#5c3020', '#20120c'], orb: 'bloodmoon', orbC: '235,84,68', mist: '220,160,130', mtn: ['#2c1810', '#180d08'], bam: ['#120a06', '#080402'], wx: 'ink', wxC: '80,28,22', hit: 'enso', hitC: '220,62,50', stars: 0.2, rays: true } },
+    yh_liuli: { char: 'yuehua', name: '琉璃月华', relic: { craft: '药玉琉璃', material: 'liuli', title: '流光药玉 · 弦月琉璃', sfx: 'liuli', glyph: '琉', stanceAtk: '流光折月', stanceDef: '玉魄凝华' },
+      look: { body: '#1f2b58', shade: '#0f1636', scarf: '#88f0ff', slash: '142,232,255', blade: '#f2fdff', metal: '#c4a2ff', haft: '#1a2450', outline: '#a6f4ff', outlineA: 0.92 },
+      deco: { head: 'startiara', tiaraC: '#88f0ff', gem: '#e4b2ff', robe: 'starry', robeC: '#182452', breastplate: '#2c4688', shoulder: '#88f0ff', cape: '#121a3e', back: 'crescent', trail: 'star', aura: 'aurora', weapStyle: 'relic_liuli', relicMat: 'liuli', relicGlyph: '琉', transform: 'heirloom' },
+      fx: { th: 'crystal', c: '142,232,255', c2: '220,174,255', relicMat: 'liuli' },
+      scene: { sky: ['#05081a', '#101d48', '#254488', '#0c1638'], orb: 'moon', orbC: '225,248,255', mist: '150,218,255', mtn: ['#162c5e', '#0c1838'], bam: ['#081026', '#040814'], wx: 'twinkle', wxC: '210,242,255', hit: 'crescent', hitC: '142,232,255', stars: 0.9, rays: true } },
+    yl_kingfisher: { char: 'yanling', name: '点翠金凤', relic: { craft: '宫廷点翠', material: 'kingfisher', title: '翠羽鎏金 · 凤翎穿风', sfx: 'feather', glyph: '翠', stanceAtk: '金凤掠羽', stanceDef: '翠幕回旋' },
+      look: { body: '#0d4a58', shade: '#062630', scarf: '#f5c84c', slash: '46,216,212', blade: '#e8fffb', metal: '#f5c84c', haft: '#093440', outline: '#f5c84c', outlineA: 0.95 },
+      deco: { head: 'plume', plumeC: ['#14c8c0', '#f5c84c'], gem: '#2ee6dc', robe: 'phoenix', robeC: '#0a3a46', breastplate: '#126474', shoulder: '#f5c84c', cape: '#082c36', back: 'peacock', trail: 'feather', featherC: '46,216,212', aura: 'gold', weapStyle: 'relic_kingfisher', relicMat: 'kingfisher', relicGlyph: '翠', transform: 'heirloom' },
+      fx: { th: 'feather', c: '46,216,212', c2: '245,200,76', part: 'feather', relicMat: 'kingfisher' },
+      scene: { sky: ['#041218', '#0a2e3a', '#165e6e', '#092630'], orb: 'sun', orbC: '255,224,126', mist: '80,212,208', mtn: ['#0f404c', '#08242c'], bam: ['#061a20', '#030e12'], wx: 'feather', wxC: '110,234,228', hit: 'feathers', hitC: '46,216,212', stars: 0.45, rays: true } },
+    yx_guqin: { char: 'yuxiao', name: '古琴断纹', relic: { craft: '仲尼断纹琴', material: 'guqin', title: '蛇腹金徽 · 广陵清商', sfx: 'guqin', glyph: '琴', stanceAtk: '十面杀伐', stanceDef: '流水清心' },
+      look: { body: '#2c1e16', shade: '#160e0a', scarf: '#e6c278', slash: '238,198,118', blade: '#f8eed8', metal: '#e6c278', haft: '#3c261a', outline: '#e6c278', outlineA: 0.9 },
+      deco: { head: 'jadepin', gem: '#e6c278', robe: 'celestial', robeC: '#241812', breastplate: '#6a4a2a', shoulder: '#d8b060', cape: '#1a110c', back: 'notering', trail: 'gold', aura: 'gold', weapStyle: 'relic_guqin', relicMat: 'guqin', relicGlyph: '琴', transform: 'heirloom' },
+      fx: { th: 'note', c: '238,198,118', c2: '255,244,214', part: 'note', relicMat: 'guqin' },
+      scene: { sky: ['#120c08', '#2a1c12', '#5c3e24', '#1e140c'], orb: 'moon', orbC: '252,232,188', mist: '225,190,130', mtn: ['#322216', '#1c120b'], bam: ['#120c08', '#090604'], wx: 'gold', wxC: '240,206,132', hit: 'sunburst', hitC: '238,198,118', stars: 0.4, rays: true } },
+    zx_sancai: { char: 'zuixian', name: '唐三彩釉', relic: { craft: '盛唐三彩', material: 'sancai', title: '流釉琥珀 · 醉卧长安', sfx: 'porcelain', glyph: '彩', stanceAtk: '琥珀醉拳', stanceDef: '翠釉化劲' },
+      look: { body: '#f5ecd8', shade: '#c4a672', scarf: '#2e9e66', slash: '242,162,56', blade: '#fff6e0', metal: '#e89a2c', haft: '#7a4a18', outline: '#2e1e0e', outlineA: 1 },
+      deco: { head: 'veilhat', hatC: '#c4721c', veilC: 'rgba(110,214,154,0.34)', gem: '#2e9e66', robe: 'dusk', robeC: '#a8621c', breastplate: '#2e8a5a', shoulder: '#e89a2c', cape: '#6e3e12', back: 'gourdback', trail: 'gold', aura: 'cloud', weapStyle: 'relic_sancai', relicMat: 'sancai', relicGlyph: '彩', transform: 'heirloom' },
+      fx: { th: 'water', c: '242,162,56', c2: '72,196,132', relicMat: 'sancai' },
+      scene: { sky: ['#161006', '#3a2810', '#7e5620', '#2a1c0a'], orb: 'sun', orbC: '255,222,148', mist: '225,186,120', mtn: ['#3a2c14', '#22180a'], bam: ['#141008', '#0a0804'], wx: 'gold', wxC: '245,190,96', hit: 'swirl', hitC: '242,162,56', stars: 0.3, rays: true } },
+    gc_kintsugi: { char: 'gouchen', name: '金缮大漆', relic: { craft: '大漆金缮', material: 'kintsugi', title: '玄漆裂金 · 碎玉重铸', sfx: 'kintsugi', glyph: '缮', stanceAtk: '裂金崩岳', stanceDef: '玄漆不坏' },
+      look: { body: '#1a1618', shade: '#0b090a', scarf: '#f4c542', slash: '248,198,66', blade: '#2a2220', metal: '#f4c542', haft: '#141012', outline: '#f4c542', outlineA: 0.96 },
+      deco: { head: 'voidhorns', hideBaseHead: true, gem: '#ffcf48', robe: 'dark', robeC: '#161214', breastplate: '#261e20', shoulder: '#f4c542', cape: '#120e10', back: 'crystals', trail: 'gold', aura: 'gold', weapStyle: 'relic_kintsugi', relicMat: 'kintsugi', relicGlyph: '缮', transform: 'heirloom' },
+      fx: { th: 'crystal', c: '248,198,66', c2: '255,240,180', relicMat: 'kintsugi' },
+      scene: { sky: ['#0a0808', '#1e1612', '#42301c', '#16100c'], orb: 'bloodmoon', orbC: '248,200,76', mist: '215,176,92', mtn: ['#241a12', '#120d08'], bam: ['#0c0806', '#060403'], wx: 'gold', wxC: '248,202,82', hit: 'hexagon', hitC: '248,198,66', stars: 0.45, rays: true } },
+    lq_papercut: { char: 'lingque', name: '蔚县剪纸', relic: { craft: '蔚县窗花', material: 'papercut', title: '朱红镂空 · 飞雀剪风', sfx: 'paper', glyph: '剪', stanceAtk: '飞剪断影', stanceDef: '纸蝶化形' },
+      look: { body: '#fff6ee', shade: '#e0b8b0', scarf: '#e62e2d', slash: '245,62,62', blade: '#ffebe8', metal: '#f5c24a', haft: '#8e1818', outline: '#b81a1a', outlineA: 1 },
+      deco: { head: 'plume', plumeC: ['#e62e2d', '#f5c24a'], gem: '#ff4242', robe: 'phoenix', robeC: '#b81c1c', breastplate: '#d82828', shoulder: '#f5c24a', cape: '#8a1414', back: 'butterflywings', trail: 'feather', featherC: '245,62,62', aura: 'cloud', weapStyle: 'relic_papercut', relicMat: 'papercut', relicGlyph: '剪', transform: 'heirloom' },
+      fx: { th: 'feather', c: '245,62,62', c2: '255,214,112', part: 'butterfly', relicMat: 'papercut' },
+      scene: { sky: ['#180606', '#441010', '#8c2020', '#2e0a0a'], orb: 'sun', orbC: '255,214,132', mist: '255,120,110', mtn: ['#441212', '#260808'], bam: ['#180606', '#0c0303'], wx: 'petal', wxC: '255,108,108', hit: 'feathers', hitC: '245,62,62', stars: 0.35, rays: true } },
+    li_screen: { char: 'liying', name: '金箔屏风', relic: { craft: '金箔漆屏', material: 'goldleaf', title: '折屏藏刃 · 鎏金离影', sfx: 'goldleaf', glyph: '屏', stanceAtk: '金屏裂影', stanceDef: '折光避锋' },
+      look: { body: '#241e14', shade: '#120e08', scarf: '#ffd65c', slash: '255,214,92', blade: '#fff6d0', metal: '#ffd65c', haft: '#382a14', outline: '#ffd65c', outlineA: 0.94 },
+      deco: { head: 'foxmask', hideBaseHead: true, mask: '#ffd65c', gem: '#fff0a8', robe: 'spirit', robeC: '#2c2212', breastplate: '#8c6824', shoulder: '#ffd65c', cape: '#1c150a', back: 'crescent', trail: 'gold', aura: 'gold', weapStyle: 'relic_screen', relicMat: 'goldleaf', relicGlyph: '屏', transform: 'heirloom' },
+      fx: { th: 'star', c: '255,214,92', c2: '255,248,214', relicMat: 'goldleaf' },
+      scene: { sky: ['#120e06', '#322610', '#6e521e', '#241a0a'], orb: 'sun', orbC: '255,232,148', mist: '245,208,118', mtn: ['#362812', '#1e1608'], bam: ['#140e06', '#0a0703'], wx: 'gold', wxC: '255,222,126', hit: 'crescent', hitC: '255,214,92', stars: 0.6, rays: true } },
+    cx_compass: { char: 'cixian', name: '司南浑仪', relic: { craft: '磁石司南', material: 'compass', title: '玄磁勺盘 · 阴阳定向', sfx: 'bronze', glyph: '磁', stanceAtk: '磁极裂阵', stanceDef: '司南定乾' },
+      look: { body: '#1e2838', shade: '#0e1420', scarf: '#58d8ff', slash: '96,218,255', blade: '#dff8ff', metal: '#e2b862', haft: '#1a2434', outline: '#78e0ff', outlineA: 0.92 },
+      deco: { head: 'circlet', gem: '#58d8ff', robe: 'starry', robeC: '#162030', breastplate: '#2e4662', shoulder: '#e2b862', cape: '#101824', back: 'zodiac', sign: 'aqu', zt: 3, zc: '96,218,255', zc2: '226,184,98', trail: 'spark', aura: 'aurora', weapStyle: 'relic_compass', relicMat: 'compass', relicGlyph: '磁', transform: 'heirloom' },
+      fx: { th: 'nebula', c: '96,218,255', c2: '226,184,98', relicMat: 'compass' },
+      scene: { sky: ['#050c18', '#0e2038', '#1e446c', '#0b182a'], orb: 'galaxy', orbC: '132,226,255', mist: '112,196,238', mtn: ['#142c48', '#0a182a'], bam: ['#071220', '#030a12'], wx: 'spark', wxC: '150,232,255', hit: 'swirl', hitC: '96,218,255', stars: 0.85, rays: true } },
+    qj_marionette: { char: 'qianji', name: '提线榫卯', relic: { craft: '鲁班榫卯', material: 'woodblock', title: '紫檀榫卯 · 机丝连环', sfx: 'woodblock', glyph: '榫', stanceAtk: '连环机括', stanceDef: '榫合铁壁' },
+      look: { body: '#4a2b1e', shade: '#26140c', scarf: '#f0b858', slash: '240,184,88', blade: '#fae6c0', metal: '#e0a642', haft: '#361c12', outline: '#f0b858', outlineA: 0.9 },
+      deco: { head: 'headband', band: '#f0b858', gem: '#ffcf70', robe: 'heavy', robeC: '#3a2016', breastplate: '#6a3c26', shoulder: '#e0a642', cape: '#28140e', back: 'chakra', trail: 'spark', aura: 'gold', weapStyle: 'relic_marionette', relicMat: 'woodblock', relicGlyph: '榫', transform: 'heirloom' },
+      fx: { th: 'star', c: '240,184,88', c2: '180,120,64', relicMat: 'woodblock' },
+      scene: { sky: ['#120a06', '#2e1a10', '#603820', '#20120a'], orb: 'sun', orbC: '245,204,126', mist: '220,164,108', mtn: ['#341e12', '#1c1008'], bam: ['#120a06', '#080402'], wx: 'spark', wxC: '245,196,104', hit: 'hexagon', hitC: '240,184,88', stars: 0.35, rays: true } },
+    ch_ironfire: { char: 'chixiao', name: '打铁熔星', relic: { craft: '非遗打铁花', material: 'ironfire', title: '千度铁水 · 星雨焚天', sfx: 'ironfire', glyph: '熔', stanceAtk: '铁花焚空', stanceDef: '熔炉护体' },
+      look: { body: '#281412', shade: '#120808', scarf: '#ff7a22', slash: '255,126,38', blade: '#fff0c2', metal: '#ff9632', haft: '#3c1810', outline: '#ffa842', outlineA: 0.96 },
+      deco: { head: 'voidhorns', hideBaseHead: true, gem: '#ff9632', robe: 'thunder', robeC: '#24100e', breastplate: '#6a2214', shoulder: '#ff7a22', cape: '#1a0a08', back: 'chakra', trail: 'spark', aura: 'gold', weapStyle: 'relic_ironfire', relicMat: 'ironfire', relicGlyph: '熔', transform: 'heirloom' },
+      fx: { th: 'thunder', c: '255,126,38', c2: '255,236,160', relicMat: 'ironfire' },
+      scene: { sky: ['#120604', '#361208', '#7c2a10', '#260c06'], orb: 'bloodmoon', orbC: '255,152,64', mist: '255,134,58', mtn: ['#38140a', '#1e0a04'], bam: ['#140604', '#080302'], wx: 'spark', wxC: '255,198,96', hit: 'sunburst', hitC: '255,126,38', stars: 0.7, rays: true } },
+    xj_armillary: { char: 'xuanji', name: '浑天玑衡', relic: { craft: '张衡浑天仪', material: 'armillary', title: '三环玑衡 · 璇玑演星', sfx: 'bronze', glyph: '浑', stanceAtk: '星轨贯日', stanceDef: '天仪护周' },
+      look: { body: '#181e3a', shade: '#0a0e20', scarf: '#f2c864', slash: '242,200,100', blade: '#fff8de', metal: '#f2c864', haft: '#141a32', outline: '#f2c864', outlineA: 0.94 },
+      deco: { head: 'startiara', tiaraC: '#f2c864', gem: '#92b8ff', robe: 'celestial', robeC: '#141a34', breastplate: '#3a4678', shoulder: '#f2c864', cape: '#0e1226', back: 'galaxy', trail: 'star', aura: 'aurora', weapStyle: 'relic_armillary', relicMat: 'armillary', relicGlyph: '浑', transform: 'heirloom' },
+      fx: { th: 'nebula', c: '242,200,100', c2: '132,178,255', part: 'twinkle', relicMat: 'armillary' },
+      scene: { sky: ['#040614', '#0e1638', '#22306a', '#0a1028'], orb: 'galaxy', orbC: '248,216,136', mist: '165,190,255', mtn: ['#16204a', '#0c122c'], bam: ['#080c1e', '#040610'], wx: 'twinkle', wxC: '248,224,158', hit: 'starburst', hitC: '242,200,100', stars: 1, rays: true } },
+    ql_dunhuang: { char: 'qingluan', name: '敦煌飞天', relic: { craft: '莫高窟壁画', material: 'dunhuang', title: '石青金箔 · 飞天伎乐', sfx: 'guqin', glyph: '煌', stanceAtk: '琵琶破阵', stanceDef: '藻井慈光' },
+      look: { body: '#f4e4cc', shade: '#c29c72', scarf: '#28889e', slash: '68,186,204', blade: '#fff2d2', metal: '#eab84a', haft: '#7a4222', outline: '#3c1e12', outlineA: 1 },
+      deco: { head: 'startiara', tiaraC: '#eab84a', gem: '#28a4b8', robe: 'celestial', robeC: '#1e6478', breastplate: '#c86832', shoulder: '#eab84a', cape: '#184e5e', back: 'notering', trail: 'gold', aura: 'gold', weapStyle: 'relic_dunhuang', relicMat: 'dunhuang', relicGlyph: '煌', transform: 'heirloom' },
+      fx: { th: 'note', c: '68,186,204', c2: '245,196,86', part: 'petal', relicMat: 'dunhuang' },
+      scene: { sky: ['#160e08', '#3c2614', '#86582a', '#2c1c0e'], orb: 'sun', orbC: '255,224,142', mist: '220,178,120', mtn: ['#4a3018', '#2a1a0c'], bam: ['#181008', '#0e0804'], wx: 'gold', wxC: '255,216,124', hit: 'sunburst', hitC: '245,196,86', stars: 0.45, rays: true } },
+    xw_cinnabar: { char: 'xuanwu', name: '剔红镇岳', relic: { craft: '宫廷剔红漆', material: 'cinnabar', title: '百层雕漆 · 玄龟镇岳', sfx: 'cinnabar', glyph: '漆', stanceAtk: '雕漆重压', stanceDef: '百层玄甲' },
+      look: { body: '#7c1816', shade: '#420a0a', scarf: '#f0c458', slash: '232,68,58', blade: '#f8dfd4', metal: '#f0c458', haft: '#380a08', outline: '#f0c458', outlineA: 0.94 },
+      deco: { head: 'taotiehelm', hideBaseHead: true, helmC: '#8e1c1a', crest: '#f0c458', gem: '#ff5242', robe: 'heavy', robeC: '#641210', breastplate: '#9e221e', shoulder: '#f0c458', cape: '#4a0c0a', back: 'crystals', trail: 'gold', aura: 'gold', weapStyle: 'relic_cinnabar', relicMat: 'cinnabar', relicGlyph: '漆', transform: 'heirloom' },
+      fx: { th: 'ink', c: '232,68,58', c2: '242,196,88', relicMat: 'cinnabar' },
+      scene: { sky: ['#160606', '#3e0e0c', '#821c18', '#2a0808'], orb: 'bloodmoon', orbC: '255,140,104', mist: '228,108,92', mtn: ['#42100e', '#240808'], bam: ['#160606', '#0c0303'], wx: 'gold', wxC: '245,200,96', hit: 'hexagon', hitC: '232,68,58', stars: 0.35, rays: true } },
+  };
+  for (const [k, def] of Object.entries(HEIRLOOM_DEFS)) {
+    C.FULL[k] = { ...def, heirloom: true, stOnly: true };
+  }
+
   /* ---------- 价格 ---------- */
   // 系统只给自己卖的东西定价：武器箱、货郎（商店固定价格）和货郎报的那一件。
   // 饰品在玩家市场上卖多少钱全由玩家定，系统不定价、不收购，所以也没有“市场价”。
   C.ST_MUL = t => t === 'gold' ? 1.4 : 1.75;   // 货郎报斩数版时贵多少
   C.refVal = it => {   // 一件饰品的基准价：只用来定货郎的报价
     const d = C.ITEM[it.k]; if (!d) return 0;
-    return Math.max(2, Math.round(C.BASE[d.tier] * d.mul * (it.st >= 0 ? C.ST_MUL(d.tier) : 1)));
+    const base = C.isHeirloom(it.k) ? 12000 : C.BASE[d.tier];
+    return Math.max(2, Math.round(base * d.mul * (it.st >= 0 ? C.ST_MUL(d.tier) : 1)));
   };
   C.GOODS = [...C.CASES, 'term'];              // 武器箱和货郎：只在商店卖，不能挂到市场
   C.isGood = k => C.GOODS.includes(k);
@@ -570,8 +688,8 @@
   C.blank = () => ({
     v: C.VER, tags: 0, term: 0, tm: null, nid: 1, inv: [], cases: Object.fromEntries(C.CASES.map(c => [c, 0])), via: [], eq: {},
     badgeGift: 0, badgeOwned: {}, badgeEquip: {}, badgeSigils: 0, heroKOs: {}, stances: {},
-    petOwned: {}, petEquip: {}, skillUnlocks: {}, skillLoadout: {}, appreciation2026: 0, promoAll: 0, promoKeys: [],
-    lst: [], hist: [], od: { d: 0, n: 0 }, pd: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, zw: { w: 0, n: 0 }, zf: 0, drop: { w: 0, g: 0, n: 0, sup: 0 },
+    petOwned: {}, petEquip: {}, skillUnlocks: {}, skillLoadout: {}, appreciation2026: 0, promoAll: 0, promoKeys: [], heirloomPromo: 0,
+    lst: [], hist: [], od: { d: 0, n: 0 }, pd: { d: 0, n: 0 }, pw: { w: 0, n: 0 }, zw: { w: 0, n: 0 }, hw: { w: 0, n: 0 }, zf: 0, drop: { w: 0, g: 0, n: 0, sup: 0 },
     op: { s: '', earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] }, cc: [], buys: {},
     stat: { open: 0, trade: 0, sold: 0, bought: 0, term: 0 }, tk: null, last: 0, dm: { d: 0, n: 0 }, gift: 0,
     rw: C.rwBlank(),
@@ -582,7 +700,7 @@
   const str = (x, n) => typeof x === 'string' ? x.slice(0, n) : '';
   const stOf = x => Math.floor(+x) >= 0 ? int(x, 0, 1e7) : -1;
   const cleanItem = x => isObj(x) && C.isItem(x.k) && Number.isFinite(+x.i) ? {
-    i: int(x.i, 1), k: x.k, st: stOf(x.st), n: str(x.n, 12).replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, ''), t: num(x.t), src: str(x.src, 8) } : null;
+    i: int(x.i, 1), k: x.k, st: C.isStOnly(x.k) ? Math.max(0, stOf(x.st)) : stOf(x.st), n: str(x.n, 12).replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, ''), t: num(x.t), src: str(x.src, 8) } : null;
   // 读进来的存档先整理一遍：缺的补上，类型不对的换掉，每一层都按格式重新拼一遍（多出来的字段一律丢掉），过了周就换周任务。
   // 第 1 版的存档也这样读：磨损、图案模板、玉珏、充值记录这些字段直接丢掉，没用完的钥匙一把换一台货郎，饰品和武器箱照旧。
   // 第 2 版的“本周买了几个箱子”也丢掉（现在不限买，限的是每天开几个）。
@@ -600,6 +718,7 @@
     s.badgeGift = s.badgeGift ? 1 : 0;
     s.appreciation2026 = s.appreciation2026 ? 1 : 0;
     s.promoAll = s.promoAll ? 1 : 0;
+    s.heirloomPromo = s.heirloomPromo ? 1 : 0;
     s.promoKeys = Array.from(new Set((Array.isArray(s.promoKeys) ? s.promoKeys : []).filter(k => C.isItem(k))));
     s.badgeOwned = Object.fromEntries(Object.entries(s.badgeOwned).filter(([id, tier]) => own(C.BADGES, id) && own(C.BADGE_TIER, tier)));
     s.badgeEquip = Object.fromEntries(Object.entries(s.badgeEquip).filter(([h, id]) => C.HERO_IDS.includes(h) && own(s.badgeOwned, id)).slice(0, C.HERO_IDS.length));
@@ -669,12 +788,13 @@
     s.pd = isObj(s.pd) ? { d: int(s.pd.d), n: int(s.pd.n, 0, 1000) } : { d: 0, n: 0 };
     s.pw = { w: int(s.pw.w), n: int(s.pw.n, 0, 1000) };
     s.zw = { w: int(s.zw.w), n: int(s.zw.n, 0, 1000) };
+    s.hw = isObj(s.hw) ? { w: int(s.hw.w), n: int(s.hw.n, 0, 1000) } : { w: 0, n: 0 };
     if (!s.zf) s.cases.c8++;   // 每个号送 1 个星座武器箱（只送一次，老号第一次读到这一版的时候送）
     s.zf = 1;
     s.drop = { w: int(s.drop.w), g: int(s.drop.g, 0, 1e6), n: int(s.drop.n, 0, 1e6), sup: s.drop.sup ? 1 : 0 };
     s.dm = { d: int(s.dm.d), n: int(s.dm.n, 0, 1e6) };
     const tm = s.tm, o = isObj(tm) && isObj(tm.o) && C.isItem(tm.o.k) ? tm.o : null;
-    s.tm = o ? { t0: num(tm.t0), n: int(tm.n, 1, C.TERM.offers), o: { k: o.k, st: stOf(o.st), price: int(o.price, 1, 1e8) } } : null;
+    s.tm = o ? { t0: num(tm.t0), n: int(tm.n, 1, C.TERM.offers), o: { k: o.k, st: C.isStOnly(o.k) ? Math.max(0, stOf(o.st)) : stOf(o.st), price: int(o.price, 1, 1e8) } } : null;
     const op = s.op, ms = Array.isArray(op.ms) && op.ms.length === 4 && op.ms.every(m => isObj(m) && own(C.MISSIONS, m.id)) ? op.ms.map(m => ({ id: m.id, n: C.MISSIONS[m.id].n, star: C.MISSIONS[m.id].star, ...(m.id === 'hero' ? { h: C.HERO_IDS.includes(m.h) ? m.h : 'qingfeng' } : {}) })) : null;
     const earned = int(op.earned, 0, 1e6);
     s.op = { s: str(op.s, 8), earned, spent: int(op.spent, 0, earned), w: ms ? int(op.w) : -1, ms: ms || [],
@@ -685,6 +805,7 @@
     if (s.pd.d !== day) s.pd = { d: day, n: 0 };
     if (s.pw.w !== wk) s.pw = { w: wk, n: 0 };
     if (s.zw.w !== wk) s.zw = { w: wk, n: 0 };
+    if (s.hw.w !== wk) s.hw = { w: wk, n: 0 };
     if (s.drop.w !== wk) s.drop = { w: wk, g: 0, n: 0, sup: 0 };
     if (s.op.s !== se.id) s.op = { s: se.id, earned: 0, spent: 0, w: 0, ms: [], prog: {}, done: [] };
     if (s.op.w !== wk) Object.assign(s.op, { w: wk, ms: C.genMissions(env.uid, wk), prog: {}, done: [] });
@@ -763,7 +884,8 @@
 
   /* ---------- 物品进出库存 ---------- */
   C.mkItem = (s, k, src, rnd, o = {}) => {
-    const st = o.st !== undefined ? o.st : (rnd() < (o.stP !== undefined ? o.stP : C.ST_P) ? 0 : -1);
+    const rawSt = o.st !== undefined ? o.st : (rnd() < (o.stP !== undefined ? o.stP : C.ST_P) ? 0 : -1);
+    const st = C.isStOnly(k) ? Math.max(0, Math.floor(+rawSt) || 0) : rawSt;
     return { i: s.nid++, k, st, n: '', t: o.t || 0, src };
   };
   // 拿到一件：这款皮肤原来没有的话，记进“可穿的皮肤”里，并记下是靠武库才有的
@@ -806,9 +928,10 @@
   };
   const pickOf = (rnd, a) => a[Math.floor(rnd() * a.length)];
   C.invFull = (s, n = 1) => false;
-  // 货郎报的价：随机一档品质、这一档里随机一件，五分之一是斩数版；价格是这一件基准价的 1.2~1.5 倍
+  // 货郎报的价：随机一档品质、这一档里随机一件（不含天工传世典藏），五分之一是斩数版；价格是这一件基准价的 1.2~1.5 倍
   C.termOffer = (rnd, cfg) => {
-    const k = pickOf(rnd, C.ofTier(rollTier(rnd, C.TERM.odds))), st = rnd() < C.cv(cfg, 'stP') ? 0 : -1;
+    const pool = C.ofTier(rollTier(rnd, C.TERM.odds)).filter(x => !C.isHeirloom(x));
+    const k = pickOf(rnd, pool.length ? pool : C.ofTier('mil')), st = rnd() < C.cv(cfg, 'stP') ? 0 : -1;
     const lo = C.cv(cfg, 'term.lo'), m = lo + rnd() * (C.cv(cfg, 'term.hi') - lo);
     return { k, st, price: Math.max(1, Math.round(C.refVal({ k, st }) * m)) };
   };
@@ -882,8 +1005,10 @@
     }
     if (C.invFull(s)) return { err: `库存满了（最多 ${C.INV_MAX} 件），先卖掉一些` };
     s.cases[cid]--; s.stat.open++;
-    if (col.prem) (s[col.cnt] || (s[col.cnt] = { d: C.day(env.now), n: 0 })).n++; else s.od.n++;
-    const tier = rollTier(env.rnd, C.oddsOf(cid, env.cfg)), k = pickOf(env.rnd, col[tier]);
+    if (col.prem) (s[col.cnt] || (s[col.cnt] = col.daily ? { d: C.day(env.now), n: 0 } : { w: C.week(C.day(env.now)), n: 0 })).n++; else s.od.n++;
+    const tier = rollTier(env.rnd, C.oddsOf(cid, env.cfg)), pool = col[tier];
+    const unowned = col.heirloom ? pool.filter(x => !s.inv.some(it => it.k === x) && !(s.lst || []).some(L => L && L.it && L.it.k === x)) : [];
+    const k = pickOf(env.rnd, unowned.length ? unowned : pool);
     const it = C.addItem(s, C.mkItem(s, k, 'case', env.rnd, { stP: C.cv(env.cfg, 'stP') }), env);
     bump(s, 'open', 1);
     return { ok: true, item: it };
@@ -1165,7 +1290,7 @@
     s.badgeSigils = Math.min(1e6, (s.badgeSigils || 0) + 50);
     s.term = Math.min(1e6, (s.term || 0) + 10);
     s.tags = Math.min(1e6, (s.tags || 0) + 10);
-    for (const c of C.CASES) s.cases[c] = Math.min(1e6, (s.cases[c] || 0) + 10);
+    for (const c of C.CASES) if (!C.COLS[c].heirloom) s.cases[c] = Math.min(1e6, (s.cases[c] || 0) + 10);
     for (const pid of Object.keys(C.PETS)) if (!s.petOwned[pid]) s.petOwned[pid] = 'spirit';
     for (const h of C.HERO_IDS) {
       s.heroKOs[h] = Math.max(s.heroKOs[h] || 0, 20);
@@ -1235,7 +1360,7 @@
     for (const h of C.HERO_IDS) {
       const list = byHero[h];
       if (!list || !list.length) continue;
-      list.sort((x, y) => tierRank(y.k) - tierRank(x.k) || (y.st >= 0 ? 1 : 0) - (x.st >= 0 ? 1 : 0) || (y.st - x.st) || (y.i - x.i));
+      list.sort((x, y) => (C.isHeirloom(y.k) ? 1 : 0) - (C.isHeirloom(x.k) ? 1 : 0) || tierRank(y.k) - tierRank(x.k) || (y.st >= 0 ? 1 : 0) - (x.st >= 0 ? 1 : 0) || (y.st - x.st) || (y.i - x.i));
       const best = list[0];
       s.eq[h] = best.i;
       env.equip[h] = best.k;
@@ -1551,7 +1676,7 @@
     s.badgeGift = 1;
     if (first) {
       giveInk(env, C.UNIVERSAL_PROMO_INK);
-      for (const cid of C.CASES) s.cases[cid] = Math.min(1e6, (s.cases[cid] || 0) + C.UNIVERSAL_PROMO_CASES);
+      for (const cid of C.CASES) if (!C.COLS[cid].heirloom) s.cases[cid] = Math.min(1e6, (s.cases[cid] || 0) + C.UNIVERSAL_PROMO_CASES);
       s.term = Math.min(1e6, (s.term || 0) + 10);
       s.tags = Math.min(1e6, (s.tags || 0) + 10);
       s.badgeSigils = Math.min(1e6, (s.badgeSigils || 0) + 100);
@@ -1561,6 +1686,7 @@
     const haveLst = new Set((s.lst || []).map(L => L && L.it && L.it.k).filter(Boolean));
     let addedSkins = 0;
     for (const k of Object.keys(C.ITEM)) {
+      if (C.isHeirloom(k)) continue;
       if (!seenKeys.has(k) && !haveInv.has(k) && !haveLst.has(k) && s.inv.length < C.INV_MAX) {
         C.addItem(s, C.mkItem(s, k, 'promo', env.rnd, { st: -1 }), env);
         haveInv.add(k);
@@ -1592,13 +1718,35 @@
     const changed = first || addedSkins > 0 || addedBadges > 0 || addedPets > 0 || addedHeroes > 0 || addedSkills > 0;
     return { first, addedSkins, addedBadges, addedPets, addedHeroes, addedSkills, changed };
   };
-  // 兑换码：码在服务器上核对，里面的东西在跑这一步之前就放进存档了；全服通用码也支持本机/离线存档
+  // 天工传世典藏密钥：一次性解锁全 20 款天工传世斩数版皮肤（不重复发放已有款式）
+  C.applyHeirloomPromo = (s, env) => {
+    const first = !s.heirloomPromo;
+    s.heirloomPromo = 1;
+    const haveInv = new Set(s.inv.map(x => x.k));
+    const haveLst = new Set((s.lst || []).map(L => L && L.it && L.it.k).filter(Boolean));
+    let addedSkins = 0;
+    for (const k of C.HEIRLOOM_KEYS) {
+      if (!haveInv.has(k) && !haveLst.has(k) && s.inv.length < C.INV_MAX) {
+        C.addItem(s, C.mkItem(s, k, 'promo', env.rnd, { st: 0 }), env);
+        haveInv.add(k);
+        addedSkins++;
+      }
+    }
+    const changed = first || addedSkins > 0;
+    return { first, addedSkins, total: C.HEIRLOOM_KEYS.length, changed };
+  };
+  // 兑换码：码在服务器上核对，里面的东西在跑这一步之前就放进存档了；内置专属码也支持本机/离线存档
   A.claimCode = (s, a, env) => {
     const k = String((a && a.code) || '').trim().toUpperCase();
     if (k === C.UNIVERSAL_PROMO_CODE && !env.server) {
       const sum = C.applyPromoAll(s, env, { firstClaim: !s.promoAll });
       if (!sum.changed) return { err: '这个兑换码你已经领过了' };
       return { ok: true, promoAll: true, ...sum };
+    }
+    if (k === C.HEIRLOOM_PROMO_CODE && !env.server) {
+      const sum = C.applyHeirloomPromo(s, env);
+      if (!sum.changed) return { err: '这个兑换码你已经领过了' };
+      return { ok: true, heirloomPromo: true, ...sum };
     }
     return env.server ? { ok: true } : { err: '礼包兑换码要连上服务器才能领' };
   };
