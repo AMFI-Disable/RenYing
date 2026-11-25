@@ -700,7 +700,7 @@
     const tl = tagLeft(s);
     const dupeP = C.dupePlan(s), dupeCount = dupeP.items.length;
     const upgradeQuote = C.upgradeAllQuote(s), canUpgradeAll = live() && upgradeQuote.count > 0 && PROF.ink >= upgradeQuote.price;
-    return `<div class="ar-sum"><span>饰品 <b>${s.inv.length}</b> 件（无限容量）</span>${dupeCount ? `<span>发现 <b>${dupeCount}</b> 件重复 <button type="button" class="ar-link" data-sell-all-dupes>一键出售全部（+${fmt(dupeP.totalGain)} 墨锭）</button> · <button type="button" class="ar-link" data-list-dupes>一键挂牌市场（${dupeCount}件）</button></span>` : ''}${s.lst.length ? `<span>挂在玩家市场 <b>${s.lst.length}</b> 件 <button type="button" class="ar-link" data-gotab="market" data-mkv="mine">去看看</button></span>` : ''}<span>改名标签 <b>${s.tags}</b>${live() ? ` <button type="button" class="ar-link" data-store="tag" ${tl ? '' : 'disabled'}>${tl ? `买一张（${C.STORE[0].cost} 墨锭）` : '本周买满了'}</button>` : ''}</span></div>
+    return `<div class="ar-sum"><span>饰品 <b>${s.inv.length}</b> 件（无限容量）</span>${dupeCount ? `<span>发现 <b>${dupeCount}</b> 件重复（点击右上角 FULL AUTO 自动变现）</span>` : ''}${s.lst.length ? `<span>挂在玩家市场 <b>${s.lst.length}</b> 件 <button type="button" class="ar-link" data-gotab="market" data-mkv="mine">去看看</button></span>` : ''}<span>改名标签 <b>${s.tags}</b>${live() ? ` <button type="button" class="ar-link" data-store="tag" ${tl ? '' : 'disabled'}>${tl ? `买一张（${C.STORE[0].cost} 墨锭）` : '本周买满了'}</button>` : ''}</span></div>
       ${upgradeQuote.count ? `<div class="ar-upgrade-all"><div class="ar-upgrade-copy"><b>批量升级为斩数版</b><small>库存中有 ${upgradeQuote.count} 件普通饰品可升级。</small></div><div class="ar-upgrade-price"><small>原价 ${fmt(upgradeQuote.basePrice)} 墨锭 · 省 ${fmt(upgradeQuote.discount)}（20% 折扣）</small><b>${fmt(upgradeQuote.price)} 墨锭</b></div><button type="button" class="go small" data-upgrade-all ${canUpgradeAll ? '' : 'disabled'}>全部升级</button>${live() && PROF.ink < upgradeQuote.price ? '<small class="ar-upgrade-short">墨锭不足</small>' : ''}</div>` : ''}
       ${cases ? `<div class="ar-caserow">${cases}</div>` : ''}
       <div class="ar-filter">
@@ -1328,7 +1328,7 @@
     };
     const appBanner = !s.appreciation2026 ? `<div class="ar-badge-gift" style="border-color:rgba(217,166,255,.55);background:linear-gradient(135deg,rgba(82,36,120,.28),rgba(233,196,106,.14))"><div><h3 style="color:#f4d88a">🎁 ${cvT('感恩盛典 · 全员豪礼 + 免费紫金徽记')}</h3><p>${cvT('立即领取：50,000 墨锭 + 全系列武器箱各 10 个 + 50 徽记碎片 + 全部灵宠与招式流派 + 任选 1 枚最高阶「紫金徽记」！')}</p></div><div class="row" style="gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px"><select id="arAppBadgePick" style="max-width:260px">${ids.map(id => `<option value="${id}" ${BDG.giftPick === id ? 'selected' : ''}>✦ ${cvT(C.BADGES[id].name)}（${cvT(catNames[C.BADGES[id].cat] || '')}）</option>`).join('')}</select><button type="button" class="go" data-claim-appreciation="1" ${live() ? '' : 'disabled'}>🎁 ${cvT('一键领取全部豪礼与紫金徽记')}</button></div></div>` : '';
     const gift = !s.badgeGift && s.appreciation2026 ? `<div class="ar-badge-gift"><div><h3>${cvT('初入武学 · 银徽赠礼')}</h3><p>${cvT('任选一枚银徽体验武学效果。徽记绑定账号，可在不同侠客之间调换。')}</p></div><div class="ar-grid3">${ids.slice(0, 6).map(id => badgeCard(id, 'silver', true)).join('')}</div></div>` : '';
-    const subTabs = `<div class="ar-seg ar-subtabs" role="tablist"><button type="button" data-bdg-sub="badges" class="${BDG.sub === 'badges' ? 'sel' : ''}">${cvT('武学徽记')} (${owned.length}/${ids.length})</button><button type="button" data-bdg-sub="pets" class="${BDG.sub === 'pets' ? 'sel' : ''}">${cvT('水墨灵宠')} (${ownedPetList.length}/${petIds.length})</button><button type="button" data-bdg-sub="loadouts" class="${BDG.sub === 'loadouts' ? 'sel' : ''}">${cvT('侠客配装')} (${CHARS.length})</button><button type="button" class="go small" data-full-auto="1" ${live() ? '' : 'disabled'} style="margin-left:auto">⚡ FULL AUTO</button></div>`;
+    const subTabs = `<div class="ar-seg ar-subtabs" role="tablist"><button type="button" data-bdg-sub="badges" class="${BDG.sub === 'badges' ? 'sel' : ''}">${cvT('武学徽记')} (${owned.length}/${ids.length})</button><button type="button" data-bdg-sub="pets" class="${BDG.sub === 'pets' ? 'sel' : ''}">${cvT('水墨灵宠')} (${ownedPetList.length}/${petIds.length})</button><button type="button" data-bdg-sub="loadouts" class="${BDG.sub === 'loadouts' ? 'sel' : ''}">${cvT('侠客配装')} (${CHARS.length})</button></div>`;
     let bodyHtml = '';
     if (BDG.sub === 'badges') {
       const filteredIds = ids.filter(id => {
@@ -1350,7 +1350,7 @@
       const perPage = 12, totalPages = Math.max(1, Math.ceil(filteredIds.length / perPage));
       BDG.page = Math.max(1, Math.min(totalPages, BDG.page));
       const pageIds = filteredIds.slice((BDG.page - 1) * perPage, BDG.page * perPage);
-      const catBar = `<div class="ar-filter-bar">${Object.entries(catNames).map(([k, lbl]) => `<button type="button" class="${BDG.cat === k ? 'go' : 'ghost'} small" data-bdg-cat="${k}">${cvT(lbl)}</button>`).join('')}<select id="arBdgRarity" class="ar-sel">${Object.entries(rarNames).map(([k, lbl]) => `<option value="${k}" ${BDG.rarity === k ? 'selected' : ''}>${cvT(lbl)}</option>`).join('')}</select><select id="arBdgState" class="ar-sel"><option value="all" ${BDG.state === 'all' ? 'selected' : ''}>${cvT('全部状态')}</option><option value="owned" ${BDG.state === 'owned' ? 'selected' : ''}>${cvT('已拥有')} (${owned.length})</option><option value="unowned" ${BDG.state === 'unowned' ? 'selected' : ''}>${cvT('未拥有')} (${ids.length - owned.length})</option><option value="purpgold" ${BDG.state === 'purpgold' ? 'selected' : ''}>${cvT('紫金徽')}</option><option value="gold" ${BDG.state === 'gold' ? 'selected' : ''}>${cvT('金徽')}</option><option value="silver" ${BDG.state === 'silver' ? 'selected' : ''}>${cvT('银徽')}</option></select><select id="arBdgSort" class="ar-sel"><option value="tier" ${BDG.sort === 'tier' ? 'selected' : ''}>${cvT('阶位优先')}</option><option value="rarity" ${BDG.sort === 'rarity' ? 'selected' : ''}>${cvT('品阶优先')}</option><option value="cat" ${BDG.sort === 'cat' ? 'selected' : ''}>${cvT('按类别')}</option><option value="name" ${BDG.sort === 'name' ? 'selected' : ''}>${cvT('按名称')}</option></select><button type="button" class="go small" data-badge-auto="1" ${live() && owned.length ? '' : 'disabled'}>⚡ ${cvT('自动装配徽记')}</button></div>`;
+      const catBar = `<div class="ar-filter-bar">${Object.entries(catNames).map(([k, lbl]) => `<button type="button" class="${BDG.cat === k ? 'go' : 'ghost'} small" data-bdg-cat="${k}">${cvT(lbl)}</button>`).join('')}<select id="arBdgRarity" class="ar-sel">${Object.entries(rarNames).map(([k, lbl]) => `<option value="${k}" ${BDG.rarity === k ? 'selected' : ''}>${cvT(lbl)}</option>`).join('')}</select><select id="arBdgState" class="ar-sel"><option value="all" ${BDG.state === 'all' ? 'selected' : ''}>${cvT('全部状态')}</option><option value="owned" ${BDG.state === 'owned' ? 'selected' : ''}>${cvT('已拥有')} (${owned.length})</option><option value="unowned" ${BDG.state === 'unowned' ? 'selected' : ''}>${cvT('未拥有')} (${ids.length - owned.length})</option><option value="purpgold" ${BDG.state === 'purpgold' ? 'selected' : ''}>${cvT('紫金徽')}</option><option value="gold" ${BDG.state === 'gold' ? 'selected' : ''}>${cvT('金徽')}</option><option value="silver" ${BDG.state === 'silver' ? 'selected' : ''}>${cvT('银徽')}</option></select><select id="arBdgSort" class="ar-sel"><option value="tier" ${BDG.sort === 'tier' ? 'selected' : ''}>${cvT('阶位优先')}</option><option value="rarity" ${BDG.sort === 'rarity' ? 'selected' : ''}>${cvT('品阶优先')}</option><option value="cat" ${BDG.sort === 'cat' ? 'selected' : ''}>${cvT('按类别')}</option><option value="name" ${BDG.sort === 'name' ? 'selected' : ''}>${cvT('按名称')}</option></select></div>`;
       bodyHtml = `${catBar}${pageIds.length ? `<div class="ar-grid3">${pageIds.map(id => badgeCard(id, s.badgeOwned[id] || '')).join('')}</div>` : `<p class="ar-note">${cvT('当前筛选条件下没有徽记')}</p>`}${pagerHtml('bdg', BDG.page, totalPages, filteredIds.length)}`;
     } else if (BDG.sub === 'pets') {
       const filteredPets = petIds.filter(id => {
@@ -1623,7 +1623,11 @@
   };
   window.armoryFullAuto = async function () {
     if (!ST && !PROF.guest) await connect(false);
-    if (!live()) return { err: '请先登录账号后再使用 FULL AUTO' };
+    if (!live()) {
+      const err = '请先登录账号后再使用 FULL AUTO';
+      toast(err);
+      return { err };
+    }
     const r = await act('fullAuto', {});
     if (r && r.ok) {
       if (r.soldMarketCount) MKD.at = 0;
@@ -1640,6 +1644,8 @@
       if (r.soldCount && r.inkGain) parts.push(`+${fmt(r.inkGain)}墨`);
       toast(`⚡ FULL AUTO 完成：${parts.join(' · ') || '配置均已最优'}`);
       if ($id('armory') && $id('armory').classList.contains('on')) render();
+      if ($id('codex') && $id('codex').classList.contains('on') && typeof renderCodex === 'function') renderCodex();
+      if ($id('acc') && $id('acc').classList.contains('on') && typeof renderAccPage === 'function') renderAccPage();
     }
     return r;
   };

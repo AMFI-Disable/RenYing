@@ -1,9 +1,10 @@
 // ===========================================================================
-// 持久化 AI 玩家系统：100 个独立 AI 账号、UTC+8 个体作息与昼夜周期（常驻 20~30 人在线）、
+// 持久化 AI 玩家系统：500 个独立 AI 账号、UTC+8 个体作息与昼夜周期（约 75~155 人动态在线）、
 // 会话与休息节律、高比例 AI 专属匹配/排位、模式/侠客/流派偏好、长期行为演化、
 // 受保护的市场参与、真人与 AI 严格区分及管理接口
 // ===========================================================================
-const AI_USERNAMES_100 = [
+const AI_USERNAMES_500 = [
+  // 1-100（保留既有 100 位 AI 昵称与身份兼容）
   '6767', '看见你', '不吃香菜', '别打我', 'xiaoming9', 'kk0812', '0419', '晚安玛卡巴卡', 'linyi7', 'yz_07',
   '8823', '吃口西瓜', 'chen77', '就打一把', 'k792', '再打一局就睡', 'skycn', 'momo酱', 'm0x3', '菜鸟报道',
   'zerok', '阿泽', '9527x', '路过打酱油', 'nova23', '小安', 'a2048', '喝杯奶茶', 'kuro7', '南风',
@@ -14,6 +15,50 @@ const AI_USERNAMES_100 = [
   'qi99', '暮色', '睡前一把', 'fengx', '青衫', '点错了', '阿宁', '竹影', '慢慢打', '阿澈',
   '墨染', '发呆中', '小满', '寒鸦', '我试试', '知秋', '惊鸿', '拾光', '远山', '望舒',
   '落雪', '晴岚', '松间', '江枫', '渔火', '清欢', '岁安', '长安客', '渡口', '听雨',
+  // 101-200（日常搞笑 / 游戏实况 / 饮品美食风格）
+  '可乐加冰', '起早好难', '今天吃啥', '摸鱼小能手', '困死了', '别抢人头', '稳住能赢', '再来亿把', '有点东西', '手滑了',
+  '卡成PPT', '橘子汽水', '柠檬不酸', '西瓜霜', '抹茶拿铁', '芋泥波波', '冰美式续命', '脆脆鲨', '小熊软糖', '芝士焗饭',
+  '烤冷面加蛋', '煎饼果子', '螺蛳粉真香', '奶茶三分糖', '深夜放毒', '早睡早起', '失眠选手', '周末不上班', '放假倒计时', '作业没写完',
+  '体育生路过', '网吧五连坐', '宿舍断电了', '外卖到了', '我先撤了', '别追我呀', '救救孩子', '轻点打', '放过我吧', '我是人机吗',
+  '键盘冒烟', '鼠标没电', '手感火热', '今天必胜', '连败终结者', '上分好难', '掉段专家', '守门员', '混分巨兽', '躺赢选手',
+  '带带我', '大佬求带', '萌新求饶', '刚入坑', '回坑老登', '养老玩家', '佛系对决', '快乐就完事', '输赢无所谓', '纯路人',
+  '吃瓜群众', '前排围观', '瓜子饮料', '小板凳', '干饭人', '炫完这顿', '饿了先下', '泡面好了', '加根火腿', '多放香菜',
+  '不吃葱姜', '微辣就行', '特辣挑战', '甜豆腐脑', '咸粽子党', '冰阔落', '旺仔牛奶', '椰树椰汁', '蜜桃乌龙', '生椰拿铁',
+  '芝士莓莓', '杨枝甘露', '烧仙草', '双皮奶', '蛋挞真香', '菠萝包', '小笼包', '生煎包', '锅贴', '牛肉面加肉',
+  '黄焖鸡', '沙县大酒店', '兰州拉面', '重庆小面', '热干面', '肠粉加蛋', '叉烧饭', '煲仔饭', '麻辣烫', '火锅底料',
+  // 201-300（英文 / 拼音 / 数字混合现代网名）
+  'keke99', 'milo07', 'zhao88', 'li_0421', 'ryan_x', 'yuki_cn', 'saki23', 'neo_01', 'jay996', 'chen_k',
+  'wuyi77', 'lin_09', 'xu_2025', 'he_08', 'zhou_y', 'tang_03', 'deng_x', 'peng_9', 'luo_05', 'gu_777',
+  'song_cn', 'han_02', 'wei_88', 'xie_06', 'pan_11', 'du_404', 'cao_23', 'yuan_9', 'tian_07', 'ren_66',
+  'jiang_x', 'fan_01', 'fang_88', 'shi_09', 'yao_24', 'tan_77', 'liao_5', 'zou_03', 'xiong_9', 'jin_04',
+  'lu_777', 'hao_12', 'kong_x', 'bai_08', 'cui_21', 'kang_6', 'mao_05', 'qiu_99', 'qin_07', 'meng_x',
+  '1024', '2077', '31415', '7788', '9960', '5201', '1314x', '0808', '1122', '6688x',
+  '4399x', '7777a', '0019', '2333x', '8080', '9090', '1999x', '2004k', '2006y', '2008z',
+  '0512', '0721', '0918', '1001', '1225', '0601', '0314', '0815', '0909', '0214',
+  '3690', '4567', '5678', '8910', '2468', '1357', '7410', '8520', '9630', '1470',
+  'alex_z', 'eric09', 'max77', 'leo_04', 'sam_cn', 'tony8', 'vivi22', 'lulu06', 'nana_k', 'coco91',
+  // 301-400（文艺 / 治愈 / 简短自然中文昵称）
+  '等风来', '雾散了', '星河滚烫', '人间理想', '山河故人', '月色真美', '晚风温柔', '落日余晖', '海边吹风', '云端漫步',
+  '南巷清风', '北岛微光', '西楼听雪', '东篱采菊', '长安不夜', '江南烟雨', '白茶清欢', '素年锦时', '浮生若梦', '浅夏微凉',
+  '初秋晚风', '冬日暖阳', '春山可望', '明月几时', '清风徐来', '水波不兴', '山月不知', '林深见鹿', '海蓝见鲸', '梦醒见你',
+  '温柔本身', '心动频率', '浪漫至死', '星辰大海', '日落大道', '橘色海面', '粉红晚霞', '蓝调时刻', '凌晨三点', '四月樱花',
+  '五月微风', '六月蝉鸣', '七月流火', '八月桂花', '九月开学', '十月金秋', '十一月雪', '十二月诗', '阿宇', '阿轩',
+  '阿然', '阿乐', '阿阳', '阿杰', '阿豪', '阿凯', '阿俊', '阿明', '阿亮', '阿伟',
+  '小七', '小九', '小十', '小鱼', '小鹿', '小猫', '小狗', '小熊', '小兔', '小鸟',
+  '大白', '大橘', '大黑', '大黄', '团子', '丸子', '布丁', '泡芙', '麻薯', '奶盖',
+  '豆包', '汤圆', '年糕', '月饼', '粽子', '饺子', '包子', '馒头', '花卷', '油条',
+  '豆浆', '米粥', '小菜', '花生', '瓜子', '核桃', '杏仁', '腰果', '碧根果', '夏威夷果',
+  // 401-500（武侠意境 / 现代二次元 / 酷炫短ID混合）
+  '一剑封喉', '无影脚', '铁布衫', '金钟罩', '凌波微步', '降龙掌', '独孤求败', '东方不败', '风清扬', '令狐冲',
+  '白衣卿相', '青衣剑客', '红尘客栈', '醉卧沙场', '笑傲江湖', '侠客行', '仗剑天涯', '踏雪无痕', '御剑乘风', '剑指苍穹',
+  '破晓之光', '暗夜行者', '极光掠影', '风暴之眼', '雷霆万钧', '烈焰焚天', '寒冰射手', '影流之主', '疾风剑豪', '无双剑姬',
+  'zoe_98', 'mia_03', 'ivy_77', 'eva_05', 'ada_19', 'ray_88', 'ben_07', 'dan_42', 'ian_11', 'jay_06',
+  'kyle_x', 'owen9', 'luke_z', 'mark7', 'paul_c', 'carl_8', 'alan_0', 'adam_3', 'noah_5', 'liam_2',
+  'chichi', 'dudu99', 'fafa88', 'gugu07', 'haha23', 'jiji01', 'kaka77', 'lala05', 'mama_x', 'nini08',
+  'pipi66', 'qiqi12', 'ruru09', 'sisi04', 'titi11', 'vava22', 'wawa33', 'xixi44', 'yaya55', 'zizi66',
+  '阿离', '阿瑶', '阿昭', '阿辞', '阿许', '阿言', '阿默', '阿白', '阿青', '阿墨',
+  '听风吟', '看云卷', '观沧海', '望星空', '赏明月', '品香茗', '抚古琴', '吹玉笛', '绘丹青', '书狂草',
+  '不负韶华', '未来可期', '来日方长', '平安喜乐', '万事胜意', '岁岁年年', '朝朝暮暮', '星光不负', '山海可平', '江湖再见',
 ];
 
 const AI_BEHAVIORS = ['aggressive', 'balanced', 'defensive', 'tactical'];
@@ -24,7 +69,7 @@ const AI_MODES = ['quickmatch', 'ranked', '1v1', '2v2', 'tag3', 'melee', 'ctf', 
 const AI_MOODS = ['focused', 'relaxed', 'competitive', 'exploratory'];
 const AI_MARKET_MAX_SPENT = 2500;
 const AI_MARKET_MAX_LIST = 3;
-const AI_TOTAL_COUNT = AI_USERNAMES_100.length;
+const AI_TOTAL_COUNT = AI_USERNAMES_500.length;
 let AI_LAST_TICK = 0;
 
 // 每种作息类型的基础活动时段（UTC+8 北京时间，支持跨午夜如 [21.0, 26.8]）与会话/休息时长范围（分钟）
@@ -58,13 +103,13 @@ function aiHash(str) {
   return (h >>> 0) / 4294967296;
 }
 
-async function aiBatchChunked(env, stmts, chunkSize = 40) {
+async function aiBatchChunked(env, stmts, chunkSize = 50) {
   for (let i = 0; i < stmts.length; i += chunkSize) {
     await env.DB.batch(stmts.slice(i, i + chunkSize));
   }
 }
 
-// 为 100 位 AI 生成各具特色的种子配置（保留 ai_01..ai_25 兼容旧库，扩展至 ai_100）
+// 为 500 位 AI 生成各具特色的种子配置（保留 ai_01..ai_100 兼容旧库，扩展至 ai_500）
 const AI_CHRONO_RING = [
   'evening', 'early_bird', 'student', 'daytime', 'casual', 'night_owl',
   'evening', 'student', 'night_owl', 'daytime', 'evening', 'early_bird',
@@ -72,7 +117,7 @@ const AI_CHRONO_RING = [
   'early_bird', 'student',
 ];
 
-const AI_PLAYER_SEEDS = AI_USERNAMES_100.map((username, i) => {
+const AI_PLAYER_SEEDS = AI_USERNAMES_500.map((username, i) => {
   const uid = i < 9 ? `ai_0${i + 1}` : `ai_${i + 1}`;
   const behavior = AI_BEHAVIORS[Math.floor(aiHash(uid + ':beh') * AI_BEHAVIORS.length)];
   const chronotype = AI_CHRONO_RING[i % AI_CHRONO_RING.length];
@@ -118,21 +163,21 @@ function aiDayCycleFactor(hourFloat) {
   return 0.34;
 }
 
-// 按 UTC+8 昼夜节律动态计算目标在线人数（整体稳定在约 20~30 人，昼夜自然起伏）
+// 按 UTC+8 昼夜节律动态计算 500 账号池的目标在线人数（整体稳定在约 75~155 人，昼夜自然起伏，绝不全部同时在线）
 function aiTargetOnlineCount(bj, activeCount) {
   const h = bj.hourFloat;
   let base;
-  if (h >= 2 && h < 6) base = 19;        // 深夜低谷：约 18~21 人（夜猫子为主）
-  else if (h >= 6 && h < 9) base = 21;   // 清晨渐起：约 20~23 人
-  else if (h >= 9 && h < 12) base = 23;  // 上午活跃：约 22~25 人
-  else if (h >= 12 && h < 14) base = 25; // 午间小峰：约 24~27 人
-  else if (h >= 14 && h < 18) base = 24; // 午后平稳：约 23~26 人
-  else if (h >= 18 && h < 23.2) base = 28; // 晚间高峰：约 27~30 人
-  else base = 22;                        // 午夜回落：约 21~24 人
-  if (bj.isWeekend) base += 1;
-  // 按 15 分钟刻度加 ±1 人的自然微幅波动，避免数字死板不变
-  const wave = Math.round((aiHash(`wave:${bj.day}:${Math.floor(h * 4)}`) - 0.5) * 2);
-  return Math.max(0, Math.min(activeCount, Math.max(18, Math.min(30, base + wave))));
+  if (h >= 2 && h < 6) base = 82;         // 深夜低谷：约 78~86 人（夜猫子为主）
+  else if (h >= 6 && h < 9) base = 96;    // 清晨渐起：约 92~100 人
+  else if (h >= 9 && h < 12) base = 112;  // 上午活跃：约 108~116 人
+  else if (h >= 12 && h < 14) base = 124; // 午间小峰：约 120~128 人
+  else if (h >= 14 && h < 18) base = 118; // 午后平稳：约 114~122 人
+  else if (h >= 18 && h < 23.2) base = 142; // 晚间高峰：约 138~148 人
+  else base = 104;                        // 午夜回落：约 100~108 人
+  if (bj.isWeekend) base += 6;
+  // 按 15 分钟刻度加 ±4 人的自然微幅波动，避免数字死板不变
+  const wave = Math.round((aiHash(`wave:${bj.day}:${Math.floor(h * 4)}`) - 0.5) * 8);
+  return Math.max(0, Math.min(activeCount, Math.max(70, Math.min(160, base + wave))));
 }
 
 function aiBuildSchedule(uid, chronotype, seedIdx) {
@@ -269,13 +314,14 @@ async function ensureAiPlayers(env, now) {
   const sampleKeys = Object.keys(C.ITEM || {}).slice(0, 16);
   const needRename = AI_PLAYER_SEEDS.some(([uid, uname]) => byUid[uid] && byUid[uid].username !== uname);
   let humanNames = null;
-  if (needRename) {
+  if (needRename || rows.length < AI_TOTAL_COUNT) {
     const hRows = (await env.DB.prepare("SELECT LOWER(username) AS u FROM users WHERE password_algo != 'ai-bot-locked'").all()).results || [];
     humanNames = new Set(hRows.map(x => x.u));
   }
 
   for (let i = 0; i < AI_PLAYER_SEEDS.length; i++) {
-    const [uid, username, profile, activity, chronotype, modes, heroes] = AI_PLAYER_SEEDS[i];
+    const [uid, baseUsername, profile, activity, chronotype, modes, heroes] = AI_PLAYER_SEEDS[i];
+    const username = (humanNames && humanNames.has(baseUsername.toLowerCase())) ? `${baseUsername}_${i + 1}` : baseUsername;
     const schedule = aiBuildSchedule(uid, chronotype, i);
     const prefs = aiBuildPrefs(modes, heroes, profile, uid);
     const evo = aiBuildEvolution(prefs.heroes, bj.day, uid);
@@ -284,7 +330,7 @@ async function ensureAiPlayers(env, now) {
       const inWin = aiInScheduleWindow(schedule, bj, uid);
       const initR = aiHash(`${uid}:init:${bj.day}:${bj.hour}`);
       let initStatus = 'offline', sessionUntil = 0, restUntil = 0, curMode = '', curHero = '';
-      // 仅在目标在线人数范围内初始化在线状态，避免 100 个 AI 同时上线
+      // 仅在目标在线人数范围内初始化在线状态，避免 500 个 AI 同时上线
       if (onlineAssigned < targetOnline && ((inWin && initR < 0.72) || initR < 0.16)) {
         onlineAssigned++;
         const sLen = Math.max(8, Math.round((schedule.sessionMin[0] + aiHash(uid + ':slen0') * (schedule.sessionMin[1] - schedule.sessionMin[0])) * (0.35 + aiHash(uid + ':srem0') * 0.65)));
@@ -344,7 +390,7 @@ async function ensureAiPlayers(env, now) {
       }
     }
   }
-  if (stmts.length) await aiBatchChunked(env, stmts, 40);
+  if (stmts.length) await aiBatchChunked(env, stmts, 50);
 }
 
 async function aiPresenceCounts(env, now) {
@@ -502,10 +548,10 @@ async function aiTickSimulation(env, now, opts = {}) {
     });
   }
 
-  // 第二阶段：柔和的人数节律调节（将同时在线 AI 稳定在 UTC+8 目标区间约 20~30 人，避免全员同时在线或全员离线）
+  // 第二阶段：柔和的人数节律调节（将同时在线 AI 稳定在 UTC+8 目标区间约 75~155 人，避免全员同时在线或全员离线）
   const onlineList = plans.filter(p => p.active && AI_ONLINE_STATUSES.includes(p.status));
-  const minBand = Math.max(0, targetOnline - 2);
-  const maxBand = Math.min(activeCount, targetOnline + 2);
+  const minBand = Math.max(0, targetOnline - 6);
+  const maxBand = Math.min(activeCount, targetOnline + 6);
 
   if (onlineList.length > maxBand) {
     // 优先让不在活跃窗口内、或会话即将结束的 AI 自然进入休息/离线
@@ -610,7 +656,7 @@ async function aiTickSimulation(env, now, opts = {}) {
       )
     );
   }
-  if (stmts.length) await aiBatchChunked(env, stmts, 40);
+  if (stmts.length) await aiBatchChunked(env, stmts, 50);
   if (opts.market !== false) {
     await aiMarketStep(env, now, bj.day, opts.forceMarket ? null : marketEligibleUids);
   }

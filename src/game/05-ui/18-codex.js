@@ -45,7 +45,7 @@ function renderCodex() {
   const ownedCount = bsTop ? Object.keys(bsTop.owned || {}).length : 0;
   const archCounts = Object.fromEntries(Object.keys(HERO_ARCH_NAMES).map(k => [k, k === 'all' ? CHARS.length : CHARS.filter(x => heroArchetype(x.id) === k).length]));
   const archBar = `<div class="arch-bar">${Object.entries(HERO_ARCH_NAMES).map(([k, lbl]) => `<button type="button" class="arch-pill${cxArch === k ? ' sel' : ''}" data-arch="${k}">${lbl}<small>${archCounts[k]}</small></button>`).join('')}</div>`;
-  const globalActions = bsTop ? `<div class="cx-global-actions"><button type="button" class="go small cx-global-auto" data-cx-global-auto="1" title="根据侠客流派与徽记阶位，一键智能装配全部已拥有徽记">⚡ 一键智能装配徽记${ownedCount ? ` (${ownedCount})` : ''}</button>${!bsTop.appreciationClaimed ? '<button type="button" class="ghost small cx-global-app" data-cx-global-app="1">🎁 领紫金豪礼</button>' : ''}</div>` : '';
+  const globalActions = bsTop && !bsTop.appreciationClaimed ? `<div class="cx-global-actions"><button type="button" class="ghost small cx-global-app" data-cx-global-app="1">🎁 领紫金豪礼</button></div>` : '';
   const topRow = `<div class="cx-top-bar">${archBar}${globalActions}</div>`;
   const heroBtns = CHARS.map((x, i) => {
     if (cxArch !== 'all' && heroArchetype(x.id) !== cxArch) return '';
@@ -315,13 +315,7 @@ $id('cxSkins').addEventListener('click', async e => {
 $id('cxTabs').addEventListener('click', async e => {
   const b = e.target.closest('button');
   if (!b) return;
-  if (b.dataset.cxGlobalAuto) {
-    if (typeof window.armoryAutoAssignBadges === 'function') {
-      await window.armoryAutoAssignBadges();
-      renderCodex(); SFX.slice();
-    }
-    return;
-  }
+
   if (b.dataset.cxGlobalApp) {
     if (typeof window.armoryClaimAppreciation === 'function') {
       await window.armoryClaimAppreciation('flowing');

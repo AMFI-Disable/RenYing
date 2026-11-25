@@ -1399,7 +1399,7 @@ async function vAiPlayers() {
   const nowMs = Date.now();
   const fmtWin = sc => ((sc && sc.windows) || []).map(([s, e]) => `${String(Math.floor(s) % 24).padStart(2, '0')}:00–${String(Math.floor(e) % 24).padStart(2, '0')}:00`).join(' / ') || '—';
   const remMin = ts => ts > nowMs ? Math.max(1, Math.round((ts - nowMs) / 60e3)) + 'm' : '—';
-  return H`<div class="card"><h2>持久化 AI 玩家生态（100 账号 · 常驻 20~30 在线 · 仅限 AI 互相对战，绝不进入真人匹配）</h2>
+  return H`<div class="card"><h2>持久化 AI 玩家生态（500 账号 · UTC+8 昼夜动态 75~155 在线 · 仅限 AI 互相对战，绝不进入真人匹配）</h2>
     <p class="hint">当前北京时间 <b>${String(c.beijingHour ?? 0).padStart(2, '0')}:${String(c.beijingMinute ?? 0).padStart(2, '0')}</b>（${phaseNames[c.dayPhase] || c.dayPhase || '—'}）。共维护 ${fmtN(allList.length)} 个独立 AI 账号，按 UTC+8 昼夜节律动态维持约 20~30 人在线，其余处于休息或离线状态（不计入在线人数）；在线 AI 重点参与 AI 专属「匹配」与「排位」，绝不进入人类匹配队列或排行榜。市场行为受参考价 0.75x~1.25x、自然间隔冷却及每日上限（${fmtN(r.maxDailySpent || 2500)} 墨锭 / ${r.maxDailyListed || 3} 单）保护。</p>
     <div class="tiles">
       ${tile('真人实时在线', hc.humanOnline || 0, `对战 ${fmtN(hc.humanPlaying || 0)} · 匹配 ${fmtN(hc.humanWaiting || 0)}`)}
@@ -1843,7 +1843,7 @@ const ACTS = {
   aitick: async b => {
     const hour = b.dataset.hour !== undefined ? Number(b.dataset.hour) : undefined;
     const title = hour !== undefined ? `按北京时间 ${String(hour).padStart(2, '0')}:00 推进一轮 AI 模拟` : '推进一轮 AI 生态模拟';
-    const a = await ask({ title, lines: ['将按 UTC+8 作息节律更新 100 位 AI 的在线/休息/匹配/排位状态，并在风控范围内执行市场试算'], whyInit: '人工触发 AI 生态演进', ok: '立即执行' });
+    const a = await ask({ title, lines: ['将按 UTC+8 作息节律更新 500 位 AI 的在线/休息/匹配/排位状态，并在风控范围内执行市场试算'], whyInit: '人工触发 AI 生态演进', ok: '立即执行' });
     if (a) await busy(b, async () => { await api('ai-players/update', { tick: true, withMarket: hour === undefined, simHour: hour, why: a.why }); toast('AI 生态已推进一轮'); render(); });
   },
   aipage: b => { S.aiPage = Math.max(0, (S.aiPage || 0) + (+b.dataset.dir || 0)); render(); },

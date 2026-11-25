@@ -822,13 +822,13 @@ section('人机验证（Turnstile）：没配置时完全跳过；配置了以�
   }
 }
 
-section('持久化 AI 玩家生态：100 账号、UTC+8 昼夜节律（20~30 在线）、高比例匹配/排位、会话休息与真人隔离');
+section('持久化 AI 玩家生态：500 账号、UTC+8 昼夜节律（75~155 在线）、高比例匹配/排位、会话休息与真人隔离');
 {
   const list0 = await adm('GET', '/api/admin/ai-players');
-  ok(list0.ok && Array.isArray(list0.list) && list0.list.length === 100, '初始化 100 个独立持久化 AI 账号', list0.list && list0.list.length);
+  ok(list0.ok && Array.isArray(list0.list) && list0.list.length === 500, '初始化 500 个独立持久化 AI 账号', list0.list && list0.list.length);
   const names = new Set(list0.list.map(x => x.username));
-  ok(names.size === 100 && names.has('6767') && names.has('看见你'), '100 个 AI 昵称互不重复且风格自然多样（含 6767、看见你 等）', names.size);
-  ok(list0.counts.aiOnline >= 16 && list0.counts.aiOnline <= 34 && list0.counts.aiOnline < 100, '初始即不会出现 100 位 AI 全部同时在线，稳定在约 20~30 人区间', list0.counts);
+  ok(names.size === 500 && names.has('6767') && names.has('看见你'), '500 个 AI 昵称互不重复且风格自然多样（含 6767、看见你 等）', names.size);
+  ok(list0.counts.aiOnline >= 65 && list0.counts.aiOnline <= 165 && list0.counts.aiOnline < 500, '初始即不会出现 500 位 AI 全部同时在线，稳定在约 75~155 人区间', list0.counts);
   const chronos = new Set(list0.list.map(x => x.chronotype));
   const styles = new Set(list0.list.map(x => x.behaviorProfile));
   ok(chronos.size >= 5 && styles.size === 4, 'AI 账号覆盖多种作息类型与全部 4 种行为流派', [[...chronos], [...styles]]);
@@ -839,7 +839,7 @@ section('持久化 AI 玩家生态：100 账号、UTC+8 昼夜节律（20~30 在
   const night2 = await adm('POST', '/api/admin/ai-players/update', { tick: true, simHour: 4.1, withMarket: false, why: '测试凌晨低谷2' });
   const peak = await adm('POST', '/api/admin/ai-players/update', { tick: true, simHour: 21, withMarket: false, why: '测试晚间高峰' });
   const peak2 = await adm('POST', '/api/admin/ai-players/update', { tick: true, simHour: 21.1, withMarket: false, why: '测试晚间高峰2' });
-  ok(night2.ok && peak2.ok && peak2.counts.aiOnline > night2.counts.aiOnline && night2.counts.aiOnline >= 16 && peak2.counts.aiOnline <= 34, 'UTC+8 昼夜周期生效：晚间高峰在线人数高于凌晨低谷，整体自然波动在 20~30 人附近', { night: night2.counts, peak: peak2.counts });
+  ok(night2.ok && peak2.ok && peak2.counts.aiOnline > night2.counts.aiOnline && night2.counts.aiOnline >= 65 && peak2.counts.aiOnline <= 165, 'UTC+8 昼夜周期生效：晚间高峰在线人数高于凌晨低谷，整体自然波动在 75~155 人附近', { night: night2.counts, peak: peak2.counts });
   ok(peak2.counts.aiPlaying % 2 === 0 && (peak2.counts.aiQuickmatch + peak2.counts.aiRanked) >= Math.floor(peak2.counts.aiOnline * 0.4), '在线 AI 高比例参与 AI 专属「匹配」与「排位」且成对匹配，绝不混入真人队列', peak2.counts);
 
   // 会话超时自动进入休息（resting）或离线（offline），且不计入 aiOnline

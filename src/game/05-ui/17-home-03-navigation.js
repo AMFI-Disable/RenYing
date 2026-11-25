@@ -153,6 +153,24 @@ function navTo(name) {
   openScreen(name);
 }
 for (const b of document.querySelectorAll('#topNav [data-nav]')) b.addEventListener('click', () => { if (b.dataset.nav === 'settings') secretSettingsClick(); SFX.slice && SFX.slice(); navTo(b.dataset.nav); });
+if ($id('topFullAutoBtn')) {
+  $id('topFullAutoBtn').addEventListener('click', async () => {
+    const btn = $id('topFullAutoBtn');
+    if (btn.disabled) return;
+    initAudio();
+    if (typeof window.armoryFullAuto !== 'function') { toast('武库系统尚未就绪，请稍后再试'); return; }
+    btn.disabled = true;
+    try {
+      const r = await window.armoryFullAuto();
+      if (r && r.err) toast(r.err);
+      renderTopNav();
+    } catch (err) {
+      toast((err && err.message) || '全自动优化失败');
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
 $id('helpTut').addEventListener('click', () => startTutorial(true));   // 帮助里的是完整教学（十一步）
 function renderTopNav() {
   const nav = $id('topNav');

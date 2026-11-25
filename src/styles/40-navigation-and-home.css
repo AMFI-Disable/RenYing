@@ -183,9 +183,12 @@
   .tn-icon { width: 38px; height: 38px; display: grid; place-items: center; border: 1px solid var(--line); background: transparent; color: rgba(236,232,225,.7); cursor: pointer; }
   .tn-icon svg { width: 18px; height: 18px; }
   .tn-icon:hover { color: #fff; border-color: rgba(236,232,225,.4); }
-  @media (max-width: 1100px) { .tn-ink { display: none; } .tn-tabs button { padding: 0 11px; font-size: 14px; letter-spacing: .06em; } .tn-tabs .tn-play { padding: 0 20px; } }
+  .tn-fullauto { height: 38px; padding: 0 13px; border: 1px solid rgba(233,196,106,.58); background: linear-gradient(135deg, rgba(233,196,106,.22), rgba(212,154,50,.12)); color: #ffe08a; font-family: var(--v-cond), var(--nav-serif); font-weight: 700; font-size: 13px; letter-spacing: .12em; cursor: pointer; white-space: nowrap; clip-path: polygon(0 0, 100% 0, 100% calc(100% - 7px), calc(100% - 7px) 100%, 0 100%); transition: background .15s, border-color .15s, color .15s, box-shadow .15s; }
+  .tn-fullauto:hover:not(:disabled) { background: linear-gradient(135deg, #e9c46a, #f3cf73); color: #161006; border-color: #ffe8a3; box-shadow: 0 0 18px rgba(233,196,106,.45); }
+  .tn-fullauto:disabled { opacity: .55; cursor: wait; }
+  @media (max-width: 1100px) { .tn-ink { display: none; } .tn-tabs button { padding: 0 11px; font-size: 14px; letter-spacing: .06em; } .tn-tabs .tn-play { padding: 0 20px; } .tn-fullauto { padding: 0 10px; font-size: 12px; letter-spacing: .08em; } }
   @media (max-width: 820px) { .tn-who { display: none; } .tn-en { display: none; } .tn-logo { padding: 0 18px 0 12px; } .tn-tabs { justify-content: flex-start; } }
-  @media (max-height: 520px) { :root { --nav-h: 46px; } .tn-mark { font-size: 22px; } .tn-player { height: 36px; } .tn-icon { width: 32px; height: 32px; } .tn-tabs .tn-play { margin: 6px 8px; } }
+  @media (max-height: 520px) { :root { --nav-h: 46px; } .tn-mark { font-size: 22px; } .tn-player { height: 36px; } .tn-icon { width: 32px; height: 32px; } .tn-fullauto { height: 32px; padding: 0 10px; font-size: 12px; } .tn-tabs .tn-play { margin: 6px 8px; } }
 
   /* ---------- 首页 ---------- */
   .home-scrim { position: absolute; inset: 0; pointer-events: none; background: linear-gradient(90deg, rgba(8,12,20,.78) 0%, rgba(8,12,20,.45) 34%, rgba(8,12,20,0) 60%), linear-gradient(0deg, rgba(8,12,20,.6), rgba(8,12,20,0) 30%); }

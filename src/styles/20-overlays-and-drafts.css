@@ -52,7 +52,8 @@
       column-gap: 36px;
       row-gap: 14px;
     }
-    .setlist > .keypanel {
+    .setlist > .keypanel,
+    .setlist > .keypanel-group {
       grid-column: 1 / -1;
     }
   }
@@ -405,10 +406,24 @@
 .tile.t-m:hover { transform: translateY(-2px); border-color: rgba(233,196,106,.4); background: rgba(255,255,255,.07); }
 .tile.t-m.active-demo { border-color: var(--p1); background: rgba(70,211,234,.12); box-shadow: 0 0 12px rgba(70,211,234,.3); }
 
-.keygrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin: 10px 0 12px; text-align: left; }
-.keyitem { background: rgba(255,255,255,.04); border: 1px solid var(--faint); border-radius: 8px; padding: 8px 10px; text-align: center; }
-.keyitem .kact { font-size: 12px; color: var(--dim); margin-bottom: 5px; display: block; }
-.keyitem button { width: 100%; font: 600 13px ui-monospace, Menlo, monospace; padding: 5px 8px; border-radius: 5px; cursor: pointer; background: rgba(0,0,0,.45); color: #8ff0ff; border: 1px solid var(--faint); transition: all .15s; }
-.keyitem button:hover { border-color: #8ff0ff; }
-.keyitem button.active { color: #e9c46a; border-color: #e9c46a; background: rgba(233,196,106,.15); animation: breath 1.2s infinite; }
+.keypanel { display: flex; flex-direction: column; gap: 10px; }
+.keypanel-head { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.keypanel-title { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+.keypanel-title b { font-family: var(--title); font-size: 17px; font-weight: 400; color: var(--gold); letter-spacing: .06em; }
+.keypanel-meta { font-size: 12px; color: var(--dim); }
+.keycat-tabs { display: flex; flex-wrap: wrap; gap: 6px; }
+.keycat-btn { display: inline-flex; align-items: center; gap: 5px; padding: 5px 11px; border-radius: 6px; border: 1px solid var(--faint); background: rgba(255,255,255,.03); color: var(--dim); font: 12.5px var(--body); cursor: pointer; transition: all .14s; }
+.keycat-btn small { font-size: 11px; opacity: .7; }
+.keycat-btn:hover { color: var(--ink); border-color: rgba(233,196,106,.45); }
+.keycat-btn.sel { color: #12101a; background: var(--gold); border-color: var(--gold); font-weight: 700; }
+.keygrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(175px, 1fr)); gap: 8px; margin: 2px 0 4px; text-align: left; }
+.keyitem { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: rgba(255,255,255,.035); border: 1px solid var(--faint); border-radius: 8px; padding: 7px 10px; transition: border-color .14s, background .14s; }
+.keyitem.is-custom { border-color: rgba(233,196,106,.42); background: rgba(233,196,106,.06); }
+.keyitem.is-rebinding { border-color: var(--gold); background: rgba(233,196,106,.12); }
+.keyitem .kact { font-size: 12.5px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.keyitem button { flex: none; min-width: 68px; font: 600 12.5px ui-monospace, Menlo, monospace; padding: 4px 8px; border-radius: 5px; cursor: pointer; background: rgba(0,0,0,.45); color: #8ff0ff; border: 1px solid var(--faint); transition: all .15s; text-align: center; }
+.keyitem button:hover { border-color: #8ff0ff; color: #fff; }
+.keyitem button.is-custom { color: #ffd166; border-color: rgba(233,196,106,.55); }
+.keyitem button.active { color: #e9c46a; border-color: #e9c46a; background: rgba(233,196,106,.18); animation: breath 1.2s infinite; }
+.keypanel-foot { margin: 2px 0 0; font-size: 12px; color: rgba(239,232,216,.52); }
 .task-go:hover { color: var(--p1); border-color: var(--p1); }

@@ -21,7 +21,6 @@ Object.assign(UI_COPY_EN, {
   "狂暴神通免禁用直选": "Frenzied powers, no bans, direct pick",
   "选定电脑境界后点击开启，进入点将台点选你的神魔出战侠客。": "Pick the AI difficulty and start, then choose your hero in the draft.",
   "切换架势": "Switch Stance",
-  "鼠标也能用：左键轻击与蓄力，右键腾空闪，左键加右键使远程招式": "The mouse works too: left click for light attacks and charging, right click for Aerial Flash, left plus right click for ranged moves",
   "敌方阵线": "Enemy Lineup",
   // 电脑难度（src/data/20-levels.js 的 desc 和 traits）
   "反应很慢（0.42~0.7 秒），很少格挡（15%），一套最多打 2 下，技能常常乱放，三成动作会失误。适合熟悉移动、按键手感和技能命中。": "Very slow reactions (0.42–0.7s), rarely guards (15%), combos of at most 2 hits, often wastes skills and fumbles three moves in ten. Good for learning movement, controls and landing skills.",

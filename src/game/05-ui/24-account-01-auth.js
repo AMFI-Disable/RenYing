@@ -298,38 +298,6 @@ $id('adPull').addEventListener('click', async () => {
   }
 });
 $id('adLogout').addEventListener('click', () => doLogout());
-if ($id('accFullAutoBtn')) {
-  $id('accFullAutoBtn').addEventListener('click', async () => {
-    const btn = $id('accFullAutoBtn'), msgEl = $id('adFullAutoMsg');
-    if (typeof window.armoryFullAuto !== 'function') {
-      if (msgEl) msgEl.textContent = '武库系统尚未就绪，请稍后再试';
-      return;
-    }
-    btn.disabled = true;
-    if (msgEl) msgEl.textContent = '正在执行 FULL AUTO 全自动优化与云端同步…';
-    try {
-      const r = await window.armoryFullAuto();
-      if (r && r.ok) {
-        const parts = [];
-        if (r.badges) parts.push(`徽记 ${r.badges} 位`);
-        if (r.skins) parts.push(`皮肤 ${r.skins} 位`);
-        if (r.pets) parts.push(`灵宠 ${r.pets} 位`);
-        if (r.stances) parts.push(`二式架势 ${r.stances} 位`);
-        if (r.skills) parts.push(`招式流派 ${r.skills} 项`);
-        if (r.soldCount) parts.push(`出售重复 ${r.soldCount} 件 (+${Number(r.inkGain || 0).toLocaleString()} 墨锭)`);
-        const summary = parts.length ? `✅ 优化完成：${parts.join(' · ')}` : '✅ 全部配置已是最优，无多余重复饰品';
-        if (msgEl) msgEl.textContent = summary;
-        renderAccPage();
-      } else {
-        if (msgEl) msgEl.textContent = (r && r.err) || '全自动优化未能完成';
-      }
-    } catch (e) {
-      if (msgEl) msgEl.textContent = (e && e.message) || '操作失败';
-    } finally {
-      btn.disabled = false;
-    }
-  });
-}
 if (window.CloudSave && CloudSave.onSyncChange) CloudSave.onSyncChange(() => { renderTopNav(); if ($id('acc').classList.contains('on')) renderAccSync(); });
 setInterval(() => { if ($id('acc').classList.contains('on')) renderAccSync(); }, 20000);
 async function doAcc(kind) {

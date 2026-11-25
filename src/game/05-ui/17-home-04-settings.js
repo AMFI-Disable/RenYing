@@ -25,52 +25,64 @@ const DISPLAY_PRESETS = {
   balanced: { quality: 'mid', fps: 120, bloom: 0.8, blur: true, vig: 0.5 },
   battery: { quality: 'low', fps: 60, bloom: 0.4, blur: false, vig: 0.2 }
 };
+const KEY_CATS = [
+  ['all', '全部'],
+  ['move', '移动与身法'],
+  ['combat', '攻击与绝学'],
+  ['vision', '视野与战况'],
+  ['tactics', '战术与统帅']
+];
 const KEY_ACTIONS = [
-  ['left', '向左移动'],
-  ['right', '向右移动'],
-  ['jump', '跳跃 / 二段跳'],
-  ['down', '沉身格挡'],
-  ['atk', '攻击（地面/空中蓄力）'],
-  ['heavyStrike', '重击劈斩（U）'],
-  ['lowKick', '下段扫腿（I）'],
-  ['iaido', '居合斩穴（O）'],
-  ['grapple', '擒拿投技（H）'],
-  ['dash', '疾步冲刺'],
-  ['special', '绝技（气满）'],
-  ['skill', '门派绝学（Q）'],
-  ['skill2', '特殊突进（R）'],
-  ['stance', '切换架势'],
-  ['feint', '虚招翻滚（C）'],
-  ['parry', '聚气弹反（F）'],
-  ['pet', '灵宠秘技（V）'],
-  ['lock', '切换锁定（G）'],
-  ['beacon', '归位自标（B）'],
-  ['rally', '战意号令（T）'],
-  ['scoreboard', '战况总览（Tab）'],
-  ['orderFocus', '指令：全军集火（1）'],
-  ['orderProtect', '指令：回防掩护（2）'],
-  ['orderSpread', '指令：分散游击（3）'],
-  ['cmdSelect', '统帅：选中队友（Y）'],
-  ['cmdRole', '统帅：分派任务（N）']
+  ['left', '向左移动', 'move'],
+  ['right', '向右移动', 'move'],
+  ['jump', '跳跃 / 二段跳', 'move'],
+  ['down', '沉身格挡', 'move'],
+  ['dash', '疾步冲刺', 'move'],
+  ['atk', '攻击 / 蓄力斩', 'combat'],
+  ['heavyStrike', '重击劈斩', 'combat'],
+  ['lowKick', '下段扫腿', 'combat'],
+  ['iaido', '居合斩穴', 'combat'],
+  ['grapple', '擒拿投技', 'combat'],
+  ['special', '终极绝技', 'combat'],
+  ['skill', '门派绝学', 'combat'],
+  ['skill2', '特殊突进', 'combat'],
+  ['stance', '切换架势', 'combat'],
+  ['feint', '虚招翻滚', 'combat'],
+  ['parry', '聚气弹反', 'combat'],
+  ['pet', '灵宠秘技', 'combat'],
+  ['lock', '切换锁定', 'vision'],
+  ['beacon', '归位自标', 'vision'],
+  ['scoreboard', '战况总览', 'vision'],
+  ['rally', '战意号令', 'tactics'],
+  ['orderFocus', '全军集火', 'tactics'],
+  ['orderProtect', '回防掩护', 'tactics'],
+  ['orderSpread', '分散游击', 'tactics'],
+  ['cmdSelect', '选中队友', 'tactics'],
+  ['cmdRole', '分派任务', 'tactics']
 ];
 let rebindingKey = null;
+let keyCatFilter = 'all';
+function keyActionLabel(act) {
+  const row = KEY_ACTIONS.find(([k]) => k === act);
+  return row ? row[1] : act;
+}
 function handleKeyRebind(e) {
   if (!rebindingKey) return;
   e.preventDefault(); e.stopPropagation();
   if (e.code === 'Escape') {
-    rebindingKey = null;
-    window.removeEventListener('keydown', handleKeyRebind, true);
+    cancelKeyRebind();
     buildSettings();
     return;
   }
-  const taken = Object.keys(custom1PKeys).find(a => a !== rebindingKey && custom1PKeys[a] === e.code);
-  if (taken) custom1PKeys[taken] = custom1PKeys[rebindingKey];   // 这个键已经给了别的动作：两个对调，别让那个动作没键可按
-  custom1PKeys[rebindingKey] = e.code;
+  const act = rebindingKey;
+  const taken = Object.keys(custom1PKeys).find(a => a !== act && custom1PKeys[a] === e.code);
+  if (taken) custom1PKeys[taken] = custom1PKeys[act];   // 这个键已经给了别的动作：两个对调，别让那个动作没键可按
+  custom1PKeys[act] = e.code;
   try { localStorage.setItem('renying-1p-keys', JSON.stringify(custom1PKeys)); } catch (err) {}
   applyCustomKeys();
-  rebindingKey = null;
-  window.removeEventListener('keydown', handleKeyRebind, true);
+  cancelKeyRebind();
   buildSettings();
+  if (taken) toast(`已将「${keyActionLabel(act)}」与「${keyActionLabel(taken)}」的键位互换`);
 }
 function buildSettings() {
   const groups = [];
@@ -83,26 +95,39 @@ function buildSettings() {
     ? `<div class="setrow"><span>${cvT(r.name)}</span><div class="seg" data-k="${r.k}">${r.opts.map(([v, t]) => `<button data-v='${JSON.stringify(v)}' class="${SETTINGS[r.k] === v ? 'sel' : ''}">${cvT(t === '关闭' ? '关闭选项' : t)}</button>`).join('')}</div><span></span></div>`
     : `<div class="setrow"><span>${cvT(r.name)}</span><input type="range" data-k="${r.k}" min="${r.range[0]}" max="${r.range[1]}" step="${r.range[2]}" value="${SETTINGS[r.k]}"><span class="v" id="sv_${r.k}">${Math.round(SETTINGS[r.k] * 100)}%</span></div>`).join('')}</section>`).join('');
   $id('settingPresets').innerHTML = `<b>${cvT('显示预设')}</b>${[['smooth', '流畅优先'], ['balanced', '均衡'], ['battery', '省电']].map(([id, label]) => `<button type="button" class="ghost small" data-settings-preset="${id}">${cvT(label)}</button>`).join('')}`;
+  const customCount = KEY_ACTIONS.filter(([act]) => custom1PKeys[act] !== DEFAULT_1P_KEYS[act]).length;
+  const visibleKeys = keyCatFilter === 'all' ? KEY_ACTIONS : KEY_ACTIONS.filter(([, , cat]) => cat === keyCatFilter);
+  const catTabsHtml = KEY_CATS.map(([cat, label]) => {
+    const cnt = cat === 'all' ? KEY_ACTIONS.length : KEY_ACTIONS.filter(([, , c]) => c === cat).length;
+    return `<button type="button" class="keycat-btn${keyCatFilter === cat ? ' sel' : ''}" data-keycat="${cat}">${label}<small>${cnt}</small></button>`;
+  }).join('');
   const keyHtml = `
-    <div class="keypanel" style="margin-top:16px;border-top:1px solid rgba(255,255,255,0.08);padding-top:14px;">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
-        <span style="font-family:${TITLE_FONT};font-size:18px;color:#e9c46a;">1P 键位设置</span>
-        <button id="resetKeysBtn" class="ghost" style="padding:4px 12px;font-size:12px;">恢复默认</button>
+    <div class="keypanel">
+      <div class="keypanel-head">
+        <div class="keypanel-title">
+          <b>1P 键位设置</b>
+          <span class="keypanel-meta">${customCount ? `已自定义 ${customCount} 项` : '默认方案'} · 点击按键改键，按 Esc 取消</span>
+        </div>
+        <button id="resetKeysBtn" type="button" class="ghost small" ${customCount ? '' : 'disabled'}>恢复默认</button>
       </div>
+      <div class="keycat-tabs" role="tablist" aria-label="键位分类">${catTabsHtml}</div>
       <div class="keygrid">
-        ${KEY_ACTIONS.map(([act, name]) => `
-          <div class="keyitem">
-            <span>${name}</span>
-            <button class="ghost keybind-btn ${rebindingKey === act ? 'active' : ''}" data-act="${act}">
-              ${rebindingKey === act ? '请按新键…' : keyLabel(custom1PKeys[act])}
+        ${visibleKeys.map(([act, name]) => {
+          const isCustom = custom1PKeys[act] !== DEFAULT_1P_KEYS[act];
+          const isActive = rebindingKey === act;
+          return `
+          <div class="keyitem${isCustom ? ' is-custom' : ''}${isActive ? ' is-rebinding' : ''}">
+            <span class="kact">${name}</span>
+            <button type="button" class="ghost keybind-btn${isActive ? ' active' : ''}${isCustom ? ' is-custom' : ''}" data-act="${act}" title="默认：${keyLabel(DEFAULT_1P_KEYS[act])}">
+              ${isActive ? '请按新键…' : keyLabel(custom1PKeys[act])}
             </button>
-          </div>
-        `).join('')}
+          </div>`;
+        }).join('')}
       </div>
-      <p style="font-size:12px;color:rgba(239,232,216,0.4);margin-top:10px;">鼠标也能用：左键轻击与蓄力，右键腾空闪，左键加右键使远程招式</p>
+      <p class="keypanel-foot">鼠标亦可直接操作：左键轻击与蓄力，右键腾空闪，左键加右键施放远程招式；冲突按键会自动互换。</p>
     </div>
   `;
-  $id('setList').innerHTML = baseHtml + `<section class="setting-group"><h3>${cvT('键位')}</h3>${keyHtml}</section>`;
+  $id('setList').innerHTML = baseHtml + `<section class="setting-group keypanel-group"><h3>${cvT('键位')}</h3>${keyHtml}</section>`;
 }
 $id('settingPresets').addEventListener('click', e => {
   const b = e.target.closest('[data-settings-preset]'), preset = b && DISPLAY_PRESETS[b.dataset.settingsPreset];
@@ -112,8 +137,16 @@ $id('settingPresets').addEventListener('click', e => {
   toast(`${cvT(b.textContent)} · ${cvT('已应用')}`);
 });
 $id('setList').addEventListener('click', e => {
+  const catBtn = e.target.closest('[data-keycat]');
+  if (catBtn) {
+    cancelKeyRebind();
+    keyCatFilter = catBtn.dataset.keycat || 'all';
+    buildSettings();
+    return;
+  }
   const rst = e.target.closest('#resetKeysBtn');
   if (rst) {
+    cancelKeyRebind();
     custom1PKeys = { ...DEFAULT_1P_KEYS };
     try { localStorage.removeItem('renying-1p-keys'); } catch (err) {}
     applyCustomKeys();
@@ -123,6 +156,11 @@ $id('setList').addEventListener('click', e => {
   }
   const kb = e.target.closest('.keybind-btn');
   if (kb) {
+    if (rebindingKey === kb.dataset.act) {
+      cancelKeyRebind();
+      buildSettings();
+      return;
+    }
     rebindingKey = kb.dataset.act;
     window.removeEventListener('keydown', handleKeyRebind, true);
     window.addEventListener('keydown', handleKeyRebind, true);
@@ -150,10 +188,12 @@ function cancelKeyRebind() {   // 点了改键又直接离开设置：别让监�
   window.removeEventListener('keydown', handleKeyRebind, true);
 }
 $id('setHelp').addEventListener('click', () => {
+  cancelKeyRebind();
   if (settingsBack === 'pause' && M.mode !== 'demo') showScreen('help');
   else navTo('help');
 });
 $id('setDone').addEventListener('click', () => {
+  cancelKeyRebind();
   if (settingsBack === 'pause' || (M.mode !== 'demo' && paused)) showScreen('pause');
   else backToMenu();
 });
