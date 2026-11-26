@@ -175,8 +175,62 @@ function updateFireflies(dt) {
     if (f.y > -20) f.y = -20; if (f.y < -440) f.y = -440;
   }
 }
+// ---------- 相机视锥剔除与 32 人团战自适应 LOD（纯渲染层，零回滚/模拟状态影响） ----------
+const RENDER_CULL = {
+  active: false, minX: -1e9, maxX: 1e9, minY: -1e9, maxY: 1e9,
+  lod: 0, totalFighters: 0, visibleFighters: 0, culledFighters: 0, culledProjs: 0, culledParticles: 0,
+};
+const _visibleOrder = [];
+function updateRenderFrustum(sc, order) {
+  const n = order ? order.length : 0;
+  const s = Math.max(0.05, sc || 1);
+  const halfW = (W * 0.5) / s;
+  const gy = groundY();
+  RENDER_CULL.minX = cam.x - halfW;
+  RENDER_CULL.maxX = cam.x + halfW;
+  RENDER_CULL.minY = -gy / s;
+  RENDER_CULL.maxY = (H - gy) / s;
+  RENDER_CULL.active = isMulti() && n >= 6;
+  RENDER_CULL.lod = n >= 21 ? 2 : n >= 12 ? 1 : 0;
+  RENDER_CULL.totalFighters = n;
+  RENDER_CULL.culledProjs = 0;
+  RENDER_CULL.culledParticles = 0;
+  _visibleOrder.length = 0;
+  if (!RENDER_CULL.active) {
+    for (let i = 0; i < n; i++) _visibleOrder.push(order[i]);
+    RENDER_CULL.visibleFighters = n;
+    RENDER_CULL.culledFighters = 0;
+    return _visibleOrder;
+  }
+  const lx0 = RENDER_CULL.minX - 220, lx1 = RENDER_CULL.maxX + 220;
+  const ly0 = RENDER_CULL.minY - 260, ly1 = RENDER_CULL.maxY + 260;
+  let culled = 0;
+  for (let i = 0; i < n; i++) {
+    const f = order[i];
+    if (!f || f.hidden) continue;
+    const fy = f.y - 60;
+    if (f.x >= lx0 && f.x <= lx1 && fy >= ly0 && fy <= ly1) _visibleOrder.push(f);
+    else culled++;
+  }
+  RENDER_CULL.visibleFighters = _visibleOrder.length;
+  RENDER_CULL.culledFighters = culled;
+  return _visibleOrder;
+}
+function inRenderFrustum(x, y, padX, padY) {
+  if (!RENDER_CULL.active) return true;
+  const px = padX || 120, py = padY !== undefined ? padY : px;
+  return x >= RENDER_CULL.minX - px && x <= RENDER_CULL.maxX + px && y >= RENDER_CULL.minY - py && y <= RENDER_CULL.maxY + py;
+}
+function fighterLod(f) {
+  if (!RENDER_CULL.active || !RENDER_CULL.lod || !f) return 0;
+  if (f.idx === localIdx() || f === superOwner) return 0;
+  const dx = Math.abs(f.x - cam.x);
+  if (RENDER_CULL.lod >= 2) return dx > 320 ? 2 : 1;
+  return dx > 420 ? 1 : 0;
+}
 function drawFireflies(glow) {
   for (const f of FIREFLIES) {
+    if (!inRenderFrustum(f.x, f.y, 60, 60)) continue;
     const a = 0.35 + 0.65 * Math.max(0, Math.sin(f.ph * 2.3));
     ctx.fillStyle = `rgba(255,236,150,${a * (glow ? 1 : 0.85)})`;
     circle([f.x, f.y], glow ? 5 : 1.8);
@@ -187,11 +241,14 @@ function drawEmissive(sc, sx, sy) {
   withBloomScreen(sc);   // 月亮和星星
   ctx.save();
   ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
-  for (const lx of [260, STAGE_W / 2, STAGE_W - 260]) { ctx.fillStyle = 'rgba(255,170,90,0.5)'; circle([lx, -72], 13); }
+  for (const lx of [260, STAGE_W / 2, STAGE_W - 260]) {
+    if (!inRenderFrustum(lx, -72, 90, 90)) continue;
+    ctx.fillStyle = 'rgba(255,170,90,0.5)'; circle([lx, -72], 13);
+  }
   drawFireflies(true);
   drawProjs(true);
-  const emitFighters = typeof allFighters === 'function' ? allFighters() : [A, B];
-  const crowded = emitFighters.length >= 8;
+  const emitFighters = RENDER_CULL.active ? _visibleOrder : (typeof allFighters === 'function' ? allFighters() : [A, B]);
+  const crowded = (RENDER_CULL.totalFighters || emitFighters.length) >= 8;
   for (const f of emitFighters) {
     if (!f || f.hidden || f.hp <= 0) continue;
     if (f.state === 'special' || (!crowded && ((f.state === 'charge' && f.t >= CHARGE_FULL) || f.buffT > 0))) {
@@ -200,7 +257,7 @@ function drawEmissive(sc, sx, sy) {
       ctx.fillStyle = g; ctx.fillRect(f.x - 90, f.y - 150, 180, 180);
     }
     if (!crowded) skinEmissive(f);
-    drawTrail(f);
+    if (fighterLod(f) < 2 || f.state === 'attack' || f.state === 'skill' || f.state === 'special') drawTrail(f);
   }
   drawParticles(true);
   ctx.restore();
@@ -331,6 +388,7 @@ function render() {
   ctx.save();
   ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
   const order = buildRenderOrder();
+  const visibleOrder = updateRenderFrustum(sc, order);
   drawDecoys();
   drawClones();
   drawCujuField();
@@ -341,8 +399,8 @@ function render() {
   if (typeof drawRaidMechanics === 'function') drawRaidMechanics();
   drawProjs();
   if (WORLD.on && !M.worldKey) drawWorldGhosts();   // 关键战是各打各的一场：不画大地图上的同道
-  drawIdentityGround(order);
-  for (const f of order) {
+  drawIdentityGround(visibleOrder);
+  for (const f of visibleOrder) {
     if (pf && pf.a > 0.3 && foesOf(pf.f).includes(f)) {   // 对手被朱砂染红
       const keep = f.look;
       f.look = { ...keep, body: '#c8321e', shade: '#7a1a12', outline: '#ff8a70', outlineA: 1, scarf: '#ff4a32', blade: '#ffd0c4' };
@@ -351,15 +409,15 @@ function render() {
     } else drawFighter(f);
   }
   if (typeof RYPhysics !== 'undefined' && RYPhysics.drawFighterFx) {
-    for (const f of order) RYPhysics.drawFighterFx(ctx, f);
+    for (const f of visibleOrder) RYPhysics.drawFighterFx(ctx, f);
   }
-  if (typeof drawPets === 'function') drawPets(order);
+  if (typeof drawPets === 'function') drawPets(visibleOrder);
   drawCujuBall();
   if (typeof drawPartyField === 'function') drawPartyField();
   drawParticles();
   drawComboTotals();
-  drawIdentityTags(order);
-  if ((M.mode === 'train' || (M.mode === 'replay' && REPLAY.on && M.phase !== 'end')) && debugHitbox) drawHitboxOverlay(order);
+  drawIdentityTags(visibleOrder);
+  if ((M.mode === 'train' || (M.mode === 'replay' && REPLAY.on && M.phase !== 'end')) && debugHitbox) drawHitboxOverlay(visibleOrder);
   ctx.restore();
   if (SETTINGS.bloom > 0 && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸上不要月亮和萤火的光晕
   if (FOREST.on) {

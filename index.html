@@ -33053,7 +33053,9 @@ for (const dx of [-50, 0, 50]) drawMagSym(x + dx, y, 9, pol, 1);
 function drawFighter(f) {
 if (f.hidden) return;
 if (f.dummy) return drawTrainDummy(f);
+const lod = typeof fighterLod === 'function' ? fighterLod(f) : 0;
 const rt = CHAR_RARITY[f.ch.id];
+if (lod === 0) {
 if (f.look.fx) skinAmbient(f);
 else if (rt === 'legend' && Math.random() < 0.2) {   // 传说角色：专属粒子
 const k = f.ch.id, x = f.x + rand(-30, 30), y = f.y - rand(20, 115);
@@ -33063,9 +33065,10 @@ addP(k === 'moyu' ? { type: 'ink', x, y, vx: rand(-15, 15), vy: -rand(15, 45), g
 if (f.meter >= 100 && f.hp > 0 && Math.random() < 0.22) {
 addP({ type: 'spark', x: f.x + rand(-22, 22), y: f.y - rand(8, 55), vx: rand(-10, 10), vy: -rand(35, 95), life: 0.42, max: 0.42, rgb: f.look.slash, w: 1.4 });
 }
+}
 const sk = f.sk; if (!sk) return;
 const L = f.look, sc = worldScale();
-if (M.mode === 'mayhem') {
+if (M.mode === 'mayhem' && lod < 2) {
 ctx.save(); ctx.globalCompositeOperation = 'lighter';
 const auraR = 55 + Math.sin(clock * 16 + f.idx * 3) * 12;
 const g = ctx.createRadialGradient(f.x, f.y - 50, 6, f.x, f.y - 50, auraR * 1.5);
@@ -33075,12 +33078,12 @@ g.addColorStop(1, `rgba(${L.slash}, 0)`);
 ctx.fillStyle = g;
 ctx.fillRect(f.x - auraR * 1.5, f.y - 50 - auraR * 1.5, auraR * 3, auraR * 3);
 ctx.restore();
-if (Math.random() < 0.35) {
+if (lod === 0 && Math.random() < 0.35) {
 addP({ type: 'spark', x: f.x + rand(-30, 30), y: f.y - rand(10, 100), vx: rand(-40, 40), vy: -rand(60, 160), life: 0.4, max: 0.4, rgb: Math.random() < 0.5 ? '255,215,80' : L.slash, w: 2.2 });
 }
 }
-if (f.look.legend && f.look.fx) skinGround(f);
-if (f.look.tier && f.look.fx) skinTierGround(f);
+if (lod === 0 && f.look.legend && f.look.fx) skinGround(f);
+if (lod === 0 && f.look.tier && f.look.fx) skinTierGround(f);
 const gy = gndY(f), hgt = clamp((gy - f.y) / 300, 0, 1);   // 站在平台上影子落在台面
 ctx.fillStyle = `rgba(0,0,0,${0.35 * (1 - hgt * 0.6)})`;
 ctx.beginPath(); ctx.ellipse(f.x, gy + 2, 34 * (1 - hgt * 0.4), 6, 0, 0, Math.PI * 2); ctx.fill();
@@ -33101,8 +33104,13 @@ const sq = f.squashT > 0 ? clamp(f.squashT / 0.25, 0, 1) : 0;   // 被磁仙大�
 const big = f.size !== 1 || sq > 0;
 if (big) { ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.size * (1 + 0.4 * sq), f.size * (1 - 0.62 * sq)); ctx.translate(-f.x, -f.y); }
 const gt = tierRank(L) >= 3 ? L.fx : null;   // 赤霄、绝世：残影在两种主题色之间流转（正常叠加：用“变亮”叠几层就糊成一团白）
+if (lod === 0) {
 for (const g of f.ghosts) drawBody(g.sk, f, { ghost: g.life * (gt ? 0.46 : 0.4), tint: gt ? rgbMix(gt.c, gt.c2 || gt.c, (g.life * 2.5) % 1) : '' });
 skinTierMotes(f, false);
+} else if (lod === 1 && f.ghosts.length) {
+const g = f.ghosts[f.ghosts.length - 1];
+drawBody(g.sk, f, { ghost: g.life * (gt ? 0.46 : 0.4), tint: gt ? rgbMix(gt.c, gt.c2 || gt.c, (g.life * 2.5) % 1) : '' });
+}
 if (f.armorT > 0 || f.buffT > 0 || f.parryT > 0 || (f.thunderGuardT && f.thunderGuardT > 0)) {
 const rgb = (f.thunderGuardT && f.thunderGuardT > 0) ? '255,230,120' : (f.armorT > 0 ? '255,210,120' : f.parryT > 0 ? '235,225,255' : '190,80,255');
 ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -33129,12 +33137,12 @@ else if (f.state === 'skill' && f.skill === 'whirl' && f.t > 0.08 && f.spN < 5) 
 else L.flMode = f.state === 'attack' || f.state === 'skill' || f.state === 'special' || f.state === 'charge' ? 'whip' : 'hang';
 }
 if (f.ch && f.ch.fly) drawWings(sk, f);
-drawScarf(f);
-drawBody(sk, f, { flash: f.flash > 0, invul: f.invul > 0 && f.invul < 50 && f.state !== 'special' && f.state !== 'knockdown' });
+if (lod < 2) drawScarf(f);
+drawBody(sk, f, { flash: f.flash > 0, invul: f.invul > 0 && f.invul < 50 && f.state !== 'special' && f.state !== 'knockdown', lod });
 if (big) ctx.restore();
 if (f.jailT > 0 && f.hp > 0) drawWengTing(f.jailX, 0, 1, Math.min(1, f.jailT * 3));   // 关在醉翁亭里：亭子罩着人，前柱半透明
-drawTrail(f);
-skinTierMotes(f, true);
+if (lod < 2 || f.state === 'attack' || f.state === 'skill' || f.state === 'special') drawTrail(f);
+if (lod === 0) skinTierMotes(f, true);
 if (f.ch && f.ch.passive === 'rhythm' && (f.notes || 0) > 0 && f.hp > 0) {
 ctx.save(); ctx.fillStyle = 'rgba(' + f.look.slash + ',0.85)'; ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 1.4;
 for (let k = 0; k < f.notes; k++) {
@@ -35263,10 +35271,12 @@ circle(sk.head, 10);
 if (L.weapon !== 'fists') { ctx.strokeStyle = `rgba(${gc},${o.ghost})`; ctx.lineWidth = 2.5; line(sk.hilt, sk.tip); }
 return;
 }
+const lod = o.lod || 0;
 const alpha = o.invul ? 0.55 : 1;
 const hideBaseHead = !!(L.deco && L.deco.hideBaseHead);
-if (L.legend && L.fx && !o.flash) skinGlow([...segs, ...arm], sk, f, L);
+if (lod === 0 && L.legend && L.fx && !o.flash) skinGlow([...segs, ...arm], sk, f, L);
 ctx.globalAlpha = alpha;
+if (lod < 2) {
 ctx.strokeStyle = L.outline; ctx.fillStyle = L.outline;
 ctx.globalAlpha = alpha * L.outlineA;
 for (const s of [...segs, ...arm]) drawTaperedSeg(s[0], s[1], s[2] + 2.5, s[3] + 2.5, L.outline);
@@ -35274,24 +35284,25 @@ circle(sk.head, 12.5);
 if (!hideBaseHead) headAcc(sk, 3, L.outline, L);
 weapon(sk, L, true, false, f);
 ctx.globalAlpha = alpha;
+}
 for (const s of segs) drawTaperedSeg(s[0], s[1], s[2], s[3], o.flash ? '#fff' : (s[4] ? L.shade : L.body));
-if (!o.flash) {
+if (!o.flash && lod < 2) {
 ctx.strokeStyle = L.scarf; ctx.lineWidth = isHeavy ? 4.2 : 2.8;
 line([sk.hip[0] - 6, sk.hip[1]], [sk.hip[0] + 6, sk.hip[1]]);
 }
 ctx.fillStyle = o.flash ? '#fff' : L.body; circle(sk.head, 10);
-drawFace(sk, f, L, o.flash);
+if (lod < 2) drawFace(sk, f, L, o.flash);
 if (!hideBaseHead) headAcc(sk, 0, o.flash ? '#fff' : L.body, L);
 weapon(sk, L, false, o.flash, f);
-if (L.fx && !o.flash && L.weapon !== 'dyelash') { if (L.legend) skinBlade(sk, f, L); else skinTint(sk, f, L); }
-if (L.deco && L.deco.zw && !o.flash) drawZodiacGleam(sk, L);
+if (lod < 2 && L.fx && !o.flash && L.weapon !== 'dyelash') { if (L.legend) skinBlade(sk, f, L); else skinTint(sk, f, L); }
+if (lod === 0 && L.deco && L.deco.zw && !o.flash) drawZodiacGleam(sk, L);
 for (const s of arm) drawTaperedSeg(s[0], s[1], s[2], s[3], o.flash ? '#fff' : L.body);
-if (!o.flash && !isRobed) {
+if (!o.flash && !isRobed && lod < 2) {
 ctx.strokeStyle = L.scarf; ctx.lineWidth = 2.0;
 line(sk.ef, [(sk.ef[0] + sk.hf[0]) * 0.5, (sk.ef[1] + sk.hf[1]) * 0.5]);
 }
 ctx.globalAlpha = 1;
-if (L.deco) drawDeco(sk, f, L, 'front');
+if (L.deco && lod < 2) drawDeco(sk, f, L, 'front');
 }
 function headAcc(sk, grow, color, L) {
 const h = sk.head, nx = h[0] - sk.neck[0], ny = h[1] - sk.neck[1], nl = Math.hypot(nx, ny) || 1;
@@ -36888,8 +36899,23 @@ ctx.restore();
 const line = (a, b) => { ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); };
 const circle = (p, r) => { ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, Math.PI * 2); ctx.fill(); };
 function drawParticles(glowOnly) {
+const cullOn = typeof RENDER_CULL !== 'undefined' && RENDER_CULL.active;
 for (const p of particles) {
 if (glowOnly && (p.ng || !(p.type === 'spark' || p.type === 'slash' || p.type === 'ring' || p.type === 'glyph' || p.type === 'lightning' || p.type === 'beam' || SKIN_GLOW_P[p.type]))) continue;   // ng：品质特效不进泛光；命中闪光本身就是一团柔光，再泛一遍就糊成一团白
+if (cullOn) {
+const pad = Math.max(120, (p.r || p.len || 40) * 1.5);
+if (p.x2 !== undefined) {
+const x0 = Math.min(p.x, p.x2), x1 = Math.max(p.x, p.x2);
+const y0 = Math.min(p.y, p.y2), y1 = Math.max(p.y, p.y2);
+if (x1 < RENDER_CULL.minX - pad || x0 > RENDER_CULL.maxX + pad || y1 < RENDER_CULL.minY - pad || y0 > RENDER_CULL.maxY + pad) {
+if (!glowOnly) RENDER_CULL.culledParticles++;
+continue;
+}
+} else if (!inRenderFrustum(p.x, p.y, pad, pad)) {
+if (!glowOnly) RENDER_CULL.culledParticles++;
+continue;
+}
+}
 const k = clamp(p.life / p.max, 0, 1);
 if (p.type === 'spark') {
 ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -36990,8 +37016,18 @@ ctx.restore();
 }
 }
 function drawProjs(glowOnly) {
+const cullOn = typeof RENDER_CULL !== 'undefined' && RENDER_CULL.active;
 for (const p of projs) {
 if (glowOnly && (p.kind === 'dragon' || p.kind === 'trap' || p.kind === 'quake' || p.kind === 'pavilion' || p.kind === 'popcorn')) continue;
+if (cullOn) {
+const padX = Math.max(200, (p.w || 60) + (p.kind === 'dragon' ? 400 : 120));
+const padY = Math.max(260, (p.h || 60) + (p.kind === 'bolt' || p.kind === 'pavilion' ? 680 : 160));
+const keepTether = p.kind === 'ironball' && inRenderFrustum(fighterByIdx(p.owner).x, fighterByIdx(p.owner).y - 50, 220, 220);
+if (!keepTether && !inRenderFrustum(p.x, p.y, padX, padY)) {
+if (!glowOnly) RENDER_CULL.culledProjs++;
+continue;
+}
+}
 const L = fighterByIdx(p.owner).look;   // 多人团战里最多 16 名侠客的技能也会生成弹道
 ctx.save();
 if (p.kind === 'popcorn') {   // 爆米花：落下时一小撮，半秒后噼啪炸开
@@ -38357,8 +38393,61 @@ f.ph += dt * f.sp; f.x += Math.cos(f.ph * 0.7) * 18 * dt; f.y += Math.sin(f.ph) 
 if (f.y > -20) f.y = -20; if (f.y < -440) f.y = -440;
 }
 }
+const RENDER_CULL = {
+active: false, minX: -1e9, maxX: 1e9, minY: -1e9, maxY: 1e9,
+lod: 0, totalFighters: 0, visibleFighters: 0, culledFighters: 0, culledProjs: 0, culledParticles: 0,
+};
+const _visibleOrder = [];
+function updateRenderFrustum(sc, order) {
+const n = order ? order.length : 0;
+const s = Math.max(0.05, sc || 1);
+const halfW = (W * 0.5) / s;
+const gy = groundY();
+RENDER_CULL.minX = cam.x - halfW;
+RENDER_CULL.maxX = cam.x + halfW;
+RENDER_CULL.minY = -gy / s;
+RENDER_CULL.maxY = (H - gy) / s;
+RENDER_CULL.active = isMulti() && n >= 6;
+RENDER_CULL.lod = n >= 21 ? 2 : n >= 12 ? 1 : 0;
+RENDER_CULL.totalFighters = n;
+RENDER_CULL.culledProjs = 0;
+RENDER_CULL.culledParticles = 0;
+_visibleOrder.length = 0;
+if (!RENDER_CULL.active) {
+for (let i = 0; i < n; i++) _visibleOrder.push(order[i]);
+RENDER_CULL.visibleFighters = n;
+RENDER_CULL.culledFighters = 0;
+return _visibleOrder;
+}
+const lx0 = RENDER_CULL.minX - 220, lx1 = RENDER_CULL.maxX + 220;
+const ly0 = RENDER_CULL.minY - 260, ly1 = RENDER_CULL.maxY + 260;
+let culled = 0;
+for (let i = 0; i < n; i++) {
+const f = order[i];
+if (!f || f.hidden) continue;
+const fy = f.y - 60;
+if (f.x >= lx0 && f.x <= lx1 && fy >= ly0 && fy <= ly1) _visibleOrder.push(f);
+else culled++;
+}
+RENDER_CULL.visibleFighters = _visibleOrder.length;
+RENDER_CULL.culledFighters = culled;
+return _visibleOrder;
+}
+function inRenderFrustum(x, y, padX, padY) {
+if (!RENDER_CULL.active) return true;
+const px = padX || 120, py = padY !== undefined ? padY : px;
+return x >= RENDER_CULL.minX - px && x <= RENDER_CULL.maxX + px && y >= RENDER_CULL.minY - py && y <= RENDER_CULL.maxY + py;
+}
+function fighterLod(f) {
+if (!RENDER_CULL.active || !RENDER_CULL.lod || !f) return 0;
+if (f.idx === localIdx() || f === superOwner) return 0;
+const dx = Math.abs(f.x - cam.x);
+if (RENDER_CULL.lod >= 2) return dx > 320 ? 2 : 1;
+return dx > 420 ? 1 : 0;
+}
 function drawFireflies(glow) {
 for (const f of FIREFLIES) {
+if (!inRenderFrustum(f.x, f.y, 60, 60)) continue;
 const a = 0.35 + 0.65 * Math.max(0, Math.sin(f.ph * 2.3));
 ctx.fillStyle = `rgba(255,236,150,${a * (glow ? 1 : 0.85)})`;
 circle([f.x, f.y], glow ? 5 : 1.8);
@@ -38368,11 +38457,14 @@ function drawEmissive(sc, sx, sy) {
 withBloomScreen(sc);   // 月亮和星星
 ctx.save();
 ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
-for (const lx of [260, STAGE_W / 2, STAGE_W - 260]) { ctx.fillStyle = 'rgba(255,170,90,0.5)'; circle([lx, -72], 13); }
+for (const lx of [260, STAGE_W / 2, STAGE_W - 260]) {
+if (!inRenderFrustum(lx, -72, 90, 90)) continue;
+ctx.fillStyle = 'rgba(255,170,90,0.5)'; circle([lx, -72], 13);
+}
 drawFireflies(true);
 drawProjs(true);
-const emitFighters = typeof allFighters === 'function' ? allFighters() : [A, B];
-const crowded = emitFighters.length >= 8;
+const emitFighters = RENDER_CULL.active ? _visibleOrder : (typeof allFighters === 'function' ? allFighters() : [A, B]);
+const crowded = (RENDER_CULL.totalFighters || emitFighters.length) >= 8;
 for (const f of emitFighters) {
 if (!f || f.hidden || f.hp <= 0) continue;
 if (f.state === 'special' || (!crowded && ((f.state === 'charge' && f.t >= CHARGE_FULL) || f.buffT > 0))) {
@@ -38381,7 +38473,7 @@ g.addColorStop(0, `rgba(${f.look.slash},0.8)`); g.addColorStop(1, `rgba(${f.look
 ctx.fillStyle = g; ctx.fillRect(f.x - 90, f.y - 150, 180, 180);
 }
 if (!crowded) skinEmissive(f);
-drawTrail(f);
+if (fighterLod(f) < 2 || f.state === 'attack' || f.state === 'skill' || f.state === 'special') drawTrail(f);
 }
 drawParticles(true);
 ctx.restore();
@@ -38503,6 +38595,7 @@ if (pf) drawXuanzhi(pf.a);
 ctx.save();
 ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
 const order = buildRenderOrder();
+const visibleOrder = updateRenderFrustum(sc, order);
 drawDecoys();
 drawClones();
 drawCujuField();
@@ -38513,8 +38606,8 @@ if (typeof drawBastionField === 'function') drawBastionField();
 if (typeof drawRaidMechanics === 'function') drawRaidMechanics();
 drawProjs();
 if (WORLD.on && !M.worldKey) drawWorldGhosts();   // 关键战是各打各的一场：不画大地图上的同道
-drawIdentityGround(order);
-for (const f of order) {
+drawIdentityGround(visibleOrder);
+for (const f of visibleOrder) {
 if (pf && pf.a > 0.3 && foesOf(pf.f).includes(f)) {   // 对手被朱砂染红
 const keep = f.look;
 f.look = { ...keep, body: '#c8321e', shade: '#7a1a12', outline: '#ff8a70', outlineA: 1, scarf: '#ff4a32', blade: '#ffd0c4' };
@@ -38523,15 +38616,15 @@ if (!pf.f.hitDone) drawFu(f.x, f.y - 150 + Math.sin(clock * 6) * 4, pf.a, pf.f.s
 } else drawFighter(f);
 }
 if (typeof RYPhysics !== 'undefined' && RYPhysics.drawFighterFx) {
-for (const f of order) RYPhysics.drawFighterFx(ctx, f);
+for (const f of visibleOrder) RYPhysics.drawFighterFx(ctx, f);
 }
-if (typeof drawPets === 'function') drawPets(order);
+if (typeof drawPets === 'function') drawPets(visibleOrder);
 drawCujuBall();
 if (typeof drawPartyField === 'function') drawPartyField();
 drawParticles();
 drawComboTotals();
-drawIdentityTags(order);
-if ((M.mode === 'train' || (M.mode === 'replay' && REPLAY.on && M.phase !== 'end')) && debugHitbox) drawHitboxOverlay(order);
+drawIdentityTags(visibleOrder);
+if ((M.mode === 'train' || (M.mode === 'replay' && REPLAY.on && M.phase !== 'end')) && debugHitbox) drawHitboxOverlay(visibleOrder);
 ctx.restore();
 if (SETTINGS.bloom > 0 && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸上不要月亮和萤火的光晕
 if (FOREST.on) {

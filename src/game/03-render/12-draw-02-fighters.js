@@ -53,19 +53,22 @@ function drawMagPlate(x, y, pol) {
 function drawFighter(f) {
   if (f.hidden) return;
   if (f.dummy) return drawTrainDummy(f);
+  const lod = typeof fighterLod === 'function' ? fighterLod(f) : 0;
   const rt = CHAR_RARITY[f.ch.id];
-  if (f.look.fx) skinAmbient(f);
-  else if (rt === 'legend' && Math.random() < 0.2) {   // 传说角色：专属粒子
-    const k = f.ch.id, x = f.x + rand(-30, 30), y = f.y - rand(20, 115);
-    addP(k === 'moyu' ? { type: 'ink', x, y, vx: rand(-15, 15), vy: -rand(15, 45), g: -30, life: 0.8, max: 0.8, r: rand(1.5, 3), rgb: '15,15,22' }
-      : { type: 'spark', x, y, vx: rand(-15, 15), vy: k === 'yanling' ? rand(10, 40) : -rand(20, 60), life: 0.7, max: 0.7, rgb: k === 'yanling' ? '225,238,255' : '235,228,255', w: k === 'yanling' ? 2 : 1.2 });
-  } else if (rt === 'rare' && Math.random() < 0.06) addP({ type: 'spark', x: f.x + rand(-24, 24), y: f.y - rand(20, 110), vx: 0, vy: -rand(20, 50), life: 0.5, max: 0.5, rgb: f.look.slash, w: 1 });
-  if (f.meter >= 100 && f.hp > 0 && Math.random() < 0.22) {
-    addP({ type: 'spark', x: f.x + rand(-22, 22), y: f.y - rand(8, 55), vx: rand(-10, 10), vy: -rand(35, 95), life: 0.42, max: 0.42, rgb: f.look.slash, w: 1.4 });
+  if (lod === 0) {
+    if (f.look.fx) skinAmbient(f);
+    else if (rt === 'legend' && Math.random() < 0.2) {   // 传说角色：专属粒子
+      const k = f.ch.id, x = f.x + rand(-30, 30), y = f.y - rand(20, 115);
+      addP(k === 'moyu' ? { type: 'ink', x, y, vx: rand(-15, 15), vy: -rand(15, 45), g: -30, life: 0.8, max: 0.8, r: rand(1.5, 3), rgb: '15,15,22' }
+        : { type: 'spark', x, y, vx: rand(-15, 15), vy: k === 'yanling' ? rand(10, 40) : -rand(20, 60), life: 0.7, max: 0.7, rgb: k === 'yanling' ? '225,238,255' : '235,228,255', w: k === 'yanling' ? 2 : 1.2 });
+    } else if (rt === 'rare' && Math.random() < 0.06) addP({ type: 'spark', x: f.x + rand(-24, 24), y: f.y - rand(20, 110), vx: 0, vy: -rand(20, 50), life: 0.5, max: 0.5, rgb: f.look.slash, w: 1 });
+    if (f.meter >= 100 && f.hp > 0 && Math.random() < 0.22) {
+      addP({ type: 'spark', x: f.x + rand(-22, 22), y: f.y - rand(8, 55), vx: rand(-10, 10), vy: -rand(35, 95), life: 0.42, max: 0.42, rgb: f.look.slash, w: 1.4 });
+    }
   }
   const sk = f.sk; if (!sk) return;
   const L = f.look, sc = worldScale();
-  if (M.mode === 'mayhem') {
+  if (M.mode === 'mayhem' && lod < 2) {
     ctx.save(); ctx.globalCompositeOperation = 'lighter';
     const auraR = 55 + Math.sin(clock * 16 + f.idx * 3) * 12;
     const g = ctx.createRadialGradient(f.x, f.y - 50, 6, f.x, f.y - 50, auraR * 1.5);
@@ -75,12 +78,12 @@ function drawFighter(f) {
     ctx.fillStyle = g;
     ctx.fillRect(f.x - auraR * 1.5, f.y - 50 - auraR * 1.5, auraR * 3, auraR * 3);
     ctx.restore();
-    if (Math.random() < 0.35) {
+    if (lod === 0 && Math.random() < 0.35) {
       addP({ type: 'spark', x: f.x + rand(-30, 30), y: f.y - rand(10, 100), vx: rand(-40, 40), vy: -rand(60, 160), life: 0.4, max: 0.4, rgb: Math.random() < 0.5 ? '255,215,80' : L.slash, w: 2.2 });
     }
   }
-  if (f.look.legend && f.look.fx) skinGround(f);
-  if (f.look.tier && f.look.fx) skinTierGround(f);
+  if (lod === 0 && f.look.legend && f.look.fx) skinGround(f);
+  if (lod === 0 && f.look.tier && f.look.fx) skinTierGround(f);
   // 影子
   const gy = gndY(f), hgt = clamp((gy - f.y) / 300, 0, 1);   // 站在平台上影子落在台面
   ctx.fillStyle = `rgba(0,0,0,${0.35 * (1 - hgt * 0.6)})`;
@@ -105,8 +108,13 @@ function drawFighter(f) {
   const big = f.size !== 1 || sq > 0;
   if (big) { ctx.save(); ctx.translate(f.x, f.y); ctx.scale(f.size * (1 + 0.4 * sq), f.size * (1 - 0.62 * sq)); ctx.translate(-f.x, -f.y); }
   const gt = tierRank(L) >= 3 ? L.fx : null;   // 赤霄、绝世：残影在两种主题色之间流转（正常叠加：用“变亮”叠几层就糊成一团白）
-  for (const g of f.ghosts) drawBody(g.sk, f, { ghost: g.life * (gt ? 0.46 : 0.4), tint: gt ? rgbMix(gt.c, gt.c2 || gt.c, (g.life * 2.5) % 1) : '' });
-  skinTierMotes(f, false);
+  if (lod === 0) {
+    for (const g of f.ghosts) drawBody(g.sk, f, { ghost: g.life * (gt ? 0.46 : 0.4), tint: gt ? rgbMix(gt.c, gt.c2 || gt.c, (g.life * 2.5) % 1) : '' });
+    skinTierMotes(f, false);
+  } else if (lod === 1 && f.ghosts.length) {
+    const g = f.ghosts[f.ghosts.length - 1];
+    drawBody(g.sk, f, { ghost: g.life * (gt ? 0.46 : 0.4), tint: gt ? rgbMix(gt.c, gt.c2 || gt.c, (g.life * 2.5) % 1) : '' });
+  }
   // 霸体金光 / 影遁增益 / 月镜 / 金刚雷铠
   if (f.armorT > 0 || f.buffT > 0 || f.parryT > 0 || (f.thunderGuardT && f.thunderGuardT > 0)) {
     const rgb = (f.thunderGuardT && f.thunderGuardT > 0) ? '255,230,120' : (f.armorT > 0 ? '255,210,120' : f.parryT > 0 ? '235,225,255' : '190,80,255');
@@ -136,13 +144,13 @@ function drawFighter(f) {
     else L.flMode = f.state === 'attack' || f.state === 'skill' || f.state === 'special' || f.state === 'charge' ? 'whip' : 'hang';
   }
   if (f.ch && f.ch.fly) drawWings(sk, f);
-  drawScarf(f);
-  drawBody(sk, f, { flash: f.flash > 0, invul: f.invul > 0 && f.invul < 50 && f.state !== 'special' && f.state !== 'knockdown' });
+  if (lod < 2) drawScarf(f);
+  drawBody(sk, f, { flash: f.flash > 0, invul: f.invul > 0 && f.invul < 50 && f.state !== 'special' && f.state !== 'knockdown', lod });
   if (big) ctx.restore();
   if (f.jailT > 0 && f.hp > 0) drawWengTing(f.jailX, 0, 1, Math.min(1, f.jailT * 3));   // 关在醉翁亭里：亭子罩着人，前柱半透明
   // 剑光
-  drawTrail(f);
-  skinTierMotes(f, true);
+  if (lod < 2 || f.state === 'attack' || f.state === 'skill' || f.state === 'special') drawTrail(f);
+  if (lod === 0) skinTierMotes(f, true);
   // 玉箫头顶的音律、被勾陈震魄时身上的金圈
   if (f.ch && f.ch.passive === 'rhythm' && (f.notes || 0) > 0 && f.hp > 0) {
     ctx.save(); ctx.fillStyle = 'rgba(' + f.look.slash + ',0.85)'; ctx.strokeStyle = ctx.fillStyle; ctx.lineWidth = 1.4;

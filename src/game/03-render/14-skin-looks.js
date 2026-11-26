@@ -648,40 +648,43 @@ function drawBody(sk, f, o) {
     if (L.weapon !== 'fists') { ctx.strokeStyle = `rgba(${gc},${o.ghost})`; ctx.lineWidth = 2.5; line(sk.hilt, sk.tip); }
     return;
   }
+  const lod = o.lod || 0;
   const alpha = o.invul ? 0.55 : 1;
   const hideBaseHead = !!(L.deco && L.deco.hideBaseHead);
-  if (L.legend && L.fx && !o.flash) skinGlow([...segs, ...arm], sk, f, L);
+  if (lod === 0 && L.legend && L.fx && !o.flash) skinGlow([...segs, ...arm], sk, f, L);
   ctx.globalAlpha = alpha;
-  // 外轮廓
-  ctx.strokeStyle = L.outline; ctx.fillStyle = L.outline;
-  ctx.globalAlpha = alpha * L.outlineA;
-  for (const s of [...segs, ...arm]) drawTaperedSeg(s[0], s[1], s[2] + 2.5, s[3] + 2.5, L.outline);
-  circle(sk.head, 12.5);
-  if (!hideBaseHead) headAcc(sk, 3, L.outline, L);
-  weapon(sk, L, true, false, f);
-  ctx.globalAlpha = alpha;
+  // 外轮廓（LOD 2 远景大团战省去二次描边，保留清晰剪影与武器）
+  if (lod < 2) {
+    ctx.strokeStyle = L.outline; ctx.fillStyle = L.outline;
+    ctx.globalAlpha = alpha * L.outlineA;
+    for (const s of [...segs, ...arm]) drawTaperedSeg(s[0], s[1], s[2] + 2.5, s[3] + 2.5, L.outline);
+    circle(sk.head, 12.5);
+    if (!hideBaseHead) headAcc(sk, 3, L.outline, L);
+    weapon(sk, L, true, false, f);
+    ctx.globalAlpha = alpha;
+  }
   // 身体与流派服饰细节
   for (const s of segs) drawTaperedSeg(s[0], s[1], s[2], s[3], o.flash ? '#fff' : (s[4] ? L.shade : L.body));
   // 腰封 / 战甲裙甲点缀
-  if (!o.flash) {
+  if (!o.flash && lod < 2) {
     ctx.strokeStyle = L.scarf; ctx.lineWidth = isHeavy ? 4.2 : 2.8;
     line([sk.hip[0] - 6, sk.hip[1]], [sk.hip[0] + 6, sk.hip[1]]);
   }
   ctx.fillStyle = o.flash ? '#fff' : L.body; circle(sk.head, 10);
-  drawFace(sk, f, L, o.flash);
+  if (lod < 2) drawFace(sk, f, L, o.flash);
   if (!hideBaseHead) headAcc(sk, 0, o.flash ? '#fff' : L.body, L);
   weapon(sk, L, false, o.flash, f);
   // 绞带的曲线与坠子直接使用皮肤配色，不沿骨架画直线刃光。
-  if (L.fx && !o.flash && L.weapon !== 'dyelash') { if (L.legend) skinBlade(sk, f, L); else skinTint(sk, f, L); }
-  if (L.deco && L.deco.zw && !o.flash) drawZodiacGleam(sk, L);
+  if (lod < 2 && L.fx && !o.flash && L.weapon !== 'dyelash') { if (L.legend) skinBlade(sk, f, L); else skinTint(sk, f, L); }
+  if (lod === 0 && L.deco && L.deco.zw && !o.flash) drawZodiacGleam(sk, L);
   // 前手臂（在剑柄之上）
   for (const s of arm) drawTaperedSeg(s[0], s[1], s[2], s[3], o.flash ? '#fff' : L.body);
-  if (!o.flash && !isRobed) {
+  if (!o.flash && !isRobed && lod < 2) {
     ctx.strokeStyle = L.scarf; ctx.lineWidth = 2.0;
     line(sk.ef, [(sk.ef[0] + sk.hf[0]) * 0.5, (sk.ef[1] + sk.hf[1]) * 0.5]);
   }
   ctx.globalAlpha = 1;
-  if (L.deco) drawDeco(sk, f, L, 'front');
+  if (L.deco && lod < 2) drawDeco(sk, f, L, 'front');
 }
 // 头饰：topknot 发髻 hat 斗笠 hood 兜帽 helm 头盔 ponytail 马尾 bun 双髻 band 头带 moon 月牙簪
 function headAcc(sk, grow, color, L) {

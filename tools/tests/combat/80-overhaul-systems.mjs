@@ -807,4 +807,44 @@ export default [
       return { pass: true };
     })()`
   },
+  {
+    name: '32-player camera-frustum culling and adaptive LOD cull off-screen entities while keeping local player at LOD 0 and 1v1 unaffected',
+    fn: `(() => {
+      // 1. 1v1 leaves frustum culling inactive and LOD at 0
+      startMatch('cpu', 'normal', [0, 1]); M.phase = 'fight';
+      W = 1920; H = 1080; DPR = 1; cv.width = 1920; cv.height = 1080;
+      step(); updateCamera(1 / 60); render();
+      if (RENDER_CULL.active || RENDER_CULL.lod !== 0 || RENDER_CULL.culledFighters !== 0) {
+        return { pass: false, error: 'Expected frustum culling off in 1v1: ' + JSON.stringify(RENDER_CULL) };
+      }
+
+      // 2. 16v16 (32 players) enables frustum culling + LOD 2, culls off-screen fighters/projectiles/particles, keeps local player LOD 0
+      startMelee(16, 0, 'normal', 'normal'); M.phase = 'fight';
+      for (let i = 0; i < 15; i++) step();
+      updateCamera(1 / 60);
+      // Place an off-screen projectile and particle far outside camera frustum
+      const farX = cam.x > STAGE_W / 2 ? 120 : STAGE_W - 120;
+      projs.push({ id: 99999, owner: 0, kind: 'qi', x: farX, y: -60, vx: 0, vy: 0, w: 40, h: 40, life: 1, age: 0, dmg: 10, delay: 0 });
+      particles.push({ type: 'spark', x: farX, y: -60, vx: 0, vy: 0, life: 0.5, max: 0.5, rgb: '255,255,255', w: 2 });
+      render();
+      if (!RENDER_CULL.active || RENDER_CULL.lod !== 2) {
+        return { pass: false, error: 'Expected active frustum culling with LOD 2 in 16v16: ' + JSON.stringify(RENDER_CULL) };
+      }
+      if (RENDER_CULL.totalFighters !== 32 || RENDER_CULL.culledFighters <= 0 || RENDER_CULL.visibleFighters >= 32) {
+        return { pass: false, error: 'Expected off-screen fighters culled in 16v16: ' + JSON.stringify(RENDER_CULL) };
+      }
+      if (RENDER_CULL.culledProjs < 1 || RENDER_CULL.culledParticles < 1) {
+        return { pass: false, error: 'Expected off-screen projectile and particle culled: ' + JSON.stringify(RENDER_CULL) };
+      }
+      if (fighterLod(A) !== 0) {
+        return { pass: false, error: 'Expected local player A to remain at LOD 0, got ' + fighterLod(A) };
+      }
+      const farFoe = allFighters().find(f => f !== A && Math.abs(f.x - cam.x) > 400);
+      if (farFoe && fighterLod(farFoe) !== 2) {
+        return { pass: false, error: 'Expected distant 16v16 fighter at LOD 2, got ' + fighterLod(farFoe) };
+      }
+      toMenu();
+      return { pass: true };
+    })()`
+  },
 ];

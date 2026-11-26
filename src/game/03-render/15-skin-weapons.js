@@ -1390,8 +1390,23 @@ function drawTrail(f) {
 const line = (a, b) => { ctx.beginPath(); ctx.moveTo(a[0], a[1]); ctx.lineTo(b[0], b[1]); ctx.stroke(); };
 const circle = (p, r) => { ctx.beginPath(); ctx.arc(p[0], p[1], r, 0, Math.PI * 2); ctx.fill(); };
 function drawParticles(glowOnly) {
+  const cullOn = typeof RENDER_CULL !== 'undefined' && RENDER_CULL.active;
   for (const p of particles) {
     if (glowOnly && (p.ng || !(p.type === 'spark' || p.type === 'slash' || p.type === 'ring' || p.type === 'glyph' || p.type === 'lightning' || p.type === 'beam' || SKIN_GLOW_P[p.type]))) continue;   // ng：品质特效不进泛光；命中闪光本身就是一团柔光，再泛一遍就糊成一团白
+    if (cullOn) {
+      const pad = Math.max(120, (p.r || p.len || 40) * 1.5);
+      if (p.x2 !== undefined) {
+        const x0 = Math.min(p.x, p.x2), x1 = Math.max(p.x, p.x2);
+        const y0 = Math.min(p.y, p.y2), y1 = Math.max(p.y, p.y2);
+        if (x1 < RENDER_CULL.minX - pad || x0 > RENDER_CULL.maxX + pad || y1 < RENDER_CULL.minY - pad || y0 > RENDER_CULL.maxY + pad) {
+          if (!glowOnly) RENDER_CULL.culledParticles++;
+          continue;
+        }
+      } else if (!inRenderFrustum(p.x, p.y, pad, pad)) {
+        if (!glowOnly) RENDER_CULL.culledParticles++;
+        continue;
+      }
+    }
     const k = clamp(p.life / p.max, 0, 1);
     if (p.type === 'spark') {
       ctx.save(); ctx.globalCompositeOperation = 'lighter';
@@ -1492,8 +1507,18 @@ function drawComboTotals() {
   }
 }
 function drawProjs(glowOnly) {
+  const cullOn = typeof RENDER_CULL !== 'undefined' && RENDER_CULL.active;
   for (const p of projs) {
     if (glowOnly && (p.kind === 'dragon' || p.kind === 'trap' || p.kind === 'quake' || p.kind === 'pavilion' || p.kind === 'popcorn')) continue;
+    if (cullOn) {
+      const padX = Math.max(200, (p.w || 60) + (p.kind === 'dragon' ? 400 : 120));
+      const padY = Math.max(260, (p.h || 60) + (p.kind === 'bolt' || p.kind === 'pavilion' ? 680 : 160));
+      const keepTether = p.kind === 'ironball' && inRenderFrustum(fighterByIdx(p.owner).x, fighterByIdx(p.owner).y - 50, 220, 220);
+      if (!keepTether && !inRenderFrustum(p.x, p.y, padX, padY)) {
+        if (!glowOnly) RENDER_CULL.culledProjs++;
+        continue;
+      }
+    }
     const L = fighterByIdx(p.owner).look;   // 多人团战里最多 16 名侠客的技能也会生成弹道
     ctx.save();
     if (p.kind === 'popcorn') {   // 爆米花：落下时一小撮，半秒后噼啪炸开
