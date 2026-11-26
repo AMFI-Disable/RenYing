@@ -1141,7 +1141,6 @@ Object.assign(UI_COPY_EN, {
   "天枢重力": "Gravity Well",
   "星宿归元": "Celestial Alignment",
   "星枢式": "Astral Pivot",
-  "破浪": "Po Lang",
   "山海星陨": "Starfall Mythos",
   "墨韵丹青": "Imperial Ink & Cinnabar",
   "沧澜雷霆": "Stormtide Tempest",

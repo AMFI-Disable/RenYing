@@ -839,18 +839,6 @@ function headAcc(sk, grow, color, L) {
       }
       break;
     }
-    case 'silk-ribbon': {  // 幽篁：偏分垂鬓 + 碧玉发钗 + 染坊长丝带
-      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
-      if (!outline) ctx.fillStyle = L.hair || '#121c16';
-      ctx.beginPath(); ctx.arc(h[0] + ux * 7 + bk * 3, h[1] + uy * 7, 6 + grow, 0, 7); ctx.fill();
-      if (!outline) {
-        ctx.strokeStyle = '#6cf0c2'; ctx.lineWidth = 2.2; line(P(10, -8), P(4, 10));
-        ctx.strokeStyle = L.scarf; ctx.lineWidth = 2.6;
-        const w = Math.sin(clock * 6) * 4;
-        ctx.beginPath(); ctx.moveTo(...P(6, -6)); ctx.quadraticCurveTo(...P(-4, -16), ...P(-16, -22 + w)); ctx.stroke();
-      }
-      break;
-    }
     case 'astro-crown': {  // 玄机：星仪铜冠 + 旋转浑天小环
       const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
       if (!outline) ctx.fillStyle = L.hair || '#15182c';
@@ -860,33 +848,6 @@ function headAcc(sk, grow, color, L) {
         line(P(9, -8), P(9, 8));
         ctx.beginPath(); ctx.arc(...P(15, 0), 5.5, 0, 7); ctx.stroke();
         ctx.fillStyle = '#9ea8ff'; ctx.beginPath(); ctx.arc(...P(15, 0), 2.1, 0, 7); ctx.fill();
-      }
-      break;
-    }
-    case 'wave-visor': {  // 破浪：海玉护额 + 逆风碎发
-      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
-      if (!outline) ctx.fillStyle = L.hair || '#142028';
-      for (const s of [-10, -3, 4]) {
-        ctx.beginPath(); ctx.moveTo(...P(7, s)); ctx.lineTo(...P(17, s - 6)); ctx.lineTo(...P(10, s + 5)); ctx.closePath(); ctx.fill();
-      }
-      if (!outline) {
-        ctx.strokeStyle = '#54d8ff'; ctx.lineWidth = 3.2; line(P(4, -9), P(5, 10));
-        ctx.fillStyle = '#dff8ff'; ctx.beginPath(); ctx.arc(...P(5, 7), 2.3, 0, 7); ctx.fill();
-      }
-      break;
-    }
-    case 'abyss-mane': {  // 沧溟：银白狂澜长鬣 + 沧海角冠
-      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
-      if (!outline) ctx.fillStyle = L.hair || '#d8e8f8';
-      ctx.beginPath();
-      ctx.moveTo(...P(6, -8)); ctx.quadraticCurveTo(...P(18, -16), ...P(14, -22));
-      ctx.quadraticCurveTo(...P(4, -20), ...P(-8, -18)); ctx.quadraticCurveTo(...P(2, -10), ...P(6, -8));
-      ctx.closePath();
-      if (outline) { ctx.lineWidth = grow * 2; ctx.stroke(); }
-      ctx.fill();
-      if (!outline) {
-        ctx.strokeStyle = '#6ec4ff'; ctx.lineWidth = 2.4;
-        ctx.beginPath(); ctx.moveTo(...P(7, 4)); ctx.quadraticCurveTo(...P(16, 10), ...P(19, 2)); ctx.stroke();
       }
       break;
     }
@@ -909,150 +870,6 @@ function headAcc(sk, grow, color, L) {
         ctx.strokeStyle = '#8cd48c'; ctx.lineWidth = 2.2;
         line([h[0] + ux * 11 - px * 6, h[1] + uy * 11 - py * 6], [h[0] + ux * 15, h[1] + uy * 15]);
         line([h[0] + ux * 11 + px * 6, h[1] + uy * 11 + py * 6], [h[0] + ux * 15, h[1] + uy * 15]);
-      }
-      break;
-    }
-    case 'flame-spiky': {  // 赤炎：狂放烈火刺发 + 焦红额巾
-      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
-      if (!outline) ctx.fillStyle = L.hair || '#2a0e0a';
-      for (const [a, b] of [[-11, -18], [-4, -12], [2, -6], [7, 2]]) {
-        ctx.beginPath(); ctx.moveTo(...P(6, a)); ctx.lineTo(...P(19, b)); ctx.lineTo(...P(8, a + 6)); ctx.closePath(); ctx.fill();
-      }
-      if (!outline) {
-        ctx.strokeStyle = '#ff521b'; ctx.lineWidth = 3.2; line(P(4, -9), P(4, 10));
-        ctx.fillStyle = '#ff9638'; ctx.beginPath(); ctx.arc(...P(19, -12), 2.2, 0, 7); ctx.fill();
-      }
-      break;
-    }
-    case 'silver-ears': {  // 银狐：双立银狐耳 + 半面狐纹
-      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
-      if (!outline) ctx.fillStyle = L.hair || '#e8e4f5';
-      for (const off of [-6, 4]) {
-        ctx.beginPath(); ctx.moveTo(...P(8, off - 3)); ctx.lineTo(...P(21 + grow, off)); ctx.lineTo(...P(8, off + 4)); ctx.closePath(); ctx.fill();
-      }
-      if (!outline) {
-        ctx.fillStyle = '#a78bfa';
-        for (const off of [-6, 4]) {
-          ctx.beginPath(); ctx.moveTo(...P(10, off - 1)); ctx.lineTo(...P(17, off)); ctx.lineTo(...P(10, off + 2)); ctx.closePath(); ctx.fill();
-        }
-      }
-      break;
-    }
-    case 'crane-plume': {  // 云鹤：仙鹤高冠羽 + 垂云抹额
-      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
-      if (!outline) ctx.fillStyle = L.hair || '#edf6ff';
-      ctx.beginPath(); ctx.arc(h[0] + ux * 10, h[1] + uy * 10, 5 + grow, 0, 7); ctx.fill();
-      if (!outline) {
-        ctx.strokeStyle = '#f2d080'; ctx.lineWidth = 2.4;
-        ctx.beginPath(); ctx.moveTo(...P(12, 0)); ctx.quadraticCurveTo(...P(22, -6), ...P(18, -17)); ctx.stroke();
-        ctx.fillStyle = '#a8e6ff'; ctx.beginPath(); ctx.arc(...P(5, 8), 2.2, 0, 7); ctx.fill();
-      }
-      break;
-    }
-    case 'halberd-plume': {  // 天罡：武将鎏金盔 + 猩红长缨
-      ctx.beginPath(); ctx.arc(h[0] + ux * 2, h[1] + uy * 2, 12.2 + grow, Math.atan2(uy, ux) - 1.75, Math.atan2(uy, ux) + 1.75); ctx.closePath();
-      if (!outline) ctx.fillStyle = '#334059'; ctx.fill();
-      if (!outline) {
-        ctx.strokeStyle = '#f0c860'; ctx.lineWidth = 2.2;
-        line([h[0] + ux * 5 - px * 9, h[1] + uy * 5 - py * 9], [h[0] + ux * 5 + px * 9, h[1] + uy * 5 + py * 9]);
-        ctx.strokeStyle = '#c83e3b'; ctx.lineWidth = 3.5;
-        ctx.beginPath(); ctx.moveTo(h[0] + ux * 13, h[1] + uy * 13); ctx.quadraticCurveTo(h[0] + ux * 18 + bk * 10, h[1] + uy * 18, h[0] + ux * 10 + bk * 20, h[1] + uy * 10 + 6); ctx.stroke();
-      }
-      break;
-    }
-    case 'ink-sidepart': {  // 墨界：斜掠文士发 + 竹簪 + 墨玉单饰
-      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
-      if (!outline) ctx.fillStyle = L.hair || '#181622';
-      ctx.beginPath(); ctx.moveTo(...P(10, -8)); ctx.quadraticCurveTo(...P(16, 4), ...P(2, 11)); ctx.quadraticCurveTo(...P(8, 2), ...P(10, -8)); ctx.closePath(); ctx.fill();
-      if (!outline) {
-        ctx.strokeStyle = '#b48eff'; ctx.lineWidth = 2.2; line(P(12, -9), P(8, 6));
-      }
-      break;
-    }
-    case 'frost-braid': {  // 白河：冰晶单马尾麻花辫 + 雪晶钗
-      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
-      if (!outline) ctx.strokeStyle = L.hair || '#182430';
-      ctx.lineWidth = 4.6 + grow; ctx.lineCap = 'round';
-      const w = Math.sin(clock * 4.5) * 2.5;
-      ctx.beginPath(); ctx.moveTo(...P(6, -7)); ctx.quadraticCurveTo(...P(-2, -16), ...P(-14, -18 + w)); ctx.stroke();
-      if (!outline) {
-        ctx.fillStyle = '#5ec8ff'; ctx.beginPath(); ctx.arc(...P(8, -7), 2.8, 0, 7); ctx.fill();
-      }
-      break;
-    }
-    case 'roc-crest': {  // 金鹏：金翅鹏翎冠 + 锐利鹰羽
-      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
-      if (!outline) ctx.fillStyle = '#f0a828';
-      for (const [up, bkOff] of [[18, -8], [14, -13]]) {
-        ctx.beginPath(); ctx.moveTo(...P(7, -2)); ctx.lineTo(...P(up + grow, bkOff)); ctx.lineTo(...P(9, -7)); ctx.closePath(); ctx.fill();
-      }
-      if (!outline) {
-        ctx.strokeStyle = '#ffc84a'; ctx.lineWidth = 2.4; line(P(5, -9), P(6, 9));
-      }
-      break;
-    }
-    case 'ghost-cowl': {  // 幽冥：破损暗影尖兜帽 + 额间紫瞳印
-      ctx.beginPath(); ctx.moveTo(h[0] + ux * (14 + grow), h[1] + uy * (14 + grow)); ctx.lineTo(h[0] + bk * (25 + grow), h[1] + 5);
-      ctx.lineTo(h[0] - ux * (8 + grow) + bk * 4, h[1] - uy * (8 + grow)); ctx.closePath();
-      if (!outline) ctx.fillStyle = '#140d20'; ctx.fill();
-      if (!outline) {
-        ctx.fillStyle = '#b26bff'; ctx.beginPath(); ctx.arc(h[0] + ux * 5 + sk.face * 5, h[1] + uy * 5, 2.2, 0, 7); ctx.fill();
-      }
-      break;
-    }
-    case 'flute-twintail': {  // 灵犀：双环翠玉铃髻 + 垂穗
-      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
-      if (!outline) ctx.fillStyle = L.hair || '#122420';
-      for (const sd of [-1, 1]) { ctx.beginPath(); ctx.arc(h[0] + ux * 9 + px * sd * 8, h[1] + uy * 9 + py * sd * 8, 4.5 + grow, 0, 7); ctx.fill(); }
-      if (!outline) {
-        ctx.strokeStyle = '#4ce6c8'; ctx.lineWidth = 2.0;
-        line(P(5, -9), P(-5, -13)); line(P(5, 7), P(-4, 11));
-      }
-      break;
-    }
-    case 'overlord-horns': {  // 霸王：玄铁战盔 + 双展青铜霸角 + 血红缨
-      ctx.beginPath(); ctx.arc(h[0] + ux * 2, h[1] + uy * 2, 12.6 + grow, Math.atan2(uy, ux) - 1.85, Math.atan2(uy, ux) + 1.85); ctx.closePath();
-      if (!outline) ctx.fillStyle = '#2d1a16'; ctx.fill();
-      if (!outline) {
-        ctx.strokeStyle = '#e6b450'; ctx.lineWidth = 3.0; ctx.lineCap = 'round';
-        for (const sd of [-1, 1]) {
-          ctx.beginPath(); ctx.moveTo(h[0] + ux * 8 + px * sd * 6, h[1] + uy * 8 + py * sd * 6);
-          ctx.quadraticCurveTo(h[0] + ux * 16 + px * sd * 12, h[1] + uy * 16 + py * sd * 12, h[0] + ux * 22 + px * sd * 8, h[1] + uy * 22 + py * sd * 8); ctx.stroke();
-        }
-        ctx.fillStyle = '#c82e28'; ctx.beginPath(); ctx.arc(h[0] + ux * 13, h[1] + uy * 13, 3.2, 0, 7); ctx.fill();
-      }
-      break;
-    }
-    case 'chime-ribbons': {  // 风铃：双风铃发环 + 樱粉双飘带
-      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
-      if (!outline) ctx.fillStyle = L.hair || '#1d222b';
-      ctx.beginPath(); ctx.arc(h[0] + ux * 8 + bk * 4, h[1] + uy * 8, 5 + grow, 0, 7); ctx.fill();
-      if (!outline) {
-        ctx.strokeStyle = '#ffa8c8'; ctx.lineWidth = 2.4;
-        const w = Math.sin(clock * 7) * 3;
-        ctx.beginPath(); ctx.moveTo(...P(7, -6)); ctx.quadraticCurveTo(...P(-2, -16), ...P(-13, -20 + w)); ctx.stroke();
-        ctx.fillStyle = '#ffe58f'; ctx.beginPath(); ctx.arc(...P(7, -6), 2.4, 0, 7); ctx.fill();
-      }
-      break;
-    }
-    case 'iaido-bun': {  // 无涯：冷峻高束浪人髻 + 额前断带
-      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
-      topknot(sk, grow, outline ? color : L.hair || '#141822');
-      if (!outline) {
-        ctx.strokeStyle = '#7c96d8'; ctx.lineWidth = 2.2;
-        line(P(4, -9), P(4, 9));
-        ctx.beginPath(); ctx.moveTo(...P(4, -9)); ctx.lineTo(...P(-4, -20)); ctx.stroke();
-      }
-      break;
-    }
-    case 'scroll-cap': {  // 丹青：斜戴画师方巾帽 + 朱砂垂缨
-      const P = (up, front) => [h[0] + ux * up + px * front * sk.face, h[1] + uy * up + py * front * sk.face];
-      if (!outline) ctx.fillStyle = '#2a2220';
-      ctx.beginPath(); ctx.moveTo(...P(9, -11)); ctx.lineTo(...P(18, -7)); ctx.lineTo(...P(16, 8)); ctx.lineTo(...P(7, 9)); ctx.closePath(); ctx.fill();
-      if (!outline) {
-        ctx.strokeStyle = '#ff6448'; ctx.lineWidth = 2.2;
-        line(P(8, -10), P(8, 8));
-        ctx.beginPath(); ctx.moveTo(...P(11, -10)); ctx.lineTo(...P(2, -17)); ctx.stroke();
       }
       break;
     }

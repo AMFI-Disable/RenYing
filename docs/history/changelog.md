@@ -6,6 +6,10 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+### Changed
+
+- **Bundle Pruning, Removed-Hero Cleanup & Physics Engine Profiling (#50) (`src/models/ai-brain.json`, `src/game/03-render/14-skin-looks.js`, `src/game/02-combat/07-physics/`, `index.html`, `renying-offline.html`)**: pruned all 16 retired hero entries from `src/models/ai-brain.json` (`36 → 20` heroes, saving `37.4 KB`), removed 16 unreferenced removed-hero `headAcc` branches from `src/game/03-render/14-skin-looks.js`, and removed 5 completely unwired physics modules (`01-kinematics-math.js`, `02-rigid-body-inertia.js`, `03-swept-collision.js`, `04-weapon-trajectories.js`, `07-environment-physics.js`, saving `234.4 KB` while retaining all 7 active runtime `RYPhysics` subsystems: `Balance`, `Knockback`, `Aerial`, `IaidoAcupoint`, `Grapple`, `ComboEngine`, and `MotionFX`). No Worker change.
+
 ### Added
 
 - **Cloudflare D1 Quota Shield & `PresenceHub` Durable Object (#49) (`cloudflare/wrangler.toml`, `cloudflare/worker/00-runtime-and-http.js`, `cloudflare/worker/10-auth-and-sessions.js`, `cloudflare/worker/40-admin-routes.js`, `cloudflare/worker/50-maintenance-and-presence.js`, `cloudflare/worker/80-request-router.js`, `src/game/05-ui/24-account-02-lobby.js`, `tools/tests/predeploy-check.mjs`)**: moved `/api/presence` aggregation to an in-memory `PresenceHub` Durable Object (`PRESENCE` binding, zero D1 writes per heartbeat, with automatic D1 write-coalesced fallback when unbound), shifted high-frequency read-only and telemetry rate limiters (`/api/flags`, `/api/leaderboard`, `/api/gboss`, `/api/saga`, `/api/world/chron`, `/api/ice`, `/api/market`, `/api/stats`, `/api/err`, `/api/ai-training`) to a bounded in-isolate memory limiter (`hitMem`), added per-isolate `(day, vid)` deduplication in `playStats`, throttled background `cleanup()` to 30-minute intervals, added a D1 telemetry write budget and quota circuit breaker (`D1_SHIELD`) surfaced in `/api/admin/stats`, lowered production `[observability]` `head_sampling_rate` to `0.1`, and calibrated client presence intervals to honor server `every`. Needs a Worker redeploy.
