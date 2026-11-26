@@ -22,9 +22,9 @@ const MODES = {
   koth2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 灵坛争锋
   party: { bp: 'open', local: true, foe: '电脑' },   // 江湖百戏：轮换趣味小游戏
   bastion: { bp: 'open', local: true, foe: '电脑' },   // 天枢城·守境：多人守城+肉鸽+灵侍+流派装备
-  melee: { bp: 'large5', squadBp: { 3: 'large3', 5: 'large5', 8: 'large8', 16: 'large16' }, team: true, local: true, us: '我方大军', foe: '敌方大军' },   // 群雄会战：3v3 ~ 16v16 同屏大混战（完整禁选）
-  ctf: { bp: 'large5', squadBp: { 2: 'large2', 3: 'large3', 5: 'large5', 8: 'large8' }, team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 夺旗争锋：2v2 ~ 8v8 团队夺旗（完整禁选）
-  quad: { bp: 'solo', local: true },   // 四象争锋：4v4v4v4 四方混战（只选自己的侠客，另外三方和队友由电脑补齐）
+  melee: { bp: 'large5', squadBp: { 3: 'large3', 5: 'large5', 8: 'large8', 10: 'large10', 16: 'large16' }, team: true, local: true, us: '我方大军', foe: '敌方大军' },   // 群雄会战：3v3 ~ 16v16 同屏大混战（含 10v10 全 20 侠客无镜像）
+  ctf: { bp: 'large5', squadBp: { 2: 'large2', 3: 'large3', 5: 'large5', 8: 'large8', 10: 'large10' }, team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 夺旗争锋：2v2 ~ 10v10 团队夺旗（完整禁选）
+  quad: { bp: 'solo', local: true },   // 四象争锋：2v2v2v2 ~ 8v8v8v8 四方混战（8–32 人同屏，选自己的侠客，其余由电脑补齐）
   gauntlet: { bp: 'solo', local: true },   // 无尽试炼：逐波递增车轮生存战
   tag3: { bp: 'trio', team: true, local: true, foe: '敌方战队' },
   tower: { bp: 'solo', local: true },

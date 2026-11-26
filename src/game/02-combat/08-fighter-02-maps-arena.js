@@ -126,7 +126,61 @@ const BATTLE5_STAIRS = [
 ];
 const BATTLE5_MAP = { id: 'battle5', w: BATTLE5_WIDTH, layers: 3, layerH: BATTLE5_LAYER_HEIGHT, decks: BATTLE5_DECKS, stairs: BATTLE5_STAIRS, plats: [...BATTLE5_DECKS, ...BATTLE5_STAIRS] };
 
-const battleMapDef = () => !isLargeTeam() ? null : (quadOn() || M.teamSize === 8 ? BATTLE_MAP : M.teamSize === 5 ? BATTLE5_MAP : null);
+// 10v10 / 5v5v5v5（20 人同屏）专属五层演武大殿：4400px 宽，10 座飞梯（含中央直通梯），7 枚灵珠
+const BATTLE10_WIDTH = 4400;
+const BATTLE10_DECKS = Array.from({ length: 4 }, (_, i) => ({
+  x: BATTLE10_WIDTH / 2, y: -(4 - i) * BATTLE_LAYER_HEIGHT, w: BATTLE10_WIDTH - 2 * WALL, k: 'battle'
+}));
+const BATTLE10_STAIRS = [
+  ...Array.from({ length: 4 }, (_, layer) => [-1, 1].map(side => {
+    const left = 290 + layer * 290;
+    const bottomX = side === -1 ? left : BATTLE10_WIDTH - left;
+    const topX = bottomX - side * 260;
+    const bottomY = -layer * BATTLE_LAYER_HEIGHT, topY = bottomY - BATTLE_LAYER_HEIGHT;
+    return { layer, bottomX, topX, bottomY, topY, x: (bottomX + topX) / 2, y: topY, w: 260, k: 'stairs' };
+  })).flat(),
+  // 中央双层直通飞梯，缓解 20 人团战中路换层拥堵
+  { layer: 0, bottomX: BATTLE10_WIDTH / 2 - 130, topX: BATTLE10_WIDTH / 2 + 130, bottomY: 0, topY: -BATTLE_LAYER_HEIGHT, x: BATTLE10_WIDTH / 2, y: -BATTLE_LAYER_HEIGHT, w: 260, k: 'stairs' },
+  { layer: 2, bottomX: BATTLE10_WIDTH / 2 + 130, topX: BATTLE10_WIDTH / 2 - 130, bottomY: -2 * BATTLE_LAYER_HEIGHT, topY: -3 * BATTLE_LAYER_HEIGHT, x: BATTLE10_WIDTH / 2, y: -3 * BATTLE_LAYER_HEIGHT, w: 260, k: 'stairs' }
+];
+const BATTLE10_MAP = { id: 'battle10', w: BATTLE10_WIDTH, layers: 5, layerH: BATTLE_LAYER_HEIGHT, decks: BATTLE10_DECKS, stairs: BATTLE10_STAIRS, plats: [...BATTLE10_DECKS, ...BATTLE10_STAIRS] };
+
+// 16v16 / 8v8v8v8（32 人同屏）专属五层玄岳大战场：5600px 宽，12 座飞梯，9 枚灵珠
+const BATTLE16_WIDTH = 5600;
+const BATTLE16_DECKS = Array.from({ length: 4 }, (_, i) => ({
+  x: BATTLE16_WIDTH / 2, y: -(4 - i) * BATTLE_LAYER_HEIGHT, w: BATTLE16_WIDTH - 2 * WALL, k: 'battle'
+}));
+const BATTLE16_STAIRS = [
+  ...Array.from({ length: 4 }, (_, layer) => [-1, 1].map(side => {
+    const left = 340 + layer * 340;
+    const bottomX = side === -1 ? left : BATTLE16_WIDTH - left;
+    const topX = bottomX - side * 280;
+    const bottomY = -layer * BATTLE_LAYER_HEIGHT, topY = bottomY - BATTLE_LAYER_HEIGHT;
+    return { layer, bottomX, topX, bottomY, topY, x: (bottomX + topX) / 2, y: topY, w: 280, k: 'stairs' };
+  })).flat(),
+  // 4 座中路交替飞梯，让 32 人战场每层都有三条纵向换层通道
+  ...Array.from({ length: 4 }, (_, layer) => {
+    const dir = layer % 2 === 0 ? 1 : -1;
+    const bottomX = BATTLE16_WIDTH / 2 - dir * 140;
+    const topX = BATTLE16_WIDTH / 2 + dir * 140;
+    const bottomY = -layer * BATTLE_LAYER_HEIGHT, topY = bottomY - BATTLE_LAYER_HEIGHT;
+    return { layer, bottomX, topX, bottomY, topY, x: BATTLE16_WIDTH / 2, y: topY, w: 280, k: 'stairs' };
+  })
+];
+const BATTLE16_MAP = { id: 'battle16', w: BATTLE16_WIDTH, layers: 5, layerH: BATTLE_LAYER_HEIGHT, decks: BATTLE16_DECKS, stairs: BATTLE16_STAIRS, plats: [...BATTLE16_DECKS, ...BATTLE16_STAIRS] };
+
+const battleMapDef = () => {
+  if (!isLargeTeam()) return null;
+  if (quadOn()) {
+    const n = M.teamSize || 4;
+    return n >= 8 ? BATTLE16_MAP : n >= 5 ? BATTLE10_MAP : BATTLE_MAP;
+  }
+  if (M.teamSize >= 16) return BATTLE16_MAP;
+  if (M.teamSize >= 10) return BATTLE10_MAP;
+  if (M.teamSize >= 8) return BATTLE_MAP;
+  if (M.teamSize === 5) return BATTLE5_MAP;
+  return null;
+};
 const battleMapOn = () => !!battleMapDef();
 
 function battlePerksInit() {
@@ -138,6 +192,30 @@ function battlePerksInit() {
     M.battlePerks.push({ x: STAGE_W / 2, y: -2 * BATTLE5_LAYER_HEIGHT, large: true, cooldown: 0 });
     M.battlePerks.push({ x: 580, y: -BATTLE5_LAYER_HEIGHT, large: false, guard: grnd() < 0.5, cooldown: 0 });
     M.battlePerks.push({ x: STAGE_W - 580, y: -BATTLE5_LAYER_HEIGHT, large: false, guard: grnd() < 0.5, cooldown: 0 });
+    return;
+  }
+  if (bm === BATTLE10_MAP) {
+    // 20 人战场：中央 3 枚主灵珠（2/4 层）+ 4 枚侧翼补给珠（共 7 枚）
+    M.battlePerks.push({ x: STAGE_W / 2, y: -2 * BATTLE_LAYER_HEIGHT, large: true, cooldown: 0 });
+    M.battlePerks.push({ x: STAGE_W / 2, y: -4 * BATTLE_LAYER_HEIGHT, large: true, cooldown: 0 });
+    M.battlePerks.push({ x: STAGE_W / 2, y: 0, large: false, guard: false, cooldown: 0 });
+    for (let layer = 0; layer < 4; layer++) {
+      const p = BATTLE10_STAIRS[layer * 2 + Math.floor(grnd() * 2)];
+      M.battlePerks.push({ x: p.x, y: platformY(p, p.x), large: false, guard: grnd() < 0.5, cooldown: 0 });
+    }
+    return;
+  }
+  if (bm === BATTLE16_MAP) {
+    // 32 人战场：中央 3 枚主灵珠 + 左右 6 枚对称补给珠（共 9 枚）
+    M.battlePerks.push({ x: STAGE_W / 2, y: -2 * BATTLE_LAYER_HEIGHT, large: true, cooldown: 0 });
+    M.battlePerks.push({ x: STAGE_W / 2, y: -4 * BATTLE_LAYER_HEIGHT, large: true, cooldown: 0 });
+    M.battlePerks.push({ x: STAGE_W / 2, y: 0, large: true, cooldown: 0 });
+    for (const side of [-1, 1]) {
+      for (const layer of [1, 2, 3]) {
+        const px = STAGE_W / 2 + side * (720 + layer * 420);
+        M.battlePerks.push({ x: clamp(px, WALL + 160, STAGE_W - WALL - 160), y: -layer * BATTLE_LAYER_HEIGHT, large: false, guard: (layer % 2) === 1, cooldown: 0 });
+      }
+    }
     return;
   }
   M.battlePerks.push({ x: STAGE_W / 2, y: -2 * BATTLE_LAYER_HEIGHT, large: true, cooldown: 0 });
@@ -203,8 +281,8 @@ function mapEdge(f, cl) {
   if (f.x >= WALL && f.x <= STAGE_W - WALL) return;
   const side = f.x < WALL ? -1 : 1;
   const fav = mapFavOn(f);
-  // 燕翎（地利）：羽行御风，坠崖伤害减半；勾陈/磁仙/凌霜对手更容易受制，流云空中不易失足
-  let pushThresh = cl.push || 320;
+  // 燕翎 / 玄武（地利）：坠崖伤害减半；玄武重甲镇崖，坠崖门槛提升 35%
+  let pushThresh = (cl.push || 320) * (fav && f.ch.id === 'xuanwu' ? 1.35 : 1);
   const flung = f.state === 'launched' || ((f.state === 'hitstun' || f.state === 'knockdown') && Math.abs(f.vx) > pushThresh);
   f.x = side < 0 ? WALL : STAGE_W - WALL;
   if (!flung || f.hp <= 0) {
@@ -224,7 +302,7 @@ function mapEdge(f, cl) {
     addP({ type: 'text', text: '坠崖出局', x: f.x - side * 40, y: f.y - 110, life: 0.9, max: 0.9, rgb: '255,150,120' });
     return;
   }
-  const dmgMul = (fav && f.ch.id === 'yanling') ? 0.5 : 1;
+  const dmgMul = (fav && (f.ch.id === 'yanling' || f.ch.id === 'xuanwu')) ? 0.5 : 1;
   const dmg = Math.round(f.maxHp * (cl.dmg || 0.06) * dmgMul);
   f.hp = Math.max(1, f.hp - dmg);
   f.x -= side * (cl.back || 30); f.y = Math.min(f.y, -40); f.vy = cl.vy || -820; f.vx = -side * 120;
@@ -398,6 +476,7 @@ const mapSkillReach = f => {
   if (mp === MAPS.cliff && f.ch.id === 'gouchen' && f.skill === 'hook') return 1.2;
   if (mp !== MAPS.pagoda) return 1;
   if (f.ch.id === 'yuxiao' && f.plat >= 0) return 1.2;
+  if (f.ch.id === 'xuanji' && f.plat >= 0) return 1.18;
   if (f.ch.id === 'liuyun' && f.y < -15) return 1.15;
   return 1;
 };
@@ -429,6 +508,7 @@ function mapWindProj(p) {
   let k = 1;
   if (o && mapFavOn(o)) {
     if (o.ch.id === 'qingfeng') k = 2;
+    else if (o.ch.id === 'qingluan') k = 1.35;
     else if (o.ch.id === 'liuyun' || o.ch.id === 'moyu') k = 1.3;
   }
   if (o && mapScrollOn(o, 'feng')) k *= 1.15;
@@ -447,6 +527,7 @@ function mapThunder(T) {
     if (f.invul > 0 || f.escInvul || f.state === 'special' || f.state === 'held' || (f.magTg !== undefined && f.magTg >= 0)) continue;
     let thunderDmg = T.dmg;
     if (mapFavOn(f) && f.ch.id === 'yuehua') thunderDmg = Math.round(thunderDmg * 0.5);
+    else if (mapFavOn(f) && f.ch.id === 'xuanji') thunderDmg = Math.round(thunderDmg * 0.6);
     toNeutral(f);
     f.hp = Math.max(1, f.hp - thunderDmg);
     f.vy = T.vy; f.vx = (Math.sign(f.x - tx) || 1) * 200; f.plat = -1;
@@ -474,11 +555,15 @@ function mapTick(dt) {
     if (E.tWarn > 0) {
       E.tWarn -= dt;
       if (E.tWarn <= 0) { E.tWarn = 0; E.tT = T.every; mapThunder(T); }
-      // 玉箫（地利）：天雷预警石坛回响，音律充能提速
+      // 玉箫 / 玄机（地利）：天雷预警期间音律充能 / 星枢冷却提速
       for (const f of allFighters()) {
-        if (!f.hidden && f.hp > 0 && mapFavOn(f) && f.ch.id === 'yuxiao' && (f.notes || 0) < 3) {
+        if (f.hidden || f.hp <= 0 || !mapFavOn(f)) continue;
+        if (f.ch.id === 'yuxiao' && (f.notes || 0) < 3) {
           f.noteT = (f.noteT || 0) + dt * 0.5;
           if (f.noteT >= 2.5) { f.noteT = 0; f.notes = (f.notes || 0) + 1; }
+        } else if (f.ch.id === 'xuanji') {
+          if (f.skillCD > 0) f.skillCD = Math.max(0, f.skillCD - 0.35 * dt);
+          if (f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.35 * dt);
         }
       }
     } else if ((E.tT -= dt) <= 0) {
@@ -499,15 +584,17 @@ function mapTick(dt) {
         if (f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + mp.fog.guard * (fav && f.ch.id === 'moyu' ? 2 : 1) * (mapScrollOn(f, 'mo') ? 1.15 : 1) * dt);
         if (fav && f.ch.id === 'zuixian') f.drunk = Math.min(100, (f.drunk || 0) + 12 * dt);
         if (fav && f.ch.id === 'yuehua' && f.sinceHit > 2 && f.hp < f.maxHp) f.hp = Math.min(f.maxHp, f.hp + 6 * HERO_HP_SCALE * dt);
-        if (fav && f.ch.id === 'qianji') {
-          if (f.skillCD > 0) f.skillCD = Math.max(0, f.skillCD - 0.2 * dt);
-          if (f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.2 * dt);
+        if (fav && (f.ch.id === 'qianji' || f.ch.id === 'chixiao')) {
+          if (f.skillCD > 0) f.skillCD = Math.max(0, f.skillCD - 0.25 * dt);
+          if (f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.25 * dt);
         }
       }
     }
     if (f.plat >= 0 && mapFavOn(f)) {
       if (f.ch.id === 'lingque' && f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.3 * dt);
       if (f.ch.id === 'qianji' && f.skillCD > 0) f.skillCD = Math.max(0, f.skillCD - 0.15 * dt);
+      if (f.ch.id === 'xuanji' && f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.25 * dt);
+      if (f.ch.id === 'qingluan' && M.map === 'bamboo' && f.meter < 100) f.meter = Math.min(100, f.meter + 2.5 * dt);
     }
     if (f.plat >= 0 && mapScrollOn(f, 'ying') && f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + 1.5 * dt);
   }

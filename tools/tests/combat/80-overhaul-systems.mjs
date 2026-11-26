@@ -274,9 +274,9 @@ export default [
           || sideFighters(1).some((f, i) => f.chIdx !== expectedTeam1[i])) {
         return { pass: false, error: 'Melee rematch changed the drafted teams' };
       }
-      // Verify 8v8 CTF BP draft structure
+      // Verify 8v8 CTF BP draft structure (1 ban per side + 16 picks = 18/20, preserving final-pick agency)
       bpStart('ctf', { teamSize: 8, level: 'hard' });
-      if (BP.picks[0].length !== 8 || BP.picks[1].length !== 8 || BP.bansBySide[0].length !== 2) {
+      if (BP.picks[0].length !== 8 || BP.picks[1].length !== 8 || BP.bansBySide[0].length !== 1 || BP.bansBySide[1].length !== 1) {
         return { pass: false, error: '8v8 CTF BP structure mismatch' };
       }
       while (BP && BP.step < bpSteps().length) bpApply(bpCpuChoice());
@@ -286,6 +286,30 @@ export default [
       $id('againBtn').click();
       if (M.mode !== 'ctf' || [0, 1].some(side => sideFighters(side).some((f, i) => f.chIdx !== ctfTeams[side][i]))) {
         return { pass: false, error: 'CTF rematch changed the drafted teams' };
+      }
+      // Verify 10v10 (20 unique heroes, BATTLE10_MAP), 16v16 (BATTLE16_MAP), and Quad 5v5v5v5/8v8v8v8 scaling
+      bpStart('melee', { teamSize: 10, level: 'normal' });
+      if (BP.picks[0].length !== 10 || BP.picks[1].length !== 10 || BP.bans.length !== 0) {
+        return { pass: false, error: '10v10 melee BP structure mismatch' };
+      }
+      while (BP && BP.step < bpSteps().length) bpApply(bpCpuChoice());
+      const all20 = [...BP.picks[0], ...BP.picks[1]];
+      if (new Set(all20).size !== 20) return { pass: false, error: '10v10 did not draft 20 unique heroes' };
+      bpFinish();
+      if (M.mode !== 'melee' || M.teamSize !== 10 || mapNow() !== BATTLE10_MAP || STAGE_W !== BATTLE10_WIDTH) {
+        return { pass: false, error: '10v10 did not activate BATTLE10_MAP' };
+      }
+      startMelee(16, 0, 'normal', 'normal');
+      if (mapNow() !== BATTLE16_MAP || STAGE_W !== BATTLE16_WIDTH || (M.battlePerks || []).length !== 9) {
+        return { pass: false, error: '16v16 did not activate BATTLE16_MAP with 9 perks' };
+      }
+      startQuad(5, 0, 'normal');
+      if (allFighters().length !== 20 || mapNow() !== BATTLE10_MAP) {
+        return { pass: false, error: '5v5v5v5 Quad Clash did not field 20 fighters on BATTLE10_MAP' };
+      }
+      startQuad(8, 0, 'normal');
+      if (allFighters().length !== 32 || mapNow() !== BATTLE16_MAP) {
+        return { pass: false, error: '8v8v8v8 Quad Clash did not field 32 fighters on BATTLE16_MAP' };
       }
       toMenu();
       return { pass: true };

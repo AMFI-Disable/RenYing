@@ -294,7 +294,7 @@ Object.assign(UI_COPY_EN, {
   "夺旗争锋 · 8v8": "Capture the Banner · 8v8",
   "3v3 / 5v5 / 8v8 同屏大混战": "3v3 / 5v5 / 8v8 simultaneous team clash",
   "夺旗争锋": "Capture the Banner",
-  "2v2–8v8 护旗夺分战": "2v2–8v8 team banner capture",
+  "2v2–10v10（4–20人护旗）": "2v2–10v10 (4–20 players CTF)",
   "无尽试炼": "Endless Gauntlet",
   "逐波递增车轮生存战": "Escalating wave survival challenge",
   "团战规模": "Team Size",

@@ -1,4 +1,4 @@
-// ======================= 夺旗争锋：2v2 ~ 8v8 团队夺旗战 =======================
+// ======================= 夺旗争锋：2v2 ~ 10v10 团队夺旗战 =======================
 // 双方基地各立战旗；夺取敌方战旗护送回己方阵地即得 1 分，先夺 3 旗者胜。
 const ctfOn = () => M.mode === 'ctf' || (M.mode === 'replay' && REPLAY.on && !!(REPLAY.m && (REPLAY.m.mode === 'ctf' || REPLAY.m.room === 'ctf'))) || !!(typeof netRoom === 'function' && netRoom() && netRoom().rule === 'ctf');
 
@@ -21,7 +21,7 @@ function ctfObjective(f, foe) {
   const team = fighterTeam(f);
   const home = M.ctf.flags[team], away = M.ctf.flags[1 - team];
   if (away.carrier === f.idx) return { x: home.baseX, y: 0 };
-  if (Math.abs(f.x - foe.x) < 220 && foe.hp > 0) return null;
+  if (foe && foe.hp > 0 && Math.abs(f.x - foe.x) < 220 && Math.abs(f.y - foe.y) < 120) return null;
   if (home.dropped) return home;
   if (home.carrier >= 0) return fighterByIdx(home.carrier);
   return away.carrier < 0 ? away : null;
@@ -107,7 +107,7 @@ function drawCtfField() {
 }
 
 function startCtf(teamSize = 4, heroIdx = 0, level = 'normal', drafted = null, mut = 'normal') {
-  const sz = clamp(teamSize | 0, 2, 8);
+  const sz = clamp(teamSize | 0, 2, 10);
   debugHitbox = false;
   refocusGame();
   netDropWaiting();

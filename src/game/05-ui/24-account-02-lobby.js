@@ -76,9 +76,22 @@ window.updateNetLobby = updateNetLobby;
 // 建房、加入、进了房间：露出下面的候战厅、状态和网络情况（平时收着，对战页只有那张 3v3 卡）
 function roomWrapShow() { const w = $id('roomWrap'); if (w) w.classList.remove('hidden'); }
 
-const netTeamMutator = () => !NET.isRanked && ['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'maps'].includes(netRoomMode) && teamMutator === 'mayhem' ? 'mayhem' : 'normal';
+const netTeamMutator = () => !NET.isRanked && ['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'quad', 'maps'].includes(netRoomMode) && teamMutator === 'mayhem' ? 'mayhem' : 'normal';
 let netRoomMode = 'normal';   // 好友房的规则，见 src/data/10-modes.js 的 ROOM_MODES；排位固定 normal（3v3 车轮战）
-const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '常规标准', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏', bastion: '天枢守境', melee: '群雄会战 · 8v8', ctf: '夺旗争锋 · 8v8' };
+let netTeamSize = 0;          // 好友房大型团战的每队人数（melee: 3/5/8/10/16, ctf: 2/3/5/8/10, quad: 2/4/5/8）
+const ROOM_TEAM_SIZES = {
+  melee: [3, 5, 8, 10, 16],
+  ctf: [2, 3, 5, 8, 10],
+  quad: [2, 4, 5, 8],
+};
+const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '常规标准', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏', bastion: '天枢守境', melee: '群雄会战', ctf: '夺旗争锋', quad: '四象争锋' };
+function roomRuleLabel(rule, sz) {
+  const base = ROOM_RULE_NAMES[rule] || ROOM_RULE_NAMES.normal;
+  const opts = ROOM_TEAM_SIZES[rule];
+  if (!opts) return base;
+  const n = opts.includes(sz) ? sz : (ROOM_MODES[rule]?.teamSize || opts[0]);
+  return rule === 'quad' ? `${base} · ${n}v${n}v${n}v${n} (${n * 4}人)` : `${base} · ${n}v${n} (${n * 2}人)`;
+}
 
 const lobbyModesSegEl = $id('lobbyModesSeg');
 if (lobbyModesSegEl) {
@@ -90,14 +103,46 @@ if (lobbyModesSegEl) {
       return;
     }
     setRoomModeUI(b.dataset.mode);
-    if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator() });
-    toast(`已设定切磋规则：${ROOM_RULE_NAMES[netRoomMode] || ROOM_RULE_NAMES.normal}`);
+    if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator(), size: netTeamSize });
+    toast(`已设定切磋规则：${roomRuleLabel(netRoomMode, netTeamSize)}`);
+    SFX.slice();
+  });
+}
+const lobbyTeamSizeSegEl = $id('lobbyTeamSizeSeg');
+if (lobbyTeamSizeSegEl) {
+  lobbyTeamSizeSegEl.addEventListener('click', e => {
+    const b = e.target.closest('button[data-rtsize]');
+    if (!b || (NET.role === 'client' && NET.open)) return;
+    const opts = ROOM_TEAM_SIZES[netRoomMode];
+    if (!opts) return;
+    const sz = +b.dataset.rtsize || opts[0];
+    netTeamSize = opts.includes(sz) ? sz : opts[0];
+    renderLobbyTeamSize();
+    if ($id('roomRuleNow')) $id('roomRuleNow').textContent = roomRuleLabel(netRoomMode, netTeamSize);
+    if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator(), size: netTeamSize });
     SFX.slice();
   });
 }
 
-function setRoomModeUI(rule) {
+function renderLobbyTeamSize() {
+  if (!lobbyTeamSizeSegEl) return;
+  const opts = ROOM_TEAM_SIZES[netRoomMode];
+  lobbyTeamSizeSegEl.hidden = !opts;
+  if (!opts) { netTeamSize = 0; return; }
+  if (!opts.includes(netTeamSize)) netTeamSize = ROOM_MODES[netRoomMode]?.teamSize || opts[0];
+  const dis = NET.role === 'client' && NET.open;
+  lobbyTeamSizeSegEl.innerHTML = opts.map(n => {
+    const lbl = netRoomMode === 'quad' ? `${n}v${n}v${n}v${n} · ${n * 4}人` : `${n}v${n} · ${n * 2}人`;
+    const sel = n === netTeamSize;
+    return `<button class="ghost small${sel ? ' sel' : ''}" data-rtsize="${n}" type="button" aria-pressed="${sel}"${dis ? ' disabled' : ''}>${lbl}</button>`;
+  }).join('');
+}
+
+function setRoomModeUI(rule, sizeOverride) {
   netRoomMode = ROOM_MODES[rule] ? rule : 'normal';
+  const opts = ROOM_TEAM_SIZES[netRoomMode];
+  if (opts) netTeamSize = opts.includes(sizeOverride) ? sizeOverride : (opts.includes(netTeamSize) ? netTeamSize : (ROOM_MODES[netRoomMode]?.teamSize || opts[0]));
+  else netTeamSize = 0;
   if (lobbyModesSegEl) {
     for (const btn of lobbyModesSegEl.querySelectorAll('button')) {
       btn.classList.toggle('sel', btn.dataset.mode === netRoomMode);
@@ -105,20 +150,21 @@ function setRoomModeUI(rule) {
       btn.disabled = NET.role === 'client' && NET.open;
     }
   }
-  if ($id('roomRuleNow')) $id('roomRuleNow').textContent = ROOM_RULE_NAMES[netRoomMode] || ROOM_RULE_NAMES.normal;
+  renderLobbyTeamSize();
+  if ($id('roomRuleNow')) $id('roomRuleNow').textContent = roomRuleLabel(netRoomMode, netTeamSize);
   if (netRoomMode !== 'normal' && $id('roomMore')) $id('roomMore').open = true;   // 选的是别的规则：把折叠打开，让人看得见
   renderLobbyMaps();
   renderLobbyMutator();
 }
 function renderLobbyMutator() {
   const el = $id('lobbyMutator'); if (!el) return;
-  el.hidden = NET.isRanked || !['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'maps'].includes(netRoomMode);
+  el.hidden = NET.isRanked || !['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'quad', 'maps'].includes(netRoomMode);
   for (const b of el.querySelectorAll('button')) { b.disabled = NET.role === 'client' && NET.open; b.classList.toggle('sel', b.dataset.mut === netTeamMutator()); b.setAttribute('aria-pressed', String(b.dataset.mut === netTeamMutator())); }
 }
 if ($id('lobbyMutator')) $id('lobbyMutator').addEventListener('click', e => {
   const b = e.target.closest('button[data-mut]'); if (!b || (NET.role === 'client' && NET.open)) return;
   teamMutator = b.dataset.mut === 'mayhem' ? 'mayhem' : 'normal';
-  renderLobbyMutator(); if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator() });
+  renderLobbyMutator(); if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator(), size: netTeamSize });
 });
 // 山河异境的联机投票：两边各一票（默认是自己在单人页上投的那张），改票时发给对面；房主开局时把两票一起发出去
 const NET_MAPV = { host: null, client: null };

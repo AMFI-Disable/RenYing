@@ -3,7 +3,7 @@
 Object.assign(UI_COPY_EN, {
   // 模式大厅的卡片和说明（src/page.html、src/game/05-ui/17-home-02-mode-hall.js）
   "墨球蹴鞠": "Ink Ball",
-  "不比气血，比谁先进三球": "No health bars, first to three goals",
+  "1v1/2v2（2–4人）· 先进三球": "1v1/2v2 (2–4 players) · First to 3 goals",
   "墨球蹴鞠 · 先进三球": "Ink Ball · First to Three",
   "不比气血 · 不计排位": "No health · Unranked",
   "场地两边各有一个球门，中间一颗墨球。普攻和技能打中墨球就能把它打飞，先把墨球打进对方球门三次的一方获胜；时间到比分领先的赢，平分进金球决胜。挨打照样会被打飞，但气血不会掉。": "There is a goal at each end and an ink ball in the middle. Hit the ball with attacks and skills to send it flying; the first side to put it in the other goal three times wins. When time runs out the side ahead wins, and a tie goes to a golden goal. Hits still knock heroes around, but nobody loses health.",

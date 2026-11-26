@@ -32,9 +32,19 @@ function meleeMatch() {
         S.respawn[f.idx] -= STEP;
         if (S.respawn[f.idx] <= 0 && S.tickets[fighterTeam(f)] > 0) {
           const team = fighterTeam(f);
-          const offset = WALL + 120 + Math.floor(f.idx / 2) * 56;
-          const rx = team === 0 ? offset : STAGE_W - offset;
+          const slot = Math.floor(f.idx / 2);
+          const bm = typeof battleMapDef === 'function' ? battleMapDef() : null;
+          // 大型团战（10v10 / 16v16）采用前沿分流复活点（地面 + 一层廊台），减少长距离跑图时间
+          const baseOffset = S.size >= 10 ? Math.min(STAGE_W * 0.22, 920) : (WALL + 140);
+          const col = S.size >= 10 ? Math.floor(slot / 2) : slot;
+          const stepX = S.size >= 10 ? 72 : 56;
+          const rx = team === 0
+            ? clamp(baseOffset + col * stepX, WALL + 90, STAGE_W / 2 - 260)
+            : clamp(STAGE_W - baseOffset - col * stepX, STAGE_W / 2 + 260, STAGE_W - WALL - 90);
           f.reset(rx);
+          if (bm && S.size >= 10 && (slot % 2) === 1 && bm.decks.length) {
+            mapPutOn(f, bm.decks.length - 1);
+          }
           f.face = team === 0 ? 1 : -1;
           f.invul = 1.1;
           if (f.idx === localIdx()) { f.beaconT = 1.4; camFocusPingT = 0.9; }

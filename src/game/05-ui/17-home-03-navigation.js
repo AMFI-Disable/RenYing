@@ -245,7 +245,7 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
 });
 // ---------- 大型团战启动 ----------
 (function initExpansionHome() {
-  let meleeTeamSize = 5, ctfTeamSize = 5;
+  let meleeTeamSize = 5, ctfTeamSize = 5, quadTeamSize = 4;
   const meleeSeg = $id('meleeSizeSeg');
   if (meleeSeg) meleeSeg.addEventListener('click', e => {
     const b = e.target.closest('[data-lsize]'); if (!b) return;
@@ -260,9 +260,16 @@ for (const b of document.querySelectorAll('[data-back]')) b.addEventListener('cl
     ctfSeg.querySelectorAll('[data-lsize]').forEach(x => x.classList.toggle('sel', x === b));
     SFX.slice && SFX.slice();
   });
+  const quadSeg = $id('quadSizeSeg');
+  if (quadSeg) quadSeg.addEventListener('click', e => {
+    const b = e.target.closest('[data-qsize]'); if (!b) return;
+    quadTeamSize = clamp(+b.dataset.qsize || 4, 2, 8);
+    quadSeg.querySelectorAll('[data-qsize]').forEach(x => x.classList.toggle('sel', x === b));
+    SFX.slice && SFX.slice();
+  });
   if ($id('largeStartMelee')) $id('largeStartMelee').addEventListener('click', () => bpStart('melee', { teamSize: meleeTeamSize, level: pickLevel || 'normal', mut: typeof teamMutator !== 'undefined' ? teamMutator : 'normal' }));
   if ($id('largeStartCtf')) $id('largeStartCtf').addEventListener('click', () => bpStart('ctf', { teamSize: ctfTeamSize, level: pickLevel || 'normal', mut: typeof teamMutator !== 'undefined' ? teamMutator : 'normal' }));
-  if ($id('largeStartQuad')) $id('largeStartQuad').addEventListener('click', () => bpStart('quad', { teamSize: 4, level: pickLevel || 'normal' }));
+  if ($id('largeStartQuad')) $id('largeStartQuad').addEventListener('click', () => bpStart('quad', { teamSize: quadTeamSize, level: pickLevel || 'normal' }));
   if ($id('largeStartGauntlet')) $id('largeStartGauntlet').addEventListener('click', () => bpStart('gauntlet', { level: pickLevel || 'normal' }));
   if ($id('cardMelee')) $id('cardMelee').addEventListener('dblclick', () => $id('largeStartMelee') && $id('largeStartMelee').click());
   if ($id('cardCtf')) $id('cardCtf').addEventListener('dblclick', () => $id('largeStartCtf') && $id('largeStartCtf').click());

@@ -57,7 +57,7 @@ Object.assign(UI_COPY_EN, {
   "训练场 · 玩法说明": "Training · Mode Guide",
   "包含招式教学、木人桩自由练习（可看判定框、帧数差与回放）、以及防反/连段等专项情景训练。": "Includes guided Move Tutorials, Free Practice with hitboxes & frame advantage, and focused situational drills.",
   "守关挑战 · 玩法说明": "Campaign · Mode Guide",
-  "十三侠客专属六章三十关斩妖除魔路线。每关击败首领积累星级与墨锭，最终章迎战六技融魂魔首。": "6-chapter, 30-stage demon-slaying campaign for every hero, ending in a co-op showdown with the 6-skill Boss.",
+  "二十侠客专属斩妖除魔路线（3v1 同袍共斗）。每关击败首领积累星级与墨锭，最终章迎战六技融魂魔首。": "Demon-slaying campaign for all 20 heroes (3v1 co-op), ending in a showdown with the 6-skill Boss.",
   "侠客列传 · 玩法说明": "Hero Sagas · Mode Guide",
   "每位侠客独立的五节剧情篇章，在关键节点做出抉择可解锁不同结局与专属秘闻。": "A 5-act story for each hero with branching choices and dual endings.",
   "问剑密卷 · 玩法说明": "Endless Tower · Mode Guide",

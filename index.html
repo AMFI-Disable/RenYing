@@ -4774,7 +4774,7 @@ window.RYBoot = (function () {
     </div>
     <div class="home-kicker"><span class="season-tag" id="homeSeason">第二赛季</span><span id="homeSeasonTxt">11.22 – 12.22 · 段位排位开启</span><span class="home-online-pill" id="homeOnlinePill" title="全服在线侠士"><span class="home-online-dot"></span><span id="homeOnlineCount">全服 — 人在线</span></span><button class="home-evt-pill" id="homeEvt" type="button" hidden>活动：全皮肤限免 · <span id="homeEvtLeft"></span></button></div>
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
-    <p class="home-tag">十六位侠客 · 回滚联机 · 赛季排位</p>
+    <p class="home-tag">二十位侠客 · 回滚联机 · 赛季排位</p>
     <div class="home-side">
       <button class="home-card home-gboss tn-online" id="homeGboss" type="button" hidden>
         <span class="hc-kicker">天魔讨伐 · 全服共斗</span>
@@ -4802,7 +4802,7 @@ window.RYBoot = (function () {
     <!-- 首页两个入口：大的「联机对战」直接去联机，下面小一点的「习武」进对战电脑和其他模式；换侠客在正中侠客脚下 -->
     <div class="home-entries" id="homeEntries">
       <button class="mcard right" id="mMatch" data-go="netp" data-kb-default><span class="mk">联机对战</span><span class="ms">3v3 车轮战 · 排位与好友约战</span></button>
-      <button class="mcard left" id="mPlay" data-go="single"><span class="mk">习武</span><span class="ms">人机切磋 · 8v8 团战 · 历练闯关</span></button>
+      <button class="mcard left" id="mPlay" data-go="single"><span class="mk">习武</span><span class="ms">人机切磋 · 3v3–16v16 团战 · 历练闯关</span></button>
     </div>
 
     <div class="home-hero" id="homeHero">   <!-- 跟着首页正中那位侠客的脚下走：上面是名字，下面是换侠客 -->
@@ -4853,22 +4853,22 @@ window.RYBoot = (function () {
           <!-- 实战切磋分区模式 (6 张主卡) -->
           <div class="xiwu-cat-group" data-cat-group="combat">
             <div class="xiwu-cards-row">
-              <button data-tab="cpu" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">对战电脑</b><span class="pt-d">一对一，难度自选</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="cpu" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="tag3" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">3v3 车轮战</b><span class="pt-d">三人接力，胜者守擂</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="tag3" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="watch2v2" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><b class="pt-n">2v2 组队</b><span class="pt-d">两人一队，可带电脑队友</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="watch2v2" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="cuju" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18M5 7c3 2 11 2 14 0M5 17c3-2 11-2 14 0"/></svg></span><b class="pt-n">墨球蹴鞠</b><span class="pt-d">不比气血，比谁先进三球</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="cuju" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="koth" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.4 1.1 6L12 17.5 6.4 20.4l1.1-6L3 10l6-1z"/></svg></span><b class="pt-n">灵坛争锋</b><span class="pt-d">占领灵坛，无限复活抢分</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="koth" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="party" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="4"/><circle cx="16" cy="9" r="3"/><path d="M4 20c1.5-3 8.5-3 10 0"/></svg></span><b class="pt-n">江湖百戏</b><span class="pt-d">传火折、断崖推手、飞球乱舞</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="party" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="cpu" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">对战电脑</b><span class="pt-d">1v1（2人）· 难度自选</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="cpu" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="tag3" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">3v3 车轮战</b><span class="pt-d">6人接力（同屏2人）· 胜者守擂</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="tag3" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="watch2v2" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><b class="pt-n">2v2 组队</b><span class="pt-d">2v2（4人同屏）· 可带电脑队友</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="watch2v2" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="cuju" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18M5 7c3 2 11 2 14 0M5 17c3-2 11-2 14 0"/></svg></span><b class="pt-n">墨球蹴鞠</b><span class="pt-d">1v1/2v2（2–4人）· 先进三球</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="cuju" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="koth" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.4 1.1 6L12 17.5 6.4 20.4l1.1-6L3 10l6-1z"/></svg></span><b class="pt-n">灵坛争锋</b><span class="pt-d">1v1/2v2（2–4人）· 无限复活抢分</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="koth" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="party" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="4"/><circle cx="16" cy="9" r="3"/><path d="M4 20c1.5-3 8.5-3 10 0"/></svg></span><b class="pt-n">江湖百戏</b><span class="pt-d">1v1（2人）· 传火折/断崖推手/飞球</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="party" title="玩法说明" aria-label="玩法说明">i</span></button>
             </div>
           </div>
 
           <!-- 大型团战与新玩法分区 -->
           <div class="xiwu-cat-group" data-cat-group="large" style="display:none">
             <div class="xiwu-cards-row">
-              <button data-tab="melee" type="button" id="cardMelee"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">群雄会战</b><span class="pt-d">3v3 至 16v16 同屏大混战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="melee" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="ctf" type="button" id="cardCtf"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">夺旗争锋</b><span class="pt-d">2v2–8v8 护旗夺分战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="ctf" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="quad" type="button" id="cardQuad"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">四象争锋</b><span class="pt-d">4v4v4v4 四方混战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="quad" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="gauntlet" type="button" id="cardGauntlet"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">无尽试炼</b><span class="pt-d">逐波递增车轮生存战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="gauntlet" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="melee" type="button" id="cardMelee"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">群雄会战</b><span class="pt-d">3v3–16v16（6–32人同屏）</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="melee" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="ctf" type="button" id="cardCtf"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">夺旗争锋</b><span class="pt-d">2v2–10v10（4–20人护旗）</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="ctf" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="quad" type="button" id="cardQuad"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">四象争锋</b><span class="pt-d">2v2v2v2–8v8v8v8（8–32人四方混战）</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="quad" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="gauntlet" type="button" id="cardGauntlet"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">无尽试炼</b><span class="pt-d">1v1（2人）· 逐波递增车轮生存</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="gauntlet" title="玩法说明" aria-label="玩法说明">i</span></button>
             </div>
           </div>
 
@@ -5024,25 +5024,26 @@ window.RYBoot = (function () {
         </div>
       </div>
 
-      <!-- 群雄会战 · 3v3 / 5v5 / 8v8 -->
+      <!-- 群雄会战 · 3v3 / 5v5 / 8v8 / 10v10 / 16v16 -->
       <div data-sec="melee" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
           <h3 class="spt">群雄会战 · 大型同屏混战</h3>
-          <span class="sub-badge">3v3 至 16v16 · 多层立体战场</span>
+          <span class="sub-badge">6–32人同屏 · 3v3 至 16v16 立体战场</span>
         </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">支持 3v3、5v5（三层演武楼阁）与 8v8（五层飞檐战场）乃至 16v16 同屏大混战！由统帅下令，配备兵力积分、战损复活、战队指令与滚轮镜头缩放。</p>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">支持 3v3（6人）、5v5（10人三层楼阁）、8v8（16人五层战场）、10v10（20人全侠客无镜像五层大殿）与 16v16（32人玄岳大战场）！由统帅下令，配备兵力积分、前沿复活与滚轮镜头缩放。</p>
         <div class="sec-sub-label" style="text-align:left;margin-top:6px">团战规模</div>
         <div class="seg m2-seg" id="meleeSizeSeg" style="margin-bottom:12px">
-          <button type="button" data-lsize="3">3v3 小队战</button>
-          <button type="button" data-lsize="5" class="sel">5v5 演武楼阁</button>
-          <button type="button" data-lsize="8">8v8 五层大战场</button>
-          <button type="button" data-lsize="16">16v16 全军会战</button>
+          <button type="button" data-lsize="3">3v3 · 6人</button>
+          <button type="button" data-lsize="5" class="sel">5v5 · 10人</button>
+          <button type="button" data-lsize="8">8v8 · 16人</button>
+          <button type="button" data-lsize="10">10v10 · 20人</button>
+          <button type="button" data-lsize="16">16v16 · 32人</button>
         </div>
         <div class="bp-rule-banner">
           <span class="bp-rule-seal">禁选</span>
           <div class="bp-rule-txt">
             <b>点将台规则 · 亲自禁人与自选本命侠客，其余位置 AI 极速补齐</b>
-            <span>你仅需掌控禁用与自身出战侠客，其余队友与敌方阵营将由 AI 快速完成选人，减少等待。</span>
+            <span>10v10 全 20 位侠客无镜像齐上阵；16v16 自动启用镜像选人，减少等待即刻开战。</span>
           </div>
         </div>
         <div class="single-action-row">
@@ -5050,19 +5051,20 @@ window.RYBoot = (function () {
         </div>
       </div>
 
-      <!-- 夺旗争锋 · 2v2–8v8 -->
+      <!-- 夺旗争锋 · 2v2–10v10 -->
       <div data-sec="ctf" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
           <h3 class="spt">夺旗争锋 · 团队护旗战</h3>
-          <span class="sub-badge">2v2–8v8 · 先夺三旗胜</span>
+          <span class="sub-badge">4–20人同屏 · 2v2–10v10 先夺三旗胜</span>
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">双方阵地各立战旗，深入敌阵夺取敌旗并护送回己方阵地即得 1 分，率先夺得 3 旗的一方获胜！</p>
         <div class="sec-sub-label" style="text-align:left;margin-top:6px">团战规模</div>
         <div class="seg m2-seg" id="ctfSizeSeg" style="margin-bottom:12px">
-          <button type="button" data-lsize="2">2v2 轻骑夺旗</button>
-          <button type="button" data-lsize="3">3v3 小队夺旗</button>
-          <button type="button" data-lsize="5" class="sel">5v5 楼阁夺旗</button>
-          <button type="button" data-lsize="8">8v8 全军夺旗</button>
+          <button type="button" data-lsize="2">2v2 · 4人</button>
+          <button type="button" data-lsize="3">3v3 · 6人</button>
+          <button type="button" data-lsize="5" class="sel">5v5 · 10人</button>
+          <button type="button" data-lsize="8">8v8 · 16人</button>
+          <button type="button" data-lsize="10">10v10 · 20人</button>
         </div>
         <div class="bp-rule-banner">
           <span class="bp-rule-seal">禁选</span>
@@ -5076,18 +5078,25 @@ window.RYBoot = (function () {
         </div>
       </div>
 
-      <!-- 四象争锋 · 4v4v4v4 -->
+      <!-- 四象争锋 · 2v2v2v2–8v8v8v8 -->
       <div data-sec="quad" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
           <h3 class="spt">四象争锋 · 四方混战</h3>
-          <span class="sub-badge">4v4v4v4 · 统帅战术相克</span>
+          <span class="sub-badge">8–32人同屏 · 统帅战术相克</span>
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">苍龙、朱雀、玄武、白虎四队同屏混战，你是苍龙统帅：用 1/2/3 或 Tab 切换锋矢、固守、游袭战术，敌方统帅的战术不可见，最后存活的队伍夺魁！</p>
+        <div class="sec-sub-label" style="text-align:left;margin-top:6px">四方规模</div>
+        <div class="seg m2-seg" id="quadSizeSeg" style="margin-bottom:12px">
+          <button type="button" data-qsize="2">2v2v2v2 · 8人</button>
+          <button type="button" data-qsize="4" class="sel">4v4v4v4 · 16人</button>
+          <button type="button" data-qsize="5">5v5v5v5 · 20人</button>
+          <button type="button" data-qsize="8">8v8v8v8 · 32人</button>
+        </div>
         <div class="bp-rule-banner">
           <span class="bp-rule-seal pick-only">直选</span>
           <div class="bp-rule-txt">
             <b>点将台规则 · 免禁用自选本命侠客</b>
-            <span>进入点将台挑选你的侠客，其余队友与三支敌队随机组成。</span>
+            <span>进入点将台挑选你的侠客，其余队友与三支敌队随机组成（5v5v5v5 恰好 20 位侠客各登场一次）。</span>
           </div>
         </div>
         <div class="single-action-row">
@@ -5099,7 +5108,7 @@ window.RYBoot = (function () {
       <div data-sec="gauntlet" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
           <h3 class="spt">无尽试炼 · 车轮生存战</h3>
-          <span class="sub-badge">逐波递增 · 考验耐力</span>
+          <span class="sub-badge">1v1（2人）· 逐波递增</span>
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">单骑迎战源源不断的江湖群雄，每击破一波恢复部分气血并迎战更高境界强敌，挑战个人极限连胜！</p>
         <div class="bp-rule-banner">
@@ -5114,13 +5123,13 @@ window.RYBoot = (function () {
         </div>
       </div>
 
-      <!-- 闯关模式（已与同袍肉鸽多人模式深度融合：十三侠客专属斩妖列传） -->
+      <!-- 闯关模式（已与同袍肉鸽多人模式深度融合：二十侠客专属斩妖列传） -->
       <div data-sec="stage" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
-          <h3 class="spt">十三侠客斩妖传 · 同袍肉鸽共斗</h3>
-          <span class="sub-badge">每位侠客专属剧情 · 多人肉鸽合一</span>
+          <h3 class="spt">二十侠客斩妖传 · 同袍肉鸽共斗</h3>
+          <span class="sub-badge">3v1（4人同屏）· 每位侠客专属剧情</span>
         </div>
-        <p class="sub" style="margin:2px 0 8px;text-align:left">十三位侠客各有一卷斩妖除魔的专属故事！前四幕迎战刀鬼、弓妖、缚灵、咒师、夜枭并感悟共享秘卷，终幕决战三侠六技融魂魔首！</p>
+        <p class="sub" style="margin:2px 0 8px;text-align:left">二十位侠客各有一卷斩妖除魔的专属故事！前四幕迎战刀鬼、弓妖、缚灵、咒师、夜枭并感悟共享秘卷，终幕决战三侠六技融魂魔首！</p>
         <div class="st-story-box" id="stStoryBox"></div>
         <div class="sec-sub-label" style="margin-top:12px">选择侠客剧情篇章与关卡（点击关卡即刻携同袍出征）</div>
         <div class="seg sttabs" id="stTabs"></div>
@@ -5230,7 +5239,7 @@ window.RYBoot = (function () {
           <span class="bp-rule-seal pick-only">直选</span>
           <div class="bp-rule-txt">
             <b>点将台规则 · 肉鸽爬塔免禁用直选</b>
-            <span>点击「开启新试炼」后进入水墨点将台，自由检视十六位侠客武学并钦点本命试炼侠客登阁。</span>
+            <span>点击「开启新试炼」后进入水墨点将台，自由检视二十位侠客武学并钦点本命试炼侠客登阁。</span>
           </div>
         </div>
         <div class="single-action-row">
@@ -5428,17 +5437,19 @@ window.RYBoot = (function () {
               <details class="tp-more" id="roomMore">
                 <summary>更多规则 · <span id="roomRuleNow">3v3 车轮战</span></summary>
                 <div class="lobby-modes-seg" id="lobbyModesSeg" role="group" aria-label="好友房规则">
-                  <button class="ghost small sel" data-mode="normal" type="button">3v3 车轮战</button>
-                  <button class="ghost small" data-mode="pp_cc" type="button">2v2 · 两人打两电脑</button>
-                  <button class="ghost small" data-mode="pp_pp" type="button">2v2 · 两人对两人</button>
-                  <button class="ghost small" data-mode="raid" type="button">联机打魔首</button>
-                  <button class="ghost small" data-mode="mayhem" type="button">通天神决</button>
-                  <button class="ghost small" data-mode="cuju" type="button">墨球蹴鞠</button>
-                  <button class="ghost small" data-mode="koth" type="button">灵坛争锋</button>
-                  <button class="ghost small" data-mode="party" type="button">江湖百戏</button>
-                  <button class="ghost small" data-mode="melee" type="button">群雄会战 · 8v8</button>
-                  <button class="ghost small" data-mode="ctf" type="button">夺旗争锋 · 8v8</button>
+                  <button class="ghost small sel" data-mode="normal" type="button">3v3 车轮战 (6人)</button>
+                  <button class="ghost small" data-mode="pp_cc" type="button">2v2 · 两人打两电脑 (4人)</button>
+                  <button class="ghost small" data-mode="pp_pp" type="button">2v2 · 两人对两人 (4人)</button>
+                  <button class="ghost small" data-mode="raid" type="button">联机打魔首 (3v1)</button>
+                  <button class="ghost small" data-mode="mayhem" type="button">通天神决 (1v1)</button>
+                  <button class="ghost small" data-mode="cuju" type="button">墨球蹴鞠 (1v1)</button>
+                  <button class="ghost small" data-mode="koth" type="button">灵坛争锋 (1v1)</button>
+                  <button class="ghost small" data-mode="party" type="button">江湖百戏 (1v1)</button>
+                  <button class="ghost small" data-mode="melee" type="button">群雄会战 (6–32人)</button>
+                  <button class="ghost small" data-mode="ctf" type="button">夺旗争锋 (4–20人)</button>
+                  <button class="ghost small" data-mode="quad" type="button">四象争锋 (8–32人)</button>
                 </div>
+                <div class="lobby-modes-seg" id="lobbyTeamSizeSeg" role="group" aria-label="联机团战人数" hidden style="margin-top:6px"></div>
                 <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。常规标准已融合动态天机异变。</p>
               </details>
             </div>
@@ -6080,11 +6091,11 @@ window.RYBoot = (function () {
   <div class="rk-info hidden" id="modalRouge" role="dialog" aria-modal="true" aria-label="同袍肉鸽 · 斩妖列传">
     <div class="rk-info-panel mr-panel">
       <div class="rk-info-head">
-        <b id="modalRougeTitle">同袍肉鸽 · 十三侠客斩妖列传</b>
+        <b id="modalRougeTitle">同袍肉鸽 · 二十侠客斩妖列传</b>
         <button class="mm-cancel" id="modalRougeClose" type="button">关闭</button>
       </div>
       <div class="m2-body">
-        <p class="m2-desc" id="modalRougeDesc">斩妖剧情闯关与多人肉鸽合二为一！三名侠客并肩体验<b>十三侠客专属斩妖故事</b>、横扫群妖波次、<b>全队共享秘卷与回血增益</b>，终幕迎战<b>随机三侠 6 项绝技、300% 气血、125% 伤害</b>的融魂魔首，大捷全员共享海量墨锭！</p>
+        <p class="m2-desc" id="modalRougeDesc">斩妖剧情闯关与多人肉鸽合二为一！三名侠客并肩体验<b>二十侠客专属斩妖故事</b>、横扫群妖波次、<b>全队共享秘卷与回血增益</b>，终幕迎战<b>随机三侠 6 项绝技、300% 气血、125% 伤害</b>的融魂魔首，大捷全员共享海量墨锭！</p>
         <div class="sec-sub-label">选择侠客斩妖列传篇章（每位侠客专属故事）</div>
         <div class="mr-story-tabs" id="rougeStoryTabs"></div>
         <div class="mr-story-box" id="rougeStoryBox"></div>
@@ -9585,9 +9596,9 @@ koth: { bp: 'open', local: true, foe: '电脑' },   // 灵坛争锋：占领灵�
 koth2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 灵坛争锋
 party: { bp: 'open', local: true, foe: '电脑' },   // 江湖百戏：轮换趣味小游戏
 bastion: { bp: 'open', local: true, foe: '电脑' },   // 天枢城·守境：多人守城+肉鸽+灵侍+流派装备
-melee: { bp: 'large5', squadBp: { 3: 'large3', 5: 'large5', 8: 'large8', 16: 'large16' }, team: true, local: true, us: '我方大军', foe: '敌方大军' },   // 群雄会战：3v3 ~ 16v16 同屏大混战（完整禁选）
-ctf: { bp: 'large5', squadBp: { 2: 'large2', 3: 'large3', 5: 'large5', 8: 'large8' }, team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 夺旗争锋：2v2 ~ 8v8 团队夺旗（完整禁选）
-quad: { bp: 'solo', local: true },   // 四象争锋：4v4v4v4 四方混战（只选自己的侠客，另外三方和队友由电脑补齐）
+melee: { bp: 'large5', squadBp: { 3: 'large3', 5: 'large5', 8: 'large8', 10: 'large10', 16: 'large16' }, team: true, local: true, us: '我方大军', foe: '敌方大军' },   // 群雄会战：3v3 ~ 16v16 同屏大混战（含 10v10 全 20 侠客无镜像）
+ctf: { bp: 'large5', squadBp: { 2: 'large2', 3: 'large3', 5: 'large5', 8: 'large8', 10: 'large10' }, team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 夺旗争锋：2v2 ~ 10v10 团队夺旗（完整禁选）
+quad: { bp: 'solo', local: true },   // 四象争锋：2v2v2v2 ~ 8v8v8v8 四方混战（8–32 人同屏，选自己的侠客，其余由电脑补齐）
 gauntlet: { bp: 'solo', local: true },   // 无尽试炼：逐波递增车轮生存战
 tag3: { bp: 'trio', team: true, local: true, foe: '敌方战队' },
 tower: { bp: 'solo', local: true },
@@ -9632,12 +9643,15 @@ large5: [                                                                       
 [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'],
 [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick']
 ],
-large8: [                                                                                                              // 大型团战 8v8：各禁 2 人，蛇形各选 8 人
-[0, 'ban'], [1, 'ban'], [0, 'ban'], [1, 'ban'],
+large8: [                                                                                                              // 大型团战 8v8：各禁 1 人，蛇形各选 8 人（2 禁 + 16 选 = 18/20，尾选留余地）
+[0, 'ban'], [1, 'ban'],
 [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'],
 [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick'], [0, 'pick'], [1, 'pick'], [1, 'pick'], [0, 'pick']
 ],
-large16: [                                                                                                             // 大型团战 16v16：各禁 1 人，蛇形各选 16 人（共 34 人，不超过侠客总数）
+large10: [                                                                                                             // 大型团战 10v10：不禁人，蛇形各选 10 人（20 位侠客全员登场无镜像）
+...Array.from({ length: 20 }, (_, k) => [[0, 1, 1, 0][k % 4], 'pick'])
+],
+large16: [                                                                                                             // 大型团战 16v16：各禁 1 人，蛇形各选 16 人（32 人同屏，自动启用双方镜像选人）
 [0, 'ban'], [1, 'ban'],
 ...Array.from({ length: 32 }, (_, k) => [[0, 1, 1, 0][k % 4], 'pick'])
 ],
@@ -9650,15 +9664,18 @@ gouchen: '链锤强袭：近崖拽击力道强劲，坠崖判定门槛降低。'
 cixian: '极性推拒：两极磁场排斥增强，更易将敌弹落断崖。',
 liuyun: '凌空渡虚：浮空滞空与三段跳，身处险境不易失足。',
 yanling: '羽行御风：空中滑翔平稳无阻，坠崖受到伤害减半。',
-lingshuang: '寒枪扼险：长枪突刺压制崖口，近崖击退力度提升 20%。'
+lingshuang: '寒枪扼险：长枪突刺压制崖口，近崖击退力度提升 20%。',
+xuanwu: '镇山玄甲：身重如岳，断崖坠落门槛提高且坠崖伤害减半。'
 } },
 ice: { n: '寒潭冰面', d: '中间是一片冰面：起步和停下都会打滑，越重滑得越远。',
-ice: { from: 0.3, to: 0.7, grip: 0.3, dash: 0.7, sure: { lingshuang: 0.8, tieshan: 0.9 } },
+ice: { from: 0.3, to: 0.7, grip: 0.3, dash: 0.7, sure: { lingshuang: 0.8, tieshan: 0.9, xuanwu: 0.9, qingluan: 0.75 } },
 fav: {
 lingshuang: '冰上如履平地：抓地力至少是平地的八成。',
 tieshan: '千斤坠地：冰上抓地力至少是平地的九成。',
+xuanwu: '玄岳定足：重甲稳立寒潭，冰面抓地力至少九成。',
 feiying: '踏雪无痕：冰面疾行与闪步突进速度提升 15%。',
 qingfeng: '顺风滑斩：冰面冲刺轻击滑行追击，招式连贯流畅。',
+qingluan: '翠羽踏霜：轻身稳步寒潭，冰面抓地力至少七成半。',
 qianji: '冰魄机轮：玄铁傀丸在冰面上极低阻力滑行更快更远。'
 } },
 bamboo: { n: '竹海悬岩', d: '两侧竹台高悬，跳得上去，按住 ↓ 再跳落下。每 18 秒刮 6 秒强风，顺风走得快、飞行道具飞得快。',
@@ -9669,6 +9686,7 @@ qingfeng: '剑气借风：顺风的飞行道具多飞一倍。',
 yanling: '乘风而行：顺风时风推得快一倍，逆风不受阻。',
 liuyun: '顺风旋岚：大招龙卷风与旋风掌顺风速度与范围增加。',
 moyu: '顺风泼墨：顺风甩墨泼洒射程增加 30%。',
+qingluan: '铃风趁势：顺风清风气浪射程提升 35%，竹台回气加速。',
 liying: '雾迷竹影：竹台高低借势布局，雾身消散时回气加倍。'
 } },
 thunder: { n: '雷泽石坛', d: '中央一座石坛。每 24 秒天雷落在石坛上空（提前 1.3 秒预警），站在坛上或在它上空的人被劈飞。',
@@ -9679,7 +9697,8 @@ leiming: '引雷淬体：不怕天雷，被劈中反而回 35 点气，并得到
 gouchen: '巨力镇坛：不怕天雷，劈中不伤也不浮空。',
 yuxiao: '雷鸣琴音：石坛回响，天雷降临时音律充能提速。',
 yuehua: '镜光引雷：明镜初现可折射天雷震荡，受到天雷伤害减半。',
-cixian: '雷磁共振：雷云笼罩期间，磁场吸引与斥力范围扩大 25%。'
+cixian: '雷磁共振：雷云笼罩期间，磁场吸引与斥力范围扩大 25%。',
+xuanji: '星规引雷：天雷预警期间，星枢技能冷却加速且抗雷减伤 40%。'
 } },
 pagoda: { n: '皇城飞檐', d: '三重飞檐错落，跳得上去，按住 ↓ 再跳落下。两侧没有红柱，被击飞撞到边上不会弹墙。',
 plats: [{ u: 0.2111111111, x: 380, y: -105, w: 220, k: 'wood' }, { u: 0.5, x: 900, y: -180, w: 260, k: 'wood' }, { u: 0.7888888889, x: 1420, y: -105, w: 220, k: 'wood' }],
@@ -9689,7 +9708,8 @@ feiying: '飞檐走壁：站在飞檐上走得快 15%。',
 lingque: '檐上穿梭：站在飞檐上时，移形换影的冷却快 30%。',
 yuxiao: '高台清乐：立于檐角弹奏，音律波及范围增大 20%。',
 qianji: '居高布机：高檐投掷机关傀丸弹跳弧线更加开阔。',
-liuyun: '俯冲破风：飞檐起跳滞空时间更长，空中出招判定更广。'
+liuyun: '俯冲破风：飞檐起跳滞空时间更长，空中出招判定更广。',
+xuanji: '高檐观星：立于飞檐时星规引力范围与冷却恢复提升。'
 } },
 wine: { n: '醉翁墨阁', d: '水榭两侧有亭台，中间一半飘着酒雾：站在雾里的地上，每秒回 2.5 点定力。',
 plats: [{ u: 0.2888888889, x: 520, y: -110, w: 240, k: 'wood' }, { u: 0.7111111111, x: 1280, y: -110, w: 240, k: 'wood' }],
@@ -9698,6 +9718,7 @@ fav: {
 zuixian: '酒香浸染：在酒雾里醉意每秒涨 12。',
 moyu: '水榭湿润：在酒雾里定力回得快一倍。',
 yuehua: '清露润镜：酒雾中脱战回复生命速度提升 50%。',
+chixiao: '酒火添薪：酒雾助燃火势，雾中技能冷却恢复提速且定力稳固。',
 liying: '雾影重重：酒雾之中雾身更凝练，打碎雾身反震对手。',
 qianji: '机簧润滑：酒雾浸润傀丸，蓄力出击冷却恢复提速。'
 } },
@@ -10158,7 +10179,7 @@ Object.assign(UI_COPY_EN, {
 "勾陈": "Gou Chen",
 "匹配对战": "Quick Match",
 "匹配对战 · 排位赛 · 好友房间": "Matchmaking · Ranked · Custom Room",
-"十六位侠客 · 回滚联机 · 赛季排位": "16 Heroes · Rollback Netcode · Ranked Season",
+"二十位侠客 · 回滚联机 · 赛季排位": "20 Heroes · Rollback Netcode · Ranked Season",
 "千影": "Thousand Shadows",
 "单人": "Solo",
 "单人模式": "Single Player",
@@ -11057,7 +11078,7 @@ Object.assign(UI_COPY_EN, {
 "排位赛 · 正在寻找对手": "Competitive · Searching for an opponent",
 "排位中…": "In queue…",
 "排位中": "In queue",
-"点击「开启新试炼」后进入水墨点将台，自由检视十六位侠客武学并钦点本命试炼侠客登阁。": "Click \"Start New Trial\" to enter the hero draft, browse all 16 heroes and pick the one who will climb the tower.",
+"点击「开启新试炼」后进入水墨点将台，自由检视二十位侠客武学并钦点本命试炼侠客登阁。": "Click \"Start New Trial\" to enter the hero draft, browse all 20 heroes and pick the one who will climb the tower.",
 "匹配中": "Searching",
 "排位赛需先登录（右上角）": "Sign in to play Competitive (top right)",
 "已取消": "Cancelled",
@@ -11979,9 +12000,9 @@ Object.assign(UI_COPY_EN, {
 "对战电脑 · 闯关 · 车轮战 · 木人桩": "Vs AI · Stages · Relay · Dummy",
 "对电脑的模式通用 · 会记住": "Used by every mode against the AI · Remembered",
 "联机对战": "Online Battle",
-"一对一，难度自选": "1v1 at the tier you pick",
-"三人接力，胜者守擂": "Three-hero relay, the winner stays on",
-"两人一队，可带电脑队友": "Teams of two, AI partners welcome",
+"1v1（2人）· 难度自选": "1v1 (2 players) · Choose AI tier",
+"6人接力（同屏2人）· 胜者守擂": "6-hero relay (2 on screen) · Winner stays",
+"2v2（4人同屏）· 可带电脑队友": "2v2 (4 on screen) · AI partners welcome",
 "一层层爬塔抽秘卷": "Climb floor by floor, collect scrolls",
 "六章三十关": "Six chapters, thirty stages",
 "每位侠客自己的故事": "Every hero's own story",
@@ -12273,7 +12294,7 @@ Object.assign(UI_COPY_EN, {
 });
 Object.assign(UI_COPY_EN, {
 "墨球蹴鞠": "Ink Ball",
-"不比气血，比谁先进三球": "No health bars, first to three goals",
+"1v1/2v2（2–4人）· 先进三球": "1v1/2v2 (2–4 players) · First to 3 goals",
 "墨球蹴鞠 · 先进三球": "Ink Ball · First to Three",
 "不比气血 · 不计排位": "No health · Unranked",
 "场地两边各有一个球门，中间一颗墨球。普攻和技能打中墨球就能把它打飞，先把墨球打进对方球门三次的一方获胜；时间到比分领先的赢，平分进金球决胜。挨打照样会被打飞，但气血不会掉。": "There is a goal at each end and an ink ball in the middle. Hit the ball with attacks and skills to send it flying; the first side to put it in the other goal three times wins. When time runs out the side ahead wins, and a tie goes to a golden goal. Hits still knock heroes around, but nobody loses health.",
@@ -12374,7 +12395,7 @@ Object.assign(UI_COPY_EN, {
 "训练场 · 玩法说明": "Training · Mode Guide",
 "包含招式教学、木人桩自由练习（可看判定框、帧数差与回放）、以及防反/连段等专项情景训练。": "Includes guided Move Tutorials, Free Practice with hitboxes & frame advantage, and focused situational drills.",
 "守关挑战 · 玩法说明": "Campaign · Mode Guide",
-"十三侠客专属六章三十关斩妖除魔路线。每关击败首领积累星级与墨锭，最终章迎战六技融魂魔首。": "6-chapter, 30-stage demon-slaying campaign for every hero, ending in a co-op showdown with the 6-skill Boss.",
+"二十侠客专属斩妖除魔路线（3v1 同袍共斗）。每关击败首领积累星级与墨锭，最终章迎战六技融魂魔首。": "Demon-slaying campaign for all 20 heroes (3v1 co-op), ending in a showdown with the 6-skill Boss.",
 "侠客列传 · 玩法说明": "Hero Sagas · Mode Guide",
 "每位侠客独立的五节剧情篇章，在关键节点做出抉择可解锁不同结局与专属秘闻。": "A 5-act story for each hero with branching choices and dual endings.",
 "问剑密卷 · 玩法说明": "Endless Tower · Mode Guide",
@@ -12682,7 +12703,7 @@ Object.assign(UI_COPY_EN, {
 "夺旗争锋 · 8v8": "Capture the Banner · 8v8",
 "3v3 / 5v5 / 8v8 同屏大混战": "3v3 / 5v5 / 8v8 simultaneous team clash",
 "夺旗争锋": "Capture the Banner",
-"2v2–8v8 护旗夺分战": "2v2–8v8 team banner capture",
+"2v2–10v10（4–20人护旗）": "2v2–10v10 (4–20 players CTF)",
 "无尽试炼": "Endless Gauntlet",
 "逐波递增车轮生存战": "Escalating wave survival challenge",
 "团战规模": "Team Size",
@@ -12998,12 +13019,16 @@ Object.assign(UI_COPY_EN, {
 "Q 玄甲震岳 → 右键 龟盾反震 → 重击(U)": "Q Bastion Slam -> RMB Shell Counter -> Heavy (U)",
 });
 Object.assign(UI_COPY_EN, {
-"16v16 全军会战": "16v16 Full Army",
-"3v3 至 16v16 · 多层立体战场": "3v3 to 16v16 · Multi-level arena",
+"6–32人同屏 · 3v3 至 16v16 立体战场": "6–32 players · 3v3 to 16v16 multi-level arena",
 "四象争锋 · 四方混战": "Quad Clash · Four-way battle",
-"4v4v4v4 · 统帅战术相克": "4v4v4v4 · Commander counter tactics",
+"8–32人同屏 · 统帅战术相克": "8–32 players · Commander counter tactics",
+"四方规模": "Four-team size",
+"2v2v2v2 · 8人": "2v2v2v2 · 8 players",
+"4v4v4v4 · 16人": "4v4v4v4 · 16 players",
+"5v5v5v5 · 20人": "5v5v5v5 · 20 players",
+"8v8v8v8 · 32人": "8v8v8v8 · 32 players",
 "苍龙、朱雀、玄武、白虎四队同屏混战，你是苍龙统帅：用 1/2/3 或 Tab 切换锋矢、固守、游袭战术，敌方统帅的战术不可见，最后存活的队伍夺魁！": "Azure Dragon, Vermilion Bird, Black Tortoise and White Tiger fight at once. You command the Azure Dragon: press 1/2/3 or Tab to switch between Spearhead, Hold and Raiders. Enemy tactics stay hidden. The last team standing wins.",
-"进入点将台挑选你的侠客，其余队友与三支敌队随机组成。": "Pick your hero. Your teammates and the three enemy teams are chosen at random.",
+"进入点将台挑选你的侠客，其余队友与三支敌队随机组成（5v5v5v5 恰好 20 位侠客各登场一次）。": "Pick your hero. Your teammates and the three enemy teams are chosen at random (5v5v5v5 fields all 20 unique heroes).",
 "进入点将台 · 开启四象争锋": "Enter the Draft · Start Quad Clash",
 "四象争锋 · 玩法说明": "Quad Clash · How to Play",
 "四队各四人同屏混战。你是本队统帅：按 1/2/3 或 Tab 切换锋矢、固守、游袭战术（锋矢克固守、固守克游袭、游袭克锋矢），Y 选中队友、N 分派主攻/牵制/破连。最后存活的队伍夺魁。": "Four teams of four fight at once. You command your team: press 1/2/3 or Tab to switch between Spearhead, Hold and Raiders (Spearhead beats Hold, Hold beats Raiders, Raiders beat Spearhead). Press Y to select a teammate and N to assign Main attack, Distract or Break combos. The last team standing wins.",
@@ -13018,8 +13043,8 @@ Object.assign(UI_COPY_EN, {
 "四象争锋": "Quad Clash",
 "四象之首": "Top of the Four",
 "你的名次": "Your rank",
-"4v4v4v4 四方混战": "4v4v4v4 four-way battle",
-"3v3 至 16v16 同屏大混战": "3v3 up to 16v16 mass battles",
+"2v2v2v2–8v8v8v8（8–32人四方混战）": "2v2v2v2–8v8v8v8 (8–32 players)",
+"3v3–16v16（6–32人同屏）": "3v3–16v16 (6–32 players)",
 "3v3–16v16 混战、四象、夺旗与无尽": "3v3–16v16 Melee, Quad Clash, CTF & Endless",
 "3v3–16v16 大型同屏混战：支持完整禁选（BP）、统帅指挥与战术相克！": "3v3–16v16 battles with a full ban-and-pick draft, a commander and counter tactics.",
 "四队各四人同屏混战：苍龙、朱雀、玄武、白虎，你是统帅，用战术相克夺魁！": "Four teams of four fight at once: Azure Dragon, Vermilion Bird, Black Tortoise and White Tiger. You are the commander. Win with counter tactics.",
@@ -13114,22 +13139,41 @@ Object.assign(UI_COPY_EN, {
 "✦ 重力削防": "✦ Gravity Guard Break",
 "重力削防": "Gravity Guard Break",
 "星火穿刺": "Star Fire Pierce",
-"2v2 轻骑夺旗": "2v2 Light Cavalry CTF",
-"2v2–8v8 · 先夺三旗胜": "2v2–8v8 · First to three flags wins",
-"3v3 小队夺旗": "3v3 Squad CTF",
-"3v3 小队战": "3v3 Squad Battle",
+"2v2 · 4人": "2v2 · 4 players",
+"3v3 · 6人": "3v3 · 6 players",
+"5v5 · 10人": "5v5 · 10 players",
+"8v8 · 16人": "8v8 · 16 players",
+"10v10 · 20人": "10v10 · 20 players",
+"16v16 · 32人": "16v16 · 32 players",
+"4–20人同屏 · 2v2–10v10 先夺三旗胜": "4–20 players · 2v2–10v10 first to 3 flags",
 "3v3 车轮战 · 排位与好友约战": "3v3 Relay · Ranked and friend matches",
-"5v5 楼阁夺旗": "5v5 Pavilion CTF",
-"5v5 演武楼阁": "5v5 Training Pavilion",
-"8v8 五层大战场": "8v8 Five-Tier Battlefield",
-"8v8 全军夺旗": "8v8 Full Army CTF",
+"人机切磋 · 3v3–16v16 团战 · 历练闯关": "AI Duel · 3v3–16v16 Team Battles · Story",
+"1v1/2v2（2–4人）· 无限复活抢分": "1v1/2v2 (2–4 players) · Respawn hill control",
+"1v1（2人）· 传火折/断崖推手/飞球": "1v1 (2 players) · Party mini-games",
+"1v1（2人）· 逐波递增车轮生存": "1v1 (2 players) · Endless survival gauntlet",
+"1v1（2人）· 逐波递增": "1v1 (2 players) · Escalating waves",
 "群雄会战 · 大型同屏混战": "Grand Melee · Large on-screen brawl",
 "夺旗争锋 · 团队护旗战": "Capture the Flag · Team flag defense",
 "无尽试炼 · 车轮生存战": "Endless Trial · Survival gauntlet",
-"逐波递增 · 考验耐力": "Waves keep getting harder · A test of stamina",
+"3v3 车轮战 (6人)": "3v3 Relay (6 players)",
+"2v2 · 两人打两电脑 (4人)": "2v2 · 2 Players vs 2 AI (4)",
+"2v2 · 两人对两人 (4人)": "2v2 · 2 Players vs 2 Players (4)",
+"联机打魔首 (3v1)": "Co-op Raid Boss (3v1)",
+"通天神决 (1v1)": "Mayhem (1v1)",
+"墨球蹴鞠 (1v1)": "Cuju (1v1)",
+"灵坛争锋 (1v1)": "King of the Hill (1v1)",
+"江湖百戏 (1v1)": "Party Games (1v1)",
+"群雄会战 (6–32人)": "Grand Melee (6–32)",
+"夺旗争锋 (4–20人)": "Capture the Flag (4–20)",
+"四象争锋 (8–32人)": "Quad Clash (8–32)",
+"联机团战人数": "Online team size",
+"二十侠客斩妖传 · 同袍肉鸽共斗": "20-Hero Demon Hunt · Co-op Roguelike",
+"3v1（4人同屏）· 每位侠客专属剧情": "3v1 (4 on screen) · Every hero's story",
+"同袍肉鸽 · 二十侠客斩妖列传": "Co-op Roguelike · 20-Hero Demon Hunt",
 "单骑迎战源源不断的江湖群雄，每击破一波恢复部分气血并迎战更高境界强敌，挑战个人极限连胜！": "Ride alone against an endless stream of fighters. Each wave you clear restores some HP and brings stronger foes. How long can your streak go?",
 "双方阵地各立战旗，深入敌阵夺取敌旗并护送回己方阵地即得 1 分，率先夺得 3 旗的一方获胜！": "Each side plants a flag at its base. Grab the enemy flag and bring it home for 1 point. The first side to capture 3 flags wins!",
-"支持 3v3、5v5（三层演武楼阁）与 8v8（五层飞檐战场）乃至 16v16 同屏大混战！由统帅下令，配备兵力积分、战损复活、战队指令与滚轮镜头缩放。": "Supports 3v3, 5v5 (three-tier Training Pavilion), 8v8 (five-tier rooftop battlefield) and even 16v16 on one screen! A commander gives orders, with troop points, respawns, squad orders and scroll-wheel camera zoom.",
+"支持 3v3（6人）、5v5（10人三层楼阁）、8v8（16人五层战场）、10v10（20人全侠客无镜像五层大殿）与 16v16（32人玄岳大战场）！由统帅下令，配备兵力积分、前沿复活与滚轮镜头缩放。": "Supports 3v3 (6), 5v5 (10, 3-tier pavilion), 8v8 (16, 5-tier arena), 10v10 (20 unique heroes, 5-tier grand hall) and 16v16 (32, 5-tier battlefield)! Commander orders, troop points, forward respawns and scroll-wheel camera zoom.",
+"10v10 全 20 位侠客无镜像齐上阵；16v16 自动启用镜像选人，减少等待即刻开战。": "10v10 fields all 20 unique heroes without mirrors; 16v16 enables cross-team mirror picks so the battle starts fast.",
 "进入点将台挑选最擅长的侠客单枪匹马迎战无尽车轮试炼。": "Head to the draft, pick the hero you play best, and take on the endless trial alone.",
 "进入点将台 (BP) · 开启夺旗争锋": "Go to the draft (BP) · Start Capture the Flag",
 "进入点将台 (BP) · 开启群雄会战": "Go to the draft (BP) · Start Grand Melee",
@@ -18145,7 +18189,7 @@ netStatus('入局成功，正在同步战局…');
 NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true;
 NET.peerQuit = false; NET.forfeit = false; NET.forfeitResult = ''; NET.keepRoom = false;   // 好友房里新来的对手：上一个人走掉的记号清掉
 updateNetLobby(true, (m.names && m.names.host) || '房主', (m.names && m.names.client) || '对手', NET.code, true);
-if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator() });
+if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator(), size: typeof netTeamSize === 'number' ? netTeamSize : 0 });
 NET_MAPV.host = NET_MAPV.client = null; netMapVoteSend(); renderLobbyMaps();   // 新对手进房：两边重新互报自己的票
 onNetOpen();
 } else if (m.sys === 'map_vote') {
@@ -18153,8 +18197,8 @@ netMapVoteRecv(m.v);
 } else if (m.sys === 'room_rule') {
 if (NET.role !== 'client') return;
 teamMutator = m.mut === 'mayhem' ? 'mayhem' : 'normal';
-setRoomModeUI(m.rule);
-toast(`擂主已设定切磋规则：${ROOM_RULE_NAMES[m.rule] || ROOM_RULE_NAMES.normal}`);
+setRoomModeUI(m.rule, m.size);
+toast(`擂主已设定切磋规则：${typeof roomRuleLabel === 'function' ? roomRuleLabel(m.rule, m.size) : (ROOM_RULE_NAMES[m.rule] || ROOM_RULE_NAMES.normal)}`);
 } else if (m.sys === 'rematch') {
 if (NET.isRanked) return;   // 排位赛没有再战：打完各自回去重新匹配
 if (m.action === 'ask') {
@@ -18419,8 +18463,9 @@ const def = roomDef();
 const tc = def.rule === 'quad' ? 4 : 2;
 M.mode = 'net'; M.wins = tc > 2 ? [0, 0, 0, 0] : [0, 0]; M.round = 1; M.carry = null; M.duo = null; M.map = null; A.meter = B.meter = 0; NET.solo = false;
 const maxPerTeam = tc > 2 ? 8 : 16;
-const reqSize = (typeof teamSizeOverride === 'number' && teamSizeOverride > 0) ? teamSizeOverride : (def.teamSize || 0);
-M.teamSize = reqSize ? clamp(reqSize | 0, tc > 2 ? 2 : 3, maxPerTeam) : 0;
+const reqSize = (typeof teamSizeOverride === 'number' && teamSizeOverride > 0) ? teamSizeOverride : ((typeof netTeamSize === 'number' && netTeamSize > 0) ? netTeamSize : (def.teamSize || 0));
+const minPerTeam = def.rule === 'ctf' || tc > 2 ? 2 : 3;
+M.teamSize = reqSize ? clamp(reqSize | 0, minPerTeam, maxPerTeam) : 0;
 if (M.teamSize) {
 M.level = 'normal';
 M.watchAi = false;
@@ -32741,7 +32786,55 @@ const BATTLE5_STAIRS = [
 { layer: 1, bottomX: BATTLE5_WIDTH - 680, topX: BATTLE5_WIDTH - 920, bottomY: -BATTLE5_LAYER_HEIGHT, topY: -2 * BATTLE5_LAYER_HEIGHT, x: BATTLE5_WIDTH - 800, y: -2 * BATTLE5_LAYER_HEIGHT, w: 240, k: 'stairs' }
 ];
 const BATTLE5_MAP = { id: 'battle5', w: BATTLE5_WIDTH, layers: 3, layerH: BATTLE5_LAYER_HEIGHT, decks: BATTLE5_DECKS, stairs: BATTLE5_STAIRS, plats: [...BATTLE5_DECKS, ...BATTLE5_STAIRS] };
-const battleMapDef = () => !isLargeTeam() ? null : (quadOn() || M.teamSize === 8 ? BATTLE_MAP : M.teamSize === 5 ? BATTLE5_MAP : null);
+const BATTLE10_WIDTH = 4400;
+const BATTLE10_DECKS = Array.from({ length: 4 }, (_, i) => ({
+x: BATTLE10_WIDTH / 2, y: -(4 - i) * BATTLE_LAYER_HEIGHT, w: BATTLE10_WIDTH - 2 * WALL, k: 'battle'
+}));
+const BATTLE10_STAIRS = [
+...Array.from({ length: 4 }, (_, layer) => [-1, 1].map(side => {
+const left = 290 + layer * 290;
+const bottomX = side === -1 ? left : BATTLE10_WIDTH - left;
+const topX = bottomX - side * 260;
+const bottomY = -layer * BATTLE_LAYER_HEIGHT, topY = bottomY - BATTLE_LAYER_HEIGHT;
+return { layer, bottomX, topX, bottomY, topY, x: (bottomX + topX) / 2, y: topY, w: 260, k: 'stairs' };
+})).flat(),
+{ layer: 0, bottomX: BATTLE10_WIDTH / 2 - 130, topX: BATTLE10_WIDTH / 2 + 130, bottomY: 0, topY: -BATTLE_LAYER_HEIGHT, x: BATTLE10_WIDTH / 2, y: -BATTLE_LAYER_HEIGHT, w: 260, k: 'stairs' },
+{ layer: 2, bottomX: BATTLE10_WIDTH / 2 + 130, topX: BATTLE10_WIDTH / 2 - 130, bottomY: -2 * BATTLE_LAYER_HEIGHT, topY: -3 * BATTLE_LAYER_HEIGHT, x: BATTLE10_WIDTH / 2, y: -3 * BATTLE_LAYER_HEIGHT, w: 260, k: 'stairs' }
+];
+const BATTLE10_MAP = { id: 'battle10', w: BATTLE10_WIDTH, layers: 5, layerH: BATTLE_LAYER_HEIGHT, decks: BATTLE10_DECKS, stairs: BATTLE10_STAIRS, plats: [...BATTLE10_DECKS, ...BATTLE10_STAIRS] };
+const BATTLE16_WIDTH = 5600;
+const BATTLE16_DECKS = Array.from({ length: 4 }, (_, i) => ({
+x: BATTLE16_WIDTH / 2, y: -(4 - i) * BATTLE_LAYER_HEIGHT, w: BATTLE16_WIDTH - 2 * WALL, k: 'battle'
+}));
+const BATTLE16_STAIRS = [
+...Array.from({ length: 4 }, (_, layer) => [-1, 1].map(side => {
+const left = 340 + layer * 340;
+const bottomX = side === -1 ? left : BATTLE16_WIDTH - left;
+const topX = bottomX - side * 280;
+const bottomY = -layer * BATTLE_LAYER_HEIGHT, topY = bottomY - BATTLE_LAYER_HEIGHT;
+return { layer, bottomX, topX, bottomY, topY, x: (bottomX + topX) / 2, y: topY, w: 280, k: 'stairs' };
+})).flat(),
+...Array.from({ length: 4 }, (_, layer) => {
+const dir = layer % 2 === 0 ? 1 : -1;
+const bottomX = BATTLE16_WIDTH / 2 - dir * 140;
+const topX = BATTLE16_WIDTH / 2 + dir * 140;
+const bottomY = -layer * BATTLE_LAYER_HEIGHT, topY = bottomY - BATTLE_LAYER_HEIGHT;
+return { layer, bottomX, topX, bottomY, topY, x: BATTLE16_WIDTH / 2, y: topY, w: 280, k: 'stairs' };
+})
+];
+const BATTLE16_MAP = { id: 'battle16', w: BATTLE16_WIDTH, layers: 5, layerH: BATTLE_LAYER_HEIGHT, decks: BATTLE16_DECKS, stairs: BATTLE16_STAIRS, plats: [...BATTLE16_DECKS, ...BATTLE16_STAIRS] };
+const battleMapDef = () => {
+if (!isLargeTeam()) return null;
+if (quadOn()) {
+const n = M.teamSize || 4;
+return n >= 8 ? BATTLE16_MAP : n >= 5 ? BATTLE10_MAP : BATTLE_MAP;
+}
+if (M.teamSize >= 16) return BATTLE16_MAP;
+if (M.teamSize >= 10) return BATTLE10_MAP;
+if (M.teamSize >= 8) return BATTLE_MAP;
+if (M.teamSize === 5) return BATTLE5_MAP;
+return null;
+};
 const battleMapOn = () => !!battleMapDef();
 function battlePerksInit() {
 M.battlePerks = [];
@@ -32751,6 +32844,28 @@ if (bm === BATTLE5_MAP) {
 M.battlePerks.push({ x: STAGE_W / 2, y: -2 * BATTLE5_LAYER_HEIGHT, large: true, cooldown: 0 });
 M.battlePerks.push({ x: 580, y: -BATTLE5_LAYER_HEIGHT, large: false, guard: grnd() < 0.5, cooldown: 0 });
 M.battlePerks.push({ x: STAGE_W - 580, y: -BATTLE5_LAYER_HEIGHT, large: false, guard: grnd() < 0.5, cooldown: 0 });
+return;
+}
+if (bm === BATTLE10_MAP) {
+M.battlePerks.push({ x: STAGE_W / 2, y: -2 * BATTLE_LAYER_HEIGHT, large: true, cooldown: 0 });
+M.battlePerks.push({ x: STAGE_W / 2, y: -4 * BATTLE_LAYER_HEIGHT, large: true, cooldown: 0 });
+M.battlePerks.push({ x: STAGE_W / 2, y: 0, large: false, guard: false, cooldown: 0 });
+for (let layer = 0; layer < 4; layer++) {
+const p = BATTLE10_STAIRS[layer * 2 + Math.floor(grnd() * 2)];
+M.battlePerks.push({ x: p.x, y: platformY(p, p.x), large: false, guard: grnd() < 0.5, cooldown: 0 });
+}
+return;
+}
+if (bm === BATTLE16_MAP) {
+M.battlePerks.push({ x: STAGE_W / 2, y: -2 * BATTLE_LAYER_HEIGHT, large: true, cooldown: 0 });
+M.battlePerks.push({ x: STAGE_W / 2, y: -4 * BATTLE_LAYER_HEIGHT, large: true, cooldown: 0 });
+M.battlePerks.push({ x: STAGE_W / 2, y: 0, large: true, cooldown: 0 });
+for (const side of [-1, 1]) {
+for (const layer of [1, 2, 3]) {
+const px = STAGE_W / 2 + side * (720 + layer * 420);
+M.battlePerks.push({ x: clamp(px, WALL + 160, STAGE_W - WALL - 160), y: -layer * BATTLE_LAYER_HEIGHT, large: false, guard: (layer % 2) === 1, cooldown: 0 });
+}
+}
 return;
 }
 M.battlePerks.push({ x: STAGE_W / 2, y: -2 * BATTLE_LAYER_HEIGHT, large: true, cooldown: 0 });
@@ -32809,7 +32924,7 @@ function mapEdge(f, cl) {
 if (f.x >= WALL && f.x <= STAGE_W - WALL) return;
 const side = f.x < WALL ? -1 : 1;
 const fav = mapFavOn(f);
-let pushThresh = cl.push || 320;
+let pushThresh = (cl.push || 320) * (fav && f.ch.id === 'xuanwu' ? 1.35 : 1);
 const flung = f.state === 'launched' || ((f.state === 'hitstun' || f.state === 'knockdown') && Math.abs(f.vx) > pushThresh);
 f.x = side < 0 ? WALL : STAGE_W - WALL;
 if (!flung || f.hp <= 0) {
@@ -32828,7 +32943,7 @@ ring(f.x, f.y - 40, 90, '255,140,120', 0.45);
 addP({ type: 'text', text: '坠崖出局', x: f.x - side * 40, y: f.y - 110, life: 0.9, max: 0.9, rgb: '255,150,120' });
 return;
 }
-const dmgMul = (fav && f.ch.id === 'yanling') ? 0.5 : 1;
+const dmgMul = (fav && (f.ch.id === 'yanling' || f.ch.id === 'xuanwu')) ? 0.5 : 1;
 const dmg = Math.round(f.maxHp * (cl.dmg || 0.06) * dmgMul);
 f.hp = Math.max(1, f.hp - dmg);
 f.x -= side * (cl.back || 30); f.y = Math.min(f.y, -40); f.vy = cl.vy || -820; f.vx = -side * 120;
@@ -32986,6 +33101,7 @@ if (!mp || !mapFavOn(f)) return 1;
 if (mp === MAPS.cliff && f.ch.id === 'gouchen' && f.skill === 'hook') return 1.2;
 if (mp !== MAPS.pagoda) return 1;
 if (f.ch.id === 'yuxiao' && f.plat >= 0) return 1.2;
+if (f.ch.id === 'xuanji' && f.plat >= 0) return 1.18;
 if (f.ch.id === 'liuyun' && f.y < -15) return 1.15;
 return 1;
 };
@@ -33014,6 +33130,7 @@ const o = fighterByIdx(p.owner);
 let k = 1;
 if (o && mapFavOn(o)) {
 if (o.ch.id === 'qingfeng') k = 2;
+else if (o.ch.id === 'qingluan') k = 1.35;
 else if (o.ch.id === 'liuyun' || o.ch.id === 'moyu') k = 1.3;
 }
 if (o && mapScrollOn(o, 'feng')) k *= 1.15;
@@ -33031,6 +33148,7 @@ continue;
 if (f.invul > 0 || f.escInvul || f.state === 'special' || f.state === 'held' || (f.magTg !== undefined && f.magTg >= 0)) continue;
 let thunderDmg = T.dmg;
 if (mapFavOn(f) && f.ch.id === 'yuehua') thunderDmg = Math.round(thunderDmg * 0.5);
+else if (mapFavOn(f) && f.ch.id === 'xuanji') thunderDmg = Math.round(thunderDmg * 0.6);
 toNeutral(f);
 f.hp = Math.max(1, f.hp - thunderDmg);
 f.vy = T.vy; f.vx = (Math.sign(f.x - tx) || 1) * 200; f.plat = -1;
@@ -33058,9 +33176,13 @@ if (E.tWarn > 0) {
 E.tWarn -= dt;
 if (E.tWarn <= 0) { E.tWarn = 0; E.tT = T.every; mapThunder(T); }
 for (const f of allFighters()) {
-if (!f.hidden && f.hp > 0 && mapFavOn(f) && f.ch.id === 'yuxiao' && (f.notes || 0) < 3) {
+if (f.hidden || f.hp <= 0 || !mapFavOn(f)) continue;
+if (f.ch.id === 'yuxiao' && (f.notes || 0) < 3) {
 f.noteT = (f.noteT || 0) + dt * 0.5;
 if (f.noteT >= 2.5) { f.noteT = 0; f.notes = (f.notes || 0) + 1; }
+} else if (f.ch.id === 'xuanji') {
+if (f.skillCD > 0) f.skillCD = Math.max(0, f.skillCD - 0.35 * dt);
+if (f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.35 * dt);
 }
 }
 } else if ((E.tT -= dt) <= 0) {
@@ -33081,15 +33203,17 @@ const fav = mapFavOn(f);
 if (f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + mp.fog.guard * (fav && f.ch.id === 'moyu' ? 2 : 1) * (mapScrollOn(f, 'mo') ? 1.15 : 1) * dt);
 if (fav && f.ch.id === 'zuixian') f.drunk = Math.min(100, (f.drunk || 0) + 12 * dt);
 if (fav && f.ch.id === 'yuehua' && f.sinceHit > 2 && f.hp < f.maxHp) f.hp = Math.min(f.maxHp, f.hp + 6 * HERO_HP_SCALE * dt);
-if (fav && f.ch.id === 'qianji') {
-if (f.skillCD > 0) f.skillCD = Math.max(0, f.skillCD - 0.2 * dt);
-if (f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.2 * dt);
+if (fav && (f.ch.id === 'qianji' || f.ch.id === 'chixiao')) {
+if (f.skillCD > 0) f.skillCD = Math.max(0, f.skillCD - 0.25 * dt);
+if (f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.25 * dt);
 }
 }
 }
 if (f.plat >= 0 && mapFavOn(f)) {
 if (f.ch.id === 'lingque' && f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.3 * dt);
 if (f.ch.id === 'qianji' && f.skillCD > 0) f.skillCD = Math.max(0, f.skillCD - 0.15 * dt);
+if (f.ch.id === 'xuanji' && f.skill2CD > 0) f.skill2CD = Math.max(0, f.skill2CD - 0.25 * dt);
+if (f.ch.id === 'qingluan' && M.map === 'bamboo' && f.meter < 100) f.meter = Math.min(100, f.meter + 2.5 * dt);
 }
 if (f.plat >= 0 && mapScrollOn(f, 'ying') && f.guard < f.maxGuard) f.guard = Math.min(f.maxGuard, f.guard + 1.5 * dt);
 }
@@ -33146,6 +33270,7 @@ f.maxHp = Math.round(f.maxHp * 10); f.hp = f.lagHp = f.maxHp;
 f.guard = f.maxGuard = 500; f.meter = 100;
 }
 function startRound() {
+M.cmd = null;
 M.squadOrders = ['auto', 'auto', 'auto', 'auto'];
 M.teamFormation = ['auto', 'auto', 'auto', 'auto'];
 M.teamFocus = [-1, -1, -1, -1];
@@ -33158,7 +33283,8 @@ announce = null;
 announceQueue.length = 0;
 secretRound();
 const largeN = isLargeTeam() ? clamp(M.teamSize || (quadOn() ? 4 : 5), quadOn() ? 2 : 3, quadOn() ? 8 : 16) : 0;
-STAGE_W = M.mode === 'world' ? WORLD_W : largeN ? (quadOn() ? BATTLE_WIDTH : largeN >= 16 ? 6400 : largeN >= 12 ? 4800 : largeN >= 8 ? BATTLE_WIDTH : largeN === 5 ? BATTLE5_WIDTH : largeN >= 6 ? 3400 : 2600) : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);   // 开放世界 8000，8v8 3600，5v5 专属三层演武楼阁 2800
+const bmInit = battleMapDef();
+STAGE_W = M.mode === 'world' ? WORLD_W : largeN ? (bmInit ? bmInit.w : largeN >= 6 ? 3400 : 2600) : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);
 if (M.round === 1 && typeof resetCamZoom === 'function') resetCamZoom(true);
 const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
 M.mapEnv = mp ? { wT: mp.wind ? mp.wind.every : 0, wOn: 0, wDir: 1, wN: 0, tT: mp.thunder ? mp.thunder.every : 0, tWarn: 0 } : null;   // 风、天雷的计时：每回合从头算
@@ -33166,7 +33292,7 @@ if (typeof applySkins === 'function') applySkins();
 for (let i = 4; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
 if (largeN) {
 const total = largeN * teamCount();
-const span = Math.min(STAGE_W * 0.38, largeN * 150);
+const span = Math.min(STAGE_W * 0.36, largeN * 140);
 if (quadOn()) quadPlaceSpots();
 for (let i = 0; i < MAX_FIGHTERS; i++) {
 const f = FIGHTERS[i];
@@ -33177,11 +33303,18 @@ if (i === localIdx() && !M.watchAi) f.beaconT = 1.4;
 } else if (i < total) {
 f.hidden = false;
 const side = i % 2, slot = Math.floor(i / 2);
-const stepX = largeN > 1 ? span / (largeN - 1) : 0;
+const multiTier = bmInit && largeN >= 10;
+const row = multiTier ? (slot % 2) : 0;
+const col = multiTier ? Math.floor(slot / 2) : slot;
+const cols = multiTier ? Math.ceil(largeN / 2) : largeN;
+const stepX = cols > 1 ? span / (cols - 1) : 0;
 const x = side === 0
-? clamp(STAGE_W / 2 - 220 - slot * stepX, WALL + 60, STAGE_W / 2 - 140)
-: clamp(STAGE_W / 2 + 220 + slot * stepX, STAGE_W / 2 + 140, STAGE_W - WALL - 60);
+? clamp(STAGE_W / 2 - 220 - col * stepX, WALL + 80, STAGE_W / 2 - 140)
+: clamp(STAGE_W / 2 + 220 + col * stepX, STAGE_W / 2 + 140, STAGE_W - WALL - 80);
 f.reset(x);
+if (multiTier && row === 1 && bmInit.decks.length) {
+mapPutOn(f, bmInit.decks.length - 1);
+}
 f.face = side === 0 ? 1 : -1;
 if (i === localIdx() && !M.watchAi) f.beaconT = 1.4;
 } else {
@@ -37000,7 +37133,7 @@ const ox = f.x;
 updateFighter(f, foeOf(f));
 if (Math.abs(f.x - ox) > 24 && typeof spatialInvalidate === 'function') spatialInvalidate();
 }
-if (isMulti()) updateArena2v2(STEP);
+if (isMulti() && !battleMapOn()) updateArena2v2(STEP);
 if (M.mode === 'train' && TRAIN.frameProbe && !RESIM) {
 const p = TRAIN.frameProbe, ready = f => ['idle', 'walk', 'air', 'block'].includes(f.state);
 if (p.attacker === null && ready(A)) p.attacker = clock;
@@ -44880,7 +45013,7 @@ cuju: { title: '墨球蹴鞠 · 玩法说明', body: '双方不扣气血，比�
 koth: { title: '灵坛争锋 · 玩法说明', body: '三层断崖高台上每 18 秒轮流激活灵坛。站入无人争抢的灵坛即可累积占领进度，先达 100% 获胜；阵亡或被打落悬崖后 2.5 秒重返战场。' },
 party: { title: '江湖百戏 · 玩法说明', body: '五局三胜趣味小游戏轮换：第一局「传火折」（击中对手把 9 秒火折传出去，归零即炸）、第二局「断崖推手」（0 伤害但 2.6 倍击退，推落悬崖即胜）、第三局「飞球乱舞」（格挡弹反飞球，砸中即出局）。' },
 train: { title: '训练场 · 玩法说明', body: '包含招式教学、木人桩自由练习（可看判定框、帧数差与回放）、以及防反/连段等专项情景训练。' },
-stage: { title: '守关挑战 · 玩法说明', body: '十三侠客专属六章三十关斩妖除魔路线。每关击败首领积累星级与墨锭，最终章迎战六技融魂魔首。' },
+stage: { title: '守关挑战 · 玩法说明', body: '二十侠客专属斩妖除魔路线（3v1 同袍共斗）。每关击败首领积累星级与墨锭，最终章迎战六技融魂魔首。' },
 saga: { title: '侠客列传 · 玩法说明', body: '每位侠客独立的五节剧情篇章，在关键节点做出抉择可解锁不同结局与专属秘闻。' },
 tower: { title: '问剑密卷 · 玩法说明', body: '无尽爬塔肉鸽试炼：每层获胜后三选一武林秘卷叠加词条，守关 AI 境界随层数递进。' },
 };
@@ -45141,7 +45274,7 @@ return;
 backToMenu();
 });
 (function initExpansionHome() {
-let meleeTeamSize = 5, ctfTeamSize = 5;
+let meleeTeamSize = 5, ctfTeamSize = 5, quadTeamSize = 4;
 const meleeSeg = $id('meleeSizeSeg');
 if (meleeSeg) meleeSeg.addEventListener('click', e => {
 const b = e.target.closest('[data-lsize]'); if (!b) return;
@@ -45156,9 +45289,16 @@ ctfTeamSize = Math.max(2, +b.dataset.lsize || 5);
 ctfSeg.querySelectorAll('[data-lsize]').forEach(x => x.classList.toggle('sel', x === b));
 SFX.slice && SFX.slice();
 });
+const quadSeg = $id('quadSizeSeg');
+if (quadSeg) quadSeg.addEventListener('click', e => {
+const b = e.target.closest('[data-qsize]'); if (!b) return;
+quadTeamSize = clamp(+b.dataset.qsize || 4, 2, 8);
+quadSeg.querySelectorAll('[data-qsize]').forEach(x => x.classList.toggle('sel', x === b));
+SFX.slice && SFX.slice();
+});
 if ($id('largeStartMelee')) $id('largeStartMelee').addEventListener('click', () => bpStart('melee', { teamSize: meleeTeamSize, level: pickLevel || 'normal', mut: typeof teamMutator !== 'undefined' ? teamMutator : 'normal' }));
 if ($id('largeStartCtf')) $id('largeStartCtf').addEventListener('click', () => bpStart('ctf', { teamSize: ctfTeamSize, level: pickLevel || 'normal', mut: typeof teamMutator !== 'undefined' ? teamMutator : 'normal' }));
-if ($id('largeStartQuad')) $id('largeStartQuad').addEventListener('click', () => bpStart('quad', { teamSize: 4, level: pickLevel || 'normal' }));
+if ($id('largeStartQuad')) $id('largeStartQuad').addEventListener('click', () => bpStart('quad', { teamSize: quadTeamSize, level: pickLevel || 'normal' }));
 if ($id('largeStartGauntlet')) $id('largeStartGauntlet').addEventListener('click', () => bpStart('gauntlet', { level: pickLevel || 'normal' }));
 if ($id('cardMelee')) $id('cardMelee').addEventListener('dblclick', () => $id('largeStartMelee') && $id('largeStartMelee').click());
 if ($id('cardCtf')) $id('cardCtf').addEventListener('dblclick', () => $id('largeStartCtf') && $id('largeStartCtf').click());
@@ -51767,14 +51907,15 @@ B.x = 1520; B.face = -1;
 }
 function kothRespawnFighter(f) {
 const side = fighterTeam(f);
-const rx = STAGE_W / 2 + (side === 0 ? -160 : 160);
+const rx = side === 0 ? 280 : STAGE_W - 280;
 f.reset(rx);
-f.y = -280;
+f.y = -140;
 f.vy = 0;
-f.invul = 1.4;
+f.face = side === 0 ? 1 : -1;
+f.invul = 1.2;
 f.hidden = false;
 if (!RESIM) {
-ring(rx, -280, 90, side === 0 ? '143,240,255' : '255,138,112', 0.4);
+ring(rx, -140, 90, side === 0 ? '143,240,255' : '255,138,112', 0.4);
 SFX.poof();
 }
 }
@@ -54209,9 +54350,18 @@ if (!RESIM && f.idx === localIdx()) say('即将重返战场…', 1.1, 'go');
 S.respawn[f.idx] -= STEP;
 if (S.respawn[f.idx] <= 0 && S.tickets[fighterTeam(f)] > 0) {
 const team = fighterTeam(f);
-const offset = WALL + 120 + Math.floor(f.idx / 2) * 56;
-const rx = team === 0 ? offset : STAGE_W - offset;
+const slot = Math.floor(f.idx / 2);
+const bm = typeof battleMapDef === 'function' ? battleMapDef() : null;
+const baseOffset = S.size >= 10 ? Math.min(STAGE_W * 0.22, 920) : (WALL + 140);
+const col = S.size >= 10 ? Math.floor(slot / 2) : slot;
+const stepX = S.size >= 10 ? 72 : 56;
+const rx = team === 0
+? clamp(baseOffset + col * stepX, WALL + 90, STAGE_W / 2 - 260)
+: clamp(STAGE_W - baseOffset - col * stepX, STAGE_W / 2 + 260, STAGE_W - WALL - 90);
 f.reset(rx);
+if (bm && S.size >= 10 && (slot % 2) === 1 && bm.decks.length) {
+mapPutOn(f, bm.decks.length - 1);
+}
 f.face = team === 0 ? 1 : -1;
 f.invul = 1.1;
 if (f.idx === localIdx()) { f.beaconT = 1.4; camFocusPingT = 0.9; }
@@ -54278,7 +54428,7 @@ if (!ctfOn() || !M.ctf || M.phase !== 'fight') return null;
 const team = fighterTeam(f);
 const home = M.ctf.flags[team], away = M.ctf.flags[1 - team];
 if (away.carrier === f.idx) return { x: home.baseX, y: 0 };
-if (Math.abs(f.x - foe.x) < 220 && foe.hp > 0) return null;
+if (foe && foe.hp > 0 && Math.abs(f.x - foe.x) < 220 && Math.abs(f.y - foe.y) < 120) return null;
 if (home.dropped) return home;
 if (home.carrier >= 0) return fighterByIdx(home.carrier);
 return away.carrier < 0 ? away : null;
@@ -54356,7 +54506,7 @@ ctx.restore();
 }
 }
 function startCtf(teamSize = 4, heroIdx = 0, level = 'normal', drafted = null, mut = 'normal') {
-const sz = clamp(teamSize | 0, 2, 8);
+const sz = clamp(teamSize | 0, 2, 10);
 debugHitbox = false;
 refocusGame();
 netDropWaiting();
@@ -54470,9 +54620,12 @@ M.quadSpots = spots;
 function quadSpawnPoint(team, slot) {
 const spot = (M.quadSpots || [0, 1, 2, 3])[team];
 const left = spot % 2 === 0, top = spot >= 2;
-const x0 = WALL + 430, step = 58;
+const sz = Math.max(2, M.teamSize || 4);
+const x0 = WALL + (STAGE_W >= 5000 ? 480 : 430);
+const maxSpan = Math.min(STAGE_W * 0.28, (sz - 1) * 72);
+const step = sz > 1 ? Math.min(72, Math.max(46, maxSpan / (sz - 1))) : 0;
 const x = left ? x0 + slot * step : STAGE_W - x0 - slot * step;
-return { x, deck: top ? 0 : -1, face: left ? 1 : -1 };   // deck：顶层平台的下标（BATTLE_DECKS[0]）；-1 是地面
+return { x, deck: top ? 0 : -1, face: left ? 1 : -1 };   // deck：顶层平台的下标（decks[0]）；-1 是地面
 }
 function quadSpawn(f, offsetSlot) {
 const team = fighterTeam(f), slot = offsetSlot !== undefined ? offsetSlot : Math.floor(f.idx / teamCount());
@@ -58071,9 +58224,10 @@ const flatCh = raidNet ? [picks[0][0], picks[0][0], picks[1][0], picks[0][1]]
 : (duo ? [duo[0][0], duo[1][0]] : picks);
 const mv = netMapVotes(), mut = netTeamMutator();
 const loadouts = [typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}, NET.peerLoadout || {}];
-const start = { ch: flatCh, seed: matchSeed, duo, mv, map: mapId, mut, competitiveScrolls, loadouts };
+const teamSize = typeof netTeamSize === 'number' ? netTeamSize : 0;
+const start = { ch: flatCh, seed: matchSeed, duo, mv, map: mapId, mut, competitiveScrolls, loadouts, teamSize };
 send({ rstart: start });
-rollStart(flatCh, matchSeed, duo, mv, mapId, mut, competitiveScrolls, loadouts);
+rollStart(flatCh, matchSeed, duo, mv, mapId, mut, competitiveScrolls, loadouts, teamSize);
 };
 onlineCompetitiveDraft = { state: currentPreMatch, onComplete: complete, remoteDeadline: Date.now() + COMPETITIVE_DRAFT_SECONDS * Math.max(1, currentPreMatch.picks[1].length), finishing: false };
 competitiveDraftStart(currentPreMatch, mode, opts, complete, true);
@@ -58108,8 +58262,9 @@ const mv = netMapVotes();   // 山河异境：两边的票（别的房间规则�
 const mut = netTeamMutator();
 const competitiveScrolls = preMatch ? competitiveScrollMap(preMatch) : null;
 const loadouts = [typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {}, NET.peerLoadout || {}];
-send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId, mut, competitiveScrolls, loadouts } : { ch: flatCh, seed, mv, map: mapId, mut, competitiveScrolls, loadouts } });
-rollStart(flatCh, seed, duo, mv, mapId, mut, competitiveScrolls, loadouts);
+const teamSize = typeof netTeamSize === 'number' ? netTeamSize : 0;
+send({ rstart: duo ? { ch: flatCh, seed, duo, mv, map: mapId, mut, competitiveScrolls, loadouts, teamSize } : { ch: flatCh, seed, mv, map: mapId, mut, competitiveScrolls, loadouts, teamSize } });
+rollStart(flatCh, seed, duo, mv, mapId, mut, competitiveScrolls, loadouts, teamSize);
 }
 } else if (mode === 'chaos') {
 startChaos(picks[0], picks[1], opts.level || pickLevel, !!opts.isWatch);
@@ -59339,9 +59494,22 @@ $id('lobbyPeerState').style.color = peerReady ? '#2bd49a' : 'var(--dim)';
 }
 window.updateNetLobby = updateNetLobby;
 function roomWrapShow() { const w = $id('roomWrap'); if (w) w.classList.remove('hidden'); }
-const netTeamMutator = () => !NET.isRanked && ['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'maps'].includes(netRoomMode) && teamMutator === 'mayhem' ? 'mayhem' : 'normal';
+const netTeamMutator = () => !NET.isRanked && ['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'quad', 'maps'].includes(netRoomMode) && teamMutator === 'mayhem' ? 'mayhem' : 'normal';
 let netRoomMode = 'normal';   // 好友房的规则，见 src/data/10-modes.js 的 ROOM_MODES；排位固定 normal（3v3 车轮战）
-const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '常规标准', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏', bastion: '天枢守境', melee: '群雄会战 · 8v8', ctf: '夺旗争锋 · 8v8' };
+let netTeamSize = 0;          // 好友房大型团战的每队人数（melee: 3/5/8/10/16, ctf: 2/3/5/8/10, quad: 2/4/5/8）
+const ROOM_TEAM_SIZES = {
+melee: [3, 5, 8, 10, 16],
+ctf: [2, 3, 5, 8, 10],
+quad: [2, 4, 5, 8],
+};
+const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '常规标准', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏', bastion: '天枢守境', melee: '群雄会战', ctf: '夺旗争锋', quad: '四象争锋' };
+function roomRuleLabel(rule, sz) {
+const base = ROOM_RULE_NAMES[rule] || ROOM_RULE_NAMES.normal;
+const opts = ROOM_TEAM_SIZES[rule];
+if (!opts) return base;
+const n = opts.includes(sz) ? sz : (ROOM_MODES[rule]?.teamSize || opts[0]);
+return rule === 'quad' ? `${base} · ${n}v${n}v${n}v${n} (${n * 4}人)` : `${base} · ${n}v${n} (${n * 2}人)`;
+}
 const lobbyModesSegEl = $id('lobbyModesSeg');
 if (lobbyModesSegEl) {
 lobbyModesSegEl.addEventListener('click', e => {
@@ -59352,13 +59520,44 @@ toast('仅擂主可调整切磋模式');
 return;
 }
 setRoomModeUI(b.dataset.mode);
-if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator() });
-toast(`已设定切磋规则：${ROOM_RULE_NAMES[netRoomMode] || ROOM_RULE_NAMES.normal}`);
+if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator(), size: netTeamSize });
+toast(`已设定切磋规则：${roomRuleLabel(netRoomMode, netTeamSize)}`);
 SFX.slice();
 });
 }
-function setRoomModeUI(rule) {
+const lobbyTeamSizeSegEl = $id('lobbyTeamSizeSeg');
+if (lobbyTeamSizeSegEl) {
+lobbyTeamSizeSegEl.addEventListener('click', e => {
+const b = e.target.closest('button[data-rtsize]');
+if (!b || (NET.role === 'client' && NET.open)) return;
+const opts = ROOM_TEAM_SIZES[netRoomMode];
+if (!opts) return;
+const sz = +b.dataset.rtsize || opts[0];
+netTeamSize = opts.includes(sz) ? sz : opts[0];
+renderLobbyTeamSize();
+if ($id('roomRuleNow')) $id('roomRuleNow').textContent = roomRuleLabel(netRoomMode, netTeamSize);
+if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator(), size: netTeamSize });
+SFX.slice();
+});
+}
+function renderLobbyTeamSize() {
+if (!lobbyTeamSizeSegEl) return;
+const opts = ROOM_TEAM_SIZES[netRoomMode];
+lobbyTeamSizeSegEl.hidden = !opts;
+if (!opts) { netTeamSize = 0; return; }
+if (!opts.includes(netTeamSize)) netTeamSize = ROOM_MODES[netRoomMode]?.teamSize || opts[0];
+const dis = NET.role === 'client' && NET.open;
+lobbyTeamSizeSegEl.innerHTML = opts.map(n => {
+const lbl = netRoomMode === 'quad' ? `${n}v${n}v${n}v${n} · ${n * 4}人` : `${n}v${n} · ${n * 2}人`;
+const sel = n === netTeamSize;
+return `<button class="ghost small${sel ? ' sel' : ''}" data-rtsize="${n}" type="button" aria-pressed="${sel}"${dis ? ' disabled' : ''}>${lbl}</button>`;
+}).join('');
+}
+function setRoomModeUI(rule, sizeOverride) {
 netRoomMode = ROOM_MODES[rule] ? rule : 'normal';
+const opts = ROOM_TEAM_SIZES[netRoomMode];
+if (opts) netTeamSize = opts.includes(sizeOverride) ? sizeOverride : (opts.includes(netTeamSize) ? netTeamSize : (ROOM_MODES[netRoomMode]?.teamSize || opts[0]));
+else netTeamSize = 0;
 if (lobbyModesSegEl) {
 for (const btn of lobbyModesSegEl.querySelectorAll('button')) {
 btn.classList.toggle('sel', btn.dataset.mode === netRoomMode);
@@ -59366,20 +59565,21 @@ btn.setAttribute('aria-pressed', btn.dataset.mode === netRoomMode);
 btn.disabled = NET.role === 'client' && NET.open;
 }
 }
-if ($id('roomRuleNow')) $id('roomRuleNow').textContent = ROOM_RULE_NAMES[netRoomMode] || ROOM_RULE_NAMES.normal;
+renderLobbyTeamSize();
+if ($id('roomRuleNow')) $id('roomRuleNow').textContent = roomRuleLabel(netRoomMode, netTeamSize);
 if (netRoomMode !== 'normal' && $id('roomMore')) $id('roomMore').open = true;   // 选的是别的规则：把折叠打开，让人看得见
 renderLobbyMaps();
 renderLobbyMutator();
 }
 function renderLobbyMutator() {
 const el = $id('lobbyMutator'); if (!el) return;
-el.hidden = NET.isRanked || !['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'maps'].includes(netRoomMode);
+el.hidden = NET.isRanked || !['normal', 'pp_cc', 'pp_pp', 'melee', 'ctf', 'quad', 'maps'].includes(netRoomMode);
 for (const b of el.querySelectorAll('button')) { b.disabled = NET.role === 'client' && NET.open; b.classList.toggle('sel', b.dataset.mut === netTeamMutator()); b.setAttribute('aria-pressed', String(b.dataset.mut === netTeamMutator())); }
 }
 if ($id('lobbyMutator')) $id('lobbyMutator').addEventListener('click', e => {
 const b = e.target.closest('button[data-mut]'); if (!b || (NET.role === 'client' && NET.open)) return;
 teamMutator = b.dataset.mut === 'mayhem' ? 'mayhem' : 'normal';
-renderLobbyMutator(); if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator() });
+renderLobbyMutator(); if (NET.open && NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator(), size: netTeamSize });
 });
 const NET_MAPV = { host: null, client: null };
 const netMapVotes = () => !NET.isRanked && (netRoomMode === 'normal' || netRoomMode === 'maps') ? [NET_MAPV.host, NET_MAPV.client] : undefined;

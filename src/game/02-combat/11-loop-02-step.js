@@ -26,7 +26,7 @@ function step() {
     updateFighter(f, foeOf(f));
     if (Math.abs(f.x - ox) > 24 && typeof spatialInvalidate === 'function') spatialInvalidate();
   }
-  if (isMulti()) updateArena2v2(STEP);
+  if (isMulti() && !battleMapOn()) updateArena2v2(STEP);
   if (M.mode === 'train' && TRAIN.frameProbe && !RESIM) {
     const p = TRAIN.frameProbe, ready = f => ['idle', 'walk', 'air', 'block'].includes(f.state);
     if (p.attacker === null && ready(A)) p.attacker = clock;

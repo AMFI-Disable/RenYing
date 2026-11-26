@@ -186,7 +186,7 @@ function onSys(m) {
     NET.names = m.names || {}; NET.tiers = m.tiers || {}; NET.open = true;
     NET.peerQuit = false; NET.forfeit = false; NET.forfeitResult = ''; NET.keepRoom = false;   // 好友房里新来的对手：上一个人走掉的记号清掉
     updateNetLobby(true, (m.names && m.names.host) || '房主', (m.names && m.names.client) || '对手', NET.code, true);
-    if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator() });
+    if (NET.role === 'host') send({ sys: 'room_rule', rule: netRoomMode, mut: netTeamMutator(), size: typeof netTeamSize === 'number' ? netTeamSize : 0 });
     NET_MAPV.host = NET_MAPV.client = null; netMapVoteSend(); renderLobbyMaps();   // 新对手进房：两边重新互报自己的票
     onNetOpen();
   } else if (m.sys === 'map_vote') {
@@ -194,8 +194,8 @@ function onSys(m) {
   } else if (m.sys === 'room_rule') {
     if (NET.role !== 'client') return;
     teamMutator = m.mut === 'mayhem' ? 'mayhem' : 'normal';
-    setRoomModeUI(m.rule);
-    toast(`擂主已设定切磋规则：${ROOM_RULE_NAMES[m.rule] || ROOM_RULE_NAMES.normal}`);
+    setRoomModeUI(m.rule, m.size);
+    toast(`擂主已设定切磋规则：${typeof roomRuleLabel === 'function' ? roomRuleLabel(m.rule, m.size) : (ROOM_RULE_NAMES[m.rule] || ROOM_RULE_NAMES.normal)}`);
   } else if (m.sys === 'rematch') {
     if (NET.isRanked) return;   // 排位赛没有再战：打完各自回去重新匹配
     if (m.action === 'ask') {
@@ -477,8 +477,9 @@ function setupNetMatch(teamSizeOverride) {
   const tc = def.rule === 'quad' ? 4 : 2;
   M.mode = 'net'; M.wins = tc > 2 ? [0, 0, 0, 0] : [0, 0]; M.round = 1; M.carry = null; M.duo = null; M.map = null; A.meter = B.meter = 0; NET.solo = false;
   const maxPerTeam = tc > 2 ? 8 : 16;
-  const reqSize = (typeof teamSizeOverride === 'number' && teamSizeOverride > 0) ? teamSizeOverride : (def.teamSize || 0);
-  M.teamSize = reqSize ? clamp(reqSize | 0, tc > 2 ? 2 : 3, maxPerTeam) : 0;
+  const reqSize = (typeof teamSizeOverride === 'number' && teamSizeOverride > 0) ? teamSizeOverride : ((typeof netTeamSize === 'number' && netTeamSize > 0) ? netTeamSize : (def.teamSize || 0));
+  const minPerTeam = def.rule === 'ctf' || tc > 2 ? 2 : 3;
+  M.teamSize = reqSize ? clamp(reqSize | 0, minPerTeam, maxPerTeam) : 0;
   if (M.teamSize) {
     M.level = 'normal';
     M.watchAi = false;

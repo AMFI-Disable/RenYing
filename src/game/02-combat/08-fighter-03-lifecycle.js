@@ -46,6 +46,7 @@ function applyMayhemStats(f) {
   f.guard = f.maxGuard = 500; f.meter = 100;
 }
 function startRound() {
+  M.cmd = null;
   M.squadOrders = ['auto', 'auto', 'auto', 'auto'];
   M.teamFormation = ['auto', 'auto', 'auto', 'auto'];
   M.teamFocus = [-1, -1, -1, -1];
@@ -58,7 +59,8 @@ function startRound() {
   announceQueue.length = 0;
   secretRound();
   const largeN = isLargeTeam() ? clamp(M.teamSize || (quadOn() ? 4 : 5), quadOn() ? 2 : 3, quadOn() ? 8 : 16) : 0;
-  STAGE_W = M.mode === 'world' ? WORLD_W : largeN ? (quadOn() ? BATTLE_WIDTH : largeN >= 16 ? 6400 : largeN >= 12 ? 4800 : largeN >= 8 ? BATTLE_WIDTH : largeN === 5 ? BATTLE5_WIDTH : largeN >= 6 ? 3400 : 2600) : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);   // 开放世界 8000，8v8 3600，5v5 专属三层演武楼阁 2800
+  const bmInit = battleMapDef();
+  STAGE_W = M.mode === 'world' ? WORLD_W : largeN ? (bmInit ? bmInit.w : largeN >= 6 ? 3400 : 2600) : cujuOn() ? CUJU.W : (typeof kothOn === 'function' && kothOn()) ? KOTH.W : (typeof bastionOn === 'function' && bastionOn()) ? 2200 : (isMulti() ? 2600 : 1800);
   if (M.round === 1 && typeof resetCamZoom === 'function') resetCamZoom(true);
   const mp = mapNow(); if (mp && mp.w && !isMulti()) STAGE_W = mp.w;     // 山河异境的地图可以换宽度
   M.mapEnv = mp ? { wT: mp.wind ? mp.wind.every : 0, wOn: 0, wDir: 1, wN: 0, tT: mp.thunder ? mp.thunder.every : 0, tWarn: 0 } : null;   // 风、天雷的计时：每回合从头算
@@ -66,7 +68,7 @@ function startRound() {
   for (let i = 4; i < MAX_FIGHTERS; i++) FIGHTERS[i].hidden = true;
   if (largeN) {
     const total = largeN * teamCount();
-    const span = Math.min(STAGE_W * 0.38, largeN * 150);
+    const span = Math.min(STAGE_W * 0.36, largeN * 140);
     if (quadOn()) quadPlaceSpots();
     for (let i = 0; i < MAX_FIGHTERS; i++) {
       const f = FIGHTERS[i];
@@ -77,11 +79,18 @@ function startRound() {
       } else if (i < total) {
         f.hidden = false;
         const side = i % 2, slot = Math.floor(i / 2);
-        const stepX = largeN > 1 ? span / (largeN - 1) : 0;
+        const multiTier = bmInit && largeN >= 10;
+        const row = multiTier ? (slot % 2) : 0;
+        const col = multiTier ? Math.floor(slot / 2) : slot;
+        const cols = multiTier ? Math.ceil(largeN / 2) : largeN;
+        const stepX = cols > 1 ? span / (cols - 1) : 0;
         const x = side === 0
-          ? clamp(STAGE_W / 2 - 220 - slot * stepX, WALL + 60, STAGE_W / 2 - 140)
-          : clamp(STAGE_W / 2 + 220 + slot * stepX, STAGE_W / 2 + 140, STAGE_W - WALL - 60);
+          ? clamp(STAGE_W / 2 - 220 - col * stepX, WALL + 80, STAGE_W / 2 - 140)
+          : clamp(STAGE_W / 2 + 220 + col * stepX, STAGE_W / 2 + 140, STAGE_W - WALL - 80);
         f.reset(x);
+        if (multiTier && row === 1 && bmInit.decks.length) {
+          mapPutOn(f, bmInit.decks.length - 1);
+        }
         f.face = side === 0 ? 1 : -1;
         if (i === localIdx() && !M.watchAi) f.beaconT = 1.4;
       } else {

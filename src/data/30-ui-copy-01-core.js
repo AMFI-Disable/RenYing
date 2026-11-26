@@ -167,7 +167,7 @@ Object.assign(UI_COPY_EN, {
   "勾陈": "Gou Chen",
   "匹配对战": "Quick Match",
   "匹配对战 · 排位赛 · 好友房间": "Matchmaking · Ranked · Custom Room",
-  "十六位侠客 · 回滚联机 · 赛季排位": "16 Heroes · Rollback Netcode · Ranked Season",
+  "二十位侠客 · 回滚联机 · 赛季排位": "20 Heroes · Rollback Netcode · Ranked Season",
   "千影": "Thousand Shadows",
   "单人": "Solo",
   "单人模式": "Single Player",

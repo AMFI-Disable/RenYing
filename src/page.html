@@ -178,7 +178,7 @@ window.RYBoot = (function () {
     </div>
     <div class="home-kicker"><span class="season-tag" id="homeSeason">第二赛季</span><span id="homeSeasonTxt">11.22 – 12.22 · 段位排位开启</span><span class="home-online-pill" id="homeOnlinePill" title="全服在线侠士"><span class="home-online-dot"></span><span id="homeOnlineCount">全服 — 人在线</span></span><button class="home-evt-pill" id="homeEvt" type="button" hidden>活动：全皮肤限免 · <span id="homeEvtLeft"></span></button></div>
     <div class="mtitle"><h1><span>刃</span><span>影</span></h1><span class="seal">月下一决</span></div>
-    <p class="home-tag">十六位侠客 · 回滚联机 · 赛季排位</p>
+    <p class="home-tag">二十位侠客 · 回滚联机 · 赛季排位</p>
     <div class="home-side">
       <button class="home-card home-gboss tn-online" id="homeGboss" type="button" hidden>
         <span class="hc-kicker">天魔讨伐 · 全服共斗</span>
@@ -206,7 +206,7 @@ window.RYBoot = (function () {
     <!-- 首页两个入口：大的「联机对战」直接去联机，下面小一点的「习武」进对战电脑和其他模式；换侠客在正中侠客脚下 -->
     <div class="home-entries" id="homeEntries">
       <button class="mcard right" id="mMatch" data-go="netp" data-kb-default><span class="mk">联机对战</span><span class="ms">3v3 车轮战 · 排位与好友约战</span></button>
-      <button class="mcard left" id="mPlay" data-go="single"><span class="mk">习武</span><span class="ms">人机切磋 · 8v8 团战 · 历练闯关</span></button>
+      <button class="mcard left" id="mPlay" data-go="single"><span class="mk">习武</span><span class="ms">人机切磋 · 3v3–16v16 团战 · 历练闯关</span></button>
     </div>
 
     <div class="home-hero" id="homeHero">   <!-- 跟着首页正中那位侠客的脚下走：上面是名字，下面是换侠客 -->
@@ -257,22 +257,22 @@ window.RYBoot = (function () {
           <!-- 实战切磋分区模式 (6 张主卡) -->
           <div class="xiwu-cat-group" data-cat-group="combat">
             <div class="xiwu-cards-row">
-              <button data-tab="cpu" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">对战电脑</b><span class="pt-d">一对一，难度自选</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="cpu" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="tag3" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">3v3 车轮战</b><span class="pt-d">三人接力，胜者守擂</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="tag3" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="watch2v2" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><b class="pt-n">2v2 组队</b><span class="pt-d">两人一队，可带电脑队友</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="watch2v2" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="cuju" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18M5 7c3 2 11 2 14 0M5 17c3-2 11-2 14 0"/></svg></span><b class="pt-n">墨球蹴鞠</b><span class="pt-d">不比气血，比谁先进三球</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="cuju" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="koth" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.4 1.1 6L12 17.5 6.4 20.4l1.1-6L3 10l6-1z"/></svg></span><b class="pt-n">灵坛争锋</b><span class="pt-d">占领灵坛，无限复活抢分</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="koth" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="party" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="4"/><circle cx="16" cy="9" r="3"/><path d="M4 20c1.5-3 8.5-3 10 0"/></svg></span><b class="pt-n">江湖百戏</b><span class="pt-d">传火折、断崖推手、飞球乱舞</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="party" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="cpu" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">对战电脑</b><span class="pt-d">1v1（2人）· 难度自选</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="cpu" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="tag3" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">3v3 车轮战</b><span class="pt-d">6人接力（同屏2人）· 胜者守擂</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="tag3" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="watch2v2" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg></span><b class="pt-n">2v2 组队</b><span class="pt-d">2v2（4人同屏）· 可带电脑队友</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="watch2v2" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="cuju" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18M5 7c3 2 11 2 14 0M5 17c3-2 11-2 14 0"/></svg></span><b class="pt-n">墨球蹴鞠</b><span class="pt-d">1v1/2v2（2–4人）· 先进三球</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="cuju" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="koth" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.4 1.1 6L12 17.5 6.4 20.4l1.1-6L3 10l6-1z"/></svg></span><b class="pt-n">灵坛争锋</b><span class="pt-d">1v1/2v2（2–4人）· 无限复活抢分</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="koth" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="party" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="4"/><circle cx="16" cy="9" r="3"/><path d="M4 20c1.5-3 8.5-3 10 0"/></svg></span><b class="pt-n">江湖百戏</b><span class="pt-d">1v1（2人）· 传火折/断崖推手/飞球</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="party" title="玩法说明" aria-label="玩法说明">i</span></button>
             </div>
           </div>
 
           <!-- 大型团战与新玩法分区 -->
           <div class="xiwu-cat-group" data-cat-group="large" style="display:none">
             <div class="xiwu-cards-row">
-              <button data-tab="melee" type="button" id="cardMelee"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">群雄会战</b><span class="pt-d">3v3 至 16v16 同屏大混战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="melee" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="ctf" type="button" id="cardCtf"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">夺旗争锋</b><span class="pt-d">2v2–8v8 护旗夺分战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="ctf" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="quad" type="button" id="cardQuad"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">四象争锋</b><span class="pt-d">4v4v4v4 四方混战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="quad" title="玩法说明" aria-label="玩法说明">i</span></button>
-              <button data-tab="gauntlet" type="button" id="cardGauntlet"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">无尽试炼</b><span class="pt-d">逐波递增车轮生存战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="gauntlet" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="melee" type="button" id="cardMelee"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">群雄会战</b><span class="pt-d">3v3–16v16（6–32人同屏）</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="melee" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="ctf" type="button" id="cardCtf"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-swords"/></svg></span><b class="pt-n">夺旗争锋</b><span class="pt-d">2v2–10v10（4–20人护旗）</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="ctf" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="quad" type="button" id="cardQuad"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-squad"/></svg></span><b class="pt-n">四象争锋</b><span class="pt-d">2v2v2v2–8v8v8v8（8–32人四方混战）</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="quad" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="gauntlet" type="button" id="cardGauntlet"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><use href="#ic-pagoda"/></svg></span><b class="pt-n">无尽试炼</b><span class="pt-d">1v1（2人）· 逐波递增车轮生存</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="gauntlet" title="玩法说明" aria-label="玩法说明">i</span></button>
             </div>
           </div>
 
@@ -428,25 +428,26 @@ window.RYBoot = (function () {
         </div>
       </div>
 
-      <!-- 群雄会战 · 3v3 / 5v5 / 8v8 -->
+      <!-- 群雄会战 · 3v3 / 5v5 / 8v8 / 10v10 / 16v16 -->
       <div data-sec="melee" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
           <h3 class="spt">群雄会战 · 大型同屏混战</h3>
-          <span class="sub-badge">3v3 至 16v16 · 多层立体战场</span>
+          <span class="sub-badge">6–32人同屏 · 3v3 至 16v16 立体战场</span>
         </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">支持 3v3、5v5（三层演武楼阁）与 8v8（五层飞檐战场）乃至 16v16 同屏大混战！由统帅下令，配备兵力积分、战损复活、战队指令与滚轮镜头缩放。</p>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">支持 3v3（6人）、5v5（10人三层楼阁）、8v8（16人五层战场）、10v10（20人全侠客无镜像五层大殿）与 16v16（32人玄岳大战场）！由统帅下令，配备兵力积分、前沿复活与滚轮镜头缩放。</p>
         <div class="sec-sub-label" style="text-align:left;margin-top:6px">团战规模</div>
         <div class="seg m2-seg" id="meleeSizeSeg" style="margin-bottom:12px">
-          <button type="button" data-lsize="3">3v3 小队战</button>
-          <button type="button" data-lsize="5" class="sel">5v5 演武楼阁</button>
-          <button type="button" data-lsize="8">8v8 五层大战场</button>
-          <button type="button" data-lsize="16">16v16 全军会战</button>
+          <button type="button" data-lsize="3">3v3 · 6人</button>
+          <button type="button" data-lsize="5" class="sel">5v5 · 10人</button>
+          <button type="button" data-lsize="8">8v8 · 16人</button>
+          <button type="button" data-lsize="10">10v10 · 20人</button>
+          <button type="button" data-lsize="16">16v16 · 32人</button>
         </div>
         <div class="bp-rule-banner">
           <span class="bp-rule-seal">禁选</span>
           <div class="bp-rule-txt">
             <b>点将台规则 · 亲自禁人与自选本命侠客，其余位置 AI 极速补齐</b>
-            <span>你仅需掌控禁用与自身出战侠客，其余队友与敌方阵营将由 AI 快速完成选人，减少等待。</span>
+            <span>10v10 全 20 位侠客无镜像齐上阵；16v16 自动启用镜像选人，减少等待即刻开战。</span>
           </div>
         </div>
         <div class="single-action-row">
@@ -454,19 +455,20 @@ window.RYBoot = (function () {
         </div>
       </div>
 
-      <!-- 夺旗争锋 · 2v2–8v8 -->
+      <!-- 夺旗争锋 · 2v2–10v10 -->
       <div data-sec="ctf" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
           <h3 class="spt">夺旗争锋 · 团队护旗战</h3>
-          <span class="sub-badge">2v2–8v8 · 先夺三旗胜</span>
+          <span class="sub-badge">4–20人同屏 · 2v2–10v10 先夺三旗胜</span>
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">双方阵地各立战旗，深入敌阵夺取敌旗并护送回己方阵地即得 1 分，率先夺得 3 旗的一方获胜！</p>
         <div class="sec-sub-label" style="text-align:left;margin-top:6px">团战规模</div>
         <div class="seg m2-seg" id="ctfSizeSeg" style="margin-bottom:12px">
-          <button type="button" data-lsize="2">2v2 轻骑夺旗</button>
-          <button type="button" data-lsize="3">3v3 小队夺旗</button>
-          <button type="button" data-lsize="5" class="sel">5v5 楼阁夺旗</button>
-          <button type="button" data-lsize="8">8v8 全军夺旗</button>
+          <button type="button" data-lsize="2">2v2 · 4人</button>
+          <button type="button" data-lsize="3">3v3 · 6人</button>
+          <button type="button" data-lsize="5" class="sel">5v5 · 10人</button>
+          <button type="button" data-lsize="8">8v8 · 16人</button>
+          <button type="button" data-lsize="10">10v10 · 20人</button>
         </div>
         <div class="bp-rule-banner">
           <span class="bp-rule-seal">禁选</span>
@@ -480,18 +482,25 @@ window.RYBoot = (function () {
         </div>
       </div>
 
-      <!-- 四象争锋 · 4v4v4v4 -->
+      <!-- 四象争锋 · 2v2v2v2–8v8v8v8 -->
       <div data-sec="quad" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
           <h3 class="spt">四象争锋 · 四方混战</h3>
-          <span class="sub-badge">4v4v4v4 · 统帅战术相克</span>
+          <span class="sub-badge">8–32人同屏 · 统帅战术相克</span>
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">苍龙、朱雀、玄武、白虎四队同屏混战，你是苍龙统帅：用 1/2/3 或 Tab 切换锋矢、固守、游袭战术，敌方统帅的战术不可见，最后存活的队伍夺魁！</p>
+        <div class="sec-sub-label" style="text-align:left;margin-top:6px">四方规模</div>
+        <div class="seg m2-seg" id="quadSizeSeg" style="margin-bottom:12px">
+          <button type="button" data-qsize="2">2v2v2v2 · 8人</button>
+          <button type="button" data-qsize="4" class="sel">4v4v4v4 · 16人</button>
+          <button type="button" data-qsize="5">5v5v5v5 · 20人</button>
+          <button type="button" data-qsize="8">8v8v8v8 · 32人</button>
+        </div>
         <div class="bp-rule-banner">
           <span class="bp-rule-seal pick-only">直选</span>
           <div class="bp-rule-txt">
             <b>点将台规则 · 免禁用自选本命侠客</b>
-            <span>进入点将台挑选你的侠客，其余队友与三支敌队随机组成。</span>
+            <span>进入点将台挑选你的侠客，其余队友与三支敌队随机组成（5v5v5v5 恰好 20 位侠客各登场一次）。</span>
           </div>
         </div>
         <div class="single-action-row">
@@ -503,7 +512,7 @@ window.RYBoot = (function () {
       <div data-sec="gauntlet" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
           <h3 class="spt">无尽试炼 · 车轮生存战</h3>
-          <span class="sub-badge">逐波递增 · 考验耐力</span>
+          <span class="sub-badge">1v1（2人）· 逐波递增</span>
         </div>
         <p class="sub" style="margin:2px 0 10px;text-align:left">单骑迎战源源不断的江湖群雄，每击破一波恢复部分气血并迎战更高境界强敌，挑战个人极限连胜！</p>
         <div class="bp-rule-banner">
@@ -518,13 +527,13 @@ window.RYBoot = (function () {
         </div>
       </div>
 
-      <!-- 闯关模式（已与同袍肉鸽多人模式深度融合：十三侠客专属斩妖列传） -->
+      <!-- 闯关模式（已与同袍肉鸽多人模式深度融合：二十侠客专属斩妖列传） -->
       <div data-sec="stage" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
-          <h3 class="spt">十三侠客斩妖传 · 同袍肉鸽共斗</h3>
-          <span class="sub-badge">每位侠客专属剧情 · 多人肉鸽合一</span>
+          <h3 class="spt">二十侠客斩妖传 · 同袍肉鸽共斗</h3>
+          <span class="sub-badge">3v1（4人同屏）· 每位侠客专属剧情</span>
         </div>
-        <p class="sub" style="margin:2px 0 8px;text-align:left">十三位侠客各有一卷斩妖除魔的专属故事！前四幕迎战刀鬼、弓妖、缚灵、咒师、夜枭并感悟共享秘卷，终幕决战三侠六技融魂魔首！</p>
+        <p class="sub" style="margin:2px 0 8px;text-align:left">二十位侠客各有一卷斩妖除魔的专属故事！前四幕迎战刀鬼、弓妖、缚灵、咒师、夜枭并感悟共享秘卷，终幕决战三侠六技融魂魔首！</p>
         <div class="st-story-box" id="stStoryBox"></div>
         <div class="sec-sub-label" style="margin-top:12px">选择侠客剧情篇章与关卡（点击关卡即刻携同袍出征）</div>
         <div class="seg sttabs" id="stTabs"></div>
@@ -634,7 +643,7 @@ window.RYBoot = (function () {
           <span class="bp-rule-seal pick-only">直选</span>
           <div class="bp-rule-txt">
             <b>点将台规则 · 肉鸽爬塔免禁用直选</b>
-            <span>点击「开启新试炼」后进入水墨点将台，自由检视十六位侠客武学并钦点本命试炼侠客登阁。</span>
+            <span>点击「开启新试炼」后进入水墨点将台，自由检视二十位侠客武学并钦点本命试炼侠客登阁。</span>
           </div>
         </div>
         <div class="single-action-row">
@@ -832,17 +841,19 @@ window.RYBoot = (function () {
               <details class="tp-more" id="roomMore">
                 <summary>更多规则 · <span id="roomRuleNow">3v3 车轮战</span></summary>
                 <div class="lobby-modes-seg" id="lobbyModesSeg" role="group" aria-label="好友房规则">
-                  <button class="ghost small sel" data-mode="normal" type="button">3v3 车轮战</button>
-                  <button class="ghost small" data-mode="pp_cc" type="button">2v2 · 两人打两电脑</button>
-                  <button class="ghost small" data-mode="pp_pp" type="button">2v2 · 两人对两人</button>
-                  <button class="ghost small" data-mode="raid" type="button">联机打魔首</button>
-                  <button class="ghost small" data-mode="mayhem" type="button">通天神决</button>
-                  <button class="ghost small" data-mode="cuju" type="button">墨球蹴鞠</button>
-                  <button class="ghost small" data-mode="koth" type="button">灵坛争锋</button>
-                  <button class="ghost small" data-mode="party" type="button">江湖百戏</button>
-                  <button class="ghost small" data-mode="melee" type="button">群雄会战 · 8v8</button>
-                  <button class="ghost small" data-mode="ctf" type="button">夺旗争锋 · 8v8</button>
+                  <button class="ghost small sel" data-mode="normal" type="button">3v3 车轮战 (6人)</button>
+                  <button class="ghost small" data-mode="pp_cc" type="button">2v2 · 两人打两电脑 (4人)</button>
+                  <button class="ghost small" data-mode="pp_pp" type="button">2v2 · 两人对两人 (4人)</button>
+                  <button class="ghost small" data-mode="raid" type="button">联机打魔首 (3v1)</button>
+                  <button class="ghost small" data-mode="mayhem" type="button">通天神决 (1v1)</button>
+                  <button class="ghost small" data-mode="cuju" type="button">墨球蹴鞠 (1v1)</button>
+                  <button class="ghost small" data-mode="koth" type="button">灵坛争锋 (1v1)</button>
+                  <button class="ghost small" data-mode="party" type="button">江湖百戏 (1v1)</button>
+                  <button class="ghost small" data-mode="melee" type="button">群雄会战 (6–32人)</button>
+                  <button class="ghost small" data-mode="ctf" type="button">夺旗争锋 (4–20人)</button>
+                  <button class="ghost small" data-mode="quad" type="button">四象争锋 (8–32人)</button>
                 </div>
+                <div class="lobby-modes-seg" id="lobbyTeamSizeSeg" role="group" aria-label="联机团战人数" hidden style="margin-top:6px"></div>
                 <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。常规标准已融合动态天机异变。</p>
               </details>
             </div>
@@ -1484,11 +1495,11 @@ window.RYBoot = (function () {
   <div class="rk-info hidden" id="modalRouge" role="dialog" aria-modal="true" aria-label="同袍肉鸽 · 斩妖列传">
     <div class="rk-info-panel mr-panel">
       <div class="rk-info-head">
-        <b id="modalRougeTitle">同袍肉鸽 · 十三侠客斩妖列传</b>
+        <b id="modalRougeTitle">同袍肉鸽 · 二十侠客斩妖列传</b>
         <button class="mm-cancel" id="modalRougeClose" type="button">关闭</button>
       </div>
       <div class="m2-body">
-        <p class="m2-desc" id="modalRougeDesc">斩妖剧情闯关与多人肉鸽合二为一！三名侠客并肩体验<b>十三侠客专属斩妖故事</b>、横扫群妖波次、<b>全队共享秘卷与回血增益</b>，终幕迎战<b>随机三侠 6 项绝技、300% 气血、125% 伤害</b>的融魂魔首，大捷全员共享海量墨锭！</p>
+        <p class="m2-desc" id="modalRougeDesc">斩妖剧情闯关与多人肉鸽合二为一！三名侠客并肩体验<b>二十侠客专属斩妖故事</b>、横扫群妖波次、<b>全队共享秘卷与回血增益</b>，终幕迎战<b>随机三侠 6 项绝技、300% 气血、125% 伤害</b>的融魂魔首，大捷全员共享海量墨锭！</p>
         <div class="sec-sub-label">选择侠客斩妖列传篇章（每位侠客专属故事）</div>
         <div class="mr-story-tabs" id="rougeStoryTabs"></div>
         <div class="mr-story-box" id="rougeStoryBox"></div>

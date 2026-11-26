@@ -29,9 +29,12 @@ function quadPlaceSpots() {
 function quadSpawnPoint(team, slot) {
   const spot = (M.quadSpots || [0, 1, 2, 3])[team];
   const left = spot % 2 === 0, top = spot >= 2;
-  const x0 = WALL + 430, step = 58;
+  const sz = Math.max(2, M.teamSize || 4);
+  const x0 = WALL + (STAGE_W >= 5000 ? 480 : 430);
+  const maxSpan = Math.min(STAGE_W * 0.28, (sz - 1) * 72);
+  const step = sz > 1 ? Math.min(72, Math.max(46, maxSpan / (sz - 1))) : 0;
   const x = left ? x0 + slot * step : STAGE_W - x0 - slot * step;
-  return { x, deck: top ? 0 : -1, face: left ? 1 : -1 };   // deck：顶层平台的下标（BATTLE_DECKS[0]）；-1 是地面
+  return { x, deck: top ? 0 : -1, face: left ? 1 : -1 };   // deck：顶层平台的下标（decks[0]）；-1 是地面
 }
 function quadSpawn(f, offsetSlot) {
   const team = fighterTeam(f), slot = offsetSlot !== undefined ? offsetSlot : Math.floor(f.idx / teamCount());

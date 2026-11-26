@@ -12,7 +12,7 @@ Object.assign(UI_COPY_EN, {
   "排位赛 · 正在寻找对手": "Competitive · Searching for an opponent",
   "排位中…": "In queue…",
   "排位中": "In queue",
-  "点击「开启新试炼」后进入水墨点将台，自由检视十六位侠客武学并钦点本命试炼侠客登阁。": "Click \"Start New Trial\" to enter the hero draft, browse all 16 heroes and pick the one who will climb the tower.",
+  "点击「开启新试炼」后进入水墨点将台，自由检视二十位侠客武学并钦点本命试炼侠客登阁。": "Click \"Start New Trial\" to enter the hero draft, browse all 20 heroes and pick the one who will climb the tower.",
   "匹配中": "Searching",
   "排位赛需先登录（右上角）": "Sign in to play Competitive (top right)",
   "已取消": "Cancelled",
