@@ -110,6 +110,7 @@ jobs:
         if: needs.preflight.outputs.game == 'true' || needs.preflight.outputs.all == 'true'
         run: |
           node tools/checks/data-check.mjs --strict-copy
+          node tools/checks/hero-completeness.mjs
           node tools/checks/frame-data.mjs --check
           node tools/tests/combat-test.mjs --sim
           node tools/tests/rollback-test.mjs --rollback

@@ -33,10 +33,24 @@ const AIR_SKILL_POSE = {
   hook: { gc_wind: 'ak_hook0', gc_throw: 'ak_hook1', gc_pull: 'ak_hook2' },
   whirl: { gc_spin: 'ak_whirl0', gc_throw: 'ak_whirl1' },
   spindle: { du_l1s: 'ak_spindle0', du_l1a: 'ak_spindle1' },
-  shadowdash: { du_l1s: 'ak_shadowdash0', dash: 'ak_shadowdash1' }
+  shadowdash: { du_l1s: 'ak_shadowdash0', dash: 'ak_shadowdash1' },
+  mistmark: { fy_seal: 'ak_mistmark0', l2a: 'ak_mistmark1' },
+  mistswap: { fy_seal: 'ak_mistswap0', a2: 'ak_mistswap1', l3: 'ak_mistswap2' },
+  polarswap: { idle: 'ak_polarswap0' },
+  magfield: { lm_boxer: 'ak_magfield0', hva: 'ak_magfield1', yx_push: 'ak_magfield2' },
+  throwball: { qf_charge: 'ak_throwball0', l1a: 'ak_throwball1' },
+  ballspike: { fy_seal: 'ak_ballspike0' },
+  flamehalberd: { qf_charge: 'ak_flamehalberd0', qf_thrust: 'ak_flamehalberd1' },
+  blazering: { qf_charge: 'ak_blazering0', l3a: 'ak_blazering1' },
+  starorb: { yx_play: 'ak_starorb0', yx_push: 'ak_starorb1' },
+  gravwell: { yx_play: 'ak_gravwell0', yx_push: 'ak_gravwell1' },
+  jadebreeze: { qf_charge: 'ak_jadebreeze0', ly_fanswipe: 'ak_jadebreeze1' },
+  luanheal: { yh_mirror: 'ak_luanheal0', ly_fanswipe: 'ak_luanheal1' },
+  shellbash: { ts_shoulder: 'ak_shellbash0', dash: 'ak_shellbash1' },
+  earthfort: { ts_lift: 'ak_earthfort0', ts_slam: 'ak_earthfort1' }
 };
 const CHARGE_POSES = {
-  qingfeng: 'qf_charge', feiying: 'fy_seal', tieshan: 'ts_lift', lingshuang: 'ls_stance', liuyun: 'ly_fanswipe', leiming: 'lm_boxer', moyu: 'my_stroke', yuehua: 'yh_lotus', yanling: 'yl_wings', yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_wind', cixian: 'lm_boxer', qianji: 'qf_charge',
+  qingfeng: 'qf_charge', feiying: 'fy_seal', tieshan: 'ts_lift', lingshuang: 'ls_stance', liuyun: 'ly_fanswipe', leiming: 'lm_boxer', moyu: 'my_stroke', yuehua: 'yh_lotus', yanling: 'yl_wings', yuxiao: 'yx_play', zuixian: 'zx_drink', gouchen: 'gc_wind', lingque: 'du_l1s', cixian: 'lm_boxer', qianji: 'qf_charge',
   chixiao: 'rk_l2s', xuanji: 'sg_l1s', qingluan: 'jf_l2s', xuanwu: 'bs_l1s', liying: 'ib_l1s'
 };
 const _TP_OUT = { sw: 0, k: 16, hip: [0, 0], neck: [0, 0], hf: [0, 0], hb: [0, 0], ff: [0, 0], fb: [0, 0] };

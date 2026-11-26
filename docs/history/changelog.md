@@ -6,6 +6,10 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+### Added
+
+- **20-Hero Pose Coverage & Automated Completeness Gates (#51) (`src/game/01-engine/01-core.js`, `src/game/02-combat/11-loop-01-anim-fx.js`, `tools/checks/hero-completeness.mjs`, `.github/workflows/ci.yml`, `index.html`, `renying-offline.html`)**: added `lingque` to `CHARGE_POSES` (`20/20` heroes covered), authored 30 bespoke `ak_*` aerial skill poses in `POSES` and mapped all 14 remaining skills across `liying`, `cixian`, `qianji`, `chixiao`, `xuanji`, `qingluan`, and `xuanwu` in `AIR_SKILL_POSE` (`40/40` skills covered), upgraded `tools/checks/hero-completeness.mjs` to enforce automated 20-hero gates (`CHARGE_POSES`, `AIR_SKILL_POSE`, `AI_KIT`/`AI_ULT`/`AI_HERO_TACTICS`, `ai-brain.json` exact 20-hero parity, skins & Heirloom `c14` coverage, and map terrain affinities), and wired `hero-completeness.mjs` into `.github/workflows/ci.yml`. No Worker change.
+
 ### Changed
 
 - **Bundle Pruning, Removed-Hero Cleanup & Physics Engine Profiling (#50) (`src/models/ai-brain.json`, `src/game/03-render/14-skin-looks.js`, `src/game/02-combat/07-physics/`, `index.html`, `renying-offline.html`)**: pruned all 16 retired hero entries from `src/models/ai-brain.json` (`36 → 20` heroes, saving `37.4 KB`), removed 16 unreferenced removed-hero `headAcc` branches from `src/game/03-render/14-skin-looks.js`, and removed 5 completely unwired physics modules (`01-kinematics-math.js`, `02-rigid-body-inertia.js`, `03-swept-collision.js`, `04-weapon-trajectories.js`, `07-environment-physics.js`, saving `234.4 KB` while retaining all 7 active runtime `RYPhysics` subsystems: `Balance`, `Knockback`, `Aerial`, `IaidoAcupoint`, `Grapple`, `ComboEngine`, and `MotionFX`). No Worker change.
