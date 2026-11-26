@@ -742,4 +742,69 @@ export default [
       return { pass: true };
     })()`
   },
+  {
+    name: '20-hero hitbox/hurtbox scaling and multi-layer vertical isolation hold across all normal moves and layered skills',
+    fn: `(() => {
+      // 1. All 20 heroes have non-degenerate normal boxes, zero cross-layer bleed at dy=180, and hurtbox width/height scaled by stat.size
+      for (let i = 0; i < CHARS.length; i++) {
+        const ch = CHARS[i], mv = CHAR_MOVES[i];
+        A.setChar(i); B.setChar(0);
+        A.state = 'idle'; A.x = 600; A.y = 0; A.face = 1;
+        const huA = hurtbox(A);
+        const expW = 36 * (ch.stat.size || 1), expH = 112 * (ch.stat.size || 1);
+        if (Math.abs((huA[2] - huA[0]) - expW) > 0.2 || Math.abs((huA[3] - huA[1]) - expH) > 0.2) {
+          return { pass: false, error: 'Hurtbox scaling mismatch for ' + ch.id + ': ' + JSON.stringify(huA) };
+        }
+        B.state = 'idle'; B.x = 660; B.y = -180; B.face = -1;
+        const huUp = hurtbox(B);
+        for (const [k, m] of Object.entries(mv)) {
+          if (!m || !m.box) continue;
+          const hb = hitbox(A, m.box);
+          if (!(hb[2] > hb[0] && hb[3] > hb[1])) return { pass: false, error: 'Degenerate hitbox on ' + ch.id + '.' + k };
+          if (overlap(hb, huUp)) return { pass: false, error: 'Normal move cross-layer bleed on ' + ch.id + '.' + k };
+        }
+      }
+      // 2. Multi-layer skill isolation on BATTLE_MAP (8v8):
+      //    a) Tieshan ironwall does not hit foes 3 floors above (-396)
+      const tsIdx = CHARS.findIndex(c => c.id === 'tieshan');
+      startMelee(8, tsIdx, 'normal', 'normal'); M.phase = 'fight';
+      for (const f of allFighters()) f.ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
+      A.reset(STAGE_W / 2 - 40); A.y = 0; A.plat = -1; A.face = 1; A.skill2CD = 0;
+      const upFoe = sideFighters(1)[0];
+      upFoe.reset(STAGE_W / 2 + 20); upFoe.y = -396; upFoe.plat = 1; upFoe.invul = 0;
+      const upHp0 = upFoe.hp;
+      startSkill(A, upFoe, 2);
+      for (let t = 0; t < 45; t++) { upFoe.y = -396; upFoe.vy = 0; step(); }
+      if (upFoe.hp < upHp0) return { pass: false, error: 'Tieshan ironwall bled through 3 floors on BATTLE_MAP' };
+
+      //    b) Qingfeng gale does not purge Moyu trap placed 2 floors below
+      const qfIdx = CHARS.findIndex(c => c.id === 'qingfeng');
+      startMelee(8, qfIdx, 'normal', 'normal'); M.phase = 'fight';
+      for (const f of allFighters()) f.ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
+      A.reset(STAGE_W / 2 - 80); A.y = -264; A.plat = 2; A.face = 1; A.skillCD = 0;
+      const foe0 = sideFighters(1)[0];
+      projs.length = 0;
+      spawnProj(foe0, { kind: 'trap', x: STAGE_W / 2, y: -6, groundY: 0, vx: 0, w: 115, h: 28, life: 5, delay: 0, dmg: 35, kb: [0, 0], stun: 0.4, hs: 0.05, root: true, groundOnly: true });
+      startSkill(A, foe0);
+      for (let t = 0; t < 35; t++) { A.y = -264; A.vy = 0; step(); }
+      const trapAlive = projs.some(p => p.kind === 'trap' && !p.dead);
+      if (!trapAlive) return { pass: false, error: 'Qingfeng gale purged a Moyu trap on a different floor' };
+
+      //    c) Zuixian pavilion dropped on ground (y=0) does not jail bystander 2 floors above (-264)
+      const zxIdx = CHARS.findIndex(c => c.id === 'zuixian');
+      startMelee(8, zxIdx, 'normal', 'normal'); M.phase = 'fight';
+      for (const f of allFighters()) f.ctrl = new DummyCtrl({ act: 'stand', autoHeal: false });
+      const gFoe = sideFighters(1)[0], hiFoe = sideFighters(1)[1];
+      A.reset(STAGE_W / 2 - 120); A.y = 0; A.plat = -1; A.face = 1; A.skillCD = 0;
+      A.ctrl = human[0]; A.lockIdx = gFoe.idx;
+      gFoe.reset(STAGE_W / 2); gFoe.y = 0; gFoe.plat = -1; gFoe.invul = 0;
+      hiFoe.reset(STAGE_W / 2); hiFoe.y = -264; hiFoe.plat = 2; hiFoe.invul = 0;
+      startSkill(A, gFoe);
+      for (let t = 0; t < 75; t++) { hiFoe.y = -264; hiFoe.vy = 0; step(); }
+      if (hiFoe.jailT > 0) return { pass: false, error: 'Zuixian ground pavilion jailed a bystander 2 floors above' };
+
+      toMenu();
+      return { pass: true };
+    })()`
+  },
 ];

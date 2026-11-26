@@ -29,5 +29,5 @@ Object.assign(SKILLS, {
       if (f.t >= 0.45) toNeutral(f);
     },
     pose: f => f.skPh === 0 ? ['yx_play', 40] : ['yx_play', 20],
-    ai: (me, foe, d) => d < 120 || projs.some(p => p.owner === foe.idx && !p.ult && Math.abs(p.x - me.x) < 260) },
+    ai: (me, foe, d) => d < 120 || projs.some(p => p.owner === foe.idx && !p.ult && Math.abs(p.x - me.x) < 260 && Math.abs(p.y - (me.y - 60)) < 120) },
 });

@@ -4,7 +4,7 @@ Object.assign(ULTS, {
     begin(f, foe) {
       f.sp = 'cast'; f.spPose = 'fy_seal'; f.invul = 0; f.spN = 0; f.vx = 0;
       // 最多四道影刃：挑离对手最近的四个雾身出刀，影刃造成极低伤害、不削架势，每道附加 3 层影印
-      const near = (f.clones || []).slice().sort((a, b) => Math.abs(a.x - foe.x) - Math.abs(b.x - foe.x) || a.id - b.id).slice(0, 4);
+      const near = (f.clones || []).slice().sort((a, b) => Math.hypot(a.x - foe.x, (a.y || 0) - foe.y) - Math.hypot(b.x - foe.x, (b.y || 0) - foe.y) || a.id - b.id).slice(0, 4);
       for (const c of near) {
         const d = foe.x >= c.x ? 1 : -1;
         const dy = ((foe.y || 0) - (c.y || 0));

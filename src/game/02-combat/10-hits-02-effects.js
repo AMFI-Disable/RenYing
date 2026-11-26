@@ -52,7 +52,7 @@ function applyHit(att, def, m, pt) {
   // 月镜：格开近身攻击并反斩（飞行道具和大招无效）
   if (def.state === 'skill' && def.parryT > 0 && !m.isProj && !m.ult) { parry(def, att, pt); def.skill2CD = 0; return; }
   // 雷鸣：金刚雷铠招架反击（吸收近战攻击并引动天雷反制敌首）
-  if (def.state === 'skill' && def.thunderGuardT > 0 && !m.ult && !m.isProj && !m.cloneEcho && Math.abs(att.x - def.x) <= 150) {
+  if (def.state === 'skill' && def.thunderGuardT > 0 && !m.ult && !m.isProj && !m.cloneEcho && Math.abs(att.x - def.x) <= 150 && Math.abs(att.y - def.y) <= 130) {
     thunderGuardCounter(def, att, pt);
     return;
   }
@@ -60,7 +60,7 @@ function applyHit(att, def, m, pt) {
   if (def.qiParryT > 0 && !m.ult && !m.hold) {
     def.qiParryT = 0; def.invul = Math.max(def.invul, 0.25); def.meter = Math.min(100, (def.meter || 0) + 18);
     if (def.relicStance === 2) def.relicCounterT = Math.max(def.relicCounterT || 0, 1.25);
-    if (!m.isProj && att && att !== def && Math.abs(att.x - def.x) < 260) {
+    if (!m.isProj && att && att !== def && Math.abs(att.x - def.x) < 260 && Math.abs(att.y - def.y) < 150) {
       att.vx = -fx * 320; att.stun = Math.max(att.stun || 0, 0.35); att.state = 'hitstun'; att.t = 0; att.move = null;
     }
     if (!RESIM) {

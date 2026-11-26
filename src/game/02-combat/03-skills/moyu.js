@@ -6,7 +6,7 @@ Object.assign(SKILLS, {
       if (f.skPh === 0 && f.t >= 0.16) {
         f.skPh = 1; SFX.poof();
         for (const p of projs) if (p.kind === 'trap' && p.owner === f.idx) p.dead = true;
-        const tf = foeOf(f), trapY = tf && Math.abs(tf.x - f.x) < 300 ? gndY(tf) : f.y;
+        const tf = foeOf(f), trapY = tf && Math.abs(tf.x - f.x) < 300 && Math.abs(tf.y - f.y) < 120 ? gndY(tf) : gndY(f);
         spawnProj(f, { kind: 'trap', x: clamp(f.x + f.face * clamp(Math.abs(tf.x - f.x), 80, 260), WALL, STAGE_W - WALL), y: trapY - 6, groundY: trapY, vx: 0, w: 115, h: 28, life: 5.0, delay: 0.22, dmg: 35, kb: [0, 0], stun: 0.48, hs: 0.07, root: true, groundOnly: true });
       }
       if (f.skPh === 1 && f.t >= 0.22) toNeutral(f);

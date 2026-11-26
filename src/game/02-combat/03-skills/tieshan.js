@@ -46,9 +46,10 @@ Object.assign(SKILLS, {
           dust(f.x + f.face * 35, f.y, 4);
         }
 
-        // 通天巨浪判定：高度直贯云霄（-2200px），封杀一切空中与腾空位移
+        // 通天巨浪判定：平地擂台直贯云霄（-2200px），多层战场限高至本层上空（-340px）避免穿楼误伤
+        const waveTop = typeof battleMapOn === 'function' && battleMapOn() ? -340 : -2200;
         if (strike(f, foe, {
-          box: [-10, -2200, 135, 0],
+          box: [-10, waveTop, 135, 0],
           dmg: 56,
           kb: foeInAir ? [Math.round(260 * wRatio), Math.round(520 * wRatio)] : [Math.round(420 * wRatio), -180],
           stun: 0.45,
@@ -61,7 +62,7 @@ Object.assign(SKILLS, {
           shake = Math.max(shake, 18);
           SFX.heavy(); SFX.thud();
           for (let h = 0; h < 7; h++) {
-            ring(f.x + f.face * 65, -h * 180 - 40, 90 + h * 18, waveRGB, 0.4);
+            ring(f.x + f.face * 65, f.y - h * 180 - 40, 90 + h * 18, waveRGB, 0.4);
           }
           const waveTxt = foeInAir ? '🌊 巨浪翻江 · 撼坠' : '🌊 巨浪裂空 · 崩山';
           addP({ type: 'text', text: waveTxt, x: f.x + f.face * 60, y: f.y - 140, life: 1.0, max: 1.0, rgb: waveRGB });

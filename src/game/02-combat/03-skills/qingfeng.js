@@ -5,11 +5,12 @@ Object.assign(SKILLS, {
     update(f, foe) {
       if (f.skPh === 0 && f.t >= 0.08) { f.skPh = 1; f.t = 0; f.vx = 1500 * f.face; f.invul = 0.12; f.hitDone = false; SFX.dash(); }
       if (f.skPh === 1) {
-        // 破墨阵：穿过墨阵直接净化
+        // 破墨阵：穿过同层敌方墨阵直接净化
         for (const p of projs) {
-          if (p.kind === 'trap' && p.owner === foe.idx && Math.abs(p.x - f.x) < 80) {
-            p.dead = true; smoke(p.x, -10, 8); SFX.slice();
-            addP({ type: 'text', text: '破阵', x: p.x, y: -45, life: 0.6, max: 0.6, rgb: '120,230,255' });
+          const py = p.groundY !== undefined ? p.groundY : p.y;
+          if (p.kind === 'trap' && p.owner !== f.idx && fighterTeam(fighterByIdx(p.owner)) !== fighterTeam(f) && Math.abs(p.x - f.x) < 80 && Math.abs(py - f.y) < 90) {
+            p.dead = true; smoke(p.x, py - 10, 8); SFX.slice();
+            addP({ type: 'text', text: '破阵', x: p.x, y: py - 45, life: 0.6, max: 0.6, rgb: '120,230,255' });
           }
         }
         if (strike(f, foe, { box: [-10, -112, 92, 0], dmg: 55, kb: [180, 0], stun: 0.65, hs: 0.12 })) {

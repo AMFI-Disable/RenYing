@@ -46,5 +46,5 @@ Object.assign(SKILLS, {
       }
     },
     pose: f => f.skPh === 0 ? ['lm_boxer', 26] : f.skPh === 1 ? ['ts_slam', 48] : ['idle', 18],
-    ai: (m, o, d) => projs.some(p => p.owner !== m.idx && p.dmg > 0 && Math.abs(p.x - m.x) < 260) || (d < 150 && Math.random() < 0.75) },
+    ai: (m, o, d) => projs.some(p => p.owner !== m.idx && p.dmg > 0 && Math.abs(p.x - m.x) < 260 && Math.abs(p.y - (m.y - 60)) < 120) || (d < 150 && Math.random() < 0.75) },
 });

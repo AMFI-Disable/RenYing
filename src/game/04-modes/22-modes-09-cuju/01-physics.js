@@ -175,6 +175,7 @@ function cujuProjHits(b) {
       b.vx = dir * power; b.vy = Math.min(b.vy, -320); b.spinV = dir * 5;
     }
     b.last = p.owner; b.held = 0;
+    M.cuju.touches[p.owner] = (M.cuju.touches[p.owner] || 0) + 1;
     M.cuju.topSpeed = Math.max(M.cuju.topSpeed || 0, Math.round(Math.hypot(b.vx, b.vy)));
     if (!RESIM) { ring(b.x, b.y, 60, owner ? owner.look.slash : '255,255,255', 0.25); SFX.ballHit(); }
   }
@@ -191,6 +192,7 @@ function cujuDeflectors(b) {
     if (overlap([d.x - 24, (d.y || 0) - 90, d.x + 24, (d.y || 0) + 4], box)) {
       const dir = cujuAttackDir(owner);
       b.vx = dir * Math.max(760, sp * 0.9); b.vy = -360; b.last = owner.idx; b.cd[owner.idx] = 0.25;
+      M.cuju.touches[owner.idx] = (M.cuju.touches[owner.idx] || 0) + 1;
       if (!RESIM) { ring(b.x, b.y, 65, owner.look.slash || '233,196,106', 0.25); addP({ type: 'text', text: '傀儡截球', x: b.x, y: b.y - 50, life: 0.5, max: 0.5, rgb: owner.look.slash }); SFX.ballHit(); }
       return;
     }
@@ -201,6 +203,7 @@ function cujuDeflectors(b) {
       if (overlap(cloneBox(c), box)) {
         const dir = cujuAttackDir(f);
         b.vx = dir * Math.max(740, sp * 0.85); b.vy = -330; b.last = f.idx; b.cd[f.idx] = 0.25;
+        M.cuju.touches[f.idx] = (M.cuju.touches[f.idx] || 0) + 1;
         if (!RESIM) { ring(b.x, b.y, 65, f.look.slash || '140,200,255', 0.25); addP({ type: 'text', text: '影截', x: b.x, y: b.y - 50, life: 0.5, max: 0.5, rgb: f.look.slash }); SFX.ballHit(); }
         return;
       }
@@ -218,6 +221,7 @@ function cujuMagnet(b) {
         if (d < MAG.rPlusR * 1.6) {
           const dir = Math.sign(b.x - f.x) || f.face;
           b.vx = dir * 1650; b.vy = -620; b.last = f.idx; b.held = 0;
+          M.cuju.touches[f.idx] = (M.cuju.touches[f.idx] || 0) + 1;
           if (!RESIM) { ring(b.x, b.y, 90, magRGB(1), 0.3); SFX.ballHit(); }
         }
       } else if (f.magN < 0 && d < MAG.rMinusRange && d > 8) {

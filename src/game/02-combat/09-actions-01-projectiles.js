@@ -141,7 +141,7 @@ function updateProjs() {
         const dx = owner.x - p.x;
         p.yoyoRange = STAGE_W; p.vx = (Math.sign(dx) || 1) * 2700;
         p.vy = clamp((owner.y - 58 - p.y) * 5, -400, 400);
-        if (Math.abs(dx) < 52) { p.yoyoArrived = true; p.vx = 0; p.vy = 0; }
+        if (Math.abs(dx) < 52 && Math.abs(owner.y - 58 - p.y) < 96) { p.yoyoArrived = true; p.vx = 0; p.vy = 0; }
       }
       p.g = 0; p.resting = false; p.speedTier = Math.abs(p.vx) > 1900 ? 3 : Math.abs(p.vx) > 900 ? 2 : 1;
     } else if (p.g) p.vy += p.g * STEP;

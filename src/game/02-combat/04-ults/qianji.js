@@ -22,7 +22,7 @@ Object.assign(ULTS, {
     update(f) {
       const ball = projs.find(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead);
       if (!ball) { f.skillCD = 0; endSpecial(f); return; }
-      if (ball.yoyoPhase === 'ult-return') ball.yoyoArrived = Math.abs(ball.x - f.x) < 52;
+      if (ball.yoyoPhase === 'ult-return') ball.yoyoArrived = Math.abs(ball.x - f.x) < 52 && Math.abs(ball.y - (f.y - 58)) < 96;
       if (ball.yoyoArrived) {
         ball.dead = true; f.skillCD = 0;
         ring(f.x, f.y - 50, 90, f.look.slash || '235,165,70', 0.35);

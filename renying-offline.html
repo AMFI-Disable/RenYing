@@ -16389,7 +16389,7 @@ if (f.t >= 0.20) toNeutral(f);
 }
 },
 pose: f => f.skPh === 0 ? ['lm_boxer', 26] : f.skPh === 1 ? ['ts_slam', 48] : ['idle', 18],
-ai: (m, o, d) => projs.some(p => p.owner !== m.idx && p.dmg > 0 && Math.abs(p.x - m.x) < 260) || (d < 150 && Math.random() < 0.75) },
+ai: (m, o, d) => projs.some(p => p.owner !== m.idx && p.dmg > 0 && Math.abs(p.x - m.x) < 260 && Math.abs(p.y - (m.y - 60)) < 120) || (d < 150 && Math.random() < 0.75) },
 });
 Object.assign(SKILLS, {
 spindle: { name: '穿叶飞梭', cd: 5, nofric: true, desc: '凌雀掷出牵丝子母飞梭，飞梭破风向前穿刺（贯穿前方敌人与墨阵），命中附加 5 秒【雀芒】印记（最多 5 层）并造成 30 伤害。',
@@ -16786,7 +16786,7 @@ update(f) {
 if (f.skPh === 0 && f.t >= 0.16) {
 f.skPh = 1; SFX.poof();
 for (const p of projs) if (p.kind === 'trap' && p.owner === f.idx) p.dead = true;
-const tf = foeOf(f), trapY = tf && Math.abs(tf.x - f.x) < 300 ? gndY(tf) : f.y;
+const tf = foeOf(f), trapY = tf && Math.abs(tf.x - f.x) < 300 && Math.abs(tf.y - f.y) < 120 ? gndY(tf) : gndY(f);
 spawnProj(f, { kind: 'trap', x: clamp(f.x + f.face * clamp(Math.abs(tf.x - f.x), 80, 260), WALL, STAGE_W - WALL), y: trapY - 6, groundY: trapY, vx: 0, w: 115, h: 28, life: 5.0, delay: 0.22, dmg: 35, kb: [0, 0], stun: 0.48, hs: 0.07, root: true, groundOnly: true });
 }
 if (f.skPh === 1 && f.t >= 0.22) toNeutral(f);
@@ -16852,9 +16852,10 @@ update(f, foe) {
 if (f.skPh === 0 && f.t >= 0.08) { f.skPh = 1; f.t = 0; f.vx = 1500 * f.face; f.invul = 0.12; f.hitDone = false; SFX.dash(); }
 if (f.skPh === 1) {
 for (const p of projs) {
-if (p.kind === 'trap' && p.owner === foe.idx && Math.abs(p.x - f.x) < 80) {
-p.dead = true; smoke(p.x, -10, 8); SFX.slice();
-addP({ type: 'text', text: '破阵', x: p.x, y: -45, life: 0.6, max: 0.6, rgb: '120,230,255' });
+const py = p.groundY !== undefined ? p.groundY : p.y;
+if (p.kind === 'trap' && p.owner !== f.idx && fighterTeam(fighterByIdx(p.owner)) !== fighterTeam(f) && Math.abs(p.x - f.x) < 80 && Math.abs(py - f.y) < 90) {
+p.dead = true; smoke(p.x, py - 10, 8); SFX.slice();
+addP({ type: 'text', text: '破阵', x: p.x, y: py - 45, life: 0.6, max: 0.6, rgb: '120,230,255' });
 }
 }
 if (strike(f, foe, { box: [-10, -112, 92, 0], dmg: 55, kb: [180, 0], stun: 0.65, hs: 0.12 })) {
@@ -16961,8 +16962,9 @@ addP({ type: 'spark', x: wx, y: wy, vx: f.face * rand(140, 360), vy: rand(-180, 
 }
 dust(f.x + f.face * 35, f.y, 4);
 }
+const waveTop = typeof battleMapOn === 'function' && battleMapOn() ? -340 : -2200;
 if (strike(f, foe, {
-box: [-10, -2200, 135, 0],
+box: [-10, waveTop, 135, 0],
 dmg: 56,
 kb: foeInAir ? [Math.round(260 * wRatio), Math.round(520 * wRatio)] : [Math.round(420 * wRatio), -180],
 stun: 0.45,
@@ -16975,7 +16977,7 @@ guardBreakMul: 1.5
 shake = Math.max(shake, 18);
 SFX.heavy(); SFX.thud();
 for (let h = 0; h < 7; h++) {
-ring(f.x + f.face * 65, -h * 180 - 40, 90 + h * 18, waveRGB, 0.4);
+ring(f.x + f.face * 65, f.y - h * 180 - 40, 90 + h * 18, waveRGB, 0.4);
 }
 const waveTxt = foeInAir ? '🌊 巨浪翻江 · 撼坠' : '🌊 巨浪裂空 · 崩山';
 addP({ type: 'text', text: waveTxt, x: f.x + f.face * 60, y: f.y - 140, life: 1.0, max: 1.0, rgb: waveRGB });
@@ -17135,7 +17137,7 @@ addP({ type: 'text', text: '音浪', x: foe.x, y: foe.y - 100, life: 0.6, max: 0
 if (f.t >= 0.45) toNeutral(f);
 },
 pose: f => f.skPh === 0 ? ['yx_play', 40] : ['yx_play', 20],
-ai: (me, foe, d) => d < 120 || projs.some(p => p.owner === foe.idx && !p.ult && Math.abs(p.x - me.x) < 260) },
+ai: (me, foe, d) => d < 120 || projs.some(p => p.owner === foe.idx && !p.ult && Math.abs(p.x - me.x) < 260 && Math.abs(p.y - (me.y - 60)) < 120) },
 });
 Object.assign(SKILLS, {
 pavilion: { name: '亭中留客', cd: 16, desc: '把对手当作客人留下：一座醉翁亭从对手头顶砸落（出手约 0.5 秒落地，射程约 720），罩住了就把人禁锢在亭中 1.5 秒，期间无法移动，但可以用腾空闪脱困；也可以随便打（被打不会飞出亭子）。落地前走开就罩不住。霸体能硬扛。',
@@ -17146,7 +17148,9 @@ f.skPh = 1; SFX.swing();
 const towardFoe = Math.sign(foe.x - f.x) === f.face;
 const tx = clamp(towardFoe ? foe.x : f.x + f.face * 260, WALL + 40, STAGE_W - WALL - 40);
 const ty = towardFoe ? foe.y : f.y;
-if (Math.abs(tx - f.x) <= 720) spawnProj(f, { kind: 'pavilion', vx: 0, x: tx, y: ty - 260, groundY: ty, delay: 0.45, w: 150, h: 560, life: 0.95, dmg: 20, kb: [0, 0], stun: 0.3, hs: 0.08, jail: true, unblockable: true, unbreakable: true });
+const layered = typeof battleMapOn === 'function' && battleMapOn();
+const pavH = layered ? 220 : 560, pavY = layered ? ty - 110 : ty - 260;
+if (Math.abs(tx - f.x) <= 720) spawnProj(f, { kind: 'pavilion', vx: 0, x: tx, y: pavY, groundY: ty, delay: 0.45, w: 150, h: pavH, life: 0.95, dmg: 20, kb: [0, 0], stun: 0.3, hs: 0.08, jail: true, unblockable: true, unbreakable: true });
 else addP({ type: 'text', text: '客在远方', x: f.x, y: f.y - 120, life: 0.7, max: 0.7, rgb: '255,190,90' });
 }
 if (f.t >= 0.27) toNeutral(f);
@@ -17438,7 +17442,7 @@ Object.assign(ULTS, {
 mistarray: { name: '万影归一', desc: '场上每个雾身同时朝对手斩出一道影刃（极低伤害、不削架势，每道附加 3 层影印），然后全部散掉；0.3 秒后本体瞬移到对手身前补一刀（60 伤害，挑空），对手跳到半空或站在高台也追得上。雾身越多影刃越多，最多四道。没有雾身时只有本体那一刀。补刀砍中后留影冷却清零。',
 begin(f, foe) {
 f.sp = 'cast'; f.spPose = 'fy_seal'; f.invul = 0; f.spN = 0; f.vx = 0;
-const near = (f.clones || []).slice().sort((a, b) => Math.abs(a.x - foe.x) - Math.abs(b.x - foe.x) || a.id - b.id).slice(0, 4);
+const near = (f.clones || []).slice().sort((a, b) => Math.hypot(a.x - foe.x, (a.y || 0) - foe.y) - Math.hypot(b.x - foe.x, (b.y || 0) - foe.y) || a.id - b.id).slice(0, 4);
 for (const c of near) {
 const d = foe.x >= c.x ? 1 : -1;
 const dy = ((foe.y || 0) - (c.y || 0));
@@ -17514,7 +17518,7 @@ ring(f.x, f.y - 50, 130, '255,225,120', 0.35); SFX.superOn(); SFX.gear();
 update(f) {
 const ball = projs.find(p => p.kind === 'ironball' && p.owner === f.idx && !p.dead);
 if (!ball) { f.skillCD = 0; endSpecial(f); return; }
-if (ball.yoyoPhase === 'ult-return') ball.yoyoArrived = Math.abs(ball.x - f.x) < 52;
+if (ball.yoyoPhase === 'ult-return') ball.yoyoArrived = Math.abs(ball.x - f.x) < 52 && Math.abs(ball.y - (f.y - 58)) < 96;
 if (ball.yoyoArrived) {
 ball.dead = true; f.skillCD = 0;
 ring(f.x, f.y - 50, 90, f.look.slash || '235,165,70', 0.35);
@@ -28215,7 +28219,7 @@ if (p.yoyoPasses >= 3) p.yoyoPhase = 'ult-return'; else p.yoyoDir *= -1;
 const dx = owner.x - p.x;
 p.yoyoRange = STAGE_W; p.vx = (Math.sign(dx) || 1) * 2700;
 p.vy = clamp((owner.y - 58 - p.y) * 5, -400, 400);
-if (Math.abs(dx) < 52) { p.yoyoArrived = true; p.vx = 0; p.vy = 0; }
+if (Math.abs(dx) < 52 && Math.abs(owner.y - 58 - p.y) < 96) { p.yoyoArrived = true; p.vx = 0; p.vy = 0; }
 }
 p.g = 0; p.resting = false; p.speedTier = Math.abs(p.vx) > 1900 ? 3 : Math.abs(p.vx) > 900 ? 2 : 1;
 } else if (p.g) p.vy += p.g * STEP;
@@ -30372,14 +30376,14 @@ smoke(def.x, def.y - 50, 4); SFX.dash();
 return;
 }
 if (def.state === 'skill' && def.parryT > 0 && !m.isProj && !m.ult) { parry(def, att, pt); def.skill2CD = 0; return; }
-if (def.state === 'skill' && def.thunderGuardT > 0 && !m.ult && !m.isProj && !m.cloneEcho && Math.abs(att.x - def.x) <= 150) {
+if (def.state === 'skill' && def.thunderGuardT > 0 && !m.ult && !m.isProj && !m.cloneEcho && Math.abs(att.x - def.x) <= 150 && Math.abs(att.y - def.y) <= 130) {
 thunderGuardCounter(def, att, pt);
 return;
 }
 if (def.qiParryT > 0 && !m.ult && !m.hold) {
 def.qiParryT = 0; def.invul = Math.max(def.invul, 0.25); def.meter = Math.min(100, (def.meter || 0) + 18);
 if (def.relicStance === 2) def.relicCounterT = Math.max(def.relicCounterT || 0, 1.25);
-if (!m.isProj && att && att !== def && Math.abs(att.x - def.x) < 260) {
+if (!m.isProj && att && att !== def && Math.abs(att.x - def.x) < 260 && Math.abs(att.y - def.y) < 150) {
 att.vx = -fx * 320; att.stun = Math.max(att.stun || 0, 0.35); att.state = 'hitstun'; att.t = 0; att.move = null;
 }
 if (!RESIM) {
@@ -45513,6 +45517,7 @@ const power = Math.min(920, 420 + p.dmg * 10);
 b.vx = dir * power; b.vy = Math.min(b.vy, -320); b.spinV = dir * 5;
 }
 b.last = p.owner; b.held = 0;
+M.cuju.touches[p.owner] = (M.cuju.touches[p.owner] || 0) + 1;
 M.cuju.topSpeed = Math.max(M.cuju.topSpeed || 0, Math.round(Math.hypot(b.vx, b.vy)));
 if (!RESIM) { ring(b.x, b.y, 60, owner ? owner.look.slash : '255,255,255', 0.25); SFX.ballHit(); }
 }
@@ -45528,6 +45533,7 @@ if (!owner || b.cd[owner.idx] > 0) continue;
 if (overlap([d.x - 24, (d.y || 0) - 90, d.x + 24, (d.y || 0) + 4], box)) {
 const dir = cujuAttackDir(owner);
 b.vx = dir * Math.max(760, sp * 0.9); b.vy = -360; b.last = owner.idx; b.cd[owner.idx] = 0.25;
+M.cuju.touches[owner.idx] = (M.cuju.touches[owner.idx] || 0) + 1;
 if (!RESIM) { ring(b.x, b.y, 65, owner.look.slash || '233,196,106', 0.25); addP({ type: 'text', text: '傀儡截球', x: b.x, y: b.y - 50, life: 0.5, max: 0.5, rgb: owner.look.slash }); SFX.ballHit(); }
 return;
 }
@@ -45538,6 +45544,7 @@ for (const c of f.clones) {
 if (overlap(cloneBox(c), box)) {
 const dir = cujuAttackDir(f);
 b.vx = dir * Math.max(740, sp * 0.85); b.vy = -330; b.last = f.idx; b.cd[f.idx] = 0.25;
+M.cuju.touches[f.idx] = (M.cuju.touches[f.idx] || 0) + 1;
 if (!RESIM) { ring(b.x, b.y, 65, f.look.slash || '140,200,255', 0.25); addP({ type: 'text', text: '影截', x: b.x, y: b.y - 50, life: 0.5, max: 0.5, rgb: f.look.slash }); SFX.ballHit(); }
 return;
 }
@@ -45554,6 +45561,7 @@ f.cujuMag = true;
 if (d < MAG.rPlusR * 1.6) {
 const dir = Math.sign(b.x - f.x) || f.face;
 b.vx = dir * 1650; b.vy = -620; b.last = f.idx; b.held = 0;
+M.cuju.touches[f.idx] = (M.cuju.touches[f.idx] || 0) + 1;
 if (!RESIM) { ring(b.x, b.y, 90, magRGB(1), 0.3); SFX.ballHit(); }
 }
 } else if (f.magN < 0 && d < MAG.rMinusRange && d > 8) {
