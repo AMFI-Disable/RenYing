@@ -6,6 +6,16 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+### Added
+
+- **10v10 Grand Hall Arena (`BATTLE10_MAP`), 32-Player Battlefield (`BATTLE16_MAP`), 10v10 No-Mirror Draft (`large10`) & Mode Refinements (`src/data/10-modes.js`, `src/data/11-bp-orders.js`, `src/data/12-maps.js`, `src/data/30-ui-copy-*.js`, `src/game/02-combat/08-fighter-02-maps-arena.js`, `src/game/04-modes/`, `src/game/05-ui/`, `src/page.html`, `tools/tests/combat/80-overhaul-systems.mjs`)**: added dedicated 5-tier arenas for 20-player (`4400 px` wide, 10 stairs, 7 pickups) and 32-player (`5600 px` wide, 12 stairs, 9 pickups) team battles, added `large10` draft order for 10v10 (20 unique heroes without mirrors) in `melee` and `ctf`, expanded `quad` support from 2v2v2v2 to 8v8v8v8 (`8–32` players), reduced `large8` bans to 1 per team, and added terrain affinity entries for `xuanwu`, `qingluan`, `xuanji`, and `chixiao` alongside updated lobby/mode UI copy.
+
+- **Tactical AI Kit, Multi-Fighter Target Scoring & Dynamic Commander Decisions (`src/ai.js`, `src/game/02-combat/08-fighter-01-entity.js`, `src/game/04-modes/22-modes-17-command.js`, `tools/tests/combat/80-overhaul-systems.mjs`)**: added `AI_KIT` and `AI_ULT` profiles for `chixiao`, `xuanji`, `qingluan`, and `xuanwu`, added `teamRole` tags across `AI_HERO_TACTICS` with `aiAdaptStance()` and `aiMapObjectives()` in `AIBrain`, added deterministic multi-fighter `smartTarget` scoring in `foeOf()` (prioritizing low-HP targets, flag carriers, commanders, backline squishies, and peel targets without pile-on), and upgraded `cmdAiEval()` to switch dynamically to `wall` or `spear` based on team HP and commander state.
+
+### Fixed
+
+- **Heirloom Stance Counter Window, Combat Keybinds & Rollback Sync (`src/game/01-engine/06-input-net.js`, `src/game/01-engine/25-keyboard-boot.js`, `src/game/02-combat/08-fighter-01-entity.js`, `src/game/02-combat/09-actions-03-fighter.js`, `src/game/02-combat/10-hits-02-effects.js`, `src/game/02-combat/11-loop-01-anim-fx.js`, `src/game/02-combat/11-loop-03-replay.js`, `src/game/03-render/`, `src/game/04-modes/`, `src/game/05-ui/`, `tools/tests/`)**: added `relicCounterT` (`1.25 s`) counter-attack tracking across parry, Just Guard, `qiParry`, and `thunderGuardCounter` with `relicDmgMul()` stance scaling, added `relicStance` keybinds for P2/P3 (`Semicolon` / `NumpadDecimal`), prevented `KeyM` mute from overriding bound stance keys during active combat, added `relicCounterT` to `FK` rollback snapshots, and expanded combat and rollback regression tests.
+
 ### Changed
 
 - **Multi-Team Spatial Partitioning, 32-Player Replay Compatibility & 4-Team Rollback Synchronization (#33) (`src/game/02-combat/08-fighter-01-entity.js`, `src/game/02-combat/08-fighter-03-lifecycle.js`, `src/game/02-combat/09-actions-01-projectiles.js`, `src/game/02-combat/10-hits-01-collision.js`, `src/game/02-combat/10-hits-02-effects.js`, `src/game/02-combat/11-loop-02-step.js`, `src/game/02-combat/11-loop-03-replay.js`, `src/game/01-engine/06-input-net.js`, `src/game/01-engine/20-rollback.js`, `src/game/04-modes/22-modes-13-melee.js`, `src/game/04-modes/22-modes-14-ctf.js`, `src/game/04-modes/22-modes-16-quad.js`, `src/game/04-modes/22-modes-17-command.js`, `src/data/10-modes.js`, `tools/checks/data-check.mjs`, `tools/tests/rollback-test.mjs`)**:
