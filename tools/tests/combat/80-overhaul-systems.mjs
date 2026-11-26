@@ -909,4 +909,48 @@ export default [
       return { pass: true };
     })()`
   },
+  {
+    name: 'Live Spectator HUD focus switcher/clean toggle and 8-slot Single-Elimination Tournament Bracket run end-to-end',
+    fn: `(() => {
+      // 1. Live Spectator HUD activates in AI watch mode, cycles fighter focus, and toggles clean mode
+      startMatch('cpu', 'normal', [0, 1]);
+      M.watchAi = true; M.phase = 'fight';
+      A.ctrl = new AICtrl('normal'); B.ctrl = new AICtrl('normal');
+      currentScreen = null;
+      if (!spectatorHudAvail()) return { pass: false, error: 'spectatorHudAvail() returned false in watch mode' };
+      const f1 = specHudCycleFocus(1);
+      if (f1 !== 0) return { pass: false, error: 'Expected first focus cycle to index 0, got ' + f1 };
+      const f2 = specHudCycleFocus(1);
+      if (f2 !== 1) return { pass: false, error: 'Expected second focus cycle to index 1, got ' + f2 };
+      const cleanOn = specHudToggleClean();
+      if (!cleanOn || !SPEC_HUD.clean) return { pass: false, error: 'specHudToggleClean did not enable clean mode' };
+      specHudToggleClean();
+      specHudSetFocus(-1);
+
+      // 2. 8-slot Tournament Bracket creates 8 unique heroes, plays/sims all 7 bouts, and crowns champion
+      const ink0 = PROF.ink || 0;
+      const t = tourCreate({ format: 'player', playerHero: 0, level: 'normal', seed: 42 });
+      if (!t || t.entrants.length !== 8) return { pass: false, error: 'Expected 8 tournament entrants' };
+      const uniqueHeroes = new Set(t.entrants.map(e => e.chIdx));
+      if (uniqueHeroes.size !== 8) return { pass: false, error: 'Tournament entrants did not have 8 unique heroes' };
+      // Play QF #1 (human entrant 0 vs entrant 7) and report human win
+      if (!tourPlayMatch(0, 0, false) || !M.tournament || M.tournament.round !== 0) {
+        return { pass: false, error: 'tourPlayMatch failed to launch QF #1' };
+      }
+      tourReportResult(0, 0, 0, [2, 0]);
+      // Fast-sim remaining AI QFs (QF #2, #3, #4)
+      const simmed = tourSimAllAi();
+      if (simmed !== 3) return { pass: false, error: 'Expected 3 AI quarterfinals fast-simmed, got ' + simmed };
+      // Semifinal 1 has human entrant 0; advance human to Grand Final and win
+      tourReportResult(1, 0, 0, [2, 1]);
+      tourSimMatch(1, 1);
+      tourReportResult(2, 0, 0, [2, 0]);
+      if (TOUR.champion !== 0) return { pass: false, error: 'Expected entrant 0 crowned champion, got ' + TOUR.champion };
+      if ((PROF.ink || 0) < ink0 + 200) return { pass: false, error: 'Champion Ink reward (+200) not credited' };
+      PROF.ink = ink0;
+      M.tournament = null;
+      toMenu();
+      return { pass: true };
+    })()`
+  },
 ];

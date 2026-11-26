@@ -8,7 +8,7 @@ function showScreen(id) {
   }
   menuTransition++;
   const prev = currentScreen; currentScreen = id;
-  for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'mapBriefing', 'buffDraft', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'langPrompt', 'gboss', 'sagaTalk']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
+  for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'mapBriefing', 'buffDraft', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'tournament', 'langPrompt', 'gboss', 'sagaTalk']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
   if (id && $id(id)) $id(id).classList.add('scr-seen');   // 打开过的面板才排版，见 style.css 的 .scr-seen
   const inMatchOverlay = (id === 'settings' || id === 'help') && settingsBack === 'pause' && M.mode !== 'demo';
   $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id) || inMatchOverlay);
@@ -116,7 +116,7 @@ if (xiwuCatTabsEl) {
     SFX.slice();
     const cat = b.dataset.cat;
     if (cat === 'combat') {
-      const isCombat = ['cpu', 'tag3', 'watch2v2', 'chaos', 'mayhem'].includes(currentSingleTab);
+      const isCombat = ['cpu', 'tag3', 'watch2v2', 'cuju', 'koth', 'party', 'tournament', 'chaos', 'mayhem'].includes(currentSingleTab);
       singleSec(isCombat ? currentSingleTab : 'cpu');
     } else if (cat === 'large') {
       singleSec(XIWU_LARGE_MODES.includes(currentSingleTab) ? currentSingleTab : 'melee');

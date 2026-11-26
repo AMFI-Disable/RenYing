@@ -109,6 +109,7 @@ function frameBody(now) {
   touchUIUpdate();
   dummyBarUpdate();
   trainInspectUpdate();
+  if (typeof specHudUpdate === 'function') specHudUpdate();
 }
 function updateCamera(dt) {
   cam.userZoom = damp(cam.userZoom || 1, cam.userZoomTarget || 1, 10, dt);
@@ -128,7 +129,8 @@ function updateCamera(dt) {
   }
   // 大型团战（3v3 ~ 8v8）：以玩家自己和附近 950px 内的战友/敌人为中心取景，不把人物缩成蚂蚁
   if (isLargeTeam()) {
-    const lf = fighterByIdx(localIdx());
+    const specF = (typeof SPEC_HUD !== 'undefined' && SPEC_HUD.focusIdx >= 0 && typeof spectatorHudAvail === 'function' && spectatorHudAvail()) ? fighterByIdx(SPEC_HUD.focusIdx) : null;
+    const lf = (specF && !specF.hidden && specF.hp > 0) ? specF : fighterByIdx(localIdx());
     const fs = allFighters();
     let anchor = (lf && !lf.hidden && lf.hp > 0) ? lf : null;
     if (!anchor) {
@@ -173,6 +175,8 @@ function updateCamera(dt) {
   const fitH = (H * 0.74) / (Math.max(250, top) * base);
   const fit = Math.max(0.28, Math.min(fitW, fitH));
   let focus = mid, zoomMul = superFreeze > 0 ? 1.1 : 1;
+  const specFocus = (typeof SPEC_HUD !== 'undefined' && SPEC_HUD.focusIdx >= 0 && typeof spectatorHudAvail === 'function' && spectatorHudAvail()) ? fighterByIdx(SPEC_HUD.focusIdx) : null;
+  if (specFocus && !specFocus.hidden && specFocus.hp > 0) { focus = lerp(mid, specFocus.x, 0.72); zoomMul *= 1.12; }
   if (camPunch.t > 0) {
     camPunch.t = Math.max(0, camPunch.t - dt);
     const k = camPunch.maxT > 0 ? (camPunch.t / camPunch.maxT) : 0;

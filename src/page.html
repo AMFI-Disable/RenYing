@@ -263,6 +263,7 @@ window.RYBoot = (function () {
               <button data-tab="cuju" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18M5 7c3 2 11 2 14 0M5 17c3-2 11-2 14 0"/></svg></span><b class="pt-n">墨球蹴鞠</b><span class="pt-d">1v1/2v2（2–4人）· 先进三球</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="cuju" title="玩法说明" aria-label="玩法说明">i</span></button>
               <button data-tab="koth" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l3 6 6 1-4.5 4.4 1.1 6L12 17.5 6.4 20.4l1.1-6L3 10l6-1z"/></svg></span><b class="pt-n">灵坛争锋</b><span class="pt-d">1v1/2v2（2–4人）· 无限复活抢分</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="koth" title="玩法说明" aria-label="玩法说明">i</span></button>
               <button data-tab="party" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="12" r="4"/><circle cx="16" cy="9" r="3"/><path d="M4 20c1.5-3 8.5-3 10 0"/></svg></span><b class="pt-n">江湖百戏</b><span class="pt-d">1v1（2人）· 传火折/断崖推手/飞球</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="party" title="玩法说明" aria-label="玩法说明">i</span></button>
+              <button data-tab="tournament" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 4h12v5a6 6 0 0 1-12 0V4z"/><path d="M12 15v5M8 20h8M6 6H3v2a3 3 0 0 0 3 3M18 6h3v2a3 3 0 0 1-3 3"/></svg></span><b class="pt-n">武林大会</b><span class="pt-d">八强单败淘汰 · 参赛或观战</span><span class="mode-info-btn" role="button" tabindex="0" data-mode-info="tournament" title="玩法说明" aria-label="玩法说明">i</span></button>
             </div>
           </div>
 
@@ -727,6 +728,24 @@ window.RYBoot = (function () {
         <div class="single-action-row">
           <button class="go" id="partyStartBtn" type="button">对战电脑 · 百戏</button>
           <button class="go alt" id="partyPvpBtn" type="button">本地双人百戏</button>
+        </div>
+      </div>
+
+      <!-- 武林大会 · 八强单败淘汰赛 -->
+      <div data-sec="tournament" class="single-sec-pane" style="display:none">
+        <div class="sec-head-row">
+          <h3 class="spt">武林大会 · 八强单败淘汰</h3>
+          <span class="sub-badge">八人签表 · 参赛与观战</span>
+        </div>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">从二十位侠客中编排八强单败淘汰签表，历经八强赛、半决赛与总决赛角逐武林盟主。支持亲自参赛、本地双人同台或全 AI 观战直转，夺魁可获 +200 墨锭奖励。</p>
+        <div class="sec-sub-label" style="text-align:left;margin-top:6px">赛制编制</div>
+        <div class="seg m2-seg" id="tourFormatSeg" style="margin-bottom:12px">
+          <button data-tfmt="player" class="sel" type="button">单人参赛 (1人 + 7 AI)</button>
+          <button data-tfmt="local2" type="button">双人参赛 (2人 + 6 AI)</button>
+          <button data-tfmt="watch8" type="button">全 AI 观战 (8强演武)</button>
+        </div>
+        <div class="single-action-row">
+          <button class="go" id="tourStartBtn" type="button">开启八强武林大会</button>
         </div>
       </div>
 
@@ -1650,8 +1669,37 @@ window.RYBoot = (function () {
       <div class="tower-choices" id="towerChoices"></div>
     </div>
   </div>
+
+  <div id="tournament" class="scr">
+    <div class="panel tourp">
+      <div class="cxhead">
+        <div>
+          <h2>武林大会 · 八强签表</h2>
+          <p class="sub" id="tourSub" style="margin:2px 0 0;text-align:left">八强单败淘汰赛</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="go small" id="tourNextBtn" type="button">出战下一场</button>
+          <button class="ghost small" id="tourSkipAiBtn" type="button">快结 AI 场次</button>
+          <button class="ghost small" id="tourResetBtn" type="button">重排签表</button>
+          <button class="ghost" data-back type="button">返回</button>
+        </div>
+      </div>
+      <div class="tour-tree" id="tourTree"></div>
+    </div>
+  </div>
 </div>
 
+<div id="specHud" class="spec-hud hidden" aria-label="实时观战面板">
+  <div class="spec-row">
+    <span class="spec-live-badge">LIVE</span>
+    <b id="specTitle">实时观战</b>
+    <button type="button" class="spec-nav" id="specPrevBtn" title="上一位侠客">‹</button>
+    <div class="spec-fighters" id="specFighters"></div>
+    <button type="button" class="spec-nav" id="specNextBtn" title="下一位侠客">›</button>
+    <button type="button" class="spec-clean-btn" id="specCleanBtn" aria-pressed="false">纯净直转</button>
+  </div>
+  <div class="spec-ticker" id="specTicker"></div>
+</div>
 <div id="rpBar" class="hidden"><span id="rpInfo">回放</span><div class="rp-scrub-wrap"><input id="rpScrub" type="range" min="0" max="1" step="1" value="0" aria-label="回放进度"><span id="rpTime">00:00 / 00:00</span></div><div class="rp-markers" id="rpMarkers" aria-label="关键事件标记"></div><button id="rpPause">暂停</button><button data-sp="0.25">0.25×</button><button data-sp="0.5">0.5×</button><button data-sp="1" class="sel">1×</button><button data-sp="2">2×</button><button data-sp="4">4×</button><label class="rp-rate" for="rpHz"><span>频率</span><input id="rpHz" type="range" min="1" max="120" step="1" value="120"><output id="rpHzValue" for="rpHz">120 Hz</output></label><button id="rpHitbox" type="button" aria-pressed="false">F1 判定框：关</button><button id="rpStep" type="button" disabled>推进 1 帧</button><button id="rpExit">退出</button></div>
 <div id="extGame" class="hidden"><iframe id="extFrame" title="青锋行" allow="autoplay; fullscreen; gamepad"></iframe><div id="extToast"></div><button id="extBack">返回刃影</button></div>
 <div id="bastionGame" class="hidden"><canvas id="bastionCanvas" tabindex="0"></canvas><div id="bastionTopBar" class="b2d-topbar"></div><div id="bastionMinimapWrap" class="b2d-minimap-wrap"><canvas id="bastionMinimap" width="180" height="135"></canvas><div class="b2d-mm-hint">点击地图队友或按 [T] 传音降临</div></div><div id="bastionCardModal" class="b2d-card-modal hidden"></div><div id="bastionHudBar" class="bastion-hud-bar"></div><div id="bastionDrawer" class="bastion-drawer hidden"></div><button id="bastionBack" type="button">返回刃影</button></div>

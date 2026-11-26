@@ -7,6 +7,10 @@ function scheduleEndScreen(show = () => showScreen('end')) {
 function showEnd(w) {
   if (REPLAY.on) { replayEnd(w); return; }
   if (typeof statMatchEnd === 'function') statMatchEnd(w);
+  if (M.tournament && typeof tourOnMatchEnd === 'function') {
+    if (REC.on) recSave(w);
+    tourOnMatchEnd(w); return;
+  }
   if (M.worldKey) {
     if (REC.on) recSave(w);
     worldKeyRound(w); return;
