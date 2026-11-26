@@ -265,6 +265,53 @@ const foeOf = f => {
     if (avenge) { f.target = avenge; return avenge; }
   }
   let cur = f.target && !f.target.hidden && f.target.hp > 0 && list.includes(f.target) ? f.target : null;
+  // 高难度多人 AI 综合目标评分（纯确定性，无随机数，保障联机回滚与录像回放一致）
+  const smartTarget = cpuTeamwork(f) && (
+    (f.ctrl && f.ctrl.brain && f.ctrl.brain.L && f.ctrl.brain.L.read >= 0.3) ||
+    (!(f.ctrl && f.ctrl.brain) && typeof LEVELS !== 'undefined' && LEVELS[M.level] && LEVELS[M.level].read >= 0.3)
+  );
+  if (!isRaid() && smartTarget) {
+    const myTeam = fighterTeam(f);
+    const allies = sideFighters(myTeam);
+    const myRole = typeof aiHeroTactic === 'function' ? (aiHeroTactic(f.ch.id).teamRole || 'skirmisher') : 'skirmisher';
+    const focusMode = (M.cmd && cmdTacticOf(myTeam) === 'spear') || (M.squadOrders && M.squadOrders[myTeam] === 'focus');
+    const ctfActive = typeof ctfOn === 'function' && ctfOn() && M.ctf && M.ctf.flags;
+    const myFlag = ctfActive ? M.ctf.flags[myTeam] : null;
+    let best = list[0], bestScore = Infinity;
+    for (let i = 0; i < list.length; i++) {
+      const e = list[i];
+      let sc = distance(e, f);
+      const hpPct = e.hp / Math.max(1, e.maxHp);
+      sc -= (1 - hpPct) * 260;
+      if (hpPct < 0.25) sc -= 180;
+      if (BRAIN_STUN.includes(e.state) || e.state === 'knockdown' || (e.guard || 100) < 30) sc -= 120;
+      if (myFlag && myFlag.carrier === e.idx) sc -= 420;
+      if (M.cmd && typeof cmdIs === 'function' && cmdIs(e)) sc -= 110;
+      if (myRole === 'assassin' && typeof aiHeroTactic === 'function') {
+        const er = aiHeroTactic(e.ch.id).teamRole;
+        if (er === 'zoner' || er === 'support') sc -= 125;
+      } else if (myRole === 'vanguard') {
+        for (let j = 0; j < allies.length; j++) {
+          const a = allies[j];
+          if (a === f || a.hidden || a.hp <= 0) continue;
+          const ar = typeof aiHeroTactic === 'function' ? aiHeroTactic(a.ch.id).teamRole : '';
+          if ((ar === 'zoner' || ar === 'support') && distance(e, a) < 220) { sc -= 140; break; }
+        }
+      }
+      if (!focusMode) {
+        let pile = 0;
+        for (let j = 0; j < allies.length; j++) {
+          const a = allies[j];
+          if (a !== f && !a.hidden && a.hp > 0 && a.target === e) pile++;
+        }
+        if (pile > 1) sc += (pile - 1) * 140;
+      }
+      if (e === cur) sc -= 95;
+      if (sc < bestScore) { bestScore = sc; best = e; }
+    }
+    f.target = best;
+    return best;
+  }
   if (cur) {
     const curDist = distance(cur, f);
     let closest = cur, minDist = curDist;

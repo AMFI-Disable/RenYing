@@ -8186,6 +8186,18 @@ ballspike: { role: 'rush', combo: true, breakout: true, use: (m, o, d) => {
 const ball = projs.find(p => p.kind === 'ironball' && p.owner === m.idx && !p.dead);
 return ball && Math.sign(o.x - ball.x) === (m.face || 1) && Math.abs(o.y - (ball.y + 58)) < 110 && Math.abs(o.x - ball.x) < 560;
 } },
+flamehalberd: { role: 'rush', combo: true, use: (m, o, d) => d > 80 && d < 390 },
+blazering: { role: 'zone', combo: true, anti: true, use: (m, o, d) => d < 160 && Math.abs(o.y - m.y) < 130 },
+starorb: { role: 'proj', combo: true, air: true, anti: true },
+gravwell: { role: 'zone', combo: true, pull: true, use: (m, o, d) => d > 60 && d < 250 && Math.abs(o.y - m.y) < 135 },
+jadebreeze: { role: 'proj', combo: true, air: true },
+luanheal: { role: 'self', combo: false, use: (m, o, d) => {
+const lowSelf = m.hp < m.maxHp * 0.72;
+const allyLow = typeof sideFighters === 'function' && typeof fighterTeam === 'function' && sideFighters(fighterTeam(m)).some(a => a !== m && !a.hidden && a.hp > 0 && a.hp < a.maxHp * 0.65 && Math.abs(a.x - m.x) < 280);
+return lowSelf || allyLow || (d < 115 && m.hp < m.maxHp * 0.88);
+} },
+shellbash: { role: 'rush', combo: true, use: (m, o, d) => d > 70 && d < 360 },
+earthfort: { role: 'zone', combo: true, groundOnly: true, use: (m, o, d) => d < 260 && (o.onGround() || (m.guard || 0) < (m.maxGuard || 100) * 0.55) },
 };
 function pickCloneDir(me, foe, c) {
 if (c === cloneMark(me, foe)) return true;
@@ -8211,6 +8223,10 @@ sandwich: { far: true, sure: (m, o) => o.invul <= 0 && (o.breakCD > 0.6 || AI_HU
 moonflow: { contact: true, heal: true, sure: (m, o, d) => d < 240 || m.hp < m.maxHp * 0.5 },
 mistarray: { far: true, sure: (m, o) => (m.clones || []).length >= 1 || o.hp / Math.max(1, o.maxHp) < 0.12 },
 recallball: { far: true, sure: (m, o) => o.invul <= 0 && (AI_HURT.includes(o.state) || o.breakCD > 0.8 || o.hp / Math.max(1, o.maxHp) < 0.35) },
+skyfall: { far: true, sure: (m, o, d) => o.invul <= 0 && (d < 460 || (o.burnT || 0) > 0 || AI_HURT.includes(o.state)) },
+celestial: { far: true, sure: (m, o) => o.invul <= 0 && (o.breakCD > 0.5 || AI_HURT.includes(o.state) || o.hp / Math.max(1, o.maxHp) < 0.3) },
+phoenixchorus: { far: true, heal: true, sure: (m, o, d) => m.hp < m.maxHp * 0.68 || (typeof sideFighters === 'function' && typeof fighterTeam === 'function' && sideFighters(fighterTeam(m)).some(a => a !== m && !a.hidden && a.hp > 0 && a.hp < a.maxHp * 0.6)) || d < 380 },
+tortoiseslam: { contact: true, sure: (m, o, d) => d < 280 && (o.onGround() || o.y > -90) },
 };
 const AI_GENE_DEF = {
 range: [0.7, 1.35, 1],      // 立回站位：相对“我够得着、对手够不着”的理想距离的倍率
@@ -8308,26 +8324,26 @@ const AI_FREE = ['idle', 'walk', 'block'];
 const AI_ACT_KEYS = ['l1', 'dl', 'cs1', 'cs2', 'air', 'skill', 'skill2', 'special'];
 const AI_ACT_REL = { l1: 1, dl: 0.75, cs1: 0.5, cs2: 0.4, air: 0.5 };   // 可靠程度：蓄力和跳入太好躲
 const AI_HERO_TACTICS = {
-qingfeng: { style: 'balanced', range: 0.96, schools: ['feng', 'qi'] },
-feiying: { style: 'assassin', range: 0.88, schools: ['ying', 'feng'] },
-tieshan: { style: 'bulwark', range: 0.82, schools: ['jin', 'mo'] },
-lingshuang: { style: 'footsies', range: 1.12, schools: ['feng', 'jin'] },
-liuyun: { style: 'air', range: 1.12, schools: ['feng', 'qi'] },
-leiming: { style: 'counter', range: 0.9, schools: ['lei', 'jin'] },
-moyu: { style: 'zoner', range: 1.2, schools: ['mo', 'qi'] },
-yuehua: { style: 'sustain', range: 1.08, schools: ['ying', 'xue'] },
-yanling: { style: 'air', range: 1.08, schools: ['feng', 'ying'] },
-yuxiao: { style: 'zoner', range: 1.15, schools: ['qi', 'feng'] },
-zuixian: { style: 'brawler', range: 0.9, schools: ['xue', 'jin'] },
-gouchen: { style: 'grappler', range: 0.94, schools: ['mo', 'jin'] },
-lingque: { style: 'assassin', range: 1.02, schools: ['ying', 'feng'] },
-liying: { style: 'trickster', range: 1.02, schools: ['ying', 'mo'] },
-cixian: { style: 'control', range: 1.08, schools: ['qi', 'jin'] },
-qianji: { style: 'setplay', range: 1.14, schools: ['feng', 'qi'] },
-chixiao: { style: 'brawler', range: 1.04, schools: ['jin', 'xue'] },
-xuanji: { style: 'zoner', range: 1.18, schools: ['qi', 'mo'] },
-qingluan: { style: 'zoner', range: 1.12, schools: ['feng', 'qi'] },
-xuanwu: { style: 'bulwark', range: 0.92, schools: ['jin', 'mo'] },
+qingfeng: { style: 'balanced', teamRole: 'skirmisher', range: 0.96, schools: ['feng', 'qi'] },
+feiying: { style: 'assassin', teamRole: 'assassin', range: 0.88, schools: ['ying', 'feng'] },
+tieshan: { style: 'bulwark', teamRole: 'vanguard', range: 0.82, schools: ['jin', 'mo'] },
+lingshuang: { style: 'footsies', teamRole: 'skirmisher', range: 1.12, schools: ['feng', 'jin'] },
+liuyun: { style: 'air', teamRole: 'zoner', range: 1.12, schools: ['feng', 'qi'] },
+leiming: { style: 'counter', teamRole: 'skirmisher', range: 0.9, schools: ['lei', 'jin'] },
+moyu: { style: 'zoner', teamRole: 'zoner', range: 1.2, schools: ['mo', 'qi'] },
+yuehua: { style: 'sustain', teamRole: 'support', range: 1.08, schools: ['ying', 'xue'] },
+yanling: { style: 'air', teamRole: 'assassin', range: 1.08, schools: ['feng', 'ying'] },
+yuxiao: { style: 'zoner', teamRole: 'zoner', range: 1.15, schools: ['qi', 'feng'] },
+zuixian: { style: 'brawler', teamRole: 'vanguard', range: 0.9, schools: ['xue', 'jin'] },
+gouchen: { style: 'grappler', teamRole: 'vanguard', range: 0.94, schools: ['mo', 'jin'] },
+lingque: { style: 'assassin', teamRole: 'assassin', range: 1.02, schools: ['ying', 'feng'] },
+liying: { style: 'trickster', teamRole: 'assassin', range: 1.02, schools: ['ying', 'mo'] },
+cixian: { style: 'control', teamRole: 'controller', range: 1.08, schools: ['qi', 'jin'] },
+qianji: { style: 'setplay', teamRole: 'controller', range: 1.14, schools: ['feng', 'qi'] },
+chixiao: { style: 'brawler', teamRole: 'skirmisher', range: 1.04, schools: ['jin', 'xue'] },
+xuanji: { style: 'zoner', teamRole: 'zoner', range: 1.18, schools: ['qi', 'mo'] },
+qingluan: { style: 'zoner', teamRole: 'support', range: 1.12, schools: ['feng', 'qi'] },
+xuanwu: { style: 'bulwark', teamRole: 'vanguard', range: 0.92, schools: ['jin', 'mo'] },
 };
 function aiHeroTactic(id) { return AI_HERO_TACTICS[id] || { style: 'balanced', range: 1, schools: [] }; }
 function aiScrollIds(f) {
@@ -8454,37 +8470,11 @@ else this.press(a, 'plan');
 }
 if (!this.qianjiBat(me, foe)) this.tactic(me, foe, d, to);
 }
-if (typeof mapNow === 'function' && me.y < -60 && me.invul <= 0 && !me.escInvul && !['special', 'held'].includes(me.state)) {
-const mp = mapNow(), env = M.mapEnv, thunder = mp && mp.thunder;
-if (thunder && env && env.tWarn > 0 && Math.abs(me.x - thunder.x * STAGE_W) < thunder.r + 40 && AI_FREE.includes(me.state)) {
-this.dir = me.x < thunder.x * STAGE_W ? -1 : 1;
-this.jumpHeld = false;
-}
-}
+this.aiAdaptStance(me, foe, d);
+this.aiMapObjectives(me, foe, d, to);
 if (this.dir === -to && ((this.dir < 0 && me.x < WALL + 120) || (this.dir > 0 && me.x > STAGE_W - WALL - 120)) && me.onGround() && AI_FREE.includes(me.state)) {
 if (clock > (this.wallT || 0)) { this.wallT = clock + 0.5; this.wallGo = this.mode === 'keep' || this.chance(0.5); }
 if (this.wallGo) { this.dir = to; if (!this.queue.length && this.chance(0.08)) this.plan([['jump', 0], ['jump', 0.22]]); }
-}
-if (typeof mapNow === 'function' && (mapNow() || {}).cliff && me.onGround() && AI_FREE.includes(me.state)) {
-const edge = Math.min(me.x - WALL, STAGE_W - WALL - me.x), out = me.x < STAGE_W / 2 ? -1 : 1;
-if (edge < 170 && this.dir === out) {
-if (clock > (this.cliffT || 0)) { this.cliffT = clock + 0.5; this.cliffGo = this.chance(0.5 + 0.5 * this.L.read); }
-this.dir = this.cliffGo ? -out : 0;
-}
-if (edge < 120 && to === -out && d < 240 && !this.queue.length && this.chance(0.06)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
-}
-if (typeof mapPlats === 'function' && mapPlats() && me.onGround() && AI_FREE.includes(me.state) && !this.queue.length) {
-const dx = Math.abs(foe.x - me.x);
-if (me.plat >= 0 && foe.plat !== me.plat && foe.y > me.y + 40 && dx < 360 && this.chance(0.05)) this.press('drop');
-else if (foe.plat >= 0 && foe.plat !== me.plat && foe.y < me.y - 40 && dx < 240 && this.chance(0.04)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
-}
-if (typeof ctfObjective === 'function' && AI_FREE.includes(me.state) && !this.queue.length) {
-const central = M.battlePerks?.[0];
-const seekPerk = !ctfOn() && central && central.cooldown <= 0 && d > 320 && me.meter < 75;
-const goal = ctfObjective(me, foe) || (seekPerk ? central : null);
-const stair = battleStairTarget(me, goal ? goal.y : foe.y);
-if (stair !== null && !this.holdDown && !this.holdAtk) this.dir = Math.sign(stair - me.x);
-else if (goal && !this.holdDown && !this.holdAtk && Math.abs(goal.x - me.x) > 35) this.dir = Math.sign(goal.x - me.x);
 }
 if (d < 44 && this.dir === to && me.onGround() && AI_FREE.includes(me.state) && !this.queue.length && !this.holdDown && !this.holdAtk) {
 const cornered = (me.x < WALL + 120 && to > 0) || (me.x > STAGE_W - WALL - 120 && to < 0);
@@ -8897,6 +8887,10 @@ if (me.ch.id === 'lingque' && me.state === 'skill' && me.skill === 'shadowdash')
 if (me.ch.id === 'lingque' && this.lingqueRoute(me, foe, d, to)) return;
 if (me.ch.id === 'liying' && this.liyingRoute(me, foe, d, to)) return;
 if (me.ch.id === 'cixian' && this.cixianRoute(me, foe, d, to)) return;
+if (me.ch.id === 'chixiao' && this.chixiaoRoute(me, foe, d, to)) return;
+if (me.ch.id === 'xuanji' && this.xuanjiRoute(me, foe, d, to)) return;
+if (me.ch.id === 'qingluan' && this.qingluanRoute(me, foe, d, to)) return;
+if (me.ch.id === 'xuanwu' && this.xuanwuRoute(me, foe, d, to)) return;
 this.updateMode(me, foe, d);
 if (this.punish(me, foe, d, to, false)) return;
 if (this.mode === 'oki') return this.oki(me, foe, d, to);
@@ -8990,6 +8984,9 @@ else if (id === 'blink') this.plan([['light', 0.5], ['light', 0.68, 'hit'], ['li
 else if (id === 'hook') this.plan([['light', 0.44, 'hit'], ['light', 0.6, 'hit'], ['light', 0.76, 'hit']]);
 else if (id === 'thunderfist') this.plan([['light', 0.44, 'hit'], ['light', 0.6, 'hit']]);
 else if (id === 'spindle' && this.L.combo >= 3) this.plan([['skill2', 0.3, 'hit'], ['skill2', 0.45, 'hit']]);   // 飞梭挂上印记：换影引爆（寻常以上）
+else if (id === 'flamehalberd' && this.L.combo >= 3) this.plan([['light', 0.36, 'hit'], ['skill2', 0.54, 'hit']]);   // 赤霄焰戟挂灼烧接烈环
+else if (id === 'gravwell' && this.L.combo >= 3) this.plan([['light', 0.34, 'hit'], ['light', 0.52, 'hit']]);   // 玄机星漩拉近接普攻
+else if (id === 'shellbash' && this.L.combo >= 3) this.plan([['light', 0.36, 'hit']]);   // 玄武冲撞接重击
 }
 shouldBait(me, foe, hits) {
 const L = this.L, g = this.g;
@@ -9245,6 +9242,7 @@ if (d < aiFrame(me, 'l1').max * 1.7 + 30 && Math.random() < 0.3) this.press('lig
 return;
 }
 if (this.watch2v2(me, foe, d, to)) return;
+if (this.aiTeamTactics(me, foe, d, to)) return;
 const cm = typeof squadAiMod === 'function' ? squadAiMod(me, foe, d) : (M.cmd ? cmdAiMod(me, foe, d) : null);   // 战队指挥战术与阵型：适用于 2v2、3v3–16v16 团战、夺旗、四象、同袍肉鸽
 if (cm && cm.dir && !this.holdDown && !this.holdAtk) { this.dir = cm.dir; return; }
 if (this.feint && clock < this.feint.end) { this.dir = clock < this.feint.turn ? to : -to; return; }
@@ -9457,6 +9455,176 @@ if (!free || foe.invul > 0 || !this.seen || clock < (this.cxNext || 0)) return f
 const counter = foe.state === 'skill' && AI_KIT[foe.skill] && AI_KIT[foe.skill].role === 'counter';
 if (rReady && me.onGround() && d > 120 && d < MAG.rMinusRange - 40 && Math.abs(foe.y - me.y) < 220 && !counter && roll(L.skill)) {
 this.stopAll(); this.press('skill2', 'cixian'); this.cxNext = clock + 0.5; return true;
+}
+return false;
+}
+chixiaoRoute(me, foe, d, to) {
+const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
+if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen || L.combo < 3 || clock < (this.cx2Next || 0)) return false;
+const burning = (foe.burnT || 0) > 0.2;
+if (burning && me.skill2CD <= 0 && d < 135 && Math.abs(foe.y - me.y) < 120 && this.chance(L.skill)) {
+this.stopAll(); this.press('skill2', 'chixiao'); this.cx2Next = clock + 0.45; return true;
+}
+if (!burning && me.skillCD <= 0 && d > 110 && d < 350 && Math.abs(foe.y - me.y) < 100 && foe.state !== 'block' && this.chance(L.skill * 0.85)) {
+this.stopAll(); this.press('skill', 'chixiao'); this.afterSkill(me, 'skill'); this.cx2Next = clock + 0.55; return true;
+}
+return false;
+}
+xuanjiRoute(me, foe, d, to) {
+const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
+if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen || L.combo < 3 || clock < (this.xjNext || 0)) return false;
+if (me.skill2CD <= 0 && d > 85 && d < 235 && Math.abs(foe.y - me.y) < 120 && (foe.onGround() || foe.y > -80) && this.chance(L.skill * 0.85)) {
+this.stopAll(); this.press('skill2', 'xuanji'); this.afterSkill(me, 'skill2'); this.xjNext = clock + 0.55; return true;
+}
+if (me.skillCD <= 0 && d > 250 && d < 660 && this.chance(L.skill * 0.7)) {
+this.stopAll(); this.press('skill', 'xuanji'); this.xjNext = clock + 0.5; return true;
+}
+return false;
+}
+qingluanRoute(me, foe, d, to) {
+const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
+if (!free || foe.hp <= 0 || clock < (this.qlNext || 0)) return false;
+const allies = (typeof isMulti === 'function' && isMulti() && typeof sideFighters === 'function' && typeof fighterTeam === 'function')
+? sideFighters(fighterTeam(me)).filter(a => a !== me && !a.hidden && a.hp > 0) : [];
+const hurtAlly = allies.find(a => a.hp < a.maxHp * 0.62 && Math.abs(a.y - me.y) < 120 && Math.abs(a.x - me.x) < 275);
+if (me.skill2CD <= 0 && (me.hp < me.maxHp * 0.66 || hurtAlly) && (L.read >= 0.3 || this.chance(Math.max(0.55, L.skill)))) {
+this.stopAll(); this.press('skill2', 'qingluan_heal'); this.qlNext = clock + 0.8; return true;
+}
+if (L.read >= 0.3 && me.skill2CD <= 0 && allies.length && d > 200) {
+const farHurt = allies.find(a => a.hp < a.maxHp * 0.55 && Math.abs(a.y - me.y) < 120 && Math.abs(a.x - me.x) >= 275 && Math.abs(a.x - me.x) < 620);
+if (farHurt) { this.dir = Math.sign(farHurt.x - me.x); return true; }
+}
+if (L.combo >= 3 && me.skillCD <= 0 && d > 140 && d < 460 && foe.invul <= 0 && this.chance(L.skill * 0.72)) {
+this.stopAll(); this.press('skill', 'qingluan_kite'); this.qlNext = clock + 0.5; return true;
+}
+return false;
+}
+xuanwuRoute(me, foe, d, to) {
+const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
+if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen || L.combo < 3 || clock < (this.xwNext || 0)) return false;
+if (me.skill2CD <= 0 && d < 185 && (foe.state === 'block' || (me.guard || 0) < (me.maxGuard || 100) * 0.55 || foe.state === 'attack') && this.chance(L.skill * 0.85)) {
+this.stopAll(); this.press('skill2', 'xuanwu_fort'); this.xwNext = clock + 0.65; return true;
+}
+if (me.skillCD <= 0 && d > 95 && d < 320 && ['attack', 'charge', 'walk', 'idle'].includes(foe.state) && this.chance(L.skill * 0.78)) {
+this.stopAll(); this.press('skill', 'xuanwu_bash'); this.afterSkill(me, 'skill'); this.xwNext = clock + 0.6; return true;
+}
+return false;
+}
+aiAdaptStance(me, foe, d) {
+if (!me.relicStanceUnlocked || (me.relicStanceCd || 0) > 0 || !me.onGround() || !AI_FREE.includes(me.state)) return;
+if (this.L.read < 0.3 || clock < (this.stanceNext || 0)) return;
+let foesNear = 0, alliesNear = 0;
+if (typeof isMulti === 'function' && isMulti() && typeof foesOf === 'function' && typeof sideFighters === 'function') {
+for (const e of foesOf(me)) if (!e.hidden && e.hp > 0 && Math.abs(e.x - me.x) < 300 && Math.abs(e.y - me.y) < 120) foesNear++;
+for (const a of sideFighters(fighterTeam(me))) if (a !== me && !a.hidden && a.hp > 0 && Math.abs(a.x - me.x) < 340 && Math.abs(a.y - me.y) < 120) alliesNear++;
+}
+const lowSelf = me.hp < me.maxHp * 0.42 || (me.guard || 100) < (me.maxGuard || 100) * 0.38 || (foesNear >= 2 && alliesNear === 0);
+const pressAdv = foe.hp < foe.maxHp * 0.38 || AI_HURT.includes(foe.state) || (foe.guard || 100) < 32 || (me.hp > foe.hp * 1.15 && me.hp > me.maxHp * 0.55);
+const want = lowSelf ? 2 : pressAdv ? 1 : me.relicStance;
+if (want && want !== me.relicStance) {
+this.press('relicStance', 'stance_adapt');
+this.stanceNext = clock + 1.4;
+}
+}
+aiMapObjectives(me, foe, d, to) {
+const mp = typeof mapNow === 'function' ? mapNow() : null;
+const env = M.mapEnv;
+if (mp && mp.thunder && env && env.tWarn > 0 && me.invul <= 0 && !me.escInvul && !['special', 'held'].includes(me.state)) {
+const thunderImmune = mp.id === 'thunder' && Array.isArray(mp.fav) && mp.fav.includes(me.ch.id);
+if (!thunderImmune && Math.abs(me.x - mp.thunder.x * STAGE_W) < mp.thunder.r + 40 && AI_FREE.includes(me.state) && (me.y < -60 || (this.L.read >= 0.3 && env.tWarn < 0.45))) {
+this.dir = me.x < mp.thunder.x * STAGE_W ? -1 : 1;
+this.jumpHeld = false;
+}
+}
+if (mp && mp.cliff && me.onGround() && AI_FREE.includes(me.state)) {
+const edge = Math.min(me.x - WALL, STAGE_W - WALL - me.x), out = me.x < STAGE_W / 2 ? -1 : 1;
+if (edge < 170 && this.dir === out) {
+if (clock > (this.cliffT || 0)) { this.cliffT = clock + 0.5; this.cliffGo = this.chance(0.5 + 0.5 * this.L.read); }
+this.dir = this.cliffGo ? -out : 0;
+}
+if (edge < 120 && to === -out && d < 240 && !this.queue.length && this.chance(0.06)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
+}
+if (typeof kothOn === 'function' && kothOn() && M.koth && typeof KOTH !== 'undefined' && AI_FREE.includes(me.state) && !this.queue.length && !this.holdDown && !this.holdAtk) {
+const z = KOTH.zones[M.koth.zoneIdx];
+if (z) {
+const inHill = Math.abs(me.x - z.x) <= KOTH.zoneR * 0.85 && Math.abs(me.y - z.y) <= 85;
+const myTeam = typeof fighterTeam === 'function' ? fighterTeam(me) : (me.idx % 2);
+const needHill = !inHill && (M.koth.holder !== myTeam || M.koth.contested || d > 260);
+if (needHill && (this.L.read >= 0.3 || this.chance(0.45))) {
+const dxZ = z.x - me.x, dyZ = z.y - me.y;
+if (Math.abs(dxZ) > 45) this.dir = Math.sign(dxZ);
+if (me.onGround()) {
+if (dyZ < -45 && Math.abs(dxZ) < 220 && this.chance(0.09 + 0.08 * this.L.read)) { this.dir = Math.sign(dxZ) || to; this.plan([['jump', 0], ['jump', 0.22]]); }
+else if (dyZ > 45 && me.plat >= 0 && this.chance(0.12)) this.press('drop', 'koth_drop');
+}
+return;
+}
+}
+}
+if (typeof mapPlats === 'function' && mapPlats() && me.onGround() && AI_FREE.includes(me.state) && !this.queue.length) {
+const dx = Math.abs(foe.x - me.x);
+if (me.plat >= 0 && foe.plat !== me.plat && foe.y > me.y + 40 && dx < 360 && this.chance(0.05)) this.press('drop');
+else if (foe.plat >= 0 && foe.plat !== me.plat && foe.y < me.y - 40 && dx < 240 && this.chance(0.04)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
+}
+if (typeof battleMapOn === 'function' && battleMapOn() && AI_FREE.includes(me.state) && !this.queue.length && !this.holdDown && !this.holdAtk) {
+let perkGoal = null;
+if ((!ctfOn || !ctfOn()) && Array.isArray(M.battlePerks) && d > 260) {
+let bestScore = Infinity;
+for (const p of M.battlePerks) {
+if (!p || p.cooldown > 0) continue;
+const dist = Math.abs(p.x - me.x) + Math.abs(p.y - me.y) * 1.6;
+if (dist > 760) continue;
+let weight = 1;
+if (p.kind === 'hp' && me.hp < me.maxHp * 0.72) weight = 0.55;
+else if (p.kind === 'meter' && me.meter < 80) weight = 0.7;
+else if (p.kind === 'dmg') weight = 0.78;
+const sc = dist * weight;
+if (sc < bestScore) { bestScore = sc; perkGoal = p; }
+}
+}
+const goal = (typeof ctfObjective === 'function' ? ctfObjective(me, foe) : null) || perkGoal;
+const targetY = goal ? goal.y : foe.y;
+if (this.L.read >= 0.3 && me.onGround() && me.y < -40 && targetY > me.y + 75 && Math.abs((goal ? goal.x : foe.x) - me.x) < 280 && this.chance(0.14)) {
+this.press('drop', 'battle_drop');
+return;
+}
+const stair = typeof battleStairTarget === 'function' ? battleStairTarget(me, targetY) : null;
+if (stair !== null) this.dir = Math.sign(stair - me.x);
+else if (goal && Math.abs(goal.x - me.x) > 35) this.dir = Math.sign(goal.x - me.x);
+}
+}
+aiTeamTactics(me, foe, d, to) {
+if (typeof isMulti !== 'function' || !isMulti() || (typeof isRaid === 'function' && isRaid())) return false;
+if (this.L.read < 0.3 || !me.onGround() || !AI_FREE.includes(me.state)) return false;
+const myTeam = typeof fighterTeam === 'function' ? fighterTeam(me) : (me.idx % 2);
+const allies = typeof sideFighters === 'function' ? sideFighters(myTeam).filter(a => a !== me && !a.hidden && a.hp > 0) : [];
+const foes = typeof foesOf === 'function' ? foesOf(me).filter(e => !e.hidden && e.hp > 0) : [];
+if (!allies.length) return false;
+const sameFloor = (a, b) => Math.abs(a.y - b.y) < 120;
+let foesNear = 0, alliesNear = 0, nearAlly = null, nearAllyD = Infinity;
+for (const e of foes) if (sameFloor(e, me) && Math.abs(e.x - me.x) < 320) foesNear++;
+for (const a of allies) {
+const da = Math.abs(a.x - me.x) + Math.abs(a.y - me.y) * 1.5;
+if (sameFloor(a, me) && Math.abs(a.x - me.x) < 360) alliesNear++;
+if (da < nearAllyD) { nearAllyD = da; nearAlly = a; }
+}
+if (foesNear >= 2 && alliesNear === 0 && me.hp < me.maxHp * 0.65 && nearAlly && nearAllyD > 200) {
+this.dir = Math.sign(nearAlly.x - me.x) || -to;
+return true;
+}
+const prof = aiHeroTactic(me.ch.id), role = prof.teamRole || 'skirmisher';
+if ((role === 'zoner' || role === 'support') && d < 250) {
+const frontAlly = allies.find(a => sameFloor(a, foe) && Math.abs(a.x - foe.x) < 210 && ['vanguard', 'skirmisher'].includes(aiHeroTactic(a.ch.id).teamRole));
+if (frontAlly && this.chance(0.55)) { this.dir = -to; return true; }
+}
+if ((role === 'assassin' || role === 'skirmisher') && d > 70 && d < 220 && !this.queue.length && clock > (this.flankCd || 0)) {
+const sameSideAlly = allies.find(a => sameFloor(a, foe) && Math.abs(a.x - foe.x) < 190 && Math.sign(a.x - foe.x) === Math.sign(me.x - foe.x));
+if (sameSideAlly && this.chance(0.18 * this.L.read)) {
+this.dir = to; this.plan([['jump', 0], ['light', 0.42]]); this.flankCd = clock + 2.4; return true;
+}
+}
+if ((foe.guard || 100) < 30 && d < 200 && this.L.punish >= 0.5 && foe.state === 'block' && this.chance(0.45)) {
+this.startCharge(me, foe, d, 'cs2'); return true;
 }
 return false;
 }
@@ -32639,6 +32807,52 @@ const avenge = brainRevenge(f, list, distance);
 if (avenge) { f.target = avenge; return avenge; }
 }
 let cur = f.target && !f.target.hidden && f.target.hp > 0 && list.includes(f.target) ? f.target : null;
+const smartTarget = cpuTeamwork(f) && (
+(f.ctrl && f.ctrl.brain && f.ctrl.brain.L && f.ctrl.brain.L.read >= 0.3) ||
+(!(f.ctrl && f.ctrl.brain) && typeof LEVELS !== 'undefined' && LEVELS[M.level] && LEVELS[M.level].read >= 0.3)
+);
+if (!isRaid() && smartTarget) {
+const myTeam = fighterTeam(f);
+const allies = sideFighters(myTeam);
+const myRole = typeof aiHeroTactic === 'function' ? (aiHeroTactic(f.ch.id).teamRole || 'skirmisher') : 'skirmisher';
+const focusMode = (M.cmd && cmdTacticOf(myTeam) === 'spear') || (M.squadOrders && M.squadOrders[myTeam] === 'focus');
+const ctfActive = typeof ctfOn === 'function' && ctfOn() && M.ctf && M.ctf.flags;
+const myFlag = ctfActive ? M.ctf.flags[myTeam] : null;
+let best = list[0], bestScore = Infinity;
+for (let i = 0; i < list.length; i++) {
+const e = list[i];
+let sc = distance(e, f);
+const hpPct = e.hp / Math.max(1, e.maxHp);
+sc -= (1 - hpPct) * 260;
+if (hpPct < 0.25) sc -= 180;
+if (BRAIN_STUN.includes(e.state) || e.state === 'knockdown' || (e.guard || 100) < 30) sc -= 120;
+if (myFlag && myFlag.carrier === e.idx) sc -= 420;
+if (M.cmd && typeof cmdIs === 'function' && cmdIs(e)) sc -= 110;
+if (myRole === 'assassin' && typeof aiHeroTactic === 'function') {
+const er = aiHeroTactic(e.ch.id).teamRole;
+if (er === 'zoner' || er === 'support') sc -= 125;
+} else if (myRole === 'vanguard') {
+for (let j = 0; j < allies.length; j++) {
+const a = allies[j];
+if (a === f || a.hidden || a.hp <= 0) continue;
+const ar = typeof aiHeroTactic === 'function' ? aiHeroTactic(a.ch.id).teamRole : '';
+if ((ar === 'zoner' || ar === 'support') && distance(e, a) < 220) { sc -= 140; break; }
+}
+}
+if (!focusMode) {
+let pile = 0;
+for (let j = 0; j < allies.length; j++) {
+const a = allies[j];
+if (a !== f && !a.hidden && a.hp > 0 && a.target === e) pile++;
+}
+if (pile > 1) sc += (pile - 1) * 140;
+}
+if (e === cur) sc -= 95;
+if (sc < bestScore) { bestScore = sc; best = e; }
+}
+f.target = best;
+return best;
+}
 if (cur) {
 const curDist = distance(cur, f);
 let closest = cur, minDist = curDist;
@@ -55237,6 +55451,13 @@ else if (o.spread > 230 + n * 28) guess = 'raid';
 else if (o.spread < 120 + n * 16) guess = 'wall';
 if (!guess || grnd() > skill) guess = CMD_ORDER[(grnd() * 3) | 0];
 let next = CMD_BEATEN_BY[guess];   // 克制 guess 的战术：guess 被谁克，就选谁
+const myAlive = sideFighters(t).filter(f => !f.hidden && f.hp > 0);
+const myHpAvg = myAlive.length ? myAlive.reduce((s, f) => s + f.hp / Math.max(1, f.maxHp), 0) / myAlive.length : 0;
+const rivalCmdr = cmdFighter(rival);
+if (skill >= 0.45) {
+if (myHpAvg < 0.45 && me.n <= o.n) next = 'wall';
+else if ((rivalCmdr && rivalCmdr.hp > 0 && rivalCmdr.hp < rivalCmdr.maxHp * 0.4) || me.n >= o.n + 2) next = 'spear';
+}
 const winning = T.dealt > T.taken * 1.3;
 if (T.tactic && winning && grnd() < 0.6) next = T.tactic;
 T.dealt *= 0.4; T.taken *= 0.4;

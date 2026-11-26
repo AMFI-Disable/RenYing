@@ -68,6 +68,22 @@ const AI_KIT = {
     const ball = projs.find(p => p.kind === 'ironball' && p.owner === m.idx && !p.dead);
     return ball && Math.sign(o.x - ball.x) === (m.face || 1) && Math.abs(o.y - (ball.y + 58)) < 110 && Math.abs(o.x - ball.x) < 560;
   } },
+  // 赤霄：焰戟突进挂灼烧、烈环近身挑飞续灼烧
+  flamehalberd: { role: 'rush', combo: true, use: (m, o, d) => d > 80 && d < 390 },
+  blazering: { role: 'zone', combo: true, anti: true, use: (m, o, d) => d < 160 && Math.abs(o.y - m.y) < 130 },
+  // 玄机：星枢自导飞行道具、星漩中近距离引力牵引
+  starorb: { role: 'proj', combo: true, air: true, anti: true },
+  gravwell: { role: 'zone', combo: true, pull: true, use: (m, o, d) => d > 60 && d < 250 && Math.abs(o.y - m.y) < 135 },
+  // 青鸾：翠风减速风筝、鸾羽治愈自身与280px内队友
+  jadebreeze: { role: 'proj', combo: true, air: true },
+  luanheal: { role: 'self', combo: false, use: (m, o, d) => {
+    const lowSelf = m.hp < m.maxHp * 0.72;
+    const allyLow = typeof sideFighters === 'function' && typeof fighterTeam === 'function' && sideFighters(fighterTeam(m)).some(a => a !== m && !a.hidden && a.hp > 0 && a.hp < a.maxHp * 0.65 && Math.abs(a.x - m.x) < 280);
+    return lowSelf || allyLow || (d < 115 && m.hp < m.maxHp * 0.88);
+  } },
+  // 玄武：龟甲霸体冲撞破防、玄壁霸体回架势震地
+  shellbash: { role: 'rush', combo: true, use: (m, o, d) => d > 70 && d < 360 },
+  earthfort: { role: 'zone', combo: true, groundOnly: true, use: (m, o, d) => d < 260 && (o.onGround() || (m.guard || 0) < (m.maxGuard || 100) * 0.55) },
 };
 // 离影：用「不按方向 / 按那一边」能不能正好选到雾身 c（和游戏里 pickClone 的规则一样）
 function pickCloneDir(me, foe, c) {
@@ -99,6 +115,14 @@ const AI_ULT = {
   mistarray: { far: true, sure: (m, o) => (m.clones || []).length >= 1 || o.hp / Math.max(1, o.maxHp) < 0.12 },
   // 机轮三穿：用三次全场穿击逼迫对手交闪避
   recallball: { far: true, sure: (m, o) => o.invul <= 0 && (AI_HURT.includes(o.state) || o.breakCD > 0.8 || o.hp / Math.max(1, o.maxHp) < 0.35) },
+  // 赤霄·天火坠：灼烧加成或中距离压制收割
+  skyfall: { far: true, sure: (m, o, d) => o.invul <= 0 && (d < 460 || (o.burnT || 0) > 0 || AI_HURT.includes(o.state)) },
+  // 玄机·周天星阵：对手交闪或硬直时释放
+  celestial: { far: true, sure: (m, o) => o.invul <= 0 && (o.breakCD > 0.5 || AI_HURT.includes(o.state) || o.hp / Math.max(1, o.maxHp) < 0.3) },
+  // 青鸾·百鸟朝凤：团队残血或自身血线吃紧时释放回复并反打
+  phoenixchorus: { far: true, heal: true, sure: (m, o, d) => m.hp < m.maxHp * 0.68 || (typeof sideFighters === 'function' && typeof fighterTeam === 'function' && sideFighters(fighterTeam(m)).some(a => a !== m && !a.hidden && a.hp > 0 && a.hp < a.maxHp * 0.6)) || d < 380 },
+  // 玄武·玄龟镇岳：近身地面重压
+  tortoiseslam: { contact: true, sure: (m, o, d) => d < 280 && (o.onGround() || o.y > -90) },
 };
 
 // ---------- 3. 打法基因 ----------
@@ -217,26 +241,26 @@ const AI_ACT_REL = { l1: 1, dl: 0.75, cs1: 0.5, cs2: 0.4, air: 0.5 };   // 可�
 // Lightweight strategic identities shared by every difficulty. The frame model
 // still decides whether an action can connect; these profiles only break ties.
 const AI_HERO_TACTICS = {
-  qingfeng: { style: 'balanced', range: 0.96, schools: ['feng', 'qi'] },
-  feiying: { style: 'assassin', range: 0.88, schools: ['ying', 'feng'] },
-  tieshan: { style: 'bulwark', range: 0.82, schools: ['jin', 'mo'] },
-  lingshuang: { style: 'footsies', range: 1.12, schools: ['feng', 'jin'] },
-  liuyun: { style: 'air', range: 1.12, schools: ['feng', 'qi'] },
-  leiming: { style: 'counter', range: 0.9, schools: ['lei', 'jin'] },
-  moyu: { style: 'zoner', range: 1.2, schools: ['mo', 'qi'] },
-  yuehua: { style: 'sustain', range: 1.08, schools: ['ying', 'xue'] },
-  yanling: { style: 'air', range: 1.08, schools: ['feng', 'ying'] },
-  yuxiao: { style: 'zoner', range: 1.15, schools: ['qi', 'feng'] },
-  zuixian: { style: 'brawler', range: 0.9, schools: ['xue', 'jin'] },
-  gouchen: { style: 'grappler', range: 0.94, schools: ['mo', 'jin'] },
-  lingque: { style: 'assassin', range: 1.02, schools: ['ying', 'feng'] },
-  liying: { style: 'trickster', range: 1.02, schools: ['ying', 'mo'] },
-  cixian: { style: 'control', range: 1.08, schools: ['qi', 'jin'] },
-  qianji: { style: 'setplay', range: 1.14, schools: ['feng', 'qi'] },
-  chixiao: { style: 'brawler', range: 1.04, schools: ['jin', 'xue'] },
-  xuanji: { style: 'zoner', range: 1.18, schools: ['qi', 'mo'] },
-  qingluan: { style: 'zoner', range: 1.12, schools: ['feng', 'qi'] },
-  xuanwu: { style: 'bulwark', range: 0.92, schools: ['jin', 'mo'] },
+  qingfeng: { style: 'balanced', teamRole: 'skirmisher', range: 0.96, schools: ['feng', 'qi'] },
+  feiying: { style: 'assassin', teamRole: 'assassin', range: 0.88, schools: ['ying', 'feng'] },
+  tieshan: { style: 'bulwark', teamRole: 'vanguard', range: 0.82, schools: ['jin', 'mo'] },
+  lingshuang: { style: 'footsies', teamRole: 'skirmisher', range: 1.12, schools: ['feng', 'jin'] },
+  liuyun: { style: 'air', teamRole: 'zoner', range: 1.12, schools: ['feng', 'qi'] },
+  leiming: { style: 'counter', teamRole: 'skirmisher', range: 0.9, schools: ['lei', 'jin'] },
+  moyu: { style: 'zoner', teamRole: 'zoner', range: 1.2, schools: ['mo', 'qi'] },
+  yuehua: { style: 'sustain', teamRole: 'support', range: 1.08, schools: ['ying', 'xue'] },
+  yanling: { style: 'air', teamRole: 'assassin', range: 1.08, schools: ['feng', 'ying'] },
+  yuxiao: { style: 'zoner', teamRole: 'zoner', range: 1.15, schools: ['qi', 'feng'] },
+  zuixian: { style: 'brawler', teamRole: 'vanguard', range: 0.9, schools: ['xue', 'jin'] },
+  gouchen: { style: 'grappler', teamRole: 'vanguard', range: 0.94, schools: ['mo', 'jin'] },
+  lingque: { style: 'assassin', teamRole: 'assassin', range: 1.02, schools: ['ying', 'feng'] },
+  liying: { style: 'trickster', teamRole: 'assassin', range: 1.02, schools: ['ying', 'mo'] },
+  cixian: { style: 'control', teamRole: 'controller', range: 1.08, schools: ['qi', 'jin'] },
+  qianji: { style: 'setplay', teamRole: 'controller', range: 1.14, schools: ['feng', 'qi'] },
+  chixiao: { style: 'brawler', teamRole: 'skirmisher', range: 1.04, schools: ['jin', 'xue'] },
+  xuanji: { style: 'zoner', teamRole: 'zoner', range: 1.18, schools: ['qi', 'mo'] },
+  qingluan: { style: 'zoner', teamRole: 'support', range: 1.12, schools: ['feng', 'qi'] },
+  xuanwu: { style: 'bulwark', teamRole: 'vanguard', range: 0.92, schools: ['jin', 'mo'] },
 };
 
 function aiHeroTactic(id) { return AI_HERO_TACTICS[id] || { style: 'balanced', range: 1, schools: [] }; }
@@ -379,43 +403,14 @@ class AIBrain {
       if (!this.qianjiBat(me, foe)) this.tactic(me, foe, d, to);
     }
 
-    // Avoid a map's marked thunder lane if the AI is airborne when it lands.
-    if (typeof mapNow === 'function' && me.y < -60 && me.invul <= 0 && !me.escInvul && !['special', 'held'].includes(me.state)) {
-      const mp = mapNow(), env = M.mapEnv, thunder = mp && mp.thunder;
-      if (thunder && env && env.tWarn > 0 && Math.abs(me.x - thunder.x * STAGE_W) < thunder.r + 40 && AI_FREE.includes(me.state)) {
-        this.dir = me.x < thunder.x * STAGE_W ? -1 : 1;
-        this.jumpHeld = false;
-      }
-    }
+    this.aiAdaptStance(me, foe, d);
+    this.aiMapObjectives(me, foe, d, to);
 
     // 往后退快撞墙了：跳过对手头顶
     if (this.dir === -to && ((this.dir < 0 && me.x < WALL + 120) || (this.dir > 0 && me.x > STAGE_W - WALL - 120)) && me.onGround() && AI_FREE.includes(me.state)) {
       // 这个决定要保持一小会儿：以前每帧重掷，贴墙时会左右抖
       if (clock > (this.wallT || 0)) { this.wallT = clock + 0.5; this.wallGo = this.mode === 'keep' || this.chance(0.5); }
       if (this.wallGo) { this.dir = to; if (!this.queue.length && this.chance(0.08)) this.plan([['jump', 0], ['jump', 0.22]]); }
-    }
-    // 山河异境的断崖台：贴着崖边还往外走就回头，被逼在崖边就跳过对手（自己走不下崖，坠崖只会是被打下去）
-    if (typeof mapNow === 'function' && (mapNow() || {}).cliff && me.onGround() && AI_FREE.includes(me.state)) {
-      const edge = Math.min(me.x - WALL, STAGE_W - WALL - me.x), out = me.x < STAGE_W / 2 ? -1 : 1;
-      if (edge < 170 && this.dir === out) {
-        if (clock > (this.cliffT || 0)) { this.cliffT = clock + 0.5; this.cliffGo = this.chance(0.5 + 0.5 * this.L.read); }
-        this.dir = this.cliffGo ? -out : 0;
-      }
-      if (edge < 120 && to === -out && d < 240 && !this.queue.length && this.chance(0.06)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
-    }
-    // 山河异境的平台：对手在下面就 ↓ + 跳落下去（不然走到台边自己会掉）；对手站在平台上、离得近就跳上去（中间的高台要二段跳）
-    if (typeof mapPlats === 'function' && mapPlats() && me.onGround() && AI_FREE.includes(me.state) && !this.queue.length) {
-      const dx = Math.abs(foe.x - me.x);
-      if (me.plat >= 0 && foe.plat !== me.plat && foe.y > me.y + 40 && dx < 360 && this.chance(0.05)) this.press('drop');
-      else if (foe.plat >= 0 && foe.plat !== me.plat && foe.y < me.y - 40 && dx < 240 && this.chance(0.04)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
-    }
-    if (typeof ctfObjective === 'function' && AI_FREE.includes(me.state) && !this.queue.length) {
-      const central = M.battlePerks?.[0];
-      const seekPerk = !ctfOn() && central && central.cooldown <= 0 && d > 320 && me.meter < 75;
-      const goal = ctfObjective(me, foe) || (seekPerk ? central : null);
-      const stair = battleStairTarget(me, goal ? goal.y : foe.y);
-      if (stair !== null && !this.holdDown && !this.holdAtk) this.dir = Math.sign(stair - me.x);
-      else if (goal && !this.holdDown && !this.holdAtk && Math.abs(goal.x - me.x) > 35) this.dir = Math.sign(goal.x - me.x);
     }
     // 防止 AI 贴脸死顶对手：已在近身接触距离且未准备脱困时停止继续向对手怀里顶撞
     if (d < 44 && this.dir === to && me.onGround() && AI_FREE.includes(me.state) && !this.queue.length && !this.holdDown && !this.holdAtk) {
@@ -913,6 +908,11 @@ class AIBrain {
     if (me.ch.id === 'liying' && this.liyingRoute(me, foe, d, to)) return;
     // 磁仙：负极 R 远远吸过来 → 负极普攻长连 → Q 换正极挑飞收尾 → Q 好了换回负极
     if (me.ch.id === 'cixian' && this.cixianRoute(me, foe, d, to)) return;
+    // 赤霄 / 玄机 / 青鸾 / 玄武：四位新锐侠客专属连段与团队战术
+    if (me.ch.id === 'chixiao' && this.chixiaoRoute(me, foe, d, to)) return;
+    if (me.ch.id === 'xuanji' && this.xuanjiRoute(me, foe, d, to)) return;
+    if (me.ch.id === 'qingluan' && this.qingluanRoute(me, foe, d, to)) return;
+    if (me.ch.id === 'xuanwu' && this.xuanwuRoute(me, foe, d, to)) return;
     // 局势
     this.updateMode(me, foe, d);
     // 抓破绽（对手收招、落地、被打僵直）
@@ -1026,6 +1026,9 @@ class AIBrain {
     else if (id === 'hook') this.plan([['light', 0.44, 'hit'], ['light', 0.6, 'hit'], ['light', 0.76, 'hit']]);
     else if (id === 'thunderfist') this.plan([['light', 0.44, 'hit'], ['light', 0.6, 'hit']]);
     else if (id === 'spindle' && this.L.combo >= 3) this.plan([['skill2', 0.3, 'hit'], ['skill2', 0.45, 'hit']]);   // 飞梭挂上印记：换影引爆（寻常以上）
+    else if (id === 'flamehalberd' && this.L.combo >= 3) this.plan([['light', 0.36, 'hit'], ['skill2', 0.54, 'hit']]);   // 赤霄焰戟挂灼烧接烈环
+    else if (id === 'gravwell' && this.L.combo >= 3) this.plan([['light', 0.34, 'hit'], ['light', 0.52, 'hit']]);   // 玄机星漩拉近接普攻
+    else if (id === 'shellbash' && this.L.combo >= 3) this.plan([['light', 0.36, 'hit']]);   // 玄武冲撞接重击
   }
   shouldBait(me, foe, hits) {
     const L = this.L, g = this.g;
@@ -1321,6 +1324,7 @@ class AIBrain {
       return;
     }
     if (this.watch2v2(me, foe, d, to)) return;
+    if (this.aiTeamTactics(me, foe, d, to)) return;
     const cm = typeof squadAiMod === 'function' ? squadAiMod(me, foe, d) : (M.cmd ? cmdAiMod(me, foe, d) : null);   // 战队指挥战术与阵型：适用于 2v2、3v3–16v16 团战、夺旗、四象、同袍肉鸽
     if (cm && cm.dir && !this.holdDown && !this.holdAtk) { this.dir = cm.dir; return; }
     // 假动作（绝顶/天道）：贴近半步骗对手出手或乱闪，再退开等它收招
@@ -1587,6 +1591,193 @@ class AIBrain {
     const counter = foe.state === 'skill' && AI_KIT[foe.skill] && AI_KIT[foe.skill].role === 'counter';
     if (rReady && me.onGround() && d > 120 && d < MAG.rMinusRange - 40 && Math.abs(foe.y - me.y) < 220 && !counter && roll(L.skill)) {
       this.stopAll(); this.press('skill2', 'cixian'); this.cxNext = clock + 0.5; return true;
+    }
+    return false;
+  }
+  // 赤霄：先以焰戟突进挂【灼烧】触发被动增伤减冷却，再近身烈环挑飞收割
+  chixiaoRoute(me, foe, d, to) {
+    const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
+    if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen || L.combo < 3 || clock < (this.cx2Next || 0)) return false;
+    const burning = (foe.burnT || 0) > 0.2;
+    if (burning && me.skill2CD <= 0 && d < 135 && Math.abs(foe.y - me.y) < 120 && this.chance(L.skill)) {
+      this.stopAll(); this.press('skill2', 'chixiao'); this.cx2Next = clock + 0.45; return true;
+    }
+    if (!burning && me.skillCD <= 0 && d > 110 && d < 350 && Math.abs(foe.y - me.y) < 100 && foe.state !== 'block' && this.chance(L.skill * 0.85)) {
+      this.stopAll(); this.press('skill', 'chixiao'); this.afterSkill(me, 'skill'); this.cx2Next = clock + 0.55; return true;
+    }
+    return false;
+  }
+  // 玄机：中距离星漩引力拉人起手，远距离星枢自导压制
+  xuanjiRoute(me, foe, d, to) {
+    const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
+    if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen || L.combo < 3 || clock < (this.xjNext || 0)) return false;
+    if (me.skill2CD <= 0 && d > 85 && d < 235 && Math.abs(foe.y - me.y) < 120 && (foe.onGround() || foe.y > -80) && this.chance(L.skill * 0.85)) {
+      this.stopAll(); this.press('skill2', 'xuanji'); this.afterSkill(me, 'skill2'); this.xjNext = clock + 0.55; return true;
+    }
+    if (me.skillCD <= 0 && d > 250 && d < 660 && this.chance(L.skill * 0.7)) {
+      this.stopAll(); this.press('skill', 'xuanji'); this.xjNext = clock + 0.5; return true;
+    }
+    return false;
+  }
+  // 青鸾：团队治疗优先，主动靠近残血队友释放鸾羽，同时以翠风减速风筝近身之敌
+  qingluanRoute(me, foe, d, to) {
+    const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
+    if (!free || foe.hp <= 0 || clock < (this.qlNext || 0)) return false;
+    const allies = (typeof isMulti === 'function' && isMulti() && typeof sideFighters === 'function' && typeof fighterTeam === 'function')
+      ? sideFighters(fighterTeam(me)).filter(a => a !== me && !a.hidden && a.hp > 0) : [];
+    const hurtAlly = allies.find(a => a.hp < a.maxHp * 0.62 && Math.abs(a.y - me.y) < 120 && Math.abs(a.x - me.x) < 275);
+    if (me.skill2CD <= 0 && (me.hp < me.maxHp * 0.66 || hurtAlly) && (L.read >= 0.3 || this.chance(Math.max(0.55, L.skill)))) {
+      this.stopAll(); this.press('skill2', 'qingluan_heal'); this.qlNext = clock + 0.8; return true;
+    }
+    if (L.read >= 0.3 && me.skill2CD <= 0 && allies.length && d > 200) {
+      const farHurt = allies.find(a => a.hp < a.maxHp * 0.55 && Math.abs(a.y - me.y) < 120 && Math.abs(a.x - me.x) >= 275 && Math.abs(a.x - me.x) < 620);
+      if (farHurt) { this.dir = Math.sign(farHurt.x - me.x); return true; }
+    }
+    if (L.combo >= 3 && me.skillCD <= 0 && d > 140 && d < 460 && foe.invul <= 0 && this.chance(L.skill * 0.72)) {
+      this.stopAll(); this.press('skill', 'qingluan_kite'); this.qlNext = clock + 0.5; return true;
+    }
+    return false;
+  }
+  // 玄武：霸体龟甲冲撞强换招、玄壁回架势破防震地
+  xuanwuRoute(me, foe, d, to) {
+    const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
+    if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen || L.combo < 3 || clock < (this.xwNext || 0)) return false;
+    if (me.skill2CD <= 0 && d < 185 && (foe.state === 'block' || (me.guard || 0) < (me.maxGuard || 100) * 0.55 || foe.state === 'attack') && this.chance(L.skill * 0.85)) {
+      this.stopAll(); this.press('skill2', 'xuanwu_fort'); this.xwNext = clock + 0.65; return true;
+    }
+    if (me.skillCD <= 0 && d > 95 && d < 320 && ['attack', 'charge', 'walk', 'idle'].includes(foe.state) && this.chance(L.skill * 0.78)) {
+      this.stopAll(); this.press('skill', 'xuanwu_bash'); this.afterSkill(me, 'skill'); this.xwNext = clock + 0.6; return true;
+    }
+    return false;
+  }
+  // 器灵双境自适应切换：血线/架势危急或被围攻切【守境】(2)，压制/追击/破防切【攻境】(1)
+  aiAdaptStance(me, foe, d) {
+    if (!me.relicStanceUnlocked || (me.relicStanceCd || 0) > 0 || !me.onGround() || !AI_FREE.includes(me.state)) return;
+    if (this.L.read < 0.3 || clock < (this.stanceNext || 0)) return;
+    let foesNear = 0, alliesNear = 0;
+    if (typeof isMulti === 'function' && isMulti() && typeof foesOf === 'function' && typeof sideFighters === 'function') {
+      for (const e of foesOf(me)) if (!e.hidden && e.hp > 0 && Math.abs(e.x - me.x) < 300 && Math.abs(e.y - me.y) < 120) foesNear++;
+      for (const a of sideFighters(fighterTeam(me))) if (a !== me && !a.hidden && a.hp > 0 && Math.abs(a.x - me.x) < 340 && Math.abs(a.y - me.y) < 120) alliesNear++;
+    }
+    const lowSelf = me.hp < me.maxHp * 0.42 || (me.guard || 100) < (me.maxGuard || 100) * 0.38 || (foesNear >= 2 && alliesNear === 0);
+    const pressAdv = foe.hp < foe.maxHp * 0.38 || AI_HURT.includes(foe.state) || (foe.guard || 100) < 32 || (me.hp > foe.hp * 1.15 && me.hp > me.maxHp * 0.55);
+    const want = lowSelf ? 2 : pressAdv ? 1 : me.relicStance;
+    if (want && want !== me.relicStance) {
+      this.press('relicStance', 'stance_adapt');
+      this.stanceNext = clock + 1.4;
+    }
+  }
+  // 地图与模式目标感知：天雷免疫、灵坛争锋占点、山河断崖与平台、大型分层战场全增益与跳层伏击
+  aiMapObjectives(me, foe, d, to) {
+    const mp = typeof mapNow === 'function' ? mapNow() : null;
+    const env = M.mapEnv;
+    // 1. 天雷预警躲避（雷鸣、勾陈在雷泽有主场免疫，无需躲避）
+    if (mp && mp.thunder && env && env.tWarn > 0 && me.invul <= 0 && !me.escInvul && !['special', 'held'].includes(me.state)) {
+      const thunderImmune = mp.id === 'thunder' && Array.isArray(mp.fav) && mp.fav.includes(me.ch.id);
+      if (!thunderImmune && Math.abs(me.x - mp.thunder.x * STAGE_W) < mp.thunder.r + 40 && AI_FREE.includes(me.state) && (me.y < -60 || (this.L.read >= 0.3 && env.tWarn < 0.45))) {
+        this.dir = me.x < mp.thunder.x * STAGE_W ? -1 : 1;
+        this.jumpHeld = false;
+      }
+    }
+    // 2. 断崖地图：远离悬崖外沿；高难度主动把残血/靠近崖边的对手往外推
+    if (mp && mp.cliff && me.onGround() && AI_FREE.includes(me.state)) {
+      const edge = Math.min(me.x - WALL, STAGE_W - WALL - me.x), out = me.x < STAGE_W / 2 ? -1 : 1;
+      if (edge < 170 && this.dir === out) {
+        if (clock > (this.cliffT || 0)) { this.cliffT = clock + 0.5; this.cliffGo = this.chance(0.5 + 0.5 * this.L.read); }
+        this.dir = this.cliffGo ? -out : 0;
+      }
+      if (edge < 120 && to === -out && d < 240 && !this.queue.length && this.chance(0.06)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
+    }
+    // 3. 灵坛争锋（KOTH）：主动前往并争夺轮转灵坛（含高台跳上与下落）
+    if (typeof kothOn === 'function' && kothOn() && M.koth && typeof KOTH !== 'undefined' && AI_FREE.includes(me.state) && !this.queue.length && !this.holdDown && !this.holdAtk) {
+      const z = KOTH.zones[M.koth.zoneIdx];
+      if (z) {
+        const inHill = Math.abs(me.x - z.x) <= KOTH.zoneR * 0.85 && Math.abs(me.y - z.y) <= 85;
+        const myTeam = typeof fighterTeam === 'function' ? fighterTeam(me) : (me.idx % 2);
+        const needHill = !inHill && (M.koth.holder !== myTeam || M.koth.contested || d > 260);
+        if (needHill && (this.L.read >= 0.3 || this.chance(0.45))) {
+          const dxZ = z.x - me.x, dyZ = z.y - me.y;
+          if (Math.abs(dxZ) > 45) this.dir = Math.sign(dxZ);
+          if (me.onGround()) {
+            if (dyZ < -45 && Math.abs(dxZ) < 220 && this.chance(0.09 + 0.08 * this.L.read)) { this.dir = Math.sign(dxZ) || to; this.plan([['jump', 0], ['jump', 0.22]]); }
+            else if (dyZ > 45 && me.plat >= 0 && this.chance(0.12)) this.press('drop', 'koth_drop');
+          }
+          return;
+        }
+      }
+    }
+    // 4. 山河异境平台导航
+    if (typeof mapPlats === 'function' && mapPlats() && me.onGround() && AI_FREE.includes(me.state) && !this.queue.length) {
+      const dx = Math.abs(foe.x - me.x);
+      if (me.plat >= 0 && foe.plat !== me.plat && foe.y > me.y + 40 && dx < 360 && this.chance(0.05)) this.press('drop');
+      else if (foe.plat >= 0 && foe.plat !== me.plat && foe.y < me.y - 40 && dx < 240 && this.chance(0.04)) { this.dir = to; this.plan([['jump', 0], ['jump', 0.22]]); }
+    }
+    // 5. 多层战场（3v3–16v16 / 夺旗 / 四象）：全图增益扫描、夺旗目标导航与高打低快落伏击
+    if (typeof battleMapOn === 'function' && battleMapOn() && AI_FREE.includes(me.state) && !this.queue.length && !this.holdDown && !this.holdAtk) {
+      let perkGoal = null;
+      if ((!ctfOn || !ctfOn()) && Array.isArray(M.battlePerks) && d > 260) {
+        let bestScore = Infinity;
+        for (const p of M.battlePerks) {
+          if (!p || p.cooldown > 0) continue;
+          const dist = Math.abs(p.x - me.x) + Math.abs(p.y - me.y) * 1.6;
+          if (dist > 760) continue;
+          let weight = 1;
+          if (p.kind === 'hp' && me.hp < me.maxHp * 0.72) weight = 0.55;
+          else if (p.kind === 'meter' && me.meter < 80) weight = 0.7;
+          else if (p.kind === 'dmg') weight = 0.78;
+          const sc = dist * weight;
+          if (sc < bestScore) { bestScore = sc; perkGoal = p; }
+        }
+      }
+      const goal = (typeof ctfObjective === 'function' ? ctfObjective(me, foe) : null) || perkGoal;
+      const targetY = goal ? goal.y : foe.y;
+      // 高打低快速落层伏击（无需绕行楼梯）
+      if (this.L.read >= 0.3 && me.onGround() && me.y < -40 && targetY > me.y + 75 && Math.abs((goal ? goal.x : foe.x) - me.x) < 280 && this.chance(0.14)) {
+        this.press('drop', 'battle_drop');
+        return;
+      }
+      const stair = typeof battleStairTarget === 'function' ? battleStairTarget(me, targetY) : null;
+      if (stair !== null) this.dir = Math.sign(stair - me.x);
+      else if (goal && Math.abs(goal.x - me.x) > 35) this.dir = Math.sign(goal.x - me.x);
+    }
+  }
+  // 多人团战协同战术：受围攻撤退靠拢队友、刺客/游斗双面夹击、远程/辅助后排站位、残架势压制破防
+  aiTeamTactics(me, foe, d, to) {
+    if (typeof isMulti !== 'function' || !isMulti() || (typeof isRaid === 'function' && isRaid())) return false;
+    if (this.L.read < 0.3 || !me.onGround() || !AI_FREE.includes(me.state)) return false;
+    const myTeam = typeof fighterTeam === 'function' ? fighterTeam(me) : (me.idx % 2);
+    const allies = typeof sideFighters === 'function' ? sideFighters(myTeam).filter(a => a !== me && !a.hidden && a.hp > 0) : [];
+    const foes = typeof foesOf === 'function' ? foesOf(me).filter(e => !e.hidden && e.hp > 0) : [];
+    if (!allies.length) return false;
+    const sameFloor = (a, b) => Math.abs(a.y - b.y) < 120;
+    let foesNear = 0, alliesNear = 0, nearAlly = null, nearAllyD = Infinity;
+    for (const e of foes) if (sameFloor(e, me) && Math.abs(e.x - me.x) < 320) foesNear++;
+    for (const a of allies) {
+      const da = Math.abs(a.x - me.x) + Math.abs(a.y - me.y) * 1.5;
+      if (sameFloor(a, me) && Math.abs(a.x - me.x) < 360) alliesNear++;
+      if (da < nearAllyD) { nearAllyD = da; nearAlly = a; }
+    }
+    // 1. 孤立受围攻且血量不健康：向最近队友靠拢
+    if (foesNear >= 2 && alliesNear === 0 && me.hp < me.maxHp * 0.65 && nearAlly && nearAllyD > 200) {
+      this.dir = Math.sign(nearAlly.x - me.x) || -to;
+      return true;
+    }
+    const prof = aiHeroTactic(me.ch.id), role = prof.teamRole || 'skirmisher';
+    // 2. 远程/辅助职业：前排队友正在贴身牵制目标时保持后排安全输出距离
+    if ((role === 'zoner' || role === 'support') && d < 250) {
+      const frontAlly = allies.find(a => sameFloor(a, foe) && Math.abs(a.x - foe.x) < 210 && ['vanguard', 'skirmisher'].includes(aiHeroTactic(a.ch.id).teamRole));
+      if (frontAlly && this.chance(0.55)) { this.dir = -to; return true; }
+    }
+    // 3. 刺客/游斗职业：队友已在一侧压制目标时，跳越夹击形成左右包抄
+    if ((role === 'assassin' || role === 'skirmisher') && d > 70 && d < 220 && !this.queue.length && clock > (this.flankCd || 0)) {
+      const sameSideAlly = allies.find(a => sameFloor(a, foe) && Math.abs(a.x - foe.x) < 190 && Math.sign(a.x - foe.x) === Math.sign(me.x - foe.x));
+      if (sameSideAlly && this.chance(0.18 * this.L.read)) {
+        this.dir = to; this.plan([['jump', 0], ['light', 0.42]]); this.flankCd = clock + 2.4; return true;
+      }
+    }
+    // 4. 目标架势见底且在近身距离：果断施压破防
+    if ((foe.guard || 100) < 30 && d < 200 && this.L.punish >= 0.5 && foe.state === 'block' && this.chance(0.45)) {
+      this.startCharge(me, foe, d, 'cs2'); return true;
     }
     return false;
   }

@@ -476,6 +476,14 @@ function cmdAiEval(t) {
   else if (o.spread < 120 + n * 16) guess = 'wall';
   if (!guess || grnd() > skill) guess = CMD_ORDER[(grnd() * 3) | 0];
   let next = CMD_BEATEN_BY[guess];   // 克制 guess 的战术：guess 被谁克，就选谁
+  // 结合团队血线与人数动态调整：残血劣势转铁壁稳守，敌帅残血或人数碾压转锋矢强推
+  const myAlive = sideFighters(t).filter(f => !f.hidden && f.hp > 0);
+  const myHpAvg = myAlive.length ? myAlive.reduce((s, f) => s + f.hp / Math.max(1, f.maxHp), 0) / myAlive.length : 0;
+  const rivalCmdr = cmdFighter(rival);
+  if (skill >= 0.45) {
+    if (myHpAvg < 0.45 && me.n <= o.n) next = 'wall';
+    else if ((rivalCmdr && rivalCmdr.hp > 0 && rivalCmdr.hp < rivalCmdr.maxHp * 0.4) || me.n >= o.n + 2) next = 'spear';
+  }
   // 这边正占上风就不换（打得好别折腾）
   const winning = T.dealt > T.taken * 1.3;
   if (T.tactic && winning && grnd() < 0.6) next = T.tactic;

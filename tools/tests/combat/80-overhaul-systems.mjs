@@ -577,4 +577,60 @@ export default [
       return { pass: true };
     })()`
   },
+  {
+    name: 'Advanced AI covers all 20 heroes (kits/ults/teamRoles), KOTH hill navigation, CTF carrier targeting, expansion routes, and adaptive Heirloom stance',
+    fn: `(() => {
+      // 1. Every single hero in the 20-hero roster has AI_KIT (skill + skill2), AI_ULT, and teamRole
+      for (const ch of CHARS) {
+        if (!AI_KIT[ch.skill]) return { pass: false, error: 'Missing AI_KIT for skill: ' + ch.id + '.' + ch.skill };
+        if (!AI_KIT[ch.skill2]) return { pass: false, error: 'Missing AI_KIT for skill2: ' + ch.id + '.' + ch.skill2 };
+        if (!AI_ULT[ch.ult]) return { pass: false, error: 'Missing AI_ULT for ult: ' + ch.id + '.' + ch.ult };
+        const tac = AI_HERO_TACTICS[ch.id];
+        if (!tac || !tac.teamRole) return { pass: false, error: 'Missing AI_HERO_TACTICS.teamRole for: ' + ch.id };
+      }
+      // 2. KOTH AI navigates toward the active rotating hill
+      startKoth(0, 1, 'hard', { isWatch: true });
+      M.phase = 'fight';
+      M.koth.zoneIdx = 1; // Left elevated hill (x=520, y=-155)
+      A.reset(1100); A.y = 0; A.plat = -1;
+      B.reset(1600); B.y = 0; B.plat = -1;
+      A.ctrl.brain.think(A, B);
+      if (A.ctrl.brain.dir >= 0) return { pass: false, error: 'KOTH AI did not move left toward left hill (x=520): dir=' + A.ctrl.brain.dir };
+      // 3. Hard+ multi-factor foeOf prioritizes CTF enemy flag carrier over slightly closer foe
+      startCtf(5, 0, 'hard');
+      M.phase = 'fight';
+      const hunter = FIGHTERS[2]; // Team 0 AI
+      const eClose = FIGHTERS[1], eCarrier = FIGHTERS[3];
+      hunter.reset(1000); hunter.y = 0;
+      eClose.reset(1220); eClose.y = 0; eClose.hp = eClose.maxHp;
+      eCarrier.reset(1360); eCarrier.y = 0; eCarrier.hp = eCarrier.maxHp;
+      M.ctf.flags[0].carrier = eCarrier.idx;
+      hunter.target = null; hunter.cmdTgt = -1;
+      const picked = foeOf(hunter);
+      if (picked !== eCarrier) return { pass: false, error: 'Hard AI did not prioritize CTF flag carrier: picked=' + (picked && picked.idx) };
+      // 4. Qingluan heals an injured ally within 275px via qingluanRoute
+      const qlIdx = CHARS.findIndex(c => c.id === 'qingluan');
+      startMelee(3, qlIdx, 'hard', 'normal');
+      M.phase = 'fight';
+      A.ctrl = new AICtrl('hard');
+      const ally = FIGHTERS[2], enemy = FIGHTERS[1];
+      A.reset(1000); A.y = 0; A.hp = A.maxHp; A.skill2CD = 0;
+      ally.reset(1160); ally.y = 0; ally.hp = Math.round(ally.maxHp * 0.4);
+      enemy.reset(1500); enemy.y = 0;
+      A.ctrl.brain.qlNext = 0;
+      const didHeal = A.ctrl.brain.qingluanRoute(A, enemy, 500, 1);
+      if (!didHeal) return { pass: false, error: 'Qingluan AI did not trigger heal for injured ally' };
+      // 5. Adaptive Heirloom stance switches to Defensive (2) when low HP at Hard+
+      startMatch('cpu', 'hard', [0, 1]);
+      M.phase = 'fight';
+      A.ctrl = new AICtrl('hard');
+      A.relicStanceUnlocked = true; A.relicStance = 1; A.relicStanceCd = 0;
+      A.hp = Math.round(A.maxHp * 0.3);
+      A.ctrl.brain.stanceNext = 0;
+      A.ctrl.brain.aiAdaptStance(A, B, 200);
+      if (!A.ctrl.buf.relicStance) return { pass: false, error: 'Hard AI did not request Defensive stance switch at 30% HP' };
+      toMenu();
+      return { pass: true };
+    })()`
+  },
 ];
