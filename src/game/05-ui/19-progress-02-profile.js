@@ -97,6 +97,13 @@ function applySkins() {
     }
     if (!f.dummy) f.look = skinLook(f.chIdx, k);
     f.skinKey = f.dummy ? '' : k;
+    const skMeta = f.skinKey && typeof SKINS !== 'undefined' && SKINS[f.skinKey];
+    f.relicStanceUnlocked = !!(skMeta && skMeta.heirloom) || !!(f.look && f.look.deco && f.look.deco.transform === 'heirloom');
+    if (!f.relicStanceUnlocked) {
+      f.relicStance = 0; f.relicStanceT = 0; f.relicStanceCd = 0; f.relicCounterT = 0;
+    } else if (f.relicStance !== 1 && f.relicStance !== 2) {
+      f.relicStance = 1;
+    }
   }
   pickScene();
 }

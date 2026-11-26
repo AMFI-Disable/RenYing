@@ -51,9 +51,9 @@ function keyLabel(code) {
 }
 const KEYS = [
   {},
-  { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'jump', ArrowDown: 'down', KeyK: 'atk', KeyJ: 'dash', KeyO: 'skill2', KeyI: 'special', KeyU: 'skill', KeyL: 'stance' },
+  { ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'jump', ArrowDown: 'down', KeyK: 'atk', KeyJ: 'dash', KeyO: 'skill2', KeyI: 'special', KeyU: 'skill', KeyL: 'stance', Semicolon: 'relicStance' },
   { KeyF: 'left', KeyH: 'right', KeyT: 'jump', KeyG: 'down', KeyC: 'atk', KeyV: 'dash', KeyB: 'skill', KeyN: 'skill2', KeyM: 'special', KeyP: 'stance' },
-  { Numpad4: 'left', Numpad6: 'right', Numpad8: 'jump', Numpad5: 'down', Numpad1: 'atk', Numpad2: 'dash', Numpad7: 'skill', Numpad9: 'skill2', Numpad3: 'special', Numpad0: 'stance' },
+  { Numpad4: 'left', Numpad6: 'right', Numpad8: 'jump', Numpad5: 'down', Numpad1: 'atk', Numpad2: 'dash', Numpad7: 'skill', Numpad9: 'skill2', Numpad3: 'special', Numpad0: 'stance', NumpadDecimal: 'relicStance' },
 ];
 function applyCustomKeys() {
   KEYS[0] = {};
@@ -349,7 +349,7 @@ function netLost() {
   NET.lastResult = '';
 }
 // 状态快照：房主每帧发一次
-const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits', 'stance', 'stanceUnlocked', 'stanceT', 'relicStance', 'relicStanceUnlocked', 'relicStanceT', 'relicStanceCd', 'badgeId', 'badgeTier', 'badgeDashT',
+const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits', 'stance', 'stanceUnlocked', 'stanceT', 'relicStance', 'relicStanceUnlocked', 'relicStanceT', 'relicStanceCd', 'relicCounterT', 'badgeId', 'badgeTier', 'badgeDashT',
   'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
   'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'defDebuffT', 'swapFreezeT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir', 'clones', 'cloneN', 'swapId', 'shadowMarks', 'shadowMarkT', 'shadowExecTarget', 'shadowExecT',
   'badgeLinkT', 'badgePressureT', 'badgePressureSkill', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'badgeAirUsed', 'badgeAirSkillUsed', 'ballGuardBreakT', 'quickGetup', 'quickGetupPhase', 'knockdownDur'];

@@ -47,12 +47,15 @@ function kothRoundInit() {
 function kothRespawnFighter(f) {
   const side = fighterTeam(f);
   const rx = side === 0 ? 280 : STAGE_W - 280;
+  const prevRelic = f.relicStance;
   f.reset(rx);
   f.y = -140;
   f.vy = 0;
   f.face = side === 0 ? 1 : -1;
   f.invul = 1.2;
   f.hidden = false;
+  if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
+  if (f.relicStanceUnlocked && (prevRelic === 1 || prevRelic === 2)) f.relicStance = prevRelic;
   if (!RESIM) {
     ring(rx, -140, 90, side === 0 ? '143,240,255' : '255,138,112', 0.4);
     SFX.poof();

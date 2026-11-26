@@ -18235,9 +18235,9 @@ return code;
 }
 const KEYS = [
 {},
-{ ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'jump', ArrowDown: 'down', KeyK: 'atk', KeyJ: 'dash', KeyO: 'skill2', KeyI: 'special', KeyU: 'skill', KeyL: 'stance' },
+{ ArrowLeft: 'left', ArrowRight: 'right', ArrowUp: 'jump', ArrowDown: 'down', KeyK: 'atk', KeyJ: 'dash', KeyO: 'skill2', KeyI: 'special', KeyU: 'skill', KeyL: 'stance', Semicolon: 'relicStance' },
 { KeyF: 'left', KeyH: 'right', KeyT: 'jump', KeyG: 'down', KeyC: 'atk', KeyV: 'dash', KeyB: 'skill', KeyN: 'skill2', KeyM: 'special', KeyP: 'stance' },
-{ Numpad4: 'left', Numpad6: 'right', Numpad8: 'jump', Numpad5: 'down', Numpad1: 'atk', Numpad2: 'dash', Numpad7: 'skill', Numpad9: 'skill2', Numpad3: 'special', Numpad0: 'stance' },
+{ Numpad4: 'left', Numpad6: 'right', Numpad8: 'jump', Numpad5: 'down', Numpad1: 'atk', Numpad2: 'dash', Numpad7: 'skill', Numpad9: 'skill2', Numpad3: 'special', Numpad0: 'stance', NumpadDecimal: 'relicStance' },
 ];
 function applyCustomKeys() {
 KEYS[0] = {};
@@ -18512,7 +18512,7 @@ netStatus(rkMsg || '对局已中断（未完成，不扣分）。可重新建房
 if (rkMsg) toast(rkMsg);
 NET.lastResult = '';
 }
-const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits', 'stance', 'stanceUnlocked', 'stanceT', 'relicStance', 'relicStanceUnlocked', 'relicStanceT', 'relicStanceCd', 'badgeId', 'badgeTier', 'badgeDashT',
+const FK = ['x', 'y', 'vx', 'vy', 'face', 'hp', 'meter', 'state', 't', 'invul', 'dashCD', 'jumps', 'airDash', 'stun', 'juggle', 'comboHits', 'stance', 'stanceUnlocked', 'stanceT', 'relicStance', 'relicStanceUnlocked', 'relicStanceT', 'relicStanceCd', 'relicCounterT', 'badgeId', 'badgeTier', 'badgeDashT',
 'spiked', 'bounced', 'sp', 'slashN', 'finalDone', 'spFace', 'dashDir', 'lunged', 'hitDone', 'hitConfirmed', 'chargeFull', 'moveName', 'rot', 'breakCD',
 'skillCD', 'skPh', 'armorT', 'armorHits', 'parryT', 'thunderGuardT', 'buffT', 'skill', 'regenLeft', 'sinceHit', 'spN', 'spPose', 'rooted', 'flyT', 'flying', 'skill2CD', 'escInvul', 'escMode', 'escT', 'bbX', 'bbT', 'twinT', 'diveAir', 'diveChained', 'ink', 'notes', 'noteT', 'drunk', 'reflectT', 'hookedT', 'burnT', 'breath', 'slowT', 'defDebuffT', 'swapFreezeT', 'drinkT', 'jailT', 'jailX', 'avaFree', 'avaChain', 'fu', 'fuT', 'skAir', 'clones', 'cloneN', 'swapId', 'shadowMarks', 'shadowMarkT', 'shadowExecTarget', 'shadowExecT',
 'badgeLinkT', 'badgePressureT', 'badgePressureSkill', 'badgeRiposteT', 'badgeBreakT', 'badgeAirSkillT', 'badgeExitT', 'badgeAirUsed', 'badgeAirSkillUsed', 'ballGuardBreakT', 'quickGetup', 'quickGetupPhase', 'knockdownDur'];
@@ -32626,7 +32626,7 @@ skill: null, skPh: 0, skillCD: 0, skill2CD: 0, ink: INK_MAX, escInvul: false, es
 notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, needleMarkT: 0, lqNormHits: 0, shadowMarks: 0, shadowMarkT: 0, shadowExecTarget: -1, shadowExecT: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0, pol: 0, polT: 0, magN: 0, magTg: -1, mChain: 0, mT: 0, sw: null, squashT: 0,
 guard: this.maxGuard, sinceBlock: 0,
 state: 'idle', t: 0, move: null, invul: 0, hitInvulBy: -1, hitInvulEnd: 0, lastHitByIdx: -1, lastHitByT: -99, lastLandIdx: -1, lastLandT: -99, comboT0: -99, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
-stance: 0, stanceUnlocked: false, stanceT: 0, relicStance: 0, relicStanceUnlocked: false, relicStanceT: 0, relicStanceCd: 0, badgeId: '', badgeTier: '', badgeDashT: 0,
+stance: 0, stanceUnlocked: false, stanceT: 0, relicStance: 0, relicStanceUnlocked: false, relicStanceT: 0, relicStanceCd: 0, relicCounterT: 0, badgeId: '', badgeTier: '', badgeDashT: 0,
 badgeLinkT: 0, badgePressureT: 0, badgePressureSkill: 0, badgeRiposteT: 0, badgeBreakT: 0, badgeAirSkillT: 0, badgeExitT: 0, badgeAirUsed: 0, badgeAirSkillUsed: 0,
 ballGuardBreakT: 0,
 juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,
@@ -35402,6 +35402,7 @@ return targets.length;
 }
 function parry(def, att, pt) {
 if (scOn()) scFire(def, 'parry', att);
+if (def.relicStance === 2) def.relicCounterT = Math.max(def.relicCounterT || 0, 1.25);
 def.parryT = 0; def.skPh = 2; def.t = 0; def.hitDone = false; def.invul = 0.35; def.face = att.x >= def.x ? 1 : -1;
 att.move = null; att.state = 'hitstun'; att.t = 0; att.stun = 0.55; att.vx = def.face * 120; att.skill = null;
 att.breakCD = Math.max(att.breakCD, 0.4);
@@ -35418,6 +35419,7 @@ addP({ type: 'callout', text: '截', x: ev.x, y: ev.y - 70, life: 0.75, max: 0.7
 SFX.block(); metal(1900, 0.8, 0.1);
 }
 function thunderGuardCounter(def, att, pt) {
+if (def.relicStance === 2) def.relicCounterT = Math.max(def.relicCounterT || 0, 1.25);
 def.thunderGuardT = 0; def.armorT = 0; def.skPh = 1; def.t = 0; def.invul = 0.35;
 const target = att || foeOf(def);
 def.face = target.x >= def.x ? 1 : -1;
@@ -35646,6 +35648,7 @@ f.dashCD = Math.max(0, f.dashCD - STEP);
 f.stanceT = Math.max(0, (f.stanceT || 0) - STEP);
 f.relicStanceT = Math.max(0, (f.relicStanceT || 0) - STEP);
 f.relicStanceCd = Math.max(0, (f.relicStanceCd || 0) - STEP);
+f.relicCounterT = Math.max(0, (f.relicCounterT || 0) - STEP);
 f.feintCD = Math.max(0, (f.feintCD || 0) - STEP);
 f.qiParryCD = Math.max(0, (f.qiParryCD || 0) - STEP);
 f.qiParryT = Math.max(0, (f.qiParryT || 0) - STEP);
@@ -36288,6 +36291,15 @@ const blocking = wasBlocking && !m.unblockable && !isBlockedCs2;
 hitVisual({ e: 'hit', a: att.idx, d: def.idx, x: pt[0], y: pt[1], dmg: isBlockedCs2 ? m.dmg * 0.45 : m.dmg, hs: m.hs, big: !!m.big, blk: blocking || isBlockedCs2, blockedCs2: isBlockedCs2, f: fx, nc: true });
 predicted.push(performance.now());
 }
+function relicDmgMul(att, def, isCounter) {
+let k = 1;
+if (att && att.relicStance === 1) k *= 1.06;
+else if (att && att.relicStance === 2) k *= 0.94;
+if (def && def.relicStance === 2) k *= 0.93;
+else if (def && def.relicStance === 1) k *= 1.06;
+if (att && att.relicStance === 2 && (isCounter || (att.badgeRiposteT || 0) > 0 || (att.relicCounterT || 0) > 0)) k *= 1.10;
+return k;
+}
 function applyHit(att, def, m, pt) {
 if (typeof bastionOn === 'function' && bastionOn() && typeof bastionModifyHit === 'function') m = bastionModifyHit(att, def, m);
 if (M.mode === 'net' && !RESIM) NET.matchHits = (NET.matchHits || 0) + 1;   // 回滚重算不能再记一次，不然两边会算成不一样
@@ -36336,6 +36348,7 @@ return;
 }
 if (def.qiParryT > 0 && !m.ult && !m.hold) {
 def.qiParryT = 0; def.invul = Math.max(def.invul, 0.25); def.meter = Math.min(100, (def.meter || 0) + 18);
+if (def.relicStance === 2) def.relicCounterT = Math.max(def.relicCounterT || 0, 1.25);
 if (!m.isProj && att && att !== def && Math.abs(att.x - def.x) < 260) {
 att.vx = -fx * 320; att.stun = Math.max(att.stun || 0, 0.35); att.state = 'hitstun'; att.t = 0; att.move = null;
 }
@@ -36373,6 +36386,7 @@ if (blocking) {
 const isJustGuard = !m.isProj && !m.unblockable && !m.noJg && !m.unparryable && (def.blockT !== undefined && def.blockT <= (scOn() ? scJG(def) : 0.09));
 if (isJustGuard) {
 if (att.badgePressureSkill) { att.badgePressureSkill = 0; att.badgePressureT = 0; }
+if (def.relicStance === 2) def.relicCounterT = Math.max(def.relicCounterT || 0, 1.25);
 if (scOn()) scFire(def, 'blk', att, true, m);
 def.guard = Math.min(def.maxGuard, (def.guard !== undefined ? def.guard : def.maxGuard) + 12);
 def.state = 'blockstun'; def.t = 0; def.stun = 0.05;
@@ -36468,11 +36482,13 @@ def.sinceBlock = 0;
 }
 const rawDefRating = (def.ch && def.ch.stat && def.ch.stat.defRating) || 1;
 const defRating = def.defDebuffT > 0 ? Math.max(0.65, rawDefRating * 0.75) : rawDefRating;
-if (def.armorT > 0 && !m.launch && !m.unblockable && !m.hold && !m.root && def.hp - m.dmg * 0.80 > 0) {
-const dmg = (m.dmg * 0.80) / defRating;
+const armorDmg = (m.dmg * 0.80 * relicDmgMul(att, def, false)) / defRating;
+if (def.armorT > 0 && !m.launch && !m.unblockable && !m.hold && !m.root && def.hp - armorDmg > 0) {
+const dmg = armorDmg;
 def.hp -= dmg; def.sinceHit = 0; def.lagDelay = 0.5;
 if (--def.armorHits <= 0) def.armorT = 0;
-if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.16 * mm);
+const armorRelicMeter = att.relicStance === 1 ? 1.10 : 1;
+if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.16 * mm * armorRelicMeter);
 def.meter = Math.min(100, def.meter + m.dmg * 0.14);
 armorPerk(def, att);   // 各位霸体侠客扛住一下的回报不一样，见 10-hits-03-signatures.js
 if (typeof applyCombatBadgeHit === 'function') applyCombatBadgeHit(att, def, m, ev);
@@ -36481,7 +36497,7 @@ hitVisual(ev); netEmit(ev);
 return;
 }
 if (m.chip) {   // 只掉血：不会硬直、不会飞起
-const chipDmg = m.dmg / defRating;
+const chipDmg = (m.dmg * relicDmgMul(att, def, false)) / defRating;
 def.hp = Math.max(def.dummy ? 1 : 0, def.hp - chipDmg); def.sinceHit = 0; def.lagDelay = 0.5; def.flash = 0.08;
 ev.dd = chipDmg; ev.nc = true; ev.cn = def.comboHits;
 if (def.hp <= 0 && M.phase === 'fight') {
@@ -36502,12 +36518,7 @@ def.skill = null;
 def.comboHits++;
 const isCounter = !m.isProj && ((def.state === 'attack' && def.move && def.moveName !== 'dl' && def.t < (def.move.su || 0.15)) || (def.state === 'skill' && def.t < 0.2));
 const scale = m.noScale ? 1 : Math.max(0.35, 1 - (att.ch.scaling || 0.08) * (def.comboHits - 1));
-let dmg = (m.dmg * scale * balDmg(att, m)) / defRating;
-if (att.relicStance === 1) dmg *= 1.06;
-else if (att.relicStance === 2) dmg *= 0.94;
-if (def.relicStance === 2) dmg *= 0.93;
-else if (def.relicStance === 1) dmg *= 1.06;
-if (att.relicStance === 2 && (isCounter || att.badgeRiposteT > 0 || (att.qiParryCD || 0) > 2.0)) dmg *= 1.10;
+let dmg = (m.dmg * scale * balDmg(att, m) * relicDmgMul(att, def, isCounter)) / defRating;
 if (isBlockedCs2) {
 dmg *= 0.45; // 格挡满蓄力斩：伤害大幅降低（较非格挡减少55%）
 if (def.guard !== undefined) def.guard = Math.max(0, def.guard - 35);
@@ -37091,7 +37102,8 @@ if (f.skAir && airH(f) > 4) pn = (AIR_SKILL_POSE[f.skill] || {})[pn] || (pn === 
 p = POSES[pn] || POSES.idle;
 } else if (s === 'dash') { p = POSES[f.dashDir === f.face ? 'dash' : 'bdash']; k = 30; }
 else if (s === 'air') { p = POSES[f.vy < 0 ? 'jump' : 'fall']; k = 14; }
-else if (s === 'block' || s === 'blockstun' || s === 'stance') { p = POSES.block; k = s === 'stance' ? 42 : 30; }
+else if (s === 'block' || s === 'blockstun') { p = POSES.block; k = 30; }
+else if (s === 'stance') { p = (f.relicStance === 1 && (f.relicStanceT || 0) > 0) ? POSES.charge : POSES.block; k = 42; }
 else if (s === 'hitstun') { p = POSES.hurt; k = 34; }
 else if (s === 'launched' || s === 'held') { p = POSES.hurtAir; k = 22; }
 else if (s === 'knockdown') { p = POSES.lying; k = 16; }
@@ -37137,6 +37149,13 @@ const bob = -Math.abs(cs) * (2.8 + (1 - weight) * 2.2);
 out.hip[1] += bob; out.neck[1] += bob; out.hf[1] += bob - sn * 2.2; out.hb[1] += bob + sn * 2.2;
 const lean = f.vx * f.face > 0 ? 4.5 : -2.5;
 out.neck[0] += lean * (1.2 - weight * 0.2); out.hf[0] += lean * 0.5 - sn * 3; out.hb[0] += sn * 3;
+}
+if ((s === 'idle' || s === 'walk') && (f.relicStance === 1 || f.relicStance === 2)) {
+if (f.relicStance === 1) {
+out.neck[0] += 4.5; out.hf[0] += 4.5; out.hf[1] -= 3; out.sw += 0.22;
+} else {
+out.hip[1] += 3.5; out.neck[0] -= 3; out.hf[0] -= 3.5; out.hf[1] += 2; out.hb[0] += 4; out.sw -= 0.28;
+}
 }
 const weight = clamp((f.ch && f.ch.stat && f.ch.stat.weight) || 1, 0.75, 1.4);
 if (s === 'attack' && f.move && f.t < f.move.su) {
@@ -38133,7 +38152,15 @@ if (typeof invalidateFighterCache === 'function') invalidateFighterCache();
 if (isRaid()) raidBossSkills();
 showScreen(null);
 startRound();
-rpf.forEach((f, i) => { const k = (m.skins || [])[i] || ''; f.look = skinLook(f.chIdx, k); f.skinKey = k; });
+rpf.forEach((f, i) => {
+const k = (m.skins || [])[i] || '';
+f.look = skinLook(f.chIdx, k);
+f.skinKey = k;
+const skMeta = k && typeof SKINS !== 'undefined' && SKINS[k];
+f.relicStanceUnlocked = !!(skMeta && skMeta.heirloom) || !!(f.look && f.look.deco && f.look.deco.transform === 'heirloom');
+if (!f.relicStanceUnlocked) f.relicStance = 0;
+else if (f.relicStance !== 1 && f.relicStance !== 2) f.relicStance = 1;
+});
 }
 function rpInfo() {
 if (REPLAY.on) {
@@ -39729,7 +39756,7 @@ if (kind === 'prism') col = rgbMix(c, c2, (Math.sin(q * 5 - clock * 4) + 1) / 2)
 else if (kind === 'fire') col = rgbMix(c2, c, al);
 if (a.h && b.h && kind !== 'brush') { ctx.fillStyle = `rgba(${col},${Math.min(0.45, 0.24 * al * mul)})`; quad(a.h, a.t, b.t, b.h); }
 ctx.fillStyle = `rgba(${col},${Math.min(1, (kind === 'smoke' || kind === 'brush' ? 0.35 : 0.62) * al * mul)})`; quad(a.b, a.t, b.t, b.b);
-ctx.strokeStyle = kind === 'fire' ? `rgba(255,240,200,${0.95 * al})` : `rgba(255,255,255,${0.9 * al})`;
+ctx.strokeStyle = f.relicStance === 1 ? `rgba(255,168,112,${0.95 * al})` : f.relicStance === 2 ? `rgba(140,245,220,${0.92 * al})` : kind === 'fire' ? `rgba(255,240,200,${0.95 * al})` : `rgba(255,255,255,${0.9 * al})`;
 ctx.lineWidth = (2.6 * al + 0.6) * (leg ? 1.35 : 1.1); line(a.t, b.t);
 if (!leg) continue;
 const dx = b.t[0] - b.b[0], dy = b.t[1] - b.b[1], d = Math.hypot(dx, dy) || 1, nx = dx / d, ny = dy / d;
@@ -39868,7 +39895,7 @@ const S = SKINS[f.skinKey], L = f.look; if (!S || !L.fx) return;
 const tr = tierRank(L), T = TIER_TXT[L.tier];
 const leg = S.rarity === 'legend', c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || skinTh(L).amb;
 const isHeir = !!(S.heirloom || (L.deco && L.deco.transform === 'heirloom'));
-const crowded = typeof fighters !== 'undefined' && fighters.length > 6;
+const crowded = typeof allFighters === 'function' && allFighters().length > 6;
 const name = () => addP({ type: 'text', text: isHeir ? `★ 天工传世 · ${S.name}` : `${T ? T[0] : S.rarity === 'legend' ? '传说' : '精英'} · ${S.name}`, x: f.x, y: f.y - 175, life: 2.2 + (tr >= 4 ? 0.6 : 0), max: 2.2 + (tr >= 4 ? 0.6 : 0), rgb: isHeir ? '255,222,130' : T ? T[1] : S.rarity === 'legend' ? '233,196,106' : '150,200,255' });
 const pCount = Math.round(((leg ? 34 : 12) + (tr >= 3 ? 16 : 0)) * (crowded ? 0.4 : 1));
 for (let i = 0; i < pCount; i++) skinSpawn(kind, f.x + rand(-40, 40), rand(-110, -4), c, c2, 1.2, true);
@@ -40703,14 +40730,14 @@ ctx.strokeStyle = `rgba(${D.shawl},0.5)`; ctx.lineWidth = 3;
 ctx.beginPath(); ctx.moveTo(p1[0], p1[1]); ctx.quadraticCurveTo(sk.eb[0] + back * 4, sk.eb[1], e2[0], e2[1]); ctx.stroke();
 }
 if (D.transform === 'heirloom') {
-const crowded = typeof fighters !== 'undefined' && fighters.length > 6;
+const crowded = typeof allFighters === 'function' && allFighters().length > 6;
 const sc = f.relicStance === 2 ? '110,230,205' : f.relicStance === 1 ? '255,112,72' : (L.fx && L.fx.c) || '238,196,102';
 const hc = [bc[0] - sk.face * 4, bc[1] - 12], hr = crowded ? 22 : 28;
 ctx.save(); ctx.globalCompositeOperation = 'lighter';
 ctx.strokeStyle = `rgba(${sc},${crowded ? 0.35 : 0.55})`; ctx.lineWidth = crowded ? 1.3 : 1.8;
 ctx.beginPath(); ctx.arc(hc[0], hc[1], hr, t * 0.6, t * 0.6 + Math.PI * 1.65); ctx.stroke();
 if (!crowded) {
-ctx.strokeStyle = 'rgba(255,228,150,0.42)'; ctx.lineWidth = 1.1; ctx.setLineDash([4, 5]);
+ctx.strokeStyle = f.relicStance === 2 ? 'rgba(180,255,240,0.45)' : 'rgba(255,228,150,0.42)'; ctx.lineWidth = 1.1; ctx.setLineDash([4, 5]);
 ctx.beginPath(); ctx.arc(hc[0], hc[1], hr + 5, -t * 0.45, -t * 0.45 + Math.PI * 1.8); ctx.stroke();
 ctx.setLineDash([]);
 }
@@ -40726,6 +40753,16 @@ const gr = (crowded ? 28 : 38) * pulse;
 ctx.strokeStyle = f.relicStance === 1 ? `rgba(255,112,72,${0.48 * pulse})` : `rgba(110,230,205,${0.48 * pulse})`;
 ctx.lineWidth = f.relicStance === 1 ? 2.2 : 2.6;
 ctx.beginPath(); ctx.ellipse(f.x, f.y - 2, gr, gr * 0.24, 0, 0, Math.PI * 2); ctx.stroke();
+if (!crowded) {
+if (f.relicStance === 1) {
+const tipX = f.x + sk.face * (gr + 10), tipY = f.y - 2;
+ctx.strokeStyle = `rgba(255,215,120,${0.55 * pulse})`; ctx.lineWidth = 1.8;
+ctx.beginPath(); ctx.moveTo(tipX - sk.face * 10, tipY - 5); ctx.lineTo(tipX, tipY); ctx.lineTo(tipX - sk.face * 10, tipY + 5); ctx.stroke();
+} else {
+ctx.strokeStyle = `rgba(210,255,245,${0.38 * pulse})`; ctx.lineWidth = 1.4;
+ctx.beginPath(); ctx.ellipse(f.x, f.y - 2, gr * 0.72, gr * 0.17, 0, 0, Math.PI * 2); ctx.stroke();
+}
+}
 }
 ctx.restore();
 }
@@ -43900,7 +43937,8 @@ const cw = 264, ch = 76, px = 14, py = H - ch - 34;
 ctx.fillStyle = 'rgba(8,10,24,0.82)'; ctx.fillRect(px, py, cw, ch);
 ctx.strokeStyle = 'rgba(52,231,155,0.55)'; ctx.lineWidth = 1.2; ctx.strokeRect(px, py, cw, ch);
 ctx.font = `bold 13px ${TITLE_FONT}`; ctx.fillStyle = '#34e79b'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-ctx.fillText(`${cvT('我')} · ${cvT(lf.look.name)} (${Math.max(0, Math.round(lf.hp))}/${lf.maxHp})`, px + 8, py + 6);
+const relicTag = lf.relicStanceUnlocked && lf.relicStance ? (lf.relicStance === 1 ? ` · ${cvT('攻境')}` : ` · ${cvT('守境')}`) : '';
+ctx.fillText(`${cvT('我')} · ${cvT(lf.look.name)}${relicTag} (${Math.max(0, Math.round(lf.hp))}/${lf.maxHp})`, px + 8, py + 6);
 const barW2 = cw - 16;
 ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(px + 8, py + 24, barW2, 8);
 ctx.fillStyle = '#34e79b'; ctx.fillRect(px + 8, py + 24, barW2 * clamp(lf.hp / lf.maxHp, 0, 1), 8);
@@ -47893,6 +47931,13 @@ k = mySkin(f.ch.id);
 }
 if (!f.dummy) f.look = skinLook(f.chIdx, k);
 f.skinKey = f.dummy ? '' : k;
+const skMeta = f.skinKey && typeof SKINS !== 'undefined' && SKINS[f.skinKey];
+f.relicStanceUnlocked = !!(skMeta && skMeta.heirloom) || !!(f.look && f.look.deco && f.look.deco.transform === 'heirloom');
+if (!f.relicStanceUnlocked) {
+f.relicStance = 0; f.relicStanceT = 0; f.relicStanceCd = 0; f.relicCounterT = 0;
+} else if (f.relicStance !== 1 && f.relicStance !== 2) {
+f.relicStance = 1;
+}
 }
 pickScene();
 }
@@ -49471,6 +49516,12 @@ if ((f.reflectT || 0) > 0) add('buff', `反弹 ${f.reflectT.toFixed(1)}s`);
 if ((f.buffT || 0) > 0) add('buff', `增伤 +50% (${f.buffT.toFixed(1)}s)`);
 if ((f.twinT || 0) > 0) add('buff', `双风强化 ${f.twinT.toFixed(1)}s`);
 if (f.stance === 1 && f.stanceUnlocked) add('buff', `二式 · ${(HERO_STANCES[f.ch.id] || {}).name || '切换态'}`);
+if (f.relicStanceUnlocked && (f.relicStance === 1 || f.relicStance === 2)) {
+const skMeta = f.skinKey && typeof SKINS !== 'undefined' && SKINS[f.skinKey];
+const r = skMeta && skMeta.relic;
+add('buff', f.relicStance === 1 ? `攻境 · ${(r && r.stanceAtk) || '破阵'}` : `守境 · ${(r && r.stanceDef) || '镇岳'}`);
+}
+if ((f.relicCounterT || 0) > 0) add('badge', `守境反击 +10% (${f.relicCounterT.toFixed(2)}s)`);
 if ((f.badgeLinkT || 0) > 0) add('badge', `连势追步 ${f.badgeLinkT.toFixed(2)}s`);
 if ((f.badgePressureT || 0) > 0) add('badge', `凝锋压迫 ${f.badgePressureT.toFixed(2)}s`);
 if ((f.badgeRiposteT || 0) > 0) add('badge', `回锋反击 ${f.badgeRiposteT.toFixed(2)}s`);
@@ -49541,6 +49592,7 @@ ${cdCell('C 虚招', A.feintCD || 0)}
 ${cdCell('F 弹反', A.qiParryCD || 0)}
 ${A.petId ? cdCell('V 灵宠', A.petCD || 0) : '<div class="tlab-cd"><span>V 灵宠</span><b>未携</b></div>'}
 ${cdCell('架势', A.stanceT || 0, A.stanceUnlocked ? '可切' : '未解')}
+${A.relicStanceUnlocked ? cdCell(A.relicStance === 2 ? '守境 [M]' : '攻境 [M]', A.relicStanceCd || 0, '可切') : ''}
 </div>
 </div>
 <div class="tlab-sec">
@@ -52123,12 +52175,15 @@ B.x = 1520; B.face = -1;
 function kothRespawnFighter(f) {
 const side = fighterTeam(f);
 const rx = side === 0 ? 280 : STAGE_W - 280;
+const prevRelic = f.relicStance;
 f.reset(rx);
 f.y = -140;
 f.vy = 0;
 f.face = side === 0 ? 1 : -1;
 f.invul = 1.2;
 f.hidden = false;
+if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
+if (f.relicStanceUnlocked && (prevRelic === 1 || prevRelic === 2)) f.relicStance = prevRelic;
 if (!RESIM) {
 ring(rx, -140, 90, side === 0 ? '143,240,255' : '255,138,112', 0.4);
 SFX.poof();
@@ -54573,6 +54628,7 @@ const stepX = S.size >= 10 ? 72 : 56;
 const rx = team === 0
 ? clamp(baseOffset + col * stepX, WALL + 90, STAGE_W / 2 - 260)
 : clamp(STAGE_W - baseOffset - col * stepX, STAGE_W / 2 + 260, STAGE_W - WALL - 90);
+const prevRelic = f.relicStance;
 f.reset(rx);
 if (bm && S.size >= 10 && (slot % 2) === 1 && bm.decks.length) {
 mapPutOn(f, bm.decks.length - 1);
@@ -54581,6 +54637,7 @@ f.face = team === 0 ? 1 : -1;
 f.invul = 1.1;
 if (f.idx === localIdx()) { f.beaconT = 1.4; camFocusPingT = 0.9; }
 if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
+if (f.relicStanceUnlocked && (prevRelic === 1 || prevRelic === 2)) f.relicStance = prevRelic;
 if (mayhemOn()) applyMayhemStats(f);
 if (typeof cmdAfterReset === 'function') cmdAfterReset(f);
 }
@@ -54666,10 +54723,12 @@ S.respawn[f.idx] -= STEP;
 if (S.respawn[f.idx] <= 0) {
 const team = fighterTeam(f);
 const offset = 45 + Math.floor(f.idx / 2) * 55;
+const prevRelic = f.relicStance;
 f.reset(S.flags[team].baseX + (team === 0 ? offset : -offset));
 f.face = team === 0 ? 1 : -1;
 f.invul = 1.0;
 if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
+if (f.relicStanceUnlocked && (prevRelic === 1 || prevRelic === 2)) f.relicStance = prevRelic;
 if (mayhemOn()) applyMayhemStats(f);
 if (f.idx === localIdx()) { f.beaconT = 1.2; camFocusPingT = 0.8; }
 }
@@ -54894,11 +54953,13 @@ if (typeof cmdOnFall === 'function') cmdOnFall(f);
 } else {
 S.respawn[f.idx] -= STEP;
 if (S.respawn[f.idx] <= 0 && S.tickets[team] > 0) {
+const prevRelic = f.relicStance;
 S.wait[f.idx] = false;
 quadSpawn(f, Math.floor(f.idx / 4));
 f.invul = 1.1;
 if (f.idx === localIdx()) { f.beaconT = 1.4; camFocusPingT = 0.9; }
 if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
+if (f.relicStanceUnlocked && (prevRelic === 1 || prevRelic === 2)) f.relicStance = prevRelic;
 if (mayhemOn()) applyMayhemStats(f);
 if (typeof cmdAfterReset === 'function') cmdAfterReset(f);
 }
@@ -56938,7 +56999,10 @@ if (W_.deadT > 0) {
 W_.deadT -= STEP; human[0].clear();
 if (A.onGround() && A.state !== 'knockdown' && A.state !== 'launched') { A.state = 'knockdown'; A.t = 0; A.vx *= 0.5; A.move = null; A.skill = null; }
 if (W_.deadT <= 0) {
+const prevRelic = A.relicStance;
 const zi = worldZoneAt(A.x); A.reset(worldShrineX(zi) + 60); A.face = 1; A.invul = 1.2;
+if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(A);
+if (A.relicStanceUnlocked && (prevRelic === 1 || prevRelic === 2)) A.relicStance = prevRelic;
 ring(A.x, -60, 90, '233,196,106', 0.5); say('土地庙 · 重整旗鼓', 0.9);
 }
 } else if (W_.calm > 5 && A.hp > 0 && A.hp < A.maxHp) A.hp = Math.min(A.maxHp, A.hp + 7 * HERO_HP_SCALE * STEP);
@@ -60164,7 +60228,9 @@ if ($id('lobbyMapRandom')) $id('lobbyMapRandom').addEventListener('click', () =>
 let TAB_SCOREBOARD = false;
 window.addEventListener('keydown', e => {
 initAudio();
-if (e.code === 'KeyM') { muted = !muted; return; }
+const inTextInput = !!(e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT'));
+const mBoundInCombat = M.mode !== 'demo' && !paused && !document.querySelector('.scr.on') && !!(KEYS[0] && KEYS[0].KeyM);
+if (e.code === 'KeyM' && !inTextInput && (e.altKey || e.ctrlKey || !mBoundInCombat)) { muted = !muted; return; }
 if (typeof bastion2dActive === 'function' && bastion2dActive()) return;
 if (e.code === 'Backquote' || e.code === 'F2') { NET_HUD = !NET_HUD; return; }
 if (e.code === 'F1') {
@@ -60815,7 +60881,7 @@ f.stanceT = 0;
 const skMeta = f.skinKey && typeof SKINS !== 'undefined' && SKINS[f.skinKey];
 f.relicStanceUnlocked = !!(skMeta && skMeta.heirloom) || !!(f.look && f.look.deco && f.look.deco.transform === 'heirloom');
 f.relicStance = f.relicStanceUnlocked ? 1 : 0;
-f.relicStanceT = 0; f.relicStanceCd = 0;
+f.relicStanceT = 0; f.relicStanceCd = 0; f.relicCounterT = 0;
 }
 }
 function badgeDuration(f, base) { return base * (BADGE_WINDOW_SCALE[f && f.badgeTier] || 1); }
@@ -61008,7 +61074,20 @@ TRAIN.lastStanceT = clock;
 if (typeof trainLogEvent === 'function') trainLogEvent('stance', label, isAtk ? '攻势 +6% · 移速 +6% · 聚气 +10% · 受击 +6%' : '减伤 -7% · 架势稳定 +15% · 回势 +22% · 反击 +10%');
 }
 addP({ type: 'text', text: label, x: f.x, y: f.y - 142, life: 0.85, max: 0.85, rgb });
-ring(f.x, f.y - 54, 86, rgb, 0.34);
+if (isAtk) {
+ring(f.x, f.y - 54, 92, rgb, 0.34);
+if (typeof slashLine === 'function') slashLine(f.x + f.face * 18, f.y - 58, f.face * -0.25, rgb);
+for (let i = 0; i < 7; i++) {
+addP({ type: 'spark', x: f.x, y: f.y - 56, vx: f.face * rand(120, 340) + rand(-60, 60), vy: rand(-180, 40), life: 0.28, max: 0.28, rgb: i % 2 ? '255,220,120' : rgb, w: 2.2, drag: 3.5 });
+}
+} else {
+ring(f.x, f.y - 54, 72, rgb, 0.32);
+ring(f.x, f.y - 54, 108, '210,255,245', 0.42);
+for (let i = 0; i < 6; i++) {
+const a = (i / 6) * Math.PI * 2;
+addP({ type: 'spark', x: f.x + Math.cos(a) * 24, y: f.y - 56 + Math.sin(a) * 18, vx: Math.cos(a) * 90, vy: -rand(90, 210), life: 0.34, max: 0.34, rgb: i % 2 ? '210,255,245' : rgb, w: 2.0, drag: 3.2 });
+}
+}
 }
 return true;
 }

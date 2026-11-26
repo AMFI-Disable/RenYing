@@ -45,10 +45,12 @@ function ctfMatch() {
         if (S.respawn[f.idx] <= 0) {
           const team = fighterTeam(f);
           const offset = 45 + Math.floor(f.idx / 2) * 55;
+          const prevRelic = f.relicStance;
           f.reset(S.flags[team].baseX + (team === 0 ? offset : -offset));
           f.face = team === 0 ? 1 : -1;
           f.invul = 1.0;
           if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
+          if (f.relicStanceUnlocked && (prevRelic === 1 || prevRelic === 2)) f.relicStance = prevRelic;
           if (mayhemOn()) applyMayhemStats(f);
           if (f.idx === localIdx()) { f.beaconT = 1.2; camFocusPingT = 0.8; }
         }

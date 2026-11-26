@@ -131,7 +131,7 @@ function applyCombatLoadouts(fighter = null) {
     const skMeta = f.skinKey && typeof SKINS !== 'undefined' && SKINS[f.skinKey];
     f.relicStanceUnlocked = !!(skMeta && skMeta.heirloom) || !!(f.look && f.look.deco && f.look.deco.transform === 'heirloom');
     f.relicStance = f.relicStanceUnlocked ? 1 : 0;
-    f.relicStanceT = 0; f.relicStanceCd = 0;
+    f.relicStanceT = 0; f.relicStanceCd = 0; f.relicCounterT = 0;
   }
 }
 function badgeDuration(f, base) { return base * (BADGE_WINDOW_SCALE[f && f.badgeTier] || 1); }
@@ -325,7 +325,20 @@ function trySwitchRelicStance(f) {
       if (typeof trainLogEvent === 'function') trainLogEvent('stance', label, isAtk ? '攻势 +6% · 移速 +6% · 聚气 +10% · 受击 +6%' : '减伤 -7% · 架势稳定 +15% · 回势 +22% · 反击 +10%');
     }
     addP({ type: 'text', text: label, x: f.x, y: f.y - 142, life: 0.85, max: 0.85, rgb });
-    ring(f.x, f.y - 54, 86, rgb, 0.34);
+    if (isAtk) {
+      ring(f.x, f.y - 54, 92, rgb, 0.34);
+      if (typeof slashLine === 'function') slashLine(f.x + f.face * 18, f.y - 58, f.face * -0.25, rgb);
+      for (let i = 0; i < 7; i++) {
+        addP({ type: 'spark', x: f.x, y: f.y - 56, vx: f.face * rand(120, 340) + rand(-60, 60), vy: rand(-180, 40), life: 0.28, max: 0.28, rgb: i % 2 ? '255,220,120' : rgb, w: 2.2, drag: 3.5 });
+      }
+    } else {
+      ring(f.x, f.y - 54, 72, rgb, 0.32);
+      ring(f.x, f.y - 54, 108, '210,255,245', 0.42);
+      for (let i = 0; i < 6; i++) {
+        const a = (i / 6) * Math.PI * 2;
+        addP({ type: 'spark', x: f.x + Math.cos(a) * 24, y: f.y - 56 + Math.sin(a) * 18, vx: Math.cos(a) * 90, vy: -rand(90, 210), life: 0.34, max: 0.34, rgb: i % 2 ? '210,255,245' : rgb, w: 2.0, drag: 3.2 });
+      }
+    }
   }
   return true;
 }

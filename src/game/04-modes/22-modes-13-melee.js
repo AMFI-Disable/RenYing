@@ -41,6 +41,7 @@ function meleeMatch() {
           const rx = team === 0
             ? clamp(baseOffset + col * stepX, WALL + 90, STAGE_W / 2 - 260)
             : clamp(STAGE_W - baseOffset - col * stepX, STAGE_W / 2 + 260, STAGE_W - WALL - 90);
+          const prevRelic = f.relicStance;
           f.reset(rx);
           if (bm && S.size >= 10 && (slot % 2) === 1 && bm.decks.length) {
             mapPutOn(f, bm.decks.length - 1);
@@ -49,6 +50,7 @@ function meleeMatch() {
           f.invul = 1.1;
           if (f.idx === localIdx()) { f.beaconT = 1.4; camFocusPingT = 0.9; }
           if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
+          if (f.relicStanceUnlocked && (prevRelic === 1 || prevRelic === 2)) f.relicStance = prevRelic;
           if (mayhemOn()) applyMayhemStats(f);
           if (typeof cmdAfterReset === 'function') cmdAfterReset(f);
         }

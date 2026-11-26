@@ -168,9 +168,16 @@ async function initRunner() {
     return elCache[id];
   };
 
+  const winListeners = {};
   const sandbox = {
-    window: { innerWidth: 1440, innerHeight: 900, addEventListener: () => {}, removeEventListener: () => {}, matchMedia: () => ({ matches: false }) },
-    document: { getElementById: id => getEl(id), querySelectorAll: () => [], querySelector: () => dummyEl, createElement: () => dummyEl, addEventListener: () => {}, removeEventListener: () => {}, body: dummyEl },
+    window: {
+      innerWidth: 1440, innerHeight: 900,
+      addEventListener(type, fn) { (winListeners[type] || (winListeners[type] = [])).push(fn); },
+      removeEventListener(type, fn) { if (winListeners[type]) winListeners[type] = winListeners[type].filter(f => f !== fn); },
+      dispatchEvent(ev) { for (const fn of (winListeners[ev.type] || []).slice()) fn(ev); return !ev.defaultPrevented; },
+      matchMedia: () => ({ matches: false })
+    },
+    document: { getElementById: id => getEl(id), querySelectorAll: () => [], querySelector: sel => (sel === '.scr.on' ? null : dummyEl), createElement: () => dummyEl, addEventListener: () => {}, removeEventListener: () => {}, body: dummyEl },
     location: { protocol: 'http:', hostname: '127.0.0.1', search: '', hash: '' },
     localStorage: {
       _data: {},

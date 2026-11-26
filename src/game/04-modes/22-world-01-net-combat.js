@@ -283,7 +283,10 @@ function worldUpdate() {
     W_.deadT -= STEP; human[0].clear();
     if (A.onGround() && A.state !== 'knockdown' && A.state !== 'launched') { A.state = 'knockdown'; A.t = 0; A.vx *= 0.5; A.move = null; A.skill = null; }
     if (W_.deadT <= 0) {
+      const prevRelic = A.relicStance;
       const zi = worldZoneAt(A.x); A.reset(worldShrineX(zi) + 60); A.face = 1; A.invul = 1.2;
+      if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(A);
+      if (A.relicStanceUnlocked && (prevRelic === 1 || prevRelic === 2)) A.relicStance = prevRelic;
       ring(A.x, -60, 90, '233,196,106', 0.5); say('土地庙 · 重整旗鼓', 0.9);
     }
   } else if (W_.calm > 5 && A.hp > 0 && A.hp < A.maxHp) A.hp = Math.min(A.maxHp, A.hp + 7 * HERO_HP_SCALE * STEP);

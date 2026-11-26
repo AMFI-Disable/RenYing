@@ -69,7 +69,7 @@ class Fighter {
       notes: 0, noteT: 0, drunk: 0, reflectT: 0, hookedT: 0, needleMark: 0, needleMarkT: 0, lqNormHits: 0, shadowMarks: 0, shadowMarkT: 0, shadowExecTarget: -1, shadowExecT: 0, burnT: 0, breath: false, drinkT: 0, veilT: 0, jailT: 0, jailX: 0, avaFree: false, avaChain: false, fu: 0, fuT: 0, pol: 0, polT: 0, magN: 0, magTg: -1, mChain: 0, mT: 0, sw: null, squashT: 0,
       guard: this.maxGuard, sinceBlock: 0,
       state: 'idle', t: 0, move: null, invul: 0, hitInvulBy: -1, hitInvulEnd: 0, lastHitByIdx: -1, lastHitByT: -99, lastLandIdx: -1, lastLandT: -99, comboT0: -99, dashCD: 0, jumps: 0, airDash: 1, stun: 0, flash: 0,
-      stance: 0, stanceUnlocked: false, stanceT: 0, relicStance: 0, relicStanceUnlocked: false, relicStanceT: 0, relicStanceCd: 0, badgeId: '', badgeTier: '', badgeDashT: 0,
+      stance: 0, stanceUnlocked: false, stanceT: 0, relicStance: 0, relicStanceUnlocked: false, relicStanceT: 0, relicStanceCd: 0, relicCounterT: 0, badgeId: '', badgeTier: '', badgeDashT: 0,
       badgeLinkT: 0, badgePressureT: 0, badgePressureSkill: 0, badgeRiposteT: 0, badgeBreakT: 0, badgeAirSkillT: 0, badgeExitT: 0, badgeAirUsed: 0, badgeAirSkillUsed: 0,
       ballGuardBreakT: 0,
       juggle: 0, comboHits: 0, rot: 0, walkPh: 0, spiked: false, bounced: false, sp: null, snap: false, hitDone: false,

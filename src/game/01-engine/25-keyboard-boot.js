@@ -4,7 +4,9 @@
 let TAB_SCOREBOARD = false;
 window.addEventListener('keydown', e => {
   initAudio();
-  if (e.code === 'KeyM') { muted = !muted; return; }
+  const inTextInput = !!(e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT'));
+  const mBoundInCombat = M.mode !== 'demo' && !paused && !document.querySelector('.scr.on') && !!(KEYS[0] && KEYS[0].KeyM);
+  if (e.code === 'KeyM' && !inTextInput && (e.altKey || e.ctrlKey || !mBoundInCombat)) { muted = !muted; return; }
   if (typeof bastion2dActive === 'function' && bastion2dActive()) return;
   if (e.code === 'Backquote' || e.code === 'F2') { NET_HUD = !NET_HUD; return; }
   if (e.code === 'F1') {

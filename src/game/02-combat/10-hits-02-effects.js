@@ -1,3 +1,12 @@
+function relicDmgMul(att, def, isCounter) {
+  let k = 1;
+  if (att && att.relicStance === 1) k *= 1.06;
+  else if (att && att.relicStance === 2) k *= 0.94;
+  if (def && def.relicStance === 2) k *= 0.93;
+  else if (def && def.relicStance === 1) k *= 1.06;
+  if (att && att.relicStance === 2 && (isCounter || (att.badgeRiposteT || 0) > 0 || (att.relicCounterT || 0) > 0)) k *= 1.10;
+  return k;
+}
 function applyHit(att, def, m, pt) {
   if (typeof bastionOn === 'function' && bastionOn() && typeof bastionModifyHit === 'function') m = bastionModifyHit(att, def, m);
   if (M.mode === 'net' && !RESIM) NET.matchHits = (NET.matchHits || 0) + 1;   // 回滚重算不能再记一次，不然两边会算成不一样
@@ -50,6 +59,7 @@ function applyHit(att, def, m, pt) {
   // 聚气弹反（F 键）：精准弹反近战或飞行道具，免伤并回气震退对手
   if (def.qiParryT > 0 && !m.ult && !m.hold) {
     def.qiParryT = 0; def.invul = Math.max(def.invul, 0.25); def.meter = Math.min(100, (def.meter || 0) + 18);
+    if (def.relicStance === 2) def.relicCounterT = Math.max(def.relicCounterT || 0, 1.25);
     if (!m.isProj && att && att !== def && Math.abs(att.x - def.x) < 260) {
       att.vx = -fx * 320; att.stun = Math.max(att.stun || 0, 0.35); att.state = 'hitstun'; att.t = 0; att.move = null;
     }
@@ -91,6 +101,7 @@ function applyHit(att, def, m, pt) {
     const isJustGuard = !m.isProj && !m.unblockable && !m.noJg && !m.unparryable && (def.blockT !== undefined && def.blockT <= (scOn() ? scJG(def) : 0.09));
     if (isJustGuard) {
       if (att.badgePressureSkill) { att.badgePressureSkill = 0; att.badgePressureT = 0; }
+      if (def.relicStance === 2) def.relicCounterT = Math.max(def.relicCounterT || 0, 1.25);
       if (scOn()) scFire(def, 'blk', att, true, m);
       def.guard = Math.min(def.maxGuard, (def.guard !== undefined ? def.guard : def.maxGuard) + 12);
       def.state = 'blockstun'; def.t = 0; def.stun = 0.05;
@@ -192,11 +203,13 @@ function applyHit(att, def, m, pt) {
   // 霸体：普通攻击打不断，减伤 20%（只吃 80% 伤害）
   const rawDefRating = (def.ch && def.ch.stat && def.ch.stat.defRating) || 1;
   const defRating = def.defDebuffT > 0 ? Math.max(0.65, rawDefRating * 0.75) : rawDefRating;
-  if (def.armorT > 0 && !m.launch && !m.unblockable && !m.hold && !m.root && def.hp - m.dmg * 0.80 > 0) {
-    const dmg = (m.dmg * 0.80) / defRating;
+  const armorDmg = (m.dmg * 0.80 * relicDmgMul(att, def, false)) / defRating;
+  if (def.armorT > 0 && !m.launch && !m.unblockable && !m.hold && !m.root && def.hp - armorDmg > 0) {
+    const dmg = armorDmg;
     def.hp -= dmg; def.sinceHit = 0; def.lagDelay = 0.5;
     if (--def.armorHits <= 0) def.armorT = 0;
-    if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.16 * mm);
+    const armorRelicMeter = att.relicStance === 1 ? 1.10 : 1;
+    if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.16 * mm * armorRelicMeter);
     def.meter = Math.min(100, def.meter + m.dmg * 0.14);
     armorPerk(def, att);   // 各位霸体侠客扛住一下的回报不一样，见 10-hits-03-signatures.js
     if (typeof applyCombatBadgeHit === 'function') applyCombatBadgeHit(att, def, m, ev);
@@ -205,7 +218,7 @@ function applyHit(att, def, m, pt) {
     return;
   }
   if (m.chip) {   // 只掉血：不会硬直、不会飞起
-    const chipDmg = m.dmg / defRating;
+    const chipDmg = (m.dmg * relicDmgMul(att, def, false)) / defRating;
     def.hp = Math.max(def.dummy ? 1 : 0, def.hp - chipDmg); def.sinceHit = 0; def.lagDelay = 0.5; def.flash = 0.08;
     ev.dd = chipDmg; ev.nc = true; ev.cn = def.comboHits;
     if (def.hp <= 0 && M.phase === 'fight') {
@@ -227,12 +240,7 @@ function applyHit(att, def, m, pt) {
   // 打在对手出手前摇上算“破”（下劈 dl 不算）。moveName 是上一记普攻的名字，收招后不清，只在出普攻时才看它
   const isCounter = !m.isProj && ((def.state === 'attack' && def.move && def.moveName !== 'dl' && def.t < (def.move.su || 0.15)) || (def.state === 'skill' && def.t < 0.2));
   const scale = m.noScale ? 1 : Math.max(0.35, 1 - (att.ch.scaling || 0.08) * (def.comboHits - 1));
-  let dmg = (m.dmg * scale * balDmg(att, m)) / defRating;
-  if (att.relicStance === 1) dmg *= 1.06;
-  else if (att.relicStance === 2) dmg *= 0.94;
-  if (def.relicStance === 2) dmg *= 0.93;
-  else if (def.relicStance === 1) dmg *= 1.06;
-  if (att.relicStance === 2 && (isCounter || att.badgeRiposteT > 0 || (att.qiParryCD || 0) > 2.0)) dmg *= 1.10;
+  let dmg = (m.dmg * scale * balDmg(att, m) * relicDmgMul(att, def, isCounter)) / defRating;
   if (isBlockedCs2) {
     dmg *= 0.45; // 格挡满蓄力斩：伤害大幅降低（较非格挡减少55%）
     if (def.guard !== undefined) def.guard = Math.max(0, def.guard - 35);

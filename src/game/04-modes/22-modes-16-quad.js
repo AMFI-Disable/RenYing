@@ -93,11 +93,13 @@ function quadMatch() {
       } else {
         S.respawn[f.idx] -= STEP;
         if (S.respawn[f.idx] <= 0 && S.tickets[team] > 0) {
+          const prevRelic = f.relicStance;
           S.wait[f.idx] = false;
           quadSpawn(f, Math.floor(f.idx / 4));
           f.invul = 1.1;
           if (f.idx === localIdx()) { f.beaconT = 1.4; camFocusPingT = 0.9; }
           if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts(f);
+          if (f.relicStanceUnlocked && (prevRelic === 1 || prevRelic === 2)) f.relicStance = prevRelic;
           if (mayhemOn()) applyMayhemStats(f);
           if (typeof cmdAfterReset === 'function') cmdAfterReset(f);
         }

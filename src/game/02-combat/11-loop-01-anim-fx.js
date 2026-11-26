@@ -79,7 +79,8 @@ function targetPose(f) {
     p = POSES[pn] || POSES.idle;
   } else if (s === 'dash') { p = POSES[f.dashDir === f.face ? 'dash' : 'bdash']; k = 30; }
   else if (s === 'air') { p = POSES[f.vy < 0 ? 'jump' : 'fall']; k = 14; }
-  else if (s === 'block' || s === 'blockstun' || s === 'stance') { p = POSES.block; k = s === 'stance' ? 42 : 30; }
+  else if (s === 'block' || s === 'blockstun') { p = POSES.block; k = 30; }
+  else if (s === 'stance') { p = (f.relicStance === 1 && (f.relicStanceT || 0) > 0) ? POSES.charge : POSES.block; k = 42; }
   else if (s === 'hitstun') { p = POSES.hurt; k = 34; }
   else if (s === 'launched' || s === 'held') { p = POSES.hurtAir; k = 22; }
   else if (s === 'knockdown') { p = POSES.lying; k = 16; }
@@ -126,6 +127,13 @@ function targetPose(f) {
     out.hip[1] += bob; out.neck[1] += bob; out.hf[1] += bob - sn * 2.2; out.hb[1] += bob + sn * 2.2;
     const lean = f.vx * f.face > 0 ? 4.5 : -2.5;
     out.neck[0] += lean * (1.2 - weight * 0.2); out.hf[0] += lean * 0.5 - sn * 3; out.hb[0] += sn * 3;
+  }
+  if ((s === 'idle' || s === 'walk') && (f.relicStance === 1 || f.relicStance === 2)) {
+    if (f.relicStance === 1) {
+      out.neck[0] += 4.5; out.hf[0] += 4.5; out.hf[1] -= 3; out.sw += 0.22;
+    } else {
+      out.hip[1] += 3.5; out.neck[0] -= 3; out.hf[0] -= 3.5; out.hf[1] += 2; out.hb[0] += 4; out.sw -= 0.28;
+    }
   }
   // Combat-feel poses are presentation only: weight changes how fighters brace and
   // recover visually, while the fixed-step hit timing and all combat values stay intact.

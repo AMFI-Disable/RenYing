@@ -358,7 +358,8 @@ function drawLocalCard() {
     ctx.fillStyle = 'rgba(8,10,24,0.82)'; ctx.fillRect(px, py, cw, ch);
     ctx.strokeStyle = 'rgba(52,231,155,0.55)'; ctx.lineWidth = 1.2; ctx.strokeRect(px, py, cw, ch);
     ctx.font = `bold 13px ${TITLE_FONT}`; ctx.fillStyle = '#34e79b'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-    ctx.fillText(`${cvT('我')} · ${cvT(lf.look.name)} (${Math.max(0, Math.round(lf.hp))}/${lf.maxHp})`, px + 8, py + 6);
+    const relicTag = lf.relicStanceUnlocked && lf.relicStance ? (lf.relicStance === 1 ? ` · ${cvT('攻境')}` : ` · ${cvT('守境')}`) : '';
+    ctx.fillText(`${cvT('我')} · ${cvT(lf.look.name)}${relicTag} (${Math.max(0, Math.round(lf.hp))}/${lf.maxHp})`, px + 8, py + 6);
     const barW2 = cw - 16;
     ctx.fillStyle = 'rgba(0,0,0,0.6)'; ctx.fillRect(px + 8, py + 24, barW2, 8);
     ctx.fillStyle = '#34e79b'; ctx.fillRect(px + 8, py + 24, barW2 * clamp(lf.hp / lf.maxHp, 0, 1), 8);

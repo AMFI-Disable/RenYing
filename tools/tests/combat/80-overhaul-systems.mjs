@@ -543,36 +543,145 @@ export default [
     })()`
   },
   {
-    name: 'Heirloom (天工传世) skins unlock configurable Dual Stance (攻守双境) with balanced combat modifiers and rollback sync fields',
+    name: 'Heirloom (天工传世) skins unlock configurable Dual Stance (攻守双境) across all 20 heroes with balanced modifiers, poses, keybinds, and respawn persistence',
     fn: `(() => {
       if (DEFAULT_1P_KEYS.relicStance !== 'KeyM') return { pass: false, error: 'Expected DEFAULT_1P_KEYS.relicStance === KeyM, got ' + DEFAULT_1P_KEYS.relicStance };
-      if (!FK.includes('relicStance') || !FK.includes('relicStanceUnlocked')) return { pass: false, error: 'FK missing relicStance rollback fields' };
+      if (KEYS[1].Semicolon !== 'relicStance' || KEYS[3].NumpadDecimal !== 'relicStance') return { pass: false, error: 'Missing 2P/4P relicStance keybinds' };
+      if (!FK.includes('relicStance') || !FK.includes('relicStanceUnlocked') || !FK.includes('relicCounterT')) return { pass: false, error: 'FK missing relicStance rollback fields' };
+
+      // 1. All 20 heroes have an heirloom skin that unlocks Dual Stance, toggles 1 <-> 2, and yields distinct Aggressive vs Defensive poses
+      if (window.ArmoryCore && window.ArmoryCore.FULL) {
+        for (const [k, d] of Object.entries(window.ArmoryCore.FULL)) {
+          if (d && d.heirloom && !SKINS[k]) {
+            SKINS[k] = { char: d.char, rarity: 'legend', name: d.name, cs: 'heirloom', heirloom: true, stOnly: !!d.stOnly, relic: d.relic ? { ...d.relic } : undefined, look: { ...d.look }, deco: JSON.parse(JSON.stringify(d.deco)), fx: { ...d.fx } };
+          }
+        }
+      }
+      const heirloomEntries = Object.entries(SKINS).filter(([, v]) => v && v.heirloom);
+      if (heirloomEntries.length !== 20) return { pass: false, error: 'Expected 20 heirloom skins, got ' + heirloomEntries.length };
       startMatch('cpu', 'normal', [0, 1]);
       M.phase = 'fight';
-      A.ctrl = human[0];
-      A.skinKey = '';
-      A.look = { ...(A.look || {}), deco: null };
+      for (let ci = 0; ci < CHARS.length; ci++) {
+        const ch = CHARS[ci];
+        const pair = heirloomEntries.find(([, v]) => v.char === ch.id);
+        if (!pair) return { pass: false, error: 'Missing heirloom skin for hero: ' + ch.id };
+        A.setChar(ci);
+        A.ctrl = human[0];
+        A.skinKey = pair[0];
+        A.look = skinLook(ci, pair[0]);
+        applyCombatLoadouts(A);
+        if (!A.relicStanceUnlocked || A.relicStance !== 1) return { pass: false, error: 'Heirloom did not unlock Aggressive (1) for ' + ch.id };
+        A.state = 'idle';
+        const atkPose = targetPose(A);
+        const atkSw = atkPose.sw, atkNeckX = atkPose.neck[0];
+        A.relicStanceCd = 0;
+        human[0].buf.relicStance = clock;
+        if (!trySwitchRelicStance(A) || A.relicStance !== 2) return { pass: false, error: 'Failed switch 1->2 for ' + ch.id };
+        A.state = 'idle';
+        const defPose = targetPose(A);
+        if (Math.abs(atkSw - defPose.sw) < 0.2 || atkNeckX <= defPose.neck[0]) {
+          return { pass: false, error: 'Aggressive and Defensive idle poses did not differ for ' + ch.id };
+        }
+        A.relicStanceCd = 0;
+        human[0].buf.relicStance = clock;
+        if (!trySwitchRelicStance(A) || A.relicStance !== 1) return { pass: false, error: 'Failed switch 2->1 for ' + ch.id };
+      }
+
+      // 2. Ordinary skin cannot switch; walk speed scales +6% (Aggressive) / -4% (Defensive); cooldown blocks double switch
+      A.setChar(0); A.ctrl = human[0];
+      A.skinKey = ''; A.look = skinLook(0, '');
       applyCombatLoadouts(A);
       if (A.relicStanceUnlocked || A.relicStance !== 0) return { pass: false, error: 'Ordinary skin should not unlock relic stance' };
       const baseWk = wk(A);
       human[0].buf.relicStance = clock;
       if (trySwitchRelicStance(A)) return { pass: false, error: 'Ordinary skin should not allow switching relic stance' };
       delete human[0].buf.relicStance;
-      A.skinKey = 'qf_porcelain';
-      A.look = { ...(A.look || {}), deco: { transform: 'heirloom' } };
+      A.skinKey = 'qf_porcelain'; A.look = skinLook(0, 'qf_porcelain');
       applyCombatLoadouts(A);
-      if (!A.relicStanceUnlocked || A.relicStance !== 1) return { pass: false, error: 'Heirloom skin did not unlock Aggressive stance (1)' };
       const atkWk = wk(A);
       if (!(atkWk > baseWk * 1.04)) return { pass: false, error: 'Aggressive stance walk speed not boosted: base=' + baseWk + ' atk=' + atkWk };
-      A.relicStanceCd = 0;
-      human[0].buf.relicStance = clock;
-      const switched = trySwitchRelicStance(A);
-      if (!switched || A.relicStance !== 2 || !(A.relicStanceCd > 0)) return { pass: false, error: 'Failed to switch to Defensive stance (2)' };
+      A.relicStanceCd = 0; human[0].buf.relicStance = clock;
+      if (!trySwitchRelicStance(A) || A.relicStance !== 2 || !(A.relicStanceCd > 0)) return { pass: false, error: 'Failed switch to Defensive (2)' };
       const defWk = wk(A);
       if (!(defWk < baseWk * 0.98)) return { pass: false, error: 'Defensive stance walk speed not reduced: base=' + baseWk + ' def=' + defWk };
       human[0].buf.relicStance = clock;
       if (trySwitchRelicStance(A)) return { pass: false, error: 'Cooldown did not prevent immediate double switch' };
       delete human[0].buf.relicStance;
+
+      // 3. KeyM during active combat triggers relicStance and does NOT toggle mute
+      const mutedBefore = muted;
+      const evM = typeof KeyboardEvent === 'function'
+        ? new KeyboardEvent('keydown', { code: 'KeyM', cancelable: true })
+        : { type: 'keydown', code: 'KeyM', repeat: false, altKey: false, ctrlKey: false, metaKey: false, shiftKey: false, defaultPrevented: false, preventDefault() { this.defaultPrevented = true; }, target: null };
+      window.dispatchEvent(evM);
+      if (muted !== mutedBefore) return { pass: false, error: 'KeyM hijacked mute during active combat' };
+      if (human[0].buf.relicStance === undefined) return { pass: false, error: 'KeyM did not buffer relicStance in active combat' };
+      delete human[0].buf.relicStance;
+
+      // 4. Exact damage/armor/chip/meter/guard modifiers & anti-whiff-parry exploit verification
+      const probeHit = (attStance, defStance, opts = {}) => {
+        startMatch('cpu', 'normal', [0, 1]); M.phase = 'fight'; M.chaos = null; M.teamMutator = 'normal';
+        A.reset(STAGE_W / 2 - 80); B.reset(STAGE_W / 2 + 80); A.face = 1; B.face = -1;
+        A.invul = 0; B.invul = 0; A.meter = 0; B.meter = 0; A.comboHits = 0; B.comboHits = 0;
+        A.relicStanceUnlocked = attStance > 0; A.relicStance = attStance; A.relicCounterT = opts.relicCounterT || 0; A.qiParryCD = opts.qiParryCD || 0;
+        B.relicStanceUnlocked = defStance > 0; B.relicStance = defStance; B.armorT = opts.armor ? 1 : 0; B.armorHits = opts.armor ? 2 : 0;
+        const hp0 = B.hp;
+        applyHit(A, B, { dmg: 100, kb: [0, 0], stun: 0.2, hs: 0.04, noScale: true, chip: !!opts.chip }, [B.x, B.y - 60]);
+        return { dmg: hp0 - B.hp, meter: A.meter };
+      };
+      const baseH = probeHit(0, 0);
+      const atkH = probeHit(1, 0);
+      const defH = probeHit(2, 0);
+      const atkTaken = probeHit(0, 1);
+      const defTaken = probeHit(0, 2);
+      const whiffParryH = probeHit(2, 0, { qiParryCD: 3.8 });
+      const verifiedCounterH = probeHit(2, 0, { relicCounterT: 1.0 });
+      const armorBase = probeHit(0, 0, { armor: true });
+      const armorAtk = probeHit(1, 0, { armor: true });
+      const chipBase = probeHit(0, 0, { chip: true });
+      const chipDef = probeHit(0, 2, { chip: true });
+      if (Math.abs(atkH.dmg / baseH.dmg - 1.06) > 0.01) return { pass: false, error: 'Aggressive dmg dealt mismatch: ' + (atkH.dmg / baseH.dmg) };
+      if (Math.abs(atkH.meter / baseH.meter - 1.10) > 0.01) return { pass: false, error: 'Aggressive meter gain mismatch: ' + (atkH.meter / baseH.meter) };
+      if (Math.abs(defH.dmg / baseH.dmg - 0.94) > 0.01) return { pass: false, error: 'Defensive dmg dealt mismatch: ' + (defH.dmg / baseH.dmg) };
+      if (Math.abs(atkTaken.dmg / baseH.dmg - 1.06) > 0.01) return { pass: false, error: 'Aggressive dmg taken mismatch: ' + (atkTaken.dmg / baseH.dmg) };
+      if (Math.abs(defTaken.dmg / baseH.dmg - 0.93) > 0.01) return { pass: false, error: 'Defensive dmg taken mismatch: ' + (defTaken.dmg / baseH.dmg) };
+      if (Math.abs(whiffParryH.dmg - defH.dmg) > 0.05) return { pass: false, error: 'Whiffed qiParry CD still granted Defensive counter bonus!' };
+      if (Math.abs(verifiedCounterH.dmg / defH.dmg - 1.10) > 0.01) return { pass: false, error: 'Verified Defensive counter bonus mismatch: ' + (verifiedCounterH.dmg / defH.dmg) };
+      if (Math.abs(armorAtk.dmg / armorBase.dmg - 1.06) > 0.01 || Math.abs(armorAtk.meter / armorBase.meter - 1.10) > 0.01) return { pass: false, error: 'Armor hit bypassed relic stance modifiers' };
+      if (Math.abs(chipDef.dmg / chipBase.dmg - 0.93) > 0.01) return { pass: false, error: 'Chip hit bypassed relic stance modifiers' };
+
+      // 5. Verified Just Guard & qiParry in Defensive stance grant relicCounterT
+      startMatch('cpu', 'normal', [0, 1]); M.phase = 'fight';
+      A.reset(STAGE_W / 2 - 80); B.reset(STAGE_W / 2 + 80); A.face = 1; B.face = -1;
+      B.relicStanceUnlocked = true; B.relicStance = 2; B.relicCounterT = 0;
+      B.state = 'block'; B.blockT = 0.03;
+      applyHit(A, B, { dmg: 40, kb: [100, 0], stun: 0.2, hs: 0.04 }, [B.x, B.y - 60]);
+      if (!(B.relicCounterT > 1.0)) return { pass: false, error: 'Just Guard in Defensive stance did not grant relicCounterT' };
+      B.relicCounterT = 0; B.qiParryT = 0.15; B.state = 'idle';
+      applyHit(A, B, { dmg: 40, kb: [100, 0], stun: 0.2, hs: 0.04 }, [B.x, B.y - 60]);
+      if (!(B.relicCounterT > 1.0)) return { pass: false, error: 'qiParry in Defensive stance did not grant relicCounterT' };
+
+      // 6. Respawn persistence across Melee, CTF, KOTH, and Quad Clash
+      startMelee(3, 0, 'normal', 'normal'); M.phase = 'fight';
+      A.skinKey = 'qf_porcelain'; A.look = skinLook(0, 'qf_porcelain'); applyCombatLoadouts(A);
+      A.relicStance = 2; A.hp = 0; M.melee.respawn[0] = STEP; meleeMatch();
+      if (!A.relicStanceUnlocked || A.relicStance !== 2) return { pass: false, error: 'Melee respawn lost Defensive stance: ' + A.relicStance };
+
+      startCtf(3, 0, 'normal'); M.phase = 'fight';
+      A.skinKey = 'qf_porcelain'; A.look = skinLook(0, 'qf_porcelain'); applyCombatLoadouts(A);
+      A.relicStance = 2; A.hp = 0; M.ctf.respawn[0] = STEP; ctfMatch();
+      if (!A.relicStanceUnlocked || A.relicStance !== 2) return { pass: false, error: 'CTF respawn lost Defensive stance: ' + A.relicStance };
+
+      startKoth(0, 1, 'normal'); M.phase = 'fight';
+      A.skinKey = 'qf_porcelain'; A.look = skinLook(0, 'qf_porcelain'); applyCombatLoadouts(A);
+      A.relicStance = 2; kothRespawnFighter(A);
+      if (!A.relicStanceUnlocked || A.relicStance !== 2) return { pass: false, error: 'KOTH respawn lost Defensive stance: ' + A.relicStance };
+
+      startQuad(2, 0, 'normal'); M.phase = 'fight';
+      A.skinKey = 'qf_porcelain'; A.look = skinLook(0, 'qf_porcelain'); applyCombatLoadouts(A);
+      A.relicStance = 2; A.hp = 0; M.quad.respawn[0] = STEP; quadMatch();
+      if (!A.relicStanceUnlocked || A.relicStance !== 2) return { pass: false, error: 'Quad respawn lost Defensive stance: ' + A.relicStance };
+
       toMenu();
       return { pass: true };
     })()`

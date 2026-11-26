@@ -527,6 +527,7 @@ function strikeAoE(f, cx, cy, rx, ry, spec, exclude) {
 // 月镜格开：对手硬直，自己准备反斩
 function parry(def, att, pt) {
   if (scOn()) scFire(def, 'parry', att);
+  if (def.relicStance === 2) def.relicCounterT = Math.max(def.relicCounterT || 0, 1.25);
   def.parryT = 0; def.skPh = 2; def.t = 0; def.hitDone = false; def.invul = 0.35; def.face = att.x >= def.x ? 1 : -1;
   att.move = null; att.state = 'hitstun'; att.t = 0; att.stun = 0.55; att.vx = def.face * 120; att.skill = null;
   att.breakCD = Math.max(att.breakCD, 0.4);
@@ -544,6 +545,7 @@ function parryVisual(ev) {
 }
 // 雷鸣金刚雷铠招架：近身攻击引落天雷
 function thunderGuardCounter(def, att, pt) {
+  if (def.relicStance === 2) def.relicCounterT = Math.max(def.relicCounterT || 0, 1.25);
   def.thunderGuardT = 0; def.armorT = 0; def.skPh = 1; def.t = 0; def.invul = 0.35;
   const target = att || foeOf(def);
   def.face = target.x >= def.x ? 1 : -1;
@@ -782,6 +784,7 @@ function updateFighter(f, foe) {
   f.stanceT = Math.max(0, (f.stanceT || 0) - STEP);
   f.relicStanceT = Math.max(0, (f.relicStanceT || 0) - STEP);
   f.relicStanceCd = Math.max(0, (f.relicStanceCd || 0) - STEP);
+  f.relicCounterT = Math.max(0, (f.relicCounterT || 0) - STEP);
   f.feintCD = Math.max(0, (f.feintCD || 0) - STEP);
   f.qiParryCD = Math.max(0, (f.qiParryCD || 0) - STEP);
   f.qiParryT = Math.max(0, (f.qiParryT || 0) - STEP);

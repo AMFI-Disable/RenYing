@@ -236,6 +236,12 @@ function _tlabBuffs(f) {
   if ((f.buffT || 0) > 0) add('buff', `增伤 +50% (${f.buffT.toFixed(1)}s)`);
   if ((f.twinT || 0) > 0) add('buff', `双风强化 ${f.twinT.toFixed(1)}s`);
   if (f.stance === 1 && f.stanceUnlocked) add('buff', `二式 · ${(HERO_STANCES[f.ch.id] || {}).name || '切换态'}`);
+  if (f.relicStanceUnlocked && (f.relicStance === 1 || f.relicStance === 2)) {
+    const skMeta = f.skinKey && typeof SKINS !== 'undefined' && SKINS[f.skinKey];
+    const r = skMeta && skMeta.relic;
+    add('buff', f.relicStance === 1 ? `攻境 · ${(r && r.stanceAtk) || '破阵'}` : `守境 · ${(r && r.stanceDef) || '镇岳'}`);
+  }
+  if ((f.relicCounterT || 0) > 0) add('badge', `守境反击 +10% (${f.relicCounterT.toFixed(2)}s)`);
   if ((f.badgeLinkT || 0) > 0) add('badge', `连势追步 ${f.badgeLinkT.toFixed(2)}s`);
   if ((f.badgePressureT || 0) > 0) add('badge', `凝锋压迫 ${f.badgePressureT.toFixed(2)}s`);
   if ((f.badgeRiposteT || 0) > 0) add('badge', `回锋反击 ${f.badgeRiposteT.toFixed(2)}s`);
@@ -306,6 +312,7 @@ function trainLabRender(force = false) {
           ${cdCell('F 弹反', A.qiParryCD || 0)}
           ${A.petId ? cdCell('V 灵宠', A.petCD || 0) : '<div class="tlab-cd"><span>V 灵宠</span><b>未携</b></div>'}
           ${cdCell('架势', A.stanceT || 0, A.stanceUnlocked ? '可切' : '未解')}
+          ${A.relicStanceUnlocked ? cdCell(A.relicStance === 2 ? '守境 [M]' : '攻境 [M]', A.relicStanceCd || 0, '可切') : ''}
         </div>
       </div>
       <div class="tlab-sec">

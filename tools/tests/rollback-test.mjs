@@ -382,6 +382,29 @@ if (runAll || args.includes('--rollback')) {
     'Issue #33: 4-team 32-player (8v8v8v8) replay records and replays deterministically with exact state hash', JSON.stringify(mt33));
   assert(mt33.meleeRecOk && mt33.replayMeleeMatch && mt33.replayMeleeCount === 32 && mt33.replayMeleeTeams === 2,
     'Issue #33: 2-team 32-player (16v16) replay records and replays deterministically with exact state hash', JSON.stringify(mt33));
+
+  // Heirloom Dual Stance (攻守双境) rollback determinism: mid-fight stance switch + counter window restore identically
+  const relicRb = new vm.Script(`(() => {
+    rollStart([0, 1], 8811);
+    M.phase = 'fight';
+    A.skinKey = 'qf_porcelain'; A.look = { ...(A.look || {}), deco: { transform: 'heirloom' } };
+    B.skinKey = 'fy_puppet'; B.look = { ...(B.look || {}), deco: { transform: 'heirloom' } };
+    applyCombatLoadouts(A); applyCombatLoadouts(B);
+    for (let f = 0; f < 80; f++) {
+      ROLL.loc[f] = { h: f % 20 < 10 ? 2 : 0, p: f === 5 ? ['relicStance'] : f > 20 && f % 14 === 0 ? ['light'] : [] };
+      ROLL.rem[f] = { h: f % 20 < 10 ? 1 : 4, p: f === 22 ? ['relicStance'] : f % 16 === 0 ? ['light'] : [] };
+      ROLL.remLast = 80;
+      rollFrame(f); ROLL.F = f + 1;
+    }
+    const stA = A.relicStance, stB = B.relicStance;
+    const before = hashState(capState());
+    ROLL.pend = 2;
+    rollResim();
+    const after = hashState(capState());
+    return { stA, stB, match: before === after };
+  })()`).runInContext(w);
+  assert(relicRb.stA === 2 && relicRb.stB === 2 && relicRb.match,
+    'Heirloom Dual Stance switching & counter state resimulate identically across rollback', JSON.stringify(relicRb));
 }
 
 // 2. QingFengXing (青锋行) 3D Action Mode Verification

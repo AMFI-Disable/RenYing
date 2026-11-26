@@ -198,7 +198,7 @@ function skinTrail(f, tr) {
     else if (kind === 'fire') col = rgbMix(c2, c, al);
     if (a.h && b.h && kind !== 'brush') { ctx.fillStyle = `rgba(${col},${Math.min(0.45, 0.24 * al * mul)})`; quad(a.h, a.t, b.t, b.h); }
     ctx.fillStyle = `rgba(${col},${Math.min(1, (kind === 'smoke' || kind === 'brush' ? 0.35 : 0.62) * al * mul)})`; quad(a.b, a.t, b.t, b.b);
-    ctx.strokeStyle = kind === 'fire' ? `rgba(255,240,200,${0.95 * al})` : `rgba(255,255,255,${0.9 * al})`;
+    ctx.strokeStyle = f.relicStance === 1 ? `rgba(255,168,112,${0.95 * al})` : f.relicStance === 2 ? `rgba(140,245,220,${0.92 * al})` : kind === 'fire' ? `rgba(255,240,200,${0.95 * al})` : `rgba(255,255,255,${0.9 * al})`;
     ctx.lineWidth = (2.6 * al + 0.6) * (leg ? 1.35 : 1.1); line(a.t, b.t);
     if (!leg) continue;
     const dx = b.t[0] - b.b[0], dy = b.t[1] - b.b[1], d = Math.hypot(dx, dy) || 1, nx = dx / d, ny = dy / d;
@@ -342,7 +342,7 @@ function skinIntroFX(f) {
   const tr = tierRank(L), T = TIER_TXT[L.tier];
   const leg = S.rarity === 'legend', c = L.fx.c, c2 = L.fx.c2 || c, kind = L.fx.part || skinTh(L).amb;
   const isHeir = !!(S.heirloom || (L.deco && L.deco.transform === 'heirloom'));
-  const crowded = typeof fighters !== 'undefined' && fighters.length > 6;
+  const crowded = typeof allFighters === 'function' && allFighters().length > 6;
   const name = () => addP({ type: 'text', text: isHeir ? `★ 天工传世 · ${S.name}` : `${T ? T[0] : S.rarity === 'legend' ? '传说' : '精英'} · ${S.name}`, x: f.x, y: f.y - 175, life: 2.2 + (tr >= 4 ? 0.6 : 0), max: 2.2 + (tr >= 4 ? 0.6 : 0), rgb: isHeir ? '255,222,130' : T ? T[1] : S.rarity === 'legend' ? '233,196,106' : '150,200,255' });
   const pCount = Math.round(((leg ? 34 : 12) + (tr >= 3 ? 16 : 0)) * (crowded ? 0.4 : 1));
   for (let i = 0; i < pCount; i++) skinSpawn(kind, f.x + rand(-40, 40), rand(-110, -4), c, c2, 1.2, true);

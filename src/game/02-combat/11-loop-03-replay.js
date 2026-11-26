@@ -643,7 +643,15 @@ function replayLoadSegment(m) {
   if (isRaid()) raidBossSkills();
   showScreen(null);
   startRound();
-  rpf.forEach((f, i) => { const k = (m.skins || [])[i] || ''; f.look = skinLook(f.chIdx, k); f.skinKey = k; });
+  rpf.forEach((f, i) => {
+    const k = (m.skins || [])[i] || '';
+    f.look = skinLook(f.chIdx, k);
+    f.skinKey = k;
+    const skMeta = k && typeof SKINS !== 'undefined' && SKINS[k];
+    f.relicStanceUnlocked = !!(skMeta && skMeta.heirloom) || !!(f.look && f.look.deco && f.look.deco.transform === 'heirloom');
+    if (!f.relicStanceUnlocked) f.relicStance = 0;
+    else if (f.relicStance !== 1 && f.relicStance !== 2) f.relicStance = 1;
+  });
 }
 function rpInfo() {
   if (REPLAY.on) {
