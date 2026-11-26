@@ -322,13 +322,11 @@ const presLive = () => typeof SOC !== 'undefined' && SOC.state === 'on';
 // 大厅直连能秒级推名单，这时候云端 30 秒一报就够；网页挂后台没人看，60 秒保个到场就行；
 // 连续几次报不上去（云端挂了、额度用完了）也别硬刷，退到 60 秒。
 function presGap() {
-  if (typeof document !== 'undefined' && document.hidden) return 60000;
+  const srvMs = PRES.srv && Number.isFinite(+PRES.srv.every) ? Math.max(15000, Math.min(120000, +PRES.srv.every * 1000)) : 45000;
+  if (typeof document !== 'undefined' && document.hidden) return Math.max(60000, srvMs);
   if (PRES.fail >= 3) return 60000;
-  if (presLive()) return 30000;
-  // 刚发现人数变过（有人进来了/走了）：接着 30 秒加密到 3 秒，抓住紧接着跟进来的人；
-  // 平时不这么报，不然一天的请求额度几下就用光了。
-  if (PRES.burst > Date.now()) return 3000;
-  return 10000;
+  if (presLive()) return Math.max(45000, srvMs);
+  return srvMs;
 }
 function presSchedule(ms) { clearTimeout(PRES.timer); PRES.timer = setTimeout(() => presBeat(), ms); }
 async function presBeat(again) {
@@ -343,7 +341,6 @@ async function presBeat(again) {
     const r = await fetch(presUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ sid: presSid(), st: presState() }), signal: ctl ? ctl.signal : undefined });
     const d = await r.json().catch(() => null);
     if (r.ok && d && typeof d.online === 'number') {
-      if (PRES.srv && d.online !== PRES.srv.online) PRES.burst = Date.now() + 30000;   // 人数刚变过：加密一轮
       PRES.srv = d; PRES.at = Date.now(); PRES.fail = 0;
     }
     else if (d && !d.ok && d.error === 'sid 不对') rotate = true;
@@ -355,10 +352,10 @@ async function presBeat(again) {
   refreshOnline();
   if (PRES.again) { PRES.again = false; presSchedule(500); } else presSchedule(presGap());
 }
-// 有“可能变了”的事就立刻报一次（切回窗口、对局状态变了、别人进出大厅），最多每 2 秒一次
+// 有“可能变了”的事就立刻报一次（切回窗口、对局状态变了、别人进出大厅），最多每 5 秒一次
 function presKick() {
   if (PRES.busy) { PRES.again = true; return; }
-  const wait = 2000 - (Date.now() - PRES.last);
+  const wait = 5000 - (Date.now() - PRES.last);
   if (wait > 0) { presSchedule(wait); return; }
   presBeat();
 }

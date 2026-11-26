@@ -38,8 +38,9 @@ async function route(request, env, ctx, rid = reqId()) {
         try { banner = row && row.note ? JSON.parse(row.note) : null; } catch (e) {}
         return json({ ok: true, banner });
       }
-      if (Math.random() < 0.02) {
-        const p = cleanup(env, now).catch(() => {});
+      if (now - lastCleanupAt >= CLEANUP_INTERVAL_MS && now >= D1_SHIELD.circuitOpenUntil) {
+        lastCleanupAt = now;
+        const p = cleanup(env, now).catch(e => { if (d1QuotaError(e)) d1ShieldTrip(e, Date.now()); });
         if (ctx && ctx.waitUntil) ctx.waitUntil(p);
       }
       const ip = clientIp(request);
@@ -47,7 +48,7 @@ async function route(request, env, ctx, rid = reqId()) {
       // 联机打洞用的 ICE 列表：平时只有 STUN；Even 在 Cloudflare 开了 TURN 并设好 TURN_KEY_ID / TURN_KEY_API_TOKEN 两个 Secret 后，
       // 每次给一份几小时就过期的 TURN 凭据（直连打不通时走中转）。拿 TURN 失败也照样回 STUN，网页不会因此连不上
       if (path === '/api/ice' && request.method === 'GET') {
-        if (!(await hit(env, 'ice:' + ip, 60, 3600e3, now))) return error('请求太频繁了，过一会儿再试', 429);
+        if (!hitMem('ice:' + ip, 60, 3600e3, now)) return error('请求太频繁了，过一会儿再试', 429);
         return json(await iceServers(env));
       }
 
@@ -225,7 +226,7 @@ async function route(request, env, ctx, rid = reqId()) {
       if (path === '/api/market' && request.method === 'GET') {
         const auth = await authenticate(env, request);
         if (!auth) return error('未登录或登录已过期，请重新登录', 401);
-        if (!(await hit(env, 'mkt:' + auth.user.id, 60, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        if (!hitMem('mkt:' + auth.user.id, 60, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
         return await handleMarket(env, auth.user.id, String(url.searchParams.get('k') || '').slice(0, 24), now);
       }
 
@@ -268,7 +269,7 @@ async function route(request, env, ctx, rid = reqId()) {
 
       // 11. 天魔讨伐：看天魔不用登录；出战、交伤害要云端账号
       if (path === '/api/gboss' && request.method === 'GET') {
-        if (!(await hit(env, 'gbg:' + ip, 120, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        if (!hitMem('gbg:' + ip, 120, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
         const auth = await authenticate(env, request);
         return json(await gbState(env, await gbNow(env, now), auth && auth.user.id, now));
       }
@@ -283,7 +284,7 @@ async function route(request, env, ctx, rid = reqId()) {
 
       // 12. 侠客列传的江湖足迹：看不用登录，记要云端账号
       if (path === '/api/saga' && request.method === 'GET') {
-        if (!(await hit(env, 'sgg:' + ip, 120, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        if (!hitMem('sgg:' + ip, 120, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
         const hero = String(url.searchParams.get('hero') || '');
         if (!C.HERO_IDS.includes(hero)) return error('没有这位侠客');
         return json(await sagaFoot(env, hero));
@@ -298,7 +299,7 @@ async function route(request, env, ctx, rid = reqId()) {
 
       // 13. 全服肉鸽 · 江湖长卷：看全服进度不用登录（带登录凭证时附上自己的秘卷和能领几节）；领奖要云端账号
       if (path === '/api/world/chron' && request.method === 'GET') {
-        if (!(await hit(env, 'cqg:' + ip, 60, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        if (!hitMem('cqg:' + ip, 60, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
         const auth = await authenticate(env, request);
         return json(await chronGet(env, auth && auth.user.id));
       }
@@ -310,7 +311,7 @@ async function route(request, env, ctx, rid = reqId()) {
 
       // 14. 功能开关（不用登录；带登录凭证时 Dev 账号能看到“只开 Dev”的）
       if (path === '/api/flags' && request.method === 'GET') {
-        if (!(await hit(env, 'flg:' + ip, 60, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        if (!hitMem('flg:' + ip, 60, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
         const auth = await authenticate(env, request);
         const user = auth && auth.user;
         return json({ ok: true, flags: await flagsFor(env, user, now), turnstile: (await turnstileOn(env, user, now)) ? String(env.TURNSTILE_SITEKEY) : '' });
@@ -318,7 +319,7 @@ async function route(request, env, ctx, rid = reqId()) {
 
       // 13. 排行榜（不用登录）：段位榜是这个赛季打满定级赛的，按段位分排；战绩榜按联机胜场排。被封的号不上榜
       if (path === '/api/leaderboard' && request.method === 'GET') {
-        if (!(await hit(env, 'lbg:' + ip, 30, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        if (!hitMem('lbg:' + ip, 30, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
         const auth = await authenticate(env, request);
         const kind = url.searchParams.get('k') === 'wins' ? 'wins' : 'rank';
         return json(await leaderboard(env, kind, String(url.searchParams.get('s') || ''), auth && auth.user.id, now));

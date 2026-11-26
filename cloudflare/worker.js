@@ -78,6 +78,60 @@ async function withCors(request, env, ctx) {
   return out;
 }
 
+/* ---------- D1 写入保护与遥测统计 ----------
+ * 高频读接口限速改走内存，在线心跳改走 PresenceHub Durable Object；
+ * 遥测类写入（游玩统计、客户端报错、慢请求、AI 样本）受每分钟预算与 D1 配额熔断器保护，
+ * 避免非核心写入耗尽免费版 D1 每日 10 万行写入额度，同时保证登录、存档和武库交易始终可用。 */
+const D1_SHIELD_COOLDOWN_MS = 5 * 60e3;
+const D1_SHIELD = {
+  startedAt: Date.now(),
+  winAt: 0,
+  telemetryWritesWin: 0,
+  telemetryWritesTotal: 0,
+  telemetryShed: 0,
+  rateMemHits: 0,
+  playStatsCoalesced: 0,
+  presenceDoHits: 0,
+  presenceD1Coalesced: 0,
+  circuitOpenUntil: 0,
+  lastQuotaErr: '',
+};
+function d1QuotaError(err) {
+  const msg = String((err && (err.message || err.cause || err)) || '');
+  return /D1_ERROR|quota|limit exceeded|too many requests|exceeded.*writes|database.*overload/i.test(msg);
+}
+function d1ShieldTrip(err, now) {
+  D1_SHIELD.circuitOpenUntil = Math.max(D1_SHIELD.circuitOpenUntil, now + D1_SHIELD_COOLDOWN_MS);
+  D1_SHIELD.lastQuotaErr = String((err && err.message) || err || 'quota').slice(0, 120);
+}
+function d1TelemetryAllowed(env, now, weight = 1) {
+  if (env && String(env.D1_TELEMETRY_SHED || '') === '1') { D1_SHIELD.telemetryShed++; return false; }
+  if (now < D1_SHIELD.circuitOpenUntil) { D1_SHIELD.telemetryShed++; return false; }
+  if (!D1_SHIELD.winAt || now - D1_SHIELD.winAt >= 60e3) { D1_SHIELD.winAt = now; D1_SHIELD.telemetryWritesWin = 0; }
+  const rawBudget = env && env.D1_TELEMETRY_BUDGET_PER_MIN !== undefined ? Number(env.D1_TELEMETRY_BUDGET_PER_MIN) : 120;
+  const budget = Number.isFinite(rawBudget) && rawBudget >= 0 ? rawBudget : 120;
+  if (D1_SHIELD.telemetryWritesWin + weight > budget) { D1_SHIELD.telemetryShed++; return false; }
+  D1_SHIELD.telemetryWritesWin += weight;
+  D1_SHIELD.telemetryWritesTotal += weight;
+  return true;
+}
+function d1ShieldSnapshot(env, now) {
+  return {
+    presenceMode: env && env.PRESENCE ? 'durable_object' : 'd1_fallback',
+    telemetryWritesWin: D1_SHIELD.telemetryWritesWin,
+    telemetryWritesTotal: D1_SHIELD.telemetryWritesTotal,
+    telemetryShed: D1_SHIELD.telemetryShed,
+    rateMemHits: D1_SHIELD.rateMemHits,
+    playStatsCoalesced: D1_SHIELD.playStatsCoalesced,
+    presenceDoHits: D1_SHIELD.presenceDoHits,
+    presenceD1Coalesced: D1_SHIELD.presenceD1Coalesced,
+    circuitOpen: now < D1_SHIELD.circuitOpenUntil,
+    circuitOpenUntil: D1_SHIELD.circuitOpenUntil,
+    lastQuotaErr: D1_SHIELD.lastQuotaErr,
+    uptimeSec: Math.max(0, Math.floor((now - D1_SHIELD.startedAt) / 1000)),
+  };
+}
+
 /* ---------- 请求编号、慢请求 ----------
  * 每个回应都带 X-Request-Id（8 位），服务器出错时错误信息里也带上，玩家报问题时说这个编号就能在「错误」页找到。
  * 超过 SLOW_MS 的请求按“方法 + 路径”合成一行记进 errs（kind = slow），记最慢一次和总耗时。
@@ -89,8 +143,10 @@ function tagged(res, request, url, env, ctx, rid, t0) {
   const out = new Response(res.body, res);
   out.headers.set('X-Request-Id', rid);
   const ms = Date.now() - t0;
-  if (ms >= SLOW_MS && env.DB) {
-    const p = errRecord(env, 'slow', { msg: request.method + ' ' + url.pathname.replace(/\d+/g, ':n'), meta: { status: res.status, rid }, ms }, Date.now()).catch(() => {});
+  const now = Date.now();
+  if (ms >= SLOW_MS && env.DB && d1TelemetryAllowed(env, now, 1)) {
+    const p = errRecord(env, 'slow', { msg: request.method + ' ' + url.pathname.replace(/\d+/g, ':n'), meta: { status: res.status, rid }, ms }, now)
+      .catch(e => { if (d1QuotaError(e)) d1ShieldTrip(e, Date.now()); });
     if (ctx && ctx.waitUntil) ctx.waitUntil(p);
   }
   return out;
@@ -477,6 +533,25 @@ async function hit(env, k, limit, windowMs, now) {
 async function peek(env, k, now) {
   const r = await env.DB.prepare('SELECT n, reset FROM rate WHERE k = ?').bind(k).first();
   return r && r.reset > now ? r.n : 0;
+}
+// 高频只读与遥测接口的内存限速（零 D1 写入；登录、注册、武库、存档仍走上面的 D1 限速）
+const MEM_RATE = new Map();
+const MEM_RATE_MAX = 8192;
+function hitMem(k, limit, windowMs, now) {
+  D1_SHIELD.rateMemHits++;
+  if (MEM_RATE.size > 4096) {
+    for (const [mk, mv] of MEM_RATE) { if (mv.reset <= now) MEM_RATE.delete(mk); }
+    while (MEM_RATE.size >= MEM_RATE_MAX) {
+      const first = MEM_RATE.keys().next().value;
+      if (first === undefined) break;
+      MEM_RATE.delete(first);
+    }
+  }
+  let e = MEM_RATE.get(k);
+  if (!e || e.reset <= now) e = { n: 1, reset: now + windowMs };
+  else e.n += 1;
+  MEM_RATE.set(k, e);
+  return e.n <= limit;
 }
 const clientIp = request => (request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown').split(',')[0].trim().slice(0, 64);
 
@@ -1708,7 +1783,7 @@ async function handleAdmin(env, request, path, now, ip) {
       env.DB.prepare("SELECT CAST((created_at / 86400000) AS INTEGER) AS d, COUNT(*) AS n FROM users WHERE created_at > ? AND COALESCE(password_algo, '') != 'ai-bot-locked' GROUP BY d ORDER BY d").bind(now - 7 * DAY_MS).all(),
       env.DB.prepare("SELECT CAST((at / 86400000) AS INTEGER) AS d, COALESCE(SUM(CASE WHEN ink1 > ink0 THEN ink1 - ink0 ELSE 0 END), 0) AS inkIn, COALESCE(SUM(CASE WHEN ink0 > ink1 THEN ink0 - ink1 ELSE 0 END), 0) AS inkOut FROM econ_log WHERE at > ? GROUP BY d ORDER BY d").bind(now - 7 * DAY_MS).all(),
       env.DB.prepare("SELECT detail FROM econ_log WHERE act IN ('open', 'openAll') AND ok = 1 AND at > ? LIMIT 1000").bind(now - 7 * DAY_MS).all(),
-      one("SELECT COUNT(*) AS online, COALESCE(SUM(st = 'match'), 0) AS playing, COALESCE(SUM(st = 'queue'), 0) AS waiting FROM presence WHERE seen > ?", now - PRESENCE_WINDOW),
+      presenceCounts(env, now),
     ]);
     const signups7d = (signups && signups.results || []).map(r => r.n);
     const inkFlow7d = (inkFlow7 && inkFlow7.results || []).map(r => ({ d: r.d, inkIn: r.inkIn || 0, inkOut: r.inkOut || 0 }));
@@ -1732,6 +1807,7 @@ async function handleAdmin(env, request, path, now, ip) {
       online: (pres && pres.online) || 0,
       playing: (pres && pres.playing) || 0,
       waiting: (pres && pres.waiting) || 0,
+      d1Shield: d1ShieldSnapshot(env, now),
       cfgId: CFG_CACHE.id,
     });
   }
@@ -2435,8 +2511,7 @@ async function handleAdmin(env, request, path, now, ip) {
       const r = await env.DB.prepare('DELETE FROM rate').run();
       deleted = (r && r.meta && r.meta.changes) || 0;
     } else if (target === 'presence') {
-      const r = await env.DB.prepare('DELETE FROM presence WHERE seen < ?').bind(now - PRESENCE_WINDOW).run();
-      deleted = (r && r.meta && r.meta.changes) || 0;
+      deleted = await presencePrune(env, now);
     } else if (target === 'auth_log_30d') {
       const r = await env.DB.prepare('DELETE FROM auth_log WHERE at < ?').bind(now - 30 * DAY_MS).run();
       deleted = (r && r.meta && r.meta.changes) || 0;
@@ -2502,6 +2577,8 @@ function adminPage() {
 //   2. 错误记录：网页报上来的错误先去掉个人信息（errScrub），按签名合并计数
 //   3. 在线人数：每个访客按 IP 的哈希记一次心跳
 //   4. 匿名游玩统计：不存名字、账号、IP，只记每天人数、留存、各模式开局数
+const CLEANUP_INTERVAL_MS = 30 * 60e3;
+let lastCleanupAt = 0;
 async function cleanup(env, now) {
   await env.DB.batch([
     env.DB.prepare('DELETE FROM errs WHERE last_at < ?').bind(now - 30 * DAY_MS),                              // 错误记录留 30 天
@@ -2553,33 +2630,151 @@ async function errRecord(env, kind, e, now) {
 async function errReport(env, request, ip, now) {
   const txt = await request.text().catch(() => '');
   if (txt.length > 8000) return error('请求太大', 413);
-  if (!(await hit(env, 'err:' + ip, 30, 3600e3, now)) || !(await hit(env, 'err:*', 2000, 3600e3, now))) return json({ ok: true, kept: false });
+  if (!hitMem('err:' + ip, 30, 3600e3, now) || !hitMem('err:*', 2000, 3600e3, now)) return json({ ok: true, kept: false });
   const body = parseObj(txt);
   if (!body || !ERR_KINDS.includes(body.k) || typeof body.msg !== 'string') return error('格式不对');
-  await errRecord(env, body.k, body, now);
+  if (!d1TelemetryAllowed(env, now, 1)) return json({ ok: true, kept: false, shed: true });
+  try {
+    await errRecord(env, body.k, body, now);
+  } catch (e) {
+    if (d1QuotaError(e)) { d1ShieldTrip(e, now); return json({ ok: true, kept: false, shed: true }); }
+    throw e;
+  }
   return json({ ok: true, kept: true });
 }
 
 /* ---------- 在线人数 ----------
  * 大厅名单靠浏览器之间直连，连不上别人的网页（有的防火墙、网络会挡 WebRTC）就只能看到自己，所以人数以这里为准。
- * 每个标签页带一个随机 sid（存在 sessionStorage，刷新还是同一个），30 秒报一次状态：menu 在逛、queue 在匹配、match 在联机对战。
+ * 每个标签页带一个随机 sid（存在 sessionStorage，刷新还是同一个），优先由 PresenceHub Durable Object 在内存里聚合（零 D1 写入），
+ * 未绑定 PRESENCE 时自动回退到 D1 presence 表并做同状态写入合并。
  * 关网页时发 bye 立刻下线。同一个 IP 最多算 PRESENCE_PER_IP 个，防止有人刷人数（同一个校园网、家里几台机器都还够用）。 */
 const PRESENCE_WINDOW = 90e3, PRESENCE_PER_IP = 16, PRESENCE_ST = ['menu', 'queue', 'match'];
+const PRESENCE_EVERY_SEC = 45, PRESENCE_D1_COALESCE_MS = 30e3;
 async function ipTag(ip) {
   const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('renying-presence:' + ip));
   return Array.from(new Uint8Array(d).slice(0, 8)).map(b => b.toString(16).padStart(2, '0')).join('');
+}
+export class PresenceHub {
+  constructor(ctx, env) {
+    this.ctx = ctx;
+    this.env = env;
+    this.sessions = new Map();
+  }
+  prune(now) {
+    const cut = now - PRESENCE_WINDOW;
+    let deleted = 0;
+    for (const [sid, rec] of this.sessions) {
+      if (rec.seen <= cut) { this.sessions.delete(sid); deleted++; }
+    }
+    return deleted;
+  }
+  counts(now) {
+    this.prune(now);
+    let online = 0, playing = 0, waiting = 0;
+    for (const rec of this.sessions.values()) {
+      online++;
+      if (rec.st === 'match') playing++;
+      else if (rec.st === 'queue') waiting++;
+    }
+    return { online, playing, waiting };
+  }
+  async fetch(request) {
+    const url = new URL(request.url);
+    const now = Date.now();
+    if (url.pathname === '/counts' && request.method === 'GET') {
+      const c = this.counts(now);
+      return json({ ok: true, ...c, mode: 'do' });
+    }
+    if (url.pathname === '/prune' && request.method === 'POST') {
+      return json({ ok: true, deleted: this.prune(now) });
+    }
+    if (url.pathname === '/beat' && request.method === 'POST') {
+      const body = await readBody(request) || {};
+      const sid = String(body.sid || '');
+      const tag = String(body.ip || '');
+      const ts = Number.isFinite(+body.now) && +body.now > 0 ? +body.now : now;
+      if (!/^[a-z0-9]{12,40}$/.test(sid) || !tag) return error('sid 不对');
+      this.prune(ts);
+      if (body.bye) {
+        const prev = this.sessions.get(sid);
+        if (prev && prev.ip === tag) this.sessions.delete(sid);
+      } else {
+        const st = PRESENCE_ST.includes(body.st) ? body.st : 'menu';
+        const prev = this.sessions.get(sid);
+        if (prev && prev.ip !== tag) return error('sid 不对');
+        if (prev) {
+          prev.st = st; prev.seen = ts;
+        } else {
+          let ipCount = 0;
+          for (const rec of this.sessions.values()) { if (rec.ip === tag) ipCount++; }
+          if (ipCount < PRESENCE_PER_IP) this.sessions.set(sid, { ip: tag, st, seen: ts });
+        }
+      }
+      const c = this.counts(ts);
+      return json({
+        ok: true,
+        online: c.online,
+        playing: c.playing,
+        waiting: c.waiting,
+        humanOnline: c.online,
+        humanPlaying: c.playing,
+        humanWaiting: c.waiting,
+        every: PRESENCE_EVERY_SEC,
+        mode: 'do',
+      });
+    }
+    return error('Not found', 404);
+  }
+}
+async function presenceCounts(env, now) {
+  if (env && env.PRESENCE) {
+    try {
+      const stub = env.PRESENCE.get(env.PRESENCE.idFromName('global'));
+      const r = await stub.fetch('https://presence.internal/counts');
+      if (r.ok) {
+        const d = await r.json();
+        if (d && typeof d.online === 'number') return { online: d.online, playing: d.playing || 0, waiting: d.waiting || 0 };
+      }
+    } catch (e) {}
+  }
+  const c = await env.DB.prepare("SELECT COUNT(*) AS online, COALESCE(SUM(st = 'match'), 0) AS playing, COALESCE(SUM(st = 'queue'), 0) AS waiting FROM presence WHERE seen > ?").bind(now - PRESENCE_WINDOW).first();
+  return { online: (c && c.online) || 0, playing: (c && c.playing) || 0, waiting: (c && c.waiting) || 0 };
+}
+async function presencePrune(env, now) {
+  let deleted = 0;
+  if (env && env.PRESENCE) {
+    try {
+      const stub = env.PRESENCE.get(env.PRESENCE.idFromName('global'));
+      const r = await stub.fetch('https://presence.internal/prune', { method: 'POST' });
+      if (r.ok) { const d = await r.json(); deleted += (d && d.deleted) || 0; }
+    } catch (e) {}
+  }
+  const r = await env.DB.prepare('DELETE FROM presence WHERE seen < ?').bind(now - PRESENCE_WINDOW).run();
+  deleted += (r && r.meta && r.meta.changes) || 0;
+  return deleted;
 }
 async function presence(env, body, ip, now) {
   const sid = String(body.sid || '');
   if (!/^[a-z0-9]{12,40}$/.test(sid)) return error('sid 不对');
   const tag = await ipTag(ip);
+  if (env && env.PRESENCE) {
+    D1_SHIELD.presenceDoHits++;
+    const stub = env.PRESENCE.get(env.PRESENCE.idFromName('global'));
+    return await stub.fetch('https://presence.internal/beat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sid, ip: tag, st: body.st, bye: !!body.bye, now }),
+    });
+  }
   if (body.bye) {
     await env.DB.prepare('DELETE FROM presence WHERE sid = ? AND ip = ?').bind(sid, tag).run();
   } else {
     const st = PRESENCE_ST.includes(body.st) ? body.st : 'menu';
-    const mine = await env.DB.prepare('SELECT (SELECT ip FROM presence WHERE sid = ?1) AS owner, (SELECT COUNT(*) FROM presence WHERE ip = ?2 AND seen > ?3) AS n').bind(sid, tag, now - PRESENCE_WINDOW).first();
+    const mine = await env.DB.prepare('SELECT (SELECT ip FROM presence WHERE sid = ?1) AS owner, (SELECT st FROM presence WHERE sid = ?1) AS prevSt, (SELECT seen FROM presence WHERE sid = ?1) AS prevSeen, (SELECT COUNT(*) FROM presence WHERE ip = ?2 AND seen > ?3) AS n').bind(sid, tag, now - PRESENCE_WINDOW).first();
     if (mine && mine.owner && mine.owner !== tag) return error('sid 不对');   // 别人的 sid：不让顶替
-    if ((mine && mine.owner) || !mine || mine.n < PRESENCE_PER_IP) {
+    if (mine && mine.owner === tag && mine.prevSt === st && now - (mine.prevSeen || 0) < PRESENCE_D1_COALESCE_MS) {
+      D1_SHIELD.presenceD1Coalesced++;
+    } else if ((mine && mine.owner) || !mine || mine.n < PRESENCE_PER_IP) {
       await env.DB.prepare('INSERT INTO presence (sid, ip, st, seen) VALUES (?1, ?2, ?3, ?4) ON CONFLICT(sid) DO UPDATE SET st = ?3, seen = ?4').bind(sid, tag, st, now).run();
     }
   }
@@ -2593,7 +2788,8 @@ async function presence(env, body, ip, now) {
     humanOnline,
     humanPlaying,
     humanWaiting,
-    every: 30
+    every: PRESENCE_EVERY_SEC,
+    mode: 'd1'
   });
 }
 
@@ -2623,21 +2819,38 @@ async function statVid(raw) {
   const d = await crypto.subtle.digest('SHA-256', new TextEncoder().encode('renying-stats:' + raw));
   return Array.from(new Uint8Array(d).slice(0, 12)).map(b => b.toString(16).padStart(2, '0')).join('');
 }
+const PLAY_DAY_SEEN = new Set();
 async function playStats(env, body, ip, now) {
   const raw = String(body.vid || '');
   if (!/^[a-z0-9]{12,40}$/.test(raw)) return error('编号不对');
   const tag = await ipTag(ip);
-  if (!(await hit(env, 'st:' + tag, 120, 3600e3, now)) || !(await hit(env, 'st:*', 20000, 3600e3, now))) return json({ ok: true, kept: false });
+  if (!hitMem('st:' + tag, 120, 3600e3, now) || !hitMem('st:*', 20000, 3600e3, now)) return json({ ok: true, kept: false });
   const ev = (Array.isArray(body.ev) ? body.ev : []).slice(0, 30).filter(statKeyOk);
   const day = statDay(now), vid = await statVid(raw);
   const counts = {};
   for (const k of ev) counts[k] = Math.min(10, (counts[k] || 0) + 1);   // 同一批里同一件事最多算 10 次
-  const st = [
-    env.DB.prepare('INSERT INTO play_visitors (vid, first_day, last_day) VALUES (?1, ?2, ?2) ON CONFLICT(vid) DO UPDATE SET last_day = MAX(last_day, ?2)').bind(vid, day),
-    env.DB.prepare('INSERT OR IGNORE INTO play_days (day, vid) VALUES (?, ?)').bind(day, vid),
-  ];
+  const seenKey = day + ':' + vid;
+  const alreadySeen = PLAY_DAY_SEEN.has(seenKey);
+  const st = [];
+  if (!alreadySeen) {
+    st.push(env.DB.prepare('INSERT INTO play_visitors (vid, first_day, last_day) VALUES (?1, ?2, ?2) ON CONFLICT(vid) DO UPDATE SET last_day = MAX(last_day, ?2)').bind(vid, day));
+    st.push(env.DB.prepare('INSERT OR IGNORE INTO play_days (day, vid) VALUES (?, ?)').bind(day, vid));
+  } else {
+    D1_SHIELD.playStatsCoalesced++;
+  }
   for (const [k, n] of Object.entries(counts)) st.push(env.DB.prepare('INSERT INTO play_counts (day, k, n) VALUES (?1, ?2, ?3) ON CONFLICT(day, k) DO UPDATE SET n = n + ?3').bind(day, k, n));
-  await env.DB.batch(st);
+  if (!st.length) return json({ ok: true, kept: true, coalesced: true });
+  if (!d1TelemetryAllowed(env, now, st.length)) return json({ ok: true, kept: false, shed: true });
+  try {
+    await env.DB.batch(st);
+    if (!alreadySeen) {
+      if (PLAY_DAY_SEEN.size >= 4096) PLAY_DAY_SEEN.clear();
+      PLAY_DAY_SEEN.add(seenKey);
+    }
+  } catch (e) {
+    if (d1QuotaError(e)) { d1ShieldTrip(e, now); return json({ ok: true, kept: false, shed: true }); }
+    throw e;
+  }
   return json({ ok: true, kept: true });
 }
 // 管理网页用：最近 days 天每天的人数、新玩家、留存、各件事的次数
@@ -2689,9 +2902,15 @@ async function aiTrainingIngest(env, body, ip, now) {
   const rows = cleanAiRows(body.rows);
   if (!rows) return error('训练样本格式不对');
   const tag = await ipTag(ip);
-  if (!(await hit(env, 'ait:' + tag, 120, DAY_MS, now)) || !(await hit(env, 'ait:*', 20000, DAY_MS, now))) return json({ ok: true, kept: false, limited: true });
-  const res = await env.DB.prepare('INSERT OR IGNORE INTO ai_training_matches (id, mode, result, rows_json, received_at) VALUES (?, ?, ?, ?, ?)').bind(id, mode, body.result, JSON.stringify(rows), now).run();
-  return json({ ok: true, kept: !!(res && res.meta && res.meta.changes), duplicate: !(res && res.meta && res.meta.changes) });
+  if (!hitMem('ait:' + tag, 120, DAY_MS, now) || !hitMem('ait:*', 20000, DAY_MS, now)) return json({ ok: true, kept: false, limited: true });
+  if (!d1TelemetryAllowed(env, now, 1)) return json({ ok: true, kept: false, shed: true });
+  try {
+    const res = await env.DB.prepare('INSERT OR IGNORE INTO ai_training_matches (id, mode, result, rows_json, received_at) VALUES (?, ?, ?, ?, ?)').bind(id, mode, body.result, JSON.stringify(rows), now).run();
+    return json({ ok: true, kept: !!(res && res.meta && res.meta.changes), duplicate: !(res && res.meta && res.meta.changes) });
+  } catch (e) {
+    if (d1QuotaError(e)) { d1ShieldTrip(e, now); return json({ ok: true, kept: false, shed: true }); }
+    throw e;
+  }
 }
 async function aiTrainingExport(env, after, limit) {
   const rows = (await env.DB.prepare('SELECT rowid AS seq, mode, result, rows_json, received_at FROM ai_training_matches WHERE rowid > ? ORDER BY rowid LIMIT ?').bind(after, limit).all()).results || [];
@@ -3585,8 +3804,9 @@ async function route(request, env, ctx, rid = reqId()) {
         try { banner = row && row.note ? JSON.parse(row.note) : null; } catch (e) {}
         return json({ ok: true, banner });
       }
-      if (Math.random() < 0.02) {
-        const p = cleanup(env, now).catch(() => {});
+      if (now - lastCleanupAt >= CLEANUP_INTERVAL_MS && now >= D1_SHIELD.circuitOpenUntil) {
+        lastCleanupAt = now;
+        const p = cleanup(env, now).catch(e => { if (d1QuotaError(e)) d1ShieldTrip(e, Date.now()); });
         if (ctx && ctx.waitUntil) ctx.waitUntil(p);
       }
       const ip = clientIp(request);
@@ -3594,7 +3814,7 @@ async function route(request, env, ctx, rid = reqId()) {
       // 联机打洞用的 ICE 列表：平时只有 STUN；Even 在 Cloudflare 开了 TURN 并设好 TURN_KEY_ID / TURN_KEY_API_TOKEN 两个 Secret 后，
       // 每次给一份几小时就过期的 TURN 凭据（直连打不通时走中转）。拿 TURN 失败也照样回 STUN，网页不会因此连不上
       if (path === '/api/ice' && request.method === 'GET') {
-        if (!(await hit(env, 'ice:' + ip, 60, 3600e3, now))) return error('请求太频繁了，过一会儿再试', 429);
+        if (!hitMem('ice:' + ip, 60, 3600e3, now)) return error('请求太频繁了，过一会儿再试', 429);
         return json(await iceServers(env));
       }
 
@@ -3772,7 +3992,7 @@ async function route(request, env, ctx, rid = reqId()) {
       if (path === '/api/market' && request.method === 'GET') {
         const auth = await authenticate(env, request);
         if (!auth) return error('未登录或登录已过期，请重新登录', 401);
-        if (!(await hit(env, 'mkt:' + auth.user.id, 60, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        if (!hitMem('mkt:' + auth.user.id, 60, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
         return await handleMarket(env, auth.user.id, String(url.searchParams.get('k') || '').slice(0, 24), now);
       }
 
@@ -3815,7 +4035,7 @@ async function route(request, env, ctx, rid = reqId()) {
 
       // 11. 天魔讨伐：看天魔不用登录；出战、交伤害要云端账号
       if (path === '/api/gboss' && request.method === 'GET') {
-        if (!(await hit(env, 'gbg:' + ip, 120, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        if (!hitMem('gbg:' + ip, 120, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
         const auth = await authenticate(env, request);
         return json(await gbState(env, await gbNow(env, now), auth && auth.user.id, now));
       }
@@ -3830,7 +4050,7 @@ async function route(request, env, ctx, rid = reqId()) {
 
       // 12. 侠客列传的江湖足迹：看不用登录，记要云端账号
       if (path === '/api/saga' && request.method === 'GET') {
-        if (!(await hit(env, 'sgg:' + ip, 120, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        if (!hitMem('sgg:' + ip, 120, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
         const hero = String(url.searchParams.get('hero') || '');
         if (!C.HERO_IDS.includes(hero)) return error('没有这位侠客');
         return json(await sagaFoot(env, hero));
@@ -3845,7 +4065,7 @@ async function route(request, env, ctx, rid = reqId()) {
 
       // 13. 全服肉鸽 · 江湖长卷：看全服进度不用登录（带登录凭证时附上自己的秘卷和能领几节）；领奖要云端账号
       if (path === '/api/world/chron' && request.method === 'GET') {
-        if (!(await hit(env, 'cqg:' + ip, 60, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        if (!hitMem('cqg:' + ip, 60, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
         const auth = await authenticate(env, request);
         return json(await chronGet(env, auth && auth.user.id));
       }
@@ -3857,7 +4077,7 @@ async function route(request, env, ctx, rid = reqId()) {
 
       // 14. 功能开关（不用登录；带登录凭证时 Dev 账号能看到“只开 Dev”的）
       if (path === '/api/flags' && request.method === 'GET') {
-        if (!(await hit(env, 'flg:' + ip, 60, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        if (!hitMem('flg:' + ip, 60, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
         const auth = await authenticate(env, request);
         const user = auth && auth.user;
         return json({ ok: true, flags: await flagsFor(env, user, now), turnstile: (await turnstileOn(env, user, now)) ? String(env.TURNSTILE_SITEKEY) : '' });
@@ -3865,7 +4085,7 @@ async function route(request, env, ctx, rid = reqId()) {
 
       // 13. 排行榜（不用登录）：段位榜是这个赛季打满定级赛的，按段位分排；战绩榜按联机胜场排。被封的号不上榜
       if (path === '/api/leaderboard' && request.method === 'GET') {
-        if (!(await hit(env, 'lbg:' + ip, 30, 60e3, now))) return error('刷新太快了，歇一会儿再试', 429);
+        if (!hitMem('lbg:' + ip, 30, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
         const auth = await authenticate(env, request);
         const kind = url.searchParams.get('k') === 'wins' ? 'wins' : 'rank';
         return json(await leaderboard(env, kind, String(url.searchParams.get('s') || ''), auth && auth.user.id, now));

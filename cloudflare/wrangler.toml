@@ -14,7 +14,7 @@ compatibility_date = "2024-10-01"
 # 免费版每天有额度，超了只是不再记新的日志，不影响 Worker 本身；日志太多时把 head_sampling_rate 调小（0.1 = 只记一成）。
 [observability]
 enabled = true
-head_sampling_rate = 1
+head_sampling_rate = 0.1
 
 # 环境变量：额外允许跨域调用接口的来源（支持 http:// 访问游戏网页时的跨域请求）
 [vars]
@@ -32,9 +32,18 @@ migrations_dir = "migrations"   # 只给 tools/tests/predeploy-check.mjs 找迁�
 name = "WORLD"
 class_name = "WorldLine"
 
+# 全服在线人数聚合：内存 Durable Object，零 D1 写入
+[[durable_objects.bindings]]
+name = "PRESENCE"
+class_name = "PresenceHub"
+
 [[migrations]]
 tag = "v1-world"
 new_sqlite_classes = ["WorldLine"]
+
+[[migrations]]
+tag = "v2-presence"
+new_sqlite_classes = ["PresenceHub"]
 
 # ---------- staging：先在这里试新改动，再上生产 ----------
 # 部署：npx wrangler deploy --env staging（会建一个叫 renying-staging 的独立 Worker，和生产完全分开）。
@@ -56,9 +65,17 @@ migrations_dir = "migrations"   # 同上：只给部署前检查用，不要 wra
 name = "WORLD"
 class_name = "WorldLine"
 
+[[env.staging.durable_objects.bindings]]
+name = "PRESENCE"
+class_name = "PresenceHub"
+
 [[env.staging.migrations]]
 tag = "v1-world"
 new_sqlite_classes = ["WorldLine"]
+
+[[env.staging.migrations]]
+tag = "v2-presence"
+new_sqlite_classes = ["PresenceHub"]
 
 [env.staging.vars]
 CORS_ORIGINS = "http://bigbraindevbros.github.io, https://bigbraindevbros.github.io, http://amfi-disable.github.io, https://amfi-disable.github.io"

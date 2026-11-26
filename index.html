@@ -60004,11 +60004,11 @@ const presUrl = () => (window.CloudSave && CloudSave.getEndpoint ? CloudSave.get
 const presState = () => (M.mode !== 'demo' && M.phase !== 'end') ? 'match' : (mmKind ? 'queue' : 'menu');
 const presLive = () => typeof SOC !== 'undefined' && SOC.state === 'on';
 function presGap() {
-if (typeof document !== 'undefined' && document.hidden) return 60000;
+const srvMs = PRES.srv && Number.isFinite(+PRES.srv.every) ? Math.max(15000, Math.min(120000, +PRES.srv.every * 1000)) : 45000;
+if (typeof document !== 'undefined' && document.hidden) return Math.max(60000, srvMs);
 if (PRES.fail >= 3) return 60000;
-if (presLive()) return 30000;
-if (PRES.burst > Date.now()) return 3000;
-return 10000;
+if (presLive()) return Math.max(45000, srvMs);
+return srvMs;
 }
 function presSchedule(ms) { clearTimeout(PRES.timer); PRES.timer = setTimeout(() => presBeat(), ms); }
 async function presBeat(again) {
@@ -60021,7 +60021,6 @@ try {
 const r = await fetch(presUrl(), { method: 'POST', headers: { 'Content-Type': 'text/plain' }, body: JSON.stringify({ sid: presSid(), st: presState() }), signal: ctl ? ctl.signal : undefined });
 const d = await r.json().catch(() => null);
 if (r.ok && d && typeof d.online === 'number') {
-if (PRES.srv && d.online !== PRES.srv.online) PRES.burst = Date.now() + 30000;   // 人数刚变过：加密一轮
 PRES.srv = d; PRES.at = Date.now(); PRES.fail = 0;
 }
 else if (d && !d.ok && d.error === 'sid 不对') rotate = true;
@@ -60035,7 +60034,7 @@ if (PRES.again) { PRES.again = false; presSchedule(500); } else presSchedule(pre
 }
 function presKick() {
 if (PRES.busy) { PRES.again = true; return; }
-const wait = 2000 - (Date.now() - PRES.last);
+const wait = 5000 - (Date.now() - PRES.last);
 if (wait > 0) { presSchedule(wait); return; }
 presBeat();
 }

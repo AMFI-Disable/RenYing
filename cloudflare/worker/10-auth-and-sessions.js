@@ -291,6 +291,25 @@ async function peek(env, k, now) {
   const r = await env.DB.prepare('SELECT n, reset FROM rate WHERE k = ?').bind(k).first();
   return r && r.reset > now ? r.n : 0;
 }
+// 高频只读与遥测接口的内存限速（零 D1 写入；登录、注册、武库、存档仍走上面的 D1 限速）
+const MEM_RATE = new Map();
+const MEM_RATE_MAX = 8192;
+function hitMem(k, limit, windowMs, now) {
+  D1_SHIELD.rateMemHits++;
+  if (MEM_RATE.size > 4096) {
+    for (const [mk, mv] of MEM_RATE) { if (mv.reset <= now) MEM_RATE.delete(mk); }
+    while (MEM_RATE.size >= MEM_RATE_MAX) {
+      const first = MEM_RATE.keys().next().value;
+      if (first === undefined) break;
+      MEM_RATE.delete(first);
+    }
+  }
+  let e = MEM_RATE.get(k);
+  if (!e || e.reset <= now) e = { n: 1, reset: now + windowMs };
+  else e.n += 1;
+  MEM_RATE.set(k, e);
+  return e.n <= limit;
+}
 const clientIp = request => (request.headers.get('CF-Connecting-IP') || request.headers.get('X-Forwarded-For') || 'unknown').split(',')[0].trim().slice(0, 64);
 
 /* ---------- 处罚：第一次警告，第二次封 1 天，第三次永久 ---------- */

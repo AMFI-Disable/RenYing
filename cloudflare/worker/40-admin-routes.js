@@ -155,7 +155,7 @@ async function handleAdmin(env, request, path, now, ip) {
       env.DB.prepare("SELECT CAST((created_at / 86400000) AS INTEGER) AS d, COUNT(*) AS n FROM users WHERE created_at > ? AND COALESCE(password_algo, '') != 'ai-bot-locked' GROUP BY d ORDER BY d").bind(now - 7 * DAY_MS).all(),
       env.DB.prepare("SELECT CAST((at / 86400000) AS INTEGER) AS d, COALESCE(SUM(CASE WHEN ink1 > ink0 THEN ink1 - ink0 ELSE 0 END), 0) AS inkIn, COALESCE(SUM(CASE WHEN ink0 > ink1 THEN ink0 - ink1 ELSE 0 END), 0) AS inkOut FROM econ_log WHERE at > ? GROUP BY d ORDER BY d").bind(now - 7 * DAY_MS).all(),
       env.DB.prepare("SELECT detail FROM econ_log WHERE act IN ('open', 'openAll') AND ok = 1 AND at > ? LIMIT 1000").bind(now - 7 * DAY_MS).all(),
-      one("SELECT COUNT(*) AS online, COALESCE(SUM(st = 'match'), 0) AS playing, COALESCE(SUM(st = 'queue'), 0) AS waiting FROM presence WHERE seen > ?", now - PRESENCE_WINDOW),
+      presenceCounts(env, now),
     ]);
     const signups7d = (signups && signups.results || []).map(r => r.n);
     const inkFlow7d = (inkFlow7 && inkFlow7.results || []).map(r => ({ d: r.d, inkIn: r.inkIn || 0, inkOut: r.inkOut || 0 }));
@@ -179,6 +179,7 @@ async function handleAdmin(env, request, path, now, ip) {
       online: (pres && pres.online) || 0,
       playing: (pres && pres.playing) || 0,
       waiting: (pres && pres.waiting) || 0,
+      d1Shield: d1ShieldSnapshot(env, now),
       cfgId: CFG_CACHE.id,
     });
   }
@@ -882,8 +883,7 @@ async function handleAdmin(env, request, path, now, ip) {
       const r = await env.DB.prepare('DELETE FROM rate').run();
       deleted = (r && r.meta && r.meta.changes) || 0;
     } else if (target === 'presence') {
-      const r = await env.DB.prepare('DELETE FROM presence WHERE seen < ?').bind(now - PRESENCE_WINDOW).run();
-      deleted = (r && r.meta && r.meta.changes) || 0;
+      deleted = await presencePrune(env, now);
     } else if (target === 'auth_log_30d') {
       const r = await env.DB.prepare('DELETE FROM auth_log WHERE at < ?').bind(now - 30 * DAY_MS).run();
       deleted = (r && r.meta && r.meta.changes) || 0;

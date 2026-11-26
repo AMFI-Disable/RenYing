@@ -78,6 +78,60 @@ async function withCors(request, env, ctx) {
   return out;
 }
 
+/* ---------- D1 写入保护与遥测统计 ----------
+ * 高频读接口限速改走内存，在线心跳改走 PresenceHub Durable Object；
+ * 遥测类写入（游玩统计、客户端报错、慢请求、AI 样本）受每分钟预算与 D1 配额熔断器保护，
+ * 避免非核心写入耗尽免费版 D1 每日 10 万行写入额度，同时保证登录、存档和武库交易始终可用。 */
+const D1_SHIELD_COOLDOWN_MS = 5 * 60e3;
+const D1_SHIELD = {
+  startedAt: Date.now(),
+  winAt: 0,
+  telemetryWritesWin: 0,
+  telemetryWritesTotal: 0,
+  telemetryShed: 0,
+  rateMemHits: 0,
+  playStatsCoalesced: 0,
+  presenceDoHits: 0,
+  presenceD1Coalesced: 0,
+  circuitOpenUntil: 0,
+  lastQuotaErr: '',
+};
+function d1QuotaError(err) {
+  const msg = String((err && (err.message || err.cause || err)) || '');
+  return /D1_ERROR|quota|limit exceeded|too many requests|exceeded.*writes|database.*overload/i.test(msg);
+}
+function d1ShieldTrip(err, now) {
+  D1_SHIELD.circuitOpenUntil = Math.max(D1_SHIELD.circuitOpenUntil, now + D1_SHIELD_COOLDOWN_MS);
+  D1_SHIELD.lastQuotaErr = String((err && err.message) || err || 'quota').slice(0, 120);
+}
+function d1TelemetryAllowed(env, now, weight = 1) {
+  if (env && String(env.D1_TELEMETRY_SHED || '') === '1') { D1_SHIELD.telemetryShed++; return false; }
+  if (now < D1_SHIELD.circuitOpenUntil) { D1_SHIELD.telemetryShed++; return false; }
+  if (!D1_SHIELD.winAt || now - D1_SHIELD.winAt >= 60e3) { D1_SHIELD.winAt = now; D1_SHIELD.telemetryWritesWin = 0; }
+  const rawBudget = env && env.D1_TELEMETRY_BUDGET_PER_MIN !== undefined ? Number(env.D1_TELEMETRY_BUDGET_PER_MIN) : 120;
+  const budget = Number.isFinite(rawBudget) && rawBudget >= 0 ? rawBudget : 120;
+  if (D1_SHIELD.telemetryWritesWin + weight > budget) { D1_SHIELD.telemetryShed++; return false; }
+  D1_SHIELD.telemetryWritesWin += weight;
+  D1_SHIELD.telemetryWritesTotal += weight;
+  return true;
+}
+function d1ShieldSnapshot(env, now) {
+  return {
+    presenceMode: env && env.PRESENCE ? 'durable_object' : 'd1_fallback',
+    telemetryWritesWin: D1_SHIELD.telemetryWritesWin,
+    telemetryWritesTotal: D1_SHIELD.telemetryWritesTotal,
+    telemetryShed: D1_SHIELD.telemetryShed,
+    rateMemHits: D1_SHIELD.rateMemHits,
+    playStatsCoalesced: D1_SHIELD.playStatsCoalesced,
+    presenceDoHits: D1_SHIELD.presenceDoHits,
+    presenceD1Coalesced: D1_SHIELD.presenceD1Coalesced,
+    circuitOpen: now < D1_SHIELD.circuitOpenUntil,
+    circuitOpenUntil: D1_SHIELD.circuitOpenUntil,
+    lastQuotaErr: D1_SHIELD.lastQuotaErr,
+    uptimeSec: Math.max(0, Math.floor((now - D1_SHIELD.startedAt) / 1000)),
+  };
+}
+
 /* ---------- 请求编号、慢请求 ----------
  * 每个回应都带 X-Request-Id（8 位），服务器出错时错误信息里也带上，玩家报问题时说这个编号就能在「错误」页找到。
  * 超过 SLOW_MS 的请求按“方法 + 路径”合成一行记进 errs（kind = slow），记最慢一次和总耗时。
@@ -89,8 +143,10 @@ function tagged(res, request, url, env, ctx, rid, t0) {
   const out = new Response(res.body, res);
   out.headers.set('X-Request-Id', rid);
   const ms = Date.now() - t0;
-  if (ms >= SLOW_MS && env.DB) {
-    const p = errRecord(env, 'slow', { msg: request.method + ' ' + url.pathname.replace(/\d+/g, ':n'), meta: { status: res.status, rid }, ms }, Date.now()).catch(() => {});
+  const now = Date.now();
+  if (ms >= SLOW_MS && env.DB && d1TelemetryAllowed(env, now, 1)) {
+    const p = errRecord(env, 'slow', { msg: request.method + ' ' + url.pathname.replace(/\d+/g, ':n'), meta: { status: res.status, rid }, ms }, now)
+      .catch(e => { if (d1QuotaError(e)) d1ShieldTrip(e, Date.now()); });
     if (ctx && ctx.waitUntil) ctx.waitUntil(p);
   }
   return out;

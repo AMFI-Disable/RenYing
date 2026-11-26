@@ -41,6 +41,9 @@ ok(/^\d{4}-\d{2}-\d{2}$/.test(val(prod, 'compatibility_date') || ''), 'compatibi
 const dbId = val(prod, 'database_id');
 ok(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(dbId || '') && !/^0{8}-/.test(dbId), '生产 database_id 是真实的 id，不是占位', dbId);
 ok(/^\[observability\]\s*\nenabled\s*=\s*true/m.test(prod), '生产打开了 [observability]');
+const sampM = prod.match(/^head_sampling_rate\s*=\s*([0-9.]+)/m);
+ok(sampM && +sampM[1] > 0 && +sampM[1] <= 0.25, '生产日志采样率已收紧至 <= 0.25', sampM && sampM[1]);
+ok(/name\s*=\s*"PRESENCE"[\s\S]*?class_name\s*=\s*"PresenceHub"/.test(prod), '生产配置绑定了 PresenceHub Durable Object');
 const migDir = val(prod, 'migrations_dir');
 const migPath = migDir && path.join(CF, migDir);
 ok(migPath && fs.statSync(migPath, { throwIfNoEntry: false })?.isDirectory(), 'migrations_dir 目录存在', migDir);
@@ -79,7 +82,9 @@ function makeD1() {
 }
 const ADMIN = 'predeploy-admin-0123456789abcdef';
 const ENV = { DB: makeD1(), ADMIN_SECRET: ADMIN };   // 故意不给 WORLD：线上没部署开放世界时也不能崩
-const { default: worker } = await import(pathToFileURL(FILE));
+const mod = await import(pathToFileURL(FILE));
+const worker = mod.default;
+const { PresenceHub } = mod;
 let ipN = 0;
 const pend = [];   // Worker 交给 ctx.waitUntil 的活（记慢请求、记服务器错误）：查结果前先等它们做完
 const settle = async () => { while (pend.length) await Promise.all(pend.splice(0)); };
@@ -211,6 +216,78 @@ section('关键接口');
 
   ok((await call('POST', '/api/logout', { token: tok })).status === 200, '退出登录');
   ok((await call('GET', '/api/profile', { token: tok })).status === 401, '退出后旧 token 失效');
+}
+
+/* ---------- 4. D1 配额护盾与 PresenceHub Durable Object ---------- */
+section('D1 配额护盾与 PresenceHub');
+{
+  ok(typeof PresenceHub === 'function', 'Worker 导出 PresenceHub Durable Object');
+  let d1Writes = 0;
+  const countD1 = base => ({
+    ...base,
+    prepare: sql => {
+      const isWrite = /^\s*(INSERT|UPDATE|DELETE|REPLACE)\b/i.test(sql);
+      const wrap = st => ({
+        bind: (...a) => wrap(st.bind(...a)),
+        first: async c => { if (isWrite) d1Writes++; return st.first(c); },
+        all: async () => { if (isWrite) d1Writes++; return st.all(); },
+        run: async () => { if (isWrite) d1Writes++; return st.run(); },
+        sql: st.sql, params: st.params,
+      });
+      return wrap(base.prepare(sql));
+    },
+    batch: async list => {
+      for (const s of list) if (/^\s*(INSERT|UPDATE|DELETE|REPLACE)\b/i.test(s.sql)) d1Writes++;
+      return base.batch(list);
+    },
+  });
+  const hub = new PresenceHub({}, {});
+  const doEnv = {
+    ...ENV,
+    DB: countD1(ENV.DB),
+    PRESENCE: {
+      idFromName: name => ({ name }),
+      get: () => ({ fetch: (url, init) => hub.fetch(new Request(url, init)) }),
+    },
+  };
+
+  // 1) PresenceHub 心跳、状态统计、顶替拦截、下线全部 0 D1 写入
+  d1Writes = 0;
+  const p1 = await call('POST', '/api/presence', { body: { sid: 'sid000000000001', st: 'match' }, headers: { 'CF-Connecting-IP': '10.8.1.1' }, env: doEnv });
+  const p2 = await call('POST', '/api/presence', { body: { sid: 'sid000000000002', st: 'queue' }, headers: { 'CF-Connecting-IP': '10.8.1.2' }, env: doEnv });
+  const hijack = await call('POST', '/api/presence', { body: { sid: 'sid000000000001', st: 'menu' }, headers: { 'CF-Connecting-IP': '10.8.1.9' }, env: doEnv });
+  ok(p1.status === 200 && p1.json.online === 1 && p1.json.playing === 1 && p1.json.mode === 'do', 'PresenceHub 聚合首条心跳并标记 do 模式', p1.text);
+  ok(p2.status === 200 && p2.json.online === 2 && p2.json.playing === 1 && p2.json.waiting === 1, 'PresenceHub 正确聚合多人状态', p2.text);
+  ok(hijack.status === 400, 'PresenceHub 拒绝异 IP 顶替 sid', hijack.status);
+  const adm = await call('GET', '/api/admin/stats', { token: ADMIN, env: doEnv });
+  ok(adm.status === 200 && adm.json.online === 2 && adm.json.d1Shield && adm.json.d1Shield.presenceMode === 'durable_object', '管理总览从 PresenceHub 读取在线人数并输出 d1Shield 指标', adm.text.slice(0, 220));
+  const bye = await call('POST', '/api/presence', { body: { sid: 'sid000000000001', bye: true }, headers: { 'CF-Connecting-IP': '10.8.1.1' }, env: doEnv });
+  ok(bye.status === 200 && bye.json.online === 1 && bye.json.playing === 0, 'PresenceHub 收到 bye 立刻下线', bye.text);
+  ok(d1Writes === 0, 'PresenceHub 心跳与管理统计全程 0 次 D1 写入', d1Writes);
+
+  // 2) 高频只读接口走内存限速，0 次 D1 写入
+  d1Writes = 0;
+  const flg = await call('GET', '/api/flags', { env: doEnv });
+  const lb = await call('GET', '/api/leaderboard', { env: doEnv });
+  ok(flg.status === 200 && lb.status === 200 && d1Writes === 0, '高频只读接口 /api/flags 与 /api/leaderboard 全程 0 次 D1 写入', d1Writes);
+
+  // 3) 遥测预算耗尽时平滑降载，核心接口不受影响
+  const shedEnv = { ...doEnv, D1_TELEMETRY_BUDGET_PER_MIN: '0' };
+  d1Writes = 0;
+  const stShed = await call('POST', '/api/stats', { body: { vid: 'vid000000000001', ev: ['open'] }, env: shedEnv });
+  const errShed = await worker.fetch(new Request('https://w.test/api/err', { method: 'POST', headers: { 'CF-Connecting-IP': '10.8.2.1', 'Content-Type': 'text/plain' }, body: JSON.stringify({ k: 'client', msg: 'shed-test' }) }), shedEnv, { waitUntil() {} });
+  const errShedJson = await errShed.json();
+  ok(stShed.status === 200 && stShed.json.shed === true && errShedJson.shed === true && d1Writes === 0, 'D1 遥测预算为 0 时平滑降载且 0 次 D1 写入', JSON.stringify({ st: stShed.json, err: errShedJson, d1Writes }));
+  ok((await call('GET', '/api/health', { env: shedEnv })).status === 200, '遥测降载时核心健康检查仍正常');
+
+  // 4) 未绑定 PRESENCE 时自动回退到 D1 并合并同状态心跳写入
+  const d1OnlyEnv = { ...ENV, DB: countD1(ENV.DB) };
+  d1Writes = 0;
+  const f1 = await call('POST', '/api/presence', { body: { sid: 'sidfallback0001', st: 'menu' }, headers: { 'CF-Connecting-IP': '10.8.3.1' }, env: d1OnlyEnv });
+  const w1 = d1Writes;
+  const f2 = await call('POST', '/api/presence', { body: { sid: 'sidfallback0001', st: 'menu' }, headers: { 'CF-Connecting-IP': '10.8.3.1' }, env: d1OnlyEnv });
+  const w2 = d1Writes;
+  ok(f1.status === 200 && f1.json.mode === 'd1' && f2.status === 200 && w1 === 1 && w2 === 1, '无 PRESENCE 绑定时回退 D1 并合并 30 秒内同状态写入', JSON.stringify({ w1, w2, f2: f2.json }));
 }
 
 console.log(`\n${pass} 项通过，${fail} 项失败（${path.relative(ROOT, FILE)}）`);
