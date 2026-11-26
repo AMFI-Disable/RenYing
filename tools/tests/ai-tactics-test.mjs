@@ -34,11 +34,14 @@ const result = JSON.parse(env.run(`JSON.stringify((() => {
   flagAI[0].dropped = true;
   flagAI[0].x = C.x + 80;
   const returnsOwnFlag = ctfObjective(C, B)?.x === flagAI[0].x;
-  return { ids, profiles, signature, build, hpTactic, chaosAdaptation, mayhemThreshold, seeksEnemyFlag, takesFlagHome, returnsOwnFlag };
+  const cujuAll1v1 = ids.every(id => !!(typeof resolveHeroAI === 'function' && resolveHeroAI(id, 'cuju', '1v1')));
+  const cujuAll2v2 = ids.every(id => !!(typeof resolveHeroAI === 'function' && resolveHeroAI(id, 'cuju', '2v2')));
+  return { ids, profiles, cujuAll1v1, cujuAll2v2, signature, build, hpTactic, chaosAdaptation, mayhemThreshold, seeksEnemyFlag, takesFlagHome, returnsOwnFlag };
 })())`));
 
 const checks = [
   ['all heroes have tactical profiles and the trainer uses roster order', result.profiles && JSON.stringify(result.ids) === JSON.stringify(HEROES)],
+  ['all 20 heroes have dedicated Cuju AI hooks for 1v1 and 2v2', result.cujuAll1v1 && result.cujuAll2v2],
   ['CTF AI seeks, captures and returns flags', result.seeksEnemyFlag && result.takesFlagHome && result.returnsOwnFlag],
   ['tower AI favors its hero signature scroll', result.signature],
   ['tower AI builds around owned scroll synergies', result.build],

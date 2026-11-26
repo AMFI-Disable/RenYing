@@ -60,7 +60,8 @@ const t0 = Date.now();
 const pool = new Pool(os.cpus().length);
 const stepResults = [];
 
-console.log(`===== RenYing AI Difficulty Ladder Benchmark (n=${N}, ${144 * N} matches per tier step) =====\n`);
+const matchesPerTier = HEROES.length * HEROES.length * N;
+console.log(`===== RenYing AI Difficulty Ladder Benchmark (n=${N}, ${matchesPerTier} matches per tier step, ${HEROES.length}x${HEROES.length} roster) =====\n`);
 
 for (let i = 0; i < STEP_PAIRS.length; i++) {
   const pair = STEP_PAIRS[i];
@@ -90,8 +91,8 @@ const lines = [
   '',
   '> 本报告由 `node tools/ai/ai-ladder-report.mjs` 及 GitHub Actions (`ai-ladder-audit.yml`) 自动实测生成，记录每个 AI 难度等级对阵**下一级难度（Next Best Difficulty）**的全角色交叉对弈胜率。',
   '',
-  `- **对局规模**: 每组相邻难度对阵 **${144 * N} 场**（12 × 12 全英雄交叉匹配，先手/后手各半，固定随机种子对齐）`,
-  `- **总模拟场次**: **${144 * N * STEP_PAIRS.length} 场**（物理引擎 120Hz 完整帧模拟）`,
+  `- **对局规模**: 每组相邻难度对阵 **${matchesPerTier} 场**（${HEROES.length} × ${HEROES.length} 全英雄交叉匹配，先手/后手各半，固定随机种子对齐）`,
+  `- **总模拟场次**: **${matchesPerTier * STEP_PAIRS.length} 场**（物理引擎 120Hz 完整帧模拟）`,
   '',
   '## 1. 相邻难度阶梯总胜率 (Tier Versus Next Best Tier)',
   '',
