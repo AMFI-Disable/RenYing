@@ -1308,3 +1308,67 @@
   overscroll-behavior: contain;
 }
 
+/* Match Review 2.0, Keyframe Scrubber & Replay Codes (#55) */
+.rp-code-box {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(15, 22, 36, 0.72);
+  border: 1px solid rgba(233, 196, 106, 0.28);
+}
+.rp-code-box input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(0, 0, 0, 0.35);
+  color: #efe8d8;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 12px;
+}
+.rp-scrub-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 170px;
+}
+.rp-scrub-wrap input[type="range"] {
+  width: 115px;
+  accent-color: #e9c46a;
+}
+#rpTime {
+  font-size: 11px;
+  font-variant-numeric: tabular-nums;
+  color: rgba(239, 232, 216, 0.82);
+  white-space: nowrap;
+}
+.rp-markers,
+.er-tl-pills {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  align-items: center;
+}
+.rp-mk,
+.er-tl-pill {
+  padding: 2px 7px;
+  font-size: 11px;
+  border-radius: 999px;
+  border: 1px solid rgba(233, 196, 106, 0.35);
+  background: rgba(233, 196, 106, 0.12);
+  color: #efe8d8;
+  cursor: pointer;
+}
+.rp-mk.k-guard_break,
+.er-tl-pill.k-guard_break,
+.rp-mk.k-trade,
+.er-tl-pill.k-trade { border-color: rgba(74, 222, 128, 0.5); background: rgba(74, 222, 128, 0.14); }
+.rp-mk.k-whiff,
+.er-tl-pill.k-whiff,
+.rp-mk.k-pressure,
+.er-tl-pill.k-pressure { border-color: rgba(248, 113, 113, 0.5); background: rgba(248, 113, 113, 0.14); }
+

@@ -6,6 +6,10 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+### Added
+
+- **Match Review 2.0, Keyframe Replay Scrubbing & Shareable Replay Codes (#55) (`src/game/02-combat/11-loop-03-replay.js`, `src/page.html`, `src/styles/80-studio-display-and-overhaul.css`, `src/data/30-ui-copy-02-tasks-and-panels.js`, `src/data/30-ui-copy-20-gaps.js`, `tools/tests/combat/80-overhaul-systems.mjs`, `index.html`, `renying-offline.html`)**: added periodic replay keyframe state caching (`RP_KEYFRAME_EVERY = 120` frames via `capState()` / `restState()`) and `replaySeek(targetFrame)` for instant forward/backward timeline scrubbing (`#rpScrub`, `#rpTime`) without restarting from frame 0; upgraded `matchReviewData()` to Match Review 2.0 with structured event timeline markers (`timeline` pills in both `#endReview` and `#rpMarkers`), `neutralScore` (0–100), `whiffRate`, and per-segment round summaries; and implemented compact schema-validated shareable Replay Codes (`RYRP2:` Base64URL via `rpEncodeCode` / `rpDecodeCode`) with one-click copy and inline import (`#rpCodeBox`) in `#replays`. No Worker change.
+
 ### Performance
 
 - **Camera-Frustum Culling & Adaptive LOD For 32-Player Arenas (#54) (`src/game/03-render/16-hud-03-render-pass.js`, `src/game/03-render/12-draw-02-fighters.js`, `src/game/03-render/14-skin-looks.js`, `src/game/03-render/15-skin-weapons.js`, `tools/tests/combat/80-overhaul-systems.mjs`, `index.html`, `renying-offline.html`)**: added render-only world-space camera-frustum culling (`RENDER_CULL`, `updateRenderFrustum`, `inRenderFrustum`) for 6–32 fighter arenas across fighters, physics FX, pets, tags, emissive passes, fireflies, projectiles, and particles while keeping `drawIdentityEdges` tracking all off-screen fighters and leaving 1v1/2v2 untouched; added 3-tier adaptive LOD (`fighterLod`) for 12–32 player crowds (keeping the local player and `superOwner` at LOD 0 while pruning ambient idle particles, tier motes, redundant ghosts, distant scarves, and distant duplicate outline passes) with zero simulation or rollback impact. No Worker change.

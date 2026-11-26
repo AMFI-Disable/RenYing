@@ -380,5 +380,20 @@ Object.assign(UI_COPY_EN, {
   "满怒清冷": "Full Fury & CDs",
   "重置状态": "Reset State",
   "回满真元并清除技能与灵宠冷却": "Fill Fury and reset all skill and pet cooldowns",
-  "重置双方位置、气血、架势与统计": "Reset positions, HP, guard, and training stats"
+  "重置双方位置、气血、架势与统计": "Reset positions, HP, guard, and training stats",
+  "输入回放码": "Import Code",
+  "回放码": "Code",
+  "导入回放码": "Import Replay Code",
+  "回放分享码": "Replay Share Code",
+  "粘贴 RYRP2: 开头的回放分享码": "Paste a replay code starting with RYRP2:",
+  "回放进度": "Replay progress",
+  "关键事件标记": "Key event markers",
+  "时间轴标记": "Timeline Markers",
+  "立回评分": "Neutral Score",
+  "优换": "Good Trade",
+  "脱身": "Escape",
+  "防守": "Guard",
+  "追击": "Punish",
+  "空挥": "Whiff",
+  "失防": "Guard Broken"
 });

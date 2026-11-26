@@ -854,4 +854,59 @@ export default [
       return { pass: true };
     })()`
   },
+  {
+    name: 'Match Review 2.0 timeline, keyframe replay scrubbing (forward & backward), and RYRP2 Replay Codes work deterministically',
+    fn: `(() => {
+      // 1. Record a short local 1v1 match (300 frames = 2.5s)
+      startMatch('cpu', 'normal', [0, 1]);
+      M.phase = 'fight';
+      recBegin('loc');
+      for (let i = 0; i < 300; i++) {
+        if (i === 40) human[0].held.right = true;
+        if (i === 70) { human[0].held.right = false; human[0].held.atk = true; }
+        if (i === 76) human[0].held.atk = false;
+        step();
+      }
+      const saved = recSave(0);
+      if (!saved || !saved.st0 || !Array.isArray(saved.ev)) return { pass: false, error: 'recSave did not produce valid replay' };
+
+      // 2. Match Review 2.0 produces neutralScore, rounds, and timeline markers
+      const rev = matchReviewData(saved);
+      if (!rev || typeof rev.neutralScore !== 'number' || rev.neutralScore < 0 || rev.neutralScore > 100) {
+        return { pass: false, error: 'Invalid Match Review 2.0 neutralScore: ' + JSON.stringify(rev && rev.neutralScore) };
+      }
+      if (!Array.isArray(rev.rounds) || rev.rounds.length < 1 || !Array.isArray(rev.timeline)) {
+        return { pass: false, error: 'Match Review 2.0 missing rounds or timeline' };
+      }
+
+      // 3. Shareable Replay Code round-trip strips heavy tr rows and rejects malformed codes
+      const code = rpEncodeCode(saved);
+      if (!code.startsWith('RYRP2:')) return { pass: false, error: 'Replay code missing RYRP2: prefix' };
+      const decoded = rpDecodeCode(code);
+      if (!decoded || decoded.tr !== undefined || decoded.ch[0] !== 0 || decoded.ch[1] !== 1) {
+        return { pass: false, error: 'Decoded replay code mismatch or did not strip tr' };
+      }
+      let rejectedBad = false;
+      try { rpDecodeCode('INVALID:123'); } catch (e) { rejectedBad = true; }
+      if (!rejectedBad) return { pass: false, error: 'rpDecodeCode accepted invalid replay code' };
+
+      // 4. Keyframe replay scrubbing forward and backward restores deterministic state
+      startReplay(decoded);
+      if (!Array.isArray(REPLAY.keyframes) || REPLAY.keyframes.length < 1) {
+        return { pass: false, error: 'startReplay did not capture frame-0 keyframe' };
+      }
+      replaySeek(260);
+      if (REPLAY.totalFrame !== 260) return { pass: false, error: 'Forward seek did not reach frame 260: ' + REPLAY.totalFrame };
+      const xAt260 = A.x, yAt260 = A.y;
+      if (REPLAY.keyframes.length < 3) return { pass: false, error: 'Expected >=3 cached keyframes at frame 260 (0, 120, 240), got ' + REPLAY.keyframes.length };
+      replaySeek(140);
+      if (REPLAY.totalFrame !== 140) return { pass: false, error: 'Backward seek did not reach frame 140: ' + REPLAY.totalFrame };
+      replaySeek(260);
+      if (REPLAY.totalFrame !== 260 || Math.abs(A.x - xAt260) > 0.01 || Math.abs(A.y - yAt260) > 0.01) {
+        return { pass: false, error: 'Seek back to 260 diverged: (' + A.x + ',' + A.y + ') vs (' + xAt260 + ',' + yAt260 + ')' };
+      }
+      toMenu();
+      return { pass: true };
+    })()`
+  },
 ];

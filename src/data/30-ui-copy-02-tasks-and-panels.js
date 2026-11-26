@@ -352,7 +352,7 @@ Object.assign(UI_COPY_EN, {
   "蓄力斩": "Charged Slash",
   "只用键盘": "Keyboard Only",
   "手机操作": "Mobile Controls",
-  "自动保存最近 10 场可回放战斗（本地对战、模式变式与联机），保存在这台设备的浏览器里。回放可暂停、慢放、快进，也能导出导入，与人对传。": "The last 10 replayable battles across local, variant and online modes are saved in this browser. Replays can be paused, slowed, fast-forwarded, and exported or imported to share.",
+  "自动保存最近 10 场可回放战斗（本地对战、模式变式与联机），保存在这台设备的浏览器里。回放可暂停、慢放、快进、拖动进度条与关键帧跳转，也能生成回放码或导出导入，与人对传。": "The last 10 replayable battles across local, variant and online modes are saved in this browser. Replays can be paused, slowed, fast-forwarded, scrubbed via timeline and keyframe markers, or shared with Replay Codes and JSON export/import.",
   "「训AI」导出的是这一局真实采集的逐帧数据：s 是 19 维状态（双方血量、护甲、内力、奥义槽、站位、朝向、滞空、硬直、是否正对），a 是这一帧按住的键（位掩码），r 由本帧双方回血/掉血和终局胜负算出。.jsonl 训练集可以导入合并、再整包导出。": "\"Train\" exports the frames actually captured in that match: s is a 19-value state (both sides' health, guard, inner force, ultimate gauge, position, facing, airborne, stun, facing each other), a is the keys held that frame (bitmask), r comes from that frame's health/guard change plus the final result. .jsonl training sets can be imported, merged, and exported as one file.",
   "肉鸽": "Roguelike",
   "开放世界": "Open World",

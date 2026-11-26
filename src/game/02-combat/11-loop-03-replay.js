@@ -1,6 +1,65 @@
 // ======================= 对战回放 =======================
 // 对战的逻辑完全由“开场状态 + 每一帧双方的操作”决定，所以只记操作，回放时重新算一遍
-const RP_KEY = 'renying-replays', RP_MAX = 10;
+const RP_KEY = 'renying-replays', RP_MAX = 10, RP_KEYFRAME_EVERY = 120, RP_KEYFRAME_MAX = 240, RP_CODE_PREFIX = 'RYRP2:';
+function rpStripForCode(m) {
+  if (!m || typeof m !== 'object') return null;
+  const keep = ['v', 'kind', 'mode', 'room', 'ranked', 'sub', 'four', 'raid', 'large', 'teamCount', 'teamSize', 'fighterCount', 'ch', 'ch4', 'chAll', 'pl', 'slots', 'names', 'skins', 'w', 'wins', 'frames', 't', 'level', 'playerSide', 'mapActive', 'stats', 'competitiveScrolls', 'raidSquadSize', 'raidWave', 'tag3', 'teams', 'teamIdx', 'round', 'mutator', 'towerFloor', 'scrolls', 'chapter', 'chapterNode', 'runId', 'st0', 'ev'];
+  const out = {};
+  for (const k of keep) if (m[k] !== undefined) out[k] = m[k];
+  if (Array.isArray(m.segments) && m.segments.length) out.segments = m.segments.map(s => rpStripForCode(s)).filter(Boolean);
+  return out;
+}
+const RP_B64_ABC = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+function rpB64UrlEncode(str) {
+  const bytes = typeof TextEncoder !== 'undefined' ? new TextEncoder().encode(str) : Array.from(unescape(encodeURIComponent(str)), c => c.charCodeAt(0));
+  let out = '';
+  for (let i = 0; i < bytes.length; i += 3) {
+    const a = bytes[i], b = i + 1 < bytes.length ? bytes[i + 1] : 0, c = i + 2 < bytes.length ? bytes[i + 2] : 0;
+    const n = (a << 16) | (b << 8) | c;
+    out += RP_B64_ABC[(n >> 18) & 63] + RP_B64_ABC[(n >> 12) & 63];
+    if (i + 1 < bytes.length) out += RP_B64_ABC[(n >> 6) & 63];
+    if (i + 2 < bytes.length) out += RP_B64_ABC[n & 63];
+  }
+  return out;
+}
+function rpB64UrlDecode(b64) {
+  const clean = String(b64 || '').replace(/=+$/, '').replace(/\+/g, '-').replace(/\//g, '_');
+  const bytes = [];
+  for (let i = 0; i < clean.length; i += 4) {
+    const v0 = RP_B64_ABC.indexOf(clean[i]), v1 = RP_B64_ABC.indexOf(clean[i + 1]);
+    const v2 = i + 2 < clean.length ? RP_B64_ABC.indexOf(clean[i + 2]) : -1;
+    const v3 = i + 3 < clean.length ? RP_B64_ABC.indexOf(clean[i + 3]) : -1;
+    if (v0 < 0 || v1 < 0 || (i + 2 < clean.length && v2 < 0) || (i + 3 < clean.length && v3 < 0)) throw new Error('bad b64');
+    bytes.push((v0 << 2) | (v1 >> 4));
+    if (v2 >= 0) bytes.push(((v1 & 15) << 4) | (v2 >> 2));
+    if (v3 >= 0) bytes.push(((v2 & 3) << 6) | v3);
+  }
+  const u8 = new Uint8Array(bytes);
+  if (typeof TextDecoder !== 'undefined') return new TextDecoder().decode(u8);
+  let bin = '';
+  for (let i = 0; i < u8.length; i++) bin += String.fromCharCode(u8[i]);
+  return decodeURIComponent(escape(bin));
+}
+function rpEncodeCode(m) {
+  if (!m || !Array.isArray(m.ch) || m.ch.length < 2 || !m.st0 || (!Array.isArray(m.ev) && !(Array.isArray(m.segments) && m.segments.length))) {
+    throw new Error('回放数据不完整，无法生成回放码');
+  }
+  return RP_CODE_PREFIX + rpB64UrlEncode(JSON.stringify(rpStripForCode(m)));
+}
+function rpDecodeCode(code) {
+  const raw = String(code || '').trim();
+  if (!raw.startsWith(RP_CODE_PREFIX) || raw.length <= RP_CODE_PREFIX.length + 8) throw new Error('回放码格式不正确（需以 RYRP2: 开头）');
+  let obj;
+  try { obj = JSON.parse(rpB64UrlDecode(raw.slice(RP_CODE_PREFIX.length))); }
+  catch (e) { throw new Error('回放码解析失败，请检查是否复制完整'); }
+  const hasSegs = Array.isArray(obj && obj.segments) && obj.segments.length > 0 && obj.segments.every(s => s && s.st0 && Array.isArray(s.ev));
+  if (!obj || typeof obj !== 'object' || !Array.isArray(obj.ch) || obj.ch.length < 2 || !obj.st0 || typeof obj.st0 !== 'object' || (!Array.isArray(obj.ev) && !hasSegs)) {
+    throw new Error('回放码内容校验未通过');
+  }
+  if (!Array.isArray(obj.ev)) obj.ev = [];
+  if (!obj.t) obj.t = Date.now();
+  return obj;
+}
 // 训AI 用的真实轨迹：录这一局时每 TR_EVERY 帧采一条「状态 + 双方操作」，一局最多留 TR_PER_MATCH 条。
 // 以前这里导出的是写死的常量数组（同一个假状态、同一个动作、奖励只看输赢），拿这种数据训练只会学到乱按。
 const TR_KEY = 'renying-train-set', TR_SET_MAX = 4000, TR_EVERY = 4, TR_LEGACY_EVERY = 6, TR_PER_MATCH = 3600;
@@ -359,7 +418,40 @@ function matchReviewData(m) {
   const practiceSignal = falls > 0 || combo >= 3 || taken > dealt * 1.2 || (attacks >= 8 && (far / attacks >= 0.25 || misfaced / attacks >= 0.2));
   const worthwhile = duration >= 120 * 12 && (practiceSignal || closeFinish);
   const reviewReason = falls > 0 ? 'edge' : closeFinish ? 'close' : combo >= 5 ? 'combo' : 'decision';
-  return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, context, matchup, focus, evidence, worthwhile, reviewReason, strengths, errors, next, moments: moments.slice(0, 4) };
+  // Match Review 2.0: structured event timeline, neutral efficiency score, and per-segment breakdown
+  const timeline = [];
+  const pushMarker = (frame, kind, label, detail) => {
+    const f = Math.max(0, Math.floor(+frame || 0));
+    if (timeline.some(x => x.kind === kind && Math.abs(x.frame - f) < 90)) return;
+    timeline.push({ frame: f, kind, label, detail });
+  };
+  for (const x of moments) {
+    const kind = x.text.includes('脱身') ? 'escape' : x.text.includes('防守') ? 'block' : x.text.includes('追击') ? 'punish' : x.text.includes('远距离') || x.text.includes('朝向') ? 'whiff' : 'trade';
+    const label = kind === 'escape' ? '脱身' : kind === 'block' ? '防守' : kind === 'punish' ? '追击' : kind === 'whiff' ? '空挥' : '优换';
+    pushMarker(x.frame, kind, label, x.text);
+  }
+  for (let i = 1; i < rows.length && timeline.length < 10; i++) {
+    if (samples[i].index !== samples[i - 1].index + 1) continue;
+    const prev = rows[i - 1], cur = rows[i];
+    const foeG = side ? 2 : 3, ownG = side ? 3 : 2;
+    if (prev[foeG] > 0.15 && cur[foeG] <= 0.02) pushMarker(sampleFrame(i), 'guard_break', '破防', '击溃对手架势，可立刻打满连段。');
+    if (prev[ownG] > 0.15 && cur[ownG] <= 0.02) pushMarker(sampleFrame(i), 'pressure', '失防', '自身架势归零，注意提前卸力或腾空闪。');
+  }
+  const segs = Array.isArray(m.segments) && m.segments.length ? m.segments : [m];
+  const rounds = [];
+  let segOffset = 0;
+  segs.forEach((seg, idx) => {
+    const segOwn = idx === 0 && segs.length === 1 ? own : ownIdx.reduce((acc, k) => { const st = (seg.stats || [])[k] || {}; acc.damage += Math.max(0, +st.damage || 0); acc.combo = Math.max(acc.combo, +st.combo || 0); acc.breaks += Math.max(0, +st.breaks || 0); return acc; }, { damage: 0, combo: 0, breaks: 0 });
+    const segFoe = idx === 0 && segs.length === 1 ? foe : foeIdx.reduce((acc, k) => { const st = (seg.stats || [])[k] || {}; acc.damage += Math.max(0, +st.damage || 0); return acc; }, { damage: 0 });
+    rounds.push({ index: idx + 1, startFrame: segOffset, frames: Math.max(0, +seg.frames || 0), dealt: Math.round(segOwn.damage), taken: Math.round(segFoe.damage), combo: segOwn.combo, breaks: segOwn.breaks });
+    if (idx > 0) pushMarker(segOffset, 'round', `第${idx + 1}段`, `进入第 ${idx + 1} 回合/阶段。`);
+    segOffset += Math.max(0, +seg.frames || 0);
+  });
+  timeline.sort((a, b) => a.frame - b.frame);
+  const whiffRate = attacks > 0 ? Math.round(((far + misfaced) / (attacks * 2)) * 100) : 0;
+  const dmgShare = (dealt + taken) > 0 ? dealt / (dealt + taken) : 0.5;
+  const neutralScore = Math.max(0, Math.min(100, Math.round(45 + dmgShare * 35 + Math.min(10, breaks * 5) + Math.min(10, combo * 1.5) - whiffRate * 0.35 - falls * 10)));
+  return { dealt: Math.round(dealt), taken: Math.round(taken), combo, breaks, rows: rows.length, team, context, matchup, focus, evidence, worthwhile, reviewReason, neutralScore, whiffRate, rounds, timeline: timeline.slice(0, 12), strengths, errors, next, moments: moments.slice(0, 4) };
 }
 function endReviewShow(m) {
   const btn = $id('endReviewBtn'), panel = $id('endReview');
@@ -371,12 +463,13 @@ function endReviewShow(m) {
   if (!review) { panel.innerHTML = ''; return; }
   const list = items => `<ul>${items.map(s => `<li>${escapeHTML(reviewCopy(s))}</li>`).join('')}</ul>`;
   const moments = review.moments.length ? `<section class="end-review-block end-review-moments"><h4>${cvT('关键时刻')}</h4><ul>${review.moments.map(x => `<li><button type="button" class="end-review-jump" data-review-frame="${Math.max(0, Math.floor(x.frame))}">${cvT('回放')} ${formatReviewTime(x.frame)} · ${escapeHTML(cvT(x.text))}</button></li>`).join('')}</ul></section>` : '';
+  const timelineHtml = review.timeline && review.timeline.length ? `<section class="end-review-block end-review-timeline"><h4>${cvT('时间轴标记')}</h4><div class="er-tl-pills">${review.timeline.map(x => `<button type="button" class="er-tl-pill k-${escapeHTML(x.kind)}" data-review-frame="${x.frame}" title="${escapeHTML(cvT(x.detail))}">${formatReviewTime(x.frame)} ${escapeHTML(cvT(x.label))}</button>`).join('')}</div></section>` : '';
   const context = review.context && review.context.hero ? `<p class="end-review-context">${escapeHTML(cvT(review.context.hero))} · ${cvT(review.context.mode === 'net' ? '联机对局' : review.context.mode === 'cpu' ? '人机对局' : '本地对局')}${review.context.level ? ` · ${escapeHTML(cvT(LV_NAME[review.context.level] || review.context.level))}` : ''}</p>` : '';
   const evidenceText = review.evidence === 'limited' ? '样本较少，建议先当作线索' : review.evidence === 'sampled' ? '依据录像抽样帧与统计' : '录像抽样较充分';
   if (review.worthwhile) btn.textContent = cvT('建议复盘 · AI 复盘'); else btn.textContent = cvT('AI 复盘');
   const matchup = review.matchup ? `<section class="end-review-block"><h4>${cvT('本局对阵建议')}</h4><p>「${escapeHTML(cvT(review.matchup.hero))}」${cvT('迎战')}「${escapeHTML(cvT(review.matchup.opponent))}」 · ${cvT('关注对方')}「${escapeHTML(cvT(review.matchup.foeMove))}」${cvT('；建议选择')}「${escapeHTML(cvT(review.matchup.ownChoice))}」${cvT(review.matchup.choice === 'ranged' ? '保持距离牵制并趁收招接近。' : review.matchup.choice === 'face' ? '校正朝向后起手。' : '先防守脱身，再抓收招反击。')}</p></section>` : '';
   const worth = review.worthwhile ? `<p class="end-review-note"><strong>${cvT('这局值得复盘')}</strong> · ${cvT(review.reviewReason === 'edge' ? '坠崖说明边缘决策值得重看。' : review.reviewReason === 'close' ? '胜负接近，重看关键交换能找到改变结果的选择。' : review.reviewReason === 'combo' ? '本局出现长连段，可以重看起手和追击选择。' : '录像中发现可练习的决策点。')}</p>` : '';
-  panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3>${context}${worth}<p class="end-review-note">${cvT(evidenceText)} · ${cvT('分析结合双方侠客、技能、站位与输入，给出可复核的战术选择建议。')}</p><div class="end-review-stats"><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${matchup}${moments}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')}</p><div class="row end-review-actions"><button class="ghost" type="button" data-review-practice="${escapeHTML(review.context.heroId)}" data-review-focus="${review.focus}">${cvT('用这位侠客去练习')}</button><span>${cvT('这份复盘有帮助吗？')}</span><button class="ghost" type="button" data-review-vote="yes">${cvT('有帮助')}</button><button class="ghost" type="button" data-review-vote="no">${cvT('没帮助')}</button></div>`;
+  panel.innerHTML = `<h3>${cvT('本局 AI 复盘')}</h3>${context}${worth}<p class="end-review-note">${cvT(evidenceText)} · ${cvT('分析结合双方侠客、技能、站位与输入，给出可复核的战术选择建议。')}</p><div class="end-review-stats"><span>${cvT('立回评分')} ${review.neutralScore}/100</span><span>${cvT(review.team ? '团队造成伤害' : '造成伤害')} ${review.dealt}</span><span>${cvT(review.team ? '团队承受伤害' : '承受伤害')} ${review.taken}</span><span>${cvT('最长连击')} ${review.combo}</span><span>${cvT('破防次数')} ${review.breaks}</span>${review.rows ? `<span>${cvT('分析帧数')} ${review.rows}</span>` : ''}</div><div class="end-review-grid"><section class="end-review-block"><h4>${cvT('做得好')}</h4>${list(review.strengths)}</section><section class="end-review-block"><h4>${cvT('可改进')}</h4>${list(review.errors)}</section><section class="end-review-block"><h4>${cvT('下一步')}</h4>${list(review.next)}</section>${matchup}${moments}${timelineHtml}</div><p class="end-review-note">${cvT('关键时刻来自录像中的抽样状态与输入，点击可跳到对应回放帧。')}</p><div class="row end-review-actions"><button class="ghost" type="button" data-review-practice="${escapeHTML(review.context.heroId)}" data-review-focus="${review.focus}">${cvT('用这位侠客去练习')}</button><span>${cvT('这份复盘有帮助吗？')}</span><button class="ghost" type="button" data-review-vote="yes">${cvT('有帮助')}</button><button class="ghost" type="button" data-review-vote="no">${cvT('没帮助')}</button></div>`;
 }
 function reviewCopy(value) {
   const s = String(value || '');
@@ -392,22 +485,67 @@ function formatReviewTime(frame) {
   const seconds = Math.floor(Math.max(0, +frame || 0) / 120);
   return `${String(Math.floor(seconds / 60)).padStart(2, '0')}:${String(seconds % 60).padStart(2, '0')}`;
 }
+function rpCaptureKeyframe() {
+  if (!REPLAY.on) return;
+  if (!Array.isArray(REPLAY.keyframes)) REPLAY.keyframes = [];
+  const tf = REPLAY.totalFrame || 0;
+  if (REPLAY.keyframes.some(k => k.totalFrame === tf)) return;
+  REPLAY.keyframes.push({ totalFrame: tf, segIdx: REPLAY.segmentIndex || 0, p: REPLAY.p || 0, f: REPLAY.f || 0, nf: REPLAY.nf || 0, lh: [(REPLAY.lh || [0, 0])[0], (REPLAY.lh || [0, 0])[1]], state: capState() });
+  REPLAY.keyframes.sort((a, b) => a.totalFrame - b.totalFrame);
+  if (REPLAY.keyframes.length > RP_KEYFRAME_MAX) {
+    REPLAY.keyframes.splice(Math.floor(REPLAY.keyframes.length / 2), 1);
+  }
+}
+function replaySeek(targetFrame) {
+  if (!REPLAY.on || !REPLAY.m) return false;
+  const maxFrame = Math.max(0, (REPLAY.totalFrames || REPLAY.m.frames || 0) - 1);
+  const target = Math.max(0, Math.min(Math.floor(+targetFrame || 0), maxFrame));
+  const kfs = Array.isArray(REPLAY.keyframes) ? REPLAY.keyframes : [];
+  let best = null;
+  for (let i = kfs.length - 1; i >= 0; i--) {
+    if (kfs[i].totalFrame <= target) { best = kfs[i]; break; }
+  }
+  const needRestore = target < (REPLAY.totalFrame || 0) || (best && best.totalFrame > (REPLAY.totalFrame || 0));
+  const prevResim = RESIM;
+  RESIM = true;
+  try {
+    if (needRestore) {
+      if (best) {
+        if (REPLAY.segmentIndex !== best.segIdx) {
+          REPLAY.segmentIndex = best.segIdx;
+          replayLoadSegment(REPLAY.segments[best.segIdx]);
+        }
+        restState(best.state);
+        M.mode = 'replay';
+        REPLAY.totalFrame = best.totalFrame;
+        REPLAY.p = best.p;
+        REPLAY.f = best.f;
+        REPLAY.nf = best.nf;
+        REPLAY.lh = [best.lh[0], best.lh[1]];
+      } else {
+        REPLAY.segmentIndex = 0;
+        REPLAY.totalFrame = 0;
+        replayLoadSegment(REPLAY.segments[0]);
+        rpCaptureKeyframe();
+      }
+    }
+    let guard = 0;
+    while (REPLAY.totalFrame < target && M.phase !== 'end' && guard++ < 72000) {
+      replayFrame();
+    }
+  } finally {
+    RESIM = prevResim;
+  }
+  particles.length = 0;
+  REPLAY.frameAcc = 0;
+  rpInfo();
+  return true;
+}
 function replayJump(m, frame) {
-  startReplay(m);
-  const target = Math.max(0, Math.min(Math.floor(+frame || 0), Math.max(0, (m.frames || 0) - 1)));
+  if (!REPLAY.on || REPLAY.m !== m) startReplay(m);
   REPLAY.paused = true;
-  $id('rpPause').textContent = cvT('继续');
-  const advance = () => {
-    if (!REPLAY.on) return;
-    let count = 0;
-    while (REPLAY.totalFrame < target && M.phase !== 'end' && count++ < 480) replayFrame();
-    if (REPLAY.totalFrame < target && M.phase !== 'end') { setTimeout(advance, 0); return; }
-    REPLAY.paused = true;
-    REPLAY.frameAcc = 0;
-    $id('rpPause').textContent = cvT('继续');
-    rpInfo();
-  };
-  setTimeout(advance, 0);
+  if ($id('rpPause')) $id('rpPause').textContent = cvT('继续');
+  replaySeek(frame);
 }
 $id('endReview').addEventListener('click', e => {
   const vote = e.target.closest('[data-review-vote]');
@@ -490,7 +628,7 @@ function renderReplays() {
   const list = rpList(), setN = trSet().length;
   // 训练集是本机攒下来的样本（导入的 .jsonl 并在这里），能整包导出、也能清掉
   const trRow = setN ? `<div class="rprow"><div class="rpm"><div class="rpt">训练集</div><div class="rps">${setN} 个样本</div></div><div style="display:flex;gap:6px;"><button class="ghost" data-trdl="1">导出</button><button class="ghost" data-trclear="1">清空</button></div></div>` : '';
-  $id('rpList').innerHTML = (list.length ? list.map((m, i) => `<div class="rprow"><div class="rpm"><div class="rpt">${escapeHTML(rpTitle(m))}</div><div class="rps">${escapeHTML(rpSub(m))}</div></div><div style="display:flex;gap:6px;"><button class="go" data-rp="${i}">播放</button><button class="ghost" data-rptrain="${i}">训AI</button><button class="ghost" data-rpexp="${i}">导出</button><button class="ghost" data-rpdel="${i}">删除</button></div></div>`).join('')
+  $id('rpList').innerHTML = (list.length ? list.map((m, i) => `<div class="rprow"><div class="rpm"><div class="rpt">${escapeHTML(rpTitle(m))}</div><div class="rps">${escapeHTML(rpSub(m))}</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="go" data-rp="${i}">播放</button><button class="ghost" data-rpcode="${i}">回放码</button><button class="ghost" data-rptrain="${i}">训AI</button><button class="ghost" data-rpexp="${i}">导出</button><button class="ghost" data-rpdel="${i}">删除</button></div></div>`).join('')
     : uiState('empty', '还没有回放。完成一场支持录像的战斗后，回放会自动保存在这里。')) + trRow;
 }
 $id('rpList').addEventListener('click', e => {
@@ -507,6 +645,15 @@ $id('rpList').addEventListener('click', e => {
     return;
   }
   if (b.dataset.rp !== undefined) { const m = list[+b.dataset.rp]; if (m) startReplay(m); }
+  else if (b.dataset.rpcode !== undefined) {
+    const m = list[+b.dataset.rpcode];
+    if (!m) return;
+    try {
+      const code = rpEncodeCode(m);
+      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(() => toast('回放码已复制到剪贴板')).catch(() => toast('回放码已生成'));
+      else toast('回放码已生成');
+    } catch (err) { toast(err.message || '生成回放码失败'); }
+  }
   else if (b.dataset.rpdel !== undefined) { list.splice(+b.dataset.rpdel, 1); rpStore(list); renderReplays(); }
   else if (b.dataset.rptrain !== undefined) {
     const m = list[+b.dataset.rptrain];
@@ -602,17 +749,54 @@ if ($id('rpImportBtn')) {
     inp.click();
   });
 }
+if ($id('rpCodeImportBtn')) {
+  $id('rpCodeImportBtn').addEventListener('click', () => {
+    const box = $id('rpCodeBox'), inp = $id('rpCodeIn');
+    if (!box) return;
+    box.classList.toggle('hidden');
+    if (!box.classList.contains('hidden') && inp) { inp.value = ''; inp.focus(); }
+  });
+}
+if ($id('rpCodeCancelBtn')) {
+  $id('rpCodeCancelBtn').addEventListener('click', () => {
+    if ($id('rpCodeBox')) $id('rpCodeBox').classList.add('hidden');
+  });
+}
+if ($id('rpCodeApplyBtn')) {
+  $id('rpCodeApplyBtn').addEventListener('click', () => {
+    const inp = $id('rpCodeIn');
+    if (!inp) return;
+    try {
+      const m = rpDecodeCode(inp.value);
+      const list = rpList();
+      list.unshift(m);
+      while (list.length > RP_MAX) list.pop();
+      rpStore(list);
+      if ($id('rpCodeBox')) $id('rpCodeBox').classList.add('hidden');
+      renderReplays();
+      toast('回放码导入成功');
+    } catch (err) { toast(err.message || '回放码导入失败'); }
+  });
+}
 function startReplay(m) {
   if (!m || !m.ev || !m.st0) return;
   debugHitbox = false;
   if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
   ROLL.on = false; REC.on = false; paused = false; BP = null; B.dummy = false; M.stage = null;
-  Object.assign(REPLAY, { on: true, m, totalFrame: 0, segmentIndex: 0, segments: Array.isArray(m.segments) && m.segments.length ? m.segments : [m], paused: false, speed: 1, hz: 120, frameAcc: 0 });
+  const segs = Array.isArray(m.segments) && m.segments.length ? m.segments : [m];
+  const totalFrames = Math.max(1, +m.frames || segs.reduce((n, s) => n + Math.max(0, +s.frames || 0), 0));
+  const rev = matchReviewData(m);
+  Object.assign(REPLAY, { on: true, m, totalFrame: 0, totalFrames, segmentIndex: 0, segments: segs, keyframes: [], timeline: (rev && rev.timeline) || [], paused: false, speed: 1, hz: 120, frameAcc: 0 });
   replayLoadSegment(REPLAY.segments[0]);
+  rpCaptureKeyframe();
   acc = 0; creditT = 0; particles.length = 0;
   pickScene();
   $id('rpPause').textContent = '暂停';
   for (const x of document.querySelectorAll('#rpBar [data-sp]')) x.classList.toggle('sel', x.dataset.sp === '1');
+  const mkEl = $id('rpMarkers');
+  if (mkEl) {
+    mkEl.innerHTML = REPLAY.timeline.slice(0, 6).map(x => `<button type="button" class="rp-mk k-${escapeHTML(x.kind)}" data-rp-frame="${x.frame}" title="${escapeHTML(cvT(x.detail))}">${formatReviewTime(x.frame)} ${escapeHTML(cvT(x.label))}</button>`).join('');
+  }
   replayInspectRender();
   $id('rpBar').classList.remove('hidden');
   rpInfo();
@@ -657,6 +841,9 @@ function rpInfo() {
   if (REPLAY.on) {
     const segments = REPLAY.segments || [], progress = segments.length > 1 ? ` · 第 ${REPLAY.segmentIndex + 1}/${segments.length} 段` : '';
     $id('rpInfo').textContent = cvT(`回放 · 第${M.round}回合${progress}${REPLAY.paused ? ' · 已暂停' : ''} · F1 判定框`);
+    const scrub = $id('rpScrub'), timeEl = $id('rpTime'), maxF = Math.max(1, (REPLAY.totalFrames || 1) - 1);
+    if (scrub) { scrub.max = String(maxF); scrub.value = String(Math.min(maxF, REPLAY.totalFrame || 0)); }
+    if (timeEl) timeEl.textContent = `${formatReviewTime(REPLAY.totalFrame || 0)} / ${formatReviewTime(REPLAY.totalFrames || 0)}`;
   }
   replayInspectRender();
 }
@@ -682,6 +869,7 @@ function replayFrame() {
   }
   step();
   REPLAY.totalFrame = (REPLAY.totalFrame || 0) + 1;
+  if (REPLAY.totalFrame % RP_KEYFRAME_EVERY === 0) rpCaptureKeyframe();
   const replayFrameNo = REPLAY.kind === 'net' ? REPLAY.nf : REPLAY.f;
   const seg = REPLAY.seg || REPLAY.m;
   if (REPLAY.on && M.phase !== 'end' && +seg.frames > 0 && replayFrameNo >= +seg.frames) replayEnd(REPLAY.m.w);
@@ -705,6 +893,7 @@ function replayEnd(w) {
   if (REPLAY.segmentIndex + 1 < (REPLAY.segments || []).length) {
     REPLAY.segmentIndex++;
     replayLoadSegment(REPLAY.segments[REPLAY.segmentIndex]);
+    rpCaptureKeyframe();
     rpInfo();
     return;
   }
@@ -740,6 +929,15 @@ $id('rpHz').addEventListener('input', e => { REPLAY.hz = Math.max(1, Math.min(12
 $id('rpHitbox').addEventListener('click', () => { if (!REPLAY.on || M.phase === 'end') return; debugHitbox = !debugHitbox; replayInspectRender(); });
 $id('rpStep').addEventListener('click', replayStep);
 $id('rpExit').addEventListener('click', toMenu);
+if ($id('rpScrub')) {
+  $id('rpScrub').addEventListener('input', e => { if (REPLAY.on) replaySeek(+e.target.value); });
+}
+if ($id('rpMarkers')) {
+  $id('rpMarkers').addEventListener('click', e => {
+    const btn = e.target.closest('[data-rp-frame]');
+    if (btn && REPLAY.on) replaySeek(+btn.dataset.rpFrame);
+  });
+}
 for (const b of document.querySelectorAll('#rpBar [data-sp]')) b.addEventListener('click', () => {
   REPLAY.speed = +b.dataset.sp;
   for (const x of document.querySelectorAll('#rpBar [data-sp]')) x.classList.toggle('sel', x === b);
