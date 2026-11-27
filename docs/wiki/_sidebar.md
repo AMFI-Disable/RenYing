@@ -1,3 +1,5 @@
+[中文首页](home.zh-cn.md)
+
 **[Home / 首页](home.md)**
 
 ### Players / 玩家
