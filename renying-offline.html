@@ -84,6 +84,7 @@ html { scroll-padding-top: env(safe-area-inset-top, 0px); }
 *, *::before, *::after { box-sizing: inherit; }
 html, body { height: 100%; margin: 0; }
 body { background: var(--bg); color: var(--ink); font-family: var(--body); overflow: hidden; -webkit-user-select: none; user-select: none; }
+small { font-size: max(12px, 0.88em); }
 :where(button, input, select, textarea) { font-family: inherit; color: inherit; }
 :where(input:not([type="range"]):not([type="checkbox"]):not([type="radio"]), select, textarea) {
 background-color: var(--panel); border: 1px solid var(--line); border-radius: var(--r-sm);
@@ -1112,7 +1113,7 @@ width: 100%; border-radius: 999px;
 .gb-top td { padding: 6px 8px; font-size: 14px; }
 .gb-feed { list-style: none; margin: 0; padding: 0; font-size: 13px; }
 .gb-feed li { padding: 5px 0; border-top: 1px solid var(--faint); }
-.gb-feed small { float: right; color: var(--dim); }
+.gb-feed small { float: right; color: var(--dim); font-size: 12px; }
 .gb-feed em { color: var(--gold); font-style: normal; }
 .gb-none { color: var(--dim); text-align: center; }
 .gb-none .ui-state { padding: var(--sp-2) 0; }
@@ -54906,7 +54907,7 @@ if (!s) return '';
 const isTianshi = id === rec;
 const tianshiOdds = isTianshi ? (s.h === hero.id ? '92%' : '75%') : '';
 return `<button type="button" class="bd-card${id === d.selectedId ? ' sel' : ''}" data-bd-id="${escapeHTML(id)}" aria-pressed="${id === d.selectedId}">
-${isTianshi ? `<span class="bd-tianshi-badge">${escapeHTML(cvT('【天时 · 契合】'))} <small style="opacity:0.85;font-size:10px;">${tianshiOdds}</small></span>` : ''}
+${isTianshi ? `<span class="bd-tianshi-badge">${escapeHTML(cvT('【天时 · 契合】'))} <small style="opacity:0.85;font-size:12px;">${tianshiOdds}</small></span>` : ''}
 <span class="bd-card-key">${i + 1}</span><span class="bd-card-icon">${scIcon(s)}</span>
 <span class="bd-card-name">${escapeHTML(cvT(s.n))}</span><span class="bd-card-tag">${scTag(s)}</span>
 <span class="bd-card-desc">${escapeHTML(cvT(s.d))}</span></button>`;

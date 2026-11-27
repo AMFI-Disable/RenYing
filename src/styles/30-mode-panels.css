@@ -115,7 +115,7 @@
 .gb-top td { padding: 6px 8px; font-size: 14px; }
 .gb-feed { list-style: none; margin: 0; padding: 0; font-size: 13px; }
 .gb-feed li { padding: 5px 0; border-top: 1px solid var(--faint); }
-.gb-feed small { float: right; color: var(--dim); }
+.gb-feed small { float: right; color: var(--dim); font-size: 12px; }
 .gb-feed em { color: var(--gold); font-style: normal; }
 .gb-none { color: var(--dim); text-align: center; }
 .gb-none .ui-state { padding: var(--sp-2) 0; }

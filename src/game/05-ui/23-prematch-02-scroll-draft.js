@@ -59,7 +59,7 @@ function competitiveDraftRender() {
     const isTianshi = id === rec;
     const tianshiOdds = isTianshi ? (s.h === hero.id ? '92%' : '75%') : '';
     return `<button type="button" class="bd-card${id === d.selectedId ? ' sel' : ''}" data-bd-id="${escapeHTML(id)}" aria-pressed="${id === d.selectedId}">
-      ${isTianshi ? `<span class="bd-tianshi-badge">${escapeHTML(cvT('【天时 · 契合】'))} <small style="opacity:0.85;font-size:10px;">${tianshiOdds}</small></span>` : ''}
+      ${isTianshi ? `<span class="bd-tianshi-badge">${escapeHTML(cvT('【天时 · 契合】'))} <small style="opacity:0.85;font-size:12px;">${tianshiOdds}</small></span>` : ''}
       <span class="bd-card-key">${i + 1}</span><span class="bd-card-icon">${scIcon(s)}</span>
       <span class="bd-card-name">${escapeHTML(cvT(s.n))}</span><span class="bd-card-tag">${scTag(s)}</span>
       <span class="bd-card-desc">${escapeHTML(cvT(s.d))}</span></button>`;

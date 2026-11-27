@@ -58,6 +58,7 @@
   *, *::before, *::after { box-sizing: inherit; }
   html, body { height: 100%; margin: 0; }
   body { background: var(--bg); color: var(--ink); font-family: var(--body); overflow: hidden; -webkit-user-select: none; user-select: none; }
+  small { font-size: max(12px, 0.88em); }
   /* Native controls inherit the same readable font and ink color even without remote fonts. */
   :where(button, input, select, textarea) { font-family: inherit; color: inherit; }
   :where(input:not([type="range"]):not([type="checkbox"]):not([type="radio"]), select, textarea) {
