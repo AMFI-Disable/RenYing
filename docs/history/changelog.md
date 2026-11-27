@@ -6,6 +6,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+- Added bilingual contributor navigation and updated feedback templates.
+
 ### Added
 
 - **Spatial Stereo Combat Audio, Dynamic Stance/Combo Soundscape & Audio Captions (#59) (`src/game/01-engine/01-core.js`, `src/game/01-engine/05-audio.js`, `src/game/02-combat/10-hits-02-effects.js`, `src/game/05-ui/17-home-04-settings.js`, `src/game/05-ui/27-combat-loadouts.js`, `src/page.html`, `src/styles/80-studio-display-and-overhaul.css`, `src/data/30-ui-copy-20-gaps.js`, `tools/tests/combat/80-overhaul-systems.mjs`, `index.html`, `renying-offline.html`)**: upgraded WebAudio synthesis with camera-relative stereo panning (`sfxPanFor`, `sfxOut` via `StereoPannerNode` with automatic mono fallback, toggled by `SETTINGS.spatialAudio` / `立体声定位`), dynamic combo-hit pitch escalation (`comboPitchMul` + harmonic chime from 3+ hits), layered Aggressive/Defensive Heirloom stance audio cues (`SFX.relicStance`), and visual directional combat sound captions (`#sfxCaption`, `sfxCaption`, toggled by `SETTINGS.audioCaptions` / `音效字幕`) for deaf and hard-of-hearing accessibility. No Worker change.

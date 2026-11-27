@@ -1,5 +1,7 @@
 # Contributing To RenYing
 
+[简体中文](contributing.zh-cn.md)
+
 Thanks for helping. This page lists the rules the repository and CI enforce. The Chinese summary is at the end.
 
 ## Who Can Merge
