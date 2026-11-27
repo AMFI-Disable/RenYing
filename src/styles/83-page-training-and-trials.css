@@ -25,6 +25,44 @@
   color: var(--gold);
   text-align: left;
 }
+.train-pre-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px 14px;
+  margin: 8px 0 10px;
+  padding: 9px 12px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, 0.035);
+  border: 1px solid rgba(239, 232, 216, 0.14);
+}
+.train-pre-group {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.train-hero-select {
+  font: 13.5px var(--body);
+  padding: 5px 10px;
+  border-radius: 8px;
+  background: rgba(13, 21, 30, 0.88);
+  color: var(--ink);
+  border: 1px solid rgba(233, 196, 106, 0.4);
+  min-width: 148px;
+  cursor: pointer;
+}
+.train-cond-btn {
+  margin: 0;
+  font-size: 12.5px;
+  padding: 4px 12px;
+}
+.train-cond-btn.sel {
+  background: rgba(233, 196, 106, 0.22);
+  border-color: rgba(233, 196, 106, 0.65);
+  color: var(--gold);
+}
 .db-opp-seg {
   display: flex;
   flex-wrap: wrap;

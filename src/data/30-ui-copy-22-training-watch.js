@@ -3,7 +3,6 @@
 Object.assign(UI_COPY_EN, {
   // 训练场 AI 观战页（src/page.html 的 #xiwuPaneWatch）
   "AI 观战": "AI Watch",
-  "AI 观战 · 电脑对电脑": "AI Watch · Computer vs Computer",
   "1v1 演武": "1v1 Duel",
   "3v3 车轮": "3v3 Relay",
   // 加载界面（src/game/05-ui/21-buttons-04-loading.js）

@@ -128,6 +128,7 @@ function applyHit(att, def, m, pt) {
       ev.justGuard = true;
       if (typeof applyCombatBadgeGuard === 'function') applyCombatBadgeGuard(def, ev);
       if (typeof TUT !== 'undefined' && TUT && def.idx === 0) TUT.justGuards = (TUT.justGuards || 0) + 1;
+      if (typeof trialOnHit === 'function' && !RESIM) trialOnHit(att, def, m, { blocked: true, justGuard: true });
       hitVisual(ev); netEmit(ev);
       return;
     }
@@ -176,6 +177,7 @@ function applyHit(att, def, m, pt) {
       haptic(45);
       ev.guardBreak = true;
       if (typeof applyCombatBadgeBreak === 'function') applyCombatBadgeBreak(att, ev);
+      if (typeof trialOnHit === 'function' && !RESIM) trialOnHit(att, def, m, { blocked: false, guardBreak: true });
       hitVisual(ev); netEmit(ev);
       return;
     }
@@ -198,6 +200,7 @@ function applyHit(att, def, m, pt) {
     att.meter = Math.min(100, att.meter + 0.6 * mm); def.meter = Math.min(100, def.meter + 1.5);
     if (typeof applyCombatBadgeGuard === 'function') applyCombatBadgeGuard(def, ev);
     if (scOn()) scFire(def, 'blk', att, false, m);
+    if (typeof trialOnHit === 'function' && !RESIM) trialOnHit(att, def, m, { blocked: true });
     hitVisual(ev); netEmit(ev);
     return;
   }
@@ -370,6 +373,7 @@ function applyHit(att, def, m, pt) {
   if (def.dummy) def.hp = Math.max(1, def.hp);
   if (scPre) scAfterHit(att, def, m, ev, dmg, isCounter, scPre);
   att.hitConfirmed = true;
+  if (typeof trialOnHit === 'function' && !RESIM) trialOnHit(att, def, m, { blocked: false });
   // 记下谁打了谁：电脑的「脑子」靠它决定先打完连招还是反击（见 08-fighter-01-entity.js 的 brainCommitted）
   if (!(clock - brainT(att.lastLandT) < BRAIN.commit && att.lastLandIdx === def.idx)) att.comboT0 = clock;
   att.lastLandIdx = def.idx; att.lastLandT = clock; def.lastHitByIdx = att.idx; def.lastHitByT = clock;

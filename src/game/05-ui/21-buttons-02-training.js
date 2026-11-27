@@ -1,8 +1,23 @@
 // ======================= 木人训练与对手行为栏 =======================
 // 本文件：木人桩：练哪位侠客、木人的特性开关、对手行为栏（稻草人做什么，见 src/data/14-dummy.js）、几种练习的开局。
-let trainSubTab = 'trials';   // 训练场当前在哪一页（AI 观战页要借用顶上的「AI 境界」条）
-function xiwuTrainingTab(name) {
-  const normalized = name === 'scenario' ? 'free' : (name === 'match' ? 'trials' : name);
+let trainSubTab = 'trials', trainChar = 0, trainTargetMode = 'dummy', trainOppMode = 'dummy', trainAiLevel = 'normal';   // 训练场当前在哪一页（天道演武页借用顶上的「AI 境界」条）
+const TRAIN_PRE = {
+  stance: 0,
+  trialFullMeter: true,
+  trialHitbox: false,
+  freeFullMeter: true,
+  freeHitbox: true,
+  lessonScope: 'full',
+  freeOppHero: -1,
+};
+const TRAIN_PANE_META = {
+  trials: { title: '连招试炼', badge: '20 侠客 · 命中校验 · 专精成长' },
+  lesson: { title: '招式教学', badge: '分步交互指导 · 攻防招架与奥义' },
+  free: { title: '自由与情景', badge: '木人桩/AI对练 · 六大情景 · 帧数检视' },
+  watch: { title: '天道演武', badge: '全 AI 观战演武 · 多模式切换' },
+};
+function xiwuTrainingTab(name, fromSingleSec = false) {
+  const normalized = name === 'scenario' ? 'free' : (name === 'match' ? 'trials' : (['trials', 'lesson', 'free', 'watch'].includes(name) ? name : 'trials'));
   trainSubTab = normalized;
   const tabs = document.querySelectorAll('#xiwuTrainingTabs [data-training-tab]');
   const panes = document.querySelectorAll('#single [data-training-pane]');
@@ -13,8 +28,16 @@ function xiwuTrainingTab(name) {
     tab.tabIndex = selected ? 0 : -1;
   }
   for (const pane of panes) pane.hidden = pane.dataset.trainingPane !== normalized;
+  const meta = TRAIN_PANE_META[normalized] || TRAIN_PANE_META.trials;
+  if ($id('trainPaneHeading')) $id('trainPaneHeading').textContent = cvT(meta.title);
+  if ($id('trainPaneBadge')) $id('trainPaneBadge').textContent = cvT(meta.badge);
+  if (!fromSingleSec && typeof currentSingleTab === 'string' && currentSingleTab.startsWith('train')) {
+    currentSingleTab = 'train-' + normalized;
+    for (const b of document.querySelectorAll('#singleTabs button[data-tab]')) b.classList.toggle('sel', b.dataset.tab === currentSingleTab);
+  }
   if (normalized === 'trials' && typeof renderComboTrialsPane === 'function') renderComboTrialsPane();
-  if ($id('aiLvHome') && currentSingleTab === 'train') $id('aiLvHome').hidden = normalized !== 'watch';
+  if (typeof renderTrainConfig === 'function') renderTrainConfig();
+  if ($id('aiLvHome') && typeof currentSingleTab === 'string' && currentSingleTab.startsWith('train')) $id('aiLvHome').hidden = normalized !== 'watch';
 }
 if ($id('xiwuTrainingTabs')) {
   $id('xiwuTrainingTabs').addEventListener('click', e => {
@@ -34,7 +57,7 @@ if ($id('xiwuTrainingTabs')) {
   });
   xiwuTrainingTab('trials');
 }
-let trainChar = 0, trainTargetMode = 'dummy', trainOppMode = 'dummy', trainAiLevel = 'normal';
+
 const TRAIN_AI_INFO = {
   easy: '入门 · 延迟反应、极少格挡、2段轻击，零血量/伤害膨胀，适合熟悉出招与连段起点。',
   normal: '寻常 · 标准立回、40%格挡、3段连招与基础追击，零血量/伤害膨胀，适合常规对练。',
@@ -42,13 +65,84 @@ const TRAIN_AI_INFO = {
   impossible: '绝顶 · 极速反应、精准弹反与连招最大化确反，完全依托 AIBrain 策略而非数值堆砌。',
   god: '天道 · 满级神经策略、读招诱骗、无缝空战追击与极致心理博弈（纯机制强度，1.0×标准血攻）。',
 };
+function trainHeroAltStanceName(ci) {
+  const ch = (typeof CHARS !== 'undefined' && CHARS[ci]) || null;
+  const spec = ch && typeof HERO_STANCES !== 'undefined' && HERO_STANCES[ch.id];
+  return spec && spec.name ? `二式 · ${spec.name}` : '二式';
+}
+function applyTrainStanceAndConditions(fighter, opts = {}) {
+  if (!fighter) return;
+  const wantAlt = (opts.stance !== undefined ? +opts.stance : TRAIN_PRE.stance) === 1;
+  if (wantAlt) {
+    fighter.stanceUnlocked = true;
+    fighter.stance = 1;
+  } else {
+    fighter.stance = 0;
+  }
+  if (opts.fullMeter) fighter.meter = 100;
+  if (opts.showHitbox !== undefined && typeof debugHitbox !== 'undefined') debugHitbox = !!opts.showHitbox;
+}
 function renderTrainConfig() {
+  const ci = clamp((typeof menuHeroPick === 'function' ? menuHeroPick() : trainChar) | 0, 0, Math.max(0, CHARS.length - 1));
+  const altLbl = trainHeroAltStanceName(ci);
+  for (const selId of ['lessonHeroSel', 'freeHeroSel']) {
+    const sel = $id(selId);
+    if (!sel) continue;
+    if (!sel.dataset || sel.dataset.opts !== String(CHARS.length)) {
+      if (sel.dataset) sel.dataset.opts = String(CHARS.length);
+      sel.innerHTML = CHARS.map((c, i) => `<option value="${i}">${escapeHTML(c.name)}</option>`).join('');
+    }
+    sel.value = String(ci);
+  }
+  const oppSel = $id('freeOppHeroSel');
+  if (oppSel) {
+    if (!oppSel.dataset || oppSel.dataset.opts !== String(CHARS.length + 1)) {
+      if (oppSel.dataset) oppSel.dataset.opts = String(CHARS.length + 1);
+      oppSel.innerHTML = `<option value="-1">${cvT('自动对手')}</option>` + CHARS.map((c, i) => `<option value="${i}">${escapeHTML(c.name)}</option>`).join('');
+    }
+    oppSel.value = String(TRAIN_PRE.freeOppHero);
+    oppSel.disabled = trainOppMode !== 'ai';
+  }
+  for (const [segId, attr] of [['trialStanceSeg', 'tstance'], ['lessonStanceSeg', 'lstance'], ['freeStanceSeg', 'fstance']]) {
+    const seg = $id(segId);
+    if (!seg) continue;
+    for (const b of seg.querySelectorAll(`button[data-${attr}]`)) {
+      const val = +b.dataset[attr];
+      const on = val === TRAIN_PRE.stance;
+      b.classList.toggle('sel', on);
+      b.setAttribute('aria-pressed', String(on));
+      if (val === 1) b.textContent = cvT(altLbl);
+    }
+  }
+  const scopeSeg = $id('lessonScopeSeg');
+  if (scopeSeg) {
+    for (const b of scopeSeg.querySelectorAll('button[data-lscope]')) {
+      const on = b.dataset.lscope === TRAIN_PRE.lessonScope;
+      b.classList.toggle('sel', on);
+      b.setAttribute('aria-pressed', String(on));
+    }
+  }
+  for (const [id, on] of [['trialFullMeterBtn', TRAIN_PRE.trialFullMeter], ['trialHitboxBtn', TRAIN_PRE.trialHitbox], ['freeFullMeterBtn', TRAIN_PRE.freeFullMeter], ['freeHitboxBtn', TRAIN_PRE.freeHitbox]]) {
+    const btn = $id(id);
+    if (btn) { btn.classList.toggle('sel', !!on); btn.setAttribute('aria-pressed', String(!!on)); }
+  }
   const oppSeg = $id('trainOppSeg');
   if (oppSeg) {
     for (const b of oppSeg.querySelectorAll('button[data-topp]')) {
       const on = b.dataset.topp === trainOppMode;
       b.classList.toggle('sel', on);
       b.setAttribute('aria-pressed', String(on));
+    }
+  }
+  const dummyActWrap = $id('freeDummyActWrap');
+  if (dummyActWrap) dummyActWrap.classList.toggle('is-dim', trainOppMode === 'ai');
+  const dummyActSeg = $id('freeDummyActSeg');
+  if (dummyActSeg) {
+    for (const b of dummyActSeg.querySelectorAll('button[data-fact]')) {
+      const on = b.dataset.fact === dummyCfg.act;
+      b.classList.toggle('sel', on);
+      b.setAttribute('aria-pressed', String(on));
+      b.disabled = trainOppMode === 'ai';
     }
   }
   const lvWrap = $id('trainAiLvWrap');
@@ -63,6 +157,59 @@ function renderTrainConfig() {
   }
   const desc = $id('trainAiDesc');
   if (desc) desc.textContent = trainOppMode === 'ai' ? (TRAIN_AI_INFO[trainAiLevel] || TRAIN_AI_INFO.normal) : '木人桩模式：可精确控制对手站桩、格挡、弹反、连段与受压闪避，并实时查看帧数差与判定框。';
+}
+for (const selId of ['lessonHeroSel', 'freeHeroSel']) {
+  if ($id(selId)) $id(selId).addEventListener('change', e => {
+    const idx = clamp(+e.target.value || 0, 0, Math.max(0, CHARS.length - 1));
+    trainChar = idx;
+    if (typeof setMenuHero === 'function') setMenuHero(idx);
+    renderTrainConfig();
+    if (typeof renderComboTrialsPane === 'function') renderComboTrialsPane();
+    SFX.slice && SFX.slice();
+  });
+}
+if ($id('freeOppHeroSel')) {
+  $id('freeOppHeroSel').addEventListener('change', e => {
+    const v = parseInt(e.target.value, 10);
+    TRAIN_PRE.freeOppHero = Number.isInteger(v) && v >= 0 && v < CHARS.length ? v : -1;
+    renderTrainConfig();
+  });
+}
+for (const [segId, attr] of [['trialStanceSeg', 'tstance'], ['lessonStanceSeg', 'lstance'], ['freeStanceSeg', 'fstance']]) {
+  if ($id(segId)) $id(segId).addEventListener('click', e => {
+    const b = e.target.closest(`button[data-${attr}]`);
+    if (!b) return;
+    TRAIN_PRE.stance = +b.dataset[attr] === 1 ? 1 : 0;
+    renderTrainConfig();
+    SFX.slice && SFX.slice();
+  });
+}
+if ($id('lessonScopeSeg')) {
+  $id('lessonScopeSeg').addEventListener('click', e => {
+    const b = e.target.closest('button[data-lscope]');
+    if (!b) return;
+    TRAIN_PRE.lessonScope = b.dataset.lscope === 'quick' ? 'quick' : 'full';
+    renderTrainConfig();
+    SFX.slice && SFX.slice();
+  });
+}
+if ($id('freeDummyActSeg')) {
+  $id('freeDummyActSeg').addEventListener('click', e => {
+    const b = e.target.closest('button[data-fact]');
+    if (!b) return;
+    dummyCfg.act = b.dataset.fact;
+    trainOppMode = 'dummy';
+    renderTrainConfig();
+    dummyBarRender();
+    SFX.slice && SFX.slice();
+  });
+}
+for (const [id, key] of [['trialFullMeterBtn', 'trialFullMeter'], ['trialHitboxBtn', 'trialHitbox'], ['freeFullMeterBtn', 'freeFullMeter'], ['freeHitboxBtn', 'freeHitbox']]) {
+  if ($id(id)) $id(id).addEventListener('click', () => {
+    TRAIN_PRE[key] = !TRAIN_PRE[key];
+    renderTrainConfig();
+    SFX.slice && SFX.slice();
+  });
 }
 if ($id('trainOppSeg')) {
   $id('trainOppSeg').addEventListener('click', e => {
@@ -545,7 +692,9 @@ function startDummyTraining() {
   FOREST.on = false; B.forestProxy = false; B.hidden = false;
   initAudio(); paused = false;
   showScreen(null);
-  const foeIdx = trainOppMode === 'ai' ? ((trainChar + 1) % CHARS.length) : 0;
+  const foeIdx = trainOppMode === 'ai'
+    ? (TRAIN_PRE.freeOppHero >= 0 && TRAIN_PRE.freeOppHero < CHARS.length ? TRAIN_PRE.freeOppHero : ((trainChar + 1) % CHARS.length))
+    : 0;
   startMatch('train', { ...dummyCfg }, [trainChar, foeIdx]);
   Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0, lastHitDmg: 0, maxHitDmg: 0, hitCount: 0, parries: 0, breaks: 0, events: [], advantage: null, frameProbe: null, lastBadgeT: -99, lastBadgeMsg: '', lastPetT: -99, lastStanceT: -99, labOpen: true });
   _tlabLastDraw = 0;
@@ -562,6 +711,7 @@ function startDummyTraining() {
     applySkins();
     A.x = STAGE_W / 2 - 160; B.x = dummyCfg.fixed ? STAGE_W / 2 : STAGE_W / 2 + 60; B.homeX = dummyCfg.fixed ? STAGE_W / 2 : undefined;
   }
+  applyTrainStanceAndConditions(A, { stance: TRAIN_PRE.stance, fullMeter: TRAIN_PRE.freeFullMeter, showHitbox: TRAIN_PRE.freeHitbox });
 }
 // 木人试剑：木人桩直接开练；各模式的最高境界专项训练和正常开局一样先去点将台选人
 function startTrainTarget(targetMode = trainTargetMode, isWatch = false) {
@@ -622,7 +772,7 @@ if (trainBtnEl) trainBtnEl.addEventListener('click', () => {
 const trainPickBtnEl = $id('trainPickBtn');
 if (trainPickBtnEl) trainPickBtnEl.addEventListener('click', () => bpStart('train', { targetMode: 'dummy' }));
 const xiwuFullTutBtn = $id('xiwuFullTutBtn');
-if (xiwuFullTutBtn) xiwuFullTutBtn.addEventListener('click', () => { initAudio(); startTutorial(true); });
+if (xiwuFullTutBtn) xiwuFullTutBtn.addEventListener('click', () => { initAudio(); startTutorial(TRAIN_PRE.lessonScope === 'full'); });
 const xiwuDrillList = document.querySelector('.xiwu-drill-list');
 if (xiwuDrillList) xiwuDrillList.addEventListener('click', e => {
   const b = e.target.closest('button[data-drill]');

@@ -120,6 +120,7 @@ xiwuPresetRender();
 const SHELVED_MODES = OFFLINE_BUILD ? ['tower'] : ['stage', 'tower'];
 const modeShelved = m => SHELVED_MODES.includes(m);
 const XIWU_LARGE_MODES = ['melee', 'ctf', 'quad', 'gauntlet'];
+const XIWU_TRAIN_MODES = ['train', 'train-trials', 'train-lesson', 'train-free', 'train-watch'];
 for (const m of SHELVED_MODES) {
   const b = document.querySelector(`#singleTabs button[data-tab="${m}"]`);
   if (b) { b.style.display = 'none'; b.setAttribute('aria-hidden', 'true'); b.tabIndex = -1; }
@@ -127,11 +128,13 @@ for (const m of SHELVED_MODES) {
 
 function singleSec(sec) {
   if (sec && modeShelved(sec)) sec = 'saga';   // 收起来的模式（从旧链接、图鉴、结算页回来）：改去侠客列传
-  const active = sec || currentSingleTab || 'cpu';
+  let active = sec || currentSingleTab || 'cpu';
+  if (active === 'train') active = 'train-' + (typeof trainSubTab === 'string' && ['trials', 'lesson', 'free', 'watch'].includes(trainSubTab) ? trainSubTab : 'trials');
   currentSingleTab = active;
 
+  const isTrain = XIWU_TRAIN_MODES.includes(active);
   const isStory = ['stage', 'saga', 'tower'].includes(active);
-  const activeCat = active === 'train' ? 'training' : isStory ? 'story' : XIWU_LARGE_MODES.includes(active) ? 'large' : 'combat';
+  const activeCat = isTrain ? 'training' : isStory ? 'story' : XIWU_LARGE_MODES.includes(active) ? 'large' : 'combat';
 
   for (const b of document.querySelectorAll('#xiwuCatTabs button')) {
     const on = b.dataset.cat === activeCat;
@@ -155,8 +158,12 @@ function singleSec(sec) {
     const secs = el.dataset.sec.split(' ');
     el.style.display = secs.includes(active) ? '' : 'none';
   }
+  if (isTrain && typeof xiwuTrainingTab === 'function') {
+    const sub = active.startsWith('train-') ? active.slice(6) : 'trials';
+    xiwuTrainingTab(sub, true);
+  }
   const supportsMutator = ['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'melee', 'ctf', 'maps'].includes(active);
-  if ($id('aiLvHome')) $id('aiLvHome').hidden = !(['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju', 'koth', 'party', 'tournament', 'melee', 'ctf', 'quad', 'gauntlet'].includes(active) || (active === 'train' && trainSubTab === 'watch'));
+  if ($id('aiLvHome')) $id('aiLvHome').hidden = !(['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju', 'koth', 'party', 'tournament', 'melee', 'ctf', 'quad', 'gauntlet', 'train-watch'].includes(active));
   if ($id('xiwuPresetBar')) $id('xiwuPresetBar').hidden = !supportsMutator;
   const mutators = $id('mutatorPills');
   if (mutators && mutators.parentElement) mutators.parentElement.hidden = !supportsMutator;
@@ -178,7 +185,11 @@ function singleSec(sec) {
       chaos: '天机莫测，乾坤逆转！每隔十五息随机降临百种异象秘法加持',
       stage: '六大篇章逐级挑战，斩妖除魔，迎战守关宗师',
       saga: '每位侠客自己的故事：五节、一个抉择、两个结局',
-      train: '训练场全面升级：支持木人桩与无数值膨胀的实战 AI 难度对练、帧级判定检视与六大专项情景！',
+      train: '训练场：四大独立入口，支持入场前配置侠客、架势、对手行为与训练条件！',
+      'train-trials': '连招试炼：选择 20 位侠客与架势，精准命中校验自动进阶并赢取专精经验与墨锭！',
+      'train-lesson': '招式教学：自选侠客、架势与课程范围，循序渐进掌握全部攻防核心机制！',
+      'train-free': '自由与情景：木人桩与无数值膨胀 AI 实战对练、实时帧数检视与六大专项情景！',
+      'train-watch': '天道演武：挑选 AI 境界与对战模式，观摩全 AI 高手同屏演武切磋！',
       mayhem: '通天彻地神魔狂战！十倍真元气血，全技能绝技无冷却狂暴轰炸！',
       maps: '换一处战场：投票选地图，断崖、冰面都会改变侠客的打法',
       cuju: '不比气血比进球：用普攻和技能把墨球打进对方球门，先进三球获胜',
@@ -194,7 +205,7 @@ function singleSec(sec) {
   else if (active === 'tower') renderTower();
   else if (active === 'chaos') renderChaos();
   else if (active === 'stage') renderStages();
-  else if (active === 'train') renderDummyFeatures();
+  else if (isTrain) { if (typeof renderTrainConfig === 'function') renderTrainConfig(); if (typeof renderDummyFeatures === 'function') renderDummyFeatures(); if (typeof renderComboTrialsPane === 'function') renderComboTrialsPane(); }
   else if (active === 'mayhem') renderMayhem();
   else if (active === 'maps') renderMaps();
   else if (active === 'cpu') updateAIBrief();
@@ -212,7 +223,11 @@ const XIWU_MODE_INFO = {
   koth: { title: '灵坛争锋 · 玩法说明', body: '三层断崖高台上每 18 秒轮流激活灵坛。站入无人争抢的灵坛即可累积占领进度，先达 100% 获胜；阵亡或被打落悬崖后 2.5 秒重返战场。' },
   party: { title: '江湖百戏 · 玩法说明', body: '五局三胜趣味小游戏轮换：第一局「传火折」（击中对手把 9 秒火折传出去，归零即炸）、第二局「断崖推手」（0 伤害但 2.6 倍击退，推落悬崖即胜）、第三局「飞球乱舞」（格挡弹反飞球，砸中即出局）。' },
   tournament: { title: '武林大会 · 玩法说明', body: '八强单败淘汰赛：支持单人参赛（1人+7 AI）、本地双人参赛（2人+6 AI）或全 AI 观战直转。每场支持实战出战、实时观战（含焦点切换与纯净直转 HUD）或快速结算 AI 场次，夺魁奖励 +200 墨锭。' },
-  train: { title: '训练场 · 玩法说明', body: '包含招式教学、木人桩自由练习（可看判定框、帧数差与回放）、以及防反/连段等专项情景训练。' },
+  train: { title: '训练场 · 玩法说明', body: '四大独立训练入口：连招试炼、招式教学、自由与情景、天道演武，均支持入场前配置侠客、架势与训练条件。' },
+  'train-trials': { title: '连招试炼 · 玩法说明', body: '覆盖全部 20 位侠客的入门、进阶、宗师 3 阶连招试炼，支持入场前选定侠客、架势与训练条件，严格命中校验并自动进阶发放专精 XP 与墨锭。' },
+  'train-lesson': { title: '招式教学 · 玩法说明', body: '分步交互式教学，可自选任意侠客、本式/二式架势与完整 11 步或 5 步快速上手课程。' },
+  'train-free': { title: '自由与情景 · 玩法说明', body: '支持木人桩（站立/格挡/招架/连段/起跳）与无数值膨胀实战 AI 对练，提供六大专项情景、判定框透视与 120Hz 逐帧检视。' },
+  'train-watch': { title: '天道演武 · 玩法说明', body: '全 AI 观战演武大厅：先选定上方 AI 境界，即可观战 1v1、3v3、2v2、天机乱斗、墨球蹴鞠、山河异境与通天神决。' },
   stage: { title: '守关挑战 · 玩法说明', body: '二十侠客专属斩妖除魔路线（3v1 同袍共斗）。每关击败首领积累星级与墨锭，最终章迎战六技融魂魔首。' },
   saga: { title: '侠客列传 · 玩法说明', body: '每位侠客独立的五节剧情篇章，在关键节点做出抉择可解锁不同结局与专属秘闻。' },
   tower: { title: '问剑密卷 · 玩法说明', body: '无尽爬塔肉鸽试炼：每层获胜后三选一武林秘卷叠加词条，守关 AI 境界随层数递进。' },

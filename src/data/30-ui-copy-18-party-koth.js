@@ -55,7 +55,6 @@ Object.assign(UI_COPY_EN, {
   "江湖百戏 · 玩法说明": "Wacky Trials · Mode Guide",
   "五局三胜趣味小游戏轮换：第一局「传火折」（击中对手把 9 秒火折传出去，归零即炸）、第二局「断崖推手」（0 伤害但 2.6 倍击退，推落悬崖即胜）、第三局「飞球乱舞」（格挡弹反飞球，砸中即出局）。": "Best-of-5 rotating minigames: Hot Potato (hit to pass the 9s bomb), Cliff Sumo (0 dmg, 2.6x knockback ring-out), and Ink Dodgeball (block to deflect, unblocked hit = KO).",
   "训练场 · 玩法说明": "Training · Mode Guide",
-  "包含招式教学、木人桩自由练习（可看判定框、帧数差与回放）、以及防反/连段等专项情景训练。": "Includes guided Move Tutorials, Free Practice with hitboxes & frame advantage, and focused situational drills.",
   "守关挑战 · 玩法说明": "Campaign · Mode Guide",
   "二十侠客专属斩妖除魔路线（3v1 同袍共斗）。每关击败首领积累星级与墨锭，最终章迎战六技融魂魔首。": "Demon-slaying campaign for all 20 heroes (3v1 co-op), ending in a showdown with the 6-skill Boss.",
   "侠客列传 · 玩法说明": "Hero Sagas · Mode Guide",

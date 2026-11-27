@@ -42,12 +42,16 @@ function tutTouchDescription(i) {
 }
 function startTutorial(full) {
   try { localStorage.setItem('renying-tut-seen', '1'); } catch (e) {}
-  trainChar = typeof menuHeroPick === 'function' ? menuHeroPick() : 0;
-  if (typeof setMenuHero === 'function') setMenuHero(trainChar);
+  if (!(typeof trainChar === 'number' && trainChar >= 0 && trainChar < CHARS.length)) {
+    trainChar = typeof menuHeroPick === 'function' ? menuHeroPick() : 0;
+  }
   dummyCfg.act = 'stand';   // 教学里稻草人只按教学的安排出手
   if (typeof STATQ !== 'undefined') STATQ.skip = true;   // 教学用的木人桩局不算一局
   startTraining('dummy');
   if (typeof STATQ !== 'undefined') STATQ.skip = false;
+  if (typeof applyTrainStanceAndConditions === 'function' && typeof TRAIN_PRE !== 'undefined') {
+    applyTrainStanceAndConditions(A, { stance: TRAIN_PRE.stance, fullMeter: false, showHitbox: false });
+  }
   B.x = STAGE_W / 2 + 220; A.x = STAGE_W / 2 - 220;
   TUT = { list: full === true ? TUT_STEPS.map((_, i) => i) : TUT_QUICK, full: full === true, step: -1, wait: 0, x0: A.x, hit: {}, blocks: 0, justGuards: 0, prev: '', shotT: 0, parryShotT: 0 };
   tutNext();

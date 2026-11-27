@@ -102,6 +102,11 @@ const TRIAL_RUN = {
   allCleared: false,
   lastState: '',
   lastMove: '',
+  lastMoveT: 0,
+  lastSkillSlot: 'skill',
+  actionSeq: 0,
+  lastRecordedSeq: -1,
+  lastRecordedTag: '',
   lastStepAt: 0,
   windowLeft: 1,
   autoTimer: 0,
@@ -133,7 +138,11 @@ function trialPrepareArenaForTier(trial) {
   if (!A || !B || !trial) return;
   A.reset(STAGE_W / 2 - 150); A.face = 1;
   A.skillCD = 0; A.skill2CD = 0; A.dashCD = 0;
-  A.meter = trial.tier === 'master' ? 100 : Math.max(A.meter || 0, 40);
+  const wantFull = trial.tier === 'master' || (typeof TRAIN_PRE !== 'undefined' && TRAIN_PRE.trialFullMeter);
+  A.meter = wantFull ? 100 : Math.max(A.meter || 0, 40);
+  if (typeof applyTrainStanceAndConditions === 'function' && typeof TRAIN_PRE !== 'undefined') {
+    applyTrainStanceAndConditions(A, { stance: TRAIN_PRE.stance, fullMeter: wantFull, showHitbox: TRAIN_PRE.trialHitbox });
+  }
   B.reset(STAGE_W / 2 + 80); B.face = -1;
   B.maxHp = B.hp = B.lagHp = 300;
   if (typeof projs !== 'undefined' && Array.isArray(projs)) projs.length = 0;
@@ -205,6 +214,10 @@ function startComboTrial(heroId, tierIdx = 0) {
     allCleared: false,
     lastState: A ? (A.state || '') : '',
     lastMove: A ? (A.moveName || A.skill || A.sp || '') : '',
+    lastSkillSlot: 'skill',
+    actionSeq: 0,
+    lastRecordedSeq: -1,
+    lastRecordedTag: '',
     lastStepAt: clock || 0,
     windowLeft: 1,
     feedback: { kind: 'idle', text: `${cvT('当前目标')}：${trial.name}` },
@@ -241,6 +254,10 @@ function trialAdvanceNext() {
     allCleared: false,
     lastState: A ? (A.state || '') : '',
     lastMove: A ? (A.moveName || A.skill || A.sp || '') : '',
+    lastSkillSlot: 'skill',
+    actionSeq: 0,
+    lastRecordedSeq: -1,
+    lastRecordedTag: '',
     lastStepAt: clock || 0,
     windowLeft: 1,
     feedback: { kind: 'idle', text: `${cvT('已自动进入下一阶')}：${nextTrial.name}` },
@@ -272,19 +289,77 @@ function trialLeaveTest() {
   renderComboTrialsPane();
 }
 
-function trialRecordAction(fighter, tag) {
+function trialIsUtilitySkill(fighter, slot) {
+  if (!fighter || !fighter.ch || typeof SKILLS === 'undefined') return false;
+  const id = slot === 'skill2' ? fighter.ch.skill2 : fighter.ch.skill;
+  const sk = SKILLS[id];
+  if (!sk) return false;
+  const hasDmg = (sk.dmg || 0) > 0 || (sk.proj && (sk.proj.dmg || 0) > 0) || (Array.isArray(sk.hits) && sk.hits.length > 0);
+  const utilTypes = ['parry', 'counter', 'buff', 'drink', 'polarity', 'swap', 'clone', 'dash', 'blink', 'veil', 'stance', 'heal'];
+  return !hasDmg && (utilTypes.includes(sk.kind) || utilTypes.includes(id) || /parry|counter|buff|drink|swap|clone|pol|veil|heal/i.test(id));
+}
+
+function trialClassifyHit(att, m) {
+  if ((m && m.ult) || (att && att.state === 'special')) return 'ult';
+  if (att && att.state === 'skill') return att.skill === att.ch.skill2 ? 'skill2' : 'skill';
+  if (m && m.isProj) return m.skillSlot || TRIAL_RUN.lastSkillSlot || 'skill2';
+  if (att && att.state === 'attack') {
+    const mv = att.moveName || '';
+    if (mv === 'cs1' || mv === 'cs2') return 'charge';
+    if (mv === 'a1' || mv === 'a2') return 'air';
+    return 'light';
+  }
+  if (m && m.skill) return TRIAL_RUN.lastSkillSlot || 'skill';
+  return 'light';
+}
+
+function trialOnHit(att, def, m, opts = {}) {
+  if (!TRIAL_RUN.active || TRIAL_RUN.done || !TRIAL_RUN.trial || att !== A || def !== B) return false;
+  if (opts.blocked) {
+    TRIAL_RUN.feedback = { kind: 'mistake', text: cvT('对手格挡了该招，请未格挡命中') };
+    trialHudRender();
+    return false;
+  }
+  const tag = trialClassifyHit(att, m);
+  const seq = TRIAL_RUN.actionSeq;
+  if (seq === TRIAL_RUN.lastRecordedSeq && tag === TRIAL_RUN.lastRecordedTag) return false;
+  const tr = TRIAL_RUN.trial;
+  const need = tr.steps[TRIAL_RUN.stepIdx];
+  const prevStep = TRIAL_RUN.stepIdx > 0 ? tr.steps[TRIAL_RUN.stepIdx - 1] : '';
+  if (tag === 'light' && need !== 'light' && prevStep === 'light' && TRIAL_RUN.stepIdx > 0) {
+    TRIAL_RUN.lastStepAt = typeof clock === 'number' ? clock : TRIAL_RUN.lastStepAt;
+    TRIAL_RUN.windowLeft = 1;
+    TRIAL_RUN.lastRecordedSeq = seq;
+    TRIAL_RUN.lastRecordedTag = tag;
+    trialHudRender();
+    return true;
+  }
+  return trialRecordAction(att, tag, { seq, hitConfirmed: true });
+}
+
+function trialRecordAction(fighter, tag, opts = {}) {
   if (!TRIAL_RUN.active || TRIAL_RUN.done || !TRIAL_RUN.trial || fighter !== A) return false;
   const tr = TRIAL_RUN.trial;
   const need = tr.steps[TRIAL_RUN.stepIdx];
   if (!need) return false;
+  const nowT = typeof clock === 'number' ? clock : 0;
+  const elapsed = TRIAL_RUN.stepIdx > 0 ? Math.max(0, nowT - (TRIAL_RUN.lastStepAt || nowT)) : 0;
+  if (TRIAL_RUN.stepIdx > 0 && elapsed > TRIAL_LINK_WINDOW) {
+    TRIAL_RUN.stepIdx = 0;
+    TRIAL_RUN.windowLeft = 1;
+    TRIAL_RUN.feedback = { kind: 'timeout', text: `${cvT('衔接超时')}（>${TRIAL_LINK_WINDOW.toFixed(1)}s）· ${cvT('请加快节奏重新起手')}` };
+    trialHudRender();
+    return false;
+  }
   const match = (tag === need) || (need === 'light' && (tag === 'light' || tag === 'light3'));
   if (!match) {
-    // 明确提示招式错误并重置当前连招进度
     const gotLabel = TRIAL_STEP_LABELS[tag] || tag;
     const needLabel = trialStepLabel(tr, TRIAL_RUN.stepIdx, need);
     const wasMid = TRIAL_RUN.stepIdx > 0;
     TRIAL_RUN.stepIdx = 0;
     TRIAL_RUN.windowLeft = 1;
+    TRIAL_RUN.lastRecordedSeq = opts.seq !== undefined ? opts.seq : TRIAL_RUN.actionSeq;
+    TRIAL_RUN.lastRecordedTag = tag;
     TRIAL_RUN.feedback = {
       kind: 'mistake',
       text: wasMid
@@ -294,12 +369,12 @@ function trialRecordAction(fighter, tag) {
     trialHudRender();
     return false;
   }
-  const nowT = typeof clock === 'number' ? clock : 0;
-  const elapsed = TRIAL_RUN.stepIdx > 0 ? Math.max(0, nowT - (TRIAL_RUN.lastStepAt || nowT)) : 0;
   const landedLabel = trialStepLabel(tr, TRIAL_RUN.stepIdx, need);
   TRIAL_RUN.stepIdx++;
   TRIAL_RUN.lastStepAt = nowT;
   TRIAL_RUN.windowLeft = 1;
+  TRIAL_RUN.lastRecordedSeq = opts.seq !== undefined ? opts.seq : TRIAL_RUN.actionSeq;
+  TRIAL_RUN.lastRecordedTag = tag;
   if (typeof SFX !== 'undefined' && SFX.slice) SFX.slice();
 
   if (TRIAL_RUN.stepIdx >= tr.steps.length) {
@@ -354,35 +429,39 @@ function trialTickUpdate() {
     if ($id('trialHud') && !$id('trialHud').classList.contains('hidden')) $id('trialHud').classList.add('hidden');
     return;
   }
-  // 连招衔接超时检测（仅在已经起手且未完成时生效）
   if (TRIAL_RUN.stepIdx > 0 && !TRIAL_RUN.done && TRIAL_RUN.trial) {
     const elapsed = Math.max(0, (clock || 0) - (TRIAL_RUN.lastStepAt || 0));
     TRIAL_RUN.windowLeft = clamp(1 - elapsed / TRIAL_LINK_WINDOW, 0, 1);
     if (elapsed > TRIAL_LINK_WINDOW) {
       TRIAL_RUN.stepIdx = 0;
       TRIAL_RUN.windowLeft = 1;
+      TRIAL_RUN.lastRecordedSeq = -1;
+      TRIAL_RUN.lastRecordedTag = '';
       TRIAL_RUN.feedback = {
         kind: 'timeout',
         text: `${cvT('衔接超时')}（>${TRIAL_LINK_WINDOW.toFixed(1)}s）· ${cvT('请加快节奏重新起手')}`,
       };
     }
   }
-  // 观测角色实时状态转换（兼容全部 20 位侠客、本式/二式与天工传世攻守双境）
   const st = A.state || '';
-  const mv = A.moveName || A.skill || A.sp || '';
-  if (st !== TRIAL_RUN.lastState || mv !== TRIAL_RUN.lastMove) {
+  const mv = st === 'attack' ? (A.moveName || '') : st === 'skill' ? (A.skill || '') : st === 'special' ? (A.sp || 'ult') : '';
+  const curT = typeof A.t === 'number' ? A.t : 0;
+  const restartedMove = (st === 'attack' || st === 'skill' || st === 'special') && st === TRIAL_RUN.lastState && mv === TRIAL_RUN.lastMove && curT < TRIAL_RUN.lastMoveT;
+  if (st !== TRIAL_RUN.lastState || mv !== TRIAL_RUN.lastMove || restartedMove) {
     TRIAL_RUN.lastState = st;
     TRIAL_RUN.lastMove = mv;
-    if (st === 'attack') {
-      if (mv === 'cs1' || mv === 'cs2') trialRecordAction(A, 'charge');
-      else if (mv === 'a1' || mv === 'a2') trialRecordAction(A, 'air');
-      else trialRecordAction(A, 'light');
-    } else if (st === 'skill') {
-      trialRecordAction(A, mv === A.ch.skill2 ? 'skill2' : 'skill');
-    } else if (st === 'special') {
-      trialRecordAction(A, 'ult');
+    if (st === 'attack' || st === 'skill' || st === 'special') {
+      TRIAL_RUN.actionSeq++;
+      if (st === 'skill') {
+        const slot = mv === A.ch.skill2 ? 'skill2' : 'skill';
+        TRIAL_RUN.lastSkillSlot = slot;
+        if (trialIsUtilitySkill(A, slot)) {
+          trialRecordAction(A, slot, { seq: TRIAL_RUN.actionSeq, utility: true });
+        }
+      }
     }
   }
+  TRIAL_RUN.lastMoveT = curT;
   trialHudRender();
 }
 
