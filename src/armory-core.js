@@ -432,6 +432,23 @@
   C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座与传世武器箱不在此列
   const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque', li: 'liying', cx: 'cixian', qj: 'qianji', ch: 'chixiao', xj: 'xuanji', ql: 'qingluan', xw: 'xuanwu' };
   C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
+  // 退场侠客的饰品：精简到 20 位侠客时退场的 16 位里，只有幽篁（yu_）和破浪（pl_）在武库里有饰品，一共 14 款。
+  // 每款换成同一个武器箱、同一档品质、同一个位置上接替它的那一款。存档、挂单、记录里读到旧编号一律换成新编号，斩数照旧。
+  // 上一版读存档时直接丢掉了这些旧款：服务器按流水找回（cloudflare/worker/30-admin-helpers.js 的 retiredRestore），本机账号按可穿的皮肤补（src/armory.js）
+  C.RETIRED = { yu_sf1: 'ql_sf1', pl_sf1: 'xw_sf1', yu_ic1: 'ql_ic1', pl_ic1: 'xw_ic1', yu_ic3: 'ql_ic3', yu_ic4: 'ql_ic4',
+    pl_st1: 'xw_st1', pl_st2: 'xw_st2', pl_st3: 'xw_st3', pl_st4: 'xw_st4', yu_ym1: 'xw_ym1', yu_ym2: 'xw_ym2', yu_ym3: 'ql_ym3', yu_ym4: 'li_ym4' };
+  C.isRetired = k => typeof k === 'string' && own(C.RETIRED, k) !== undefined;
+  C.liveKey = k => C.isRetired(k) ? C.RETIRED[k] : k;
+  // 可穿的皮肤、正穿着的：旧编号换成新编号；穿在退场侠客身上的那一条拿掉
+  C.retireSkins = env => {
+    if (!env || !Array.isArray(env.skins)) return false;
+    let changed = false;
+    const out = [];
+    for (const k of env.skins) { const m = C.liveKey(k); if (m !== k) changed = true; if (!out.includes(m)) out.push(m); }
+    if (changed) { env.skins.length = 0; env.skins.push(...out); }
+    if (env.equip && typeof env.equip === 'object') for (const [c, k] of Object.entries(env.equip)) if (C.isRetired(k)) { delete env.equip[c]; changed = true; }
+    return changed;
+  };
 
   // 星座武器箱的 36 款：按 C.ZODIAC 的配色和 C.ZOD_OF 的分配生成。
   // 背后一枚星座星图（deco.sign 是哪个星座，zt 是第几档：灵犀只有星图，赤霄加一圈星环，绝世是转动的星盘），头上星冠，绝世的兵器上还有星光（zw）
@@ -699,8 +716,8 @@
   const num = (x, lo = 0, hi = 1e15) => { const v = +x; return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : lo; };
   const str = (x, n) => typeof x === 'string' ? x.slice(0, n) : '';
   const stOf = x => Math.floor(+x) >= 0 ? int(x, 0, 1e7) : -1;
-  const cleanItem = x => isObj(x) && C.isItem(x.k) && Number.isFinite(+x.i) ? {
-    i: int(x.i, 1), k: x.k, st: C.isStOnly(x.k) ? Math.max(0, stOf(x.st)) : stOf(x.st), n: str(x.n, 12).replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, ''), t: num(x.t), src: str(x.src, 8) } : null;
+  const cleanItem = x => isObj(x) && C.isItem(C.liveKey(x.k)) && Number.isFinite(+x.i) ? {
+    i: int(x.i, 1), k: C.liveKey(x.k), st: C.isStOnly(C.liveKey(x.k)) ? Math.max(0, stOf(x.st)) : stOf(x.st), n: str(x.n, 12).replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, ''), t: num(x.t), src: str(x.src, 8) } : null;
   // 读进来的存档先整理一遍：缺的补上，类型不对的换掉，每一层都按格式重新拼一遍（多出来的字段一律丢掉），过了周就换周任务。
   // 第 1 版的存档也这样读：磨损、图案模板、玉珏、充值记录这些字段直接丢掉，没用完的钥匙一把换一台货郎，饰品和武器箱照旧。
   // 第 2 版的“本周买了几个箱子”也丢掉（现在不限买，限的是每天开几个）。
@@ -719,7 +736,7 @@
     s.appreciation2026 = s.appreciation2026 ? 1 : 0;
     s.promoAll = s.promoAll ? 1 : 0;
     s.heirloomPromo = s.heirloomPromo ? 1 : 0;
-    s.promoKeys = Array.from(new Set((Array.isArray(s.promoKeys) ? s.promoKeys : []).filter(k => C.isItem(k))));
+    s.promoKeys = Array.from(new Set((Array.isArray(s.promoKeys) ? s.promoKeys : []).map(C.liveKey).filter(k => C.isItem(k))));
     s.badgeOwned = Object.fromEntries(Object.entries(s.badgeOwned).filter(([id, tier]) => own(C.BADGES, id) && own(C.BADGE_TIER, tier)));
     s.badgeEquip = Object.fromEntries(Object.entries(s.badgeEquip).filter(([h, id]) => C.HERO_IDS.includes(h) && own(s.badgeOwned, id)).slice(0, C.HERO_IDS.length));
     const equippedBadges = new Set();
@@ -774,10 +791,10 @@
     for (const x of s.inv) top = Math.max(top, x.i);
     for (const L of s.lst) top = Math.max(top, L.it.i);
     s.nid = Math.max(int(s.nid, 1), top + 1);
-    s.via = Array.from(new Set(s.via.filter(k => C.isItem(k))));
+    s.via = Array.from(new Set(s.via.map(C.liveKey).filter(k => C.isItem(k))));
     s.eq = Object.fromEntries(Object.entries(s.eq).filter(([c, id]) => C.HERO_IDS.includes(c) && s.inv.some(x => x.i === id && C.charOf(x.k) === c)));
     s.hist = s.hist.filter(isObj).slice(0, C.HIST_MAX).map(h => ({ t: num(h.t), kind: ['buy', 'sell', 'sold', 'term', 'upgrade'].includes(h.kind) ? h.kind : 'sell',
-      ...(C.isGood(h.g) || C.CASES.includes(h.c) ? { g: C.isGood(h.g) ? h.g : h.c, n: int(h.n, 0, 1e6) } : { k: C.isItem(h.k) ? h.k : 'qf_p1', st: stOf(h.st) }),   // 第 2 版的箱子记录写在 c 里
+      ...(C.isGood(h.g) || C.CASES.includes(h.c) ? { g: C.isGood(h.g) ? h.g : h.c, n: int(h.n, 0, 1e6) } : { k: C.isItem(C.liveKey(h.k)) ? C.liveKey(h.k) : 'qf_p1', st: stOf(h.st) }),   // 第 2 版的箱子记录写在 c 里
       price: int(h.price, 0, 1e9), ...(h.gain !== undefined ? { gain: int(h.gain, 0, 1e9) } : {}) }));
     s.cc = Array.from(new Set(s.cc.filter(c => own(C.COLS, c))));
     s.buys = Object.fromEntries(Object.entries(s.buys).filter(([id, v]) => C.STORE.some(g => g.id === id) && isObj(v)).map(([id, v]) => [id, { k: str(v.k, 12), n: int(v.n, 0, 1e6) }]));
@@ -793,8 +810,8 @@
     s.zf = 1;
     s.drop = { w: int(s.drop.w), g: int(s.drop.g, 0, 1e6), n: int(s.drop.n, 0, 1e6), sup: s.drop.sup ? 1 : 0 };
     s.dm = { d: int(s.dm.d), n: int(s.dm.n, 0, 1e6) };
-    const tm = s.tm, o = isObj(tm) && isObj(tm.o) && C.isItem(tm.o.k) ? tm.o : null;
-    s.tm = o ? { t0: num(tm.t0), n: int(tm.n, 1, C.TERM.offers), o: { k: o.k, st: C.isStOnly(o.k) ? Math.max(0, stOf(o.st)) : stOf(o.st), price: int(o.price, 1, 1e8) } } : null;
+    const tm = s.tm, o = isObj(tm) && isObj(tm.o) && C.isItem(C.liveKey(tm.o.k)) ? tm.o : null, ok = o ? C.liveKey(o.k) : '';
+    s.tm = o ? { t0: num(tm.t0), n: int(tm.n, 1, C.TERM.offers), o: { k: ok, st: C.isStOnly(ok) ? Math.max(0, stOf(o.st)) : stOf(o.st), price: int(o.price, 1, 1e8) } } : null;
     const op = s.op, ms = Array.isArray(op.ms) && op.ms.length === 4 && op.ms.every(m => isObj(m) && own(C.MISSIONS, m.id)) ? op.ms.map(m => ({ id: m.id, n: C.MISSIONS[m.id].n, star: C.MISSIONS[m.id].star, ...(m.id === 'hero' ? { h: C.HERO_IDS.includes(m.h) ? m.h : 'qingfeng' } : {}) })) : null;
     const earned = int(op.earned, 0, 1e6);
     s.op = { s: str(op.s, 8), earned, spent: int(op.spent, 0, earned), w: ms ? int(op.w) : -1, ms: ms || [],
@@ -812,6 +829,7 @@
     if (s.dm.d !== day) s.dm = { d: day, n: 0 };
     s.rw = C.rwClean(s.rw, env, day, wk);
     if (s.tm && !(now - s.tm.t0 < C.TERM.days * 86400e3)) s.tm = null;   // 开封超过 3 天：作废
+    C.retireSkins(env);
     return s;
   };
   const STAGE_RE = /^([1-9]\d?)\.([1-9])$/;
@@ -1078,7 +1096,7 @@
     if (r.expired) return { err: '这件挂单已经到期撤下了，刷新看看' };
     if (a.price !== undefined && +a.price !== r.price) return { err: '标价变了，刷新看看' };
     const it0 = cleanItem(r.item);
-    if (!it0 || it0.k !== r.k) return { err: '这件挂单坏了' };
+    if (!it0 || it0.k !== C.liveKey(r.k)) return { err: '这件挂单坏了' };
     if (C.invFull(s)) return { err: '库存满了' };
     if (env.ink < r.price) return { err: `墨锭不够，要 ${r.price}` };
     giveInk(env, -r.price);
@@ -1109,7 +1127,7 @@
     for (const r of Array.isArray(env.paid) ? env.paid.slice(0, 40) : []) {
       if (!isObj(r) || !C.isLid(r.id) || env.settled.includes(r.id)) continue;
       const ix = s.lst.findIndex(L => L.l === r.id), L = ix >= 0 ? s.lst.splice(ix, 1)[0] : null;
-      const price = int(r.price, 1, C.PRICE_MAX), gain = C.net(price, env.cfg), k = L ? L.it.k : C.isItem(r.k) ? r.k : 'qf_p1', st = L ? L.it.st : stOf(r.st);
+      const price = int(r.price, 1, C.PRICE_MAX), gain = C.net(price, env.cfg), k = L ? L.it.k : C.isItem(C.liveKey(r.k)) ? C.liveKey(r.k) : 'qf_p1', st = L ? L.it.st : stOf(r.st);
       giveInk(env, gain); s.stat.sold++;
       histPush(s, { t: num(r.at) || env.now, kind: 'sold', k, st, price, gain });
       sold.push({ k, st, price, gain });

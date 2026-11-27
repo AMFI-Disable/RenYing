@@ -470,6 +470,23 @@
   C.ofTierReg = t => C.ofTier(t).filter(k => !C.isPrem(k));   // 普通武器箱里的：星章兑换只从这些里出，神兵、星座与传世武器箱不在此列
   const PREFIX = { qf: 'qingfeng', fy: 'feiying', ts: 'tieshan', ls: 'lingshuang', ly: 'liuyun', lm: 'leiming', my: 'moyu', yh: 'yuehua', yl: 'yanling', yx: 'yuxiao', zx: 'zuixian', gc: 'gouchen', lq: 'lingque', li: 'liying', cx: 'cixian', qj: 'qianji', ch: 'chixiao', xj: 'xuanji', ql: 'qingluan', xw: 'xuanwu' };
   C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
+  // 退场侠客的饰品：精简到 20 位侠客时退场的 16 位里，只有幽篁（yu_）和破浪（pl_）在武库里有饰品，一共 14 款。
+  // 每款换成同一个武器箱、同一档品质、同一个位置上接替它的那一款。存档、挂单、记录里读到旧编号一律换成新编号，斩数照旧。
+  // 上一版读存档时直接丢掉了这些旧款：服务器按流水找回（cloudflare/worker/30-admin-helpers.js 的 retiredRestore），本机账号按可穿的皮肤补（src/armory.js）
+  C.RETIRED = { yu_sf1: 'ql_sf1', pl_sf1: 'xw_sf1', yu_ic1: 'ql_ic1', pl_ic1: 'xw_ic1', yu_ic3: 'ql_ic3', yu_ic4: 'ql_ic4',
+    pl_st1: 'xw_st1', pl_st2: 'xw_st2', pl_st3: 'xw_st3', pl_st4: 'xw_st4', yu_ym1: 'xw_ym1', yu_ym2: 'xw_ym2', yu_ym3: 'ql_ym3', yu_ym4: 'li_ym4' };
+  C.isRetired = k => typeof k === 'string' && own(C.RETIRED, k) !== undefined;
+  C.liveKey = k => C.isRetired(k) ? C.RETIRED[k] : k;
+  // 可穿的皮肤、正穿着的：旧编号换成新编号；穿在退场侠客身上的那一条拿掉
+  C.retireSkins = env => {
+    if (!env || !Array.isArray(env.skins)) return false;
+    let changed = false;
+    const out = [];
+    for (const k of env.skins) { const m = C.liveKey(k); if (m !== k) changed = true; if (!out.includes(m)) out.push(m); }
+    if (changed) { env.skins.length = 0; env.skins.push(...out); }
+    if (env.equip && typeof env.equip === 'object') for (const [c, k] of Object.entries(env.equip)) if (C.isRetired(k)) { delete env.equip[c]; changed = true; }
+    return changed;
+  };
 
   // 星座武器箱的 36 款：按 C.ZODIAC 的配色和 C.ZOD_OF 的分配生成。
   // 背后一枚星座星图（deco.sign 是哪个星座，zt 是第几档：灵犀只有星图，赤霄加一圈星环，绝世是转动的星盘），头上星冠，绝世的兵器上还有星光（zw）
@@ -737,8 +754,8 @@
   const num = (x, lo = 0, hi = 1e15) => { const v = +x; return Number.isFinite(v) ? Math.max(lo, Math.min(hi, v)) : lo; };
   const str = (x, n) => typeof x === 'string' ? x.slice(0, n) : '';
   const stOf = x => Math.floor(+x) >= 0 ? int(x, 0, 1e7) : -1;
-  const cleanItem = x => isObj(x) && C.isItem(x.k) && Number.isFinite(+x.i) ? {
-    i: int(x.i, 1), k: x.k, st: C.isStOnly(x.k) ? Math.max(0, stOf(x.st)) : stOf(x.st), n: str(x.n, 12).replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, ''), t: num(x.t), src: str(x.src, 8) } : null;
+  const cleanItem = x => isObj(x) && C.isItem(C.liveKey(x.k)) && Number.isFinite(+x.i) ? {
+    i: int(x.i, 1), k: C.liveKey(x.k), st: C.isStOnly(C.liveKey(x.k)) ? Math.max(0, stOf(x.st)) : stOf(x.st), n: str(x.n, 12).replace(/[\u0000-\u001f\u007f<>&"'`\\]/g, ''), t: num(x.t), src: str(x.src, 8) } : null;
   // 读进来的存档先整理一遍：缺的补上，类型不对的换掉，每一层都按格式重新拼一遍（多出来的字段一律丢掉），过了周就换周任务。
   // 第 1 版的存档也这样读：磨损、图案模板、玉珏、充值记录这些字段直接丢掉，没用完的钥匙一把换一台货郎，饰品和武器箱照旧。
   // 第 2 版的“本周买了几个箱子”也丢掉（现在不限买，限的是每天开几个）。
@@ -757,7 +774,7 @@
     s.appreciation2026 = s.appreciation2026 ? 1 : 0;
     s.promoAll = s.promoAll ? 1 : 0;
     s.heirloomPromo = s.heirloomPromo ? 1 : 0;
-    s.promoKeys = Array.from(new Set((Array.isArray(s.promoKeys) ? s.promoKeys : []).filter(k => C.isItem(k))));
+    s.promoKeys = Array.from(new Set((Array.isArray(s.promoKeys) ? s.promoKeys : []).map(C.liveKey).filter(k => C.isItem(k))));
     s.badgeOwned = Object.fromEntries(Object.entries(s.badgeOwned).filter(([id, tier]) => own(C.BADGES, id) && own(C.BADGE_TIER, tier)));
     s.badgeEquip = Object.fromEntries(Object.entries(s.badgeEquip).filter(([h, id]) => C.HERO_IDS.includes(h) && own(s.badgeOwned, id)).slice(0, C.HERO_IDS.length));
     const equippedBadges = new Set();
@@ -812,10 +829,10 @@
     for (const x of s.inv) top = Math.max(top, x.i);
     for (const L of s.lst) top = Math.max(top, L.it.i);
     s.nid = Math.max(int(s.nid, 1), top + 1);
-    s.via = Array.from(new Set(s.via.filter(k => C.isItem(k))));
+    s.via = Array.from(new Set(s.via.map(C.liveKey).filter(k => C.isItem(k))));
     s.eq = Object.fromEntries(Object.entries(s.eq).filter(([c, id]) => C.HERO_IDS.includes(c) && s.inv.some(x => x.i === id && C.charOf(x.k) === c)));
     s.hist = s.hist.filter(isObj).slice(0, C.HIST_MAX).map(h => ({ t: num(h.t), kind: ['buy', 'sell', 'sold', 'term', 'upgrade'].includes(h.kind) ? h.kind : 'sell',
-      ...(C.isGood(h.g) || C.CASES.includes(h.c) ? { g: C.isGood(h.g) ? h.g : h.c, n: int(h.n, 0, 1e6) } : { k: C.isItem(h.k) ? h.k : 'qf_p1', st: stOf(h.st) }),   // 第 2 版的箱子记录写在 c 里
+      ...(C.isGood(h.g) || C.CASES.includes(h.c) ? { g: C.isGood(h.g) ? h.g : h.c, n: int(h.n, 0, 1e6) } : { k: C.isItem(C.liveKey(h.k)) ? C.liveKey(h.k) : 'qf_p1', st: stOf(h.st) }),   // 第 2 版的箱子记录写在 c 里
       price: int(h.price, 0, 1e9), ...(h.gain !== undefined ? { gain: int(h.gain, 0, 1e9) } : {}) }));
     s.cc = Array.from(new Set(s.cc.filter(c => own(C.COLS, c))));
     s.buys = Object.fromEntries(Object.entries(s.buys).filter(([id, v]) => C.STORE.some(g => g.id === id) && isObj(v)).map(([id, v]) => [id, { k: str(v.k, 12), n: int(v.n, 0, 1e6) }]));
@@ -831,8 +848,8 @@
     s.zf = 1;
     s.drop = { w: int(s.drop.w), g: int(s.drop.g, 0, 1e6), n: int(s.drop.n, 0, 1e6), sup: s.drop.sup ? 1 : 0 };
     s.dm = { d: int(s.dm.d), n: int(s.dm.n, 0, 1e6) };
-    const tm = s.tm, o = isObj(tm) && isObj(tm.o) && C.isItem(tm.o.k) ? tm.o : null;
-    s.tm = o ? { t0: num(tm.t0), n: int(tm.n, 1, C.TERM.offers), o: { k: o.k, st: C.isStOnly(o.k) ? Math.max(0, stOf(o.st)) : stOf(o.st), price: int(o.price, 1, 1e8) } } : null;
+    const tm = s.tm, o = isObj(tm) && isObj(tm.o) && C.isItem(C.liveKey(tm.o.k)) ? tm.o : null, ok = o ? C.liveKey(o.k) : '';
+    s.tm = o ? { t0: num(tm.t0), n: int(tm.n, 1, C.TERM.offers), o: { k: ok, st: C.isStOnly(ok) ? Math.max(0, stOf(o.st)) : stOf(o.st), price: int(o.price, 1, 1e8) } } : null;
     const op = s.op, ms = Array.isArray(op.ms) && op.ms.length === 4 && op.ms.every(m => isObj(m) && own(C.MISSIONS, m.id)) ? op.ms.map(m => ({ id: m.id, n: C.MISSIONS[m.id].n, star: C.MISSIONS[m.id].star, ...(m.id === 'hero' ? { h: C.HERO_IDS.includes(m.h) ? m.h : 'qingfeng' } : {}) })) : null;
     const earned = int(op.earned, 0, 1e6);
     s.op = { s: str(op.s, 8), earned, spent: int(op.spent, 0, earned), w: ms ? int(op.w) : -1, ms: ms || [],
@@ -850,6 +867,7 @@
     if (s.dm.d !== day) s.dm = { d: day, n: 0 };
     s.rw = C.rwClean(s.rw, env, day, wk);
     if (s.tm && !(now - s.tm.t0 < C.TERM.days * 86400e3)) s.tm = null;   // 开封超过 3 天：作废
+    C.retireSkins(env);
     return s;
   };
   const STAGE_RE = /^([1-9]\d?)\.([1-9])$/;
@@ -1116,7 +1134,7 @@
     if (r.expired) return { err: '这件挂单已经到期撤下了，刷新看看' };
     if (a.price !== undefined && +a.price !== r.price) return { err: '标价变了，刷新看看' };
     const it0 = cleanItem(r.item);
-    if (!it0 || it0.k !== r.k) return { err: '这件挂单坏了' };
+    if (!it0 || it0.k !== C.liveKey(r.k)) return { err: '这件挂单坏了' };
     if (C.invFull(s)) return { err: '库存满了' };
     if (env.ink < r.price) return { err: `墨锭不够，要 ${r.price}` };
     giveInk(env, -r.price);
@@ -1147,7 +1165,7 @@
     for (const r of Array.isArray(env.paid) ? env.paid.slice(0, 40) : []) {
       if (!isObj(r) || !C.isLid(r.id) || env.settled.includes(r.id)) continue;
       const ix = s.lst.findIndex(L => L.l === r.id), L = ix >= 0 ? s.lst.splice(ix, 1)[0] : null;
-      const price = int(r.price, 1, C.PRICE_MAX), gain = C.net(price, env.cfg), k = L ? L.it.k : C.isItem(r.k) ? r.k : 'qf_p1', st = L ? L.it.st : stOf(r.st);
+      const price = int(r.price, 1, C.PRICE_MAX), gain = C.net(price, env.cfg), k = L ? L.it.k : C.isItem(C.liveKey(r.k)) ? C.liveKey(r.k) : 'qf_p1', st = L ? L.it.st : stOf(r.st);
       giveInk(env, gain); s.stat.sold++;
       histPush(s, { t: num(r.at) || env.now, kind: 'sold', k, st, price, gain });
       sold.push({ k, st, price, gain });
@@ -1884,7 +1902,8 @@ const MIGRATIONS = [
   {"id": 10, "name": "0010_ai_players", "sum": "da8876230e582d57", "sql": ["CREATE TABLE IF NOT EXISTS ai_players ( uid TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE COLLATE NOCASE, active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)), activity_level REAL NOT NULL DEFAULT 0.65 CHECK (activity_level >= 0 AND activity_level <= 1), behavior_profile TEXT NOT NULL DEFAULT 'balanced' CHECK (behavior_profile IN ('aggressive', 'balanced', 'defensive', 'tactical')), matchmaking_enabled INTEGER NOT NULL DEFAULT 1 CHECK (matchmaking_enabled IN (0, 1)), market_enabled INTEGER NOT NULL DEFAULT 1 CHECK (market_enabled IN (0, 1)), status TEXT NOT NULL DEFAULT 'menu' CHECK (status IN ('menu', 'queue', 'match')), last_active_at INTEGER NOT NULL DEFAULT 0, daily_spent INTEGER NOT NULL DEFAULT 0 CHECK (daily_spent >= 0), daily_listed INTEGER NOT NULL DEFAULT 0 CHECK (daily_listed >= 0), daily_reset_day INTEGER NOT NULL DEFAULT 0, updated_at INTEGER NOT NULL DEFAULT 0 )", "CREATE INDEX IF NOT EXISTS idx_ai_players_active ON ai_players (active, status)"]},
   {"id": 11, "name": "0011_ai_players_lifecycle", "sum": "ae4e3d758dad600b", "sql": ["CREATE TABLE ai_players_new ( uid TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE COLLATE NOCASE, active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)), activity_level REAL NOT NULL DEFAULT 0.65 CHECK (activity_level >= 0 AND activity_level <= 1), behavior_profile TEXT NOT NULL DEFAULT 'balanced' CHECK (behavior_profile IN ('aggressive', 'balanced', 'defensive', 'tactical')), matchmaking_enabled INTEGER NOT NULL DEFAULT 1 CHECK (matchmaking_enabled IN (0, 1)), market_enabled INTEGER NOT NULL DEFAULT 1 CHECK (market_enabled IN (0, 1)), status TEXT NOT NULL DEFAULT 'offline' CHECK (status IN ('offline', 'resting', 'menu', 'queue', 'match', 'training', 'market')), chronotype TEXT NOT NULL DEFAULT 'evening' CHECK (chronotype IN ('early_bird', 'daytime', 'student', 'evening', 'night_owl', 'casual')), schedule_json TEXT NOT NULL DEFAULT '{}', prefs_json TEXT NOT NULL DEFAULT '{}', evolution_json TEXT NOT NULL DEFAULT '{}', current_mode TEXT NOT NULL DEFAULT '', current_hero TEXT NOT NULL DEFAULT '', session_until INTEGER NOT NULL DEFAULT 0, rest_until INTEGER NOT NULL DEFAULT 0, next_market_at INTEGER NOT NULL DEFAULT 0, sessions_today INTEGER NOT NULL DEFAULT 0 CHECK (sessions_today >= 0), matches_today INTEGER NOT NULL DEFAULT 0 CHECK (matches_today >= 0), training_today INTEGER NOT NULL DEFAULT 0 CHECK (training_today >= 0), last_active_at INTEGER NOT NULL DEFAULT 0, daily_spent INTEGER NOT NULL DEFAULT 0 CHECK (daily_spent >= 0), daily_listed INTEGER NOT NULL DEFAULT 0 CHECK (daily_listed >= 0), daily_reset_day INTEGER NOT NULL DEFAULT 0, updated_at INTEGER NOT NULL DEFAULT 0 )", "INSERT INTO ai_players_new (uid, username, active, activity_level, behavior_profile, matchmaking_enabled, market_enabled, status, last_active_at, daily_spent, daily_listed, daily_reset_day, updated_at) SELECT uid, username, active, activity_level, behavior_profile, matchmaking_enabled, market_enabled, CASE WHEN status IN ('offline', 'resting', 'menu', 'queue', 'match', 'training', 'market') THEN status ELSE 'offline' END, last_active_at, MAX(daily_spent, 0), MAX(daily_listed, 0), daily_reset_day, updated_at FROM ai_players", "DROP TABLE ai_players", "ALTER TABLE ai_players_new RENAME TO ai_players", "CREATE INDEX IF NOT EXISTS idx_ai_players_active ON ai_players (active, status)"]},
   {"id": 12, "name": "0012_rename_first_25_ai", "sum": "a5608f44568ae155", "sql": ["UPDATE ai_players SET username = '6767' WHERE uid = 'ai_01' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('6767') AND id != 'ai_01')", "UPDATE users SET username = '6767' WHERE id = 'ai_01' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('6767') AND id != 'ai_01')", "UPDATE ai_players SET username = '看见你' WHERE uid = 'ai_02' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('看见你') AND id != 'ai_02')", "UPDATE users SET username = '看见你' WHERE id = 'ai_02' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('看见你') AND id != 'ai_02')", "UPDATE ai_players SET username = '不吃香菜' WHERE uid = 'ai_03' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('不吃香菜') AND id != 'ai_03')", "UPDATE users SET username = '不吃香菜' WHERE id = 'ai_03' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('不吃香菜') AND id != 'ai_03')", "UPDATE ai_players SET username = '别打我' WHERE uid = 'ai_04' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('别打我') AND id != 'ai_04')", "UPDATE users SET username = '别打我' WHERE id = 'ai_04' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('别打我') AND id != 'ai_04')", "UPDATE ai_players SET username = 'xiaoming9' WHERE uid = 'ai_05' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('xiaoming9') AND id != 'ai_05')", "UPDATE users SET username = 'xiaoming9' WHERE id = 'ai_05' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('xiaoming9') AND id != 'ai_05')", "UPDATE ai_players SET username = 'kk0812' WHERE uid = 'ai_06' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('kk0812') AND id != 'ai_06')", "UPDATE users SET username = 'kk0812' WHERE id = 'ai_06' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('kk0812') AND id != 'ai_06')", "UPDATE ai_players SET username = '0419' WHERE uid = 'ai_07' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('0419') AND id != 'ai_07')", "UPDATE users SET username = '0419' WHERE id = 'ai_07' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('0419') AND id != 'ai_07')", "UPDATE ai_players SET username = '晚安玛卡巴卡' WHERE uid = 'ai_08' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('晚安玛卡巴卡') AND id != 'ai_08')", "UPDATE users SET username = '晚安玛卡巴卡' WHERE id = 'ai_08' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('晚安玛卡巴卡') AND id != 'ai_08')", "UPDATE ai_players SET username = 'linyi7' WHERE uid = 'ai_09' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('linyi7') AND id != 'ai_09')", "UPDATE users SET username = 'linyi7' WHERE id = 'ai_09' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('linyi7') AND id != 'ai_09')", "UPDATE ai_players SET username = 'yz_07' WHERE uid = 'ai_10' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('yz_07') AND id != 'ai_10')", "UPDATE users SET username = 'yz_07' WHERE id = 'ai_10' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('yz_07') AND id != 'ai_10')", "UPDATE ai_players SET username = '8823' WHERE uid = 'ai_11' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('8823') AND id != 'ai_11')", "UPDATE users SET username = '8823' WHERE id = 'ai_11' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('8823') AND id != 'ai_11')", "UPDATE ai_players SET username = '吃口西瓜' WHERE uid = 'ai_12' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('吃口西瓜') AND id != 'ai_12')", "UPDATE users SET username = '吃口西瓜' WHERE id = 'ai_12' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('吃口西瓜') AND id != 'ai_12')", "UPDATE ai_players SET username = 'chen77' WHERE uid = 'ai_13' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('chen77') AND id != 'ai_13')", "UPDATE users SET username = 'chen77' WHERE id = 'ai_13' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('chen77') AND id != 'ai_13')", "UPDATE ai_players SET username = '就打一把' WHERE uid = 'ai_14' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('就打一把') AND id != 'ai_14')", "UPDATE users SET username = '就打一把' WHERE id = 'ai_14' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('就打一把') AND id != 'ai_14')", "UPDATE ai_players SET username = 'k792' WHERE uid = 'ai_15' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('k792') AND id != 'ai_15')", "UPDATE users SET username = 'k792' WHERE id = 'ai_15' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('k792') AND id != 'ai_15')", "UPDATE ai_players SET username = '再打一局就睡' WHERE uid = 'ai_16' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('再打一局就睡') AND id != 'ai_16')", "UPDATE users SET username = '再打一局就睡' WHERE id = 'ai_16' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('再打一局就睡') AND id != 'ai_16')", "UPDATE ai_players SET username = 'skycn' WHERE uid = 'ai_17' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('skycn') AND id != 'ai_17')", "UPDATE users SET username = 'skycn' WHERE id = 'ai_17' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('skycn') AND id != 'ai_17')", "UPDATE ai_players SET username = 'momo酱' WHERE uid = 'ai_18' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('momo酱') AND id != 'ai_18')", "UPDATE users SET username = 'momo酱' WHERE id = 'ai_18' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('momo酱') AND id != 'ai_18')", "UPDATE ai_players SET username = 'm0x3' WHERE uid = 'ai_19' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('m0x3') AND id != 'ai_19')", "UPDATE users SET username = 'm0x3' WHERE id = 'ai_19' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('m0x3') AND id != 'ai_19')", "UPDATE ai_players SET username = '菜鸟报道' WHERE uid = 'ai_20' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('菜鸟报道') AND id != 'ai_20')", "UPDATE users SET username = '菜鸟报道' WHERE id = 'ai_20' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('菜鸟报道') AND id != 'ai_20')", "UPDATE ai_players SET username = 'zerok' WHERE uid = 'ai_21' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('zerok') AND id != 'ai_21')", "UPDATE users SET username = 'zerok' WHERE id = 'ai_21' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('zerok') AND id != 'ai_21')", "UPDATE ai_players SET username = '阿泽' WHERE uid = 'ai_22' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('阿泽') AND id != 'ai_22')", "UPDATE users SET username = '阿泽' WHERE id = 'ai_22' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('阿泽') AND id != 'ai_22')", "UPDATE ai_players SET username = '9527x' WHERE uid = 'ai_23' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('9527x') AND id != 'ai_23')", "UPDATE users SET username = '9527x' WHERE id = 'ai_23' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('9527x') AND id != 'ai_23')", "UPDATE ai_players SET username = '路过打酱油' WHERE uid = 'ai_24' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('路过打酱油') AND id != 'ai_24')", "UPDATE users SET username = '路过打酱油' WHERE id = 'ai_24' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('路过打酱油') AND id != 'ai_24')", "UPDATE ai_players SET username = 'nova23' WHERE uid = 'ai_25' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('nova23') AND id != 'ai_25')", "UPDATE users SET username = 'nova23' WHERE id = 'ai_25' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('nova23') AND id != 'ai_25')"]},
-  {"id": 13, "name": "0013_remove_ai_players", "sum": "477bb740005e0dd4", "sql": ["DELETE FROM mkt WHERE seller IN (SELECT id FROM users WHERE password_algo = 'ai-bot-locked') AND state != 1", "DELETE FROM econ_log WHERE uid IN (SELECT id FROM users WHERE password_algo = 'ai-bot-locked') OR uid = 'ai_system'", "DELETE FROM econ WHERE uid IN (SELECT id FROM users WHERE password_algo = 'ai-bot-locked')", "DELETE FROM users WHERE password_algo = 'ai-bot-locked'", "DELETE FROM rate WHERE k = 'ai:tick'", "DROP TABLE IF EXISTS ai_players"]}
+  {"id": 13, "name": "0013_remove_ai_players", "sum": "477bb740005e0dd4", "sql": ["DELETE FROM mkt WHERE seller IN (SELECT id FROM users WHERE password_algo = 'ai-bot-locked') AND state != 1", "DELETE FROM econ_log WHERE uid IN (SELECT id FROM users WHERE password_algo = 'ai-bot-locked') OR uid = 'ai_system'", "DELETE FROM econ WHERE uid IN (SELECT id FROM users WHERE password_algo = 'ai-bot-locked')", "DELETE FROM users WHERE password_algo = 'ai-bot-locked'", "DELETE FROM rate WHERE k = 'ai:tick'", "DROP TABLE IF EXISTS ai_players"]},
+  {"id": 14, "name": "0014_retired_hero_skins", "sum": "e3ef441b2adabff0", "sql": ["UPDATE mkt SET k = 'ql_sf1', item_json = json_set(item_json, '$.k', 'ql_sf1') WHERE k = 'yu_sf1'", "UPDATE mkt SET k = 'xw_sf1', item_json = json_set(item_json, '$.k', 'xw_sf1') WHERE k = 'pl_sf1'", "UPDATE mkt SET k = 'ql_ic1', item_json = json_set(item_json, '$.k', 'ql_ic1') WHERE k = 'yu_ic1'", "UPDATE mkt SET k = 'xw_ic1', item_json = json_set(item_json, '$.k', 'xw_ic1') WHERE k = 'pl_ic1'", "UPDATE mkt SET k = 'ql_ic3', item_json = json_set(item_json, '$.k', 'ql_ic3') WHERE k = 'yu_ic3'", "UPDATE mkt SET k = 'ql_ic4', item_json = json_set(item_json, '$.k', 'ql_ic4') WHERE k = 'yu_ic4'", "UPDATE mkt SET k = 'xw_st1', item_json = json_set(item_json, '$.k', 'xw_st1') WHERE k = 'pl_st1'", "UPDATE mkt SET k = 'xw_st2', item_json = json_set(item_json, '$.k', 'xw_st2') WHERE k = 'pl_st2'", "UPDATE mkt SET k = 'xw_st3', item_json = json_set(item_json, '$.k', 'xw_st3') WHERE k = 'pl_st3'", "UPDATE mkt SET k = 'xw_st4', item_json = json_set(item_json, '$.k', 'xw_st4') WHERE k = 'pl_st4'", "UPDATE mkt SET k = 'xw_ym1', item_json = json_set(item_json, '$.k', 'xw_ym1') WHERE k = 'yu_ym1'", "UPDATE mkt SET k = 'xw_ym2', item_json = json_set(item_json, '$.k', 'xw_ym2') WHERE k = 'yu_ym2'", "UPDATE mkt SET k = 'ql_ym3', item_json = json_set(item_json, '$.k', 'ql_ym3') WHERE k = 'yu_ym3'", "UPDATE mkt SET k = 'li_ym4', item_json = json_set(item_json, '$.k', 'li_ym4') WHERE k = 'yu_ym4'"]}
 ];
 /* === src/data/13-chron.js === */
 // ======================= 全服肉鸽 · 江湖长卷：全服共享的剧情线 =======================
@@ -2599,6 +2618,7 @@ function mergeSkins(list, st, srv, ev) {
   const via = new Set(Array.isArray(st.via) ? st.via : []), out = [];
   for (const k of cleanSkins(list)) {
     if (C.CS_KEYS.includes(k) && !via.has(k)) continue;
+    if (C.isRetired(k) && srv.rh) continue;   // 退场侠客的旧款：找回做完以后（srv.rh）不再认，换成新编号的那一款在 via 里
     const g = srv.gone[k];
     if (g && !(ev >= g[0]) && !via.has(k)) continue;
     out.push(k);
@@ -2916,6 +2936,13 @@ async function handleEcon(env, auth, body, now, ip) {
         for (const k of legacy) { C.addItem(state0, C.mkItem(state0, k, 'legacy', rnd, { st: -1 }), E); if (!state0.via.includes(k)) state0.via.push(k); }
       }
     }
+    // 退场侠客的饰品：上一版读存档时丢掉了的，按流水原样找回（每个号只做一次，记在 srv.rh；见 30-admin-helpers.js 的 retiredRestore）
+    let retired = null;
+    if (!eco.srv.rh) {
+      const s1 = state0 === eco.state ? C.normalize(JSON.parse(JSON.stringify(eco.state)), { now, uid }) : state0;
+      retired = await retiredRestore(env, uid, s1, E, retiredGone(eco.state, prof), now);
+      if (retired) state0 = s1;
+    }
     // 作废的兑换码：领过的号把码送的饰品收回。已经被别人买走的不追（买家是花墨锭买的）
     let voided = null;
     if (!eco.srv.zv) {
@@ -2979,11 +3006,12 @@ async function handleEcon(env, auth, body, now, ip) {
       return error('操作失败，已记录', 500);
     }
     const mo = mkt.out, settled = E.settled || [];
-    if (!legacy && !code && !out.sold.length && !out.back && !mo && !(voided && voided.lst.length) && E.ink === eco.ink && stJson === eco.stateJson && !add.length && !del.length && !Object.keys(eq).length) {
+    if (!legacy && !retired && !code && !out.sold.length && !out.back && !mo && !(voided && voided.lst.length) && E.ink === eco.ink && stJson === eco.stateJson && !add.length && !del.length && !Object.keys(eq).length) {
       return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: [], skinsDel: [], equip: {}, cfg });   // 什么都没变：不用写
     }
     const ver = eco.ver, srv = eco.srv;
     if (legacy) srv.lg = now;
+    if (!srv.rh) srv.rh = now;   // 走到这里说明退场饰品那一步已经做过（丢了的找回了，没丢的不用再查）
     if (!srv.zv) srv.zv = now;   // 走到这里说明作废那一步已经做过（领过的号收回了，没领过的不用再查）
     for (const k of del) srv.gone[k] = [ver + 1, now];
     for (const k of add) delete srv.gone[k];
@@ -3036,6 +3064,7 @@ async function handleEcon(env, auth, body, now, ip) {
       for (const l of voided.lst) stmts.push(guard(env, 'UPDATE mkt SET state = 2, done_at = ? WHERE id = ? AND seller = ? AND state = 0 AND', [now, l, uid], uid, ver, tx));
       stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'code_void', 1, null, null, JSON.stringify(voided).slice(0, 400)], uid, ver, tx));
     }
+    if (retired) stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'retire', 1, null, null, logDetail({ k: retired.k, ad: [...retired.inv, ...retired.fill], lst: retired.lst.length ? retired.lst : undefined })], uid, ver, tx));
     if (legacy && legacy.length) stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'legacy', 1, null, null, JSON.stringify({ k: legacy }).slice(0, 400)], uid, ver, tx));
     if (!quiet) stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, act, res.err ? 0 : 1, eco.ink, E.ink, detail], uid, ver, tx));
     stmts.push(userWrite(env, uid, p, now, ver, tx));
@@ -3485,7 +3514,7 @@ async function adminAdjust(env, u, body, who, why, now) {
 // 正常的去向（熔铸掉、一键卖掉重复的、在玩家市场卖掉）只列出来，不能找回（找回就是凭空多一件）；
 // 去向不明的（某一步操作里突然没了、旧流水没记去向）和管理员收走的可以找回。找回过的会标出来，不能再找回第二次
 const LOST_WHY = { trade: '熔铸掉了', sellDupes: '一键卖掉了重复的', sold: '在玩家市场卖掉了', admin: '管理员收走了' };
-const parseItemRef = t => { const m = /^([a-z]{2}_[a-z0-9]+)#(\d+)( st(\d+)?)?$/.exec(String(t)); return m && C.isItem(m[1]) ? { k: m[1], i: +m[2], st: m[3] ? +(m[4] || 0) : -1, n: m[4] !== undefined } : null; };   // 老流水只记了 st，没有斩数
+const parseItemRef = t => { const m = /^([a-z]{2}_[a-z0-9]+)#(\d+)( st(\d+)?)?$/.exec(String(t)); return m && C.isItem(C.liveKey(m[1])) ? { k: C.liveKey(m[1]), i: +m[2], st: m[3] ? +(m[4] || 0) : -1, n: m[4] !== undefined, ...(C.isRetired(m[1]) ? { was: m[1] } : {}) } : null; };   // 退场侠客的旧款按接替的那一款算，was 记着原来的编号   // 老流水只记了 st，没有斩数
 async function lostItems(env, uid, all = false) {
   const row = await env.DB.prepare('SELECT state_json FROM econ WHERE uid = ?').bind(uid).first();
   const st = parseObj(row && row.state_json) || C.blank(), here = new Set();
@@ -3501,7 +3530,7 @@ async function lostItems(env, uid, all = false) {
     after = page[page.length - 1].id;
   }
   const seen = new Map();
-  const one = (x, fresh) => { let o = seen.get(x.i); if (!o) seen.set(x.i, o = { i: x.i, k: x.k, st: x.st }); else if (fresh || x.n) { o.k = x.k; o.st = x.st; } return o; };   // 记了斩数的以最近一次为准；老流水没记斩数，以拿到时的为准
+  const one = (x, fresh) => { let o = seen.get(x.i); if (!o) seen.set(x.i, o = { i: x.i, k: x.k, st: x.st }); else if (fresh || x.n) { o.k = x.k; o.st = x.st; } if (x.was) o.was = x.was; return o; };   // 记了斩数的以最近一次为准；老流水没记斩数，以拿到时的为准
   const got = (t, r) => { const x = parseItemRef(t); if (x) { const o = one(x, true); if (!o.got) o.got = { at: r.at, act: r.act }; } };
   const gone = (t, r, why) => { const x = typeof t === 'number' ? seen.get(t) : parseItemRef(t); if (!x) return; const o = one(x); o.gone = { at: r.at, act: r.act, why }; o.restored = null; };
   for (const r of log) {
@@ -3518,10 +3547,51 @@ async function lostItems(env, uid, all = false) {
   for (const o of seen.values()) {
     if (here.has(o.i)) continue;
     const g = o.gone, why = o.restored ? 'restored' : sold.has(o.i) ? 'sold' : g && g.why === 'admin' ? 'admin' : g && LOST_WHY[g.act] ? g.act : g ? 'odd' : 'unknown';
-    out.push({ i: o.i, k: o.k, st: o.st, got: o.got || null, gone: g || null, why, can: ['admin', 'odd', 'unknown'].includes(why) });
+    out.push({ i: o.i, k: o.k, st: o.st, ...(o.was ? { was: o.was } : {}), got: o.got || null, gone: g || null, why, can: ['admin', 'odd', 'unknown'].includes(why) });
   }
   out.sort((a, b) => ((b.gone && b.gone.at) || 0) - ((a.gone && a.gone.at) || 0) || b.i - a.i);
   return all ? out : out.slice(0, 300);
+}
+// 退场侠客的饰品（C.RETIRED）：上一版读存档时把这些旧款直接丢掉了，库存里没了，流水里也没记去向。
+// retiredGone：可穿的皮肤或 via 里还记着旧款、存档里却一件都没有的，就是被丢掉了（每个号只查一次，记在 srv.rh）
+function retiredGone(st, prof) {
+  const raw = st && typeof st === 'object' ? st : {}, has = new Set();
+  for (const it of Array.isArray(raw.inv) ? raw.inv : []) if (it) has.add(it.k);
+  for (const L of Array.isArray(raw.lst) ? raw.lst : []) if (L && L.it) has.add(L.it.k);
+  const seen = [...cleanSkins(prof && prof.skins), ...(Array.isArray(raw.via) ? raw.via : [])];
+  return Array.from(new Set(seen.filter(k => C.isRetired(k) && !has.has(k))));
+}
+// retiredRestore：按流水把丢掉的每一件原样找回（编号、斩数照旧，款式换成接替的那一款）；流水里一件也查不到的旧款补一件普通版。
+// 挂在市场上、存档里却没了挂单记录的（上一版把挂单记录也丢掉了），补回挂单记录，到期没卖掉时照常退回库存。
+// 没有要找回的返回 null；有的话返回这次放回来的清单，记进流水
+async function retiredRestore(env, uid, s, E, keys, now) {
+  const want = new Set(keys), live = new Set(Object.values(C.RETIRED)), out = { k: keys, inv: [], lst: [], fill: [] };
+  const taken = new Set([...s.inv.map(x => x.i), ...s.lst.map(L => L.it.i)]), open = new Set();
+  for (const r of (await env.DB.prepare('SELECT id, k, item_json, price, at FROM mkt WHERE seller = ? AND state = 0').bind(uid).all()).results || []) {
+    const it = parseObj(r.item_json); if (!it || !Number.isInteger(+it.i)) continue;
+    open.add(+it.i);
+    if (!live.has(C.liveKey(r.k)) || taken.has(+it.i) || s.lst.some(L => L.l === r.id)) continue;
+    const x = { i: +it.i, k: C.liveKey(r.k), st: Math.floor(+it.st) >= 0 ? Math.floor(+it.st) : -1 };
+    s.lst.push({ l: r.id, it: { ...x, n: '', t: now, src: 'retire' }, price: r.price, t: r.at });
+    taken.add(x.i); s.nid = Math.max(s.nid, x.i + 1);
+    out.lst.push(itemRef(x));
+  }
+  if (!want.size && !out.lst.length) return null;
+  const lost = want.size ? (await lostItems(env, uid, true)).filter(x => x.why === 'unknown' && want.has(x.was) && !open.has(x.i)) : [];
+  for (const x of lost) {
+    const to = taken.has(x.i) ? s.nid++ : x.i;   // 原来的编号空着就用原来的，流水里好对上
+    taken.add(to); s.nid = Math.max(s.nid, to + 1);
+    const it = C.addItem(s, { i: to, k: x.k, st: x.st, n: '', t: now, src: 'retire' }, E);
+    if (!s.via.includes(it.k)) s.via.push(it.k);
+    out.inv.push(itemRef(it));
+  }
+  for (const k of want) {
+    if (lost.some(x => x.was === k)) continue;
+    const it = C.addItem(s, C.mkItem(s, C.liveKey(k), 'retire', E.rnd, { st: -1 }), E);
+    if (!s.via.includes(it.k)) s.via.push(it.k);
+    out.fill.push(itemRef(it));
+  }
+  return out;
 }
 async function adminRestore(env, u, body, who, why, now) {
   const ids = Array.isArray(body.ids) ? [...new Set(body.ids.map(Number))] : [];

@@ -246,7 +246,7 @@ async function adminAdjust(env, u, body, who, why, now) {
 // 正常的去向（熔铸掉、一键卖掉重复的、在玩家市场卖掉）只列出来，不能找回（找回就是凭空多一件）；
 // 去向不明的（某一步操作里突然没了、旧流水没记去向）和管理员收走的可以找回。找回过的会标出来，不能再找回第二次
 const LOST_WHY = { trade: '熔铸掉了', sellDupes: '一键卖掉了重复的', sold: '在玩家市场卖掉了', admin: '管理员收走了' };
-const parseItemRef = t => { const m = /^([a-z]{2}_[a-z0-9]+)#(\d+)( st(\d+)?)?$/.exec(String(t)); return m && C.isItem(m[1]) ? { k: m[1], i: +m[2], st: m[3] ? +(m[4] || 0) : -1, n: m[4] !== undefined } : null; };   // 老流水只记了 st，没有斩数
+const parseItemRef = t => { const m = /^([a-z]{2}_[a-z0-9]+)#(\d+)( st(\d+)?)?$/.exec(String(t)); return m && C.isItem(C.liveKey(m[1])) ? { k: C.liveKey(m[1]), i: +m[2], st: m[3] ? +(m[4] || 0) : -1, n: m[4] !== undefined, ...(C.isRetired(m[1]) ? { was: m[1] } : {}) } : null; };   // 退场侠客的旧款按接替的那一款算，was 记着原来的编号   // 老流水只记了 st，没有斩数
 async function lostItems(env, uid, all = false) {
   const row = await env.DB.prepare('SELECT state_json FROM econ WHERE uid = ?').bind(uid).first();
   const st = parseObj(row && row.state_json) || C.blank(), here = new Set();
@@ -262,7 +262,7 @@ async function lostItems(env, uid, all = false) {
     after = page[page.length - 1].id;
   }
   const seen = new Map();
-  const one = (x, fresh) => { let o = seen.get(x.i); if (!o) seen.set(x.i, o = { i: x.i, k: x.k, st: x.st }); else if (fresh || x.n) { o.k = x.k; o.st = x.st; } return o; };   // 记了斩数的以最近一次为准；老流水没记斩数，以拿到时的为准
+  const one = (x, fresh) => { let o = seen.get(x.i); if (!o) seen.set(x.i, o = { i: x.i, k: x.k, st: x.st }); else if (fresh || x.n) { o.k = x.k; o.st = x.st; } if (x.was) o.was = x.was; return o; };   // 记了斩数的以最近一次为准；老流水没记斩数，以拿到时的为准
   const got = (t, r) => { const x = parseItemRef(t); if (x) { const o = one(x, true); if (!o.got) o.got = { at: r.at, act: r.act }; } };
   const gone = (t, r, why) => { const x = typeof t === 'number' ? seen.get(t) : parseItemRef(t); if (!x) return; const o = one(x); o.gone = { at: r.at, act: r.act, why }; o.restored = null; };
   for (const r of log) {
@@ -279,10 +279,51 @@ async function lostItems(env, uid, all = false) {
   for (const o of seen.values()) {
     if (here.has(o.i)) continue;
     const g = o.gone, why = o.restored ? 'restored' : sold.has(o.i) ? 'sold' : g && g.why === 'admin' ? 'admin' : g && LOST_WHY[g.act] ? g.act : g ? 'odd' : 'unknown';
-    out.push({ i: o.i, k: o.k, st: o.st, got: o.got || null, gone: g || null, why, can: ['admin', 'odd', 'unknown'].includes(why) });
+    out.push({ i: o.i, k: o.k, st: o.st, ...(o.was ? { was: o.was } : {}), got: o.got || null, gone: g || null, why, can: ['admin', 'odd', 'unknown'].includes(why) });
   }
   out.sort((a, b) => ((b.gone && b.gone.at) || 0) - ((a.gone && a.gone.at) || 0) || b.i - a.i);
   return all ? out : out.slice(0, 300);
+}
+// 退场侠客的饰品（C.RETIRED）：上一版读存档时把这些旧款直接丢掉了，库存里没了，流水里也没记去向。
+// retiredGone：可穿的皮肤或 via 里还记着旧款、存档里却一件都没有的，就是被丢掉了（每个号只查一次，记在 srv.rh）
+function retiredGone(st, prof) {
+  const raw = st && typeof st === 'object' ? st : {}, has = new Set();
+  for (const it of Array.isArray(raw.inv) ? raw.inv : []) if (it) has.add(it.k);
+  for (const L of Array.isArray(raw.lst) ? raw.lst : []) if (L && L.it) has.add(L.it.k);
+  const seen = [...cleanSkins(prof && prof.skins), ...(Array.isArray(raw.via) ? raw.via : [])];
+  return Array.from(new Set(seen.filter(k => C.isRetired(k) && !has.has(k))));
+}
+// retiredRestore：按流水把丢掉的每一件原样找回（编号、斩数照旧，款式换成接替的那一款）；流水里一件也查不到的旧款补一件普通版。
+// 挂在市场上、存档里却没了挂单记录的（上一版把挂单记录也丢掉了），补回挂单记录，到期没卖掉时照常退回库存。
+// 没有要找回的返回 null；有的话返回这次放回来的清单，记进流水
+async function retiredRestore(env, uid, s, E, keys, now) {
+  const want = new Set(keys), live = new Set(Object.values(C.RETIRED)), out = { k: keys, inv: [], lst: [], fill: [] };
+  const taken = new Set([...s.inv.map(x => x.i), ...s.lst.map(L => L.it.i)]), open = new Set();
+  for (const r of (await env.DB.prepare('SELECT id, k, item_json, price, at FROM mkt WHERE seller = ? AND state = 0').bind(uid).all()).results || []) {
+    const it = parseObj(r.item_json); if (!it || !Number.isInteger(+it.i)) continue;
+    open.add(+it.i);
+    if (!live.has(C.liveKey(r.k)) || taken.has(+it.i) || s.lst.some(L => L.l === r.id)) continue;
+    const x = { i: +it.i, k: C.liveKey(r.k), st: Math.floor(+it.st) >= 0 ? Math.floor(+it.st) : -1 };
+    s.lst.push({ l: r.id, it: { ...x, n: '', t: now, src: 'retire' }, price: r.price, t: r.at });
+    taken.add(x.i); s.nid = Math.max(s.nid, x.i + 1);
+    out.lst.push(itemRef(x));
+  }
+  if (!want.size && !out.lst.length) return null;
+  const lost = want.size ? (await lostItems(env, uid, true)).filter(x => x.why === 'unknown' && want.has(x.was) && !open.has(x.i)) : [];
+  for (const x of lost) {
+    const to = taken.has(x.i) ? s.nid++ : x.i;   // 原来的编号空着就用原来的，流水里好对上
+    taken.add(to); s.nid = Math.max(s.nid, to + 1);
+    const it = C.addItem(s, { i: to, k: x.k, st: x.st, n: '', t: now, src: 'retire' }, E);
+    if (!s.via.includes(it.k)) s.via.push(it.k);
+    out.inv.push(itemRef(it));
+  }
+  for (const k of want) {
+    if (lost.some(x => x.was === k)) continue;
+    const it = C.addItem(s, C.mkItem(s, C.liveKey(k), 'retire', E.rnd, { st: -1 }), E);
+    if (!s.via.includes(it.k)) s.via.push(it.k);
+    out.fill.push(itemRef(it));
+  }
+  return out;
 }
 async function adminRestore(env, u, body, who, why, now) {
   const ids = Array.isArray(body.ids) ? [...new Set(body.ids.map(Number))] : [];

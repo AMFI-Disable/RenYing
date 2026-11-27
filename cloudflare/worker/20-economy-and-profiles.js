@@ -44,6 +44,7 @@ function mergeSkins(list, st, srv, ev) {
   const via = new Set(Array.isArray(st.via) ? st.via : []), out = [];
   for (const k of cleanSkins(list)) {
     if (C.CS_KEYS.includes(k) && !via.has(k)) continue;
+    if (C.isRetired(k) && srv.rh) continue;   // 退场侠客的旧款：找回做完以后（srv.rh）不再认，换成新编号的那一款在 via 里
     const g = srv.gone[k];
     if (g && !(ev >= g[0]) && !via.has(k)) continue;
     out.push(k);
@@ -361,6 +362,13 @@ async function handleEcon(env, auth, body, now, ip) {
         for (const k of legacy) { C.addItem(state0, C.mkItem(state0, k, 'legacy', rnd, { st: -1 }), E); if (!state0.via.includes(k)) state0.via.push(k); }
       }
     }
+    // 退场侠客的饰品：上一版读存档时丢掉了的，按流水原样找回（每个号只做一次，记在 srv.rh；见 30-admin-helpers.js 的 retiredRestore）
+    let retired = null;
+    if (!eco.srv.rh) {
+      const s1 = state0 === eco.state ? C.normalize(JSON.parse(JSON.stringify(eco.state)), { now, uid }) : state0;
+      retired = await retiredRestore(env, uid, s1, E, retiredGone(eco.state, prof), now);
+      if (retired) state0 = s1;
+    }
     // 作废的兑换码：领过的号把码送的饰品收回。已经被别人买走的不追（买家是花墨锭买的）
     let voided = null;
     if (!eco.srv.zv) {
@@ -424,11 +432,12 @@ async function handleEcon(env, auth, body, now, ip) {
       return error('操作失败，已记录', 500);
     }
     const mo = mkt.out, settled = E.settled || [];
-    if (!legacy && !code && !out.sold.length && !out.back && !mo && !(voided && voided.lst.length) && E.ink === eco.ink && stJson === eco.stateJson && !add.length && !del.length && !Object.keys(eq).length) {
+    if (!legacy && !retired && !code && !out.sold.length && !out.back && !mo && !(voided && voided.lst.length) && E.ink === eco.ink && stJson === eco.stateJson && !add.length && !del.length && !Object.keys(eq).length) {
       return json({ ok: true, ...out, state: C.publicState(st), ledger: ledgerOut(eco, now), skinsAdd: [], skinsDel: [], equip: {}, cfg });   // 什么都没变：不用写
     }
     const ver = eco.ver, srv = eco.srv;
     if (legacy) srv.lg = now;
+    if (!srv.rh) srv.rh = now;   // 走到这里说明退场饰品那一步已经做过（丢了的找回了，没丢的不用再查）
     if (!srv.zv) srv.zv = now;   // 走到这里说明作废那一步已经做过（领过的号收回了，没领过的不用再查）
     for (const k of del) srv.gone[k] = [ver + 1, now];
     for (const k of add) delete srv.gone[k];
@@ -481,6 +490,7 @@ async function handleEcon(env, auth, body, now, ip) {
       for (const l of voided.lst) stmts.push(guard(env, 'UPDATE mkt SET state = 2, done_at = ? WHERE id = ? AND seller = ? AND state = 0 AND', [now, l, uid], uid, ver, tx));
       stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'code_void', 1, null, null, JSON.stringify(voided).slice(0, 400)], uid, ver, tx));
     }
+    if (retired) stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'retire', 1, null, null, logDetail({ k: retired.k, ad: [...retired.inv, ...retired.fill], lst: retired.lst.length ? retired.lst : undefined })], uid, ver, tx));
     if (legacy && legacy.length) stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, 'legacy', 1, null, null, JSON.stringify({ k: legacy }).slice(0, 400)], uid, ver, tx));
     if (!quiet) stmts.push(ins(env, 'INSERT INTO econ_log (uid, at, act, ok, ink0, ink1, detail) SELECT ?, ?, ?, ?, ?, ?, ?', [uid, now, act, res.err ? 0 : 1, eco.ink, E.ink, detail], uid, ver, tx));
     stmts.push(userWrite(env, uid, p, now, ver, tx));

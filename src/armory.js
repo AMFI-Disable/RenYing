@@ -294,10 +294,28 @@
     if (MODE !== 'local' || !ST || PROF.guest || cloudOn()) return;
     voidLocal();
     if (OFFLINE_BUILD) return;
+    retireLocal();
     const lg = (PROF.skins || []).filter(k => C.isItem(k) && !ST.via.includes(k) && !ST.inv.some(x => x.k === k));
     if (!lg.length) return;
     const env = envBase();
     for (const k of lg) { C.addItem(ST, C.mkItem(ST, k, 'legacy', rnd, { st: -1 }), env); ST.via.push(k); }
+    SIG = sigOf(ST);
+    if (window.CloudSave) CloudSave.saveProfile(PROF, true);
+  }
+  // 退场侠客的旧款（C.RETIRED）：库存、挂单读进来时已经换成接替的那一款；上一版读存档时丢掉了的，本机账号没有流水可查，
+  // 按可穿的皮肤里还记着的旧款各补一件普通版（同款已经有了就不补），可穿的皮肤换成新编号。做完旧编号就不在了，所以只做一次
+  function retireLocal() {
+    const rk = (PROF.skins || []).filter(k => C.isRetired(k));
+    if (!rk.length) return;
+    const env = envBase();
+    for (const k of rk) {
+      const m = C.liveKey(k);
+      if (ST.inv.some(x => x.k === m) || ST.lst.some(L => L.it.k === m)) continue;
+      C.addItem(ST, C.mkItem(ST, m, 'retire', rnd, { st: -1 }), env);
+      if (!ST.via.includes(m)) ST.via.push(m);
+    }
+    C.retireSkins(env);
+    PROF.skins = env.skins; PROF.equip = env.equip;
     SIG = sigOf(ST);
     if (window.CloudSave) CloudSave.saveProfile(PROF, true);
   }
