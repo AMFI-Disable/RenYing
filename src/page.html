@@ -1100,6 +1100,7 @@ window.RYBoot = (function () {
           <div class="comlog" id="comLog"></div>
           <div class="comin">
             <input id="comIn" maxlength="200" placeholder="在大厅说点什么（回车发送）" autocomplete="off">
+            <button type="button" class="ghost small" id="socShareLastBtn" title="分享最近一局战绩与回放码">战绩卡</button>
             <button class="go small" id="comSend" style="display:inline-flex;align-items:center;gap:4px">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>发送
             </button>
@@ -1279,8 +1280,8 @@ window.RYBoot = (function () {
 
   <div id="lb" class="scr">
     <div class="panel">
-      <div class="lb-head-row"><h2>排行榜</h2><span class="season-tag" id="lbSeasonTag"></span></div>
-      <div class="seg" id="lbTabs"><button data-k="rank" class="sel">段位榜</button><button data-k="wins">战绩榜</button><button data-k="mastery">专精试炼榜</button></div>
+      <div class="lb-head-row"><h2>排行榜</h2><span class="season-tag" id="lbSeasonTag"></span><select id="lbSeasonSel" class="lb-season-sel" aria-label="选择赛季"></select></div>
+      <div class="seg lb-tabs" id="lbTabs"><button data-k="rank" class="sel">段位榜</button><button data-k="wins">战绩榜</button><button data-k="tag3">3v3 车轮</button><button data-k="duo">2v2 双打</button><button data-k="gboss">天魔榜</button><button data-k="mastery">专精试炼</button></div>
       <p class="sub" id="lbSub"></p>
       <div class="lbwrap"><div id="lbState"></div><table class="lbt" id="lbTable"></table></div>
       <div class="row"><button class="ghost" id="lbBack">返回</button></div>
@@ -1651,7 +1652,7 @@ window.RYBoot = (function () {
     <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p><div class="combat-card" id="endCombatCard"></div><div class="combat-card hidden" id="endRelayTeams"></div><p class="end-arm" id="endArm"></p>
       <button class="ghost hidden" id="endReviewBtn" type="button" aria-expanded="false" aria-controls="endReview">AI 复盘</button>
       <section class="end-review hidden" id="endReview" aria-live="polite"></section>
-      <div class="row end-qol-row"><button class="ghost hidden" id="endChangeHeroBtn" type="button">换侠客再战</button><button class="ghost" id="endHistoryBtn" type="button">查看战绩</button></div>
+      <div class="row end-qol-row"><button class="ghost hidden" id="endChangeHeroBtn" type="button">换侠客再战</button><button class="ghost" id="endShareComBtn" type="button">分享到社区</button><button class="ghost" id="endHistoryBtn" type="button">查看战绩</button></div>
       <div class="row">
         <button class="go" id="againBtn">再战</button>
         <button class="ghost hidden" id="netRepickBtn">换人再战</button>
@@ -1691,6 +1692,8 @@ window.RYBoot = (function () {
           <button class="ghost small" id="tourSkipAiBtn" type="button">快结 AI 场次</button>
           <button class="ghost small" id="tourAutoBtn" type="button" aria-pressed="false">自动推进：关</button>
           <button class="ghost small" id="tourShareBtn" type="button">分享战绩</button>
+          <button class="ghost small" id="tourShareComBtn" type="button">发到社区</button>
+          <button class="ghost small" id="tourPublishBtn" type="button">发布公开签表</button>
           <button class="ghost small" id="tourImportBtn" type="button">导入战绩</button>
           <button class="ghost small" id="tourResetBtn" type="button">重排签表</button>
           <button class="ghost" data-back type="button">返回</button>
@@ -1703,6 +1706,7 @@ window.RYBoot = (function () {
       </div>
       <div class="tour-tree" id="tourTree"></div>
       <div class="tour-standings" id="tourStandings"></div>
+      <div class="tour-public" id="tourPublicList"></div>
     </div>
   </div>
 </div>
@@ -1717,6 +1721,7 @@ window.RYBoot = (function () {
     <button type="button" class="spec-nav" id="specPrevBtn" title="上一位侠客">‹</button>
     <div class="spec-fighters" id="specFighters"></div>
     <button type="button" class="spec-nav" id="specNextBtn" title="下一位侠客">›</button>
+    <button type="button" class="spec-clean-btn" id="specStageBtn" aria-pressed="false">大屏模式</button>
     <button type="button" class="spec-clean-btn" id="specCleanBtn" aria-pressed="false">纯净直转</button>
     <button type="button" class="spec-exit-btn hidden" id="specExitBtn">退出观战</button>
   </div>

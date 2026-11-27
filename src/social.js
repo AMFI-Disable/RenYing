@@ -29,7 +29,18 @@ const SOC = {
   data: null, cur: 'hall', sess: 0, joinT: 0, tick: 0, lastSay: 0,
   state: 'off',                   // off / connecting / on
 };
-const SOC_MAX_CONV = 200, SOC_MAX_HALL = 150, SOC_TEXT = 200, SOC_SLOTS = 4;
+const SOC_MAX_CONV = 200, SOC_MAX_HALL = 150, SOC_TEXT = 200, SOC_SLOTS = 4, SOC_CARD_CODE_MAX = 24000;
+function socCleanCard(card) {
+  if (!card || typeof card !== 'object') return null;
+  const kind = ['match', 'replay', 'tour'].includes(card.kind) ? card.kind : 'match';
+  const title = socClean(card.title).slice(0, 80);
+  const mode = socClean(card.mode).slice(0, 32);
+  const summary = socClean(card.summary).slice(0, 140);
+  let code = typeof card.code === 'string' ? card.code.trim() : '';
+  if (code && (!/^(RYRP2|RYTR1):[A-Za-z0-9_-]{8,}$/.test(code) || code.length > SOC_CARD_CODE_MAX)) code = '';
+  if (!title && !code) return null;
+  return { kind, title, mode, summary, code };
+}
 function socHallId(s) { return 'renying-hall-' + (s == null ? SOC.slot : s); }
 
 /* ---------- 名字与 id ---------- */
@@ -255,11 +266,12 @@ function socHubWire(c) {
     }
     if (!st.name) return;
     if (m.t === 'say') {
-      const now = Date.now(), text = socClean(m.text);
-      if (!text) return;
+      const now = Date.now(), text = socClean(m.text), card = socCleanCard(m.card);
+      if (!text && !card) return;
       st.burst = Math.max(0, st.burst - (now - st.last) / 1500) + 1; st.last = now;   // 每 1.5 秒回一格，连发超过 5 条就吞掉
       if (st.burst > 5) return;
-      const msg = { id: socRid(), from: st.name, text, at: now };
+      const msg = { id: socRid(), from: st.name, text: text || (card ? card.title : ''), at: now };
+      if (card) msg.card = card;
       SOC.hubHist.push(msg); if (SOC.hubHist.length > SOC_MAX_HALL) SOC.hubHist.splice(0, SOC.hubHist.length - SOC_MAX_HALL);
       socHubCast({ t: 'msg', m: msg });
     }
@@ -286,17 +298,22 @@ function socHallRx(m) {
 }
 function socHallAdd(x, quiet) {
   if (!x || typeof x !== 'object' || !x.id || SOC.hist.some(h => h.id === x.id)) return false;
+  const card = socCleanCard(x.card);
   const m = { id: String(x.id).slice(0, 24), from: String(x.from || '').slice(0, 12), text: socClean(x.text), at: +x.at || Date.now() };
-  if (!m.from || !m.text) return false;
+  if (card) m.card = card;
+  if (!m.from || (!m.text && !m.card)) return false;
   SOC.hist.push(m); SOC.hist.sort((a, b) => a.at - b.at);
   if (SOC.hist.length > SOC_MAX_HALL) SOC.hist.splice(0, SOC.hist.length - SOC_MAX_HALL);
   if (!quiet && (SOC.cur !== 'hall' || !socVisible()) && m.from !== SOC.me) SOC.data.unread.hall = Math.min(99, (SOC.data.unread.hall || 0) + 1);
   return true;
 }
-function socHallSay(text) {
+function socHallSay(text, card) {
   text = socClean(text);
-  if (!text) return false;
-  if (!socSend(SOC.hall, { t: 'say', text })) { toast('大厅还没连上，稍等一下再发'); return false; }
+  const cleanCard = socCleanCard(card);
+  if (!text && !cleanCard) return false;
+  const pkt = { t: 'say', text: text || (cleanCard ? cleanCard.title : '') };
+  if (cleanCard) pkt.card = cleanCard;
+  if (!socSend(SOC.hall, pkt)) { toast('大厅还没连上，稍等一下再发'); return false; }
   return true;
 }
 
@@ -374,8 +391,10 @@ function socRx(name, m) {
     delete D.friends[name]; delete D.reqIn[name]; delete D.reqOut[name]; changed = true;
   } else if (m.t === 'dm') {
     if (D.friends[name]) {
-      const text = socClean(m.text);
-      if (text && socPush('u:' + name, { id, from: name, text, at })) { changed = true; note = `${name}：${text}`; }
+      const text = socClean(m.text), card = socCleanCard(m.card);
+      const rec = { id, from: name, text: text || (card ? card.title : ''), at };
+      if (card) rec.card = card;
+      if ((text || card) && socPush('u:' + name, rec)) { changed = true; note = `${name}：${rec.text}`; }
     }
   } else if (m.t === 'ginv' || m.t === 'gupd') {
     const g = m.g || {}, gid = String(g.id || '').slice(0, 24);
@@ -397,8 +416,10 @@ function socRx(name, m) {
   } else if (m.t === 'gmsg') {
     const gid = String(m.gid || ''), g = D.groups[gid];
     if (g && g.members.includes(name)) {
-      const text = socClean(m.text);
-      if (text && socPush('g:' + gid, { id, from: name, text, at })) { changed = true; note = `${name}@${g.name}：${text}`; }
+      const text = socClean(m.text), card = socCleanCard(m.card);
+      const rec = { id, from: name, text: text || (card ? card.title : ''), at };
+      if (card) rec.card = card;
+      if ((text || card) && socPush('g:' + gid, rec)) { changed = true; note = `${name}@${g.name}：${rec.text}`; }
     }
   }
   ack();
@@ -508,24 +529,30 @@ async function socLeave(gid) {
   delete SOC.data.groups[gid]; delete SOC.data.convs['g:' + gid]; delete SOC.data.unread['g:' + gid];
   socOpen('hall');
 }
-function socSendCur(text) {
+function socSendCur(text, card) {
   text = socClean(text);
-  if (!text) return false;
+  const cleanCard = socCleanCard(card);
+  if (!text && !cleanCard) return false;
   const k = SOC.cur;
-  if (k === 'hall') return socHallSay(text);
+  if (k === 'hall') return socHallSay(text, cleanCard);
   const now = Date.now();
   if (now - SOC.lastSay < 350) return false;
   SOC.lastSay = now;
   const id = socRid();
+  const bodyText = text || (cleanCard ? cleanCard.title : '');
   if (k.startsWith('u:')) {
     const to = k.slice(2);
     if (!SOC.data.friends[to]) { toast('对方已经不是你的好友了'); return false; }
-    socPush(k, { id, from: SOC.me, text, at: now });
-    socQueue(to, { t: 'dm', id, text, at: now });
+    const rec = { id, from: SOC.me, text: bodyText, at: now };
+    if (cleanCard) rec.card = cleanCard;
+    socPush(k, rec);
+    socQueue(to, Object.assign({ t: 'dm', id, text: bodyText, at: now }, cleanCard ? { card: cleanCard } : {}));
   } else {
     const gid = k.slice(2), g = SOC.data.groups[gid]; if (!g) return false;
-    socPush(k, { id, from: SOC.me, text, at: now, ok: 1 });
-    for (const n of g.members) if (n !== SOC.me) socQueue(n, { t: 'gmsg', gid, id, text, at: now });
+    const rec = { id, from: SOC.me, text: bodyText, at: now, ok: 1 };
+    if (cleanCard) rec.card = cleanCard;
+    socPush(k, rec);
+    for (const n of g.members) if (n !== SOC.me) socQueue(n, Object.assign({ t: 'gmsg', gid, id, text: bodyText, at: now }, cleanCard ? { card: cleanCard } : {}));
   }
   socRenderLog(true); socRenderList();
   return true;
@@ -624,7 +651,8 @@ function socRenderLog(keepBottom) {
       const mine = m.from === SOC.me;
       const add = k === 'hall' && !mine && !guest && !fr[m.from] && !/^游客\d{4}$/.test(m.from) ? `<button type="button" class="soc-add" data-add="${escapeHTML(m.from)}">+好友</button>` : '';
       const st = mine && k.startsWith('u:') ? (m.ok ? '' : '<span class="soc-pend" title="对方上线后送达">未送达</span>') : '';
-      return `<div class="cm${mine ? ' me' : ''}"><div class="cm-head"><span class="cn">${escapeHTML(mine ? '我' : m.from)}${add}</span><span class="ct">${st}${socTime(m.at)}</span></div><div class="cm-body">${socFmt(m.text)}</div></div>`;
+      const cardHtml = socRenderCard(m);
+      return `<div class="cm${mine ? ' me' : ''}"><div class="cm-head"><span class="cn">${escapeHTML(mine ? '我' : m.from)}${add}</span><span class="ct">${st}${socTime(m.at)}</span></div><div class="cm-body">${socFmt(m.text)}${cardHtml}</div></div>`;
     }).join('');
   }
   if (!keepBottom || atBottom || keepBottom === 'force') log.scrollTop = log.scrollHeight;
@@ -658,6 +686,84 @@ function openCommunity() {
   socOpen(SOC.cur || 'hall');
   $id('community').classList.remove('soc-chat');
 }
+function socRenderCard(m) {
+  let card = m && m.card ? socCleanCard(m.card) : null;
+  if (!card && m && typeof m.text === 'string') {
+    const match = m.text.match(/\b((?:RYRP2|RYTR1):[A-Za-z0-9_-]{8,})\b/);
+    if (match) {
+      const isTour = match[1].startsWith('RYTR1:');
+      card = socCleanCard({ kind: isTour ? 'tour' : 'replay', mode: isTour ? '武林大会' : '实战回放', title: isTour ? '武林大会签表分享' : '实战回放码', summary: isTour ? '一键导入并查看完整淘汰赛签表' : '点击下方按钮直接加载并播放完整回放', code: match[1] });
+    }
+  }
+  if (!card) return '';
+  const isTour = card.kind === 'tour' || (card.code && card.code.startsWith('RYTR1:'));
+  const isRp = !isTour && card.code && card.code.startsWith('RYRP2:');
+  const acts = [];
+  if (isRp) acts.push(`<button type="button" class="go small" data-watch-rp="${escapeHTML(card.code)}">观看回放</button>`);
+  if (isTour && card.code) acts.push(`<button type="button" class="go small" data-open-tour="${escapeHTML(card.code)}">打开签表</button>`);
+  if (card.code) acts.push(`<button type="button" class="ghost small" data-copy-code="${escapeHTML(card.code)}">${isTour ? '复制赛果码' : '复制回放码'}</button>`);
+  return `<div class="soc-card"><div class="soc-card-top"><span class="soc-card-badge">${escapeHTML(card.mode || (isTour ? '武林大会' : '战绩卡'))}</span><b>${escapeHTML(card.title)}</b></div>${card.summary ? `<div class="soc-card-sub">${escapeHTML(card.summary)}</div>` : ''}${acts.length ? `<div class="soc-card-acts">${acts.join('')}</div>` : ''}</div>`;
+}
+function socBuildLatestMatchCard() {
+  const list = typeof rpList === 'function' ? rpList() : [];
+  const latest = list && list[0];
+  let code = '';
+  if (latest && typeof rpEncodeCode === 'function') {
+    try {
+      const c = rpEncodeCode(latest);
+      if (c && c.length <= SOC_CARD_CODE_MAX) code = c;
+    } catch (e) {}
+  }
+  if (latest && Array.isArray(latest.ch) && typeof CHARS !== 'undefined') {
+    const aName = (CHARS[latest.ch[0]] && CHARS[latest.ch[0]].name) || '1P';
+    const bName = (CHARS[latest.ch[1]] && CHARS[latest.ch[1]].name) || '2P';
+    const wTxt = latest.w === 0 ? `${aName} 胜` : latest.w === 1 ? `${bName} 胜` : '激战回放';
+    const sc = Array.isArray(latest.wins) ? `${latest.wins[0]}:${latest.wins[1]}` : '';
+    const modeLbl = latest.tag3 ? '3v3 车轮战' : latest.ranked ? '排位赛' : latest.kind === 'net' ? '联机对战' : '切磋对战';
+    return socCleanCard({ kind: code ? 'replay' : 'match', mode: modeLbl, title: `${aName} vs ${bName} · ${wTxt}`, summary: sc ? `比分 ${sc}${code ? ' · 含可播放回放码' : ''}` : (code ? '含可播放回放码' : '本场战绩快报'), code });
+  }
+  const title = ($id('endTitle') && $id('endTitle').textContent || '').trim();
+  const sub = ($id('endSub') && $id('endSub').textContent || '').trim();
+  if (!title) return null;
+  return socCleanCard({ kind: 'match', mode: '战绩卡', title, summary: sub || '刚完成一场江湖对决', code });
+}
+function socShareMatchCard(card, openAfter = false) {
+  const clean = socCleanCard(card || socBuildLatestMatchCard());
+  if (!clean) { toast('还没有可分享的战绩或回放'); return false; }
+  socStart();
+  const summaryText = `【${clean.mode || '战绩卡'}】${clean.title}${clean.summary ? ' · ' + clean.summary : ''}`;
+  let sent = false;
+  if (SOC.cur !== 'hall' && SOC.data) sent = socSendCur(summaryText, clean);
+  else if (SOC.hall && SOC.hall.open) sent = socHallSay(summaryText, clean);
+  if (!sent) {
+    if (!SOC.data) socLoad();
+    socHallAdd({ id: socRid(), from: SOC.me || socWho(), text: summaryText, card: clean, at: Date.now() }, true);
+    socSave();
+    if ($id('comLog')) socRenderLog('force');
+    toast('已生成战绩卡预览（大厅连上后可实时广播）');
+  } else {
+    toast('已分享战绩卡到社区');
+  }
+  if (openAfter && typeof openScreen === 'function') openScreen('community');
+  return true;
+}
+function socWatchReplayCode(code) {
+  if (typeof rpDecodeCode !== 'function' || typeof rpPlay !== 'function') { toast('当前无法启动回放播放器'); return false; }
+  try {
+    const obj = rpDecodeCode(code);
+    if (typeof rpList === 'function' && typeof rpStore === 'function') {
+      const list = rpList();
+      list.unshift(obj);
+      while (list.length > (typeof RP_MAX === 'number' ? RP_MAX : 10)) list.pop();
+      rpStore(list);
+    }
+    rpPlay(obj);
+    return true;
+  } catch (err) {
+    toast((err && err.message) || '回放码无法解析');
+    return false;
+  }
+}
 function postRoomToCommunity() {
   const code = (NET.code || ($id('roomCode') && $id('roomCode').textContent) || '').trim();
   if (!code) { toast('请先设擂建房生成房间码'); return; }
@@ -671,7 +777,26 @@ $id('socList').addEventListener('click', e => {
   const a = e.target.closest('[data-acc]'), d = e.target.closest('[data-dec]'), it = e.target.closest('[data-k]');
   if (a) socAccept(a.dataset.acc); else if (d) socDecline(d.dataset.dec); else if (it) socOpen(it.dataset.k);
 });
-$id('comLog').addEventListener('click', e => { const b = e.target.closest('[data-add]'); if (b) socAddFriend(b.dataset.add); });
+$id('comLog').addEventListener('click', e => {
+  const add = e.target.closest('[data-add]');
+  if (add) { socAddFriend(add.dataset.add); return; }
+  const rp = e.target.closest('[data-watch-rp]');
+  if (rp) { socWatchReplayCode(rp.dataset.watchRp); return; }
+  const tr = e.target.closest('[data-open-tour]');
+  if (tr && typeof tourImportCode === 'function') {
+    if (tourImportCode(tr.dataset.openTour)) { if (typeof showScreen === 'function') showScreen('tournament'); toast('已导入社区武林大会签表'); }
+    else toast('签表分享码无效');
+    return;
+  }
+  const cp = e.target.closest('[data-copy-code]');
+  if (cp) {
+    const code = cp.dataset.copyCode;
+    if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(() => toast('已复制分享码')).catch(() => toast('复制失败，请手动复制'));
+    else toast('已选中分享码');
+  }
+});
+if ($id('socShareLastBtn')) $id('socShareLastBtn').addEventListener('click', () => socShareMatchCard(null, false));
+if ($id('endShareComBtn')) $id('endShareComBtn').addEventListener('click', () => socShareMatchCard(null, true));
 $id('socHead').addEventListener('click', e => {
   const b = e.target.closest('[data-act]'); if (!b) return;
   const k = SOC.cur;
