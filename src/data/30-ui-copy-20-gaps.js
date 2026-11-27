@@ -444,5 +444,14 @@ Object.assign(UI_COPY_EN, {
   "已通关": "Cleared",
   "首通奖励": "First Clear",
   "重练": "Replay",
-  "开始试炼": "Start Trial"
+  "开始试炼": "Start Trial",
+  "无障碍与显示": "Accessibility & Display",
+  "色觉辅助": "Colorblind Palette",
+  "红色盲": "Protanopia",
+  "绿色盲": "Deuteranopia",
+  "蓝色盲": "Tritanopia",
+  "减弱闪光与震动": "Reduce Flash & Shake",
+  "高对比判定框": "High-Contrast Hitboxes",
+  "界面字号": "UI Text Scale",
+  "放大": "Large"
 });

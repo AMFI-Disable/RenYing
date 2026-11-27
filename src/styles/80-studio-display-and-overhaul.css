@@ -1550,3 +1550,41 @@
 .cx-m-meta { font-size: 11.5px; color: rgba(239, 232, 216, 0.78); font-variant-numeric: tabular-nums; }
 .lb-head-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
+/* Accessibility Suite & Responsive Mobile/Tablet Layout (#58) */
+html[data-ui-scale="large"] body { font-size: 16.5px; }
+html[data-ui-scale="large"] .panel,
+html[data-ui-scale="large"] .setrow,
+html[data-ui-scale="large"] .sub,
+html[data-ui-scale="large"] .tips { font-size: 1.08em; }
+html[data-ui-scale="large"] button,
+html[data-ui-scale="large"] .seg button { font-size: 1.06em; min-height: 36px; }
+html[data-reduced-flash="1"] *,
+html[data-reduced-flash="1"] *::before,
+html[data-reduced-flash="1"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+@media (pointer: coarse) {
+  #settings .seg button,
+  #replays button,
+  #tournament button,
+  .spec-hud button,
+  #rpBar button {
+    min-height: 44px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+@media (max-width: 1024px) {
+  #settings .setlist { grid-template-columns: 1fr; }
+  #settings .setrow { flex-wrap: wrap; gap: 6px; }
+  .spec-hud { max-width: 96vw; padding: 5px 8px; }
+  #rpBar { flex-wrap: wrap; row-gap: 6px; max-width: 96vw; }
+}
+@media (max-width: 720px) {
+  #settings .seg { flex-wrap: wrap; }
+  .trial-hud { min-width: 0; width: calc(100vw - 20px); padding: 6px 10px; }
+  .rp-code-box { flex-wrap: wrap; }
+}
+

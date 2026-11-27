@@ -4876,6 +4876,42 @@ flex-wrap: wrap;
 .cx-m-track i { display: block; height: 100%; background: linear-gradient(90deg, #b5282d, #e9c46a); }
 .cx-m-meta { font-size: 11.5px; color: rgba(239, 232, 216, 0.78); font-variant-numeric: tabular-nums; }
 .lb-head-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+html[data-ui-scale="large"] body { font-size: 16.5px; }
+html[data-ui-scale="large"] .panel,
+html[data-ui-scale="large"] .setrow,
+html[data-ui-scale="large"] .sub,
+html[data-ui-scale="large"] .tips { font-size: 1.08em; }
+html[data-ui-scale="large"] button,
+html[data-ui-scale="large"] .seg button { font-size: 1.06em; min-height: 36px; }
+html[data-reduced-flash="1"] *,
+html[data-reduced-flash="1"] *::before,
+html[data-reduced-flash="1"] *::after {
+animation-duration: 0.01ms !important;
+animation-iteration-count: 1 !important;
+transition-duration: 0.01ms !important;
+}
+@media (pointer: coarse) {
+#settings .seg button,
+#replays button,
+#tournament button,
+.spec-hud button,
+#rpBar button {
+min-height: 44px;
+padding-left: 12px;
+padding-right: 12px;
+}
+}
+@media (max-width: 1024px) {
+#settings .setlist { grid-template-columns: 1fr; }
+#settings .setrow { flex-wrap: wrap; gap: 6px; }
+.spec-hud { max-width: 96vw; padding: 5px 8px; }
+#rpBar { flex-wrap: wrap; row-gap: 6px; max-width: 96vw; }
+}
+@media (max-width: 720px) {
+#settings .seg { flex-wrap: wrap; }
+.trial-hud { min-width: 0; width: calc(100vw - 20px); padding: 6px 10px; }
+.rp-code-box { flex-wrap: wrap; }
+}
 </style>
 </head>
 <body>
@@ -13383,7 +13419,16 @@ Object.assign(UI_COPY_EN, {
 "已通关": "Cleared",
 "首通奖励": "First Clear",
 "重练": "Replay",
-"开始试炼": "Start Trial"
+"开始试炼": "Start Trial",
+"无障碍与显示": "Accessibility & Display",
+"色觉辅助": "Colorblind Palette",
+"红色盲": "Protanopia",
+"绿色盲": "Deuteranopia",
+"蓝色盲": "Tritanopia",
+"减弱闪光与震动": "Reduce Flash & Shake",
+"高对比判定框": "High-Contrast Hitboxes",
+"界面字号": "UI Text Scale",
+"放大": "Large"
 });
 Object.assign(UI_COPY_EN, {
 "旧版本录的，可能对不上": "Recorded with an older version. Playback may differ.",
@@ -16109,7 +16154,49 @@ iconizeTree(n); stripAttrs(n);
 if (document.body) go(); else document.addEventListener('DOMContentLoaded', go);
 })();
 'use strict';
-const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, backgroundPlay: false, stats: true, aiTraining: true, lang: 'zh' };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, backgroundPlay: false, stats: true, aiTraining: true, lang: 'zh', colorblind: 'none', reducedFlash: false, highContrastHitbox: false, uiScale: 'normal' };
+const A11Y_TEAM_PALETTES = {
+none: [
+{ hex: '#46d3ea', rgb: '70,211,234', shape: 'circle' },
+{ hex: '#ff6470', rgb: '255,100,112', shape: 'diamond' },
+{ hex: '#b58cff', rgb: '181,140,255', shape: 'square' },
+{ hex: '#ffc65a', rgb: '255,198,90', shape: 'triangle' },
+],
+protan: [
+{ hex: '#0072b2', rgb: '0,114,178', shape: 'circle' },
+{ hex: '#e69f00', rgb: '230,159,0', shape: 'diamond' },
+{ hex: '#cc79a7', rgb: '204,121,167', shape: 'square' },
+{ hex: '#56b4e9', rgb: '86,180,233', shape: 'triangle' },
+],
+deutan: [
+{ hex: '#0072b2', rgb: '0,114,178', shape: 'circle' },
+{ hex: '#d55e00', rgb: '213,94,0', shape: 'diamond' },
+{ hex: '#cc79a7', rgb: '204,121,167', shape: 'square' },
+{ hex: '#f0e442', rgb: '240,228,66', shape: 'triangle' },
+],
+tritan: [
+{ hex: '#009e73', rgb: '0,158,115', shape: 'circle' },
+{ hex: '#d55e00', rgb: '213,94,0', shape: 'diamond' },
+{ hex: '#e69f00', rgb: '230,159,0', shape: 'square' },
+{ hex: '#56b4e9', rgb: '86,180,233', shape: 'triangle' },
+],
+};
+function a11yTeamEntry(teamIdx) {
+const pal = A11Y_TEAM_PALETTES[SETTINGS.colorblind] || A11Y_TEAM_PALETTES.none;
+return pal[((teamIdx | 0) % pal.length + pal.length) % pal.length];
+}
+function a11yTeamHex(teamIdx) { return a11yTeamEntry(teamIdx).hex; }
+function a11yTeamRgb(teamIdx) { return a11yTeamEntry(teamIdx).rgb; }
+function a11yTeamShape(teamIdx) { return a11yTeamEntry(teamIdx).shape; }
+function a11ySelfRgb() { return SETTINGS.colorblind && SETTINGS.colorblind !== 'none' ? '240,228,66' : '46,213,115'; }
+function a11ySelfHex() { return SETTINGS.colorblind && SETTINGS.colorblind !== 'none' ? '#f0e442' : '#34e79b'; }
+function applyAccessibility() {
+if (typeof document === 'undefined' || !document.documentElement) return;
+const ds = document.documentElement.dataset;
+ds.colorblind = SETTINGS.colorblind || 'none';
+ds.uiScale = SETTINGS.uiScale || 'normal';
+ds.reducedFlash = SETTINGS.reducedFlash ? '1' : '0';
+}
 try {
 const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
 Object.assign(SETTINGS, saved);
@@ -16119,13 +16206,19 @@ SETTINGS.bloomMigrated = true;
 const ALLOWED_FPS = [144, 120, 60, 30];
 if (!SETTINGS.fps || !ALLOWED_FPS.includes(SETTINGS.fps)) SETTINGS.fps = 144;
 if (saved.aim === undefined || !saved.aimMigrated) { SETTINGS.aim = true; SETTINGS.aimMigrated = true; }
+if (!A11Y_TEAM_PALETTES[SETTINGS.colorblind]) SETTINGS.colorblind = 'none';
+if (SETTINGS.uiScale !== 'normal' && SETTINGS.uiScale !== 'large') SETTINGS.uiScale = 'normal';
+SETTINGS.reducedFlash = !!SETTINGS.reducedFlash;
+SETTINGS.highContrastHitbox = !!SETTINGS.highContrastHitbox;
 if (saved.lang) SETTINGS.lang = saved.lang;
 else {
 const rawL = localStorage.getItem('renying-lang');
 if (rawL === 'en' || rawL === 'zh') SETTINGS.lang = rawL;
 }
 } catch (e) {}
+applyAccessibility();
 function saveSettings() {
+applyAccessibility();
 try {
 localStorage.setItem('renying-settings', JSON.stringify(SETTINGS));
 if (SETTINGS.lang) localStorage.setItem('renying-lang', SETTINGS.lang);
@@ -30630,31 +30723,58 @@ return da - db || a.idx - b.idx;
 return out;
 }
 function drawHitboxOverlay(fighters) {
+const hc = !!(typeof SETTINGS !== 'undefined' && SETTINGS.highContrastHitbox);
 ctx.save();
+const drawBox = (x, y, w, h, stroke, fill, dash) => {
+ctx.fillStyle = fill;
+ctx.fillRect(x, y, w, h);
+if (hc) {
+ctx.setLineDash([]);
+ctx.lineWidth = 5;
+ctx.strokeStyle = 'rgba(0, 0, 0, 0.92)';
+ctx.strokeRect(x, y, w, h);
+}
+ctx.setLineDash(hc && dash ? dash : []);
+ctx.lineWidth = hc ? 2.8 : 1.5;
+ctx.strokeStyle = stroke;
+ctx.strokeRect(x, y, w, h);
+ctx.setLineDash([]);
+};
 for (const f of fighters) {
 if (!f || f.hidden || f.hp <= 0) continue;
 const hu = hurtbox(f);
-ctx.lineWidth = 1.5;
-ctx.strokeStyle = f.invul > 0 ? 'rgba(120, 200, 255, 0.85)' : 'rgba(80, 240, 120, 0.85)';
-ctx.fillStyle = f.invul > 0 ? 'rgba(120, 200, 255, 0.15)' : 'rgba(80, 240, 120, 0.15)';
-ctx.fillRect(hu[0], hu[1], hu[2] - hu[0], hu[3] - hu[1]);
-ctx.strokeRect(hu[0], hu[1], hu[2] - hu[0], hu[3] - hu[1]);
+const huStroke = hc
+? (f.invul > 0 ? '#ffffff' : '#00f5d4')
+: (f.invul > 0 ? 'rgba(120, 200, 255, 0.85)' : 'rgba(80, 240, 120, 0.85)');
+const huFill = hc
+? (f.invul > 0 ? 'rgba(255, 255, 255, 0.22)' : 'rgba(0, 245, 212, 0.22)')
+: (f.invul > 0 ? 'rgba(120, 200, 255, 0.15)' : 'rgba(80, 240, 120, 0.15)');
+drawBox(hu[0], hu[1], hu[2] - hu[0], hu[3] - hu[1], huStroke, huFill, [8, 4]);
 if (f.state === 'attack' && f.move && f.move.box) {
 const su = f.move.su || 0.04, ac = f.move.ac || 0.08, rec = (f.move.rec !== undefined ? f.move.rec : 0.18);
 const isStart = f.t < su;
 const isAct = f.t >= su && f.t < su + ac;
 const hb = hitbox(f, f.move.box);
-ctx.strokeStyle = isAct ? 'rgba(255, 45, 65, 0.95)' : isStart ? 'rgba(255, 195, 50, 0.85)' : 'rgba(80, 160, 255, 0.75)';
-ctx.fillStyle = isAct ? 'rgba(255, 45, 65, 0.28)' : isStart ? 'rgba(255, 195, 50, 0.12)' : 'rgba(80, 160, 255, 0.12)';
-ctx.fillRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
-ctx.strokeRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
-ctx.font = 'bold 12px monospace';
-ctx.fillStyle = isAct ? '#ff4055' : isStart ? '#ffc040' : '#60b0ff';
+const hbStroke = hc
+? (isAct ? '#ff2a6d' : isStart ? '#ffd60a' : '#38bdf8')
+: (isAct ? 'rgba(255, 45, 65, 0.95)' : isStart ? 'rgba(255, 195, 50, 0.85)' : 'rgba(80, 160, 255, 0.75)');
+const hbFill = hc
+? (isAct ? 'rgba(255, 42, 109, 0.34)' : isStart ? 'rgba(255, 214, 10, 0.22)' : 'rgba(56, 189, 248, 0.2)')
+: (isAct ? 'rgba(255, 45, 65, 0.28)' : isStart ? 'rgba(255, 195, 50, 0.12)' : 'rgba(80, 160, 255, 0.12)');
+drawBox(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1], hbStroke, hbFill, isAct ? [] : isStart ? [4, 4] : [12, 4, 3, 4]);
+ctx.font = hc ? 'bold 13px monospace' : 'bold 12px monospace';
 ctx.textAlign = 'center';
 const frameTxt = isAct ? `活跃帧 [${Math.round((f.t - su) / STEP)}/${Math.round(ac / STEP)}F]` : isStart ? `前摇 [${Math.round(f.t / STEP)}/${Math.round(su / STEP)}F]` : `收招 [${Math.round((f.t - su - ac) / STEP)}/${Math.round(rec / STEP)}F]`;
-ctx.fillText(frameTxt, (hb[0] + hb[2]) / 2, hb[1] - 8);
+const tx = (hb[0] + hb[2]) / 2, ty = hb[1] - 8;
+if (hc) {
+const tw = ctx.measureText(frameTxt).width + 10;
+ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
+ctx.fillRect(tx - tw / 2, ty - 13, tw, 16);
 }
-ctx.font = 'bold 12px monospace';
+ctx.fillStyle = isAct ? '#ff4055' : isStart ? '#ffd60a' : '#60c0ff';
+ctx.fillText(frameTxt, tx, ty);
+}
+ctx.font = hc ? 'bold 13px monospace' : 'bold 12px monospace';
 ctx.textAlign = 'center';
 let advText = '';
 const other = foeOf ? foeOf(f) : null;
@@ -30665,18 +30785,26 @@ const advFrames = Math.round((foeStun - remainingAtk) / STEP);
 advText = advFrames >= 0 ? ` +${advFrames}F 优势` : ` ${advFrames}F 劣势`;
 }
 const stDesc = `${f.state}${f.stun > 0 ? ` (硬直 ${Math.round(f.stun / STEP)}F)` : ''}${advText}`;
+const sy = f.y - 125 * (f.size || 1);
+if (hc) {
+const sw = ctx.measureText(stDesc).width + 10;
+ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
+ctx.fillRect(f.x - sw / 2, sy - 13, sw, 16);
+}
 ctx.fillStyle = advText.includes('+') ? '#70ff90' : advText.includes('-') ? '#ff7070' : '#efe8d8';
-ctx.fillText(stDesc, f.x, f.y - 125 * (f.size || 1));
+ctx.fillText(stDesc, f.x, sy);
 }
 if (typeof projs !== 'undefined' && Array.isArray(projs)) {
 for (const p of projs) {
 if (!p || !p.w || !p.h) continue;
 const x0 = p.x - p.w / 2, y0 = p.y - p.h / 2;
-ctx.strokeStyle = p.owner === 0 ? 'rgba(80, 235, 255, 0.92)' : 'rgba(255, 145, 70, 0.92)';
-ctx.fillStyle = p.owner === 0 ? 'rgba(80, 235, 255, 0.2)' : 'rgba(255, 145, 70, 0.2)';
-ctx.lineWidth = 1.5;
-ctx.fillRect(x0, y0, p.w, p.h);
-ctx.strokeRect(x0, y0, p.w, p.h);
+const pStroke = hc
+? (p.owner === 0 ? '#56b4e9' : '#e69f00')
+: (p.owner === 0 ? 'rgba(80, 235, 255, 0.92)' : 'rgba(255, 145, 70, 0.92)');
+const pFill = hc
+? (p.owner === 0 ? 'rgba(86, 180, 233, 0.28)' : 'rgba(230, 159, 0, 0.28)')
+: (p.owner === 0 ? 'rgba(80, 235, 255, 0.2)' : 'rgba(255, 145, 70, 0.2)');
+drawBox(x0, y0, p.w, p.h, pStroke, pFill, [6, 3]);
 }
 }
 ctx.restore();
@@ -33941,23 +34069,24 @@ const youLabel = () => (window.I18N ? I18N.t('我') : '我');   // 默认「我�
 function idRole(f) {
 if (!f || f.hidden || f.dummy || !f.sk) return null;
 if (M.mode === 'demo') return null;
+const cb = typeof SETTINGS !== 'undefined' && SETTINGS.colorblind && SETTINGS.colorblind !== 'none';
 if (isAiVsAi()) {
-if (M.watchAi) return fighterTeam(f) === 0 ? { kind: 'ally', rgb: ID_ALLY, label: cvT(f.look.name) } : { kind: 'foe', rgb: ID_FOE };
+if (M.watchAi) return fighterTeam(f) === 0 ? { kind: 'ally', rgb: cb ? a11yTeamRgb(0) : ID_ALLY, label: cvT(f.look.name) } : { kind: 'foe', rgb: cb ? a11yTeamRgb(1) : ID_FOE };
 return null;
 }
 const k = human.indexOf(f.ctrl);
 if (k >= 0 || (f === A && !isMulti() && !(A.ctrl instanceof AICtrl))) {
 const idx = k >= 0 ? k : 0;
 const label = idHumans().length > 1 ? `${idx + 1}P` : youLabel();
-return { kind: 'self', rgb: ID_SELF[idx] || ID_SELF[0], label };
+return { kind: 'self', rgb: cb && idx === 0 ? a11ySelfRgb() : (ID_SELF[idx] || ID_SELF[0]), label };
 }
 if (isMulti() && fighterTeam(f) === localTeam()) {
 const name = (f.ctrl === NET.remote && (NET.names || {})[NET.role === 'host' ? 'client' : 'host'])
 ? String(NET.names[NET.role === 'host' ? 'client' : 'host']).slice(0, 6)
 : cvT(f.look.name);
-return { kind: 'ally', rgb: ID_ALLY, label: name };
+return { kind: 'ally', rgb: cb ? a11yTeamRgb(0) : ID_ALLY, label: name };
 }
-return { kind: 'foe', rgb: quadOn() ? teamRgbOf(f) : ID_FOE };
+return { kind: 'foe', rgb: (quadOn() || cb) ? teamRgbOf(f) : ID_FOE };
 }
 function drawIdentityBeacon(f, px) {
 const matchStartT = (M.phase === 'fight' && M.t < 1.5) ? clamp((1.5 - M.t) / 1.5, 0, 1) : 0;
@@ -38476,14 +38605,26 @@ ctx.beginPath(); ctx.moveTo(mx, y); ctx.lineTo(mx + mw, y); ctx.stroke();
 const lf = fighterByIdx(localIdx());
 const fighters = allFighters().filter(f => f !== lf);
 if (lf) fighters.push(lf);
+const cb = typeof SETTINGS !== 'undefined' && SETTINGS.colorblind && SETTINGS.colorblind !== 'none';
 for (const f of fighters) {
 if (f.hidden || f.hp <= 0) continue;
 const rx = mx + clamp(f.x / Math.max(1, STAGE_W), 0, 1) * mw;
+const ry = mapY(f.y);
 const isSelf = lf && f.idx === lf.idx;
 const isAlly = fighterTeam(f) === localTeam();
+const rad = isSelf ? 4.5 : 3.0;
+const shape = cb && !isSelf ? a11yTeamShape(quadOn() ? fighterTeam(f) : (isAlly ? 0 : 1)) : 'circle';
 ctx.beginPath();
-ctx.arc(rx, mapY(f.y), isSelf ? 4.5 : 2.8, 0, Math.PI * 2);
-ctx.fillStyle = isSelf ? '#ffe066' : quadOn() ? teamHexOf(f) : isAlly ? '#6fe0ff' : '#ff6470';
+if (shape === 'diamond') {
+ctx.moveTo(rx, ry - rad - 0.6); ctx.lineTo(rx + rad + 0.6, ry); ctx.lineTo(rx, ry + rad + 0.6); ctx.lineTo(rx - rad - 0.6, ry); ctx.closePath();
+} else if (shape === 'square') {
+ctx.rect(rx - rad, ry - rad, rad * 2, rad * 2);
+} else if (shape === 'triangle') {
+ctx.moveTo(rx, ry - rad - 0.8); ctx.lineTo(rx + rad + 0.6, ry + rad); ctx.lineTo(rx - rad - 0.6, ry + rad); ctx.closePath();
+} else {
+ctx.arc(rx, ry, rad, 0, Math.PI * 2);
+}
+ctx.fillStyle = isSelf ? '#ffe066' : (quadOn() || cb) ? teamHexOf(f) : isAlly ? '#6fe0ff' : '#ff6470';
 ctx.fill();
 if (isSelf) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2; ctx.stroke(); }
 }
@@ -39236,8 +39377,10 @@ if (M.mode === 'demo') return renderMenu();
 ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
 const sc = worldScale();
 drawBackdrop(sc);
-const sk = shake * SETTINGS.shake;
-const sx = rand(-sk, sk) + shakeDirX * SETTINGS.shake, sy = rand(-sk, sk) + shakeDirY * SETTINGS.shake;
+const rf = !!(typeof SETTINGS !== 'undefined' && SETTINGS.reducedFlash);
+const shakeScale = rf ? Math.min(SETTINGS.shake, 0.25) : SETTINGS.shake;
+const sk = shake * shakeScale;
+const sx = rand(-sk, sk) + shakeDirX * shakeScale, sy = rand(-sk, sk) + shakeDirY * shakeScale;
 ctx.save();
 ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
 drawGround();
@@ -39251,7 +39394,7 @@ const gy = groundY(), gg = ctx.createLinearGradient(0, gy, 0, H);
 gg.addColorStop(0, `rgba(${SCN.mist},${SCN.legend ? 0.16 : 0.08})`); gg.addColorStop(1, `rgba(${SCN.mist},0)`);
 ctx.fillStyle = gg; ctx.fillRect(0, gy, W, H - gy);
 }
-if (dimA > 0.01) { ctx.fillStyle = `rgba(3,3,10,${0.55 * dimA})`; ctx.fillRect(0, 0, W, H); }
+if (dimA > 0.01) { ctx.fillStyle = `rgba(3,3,10,${(rf ? 0.25 : 0.55) * dimA})`; ctx.fillRect(0, 0, W, H); }
 const pf = paperFX();
 if (pf) drawXuanzhi(pf.a);
 ctx.save();
@@ -39288,7 +39431,7 @@ drawComboTotals();
 drawIdentityTags(visibleOrder);
 if ((M.mode === 'train' || (M.mode === 'replay' && REPLAY.on && M.phase !== 'end')) && debugHitbox) drawHitboxOverlay(visibleOrder);
 ctx.restore();
-if (SETTINGS.bloom > 0 && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸上不要月亮和萤火的光晕
+if (SETTINGS.bloom > 0 && !rf && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸或减弱闪光模式下跳过全屏泛光
 if (FOREST.on) {
 const px = W / 2 + (A.x - cam.x) * sc, py = groundY() + (A.y - 60) * sc;
 const dk = ctx.createRadialGradient(px, py, 60 * sc, px, py, 520 * sc);
@@ -39305,7 +39448,7 @@ if (ce > 0.01) cineFX(ce);
 { const T = superOwner && superFreeze > 0 && sceneOf(superOwner.skinKey);
 if (T && T.legend) { const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.1, W / 2, H / 2, Math.max(W, H) * 0.7); g.addColorStop(0, `rgba(${T.orbC},0)`); g.addColorStop(1, `rgba(${T.orbC},0.28)`); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); } }
 drawVignette(ce);
-if (flashA > 0.01) { ctx.fillStyle = `rgba(${flashRGB},${flashA * (isLargeTeam() ? 0.28 : 0.5)})`; ctx.fillRect(0, 0, W, H); }
+if (flashA > 0.01 && !rf) { ctx.fillStyle = `rgba(${flashRGB},${flashA * (isLargeTeam() ? 0.28 : 0.5)})`; ctx.fillRect(0, 0, W, H); }
 drawIdentityEdges(order, sx, sy);
 drawHUD();
 if (typeof drawPhysicsTelemetryHUD === 'function') drawPhysicsTelemetryHUD();
@@ -40192,6 +40335,10 @@ const SETTING_ROWS = [
 { group: '显示与性能', k: 'blur', name: '背景虚化', opts: [[true, '开'], [false, '关闭']] },
 { group: '显示与性能', k: 'shake', name: '画面震动', range: [0, 2, 0.1] },
 { group: '显示与性能', k: 'vig', name: '暗角', range: [0, 1.5, 0.1] },
+{ group: '无障碍与显示', k: 'colorblind', name: '色觉辅助', opts: [['none', '关闭'], ['protan', '红色盲'], ['deutan', '绿色盲'], ['tritan', '蓝色盲']] },
+{ group: '无障碍与显示', k: 'reducedFlash', name: '减弱闪光与震动', opts: [[false, '关闭'], [true, '开启']] },
+{ group: '无障碍与显示', k: 'highContrastHitbox', name: '高对比判定框', opts: [[false, '关闭'], [true, '开启']] },
+{ group: '无障碍与显示', k: 'uiScale', name: '界面字号', opts: [['normal', '标准'], ['large', '放大']] },
 { group: '声音', k: 'music', name: '音乐', range: [0, 1, 0.05] },
 { group: '声音', k: 'sfx', name: '音效', range: [0, 1, 0.05] },
 { group: '数据偏好', k: 'stats', name: '匿名统计', opts: [[true, '开（不记名字、账号）'], [false, '关闭']] },
@@ -49735,8 +49882,18 @@ const QUAD_TEAMS = [
 ];
 const QUAD_MATCH_TIME = 210;
 const QUAD_RESPAWN_TIME = 3.2;
-const teamHexOf = f => quadOn() ? (QUAD_TEAMS[fighterTeam(f)] || QUAD_TEAMS[0]).hex : (fighterTeam(f) === localTeam() ? '#6fe0ff' : '#ff6470');
-const teamRgbOf = f => quadOn() ? (QUAD_TEAMS[fighterTeam(f)] || QUAD_TEAMS[0]).rgb : (fighterTeam(f) === localTeam() ? '111,224,255' : '255,100,112');
+const teamHexOf = f => {
+const cb = typeof SETTINGS !== 'undefined' && SETTINGS.colorblind && SETTINGS.colorblind !== 'none';
+if (quadOn()) return cb ? a11yTeamHex(fighterTeam(f)) : (QUAD_TEAMS[fighterTeam(f)] || QUAD_TEAMS[0]).hex;
+const isAlly = fighterTeam(f) === localTeam();
+return cb ? a11yTeamHex(isAlly ? 0 : 1) : (isAlly ? '#6fe0ff' : '#ff6470');
+};
+const teamRgbOf = f => {
+const cb = typeof SETTINGS !== 'undefined' && SETTINGS.colorblind && SETTINGS.colorblind !== 'none';
+if (quadOn()) return cb ? a11yTeamRgb(fighterTeam(f)) : (QUAD_TEAMS[fighterTeam(f)] || QUAD_TEAMS[0]).rgb;
+const isAlly = fighterTeam(f) === localTeam();
+return cb ? a11yTeamRgb(isAlly ? 0 : 1) : (isAlly ? '111,224,255' : '255,100,112');
+};
 const teamNameOf = t => quadOn() ? (QUAD_TEAMS[t] || QUAD_TEAMS[0]).n : (t === localTeam() ? '我方' : '敌方');
 function quadPlaceSpots() {
 const spots = [0, 1, 2, 3];

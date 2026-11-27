@@ -14,9 +14,19 @@ const QUAD_TEAMS = [
 ];
 const QUAD_MATCH_TIME = 210;
 const QUAD_RESPAWN_TIME = 3.2;
-// 阵营的颜色：四象争锋里每队一种，其余模式里「我方青、敌方红」
-const teamHexOf = f => quadOn() ? (QUAD_TEAMS[fighterTeam(f)] || QUAD_TEAMS[0]).hex : (fighterTeam(f) === localTeam() ? '#6fe0ff' : '#ff6470');
-const teamRgbOf = f => quadOn() ? (QUAD_TEAMS[fighterTeam(f)] || QUAD_TEAMS[0]).rgb : (fighterTeam(f) === localTeam() ? '111,224,255' : '255,100,112');
+// 阵营的颜色：四象争锋里每队一种，其余模式里「我方青、敌方红」（开启色觉辅助时改用无障碍色板）
+const teamHexOf = f => {
+  const cb = typeof SETTINGS !== 'undefined' && SETTINGS.colorblind && SETTINGS.colorblind !== 'none';
+  if (quadOn()) return cb ? a11yTeamHex(fighterTeam(f)) : (QUAD_TEAMS[fighterTeam(f)] || QUAD_TEAMS[0]).hex;
+  const isAlly = fighterTeam(f) === localTeam();
+  return cb ? a11yTeamHex(isAlly ? 0 : 1) : (isAlly ? '#6fe0ff' : '#ff6470');
+};
+const teamRgbOf = f => {
+  const cb = typeof SETTINGS !== 'undefined' && SETTINGS.colorblind && SETTINGS.colorblind !== 'none';
+  if (quadOn()) return cb ? a11yTeamRgb(fighterTeam(f)) : (QUAD_TEAMS[fighterTeam(f)] || QUAD_TEAMS[0]).rgb;
+  const isAlly = fighterTeam(f) === localTeam();
+  return cb ? a11yTeamRgb(isAlly ? 0 : 1) : (isAlly ? '111,224,255' : '255,100,112');
+};
 const teamNameOf = t => quadOn() ? (QUAD_TEAMS[t] || QUAD_TEAMS[0]).n : (t === localTeam() ? '我方' : '敌方');
 
 // 四个出生点：0 地面左、1 地面右、2 顶层左、3 顶层右。每局随机打乱，哪队在哪里不固定

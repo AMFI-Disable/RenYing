@@ -12,23 +12,24 @@ const youLabel = () => (window.I18N ? I18N.t('我') : '我');   // 默认「我�
 function idRole(f) {
   if (!f || f.hidden || f.dummy || !f.sk) return null;
   if (M.mode === 'demo') return null;
+  const cb = typeof SETTINGS !== 'undefined' && SETTINGS.colorblind && SETTINGS.colorblind !== 'none';
   if (isAiVsAi()) {
-    if (M.watchAi) return fighterTeam(f) === 0 ? { kind: 'ally', rgb: ID_ALLY, label: cvT(f.look.name) } : { kind: 'foe', rgb: ID_FOE };
+    if (M.watchAi) return fighterTeam(f) === 0 ? { kind: 'ally', rgb: cb ? a11yTeamRgb(0) : ID_ALLY, label: cvT(f.look.name) } : { kind: 'foe', rgb: cb ? a11yTeamRgb(1) : ID_FOE };
     return null;
   }
   const k = human.indexOf(f.ctrl);
   if (k >= 0 || (f === A && !isMulti() && !(A.ctrl instanceof AICtrl))) {
     const idx = k >= 0 ? k : 0;
     const label = idHumans().length > 1 ? `${idx + 1}P` : youLabel();
-    return { kind: 'self', rgb: ID_SELF[idx] || ID_SELF[0], label };
+    return { kind: 'self', rgb: cb && idx === 0 ? a11ySelfRgb() : (ID_SELF[idx] || ID_SELF[0]), label };
   }
   if (isMulti() && fighterTeam(f) === localTeam()) {
     const name = (f.ctrl === NET.remote && (NET.names || {})[NET.role === 'host' ? 'client' : 'host'])
       ? String(NET.names[NET.role === 'host' ? 'client' : 'host']).slice(0, 6)
       : cvT(f.look.name);
-    return { kind: 'ally', rgb: ID_ALLY, label: name };
+    return { kind: 'ally', rgb: cb ? a11yTeamRgb(0) : ID_ALLY, label: name };
   }
-  return { kind: 'foe', rgb: quadOn() ? teamRgbOf(f) : ID_FOE };
+  return { kind: 'foe', rgb: (quadOn() || cb) ? teamRgbOf(f) : ID_FOE };
 }
 
 // 战斗开局与受身/起身降临垂直水墨光束（Beacon）

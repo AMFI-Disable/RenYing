@@ -367,8 +367,10 @@ function render() {
   ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
   const sc = worldScale();
   drawBackdrop(sc);
-  const sk = shake * SETTINGS.shake;
-  const sx = rand(-sk, sk) + shakeDirX * SETTINGS.shake, sy = rand(-sk, sk) + shakeDirY * SETTINGS.shake;
+  const rf = !!(typeof SETTINGS !== 'undefined' && SETTINGS.reducedFlash);
+  const shakeScale = rf ? Math.min(SETTINGS.shake, 0.25) : SETTINGS.shake;
+  const sk = shake * shakeScale;
+  const sx = rand(-sk, sk) + shakeDirX * shakeScale, sy = rand(-sk, sk) + shakeDirY * shakeScale;
   ctx.save();
   ctx.translate(W / 2 + sx, groundY() + sy); ctx.scale(sc, sc); ctx.translate(-cam.x, 0);
   drawGround();
@@ -382,7 +384,7 @@ function render() {
     gg.addColorStop(0, `rgba(${SCN.mist},${SCN.legend ? 0.16 : 0.08})`); gg.addColorStop(1, `rgba(${SCN.mist},0)`);
     ctx.fillStyle = gg; ctx.fillRect(0, gy, W, H - gy);
   }
-  if (dimA > 0.01) { ctx.fillStyle = `rgba(3,3,10,${0.55 * dimA})`; ctx.fillRect(0, 0, W, H); }
+  if (dimA > 0.01) { ctx.fillStyle = `rgba(3,3,10,${(rf ? 0.25 : 0.55) * dimA})`; ctx.fillRect(0, 0, W, H); }
   const pf = paperFX();
   if (pf) drawXuanzhi(pf.a);
   ctx.save();
@@ -419,7 +421,7 @@ function render() {
   drawIdentityTags(visibleOrder);
   if ((M.mode === 'train' || (M.mode === 'replay' && REPLAY.on && M.phase !== 'end')) && debugHitbox) drawHitboxOverlay(visibleOrder);
   ctx.restore();
-  if (SETTINGS.bloom > 0 && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸上不要月亮和萤火的光晕
+  if (SETTINGS.bloom > 0 && !rf && !(pf && pf.a > 0.3)) drawBloom(sc, sx, sy);   // 宣纸或减弱闪光模式下跳过全屏泛光
   if (FOREST.on) {
     const px = W / 2 + (A.x - cam.x) * sc, py = groundY() + (A.y - 60) * sc;
     const dk = ctx.createRadialGradient(px, py, 60 * sc, px, py, 520 * sc);
@@ -437,7 +439,7 @@ function render() {
     if (T && T.legend) { const g = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * 0.1, W / 2, H / 2, Math.max(W, H) * 0.7); g.addColorStop(0, `rgba(${T.orbC},0)`); g.addColorStop(1, `rgba(${T.orbC},0.28)`); ctx.fillStyle = g; ctx.fillRect(0, 0, W, H); } }
   // 暗角
   drawVignette(ce);
-  if (flashA > 0.01) { ctx.fillStyle = `rgba(${flashRGB},${flashA * (isLargeTeam() ? 0.28 : 0.5)})`; ctx.fillRect(0, 0, W, H); }
+  if (flashA > 0.01 && !rf) { ctx.fillStyle = `rgba(${flashRGB},${flashA * (isLargeTeam() ? 0.28 : 0.5)})`; ctx.fillRect(0, 0, W, H); }
   drawIdentityEdges(order, sx, sy);
   drawHUD();
   if (typeof drawPhysicsTelemetryHUD === 'function') drawPhysicsTelemetryHUD();

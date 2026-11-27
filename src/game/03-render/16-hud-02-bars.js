@@ -337,14 +337,26 @@ function drawLargeMiniMap(top, cx) {
   const lf = fighterByIdx(localIdx());
   const fighters = allFighters().filter(f => f !== lf);
   if (lf) fighters.push(lf);
+  const cb = typeof SETTINGS !== 'undefined' && SETTINGS.colorblind && SETTINGS.colorblind !== 'none';
   for (const f of fighters) {
     if (f.hidden || f.hp <= 0) continue;
     const rx = mx + clamp(f.x / Math.max(1, STAGE_W), 0, 1) * mw;
+    const ry = mapY(f.y);
     const isSelf = lf && f.idx === lf.idx;
     const isAlly = fighterTeam(f) === localTeam();
+    const rad = isSelf ? 4.5 : 3.0;
+    const shape = cb && !isSelf ? a11yTeamShape(quadOn() ? fighterTeam(f) : (isAlly ? 0 : 1)) : 'circle';
     ctx.beginPath();
-    ctx.arc(rx, mapY(f.y), isSelf ? 4.5 : 2.8, 0, Math.PI * 2);
-    ctx.fillStyle = isSelf ? '#ffe066' : quadOn() ? teamHexOf(f) : isAlly ? '#6fe0ff' : '#ff6470';
+    if (shape === 'diamond') {
+      ctx.moveTo(rx, ry - rad - 0.6); ctx.lineTo(rx + rad + 0.6, ry); ctx.lineTo(rx, ry + rad + 0.6); ctx.lineTo(rx - rad - 0.6, ry); ctx.closePath();
+    } else if (shape === 'square') {
+      ctx.rect(rx - rad, ry - rad, rad * 2, rad * 2);
+    } else if (shape === 'triangle') {
+      ctx.moveTo(rx, ry - rad - 0.8); ctx.lineTo(rx + rad + 0.6, ry + rad); ctx.lineTo(rx - rad - 0.6, ry + rad); ctx.closePath();
+    } else {
+      ctx.arc(rx, ry, rad, 0, Math.PI * 2);
+    }
+    ctx.fillStyle = isSelf ? '#ffe066' : (quadOn() || cb) ? teamHexOf(f) : isAlly ? '#6fe0ff' : '#ff6470';
     ctx.fill();
     if (isSelf) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2; ctx.stroke(); }
   }

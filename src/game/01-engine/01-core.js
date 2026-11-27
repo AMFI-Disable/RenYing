@@ -113,7 +113,49 @@ function stripAttrs(root) { if (root.nodeType !== 1) return; for (const el of [r
    ===================================================================== */
 
 // ======================= 设置（保存在浏览器里） =======================
-const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, backgroundPlay: false, stats: true, aiTraining: true, lang: 'zh' };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, backgroundPlay: false, stats: true, aiTraining: true, lang: 'zh', colorblind: 'none', reducedFlash: false, highContrastHitbox: false, uiScale: 'normal' };
+const A11Y_TEAM_PALETTES = {
+  none: [
+    { hex: '#46d3ea', rgb: '70,211,234', shape: 'circle' },
+    { hex: '#ff6470', rgb: '255,100,112', shape: 'diamond' },
+    { hex: '#b58cff', rgb: '181,140,255', shape: 'square' },
+    { hex: '#ffc65a', rgb: '255,198,90', shape: 'triangle' },
+  ],
+  protan: [
+    { hex: '#0072b2', rgb: '0,114,178', shape: 'circle' },
+    { hex: '#e69f00', rgb: '230,159,0', shape: 'diamond' },
+    { hex: '#cc79a7', rgb: '204,121,167', shape: 'square' },
+    { hex: '#56b4e9', rgb: '86,180,233', shape: 'triangle' },
+  ],
+  deutan: [
+    { hex: '#0072b2', rgb: '0,114,178', shape: 'circle' },
+    { hex: '#d55e00', rgb: '213,94,0', shape: 'diamond' },
+    { hex: '#cc79a7', rgb: '204,121,167', shape: 'square' },
+    { hex: '#f0e442', rgb: '240,228,66', shape: 'triangle' },
+  ],
+  tritan: [
+    { hex: '#009e73', rgb: '0,158,115', shape: 'circle' },
+    { hex: '#d55e00', rgb: '213,94,0', shape: 'diamond' },
+    { hex: '#e69f00', rgb: '230,159,0', shape: 'square' },
+    { hex: '#56b4e9', rgb: '86,180,233', shape: 'triangle' },
+  ],
+};
+function a11yTeamEntry(teamIdx) {
+  const pal = A11Y_TEAM_PALETTES[SETTINGS.colorblind] || A11Y_TEAM_PALETTES.none;
+  return pal[((teamIdx | 0) % pal.length + pal.length) % pal.length];
+}
+function a11yTeamHex(teamIdx) { return a11yTeamEntry(teamIdx).hex; }
+function a11yTeamRgb(teamIdx) { return a11yTeamEntry(teamIdx).rgb; }
+function a11yTeamShape(teamIdx) { return a11yTeamEntry(teamIdx).shape; }
+function a11ySelfRgb() { return SETTINGS.colorblind && SETTINGS.colorblind !== 'none' ? '240,228,66' : '46,213,115'; }
+function a11ySelfHex() { return SETTINGS.colorblind && SETTINGS.colorblind !== 'none' ? '#f0e442' : '#34e79b'; }
+function applyAccessibility() {
+  if (typeof document === 'undefined' || !document.documentElement) return;
+  const ds = document.documentElement.dataset;
+  ds.colorblind = SETTINGS.colorblind || 'none';
+  ds.uiScale = SETTINGS.uiScale || 'normal';
+  ds.reducedFlash = SETTINGS.reducedFlash ? '1' : '0';
+}
 try {
   const saved = JSON.parse(localStorage.getItem('renying-settings') || '{}');
   Object.assign(SETTINGS, saved);
@@ -125,13 +167,19 @@ try {
   const ALLOWED_FPS = [144, 120, 60, 30];
   if (!SETTINGS.fps || !ALLOWED_FPS.includes(SETTINGS.fps)) SETTINGS.fps = 144;
   if (saved.aim === undefined || !saved.aimMigrated) { SETTINGS.aim = true; SETTINGS.aimMigrated = true; }
+  if (!A11Y_TEAM_PALETTES[SETTINGS.colorblind]) SETTINGS.colorblind = 'none';
+  if (SETTINGS.uiScale !== 'normal' && SETTINGS.uiScale !== 'large') SETTINGS.uiScale = 'normal';
+  SETTINGS.reducedFlash = !!SETTINGS.reducedFlash;
+  SETTINGS.highContrastHitbox = !!SETTINGS.highContrastHitbox;
   if (saved.lang) SETTINGS.lang = saved.lang;
   else {
     const rawL = localStorage.getItem('renying-lang');
     if (rawL === 'en' || rawL === 'zh') SETTINGS.lang = rawL;
   }
 } catch (e) {}
+applyAccessibility();
 function saveSettings() {
+  applyAccessibility();
   try {
     localStorage.setItem('renying-settings', JSON.stringify(SETTINGS));
     if (SETTINGS.lang) localStorage.setItem('renying-lang', SETTINGS.lang);

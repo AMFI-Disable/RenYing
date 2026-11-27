@@ -218,16 +218,34 @@ function findTargetsInRadius(f, cx, cy, rx, ry, opts) {
 
 // 调试模式判定框与帧优势透视 (Hitbox & Frame Advantage Overlay)
 function drawHitboxOverlay(fighters) {
+  const hc = !!(typeof SETTINGS !== 'undefined' && SETTINGS.highContrastHitbox);
   ctx.save();
+  const drawBox = (x, y, w, h, stroke, fill, dash) => {
+    ctx.fillStyle = fill;
+    ctx.fillRect(x, y, w, h);
+    if (hc) {
+      ctx.setLineDash([]);
+      ctx.lineWidth = 5;
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.92)';
+      ctx.strokeRect(x, y, w, h);
+    }
+    ctx.setLineDash(hc && dash ? dash : []);
+    ctx.lineWidth = hc ? 2.8 : 1.5;
+    ctx.strokeStyle = stroke;
+    ctx.strokeRect(x, y, w, h);
+    ctx.setLineDash([]);
+  };
   for (const f of fighters) {
     if (!f || f.hidden || f.hp <= 0) continue;
-    // 1. 受击框 (Hurtbox) - 绿色 / 无敌蓝色
+    // 1. 受击框 (Hurtbox) - 绿色 / 无敌蓝色（高对比模式使用青色虚线 + 黑色描边）
     const hu = hurtbox(f);
-    ctx.lineWidth = 1.5;
-    ctx.strokeStyle = f.invul > 0 ? 'rgba(120, 200, 255, 0.85)' : 'rgba(80, 240, 120, 0.85)';
-    ctx.fillStyle = f.invul > 0 ? 'rgba(120, 200, 255, 0.15)' : 'rgba(80, 240, 120, 0.15)';
-    ctx.fillRect(hu[0], hu[1], hu[2] - hu[0], hu[3] - hu[1]);
-    ctx.strokeRect(hu[0], hu[1], hu[2] - hu[0], hu[3] - hu[1]);
+    const huStroke = hc
+      ? (f.invul > 0 ? '#ffffff' : '#00f5d4')
+      : (f.invul > 0 ? 'rgba(120, 200, 255, 0.85)' : 'rgba(80, 240, 120, 0.85)');
+    const huFill = hc
+      ? (f.invul > 0 ? 'rgba(255, 255, 255, 0.22)' : 'rgba(0, 245, 212, 0.22)')
+      : (f.invul > 0 ? 'rgba(120, 200, 255, 0.15)' : 'rgba(80, 240, 120, 0.15)');
+    drawBox(hu[0], hu[1], hu[2] - hu[0], hu[3] - hu[1], huStroke, huFill, [8, 4]);
 
     // 2. 攻击框 (Hitbox) - 前摇黄色 / 活跃帧红色 / 后摇收招蓝色
     if (f.state === 'attack' && f.move && f.move.box) {
@@ -235,19 +253,28 @@ function drawHitboxOverlay(fighters) {
       const isStart = f.t < su;
       const isAct = f.t >= su && f.t < su + ac;
       const hb = hitbox(f, f.move.box);
-      ctx.strokeStyle = isAct ? 'rgba(255, 45, 65, 0.95)' : isStart ? 'rgba(255, 195, 50, 0.85)' : 'rgba(80, 160, 255, 0.75)';
-      ctx.fillStyle = isAct ? 'rgba(255, 45, 65, 0.28)' : isStart ? 'rgba(255, 195, 50, 0.12)' : 'rgba(80, 160, 255, 0.12)';
-      ctx.fillRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
-      ctx.strokeRect(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1]);
+      const hbStroke = hc
+        ? (isAct ? '#ff2a6d' : isStart ? '#ffd60a' : '#38bdf8')
+        : (isAct ? 'rgba(255, 45, 65, 0.95)' : isStart ? 'rgba(255, 195, 50, 0.85)' : 'rgba(80, 160, 255, 0.75)');
+      const hbFill = hc
+        ? (isAct ? 'rgba(255, 42, 109, 0.34)' : isStart ? 'rgba(255, 214, 10, 0.22)' : 'rgba(56, 189, 248, 0.2)')
+        : (isAct ? 'rgba(255, 45, 65, 0.28)' : isStart ? 'rgba(255, 195, 50, 0.12)' : 'rgba(80, 160, 255, 0.12)');
+      drawBox(hb[0], hb[1], hb[2] - hb[0], hb[3] - hb[1], hbStroke, hbFill, isAct ? [] : isStart ? [4, 4] : [12, 4, 3, 4]);
 
-      ctx.font = 'bold 12px monospace';
-      ctx.fillStyle = isAct ? '#ff4055' : isStart ? '#ffc040' : '#60b0ff';
+      ctx.font = hc ? 'bold 13px monospace' : 'bold 12px monospace';
       ctx.textAlign = 'center';
       const frameTxt = isAct ? `活跃帧 [${Math.round((f.t - su) / STEP)}/${Math.round(ac / STEP)}F]` : isStart ? `前摇 [${Math.round(f.t / STEP)}/${Math.round(su / STEP)}F]` : `收招 [${Math.round((f.t - su - ac) / STEP)}/${Math.round(rec / STEP)}F]`;
-      ctx.fillText(frameTxt, (hb[0] + hb[2]) / 2, hb[1] - 8);
+      const tx = (hb[0] + hb[2]) / 2, ty = hb[1] - 8;
+      if (hc) {
+        const tw = ctx.measureText(frameTxt).width + 10;
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
+        ctx.fillRect(tx - tw / 2, ty - 13, tw, 16);
+      }
+      ctx.fillStyle = isAct ? '#ff4055' : isStart ? '#ffd60a' : '#60c0ff';
+      ctx.fillText(frameTxt, tx, ty);
     }
 
-    ctx.font = 'bold 12px monospace';
+    ctx.font = hc ? 'bold 13px monospace' : 'bold 12px monospace';
     ctx.textAlign = 'center';
     let advText = '';
     const other = foeOf ? foeOf(f) : null;
@@ -258,19 +285,27 @@ function drawHitboxOverlay(fighters) {
       advText = advFrames >= 0 ? ` +${advFrames}F 优势` : ` ${advFrames}F 劣势`;
     }
     const stDesc = `${f.state}${f.stun > 0 ? ` (硬直 ${Math.round(f.stun / STEP)}F)` : ''}${advText}`;
+    const sy = f.y - 125 * (f.size || 1);
+    if (hc) {
+      const sw = ctx.measureText(stDesc).width + 10;
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.88)';
+      ctx.fillRect(f.x - sw / 2, sy - 13, sw, 16);
+    }
     ctx.fillStyle = advText.includes('+') ? '#70ff90' : advText.includes('-') ? '#ff7070' : '#efe8d8';
-    ctx.fillText(stDesc, f.x, f.y - 125 * (f.size || 1));
+    ctx.fillText(stDesc, f.x, sy);
   }
   // 3. 飞行道具判定框 (Projectile Hitboxes)
   if (typeof projs !== 'undefined' && Array.isArray(projs)) {
     for (const p of projs) {
       if (!p || !p.w || !p.h) continue;
       const x0 = p.x - p.w / 2, y0 = p.y - p.h / 2;
-      ctx.strokeStyle = p.owner === 0 ? 'rgba(80, 235, 255, 0.92)' : 'rgba(255, 145, 70, 0.92)';
-      ctx.fillStyle = p.owner === 0 ? 'rgba(80, 235, 255, 0.2)' : 'rgba(255, 145, 70, 0.2)';
-      ctx.lineWidth = 1.5;
-      ctx.fillRect(x0, y0, p.w, p.h);
-      ctx.strokeRect(x0, y0, p.w, p.h);
+      const pStroke = hc
+        ? (p.owner === 0 ? '#56b4e9' : '#e69f00')
+        : (p.owner === 0 ? 'rgba(80, 235, 255, 0.92)' : 'rgba(255, 145, 70, 0.92)');
+      const pFill = hc
+        ? (p.owner === 0 ? 'rgba(86, 180, 233, 0.28)' : 'rgba(230, 159, 0, 0.28)')
+        : (p.owner === 0 ? 'rgba(80, 235, 255, 0.2)' : 'rgba(255, 145, 70, 0.2)');
+      drawBox(x0, y0, p.w, p.h, pStroke, pFill, [6, 3]);
     }
   }
   ctx.restore();

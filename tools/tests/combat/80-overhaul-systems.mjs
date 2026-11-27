@@ -1001,4 +1001,51 @@ export default [
       return { pass: true };
     })()`
   },
+  {
+    name: 'Accessibility suite: colorblind team palettes & shapes, reduced-flash suppression, high-contrast hitboxes, and UI text scale',
+    fn: `(() => {
+      const prev = { colorblind: SETTINGS.colorblind, reducedFlash: SETTINGS.reducedFlash, highContrastHitbox: SETTINGS.highContrastHitbox, uiScale: SETTINGS.uiScale };
+      try {
+        // 1. Colorblind team palettes switch hex/rgb/shapes deterministically across modes
+        SETTINGS.colorblind = 'none';
+        const defaultHex0 = a11yTeamHex(0), defaultHex1 = a11yTeamHex(1);
+        SETTINGS.colorblind = 'protan';
+        saveSettings();
+        if (a11yTeamHex(0) === defaultHex0 || a11yTeamHex(1) === defaultHex1) {
+          return { pass: false, error: 'Protanopia palette did not differ from default team colors' };
+        }
+        if (a11yTeamShape(0) !== 'circle' || a11yTeamShape(1) !== 'diamond' || a11yTeamShape(2) !== 'square' || a11yTeamShape(3) !== 'triangle') {
+          return { pass: false, error: 'Unexpected team shape markers' };
+        }
+        startMelee(3, 0, 'normal', 'normal'); M.phase = 'fight';
+        if (teamHexOf(A) !== a11yTeamHex(0) || teamHexOf(B) !== a11yTeamHex(1)) {
+          return { pass: false, error: 'teamHexOf did not apply colorblind palette: ' + teamHexOf(A) + ' / ' + teamHexOf(B) };
+        }
+
+        // 2. High-contrast hitboxes render cleanly with distinct dash patterns
+        SETTINGS.highContrastHitbox = true;
+        SETTINGS.reducedFlash = true;
+        SETTINGS.uiScale = 'large';
+        saveSettings();
+        if (document.documentElement && document.documentElement.dataset) {
+          if (document.documentElement.dataset.uiScale !== 'large' || document.documentElement.dataset.reducedFlash !== '1' || document.documentElement.dataset.colorblind !== 'protan') {
+            return { pass: false, error: 'applyAccessibility did not sync dataset attributes' };
+          }
+        }
+        startTraining('dummy', false); M.phase = 'fight';
+        debugHitbox = true; flashA = 0.8; shake = 10;
+        render();
+        buildSettings();
+        const setHtml = ($id('setList') || {}).innerHTML || '';
+        if (!setHtml.includes('色觉辅助') || !setHtml.includes('高对比判定框') || !setHtml.includes('减弱闪光与震动')) {
+          return { pass: false, error: 'Settings UI missing Accessibility rows' };
+        }
+      } finally {
+        Object.assign(SETTINGS, prev);
+        saveSettings();
+        toMenu();
+      }
+      return { pass: true };
+    })()`
+  },
 ];
