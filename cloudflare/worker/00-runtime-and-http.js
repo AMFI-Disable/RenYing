@@ -93,6 +93,8 @@ const D1_SHIELD = {
   playStatsCoalesced: 0,
   presenceDoHits: 0,
   presenceD1Coalesced: 0,
+  v120CacheHits: 0,
+  v120CacheMisses: 0,
   circuitOpenUntil: 0,
   lastQuotaErr: '',
 };
@@ -125,6 +127,8 @@ function d1ShieldSnapshot(env, now) {
     playStatsCoalesced: D1_SHIELD.playStatsCoalesced,
     presenceDoHits: D1_SHIELD.presenceDoHits,
     presenceD1Coalesced: D1_SHIELD.presenceD1Coalesced,
+    v120CacheHits: D1_SHIELD.v120CacheHits,
+    v120CacheMisses: D1_SHIELD.v120CacheMisses,
     circuitOpen: now < D1_SHIELD.circuitOpenUntil,
     circuitOpenUntil: D1_SHIELD.circuitOpenUntil,
     lastQuotaErr: D1_SHIELD.lastQuotaErr,

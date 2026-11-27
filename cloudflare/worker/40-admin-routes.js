@@ -39,11 +39,13 @@ async function handleAdmin(env, request, path, now, ip) {
     await env.DB.prepare('INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0) ON CONFLICT(uid) DO UPDATE SET ban_until = ?3, perm = ?4, log_json = ?5, at = ?6')
       .bind(u.id, rec.strikes, until, perm || rec.perm ? 1 : 0, JSON.stringify(log), now).run();
     await logRow(env, u.id, now, 'admin_ban', 1, null, null, JSON.stringify({ by: who, why, days: perm ? 'perm' : days }));
+    lbCacheClear(env);
     return { banUntil: until, perm: perm || rec.perm };
   };
   const pardonUser = async (u, note) => {
     await env.DB.prepare("INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, 0, 0, 0, '[]', ?2, ?2) ON CONFLICT(uid) DO UPDATE SET strikes = 0, ban_until = 0, perm = 0, log_json = '[]', at = ?2, pardon = ?2").bind(u.id, now).run();
     await logRow(env, u.id, now, 'pardon', 1, null, null, JSON.stringify({ by: who, why: note }));
+    lbCacheClear(env);
   };
   const bundleIn = (noun, eg) => {   // 补偿、兑换码里的东西：墨锭、每种武器箱、货郎、改名标签，还有饰品和给玩家看的说明
     const ink = intIn(body.ink, 0, ADJ_INK), term = intIn(body.term, 0, 100), tags = intIn(body.tags, 0, 100);
@@ -594,10 +596,12 @@ async function handleAdmin(env, request, path, now, ip) {
           env.DB.prepare('DELETE FROM devices WHERE user_id = ?').bind(u.id),
         ]);
         await logRow(env, u.id, now, 'acct_del', 1, null, null, JSON.stringify({ by: who, why }));
+        lbCacheClear(env);
       } else if (op === 'restore') {
         if (!u.deleted_at) { skip.push({ uid: u.id, name: u.username, why: '没有删除' }); continue; }
         await env.DB.prepare('UPDATE users SET deleted_at = 0 WHERE id = ?').bind(u.id).run();
         await logRow(env, u.id, now, 'acct_restore', 1, null, null, JSON.stringify({ by: who, why, since: u.deleted_at }));
+        lbCacheClear(env);
       } else if (op === 'ban') await banUser(u, perm, days);
       else await pardonUser(u, why);
       done.push({ uid: u.id, name: u.username });

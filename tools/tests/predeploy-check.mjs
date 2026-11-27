@@ -288,6 +288,48 @@ section('D1 配额护盾与 PresenceHub');
   const f2 = await call('POST', '/api/presence', { body: { sid: 'sidfallback0001', st: 'menu' }, headers: { 'CF-Connecting-IP': '10.8.3.1' }, env: d1OnlyEnv });
   const w2 = d1Writes;
   ok(f1.status === 200 && f1.json.mode === 'd1' && f2.status === 200 && w1 === 1 && w2 === 1, '无 PRESENCE 绑定时回退 D1 并合并 30 秒内同状态写入', JSON.stringify({ w1, w2, f2: f2.json }));
+
+  // 5) v1.2.0 多模式排行榜、赛季历史归档、持久化公开锦标赛与 60 秒内存缓存保护
+  let d1Reads = 0;
+  const countBoth = base => {
+    const wrap = s => ({
+      bind: (...p) => wrap(s.bind(...p)),
+      first: async (...a) => { if (/^\s*(SELECT|WITH)\b/i.test(s.sql)) d1Reads++; else d1Writes++; return s.first(...a); },
+      all: async (...a) => { if (/^\s*(SELECT|WITH)\b/i.test(s.sql)) d1Reads++; else d1Writes++; return s.all(...a); },
+      run: async (...a) => { if (/^\s*(SELECT|WITH)\b/i.test(s.sql)) d1Reads++; else d1Writes++; return s.run(...a); },
+    });
+    return {
+      prepare: sql => wrap(base.prepare(sql)),
+      batch: async list => { for (const s of list) { if (/^\s*(SELECT|WITH)\b/i.test(s.sql)) d1Reads++; else d1Writes++; } return base.batch(list); },
+      exec: async sql => { d1Writes++; return base.exec(sql); },
+    };
+  };
+  const v120Env = { ...doEnv, DB: countBoth(ENV.DB) };
+  d1Reads = 0; d1Writes = 0;
+  const lbRank1 = await call('GET', '/api/leaderboard?k=rank&s=S1', { env: v120Env });
+  const readsAfterMiss = d1Reads;
+  const lbRank2 = await call('GET', '/api/leaderboard?k=rank&s=S1', { env: v120Env });
+  const lbTag3 = await call('GET', '/api/leaderboard?k=tag3', { env: v120Env });
+  const lbDuo = await call('GET', '/api/leaderboard?k=duo', { env: v120Env });
+  const lbGboss = await call('GET', '/api/leaderboard?k=gboss', { env: v120Env });
+  ok(lbRank1.status === 200 && lbRank2.status === 200 && lbRank2.json.cached === true && d1Reads === readsAfterMiss + 3 && d1Writes === 0,
+    'v1.2.0 多模式与历史赛季榜单命中 60 秒内存缓存且全程 0 次 D1 写入', JSON.stringify({ readsAfterMiss, d1Reads, d1Writes, cached2: lbRank2.json && lbRank2.json.cached }));
+  ok(lbTag3.status === 200 && lbDuo.status === 200 && lbGboss.status === 200 && Array.isArray(lbRank1.json.seasons),
+    'v1.2.0 支持 rank/S1、tag3、duo、gboss 公开榜单并返回赛季列表');
+
+  // 公开锦标赛发布校验 + 60 秒缓存读取
+  const regT = await call('POST', '/api/register', { body: { username: 'tourhost120', password: 'Password123!' } });
+  const tTok = regT.json && regT.json.token;
+  const badTour = await call('POST', '/api/tournaments', { token: tTok, body: { size: 8, code: 'INVALID_CODE' }, env: v120Env });
+  ok(badTour.status === 400, '公开锦标赛拒绝非法分享码', badTour.status);
+  const pubTour = await call('POST', '/api/tournaments', { token: tTok, body: { id: 'tour_v120_test', title: '江湖八强测试赛', size: 8, status: 'active', code: 'RYTR1:eyJ2IjoxLCJzeiI6OH0' }, env: v120Env });
+  ok(pubTour.status === 200 && pubTour.json.id === 'tour_v120_test', '登录用户可发布合法公开锦标赛签表', pubTour.text);
+  d1Reads = 0; d1Writes = 0;
+  const tList1 = await call('GET', '/api/tournaments', { env: v120Env });
+  const tReads1 = d1Reads;
+  const tList2 = await call('GET', '/api/tournaments', { env: v120Env });
+  ok(tList1.status === 200 && tList1.json.list.some(x => x.id === 'tour_v120_test') && tList2.status === 200 && tList2.json.cached === true && d1Reads === tReads1 && d1Writes === 0,
+    'GET /api/tournaments 返回公开赛程并命中 60 秒内存缓存（0 次 D1 写入）', JSON.stringify({ tReads1, d1Reads, d1Writes, cached: tList2.json && tList2.json.cached }));
 }
 
 console.log(`\n${pass} 项通过，${fail} 项失败（${path.relative(ROOT, FILE)}）`);

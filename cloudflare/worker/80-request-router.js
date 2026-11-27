@@ -210,7 +210,9 @@ async function route(request, env, ctx, rid = reqId()) {
         }
         const body = await readBody(request);
         if (!body) return error('存档太大', 413);
-        return await handleProfilePost(env, auth, body, now);
+        const res = await handleProfilePost(env, auth, body, now);
+        if (res.status === 200 && body.profile && (body.profile.rk || body.profile.netWins !== undefined || body.profile.netLosses !== undefined || body.profile.modeStats)) lbCacheClear(env);
+        return res;
       }
 
       // 6. 武库：开箱、买卖、熔铸……
@@ -317,12 +319,28 @@ async function route(request, env, ctx, rid = reqId()) {
         return json({ ok: true, flags: await flagsFor(env, user, now), turnstile: (await turnstileOn(env, user, now)) ? String(env.TURNSTILE_SITEKEY) : '' });
       }
 
-      // 13. 排行榜（不用登录）：段位榜是这个赛季打满定级赛的，按段位分排；战绩榜按联机胜场排。被封的号不上榜
+      // 13. 排行榜（不用登录，60 秒内存缓存）：支持段位/赛季归档、战绩、3v3、2v2、天魔讨伐。被封的号不上榜
       if (path === '/api/leaderboard' && request.method === 'GET') {
         if (!hitMem('lbg:' + ip, 30, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
         const auth = await authenticate(env, request);
-        const kind = url.searchParams.get('k') === 'wins' ? 'wins' : 'rank';
+        const rawK = String(url.searchParams.get('k') || 'rank');
+        const kind = ['rank', 'wins', 'tag3', 'duo', 'gboss'].includes(rawK) ? rawK : 'rank';
         return json(await leaderboard(env, kind, String(url.searchParams.get('s') || ''), auth && auth.user.id, now));
+      }
+
+      // 14. 持久化公开锦标赛（GET 公开读走 60 秒内存缓存；POST 登录发布受 hitMem + D1_SHIELD 保护）
+      if (path === '/api/tournaments') {
+        if (request.method === 'GET') {
+          if (!hitMem('tourg:' + ip, 30, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
+          return json(await listPublicTournaments(env, now));
+        }
+        if (request.method === 'POST') {
+          const auth = await authenticate(env, request);
+          if (!auth) return error('未登录或登录已过期，请重新登录', 401);
+          const body = await readBody(request);
+          if (!body) return error('请求太大', 413);
+          return await publishPublicTournament(env, auth, body, now);
+        }
       }
 
       // 9. Logout
