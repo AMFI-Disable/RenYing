@@ -652,6 +652,12 @@ grid-column: 1 / -1;
 .comlog .cn { color: #8ff0ff; font-weight: 600; font-size: 13.5px; display: inline-flex; align-items: center; gap: 6px; }
 .comlog .ct { color: var(--dim); font-size: 12px; }
 .comlog .cm-body { color: var(--ink); font-size: 14px; word-break: break-word; line-height: 1.5; }
+.soc-card { margin-top: 8px; padding: 10px 12px; border-radius: 8px; background: rgba(233,196,106,.07); border: 1px solid rgba(233,196,106,.32); display: flex; flex-direction: column; gap: 6px; }
+.soc-card-top { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 13.5px; color: var(--ink); }
+.soc-card-badge { font-size: 12px; padding: 2px 7px; border-radius: 999px; background: rgba(70,211,234,.14); border: 1px solid rgba(70,211,234,.4); color: #8ff0ff; white-space: nowrap; }
+.soc-card-sub { font-size: 12.5px; color: var(--dim); }
+.soc-card-acts { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 2px; }
+.soc-card-acts .go.small, .soc-card-acts .ghost.small { margin: 0; font-size: 12.5px; padding: 4px 12px; letter-spacing: .06em; }
 .comlog .emo svg { width: 34px; height: 34px; vertical-align: middle; margin: 0 2px; }
 .comin { display: flex; gap: 8px; }
 .comin input { flex: 1; min-width: 0; font: 15px var(--body); padding: 10px 14px; border-radius: 8px; border: 1px solid var(--faint); background: rgba(0,0,0,.45); color: var(--ink); -webkit-user-select: text; user-select: text; }
@@ -5017,6 +5023,19 @@ font-variant-numeric: tabular-nums;
 .tour-st-row b { color: rgba(239, 232, 216, 0.8); }
 .tour-st-row.is-champ { background: rgba(233, 196, 106, 0.18); border: 1px solid rgba(233, 196, 106, 0.5); }
 .tour-st-row.is-human span { color: #6fe0ff; }
+.tour-public { margin-top: 12px; }
+.tour-pub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.tour-pub-item { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,.04); border: 1px solid rgba(233,196,106,.24); color: var(--ink); cursor: pointer; text-align: left; font: inherit; }
+.tour-pub-item:hover { background: rgba(233,196,106,.12); border-color: rgba(233,196,106,.5); }
+.tour-pub-item b { font-size: 13px; color: #fbefcf; }
+.tour-pub-item small { font-size: 12px; color: var(--dim); }
+.lb-head-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.lb-season-sel { font: 13px var(--body); padding: 4px 10px; border-radius: 999px; background: rgba(13,21,30,.88); color: var(--gold); border: 1px solid rgba(233,196,106,.45); cursor: pointer; }
+#lbTabs.lb-tabs { display: flex; flex-wrap: wrap; justify-content: center; border-radius: 14px; max-width: 100%; }
+#lbTabs.lb-tabs button { font-size: 13.5px; padding: 6px 14px; white-space: nowrap; }
+body.spec-stage #specHud { top: 10px; padding: 10px 18px; border-color: rgba(233,196,106,.75); box-shadow: 0 12px 36px rgba(0,0,0,.65); }
+body.spec-stage #specTitle { font-size: 17px; letter-spacing: .08em; }
+body.spec-stage .spec-ticker { font-size: 14px; }
 @media (max-width: 860px) {
 .tour-tree,
 .tour-tree[data-size="4"],
@@ -6183,6 +6202,7 @@ window.RYBoot = (function () {
           <div class="comlog" id="comLog"></div>
           <div class="comin">
             <input id="comIn" maxlength="200" placeholder="在大厅说点什么（回车发送）" autocomplete="off">
+            <button type="button" class="ghost small" id="socShareLastBtn" title="分享最近一局战绩与回放码">战绩卡</button>
             <button class="go small" id="comSend" style="display:inline-flex;align-items:center;gap:4px">
               <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>发送
             </button>
@@ -6362,8 +6382,8 @@ window.RYBoot = (function () {
 
   <div id="lb" class="scr">
     <div class="panel">
-      <div class="lb-head-row"><h2>排行榜</h2><span class="season-tag" id="lbSeasonTag"></span></div>
-      <div class="seg" id="lbTabs"><button data-k="rank" class="sel">段位榜</button><button data-k="wins">战绩榜</button><button data-k="mastery">专精试炼榜</button></div>
+      <div class="lb-head-row"><h2>排行榜</h2><span class="season-tag" id="lbSeasonTag"></span><select id="lbSeasonSel" class="lb-season-sel" aria-label="选择赛季"></select></div>
+      <div class="seg lb-tabs" id="lbTabs"><button data-k="rank" class="sel">段位榜</button><button data-k="wins">战绩榜</button><button data-k="tag3">3v3 车轮</button><button data-k="duo">2v2 双打</button><button data-k="gboss">天魔榜</button><button data-k="mastery">专精试炼</button></div>
       <p class="sub" id="lbSub"></p>
       <div class="lbwrap"><div id="lbState"></div><table class="lbt" id="lbTable"></table></div>
       <div class="row"><button class="ghost" id="lbBack">返回</button></div>
@@ -6734,7 +6754,7 @@ window.RYBoot = (function () {
     <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p><div class="combat-card" id="endCombatCard"></div><div class="combat-card hidden" id="endRelayTeams"></div><p class="end-arm" id="endArm"></p>
       <button class="ghost hidden" id="endReviewBtn" type="button" aria-expanded="false" aria-controls="endReview">AI 复盘</button>
       <section class="end-review hidden" id="endReview" aria-live="polite"></section>
-      <div class="row end-qol-row"><button class="ghost hidden" id="endChangeHeroBtn" type="button">换侠客再战</button><button class="ghost" id="endHistoryBtn" type="button">查看战绩</button></div>
+      <div class="row end-qol-row"><button class="ghost hidden" id="endChangeHeroBtn" type="button">换侠客再战</button><button class="ghost" id="endShareComBtn" type="button">分享到社区</button><button class="ghost" id="endHistoryBtn" type="button">查看战绩</button></div>
       <div class="row">
         <button class="go" id="againBtn">再战</button>
         <button class="ghost hidden" id="netRepickBtn">换人再战</button>
@@ -6774,6 +6794,8 @@ window.RYBoot = (function () {
           <button class="ghost small" id="tourSkipAiBtn" type="button">快结 AI 场次</button>
           <button class="ghost small" id="tourAutoBtn" type="button" aria-pressed="false">自动推进：关</button>
           <button class="ghost small" id="tourShareBtn" type="button">分享战绩</button>
+          <button class="ghost small" id="tourShareComBtn" type="button">发到社区</button>
+          <button class="ghost small" id="tourPublishBtn" type="button">发布公开签表</button>
           <button class="ghost small" id="tourImportBtn" type="button">导入战绩</button>
           <button class="ghost small" id="tourResetBtn" type="button">重排签表</button>
           <button class="ghost" data-back type="button">返回</button>
@@ -6786,6 +6808,7 @@ window.RYBoot = (function () {
       </div>
       <div class="tour-tree" id="tourTree"></div>
       <div class="tour-standings" id="tourStandings"></div>
+      <div class="tour-public" id="tourPublicList"></div>
     </div>
   </div>
 </div>
@@ -6800,6 +6823,7 @@ window.RYBoot = (function () {
     <button type="button" class="spec-nav" id="specPrevBtn" title="上一位侠客">‹</button>
     <div class="spec-fighters" id="specFighters"></div>
     <button type="button" class="spec-nav" id="specNextBtn" title="下一位侠客">›</button>
+    <button type="button" class="spec-clean-btn" id="specStageBtn" aria-pressed="false">大屏模式</button>
     <button type="button" class="spec-clean-btn" id="specCleanBtn" aria-pressed="false">纯净直转</button>
     <button type="button" class="spec-exit-btn hidden" id="specExitBtn">退出观战</button>
   </div>
@@ -7614,6 +7638,11 @@ function flag(k) { return flagCache()[k] === true; }
 async function leaderboard(k, season) {
 return api('/api/leaderboard?k=' + encodeURIComponent(k) + (season ? '&s=' + encodeURIComponent(season) : ''), { method: 'GET' });
 }
+async function tournaments() { return api('/api/tournaments', { method: 'GET' }); }
+async function publishTournament(body) {
+if (!cloudActive() || !getUser()) { const e = new Error('当前是本地存档，登录后可发布公开赛程'); e.status = 0; throw e; }
+return api('/api/tournaments', { method: 'POST', body: JSON.stringify(body || {}) });
+}
 async function saga(hero) { return api('/api/saga?hero=' + encodeURIComponent(hero), { method: 'GET' }); }
 async function sagaMark(body) {
 if (!cloudActive() || !getUser()) { const e = new Error('当前是本地存档'); e.status = 0; throw e; }
@@ -8210,6 +8239,8 @@ exportCurrentAccount,
 exportAllAccounts,
 importAccountData,
 leaderboard,
+tournaments,
+publishTournament,
 onProgress,
 loadFlags,
 flag,
@@ -13681,7 +13712,6 @@ Object.assign(UI_COPY_EN, {
 "面对连段与腾空闪练习防守反攻": "Practice escaping combos and counterattacking",
 "真实 AI 难度对练检验立回与确反": "Spar against real AI difficulty for neutral and punishes",
 "起跳目标练习对空截击与落台追击": "Practice anti-airs and landing punishes",
-"专精试炼榜": "Mastery & Trials",
 "连招试炼指引": "Combo Trial Guide",
 "离开测试": "Leave Test",
 "开始连招测试": "Start Combo Test",
@@ -13729,7 +13759,25 @@ Object.assign(UI_COPY_EN, {
 "腾空闪避": "Aerial Flash",
 "天雷轰鸣": "Thunder Strike",
 "攻境切换": "Aggressive Stance",
-"守境切换": "Defensive Stance"
+"守境切换": "Defensive Stance",
+"战绩卡": "Match Card",
+"分享到社区": "Share To Community",
+"发到社区": "Post To Community",
+"发布公开签表": "Publish Public Bracket",
+"大屏模式": "Stage View",
+"退出大屏": "Exit Stage View",
+"2v2 双打": "2v2 Duo",
+"天魔榜": "Global Boss",
+"专精试炼": "Mastery",
+"选择赛季": "Select Season",
+"公开赛程大厅": "Public Tournament Hall",
+"场进行中/近期赛事": "Active / Recent Tournaments",
+"已完赛": "Completed",
+"进行中": "Live",
+"观看回放": "Watch Replay",
+"打开签表": "Open Bracket",
+"复制回放码": "Copy Replay Code",
+"复制赛果码": "Copy Bracket Code"
 });
 Object.assign(UI_COPY_EN, {
 "旧版本录的，可能对不上": "Recorded with an older version. Playback may differ.",
@@ -16523,7 +16571,7 @@ localStorage.setItem('renying-settings', JSON.stringify(SETTINGS));
 if (SETTINGS.lang) localStorage.setItem('renying-lang', SETTINGS.lang);
 } catch (e) {}
 }
-const VERSION = '1.1.0';         // 每次更新改一下，联机时双方版本必须一样
+const VERSION = '1.2.0';         // 每次更新改一下，联机时双方版本必须一样
 const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用
 const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上加全服排行榜
@@ -43477,7 +43525,12 @@ if (c && typeof c === 'object' && c.owner === owner && (!RKS || (c.at || 0) > (R
 if (!RKS || RKS.season !== sid) {
 const old = RKS;
 RKS = rkFresh(sid);
-if (old && old.placed >= RK.PLACE) RKS.last = { season: old.season, label: rkTier(old.pts).label, peak: old.peak || old.pts };
+if (old && old.placed >= RK.PLACE) {
+const pts = old.pts || old.est || RK.PLACE_START;
+RKS.last = { season: old.season, label: rkTier(pts).label, pts, peak: old.peak || pts };
+PROF.rkHist = (PROF.rkHist && typeof PROF.rkHist === 'object') ? PROF.rkHist : {};
+PROF.rkHist[old.season] = { pts, peak: old.peak || pts, label: rkTier(pts).label };
+}
 }
 if (RKS.placed >= RK.PLACE && !(RKS.pts > 0)) { RKS.pts = rkClamp(RKS.est, RK.PLACE_CAP); RKS.peak = Math.max(RKS.peak || 0, RKS.pts); }
 RKS.owner = owner;
@@ -43757,6 +43810,12 @@ if (won) {
 PROF.netWins = (PROF.netWins || 0) + 1;
 } else {
 PROF.netLosses = (PROF.netLosses || 0) + 1;
+}
+const modeKey = (typeof M !== 'undefined' && M) ? (M.tag3 ? 'tag3' : (M.duo || M.four ? 'duo' : '')) : '';
+if (modeKey) {
+PROF.modeStats = (PROF.modeStats && typeof PROF.modeStats === 'object') ? PROF.modeStats : {};
+const ms = PROF.modeStats[modeKey] || (PROF.modeStats[modeKey] = { w: 0, l: 0 });
+if (won) ms.w = (ms.w || 0) + 1; else ms.l = (ms.l || 0) + 1;
 }
 $id('endRank').textContent = `+${gain} 墨锭 · 联机${won ? '胜' : '负'}（累计 ${PROF.netWins || 0} 胜）`;
 if (ranked) {
@@ -51619,7 +51678,8 @@ ctx.fillStyle = '#ffeb96';
 ctx.fillText(`[Y] ${cvT('选中')}: ${sel ? cvT(sel.look.name) : cvT('全队')}   [N] ${cvT('任务')}: ${roleId >= 0 ? cvT(CMD_ROLES[roleId].n) : cvT('各异')}`, px + 8, py + 64);
 ctx.restore();
 }
-const SPEC_HUD = { focusIdx: -1, clean: false, lastDraw: 0, liveSpecs: 0, liveTitle: '', bcastAcc: 0 };
+const SPEC_HUD = { focusIdx: -1, clean: false, stage: false, lastDraw: 0, liveSpecs: 0, liveTitle: '', bcastAcc: 0 };
+const TOUR_PERSIST_KEY = 'renying-tournament-active';
 const SPEC_BCAST_INTERVAL = 1 / 20;   // 20Hz 被动只读快照广播，不干扰 120Hz 回滚输入通道
 function spectatorHudAvail() {
 if (typeof currentScreen !== 'undefined' && currentScreen) return false;
@@ -51648,6 +51708,13 @@ SPEC_HUD.clean = !SPEC_HUD.clean;
 SPEC_HUD.lastDraw = 0;
 specHudRender(true);
 return SPEC_HUD.clean;
+}
+function specHudToggleStage() {
+SPEC_HUD.stage = !SPEC_HUD.stage;
+if (typeof document !== 'undefined' && document.body) document.body.classList.toggle('spec-stage', SPEC_HUD.stage);
+SPEC_HUD.lastDraw = 0;
+specHudRender(true);
+return SPEC_HUD.stage;
 }
 function specBroadcastTick(dt) {
 if (typeof p2pSpecCount !== 'function' || typeof p2pSpecBroadcast !== 'function') return 0;
@@ -51732,6 +51799,11 @@ countEl.classList.toggle('hidden', sc <= 0);
 if (sc > 0) countEl.textContent = `${sc} ${cvT('观战中')}`;
 }
 if (exitBtn) exitBtn.classList.toggle('hidden', !isLiveNet);
+const stageBtn = $id('specStageBtn');
+if (stageBtn) {
+stageBtn.setAttribute('aria-pressed', String(SPEC_HUD.stage));
+stageBtn.textContent = cvT(SPEC_HUD.stage ? '退出大屏' : '大屏模式');
+}
 if (cleanBtn) {
 cleanBtn.setAttribute('aria-pressed', String(SPEC_HUD.clean));
 cleanBtn.textContent = cvT(SPEC_HUD.clean ? '恢复完整界面' : '纯净直转');
@@ -52387,6 +52459,7 @@ if (standingsEl) {
 const rows = tourStandings(TOUR);
 standingsEl.innerHTML = `<div class="tour-st-head"><b>${cvT('实时排名榜')}</b><span>${TOUR.history.length} / ${TOUR.size - 1} ${cvT('场已完赛')}</span></div><div class="tour-st-grid">${rows.map(r => `<div class="tour-st-row${r.place === 1 && TOUR.champion >= 0 ? ' is-champ' : ''}${r.human > 0 ? ' is-human' : ''}"><em>#${r.place}</em><span>${escapeHTML(r.name)}</span><b>${r.wins}-${r.losses}</b></div>`).join('')}</div>`;
 }
+tourSaveLocal(TOUR);
 }
 if ($id('tourFormatSeg')) {
 $id('tourFormatSeg').addEventListener('click', e => {
@@ -52486,6 +52559,99 @@ playerHero: typeof menuHeroPick === 'function' ? menuHeroPick() : 0
 });
 });
 }
+function tourSaveLocal(tour = TOUR) {
+if (!tour) return false;
+try {
+const code = tourEncodeCode(tour);
+if (code) localStorage.setItem(TOUR_PERSIST_KEY, JSON.stringify({ id: tour.id || '', code, at: Date.now() }));
+return true;
+} catch (e) { return false; }
+}
+function tourRestoreLocal() {
+try {
+if (typeof location !== 'undefined') {
+const m = (location.hash || '').match(/tour=(RYTR1:[A-Za-z0-9_-]+)/) || (location.search || '').match(/tour=(RYTR1:[A-Za-z0-9_-]+)/);
+if (m && m[1]) {
+const imp = tourImportCode(decodeURIComponent(m[1]));
+if (imp) return imp;
+}
+}
+const raw = localStorage.getItem(TOUR_PERSIST_KEY);
+if (!raw) return null;
+const saved = JSON.parse(raw);
+if (saved && saved.code) {
+const parsed = tourDecodeCode(saved.code);
+if (parsed) { if (saved.id) parsed.id = saved.id; TOUR = parsed; return TOUR; }
+}
+} catch (e) {}
+return null;
+}
+function tourShareUrl(tour = TOUR) {
+if (!tour) return '';
+const code = tourEncodeCode(tour);
+if (!code) return '';
+const base = typeof location !== 'undefined' && location.origin && location.origin !== 'null' ? (location.origin + location.pathname) : '';
+return base ? `${base}#tour=${code}` : code;
+}
+async function tourPublishPublic() {
+if (!TOUR) { toast('尚未开启武林大会赛程'); return false; }
+const code = tourEncodeCode(TOUR);
+const url = tourShareUrl(TOUR);
+const status = TOUR.champion >= 0 ? 'completed' : 'active';
+const title = `${(typeof ACC !== 'undefined' && ACC.name) || '江湖'} · ${TOUR.size}强武林大会`;
+if (window.CloudSave && typeof CloudSave.publishTournament === 'function' && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isCloud) {
+try {
+const res = await CloudSave.publishTournament({ id: TOUR.id, title, size: TOUR.size, status, code });
+if (res && res.id) TOUR.id = res.id;
+tourSaveLocal(TOUR);
+if (navigator.clipboard && navigator.clipboard.writeText && url) navigator.clipboard.writeText(url).catch(() => {});
+toast('已发布公开签表并复制观赛链接！');
+tourLoadPublicList();
+return true;
+} catch (err) {
+toast((err && err.message) || '发布公开签表失败');
+return false;
+}
+}
+if (navigator.clipboard && navigator.clipboard.writeText && url) {
+navigator.clipboard.writeText(url).then(() => toast('已复制签表观赛链接（登录云端账号可发布至公开大厅）')).catch(() => toast('已生成签表观赛链接'));
+} else {
+toast('已生成签表观赛链接');
+}
+return true;
+}
+async function tourLoadPublicList() {
+const el = $id('tourPublicList');
+if (!el || !window.CloudSave || typeof CloudSave.tournaments !== 'function') return;
+try {
+const r = await CloudSave.tournaments();
+const list = (r && Array.isArray(r.list)) ? r.list : [];
+if (!list.length) { el.innerHTML = ''; return; }
+el.innerHTML = `<div class="tour-st-head"><b>${cvT('公开赛程大厅')}</b><span>${list.length} ${cvT('场进行中/近期赛事')}</span></div><div class="tour-pub-grid">${list.slice(0, 8).map(t => `<button type="button" class="tour-pub-item" data-pub-code="${escapeHTML(t.code)}"><b>${escapeHTML(t.title)}</b><small>${escapeHTML(t.hostName)} · ${t.size}${cvT('强')} · ${cvT(t.status === 'completed' ? '已完赛' : '进行中')}</small></button>`).join('')}</div>`;
+} catch (e) { el.innerHTML = ''; }
+}
+if ($id('specStageBtn')) $id('specStageBtn').addEventListener('click', () => specHudToggleStage());
+if ($id('tourShareComBtn')) {
+$id('tourShareComBtn').addEventListener('click', () => {
+if (!TOUR || typeof socShareMatchCard !== 'function') { toast('尚未开启武林大会赛程'); return; }
+const champ = TOUR.champion >= 0 ? TOUR.entrants[TOUR.champion] : null;
+socShareMatchCard({
+kind: 'tour',
+mode: '武林大会',
+title: `${TOUR.size}强单败淘汰赛${champ ? ' · 盟主 ' + champ.name : ''}`,
+summary: `已完赛 ${TOUR.history.length}/${TOUR.size - 1} 场 · 一键导入签表`,
+code: tourEncodeCode(TOUR),
+}, true);
+});
+}
+if ($id('tourPublishBtn')) $id('tourPublishBtn').addEventListener('click', () => { tourPublishPublic(); });
+if ($id('tourPublicList')) {
+$id('tourPublicList').addEventListener('click', e => {
+const b = e.target.closest('[data-pub-code]');
+if (!b) return;
+if (tourImportCode(b.dataset.pubCode)) toast('已加载公开赛程签表');
+});
+}
 if ($id('tourTree')) {
 $id('tourTree').addEventListener('click', e => {
 const play = e.target.closest('[data-tour-play]');
@@ -52494,6 +52660,7 @@ const sim = e.target.closest('[data-tour-sim]');
 if (sim) { const [r, m] = sim.dataset.tourSim.split(':').map(Number); tourSimMatch(r, m); }
 });
 }
+tourRestoreLocal();
 const SAGA = Object.fromEntries(HEROES.map(x => [x.id, x.saga]));
 const SAGA_INK = { node: 40, end: 150 };
 const SAGA_GOAL = { ko: '击败对手', survive: '撑过 {t} 秒', fast: '{t} 秒内击败对手' };
@@ -56396,8 +56563,34 @@ uiConfirm('文件解析失败：' + err.message, { alert: true });
 reader.readAsText(file);
 });
 }
-let lbKind = 'rank', lbTok = 0;
+let lbKind = 'rank', lbSeason = '', lbTok = 0;
+function lbSeasonLabel(id) {
+if (typeof SEASONS !== 'undefined' && Array.isArray(SEASONS)) {
+const found = SEASONS.find(s => s.id === id);
+if (found) return `${found.id} · ${found.name}`;
+}
+return id;
+}
+function lbSyncSeasonSelect(seasons, activeId) {
+const sel = $id('lbSeasonSel');
+if (!sel) return;
+const list = Array.isArray(seasons) && seasons.length ? seasons : (typeof SEASONS !== 'undefined' ? SEASONS.map(s => s.id).reverse() : [activeId || 'S2']);
+const target = list.includes(activeId) ? activeId : list[0];
+lbSeason = target;
+if (sel.dataset.opts !== list.join(',')) {
+sel.dataset.opts = list.join(',');
+sel.innerHTML = list.map(id => `<option value="${escapeHTML(id)}">${escapeHTML(lbSeasonLabel(id))}</option>`).join('');
+}
+sel.value = target;
+sel.hidden = lbKind !== 'rank';
+}
 $id('lbTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { lbKind = b.dataset.k; openLeaderboard(); } });
+if ($id('lbSeasonSel')) {
+$id('lbSeasonSel').addEventListener('change', e => {
+lbSeason = e.target.value || '';
+openLeaderboard();
+});
+}
 function lbShow(sub, state, rows) {
 $id('lbSub').textContent = sub; $id('lbSub').hidden = !sub;
 $id('lbState').innerHTML = state; $id('lbTable').innerHTML = rows;
@@ -56406,10 +56599,14 @@ async function openLeaderboard() {
 menuCam.tz = 1.35; showScreen('lb');
 const tok = ++lbTok, kind = lbKind;
 for (const b of (($id('lbTabs') && $id('lbTabs').children) || [])) b.classList.toggle('sel', b.dataset.k === kind);
+const curSeason = typeof rkSeason === 'function' ? rkSeason() : { id: 'S2', name: '第二赛季' };
+const activeSeason = lbSeason || curSeason.id;
+lbSyncSeasonSelect(null, activeSeason);
 const sTag = $id('lbSeasonTag');
-if (sTag && typeof rkSeason === 'function') {
-const s = rkSeason();
-sTag.textContent = `${s.name}${typeof SEASON !== 'undefined' && SEASON.span ? ' · ' + SEASON.span : ''}`;
+if (sTag) {
+sTag.textContent = kind === 'rank' && activeSeason !== curSeason.id
+? `${lbSeasonLabel(activeSeason)} · 历史归档`
+: `${curSeason.name}${typeof SEASON !== 'undefined' && SEASON.span ? ' · ' + SEASON.span : ''}`;
 }
 if (kind === 'mastery') {
 if (typeof masterySummary !== 'function') { lbShow('', uiState('empty', '专精数据尚未加载'), ''); return; }
@@ -56421,20 +56618,43 @@ return;
 }
 lbShow('', uiState('loading', '正在读取排行榜…'), '');
 const fail = err => { if (tok === lbTok) lbShow('', uiState('error', (err && err.message) || '排行榜暂时读不到，稍后再试'), ''); };
-if (kind === 'rank') {
 try {
-const j = await CloudSave.leaderboard('rank', rkSeason().id);
+const j = await CloudSave.leaderboard(kind, kind === 'rank' ? activeSeason : '');
 if (tok !== lbTok) return;   // 读的时候换了标签：这份结果不要了
-if (!j.list.length) { lbShow('', uiState('empty', '还没有人完成定级赛。排位赛打满 3 场就能上榜！'), ''); return; }
-lbShow(`本赛季打满 ${RK.PLACE} 场定级赛后上榜。段位从低到高：${RK_TIERS.map(t => t.l + ' ' + t.n).join('、')}`, '',
-'<tr><th>名次</th><th>昵称</th><th>段位</th><th class="n">段位分</th></tr>' + j.list.map((r, i) =>
-`<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td>${escapeHTML(rkTier(r.pts).label + ' · ' + rkTier(r.pts).name)}</td><td class="n">${r.pts}</td></tr>`).join(''));
-} catch (err) { fail(err); }
+if (Array.isArray(j.seasons) && j.seasons.length) lbSyncSeasonSelect(j.seasons, activeSeason);
+if (kind === 'rank') {
+if (!j.list.length) {
+const msg = activeSeason === curSeason.id
+? '还没有人完成定级赛。排位赛打满 3 场就能上榜！'
+: `${lbSeasonLabel(activeSeason)} 暂无历史归档记录`;
+lbShow('', uiState('empty', msg), '');
 return;
 }
-try {
-const j = await CloudSave.leaderboard('wins');
-if (tok !== lbTok) return;
+const note = activeSeason === curSeason.id
+? `本赛季打满 ${RK.PLACE} 场定级赛后上榜。段位从低到高：${RK_TIERS.map(t => t.l + ' ' + t.n).join('、')}`
+: `${lbSeasonLabel(activeSeason)} 赛季历史归档榜单（共 ${j.list.length} 位上榜侠客）`;
+lbShow(note, '',
+'<tr><th>名次</th><th>昵称</th><th>段位</th><th class="n">段位分</th></tr>' + j.list.map((r, i) =>
+`<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td>${escapeHTML(rkTier(r.pts).label + ' · ' + rkTier(r.pts).name)}</td><td class="n">${r.pts}</td></tr>`).join(''));
+return;
+}
+if (kind === 'gboss') {
+if (!j.list.length) { lbShow('', uiState('empty', '还没有天魔讨伐伤害记录——去天魔讨伐砍出第一刀吧！'), ''); return; }
+lbShow('全服天魔讨伐累计伤害榜（60 秒缓存，零写入）', '',
+'<tr><th>名次</th><th>昵称</th><th class="n">累计伤害</th><th class="n">出战次数</th></tr>' + j.list.map((r, i) =>
+`<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td class="n">${(r.dmg || 0).toLocaleString()}</td><td class="n">${r.runs || 0}</td></tr>`).join(''));
+return;
+}
+if (kind === 'tag3' || kind === 'duo') {
+const lbl = kind === 'tag3' ? '3v3 车轮战' : '2v2 双打';
+if (!j.list.length) { lbShow('', uiState('empty', `还没有人记录 ${lbl} 胜场——去打赢第一场吧！`), ''); return; }
+lbShow(`${lbl}公开战绩榜（按胜场排序）`, '',
+'<tr><th>名次</th><th>昵称</th><th class="n">胜</th><th class="n">负</th><th class="n">胜率</th></tr>' + j.list.map((r, i) => {
+const g = r.wins + r.losses, rate = g ? Math.round(r.wins / g * 100) + '%' : '-';
+return `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td class="n">${r.wins}</td><td class="n">${r.losses}</td><td class="n">${rate}</td></tr>`;
+}).join(''));
+return;
+}
 if (!j.list.length) { lbShow('', uiState('empty', '还没有人打过联机——去赢下第一场吧！'), ''); return; }
 lbShow(`已注册玩家 ${j.players} 位，按联机胜场排`, '', '<tr><th>名次</th><th>昵称</th><th class="n">胜</th><th class="n">负</th><th class="n">胜率</th></tr>' + j.list.map((r, i) => {
 const g = r.wins + r.losses, rate = g ? Math.round(r.wins / g * 100) + '%' : '-';
@@ -58709,7 +58929,18 @@ online: [], hist: [],           // 大厅在线名单、大厅最近的聊天
 data: null, cur: 'hall', sess: 0, joinT: 0, tick: 0, lastSay: 0,
 state: 'off',                   // off / connecting / on
 };
-const SOC_MAX_CONV = 200, SOC_MAX_HALL = 150, SOC_TEXT = 200, SOC_SLOTS = 4;
+const SOC_MAX_CONV = 200, SOC_MAX_HALL = 150, SOC_TEXT = 200, SOC_SLOTS = 4, SOC_CARD_CODE_MAX = 24000;
+function socCleanCard(card) {
+if (!card || typeof card !== 'object') return null;
+const kind = ['match', 'replay', 'tour'].includes(card.kind) ? card.kind : 'match';
+const title = socClean(card.title).slice(0, 80);
+const mode = socClean(card.mode).slice(0, 32);
+const summary = socClean(card.summary).slice(0, 140);
+let code = typeof card.code === 'string' ? card.code.trim() : '';
+if (code && (!/^(RYRP2|RYTR1):[A-Za-z0-9_-]{8,}$/.test(code) || code.length > SOC_CARD_CODE_MAX)) code = '';
+if (!title && !code) return null;
+return { kind, title, mode, summary, code };
+}
 function socHallId(s) { return 'renying-hall-' + (s == null ? SOC.slot : s); }
 function socHash(s) {
 let a = 0x811c9dc5, b = 0x01000193 ^ 0x5bd1e995;
@@ -58922,11 +59153,12 @@ return;
 }
 if (!st.name) return;
 if (m.t === 'say') {
-const now = Date.now(), text = socClean(m.text);
-if (!text) return;
+const now = Date.now(), text = socClean(m.text), card = socCleanCard(m.card);
+if (!text && !card) return;
 st.burst = Math.max(0, st.burst - (now - st.last) / 1500) + 1; st.last = now;   // 每 1.5 秒回一格，连发超过 5 条就吞掉
 if (st.burst > 5) return;
-const msg = { id: socRid(), from: st.name, text, at: now };
+const msg = { id: socRid(), from: st.name, text: text || (card ? card.title : ''), at: now };
+if (card) msg.card = card;
 SOC.hubHist.push(msg); if (SOC.hubHist.length > SOC_MAX_HALL) SOC.hubHist.splice(0, SOC.hubHist.length - SOC_MAX_HALL);
 socHubCast({ t: 'msg', m: msg });
 }
@@ -58952,17 +59184,22 @@ if (socHallAdd(m.m)) { socSave(); if (SOC.cur === 'hall') socRenderLog(true); }
 }
 function socHallAdd(x, quiet) {
 if (!x || typeof x !== 'object' || !x.id || SOC.hist.some(h => h.id === x.id)) return false;
+const card = socCleanCard(x.card);
 const m = { id: String(x.id).slice(0, 24), from: String(x.from || '').slice(0, 12), text: socClean(x.text), at: +x.at || Date.now() };
-if (!m.from || !m.text) return false;
+if (card) m.card = card;
+if (!m.from || (!m.text && !m.card)) return false;
 SOC.hist.push(m); SOC.hist.sort((a, b) => a.at - b.at);
 if (SOC.hist.length > SOC_MAX_HALL) SOC.hist.splice(0, SOC.hist.length - SOC_MAX_HALL);
 if (!quiet && (SOC.cur !== 'hall' || !socVisible()) && m.from !== SOC.me) SOC.data.unread.hall = Math.min(99, (SOC.data.unread.hall || 0) + 1);
 return true;
 }
-function socHallSay(text) {
+function socHallSay(text, card) {
 text = socClean(text);
-if (!text) return false;
-if (!socSend(SOC.hall, { t: 'say', text })) { toast('大厅还没连上，稍等一下再发'); return false; }
+const cleanCard = socCleanCard(card);
+if (!text && !cleanCard) return false;
+const pkt = { t: 'say', text: text || (cleanCard ? cleanCard.title : '') };
+if (cleanCard) pkt.card = cleanCard;
+if (!socSend(SOC.hall, pkt)) { toast('大厅还没连上，稍等一下再发'); return false; }
 return true;
 }
 function socWireIn(c) {
@@ -59035,8 +59272,10 @@ if (D.reqOut[name] || !D.friends[name]) { delete D.reqOut[name]; delete D.reqIn[
 delete D.friends[name]; delete D.reqIn[name]; delete D.reqOut[name]; changed = true;
 } else if (m.t === 'dm') {
 if (D.friends[name]) {
-const text = socClean(m.text);
-if (text && socPush('u:' + name, { id, from: name, text, at })) { changed = true; note = `${name}：${text}`; }
+const text = socClean(m.text), card = socCleanCard(m.card);
+const rec = { id, from: name, text: text || (card ? card.title : ''), at };
+if (card) rec.card = card;
+if ((text || card) && socPush('u:' + name, rec)) { changed = true; note = `${name}：${rec.text}`; }
 }
 } else if (m.t === 'ginv' || m.t === 'gupd') {
 const g = m.g || {}, gid = String(g.id || '').slice(0, 24);
@@ -59058,8 +59297,10 @@ if (g && g.members.includes(name)) { g.members = g.members.filter(x => x !== nam
 } else if (m.t === 'gmsg') {
 const gid = String(m.gid || ''), g = D.groups[gid];
 if (g && g.members.includes(name)) {
-const text = socClean(m.text);
-if (text && socPush('g:' + gid, { id, from: name, text, at })) { changed = true; note = `${name}@${g.name}：${text}`; }
+const text = socClean(m.text), card = socCleanCard(m.card);
+const rec = { id, from: name, text: text || (card ? card.title : ''), at };
+if (card) rec.card = card;
+if ((text || card) && socPush('g:' + gid, rec)) { changed = true; note = `${name}@${g.name}：${rec.text}`; }
 }
 }
 ack();
@@ -59166,24 +59407,30 @@ for (const n of g.members) if (n !== SOC.me) socQueue(n, { t: 'gleave', gid });
 delete SOC.data.groups[gid]; delete SOC.data.convs['g:' + gid]; delete SOC.data.unread['g:' + gid];
 socOpen('hall');
 }
-function socSendCur(text) {
+function socSendCur(text, card) {
 text = socClean(text);
-if (!text) return false;
+const cleanCard = socCleanCard(card);
+if (!text && !cleanCard) return false;
 const k = SOC.cur;
-if (k === 'hall') return socHallSay(text);
+if (k === 'hall') return socHallSay(text, cleanCard);
 const now = Date.now();
 if (now - SOC.lastSay < 350) return false;
 SOC.lastSay = now;
 const id = socRid();
+const bodyText = text || (cleanCard ? cleanCard.title : '');
 if (k.startsWith('u:')) {
 const to = k.slice(2);
 if (!SOC.data.friends[to]) { toast('对方已经不是你的好友了'); return false; }
-socPush(k, { id, from: SOC.me, text, at: now });
-socQueue(to, { t: 'dm', id, text, at: now });
+const rec = { id, from: SOC.me, text: bodyText, at: now };
+if (cleanCard) rec.card = cleanCard;
+socPush(k, rec);
+socQueue(to, Object.assign({ t: 'dm', id, text: bodyText, at: now }, cleanCard ? { card: cleanCard } : {}));
 } else {
 const gid = k.slice(2), g = SOC.data.groups[gid]; if (!g) return false;
-socPush(k, { id, from: SOC.me, text, at: now, ok: 1 });
-for (const n of g.members) if (n !== SOC.me) socQueue(n, { t: 'gmsg', gid, id, text, at: now });
+const rec = { id, from: SOC.me, text: bodyText, at: now, ok: 1 };
+if (cleanCard) rec.card = cleanCard;
+socPush(k, rec);
+for (const n of g.members) if (n !== SOC.me) socQueue(n, Object.assign({ t: 'gmsg', gid, id, text: bodyText, at: now }, cleanCard ? { card: cleanCard } : {}));
 }
 socRenderLog(true); socRenderList();
 return true;
@@ -59280,7 +59527,8 @@ if (m.sys) return `<div class="cm sys">${escapeHTML(m.text)}<span class="ct">${s
 const mine = m.from === SOC.me;
 const add = k === 'hall' && !mine && !guest && !fr[m.from] && !/^游客\d{4}$/.test(m.from) ? `<button type="button" class="soc-add" data-add="${escapeHTML(m.from)}">+好友</button>` : '';
 const st = mine && k.startsWith('u:') ? (m.ok ? '' : '<span class="soc-pend" title="对方上线后送达">未送达</span>') : '';
-return `<div class="cm${mine ? ' me' : ''}"><div class="cm-head"><span class="cn">${escapeHTML(mine ? '我' : m.from)}${add}</span><span class="ct">${st}${socTime(m.at)}</span></div><div class="cm-body">${socFmt(m.text)}</div></div>`;
+const cardHtml = socRenderCard(m);
+return `<div class="cm${mine ? ' me' : ''}"><div class="cm-head"><span class="cn">${escapeHTML(mine ? '我' : m.from)}${add}</span><span class="ct">${st}${socTime(m.at)}</span></div><div class="cm-body">${socFmt(m.text)}${cardHtml}</div></div>`;
 }).join('');
 }
 if (!keepBottom || atBottom || keepBottom === 'force') log.scrollTop = log.scrollHeight;
@@ -59313,6 +59561,84 @@ $id('socAddIn').placeholder = socGuestNow() ? '登录后可以加好友' : '输�
 socOpen(SOC.cur || 'hall');
 $id('community').classList.remove('soc-chat');
 }
+function socRenderCard(m) {
+let card = m && m.card ? socCleanCard(m.card) : null;
+if (!card && m && typeof m.text === 'string') {
+const match = m.text.match(/\b((?:RYRP2|RYTR1):[A-Za-z0-9_-]{8,})\b/);
+if (match) {
+const isTour = match[1].startsWith('RYTR1:');
+card = socCleanCard({ kind: isTour ? 'tour' : 'replay', mode: isTour ? '武林大会' : '实战回放', title: isTour ? '武林大会签表分享' : '实战回放码', summary: isTour ? '一键导入并查看完整淘汰赛签表' : '点击下方按钮直接加载并播放完整回放', code: match[1] });
+}
+}
+if (!card) return '';
+const isTour = card.kind === 'tour' || (card.code && card.code.startsWith('RYTR1:'));
+const isRp = !isTour && card.code && card.code.startsWith('RYRP2:');
+const acts = [];
+if (isRp) acts.push(`<button type="button" class="go small" data-watch-rp="${escapeHTML(card.code)}">观看回放</button>`);
+if (isTour && card.code) acts.push(`<button type="button" class="go small" data-open-tour="${escapeHTML(card.code)}">打开签表</button>`);
+if (card.code) acts.push(`<button type="button" class="ghost small" data-copy-code="${escapeHTML(card.code)}">${isTour ? '复制赛果码' : '复制回放码'}</button>`);
+return `<div class="soc-card"><div class="soc-card-top"><span class="soc-card-badge">${escapeHTML(card.mode || (isTour ? '武林大会' : '战绩卡'))}</span><b>${escapeHTML(card.title)}</b></div>${card.summary ? `<div class="soc-card-sub">${escapeHTML(card.summary)}</div>` : ''}${acts.length ? `<div class="soc-card-acts">${acts.join('')}</div>` : ''}</div>`;
+}
+function socBuildLatestMatchCard() {
+const list = typeof rpList === 'function' ? rpList() : [];
+const latest = list && list[0];
+let code = '';
+if (latest && typeof rpEncodeCode === 'function') {
+try {
+const c = rpEncodeCode(latest);
+if (c && c.length <= SOC_CARD_CODE_MAX) code = c;
+} catch (e) {}
+}
+if (latest && Array.isArray(latest.ch) && typeof CHARS !== 'undefined') {
+const aName = (CHARS[latest.ch[0]] && CHARS[latest.ch[0]].name) || '1P';
+const bName = (CHARS[latest.ch[1]] && CHARS[latest.ch[1]].name) || '2P';
+const wTxt = latest.w === 0 ? `${aName} 胜` : latest.w === 1 ? `${bName} 胜` : '激战回放';
+const sc = Array.isArray(latest.wins) ? `${latest.wins[0]}:${latest.wins[1]}` : '';
+const modeLbl = latest.tag3 ? '3v3 车轮战' : latest.ranked ? '排位赛' : latest.kind === 'net' ? '联机对战' : '切磋对战';
+return socCleanCard({ kind: code ? 'replay' : 'match', mode: modeLbl, title: `${aName} vs ${bName} · ${wTxt}`, summary: sc ? `比分 ${sc}${code ? ' · 含可播放回放码' : ''}` : (code ? '含可播放回放码' : '本场战绩快报'), code });
+}
+const title = ($id('endTitle') && $id('endTitle').textContent || '').trim();
+const sub = ($id('endSub') && $id('endSub').textContent || '').trim();
+if (!title) return null;
+return socCleanCard({ kind: 'match', mode: '战绩卡', title, summary: sub || '刚完成一场江湖对决', code });
+}
+function socShareMatchCard(card, openAfter = false) {
+const clean = socCleanCard(card || socBuildLatestMatchCard());
+if (!clean) { toast('还没有可分享的战绩或回放'); return false; }
+socStart();
+const summaryText = `【${clean.mode || '战绩卡'}】${clean.title}${clean.summary ? ' · ' + clean.summary : ''}`;
+let sent = false;
+if (SOC.cur !== 'hall' && SOC.data) sent = socSendCur(summaryText, clean);
+else if (SOC.hall && SOC.hall.open) sent = socHallSay(summaryText, clean);
+if (!sent) {
+if (!SOC.data) socLoad();
+socHallAdd({ id: socRid(), from: SOC.me || socWho(), text: summaryText, card: clean, at: Date.now() }, true);
+socSave();
+if ($id('comLog')) socRenderLog('force');
+toast('已生成战绩卡预览（大厅连上后可实时广播）');
+} else {
+toast('已分享战绩卡到社区');
+}
+if (openAfter && typeof openScreen === 'function') openScreen('community');
+return true;
+}
+function socWatchReplayCode(code) {
+if (typeof rpDecodeCode !== 'function' || typeof rpPlay !== 'function') { toast('当前无法启动回放播放器'); return false; }
+try {
+const obj = rpDecodeCode(code);
+if (typeof rpList === 'function' && typeof rpStore === 'function') {
+const list = rpList();
+list.unshift(obj);
+while (list.length > (typeof RP_MAX === 'number' ? RP_MAX : 10)) list.pop();
+rpStore(list);
+}
+rpPlay(obj);
+return true;
+} catch (err) {
+toast((err && err.message) || '回放码无法解析');
+return false;
+}
+}
 function postRoomToCommunity() {
 const code = (NET.code || ($id('roomCode') && $id('roomCode').textContent) || '').trim();
 if (!code) { toast('请先设擂建房生成房间码'); return; }
@@ -59325,7 +59651,26 @@ $id('socList').addEventListener('click', e => {
 const a = e.target.closest('[data-acc]'), d = e.target.closest('[data-dec]'), it = e.target.closest('[data-k]');
 if (a) socAccept(a.dataset.acc); else if (d) socDecline(d.dataset.dec); else if (it) socOpen(it.dataset.k);
 });
-$id('comLog').addEventListener('click', e => { const b = e.target.closest('[data-add]'); if (b) socAddFriend(b.dataset.add); });
+$id('comLog').addEventListener('click', e => {
+const add = e.target.closest('[data-add]');
+if (add) { socAddFriend(add.dataset.add); return; }
+const rp = e.target.closest('[data-watch-rp]');
+if (rp) { socWatchReplayCode(rp.dataset.watchRp); return; }
+const tr = e.target.closest('[data-open-tour]');
+if (tr && typeof tourImportCode === 'function') {
+if (tourImportCode(tr.dataset.openTour)) { if (typeof showScreen === 'function') showScreen('tournament'); toast('已导入社区武林大会签表'); }
+else toast('签表分享码无效');
+return;
+}
+const cp = e.target.closest('[data-copy-code]');
+if (cp) {
+const code = cp.dataset.copyCode;
+if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(() => toast('已复制分享码')).catch(() => toast('复制失败，请手动复制'));
+else toast('已选中分享码');
+}
+});
+if ($id('socShareLastBtn')) $id('socShareLastBtn').addEventListener('click', () => socShareMatchCard(null, false));
+if ($id('endShareComBtn')) $id('endShareComBtn').addEventListener('click', () => socShareMatchCard(null, true));
 $id('socHead').addEventListener('click', e => {
 const b = e.target.closest('[data-act]'); if (!b) return;
 const k = SOC.cur;

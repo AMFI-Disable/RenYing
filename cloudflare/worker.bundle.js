@@ -1903,7 +1903,8 @@ const MIGRATIONS = [
   {"id": 11, "name": "0011_ai_players_lifecycle", "sum": "ae4e3d758dad600b", "sql": ["CREATE TABLE ai_players_new ( uid TEXT PRIMARY KEY, username TEXT NOT NULL UNIQUE COLLATE NOCASE, active INTEGER NOT NULL DEFAULT 1 CHECK (active IN (0, 1)), activity_level REAL NOT NULL DEFAULT 0.65 CHECK (activity_level >= 0 AND activity_level <= 1), behavior_profile TEXT NOT NULL DEFAULT 'balanced' CHECK (behavior_profile IN ('aggressive', 'balanced', 'defensive', 'tactical')), matchmaking_enabled INTEGER NOT NULL DEFAULT 1 CHECK (matchmaking_enabled IN (0, 1)), market_enabled INTEGER NOT NULL DEFAULT 1 CHECK (market_enabled IN (0, 1)), status TEXT NOT NULL DEFAULT 'offline' CHECK (status IN ('offline', 'resting', 'menu', 'queue', 'match', 'training', 'market')), chronotype TEXT NOT NULL DEFAULT 'evening' CHECK (chronotype IN ('early_bird', 'daytime', 'student', 'evening', 'night_owl', 'casual')), schedule_json TEXT NOT NULL DEFAULT '{}', prefs_json TEXT NOT NULL DEFAULT '{}', evolution_json TEXT NOT NULL DEFAULT '{}', current_mode TEXT NOT NULL DEFAULT '', current_hero TEXT NOT NULL DEFAULT '', session_until INTEGER NOT NULL DEFAULT 0, rest_until INTEGER NOT NULL DEFAULT 0, next_market_at INTEGER NOT NULL DEFAULT 0, sessions_today INTEGER NOT NULL DEFAULT 0 CHECK (sessions_today >= 0), matches_today INTEGER NOT NULL DEFAULT 0 CHECK (matches_today >= 0), training_today INTEGER NOT NULL DEFAULT 0 CHECK (training_today >= 0), last_active_at INTEGER NOT NULL DEFAULT 0, daily_spent INTEGER NOT NULL DEFAULT 0 CHECK (daily_spent >= 0), daily_listed INTEGER NOT NULL DEFAULT 0 CHECK (daily_listed >= 0), daily_reset_day INTEGER NOT NULL DEFAULT 0, updated_at INTEGER NOT NULL DEFAULT 0 )", "INSERT INTO ai_players_new (uid, username, active, activity_level, behavior_profile, matchmaking_enabled, market_enabled, status, last_active_at, daily_spent, daily_listed, daily_reset_day, updated_at) SELECT uid, username, active, activity_level, behavior_profile, matchmaking_enabled, market_enabled, CASE WHEN status IN ('offline', 'resting', 'menu', 'queue', 'match', 'training', 'market') THEN status ELSE 'offline' END, last_active_at, MAX(daily_spent, 0), MAX(daily_listed, 0), daily_reset_day, updated_at FROM ai_players", "DROP TABLE ai_players", "ALTER TABLE ai_players_new RENAME TO ai_players", "CREATE INDEX IF NOT EXISTS idx_ai_players_active ON ai_players (active, status)"]},
   {"id": 12, "name": "0012_rename_first_25_ai", "sum": "a5608f44568ae155", "sql": ["UPDATE ai_players SET username = '6767' WHERE uid = 'ai_01' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('6767') AND id != 'ai_01')", "UPDATE users SET username = '6767' WHERE id = 'ai_01' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('6767') AND id != 'ai_01')", "UPDATE ai_players SET username = '看见你' WHERE uid = 'ai_02' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('看见你') AND id != 'ai_02')", "UPDATE users SET username = '看见你' WHERE id = 'ai_02' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('看见你') AND id != 'ai_02')", "UPDATE ai_players SET username = '不吃香菜' WHERE uid = 'ai_03' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('不吃香菜') AND id != 'ai_03')", "UPDATE users SET username = '不吃香菜' WHERE id = 'ai_03' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('不吃香菜') AND id != 'ai_03')", "UPDATE ai_players SET username = '别打我' WHERE uid = 'ai_04' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('别打我') AND id != 'ai_04')", "UPDATE users SET username = '别打我' WHERE id = 'ai_04' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('别打我') AND id != 'ai_04')", "UPDATE ai_players SET username = 'xiaoming9' WHERE uid = 'ai_05' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('xiaoming9') AND id != 'ai_05')", "UPDATE users SET username = 'xiaoming9' WHERE id = 'ai_05' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('xiaoming9') AND id != 'ai_05')", "UPDATE ai_players SET username = 'kk0812' WHERE uid = 'ai_06' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('kk0812') AND id != 'ai_06')", "UPDATE users SET username = 'kk0812' WHERE id = 'ai_06' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('kk0812') AND id != 'ai_06')", "UPDATE ai_players SET username = '0419' WHERE uid = 'ai_07' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('0419') AND id != 'ai_07')", "UPDATE users SET username = '0419' WHERE id = 'ai_07' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('0419') AND id != 'ai_07')", "UPDATE ai_players SET username = '晚安玛卡巴卡' WHERE uid = 'ai_08' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('晚安玛卡巴卡') AND id != 'ai_08')", "UPDATE users SET username = '晚安玛卡巴卡' WHERE id = 'ai_08' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('晚安玛卡巴卡') AND id != 'ai_08')", "UPDATE ai_players SET username = 'linyi7' WHERE uid = 'ai_09' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('linyi7') AND id != 'ai_09')", "UPDATE users SET username = 'linyi7' WHERE id = 'ai_09' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('linyi7') AND id != 'ai_09')", "UPDATE ai_players SET username = 'yz_07' WHERE uid = 'ai_10' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('yz_07') AND id != 'ai_10')", "UPDATE users SET username = 'yz_07' WHERE id = 'ai_10' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('yz_07') AND id != 'ai_10')", "UPDATE ai_players SET username = '8823' WHERE uid = 'ai_11' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('8823') AND id != 'ai_11')", "UPDATE users SET username = '8823' WHERE id = 'ai_11' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('8823') AND id != 'ai_11')", "UPDATE ai_players SET username = '吃口西瓜' WHERE uid = 'ai_12' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('吃口西瓜') AND id != 'ai_12')", "UPDATE users SET username = '吃口西瓜' WHERE id = 'ai_12' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('吃口西瓜') AND id != 'ai_12')", "UPDATE ai_players SET username = 'chen77' WHERE uid = 'ai_13' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('chen77') AND id != 'ai_13')", "UPDATE users SET username = 'chen77' WHERE id = 'ai_13' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('chen77') AND id != 'ai_13')", "UPDATE ai_players SET username = '就打一把' WHERE uid = 'ai_14' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('就打一把') AND id != 'ai_14')", "UPDATE users SET username = '就打一把' WHERE id = 'ai_14' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('就打一把') AND id != 'ai_14')", "UPDATE ai_players SET username = 'k792' WHERE uid = 'ai_15' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('k792') AND id != 'ai_15')", "UPDATE users SET username = 'k792' WHERE id = 'ai_15' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('k792') AND id != 'ai_15')", "UPDATE ai_players SET username = '再打一局就睡' WHERE uid = 'ai_16' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('再打一局就睡') AND id != 'ai_16')", "UPDATE users SET username = '再打一局就睡' WHERE id = 'ai_16' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('再打一局就睡') AND id != 'ai_16')", "UPDATE ai_players SET username = 'skycn' WHERE uid = 'ai_17' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('skycn') AND id != 'ai_17')", "UPDATE users SET username = 'skycn' WHERE id = 'ai_17' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('skycn') AND id != 'ai_17')", "UPDATE ai_players SET username = 'momo酱' WHERE uid = 'ai_18' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('momo酱') AND id != 'ai_18')", "UPDATE users SET username = 'momo酱' WHERE id = 'ai_18' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('momo酱') AND id != 'ai_18')", "UPDATE ai_players SET username = 'm0x3' WHERE uid = 'ai_19' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('m0x3') AND id != 'ai_19')", "UPDATE users SET username = 'm0x3' WHERE id = 'ai_19' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('m0x3') AND id != 'ai_19')", "UPDATE ai_players SET username = '菜鸟报道' WHERE uid = 'ai_20' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('菜鸟报道') AND id != 'ai_20')", "UPDATE users SET username = '菜鸟报道' WHERE id = 'ai_20' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('菜鸟报道') AND id != 'ai_20')", "UPDATE ai_players SET username = 'zerok' WHERE uid = 'ai_21' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('zerok') AND id != 'ai_21')", "UPDATE users SET username = 'zerok' WHERE id = 'ai_21' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('zerok') AND id != 'ai_21')", "UPDATE ai_players SET username = '阿泽' WHERE uid = 'ai_22' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('阿泽') AND id != 'ai_22')", "UPDATE users SET username = '阿泽' WHERE id = 'ai_22' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('阿泽') AND id != 'ai_22')", "UPDATE ai_players SET username = '9527x' WHERE uid = 'ai_23' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('9527x') AND id != 'ai_23')", "UPDATE users SET username = '9527x' WHERE id = 'ai_23' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('9527x') AND id != 'ai_23')", "UPDATE ai_players SET username = '路过打酱油' WHERE uid = 'ai_24' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('路过打酱油') AND id != 'ai_24')", "UPDATE users SET username = '路过打酱油' WHERE id = 'ai_24' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('路过打酱油') AND id != 'ai_24')", "UPDATE ai_players SET username = 'nova23' WHERE uid = 'ai_25' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('nova23') AND id != 'ai_25')", "UPDATE users SET username = 'nova23' WHERE id = 'ai_25' AND password_algo = 'ai-bot-locked' AND NOT EXISTS (SELECT 1 FROM users WHERE LOWER(username) = LOWER('nova23') AND id != 'ai_25')"]},
   {"id": 13, "name": "0013_remove_ai_players", "sum": "477bb740005e0dd4", "sql": ["DELETE FROM mkt WHERE seller IN (SELECT id FROM users WHERE password_algo = 'ai-bot-locked') AND state != 1", "DELETE FROM econ_log WHERE uid IN (SELECT id FROM users WHERE password_algo = 'ai-bot-locked') OR uid = 'ai_system'", "DELETE FROM econ WHERE uid IN (SELECT id FROM users WHERE password_algo = 'ai-bot-locked')", "DELETE FROM users WHERE password_algo = 'ai-bot-locked'", "DELETE FROM rate WHERE k = 'ai:tick'", "DROP TABLE IF EXISTS ai_players"]},
-  {"id": 14, "name": "0014_retired_hero_skins", "sum": "e3ef441b2adabff0", "sql": ["UPDATE mkt SET k = 'ql_sf1', item_json = json_set(item_json, '$.k', 'ql_sf1') WHERE k = 'yu_sf1'", "UPDATE mkt SET k = 'xw_sf1', item_json = json_set(item_json, '$.k', 'xw_sf1') WHERE k = 'pl_sf1'", "UPDATE mkt SET k = 'ql_ic1', item_json = json_set(item_json, '$.k', 'ql_ic1') WHERE k = 'yu_ic1'", "UPDATE mkt SET k = 'xw_ic1', item_json = json_set(item_json, '$.k', 'xw_ic1') WHERE k = 'pl_ic1'", "UPDATE mkt SET k = 'ql_ic3', item_json = json_set(item_json, '$.k', 'ql_ic3') WHERE k = 'yu_ic3'", "UPDATE mkt SET k = 'ql_ic4', item_json = json_set(item_json, '$.k', 'ql_ic4') WHERE k = 'yu_ic4'", "UPDATE mkt SET k = 'xw_st1', item_json = json_set(item_json, '$.k', 'xw_st1') WHERE k = 'pl_st1'", "UPDATE mkt SET k = 'xw_st2', item_json = json_set(item_json, '$.k', 'xw_st2') WHERE k = 'pl_st2'", "UPDATE mkt SET k = 'xw_st3', item_json = json_set(item_json, '$.k', 'xw_st3') WHERE k = 'pl_st3'", "UPDATE mkt SET k = 'xw_st4', item_json = json_set(item_json, '$.k', 'xw_st4') WHERE k = 'pl_st4'", "UPDATE mkt SET k = 'xw_ym1', item_json = json_set(item_json, '$.k', 'xw_ym1') WHERE k = 'yu_ym1'", "UPDATE mkt SET k = 'xw_ym2', item_json = json_set(item_json, '$.k', 'xw_ym2') WHERE k = 'yu_ym2'", "UPDATE mkt SET k = 'ql_ym3', item_json = json_set(item_json, '$.k', 'ql_ym3') WHERE k = 'yu_ym3'", "UPDATE mkt SET k = 'li_ym4', item_json = json_set(item_json, '$.k', 'li_ym4') WHERE k = 'yu_ym4'"]}
+  {"id": 14, "name": "0014_retired_hero_skins", "sum": "e3ef441b2adabff0", "sql": ["UPDATE mkt SET k = 'ql_sf1', item_json = json_set(item_json, '$.k', 'ql_sf1') WHERE k = 'yu_sf1'", "UPDATE mkt SET k = 'xw_sf1', item_json = json_set(item_json, '$.k', 'xw_sf1') WHERE k = 'pl_sf1'", "UPDATE mkt SET k = 'ql_ic1', item_json = json_set(item_json, '$.k', 'ql_ic1') WHERE k = 'yu_ic1'", "UPDATE mkt SET k = 'xw_ic1', item_json = json_set(item_json, '$.k', 'xw_ic1') WHERE k = 'pl_ic1'", "UPDATE mkt SET k = 'ql_ic3', item_json = json_set(item_json, '$.k', 'ql_ic3') WHERE k = 'yu_ic3'", "UPDATE mkt SET k = 'ql_ic4', item_json = json_set(item_json, '$.k', 'ql_ic4') WHERE k = 'yu_ic4'", "UPDATE mkt SET k = 'xw_st1', item_json = json_set(item_json, '$.k', 'xw_st1') WHERE k = 'pl_st1'", "UPDATE mkt SET k = 'xw_st2', item_json = json_set(item_json, '$.k', 'xw_st2') WHERE k = 'pl_st2'", "UPDATE mkt SET k = 'xw_st3', item_json = json_set(item_json, '$.k', 'xw_st3') WHERE k = 'pl_st3'", "UPDATE mkt SET k = 'xw_st4', item_json = json_set(item_json, '$.k', 'xw_st4') WHERE k = 'pl_st4'", "UPDATE mkt SET k = 'xw_ym1', item_json = json_set(item_json, '$.k', 'xw_ym1') WHERE k = 'yu_ym1'", "UPDATE mkt SET k = 'xw_ym2', item_json = json_set(item_json, '$.k', 'xw_ym2') WHERE k = 'yu_ym2'", "UPDATE mkt SET k = 'ql_ym3', item_json = json_set(item_json, '$.k', 'ql_ym3') WHERE k = 'yu_ym3'", "UPDATE mkt SET k = 'li_ym4', item_json = json_set(item_json, '$.k', 'li_ym4') WHERE k = 'yu_ym4'"]},
+  {"id": 15, "name": "0015_v120_tournaments", "sum": "43a8cf9d1feb01f1", "sql": ["CREATE TABLE IF NOT EXISTS public_tournaments ( id TEXT PRIMARY KEY, host_uid TEXT NOT NULL, host_name TEXT NOT NULL, title TEXT NOT NULL, size INTEGER NOT NULL CHECK (size IN (4, 8, 16)), status TEXT NOT NULL DEFAULT 'active' CHECK (status IN ('active', 'completed')), code TEXT NOT NULL CHECK (length(code) <= 8192), updated_at INTEGER NOT NULL, created_at INTEGER NOT NULL )", "CREATE INDEX IF NOT EXISTS idx_public_tournaments_updated ON public_tournaments (updated_at DESC)"]}
 ];
 /* === src/data/13-chron.js === */
 // ======================= 全服肉鸽 · 江湖长卷：全服共享的剧情线 =======================
@@ -2066,6 +2067,8 @@ const D1_SHIELD = {
   playStatsCoalesced: 0,
   presenceDoHits: 0,
   presenceD1Coalesced: 0,
+  v120CacheHits: 0,
+  v120CacheMisses: 0,
   circuitOpenUntil: 0,
   lastQuotaErr: '',
 };
@@ -2098,6 +2101,8 @@ function d1ShieldSnapshot(env, now) {
     playStatsCoalesced: D1_SHIELD.playStatsCoalesced,
     presenceDoHits: D1_SHIELD.presenceDoHits,
     presenceD1Coalesced: D1_SHIELD.presenceD1Coalesced,
+    v120CacheHits: D1_SHIELD.v120CacheHits,
+    v120CacheMisses: D1_SHIELD.v120CacheMisses,
     circuitOpen: now < D1_SHIELD.circuitOpenUntil,
     circuitOpenUntil: D1_SHIELD.circuitOpenUntil,
     lastQuotaErr: D1_SHIELD.lastQuotaErr,
@@ -3691,11 +3696,13 @@ async function handleAdmin(env, request, path, now, ip) {
     await env.DB.prepare('INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, ?2, ?3, ?4, ?5, ?6, 0) ON CONFLICT(uid) DO UPDATE SET ban_until = ?3, perm = ?4, log_json = ?5, at = ?6')
       .bind(u.id, rec.strikes, until, perm || rec.perm ? 1 : 0, JSON.stringify(log), now).run();
     await logRow(env, u.id, now, 'admin_ban', 1, null, null, JSON.stringify({ by: who, why, days: perm ? 'perm' : days }));
+    lbCacheClear(env);
     return { banUntil: until, perm: perm || rec.perm };
   };
   const pardonUser = async (u, note) => {
     await env.DB.prepare("INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES (?1, 0, 0, 0, '[]', ?2, ?2) ON CONFLICT(uid) DO UPDATE SET strikes = 0, ban_until = 0, perm = 0, log_json = '[]', at = ?2, pardon = ?2").bind(u.id, now).run();
     await logRow(env, u.id, now, 'pardon', 1, null, null, JSON.stringify({ by: who, why: note }));
+    lbCacheClear(env);
   };
   const bundleIn = (noun, eg) => {   // 补偿、兑换码里的东西：墨锭、每种武器箱、货郎、改名标签，还有饰品和给玩家看的说明
     const ink = intIn(body.ink, 0, ADJ_INK), term = intIn(body.term, 0, 100), tags = intIn(body.tags, 0, 100);
@@ -4246,10 +4253,12 @@ async function handleAdmin(env, request, path, now, ip) {
           env.DB.prepare('DELETE FROM devices WHERE user_id = ?').bind(u.id),
         ]);
         await logRow(env, u.id, now, 'acct_del', 1, null, null, JSON.stringify({ by: who, why }));
+        lbCacheClear(env);
       } else if (op === 'restore') {
         if (!u.deleted_at) { skip.push({ uid: u.id, name: u.username, why: '没有删除' }); continue; }
         await env.DB.prepare('UPDATE users SET deleted_at = 0 WHERE id = ?').bind(u.id).run();
         await logRow(env, u.id, now, 'acct_restore', 1, null, null, JSON.stringify({ by: who, why, since: u.deleted_at }));
+        lbCacheClear(env);
       } else if (op === 'ban') await banUser(u, perm, days);
       else await pardonUser(u, why);
       done.push({ uid: u.id, name: u.username });
@@ -5082,26 +5091,160 @@ async function gbHit(env, auth, body, now) {
  * 胜场榜挡掉明显是改出来的数：胜场到了 LB_WIN_FAKE（游戏开服才一个多月，没人打得到），或者一场没输却赢了 LB_WIN_CLEAN 场以上。
  * 这些号不封、存档不动，只是不上榜；真要处理用管理网页封号。 */
 const LB_N = 100, RK_PLACE = 3, RK_MIN = 1000, RK_MAX = 25000, LB_WIN_FAKE = 1000, LB_WIN_CLEAN = 30;
-async function leaderboard(env, kind, season, me, now) {
-  const notBanned = "deleted_at = 0 AND COALESCE(password_algo, '') != 'ai-bot-locked' AND id NOT IN (SELECT uid FROM sanctions WHERE perm = 1 OR ban_until > ?1)";
-  if (kind === 'rank') {
-    if (!/^S\d{1,3}$/.test(season)) return { ok: true, kind, list: [] };
-    const rows = (await env.DB.prepare(
-      `SELECT id, username, CASE WHEN COALESCE(json_extract(profile_json, '$.rk.pts'), 0) > 0 THEN json_extract(profile_json, '$.rk.pts') ELSE json_extract(profile_json, '$.rk.est') END AS pts FROM users WHERE ${notBanned}
-       AND json_extract(profile_json, '$.rk.season') = ?2 AND json_extract(profile_json, '$.rk.placed') >= ?3
-       ORDER BY pts DESC, updated_at LIMIT ?4`).bind(now, season, RK_PLACE, LB_N).all()).results || [];
-    return { ok: true, kind, list: rows.map(r => ({ name: r.username, pts: Math.max(RK_MIN, Math.min(RK_MAX, Math.round(+r.pts || 0))), me: r.id === me })) };
+const LB_SEASONS = ['S2', 'S1'];
+const LB_CACHE_BY_DB = new WeakMap(), LB_CACHE_TTL_MS = 60e3, LB_CACHE_MAX = 32;
+const TOUR_CACHE_BY_DB = new WeakMap(), TOUR_CACHE_TTL_MS = 60e3, TOUR_TTL_MS = 14 * 86400e3;
+function lbCacheFor(env) {
+  const db = env && env.DB;
+  if (!db || typeof db !== 'object') return new Map();
+  let m = LB_CACHE_BY_DB.get(db);
+  if (!m) { m = new Map(); LB_CACHE_BY_DB.set(db, m); }
+  return m;
+}
+function lbCacheClear(env) {
+  const db = env && env.DB;
+  if (db && typeof db === 'object') { const m = LB_CACHE_BY_DB.get(db); if (m) m.clear(); }
+}
+function tourCacheFor(env) {
+  const db = env && env.DB;
+  if (!db || typeof db !== 'object') return { list: null, at: 0 };
+  let c = TOUR_CACHE_BY_DB.get(db);
+  if (!c) { c = { list: null, at: 0 }; TOUR_CACHE_BY_DB.set(db, c); }
+  return c;
+}
+function lbCacheSet(cache, key, val, now) {
+  if (cache.size >= LB_CACHE_MAX) {
+    const firstKey = cache.keys().next().value;
+    if (firstKey !== undefined) cache.delete(firstKey);
   }
-  const [rows, cnt] = await Promise.all([
-    env.DB.prepare(
-      `SELECT id, username, json_extract(profile_json, '$.netWins') AS w, json_extract(profile_json, '$.netLosses') AS l FROM users WHERE ${notBanned}
-       AND json_extract(profile_json, '$.netWins') > 0 AND json_extract(profile_json, '$.netWins') < ?3
-       AND NOT (COALESCE(json_extract(profile_json, '$.netLosses'), 0) = 0 AND json_extract(profile_json, '$.netWins') > ?4)
-       ORDER BY w DESC, l, updated_at LIMIT ?2`).bind(now, LB_N, LB_WIN_FAKE, LB_WIN_CLEAN).all(),
-    env.DB.prepare("SELECT COUNT(*) AS n FROM users WHERE deleted_at = 0 AND COALESCE(password_algo, '') != 'ai-bot-locked'").first(),
-  ]);
+  cache.set(key, { val, at: now });
+}
+function lbMaterialize(payload, me) {
+  return {
+    ...payload,
+    list: (payload.list || []).map(({ _uid, ...rest }) => ({ ...rest, me: !!me && _uid === me })),
+  };
+}
+async function leaderboard(env, kind, season, me, now) {
+  const safeKind = ['rank', 'wins', 'tag3', 'duo', 'gboss'].includes(kind) ? kind : 'rank';
+  const safeSeason = /^S\d{1,3}$/.test(season) ? season : LB_SEASONS[0];
+  const cache = lbCacheFor(env);
+  const cacheKey = `${safeKind}:${safeKind === 'rank' ? safeSeason : 'all'}`;
+  const hitEntry = cache.get(cacheKey);
+  if (hitEntry && now - hitEntry.at < LB_CACHE_TTL_MS) {
+    D1_SHIELD.v120CacheHits++;
+    return lbMaterialize({ ...hitEntry.val, cached: true }, me);
+  }
+  if (now < D1_SHIELD.circuitOpenUntil) {
+    if (hitEntry) { D1_SHIELD.v120CacheHits++; return lbMaterialize({ ...hitEntry.val, cached: true, stale: true }, me); }
+    return { ok: true, kind: safeKind, season: safeSeason, seasons: LB_SEASONS, list: [], shed: true };
+  }
+  D1_SHIELD.v120CacheMisses++;
+  const notBanned = "deleted_at = 0 AND COALESCE(password_algo, '') != 'ai-bot-locked' AND id NOT IN (SELECT uid FROM sanctions WHERE perm = 1 OR ban_until > ?1)";
   const n = v => Math.max(0, Math.min(1e6, Math.floor(+v || 0)));
-  return { ok: true, kind, players: (cnt && cnt.n) || 0, list: (rows.results || []).map(r => ({ name: r.username, wins: n(r.w), losses: n(r.l), me: r.id === me })) };
+  let payload;
+  if (safeKind === 'rank') {
+    const histPath = `$.rkHist.${safeSeason}.pts`;
+    const rows = (await env.DB.prepare(
+      `SELECT id, username,
+         CASE
+           WHEN json_extract(profile_json, '$.rk.season') = ?2 AND json_extract(profile_json, '$.rk.placed') >= ?3
+             THEN CASE WHEN COALESCE(json_extract(profile_json, '$.rk.pts'), 0) > 0 THEN json_extract(profile_json, '$.rk.pts') ELSE json_extract(profile_json, '$.rk.est') END
+           WHEN COALESCE(json_extract(profile_json, '${histPath}'), 0) > 0
+             THEN json_extract(profile_json, '${histPath}')
+           WHEN json_extract(profile_json, '$.rk.last.season') = ?2 AND COALESCE(json_extract(profile_json, '$.rk.last.pts'), 0) > 0
+             THEN json_extract(profile_json, '$.rk.last.pts')
+           ELSE NULL
+         END AS pts
+       FROM users WHERE ${notBanned}
+       AND (
+         (json_extract(profile_json, '$.rk.season') = ?2 AND json_extract(profile_json, '$.rk.placed') >= ?3)
+         OR COALESCE(json_extract(profile_json, '${histPath}'), 0) > 0
+         OR (json_extract(profile_json, '$.rk.last.season') = ?2 AND COALESCE(json_extract(profile_json, '$.rk.last.pts'), 0) > 0)
+       )
+       ORDER BY pts DESC, updated_at LIMIT ?4`).bind(now, safeSeason, RK_PLACE, LB_N).all()).results || [];
+    payload = { ok: true, kind: safeKind, season: safeSeason, seasons: LB_SEASONS, cachedAt: now, list: rows.map(r => ({ _uid: r.id, name: r.username, pts: Math.max(RK_MIN, Math.min(RK_MAX, Math.round(+r.pts || 0))) })) };
+  } else if (safeKind === 'tag3' || safeKind === 'duo') {
+    const wPath = `$.modeStats.${safeKind}.w`, lPath = `$.modeStats.${safeKind}.l`;
+    const rows = (await env.DB.prepare(
+      `SELECT id, username, COALESCE(json_extract(profile_json, '${wPath}'), 0) AS w, COALESCE(json_extract(profile_json, '${lPath}'), 0) AS l
+       FROM users WHERE ${notBanned}
+       AND COALESCE(json_extract(profile_json, '${wPath}'), 0) > 0 AND COALESCE(json_extract(profile_json, '${wPath}'), 0) < ?3
+       ORDER BY w DESC, l, updated_at LIMIT ?2`).bind(now, LB_N, LB_WIN_FAKE).all()).results || [];
+    payload = { ok: true, kind: safeKind, seasons: LB_SEASONS, cachedAt: now, list: rows.map(r => ({ _uid: r.id, name: r.username, wins: n(r.w), losses: n(r.l) })) };
+  } else if (safeKind === 'gboss') {
+    const rows = (await env.DB.prepare(
+      `SELECT d.uid AS id, u.username AS username, SUM(d.dmg) AS dmg, SUM(d.runs) AS runs
+       FROM gboss_hit d JOIN users u ON u.id = d.uid
+       WHERE u.deleted_at = 0 AND COALESCE(u.password_algo, '') != 'ai-bot-locked'
+       AND u.id NOT IN (SELECT uid FROM sanctions WHERE perm = 1 OR ban_until > ?1)
+       GROUP BY d.uid, u.username
+       ORDER BY dmg DESC, runs ASC LIMIT ?2`).bind(now, LB_N).all()).results || [];
+    payload = { ok: true, kind: safeKind, seasons: LB_SEASONS, cachedAt: now, list: rows.map(r => ({ _uid: r.id, name: r.username, dmg: Math.max(0, Math.round(+r.dmg || 0)), runs: n(r.runs) })) };
+  } else {
+    const [rows, cnt] = await Promise.all([
+      env.DB.prepare(
+        `SELECT id, username, json_extract(profile_json, '$.netWins') AS w, json_extract(profile_json, '$.netLosses') AS l FROM users WHERE ${notBanned}
+         AND json_extract(profile_json, '$.netWins') > 0 AND json_extract(profile_json, '$.netWins') < ?3
+         AND NOT (COALESCE(json_extract(profile_json, '$.netLosses'), 0) = 0 AND json_extract(profile_json, '$.netWins') > ?4)
+         ORDER BY w DESC, l, updated_at LIMIT ?2`).bind(now, LB_N, LB_WIN_FAKE, LB_WIN_CLEAN).all(),
+      env.DB.prepare("SELECT COUNT(*) AS n FROM users WHERE deleted_at = 0 AND COALESCE(password_algo, '') != 'ai-bot-locked'").first(),
+    ]);
+    payload = { ok: true, kind: safeKind, seasons: LB_SEASONS, cachedAt: now, players: (cnt && cnt.n) || 0, list: (rows.results || []).map(r => ({ _uid: r.id, name: r.username, wins: n(r.w), losses: n(r.l) })) };
+  }
+  lbCacheSet(cache, cacheKey, payload, now);
+  return lbMaterialize({ ...payload, cached: false }, me);
+}
+
+/* ---------- v1.2.0 持久化公开锦标赛（60 秒内存缓存，读接口零 D1 写入） ---------- */
+async function listPublicTournaments(env, now) {
+  const tCache = tourCacheFor(env);
+  if (tCache.list && now - tCache.at < TOUR_CACHE_TTL_MS) {
+    D1_SHIELD.v120CacheHits++;
+    return { ok: true, cached: true, cachedAt: tCache.at, list: tCache.list };
+  }
+  if (now < D1_SHIELD.circuitOpenUntil) {
+    if (tCache.list) { D1_SHIELD.v120CacheHits++; return { ok: true, cached: true, stale: true, cachedAt: tCache.at, list: tCache.list }; }
+    return { ok: true, cached: false, shed: true, list: [] };
+  }
+  D1_SHIELD.v120CacheMisses++;
+  const rows = (await env.DB.prepare(
+    `SELECT id, host_name, title, size, status, code, updated_at, created_at
+     FROM public_tournaments WHERE updated_at > ?1 ORDER BY updated_at DESC LIMIT 24`).bind(now - TOUR_TTL_MS).all()).results || [];
+  const list = rows.map(r => ({
+    id: r.id, hostName: r.host_name, title: r.title, size: r.size | 0,
+    status: r.status, code: r.code, updatedAt: +r.updated_at || 0, createdAt: +r.created_at || 0,
+  }));
+  tCache.list = list;
+  tCache.at = now;
+  return { ok: true, cached: false, cachedAt: now, list };
+}
+async function publishPublicTournament(env, auth, body, now) {
+  if (now < D1_SHIELD.circuitOpenUntil) return error('服务繁忙，请稍后再发布赛程', 503);
+  if (!hitMem('tourp:' + auth.user.id, 12, 3600e3, now)) return error('发布太频繁了，请稍后再试', 429);
+  const code = String((body && body.code) || '').trim();
+  if (!/^RYTR1:[A-Za-z0-9_-]{8,}$/.test(code) || code.length > 8192) return error('赛果分享码格式不正确或超出长度限制');
+  const size = +((body && body.size) || 0);
+  if (![4, 8, 16].includes(size)) return error('赛制人数仅支持 4、8 或 16 强');
+  const title = String((body && body.title) || `${auth.user.username}的武林大会`).replace(/[\u0000-\u001f]/g, ' ').trim().slice(0, 48) || '武林大会';
+  const status = body && body.status === 'completed' ? 'completed' : 'active';
+  const rawId = String((body && body.id) || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 40);
+  const id = rawId || ('t_' + randHex(8));
+  try {
+    await env.DB.prepare(
+      `INSERT INTO public_tournaments (id, host_uid, host_name, title, size, status, code, updated_at, created_at)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?8)
+       ON CONFLICT(id) DO UPDATE SET title = excluded.title, size = excluded.size, status = excluded.status, code = excluded.code, updated_at = excluded.updated_at
+       WHERE public_tournaments.host_uid = excluded.host_uid`)
+      .bind(id, auth.user.id, auth.user.username, title, size, status, code, now).run();
+    const tCache = tourCacheFor(env);
+    tCache.list = null;
+    tCache.at = 0;
+  } catch (err) {
+    if (d1QuotaError(err)) { d1ShieldTrip(err, now); return error('服务繁忙，请稍后再试', 503); }
+    throw err;
+  }
+  return json({ ok: true, id, title, size, status, updatedAt: now });
 }
 
 /* ---------- 侠客列传：江湖足迹 ---------- */
@@ -6000,7 +6143,9 @@ async function route(request, env, ctx, rid = reqId()) {
         }
         const body = await readBody(request);
         if (!body) return error('存档太大', 413);
-        return await handleProfilePost(env, auth, body, now);
+        const res = await handleProfilePost(env, auth, body, now);
+        if (res.status === 200 && body.profile && (body.profile.rk || body.profile.netWins !== undefined || body.profile.netLosses !== undefined || body.profile.modeStats)) lbCacheClear(env);
+        return res;
       }
 
       // 6. 武库：开箱、买卖、熔铸……
@@ -6107,12 +6252,28 @@ async function route(request, env, ctx, rid = reqId()) {
         return json({ ok: true, flags: await flagsFor(env, user, now), turnstile: (await turnstileOn(env, user, now)) ? String(env.TURNSTILE_SITEKEY) : '' });
       }
 
-      // 13. 排行榜（不用登录）：段位榜是这个赛季打满定级赛的，按段位分排；战绩榜按联机胜场排。被封的号不上榜
+      // 13. 排行榜（不用登录，60 秒内存缓存）：支持段位/赛季归档、战绩、3v3、2v2、天魔讨伐。被封的号不上榜
       if (path === '/api/leaderboard' && request.method === 'GET') {
         if (!hitMem('lbg:' + ip, 30, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
         const auth = await authenticate(env, request);
-        const kind = url.searchParams.get('k') === 'wins' ? 'wins' : 'rank';
+        const rawK = String(url.searchParams.get('k') || 'rank');
+        const kind = ['rank', 'wins', 'tag3', 'duo', 'gboss'].includes(rawK) ? rawK : 'rank';
         return json(await leaderboard(env, kind, String(url.searchParams.get('s') || ''), auth && auth.user.id, now));
+      }
+
+      // 14. 持久化公开锦标赛（GET 公开读走 60 秒内存缓存；POST 登录发布受 hitMem + D1_SHIELD 保护）
+      if (path === '/api/tournaments') {
+        if (request.method === 'GET') {
+          if (!hitMem('tourg:' + ip, 30, 60e3, now)) return error('刷新太快了，歇一会儿再试', 429);
+          return json(await listPublicTournaments(env, now));
+        }
+        if (request.method === 'POST') {
+          const auth = await authenticate(env, request);
+          if (!auth) return error('未登录或登录已过期，请重新登录', 401);
+          const body = await readBody(request);
+          if (!body) return error('请求太大', 413);
+          return await publishPublicTournament(env, auth, body, now);
+        }
       }
 
       // 9. Logout

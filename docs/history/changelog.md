@@ -6,6 +6,15 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+## [1.2.0] - 2026-11-27
+
+### Added
+
+- **Community Match Result & Replay Code Sharing (`src/social.js`, `src/page.html`, `src/styles/20-overlays-and-drafts.css`)**: added structured match-result and `RYRP2:`/`RYTR1:` card sanitization, forwarding, rendering, and one-click replay playback or tournament bracket import inside Community Hub (`#community`), plus direct `分享到社区` / `战绩卡` triggers on `#end` and `#community`.
+- **Persistent Web-Visible Tournaments & Shared-Screen Spectator View (`src/game/04-modes/22-modes-18-tournament.js`, `cloudflare/migrations/0015_v120_tournaments.sql`, `cloudflare/worker/60-world-services.js`, `cloudflare/worker/80-request-router.js`, `src/cloud.js`, `src/styles/85-page-replays-spectator-tournament.css`)**: added automatic `localStorage` bracket persistence, `#tour=RYTR1:...` shareable URL deep-linking, authenticated `POST /api/tournaments` publishing and 60s-cached public `GET /api/tournaments` browsing, and a dedicated Big-Screen / Shared-Screen Spectator Mode (`#specStageBtn`) on `#specHud`.
+- **Mode-Specific Public Leaderboards & Seasonal Archives (`src/game/05-ui/24-account-01-legacy-lb.js`, `src/game/05-ui/19-progress-04-ranked.js`, `cloudflare/worker/60-world-services.js`, `src/page.html`)**: expanded `/api/leaderboard` and `#lbTabs` to support Ranked + Historical Season Archives (`#lbSeasonSel`), Online Wins, 3v3 Relay (`tag3`), 2v2 Duo (`duo`), Global Boss (`gboss`), and Local Mastery, while recording `PROF.rkHist` on season rollover and `PROF.modeStats` per match.
+- **Cloudflare D1 Quota Protection & Caching For v1.2.0 Online Services (`cloudflare/worker/00-runtime-and-http.js`, `cloudflare/worker/60-world-services.js`, `tools/tests/predeploy-check.mjs`)**: routed all `v1.2.0` public read endpoints through bounded 60-second in-isolate caches (`0` D1 writes per request, `<= 1` D1 read per 60s window), `hitMem` rate limiters, and `D1_SHIELD` circuit-breaker shedding, with automated verification in `tools/tests/predeploy-check.mjs`.
+
 ## [1.1.0] - 2026-11-27
 
 ### Fixed
