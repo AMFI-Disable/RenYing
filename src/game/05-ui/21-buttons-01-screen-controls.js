@@ -2,63 +2,200 @@
 // 本文件：showScreen（切换页面的唯一入口）、选模式、电脑境界（难度）选择条、习武大厅和任务页的分页按钮。
 // ======================= 界面按钮 =======================
 let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 劲敌 绝顶 天道（宿敌只留给万仞剑阁内部用）
+// ======================= 页面生命周期与共享组件管理 (Page Lifecycle Manager) =======================
+// 所有 26 个页面（.scr）的统一注册表：显式声明顶栏可见性、页面分组、进入/离开钩子，确保页面切换时自动清理浮层、弹窗与临时状态。
+const SCREEN_IDS = [
+  'menu', 'pause', 'end', 'replays', 'bp', 'mapBriefing', 'buffDraft',
+  'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community',
+  'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd',
+  'towerModal', 'tournament', 'langPrompt', 'gboss', 'sagaTalk'
+];
+
+function clearAllHumanInputs() {
+  if (typeof human !== 'undefined' && Array.isArray(human)) {
+    for (const h of human) {
+      if (h && typeof h.clear === 'function') h.clear();
+    }
+  }
+  if (typeof TAB_SCOREBOARD !== 'undefined') TAB_SCOREBOARD = false;
+}
+
+function isInMatchOverlayScreen(id) {
+  if (!id || M.mode === 'demo') return false;
+  if ((id === 'settings' || id === 'help') && typeof settingsBack !== 'undefined' && settingsBack === 'pause') return true;
+  if (id === 'replays' && typeof replaysFrom !== 'undefined' && replaysFrom === 'end') return true;
+  return false;
+}
+
+function cleanupTransientOverlays(targetId) {
+  // 1. 关闭跨页可能残留的弹窗与浮层（仅保留目标页自身的合法元素）
+  for (const mid of ['modal2v2', 'modalRouge', 'modalWorld', 'rkInfo', 'rkReveal']) {
+    const el = $id(mid);
+    if (el && !el.classList.contains('hidden')) el.classList.add('hidden');
+  }
+  const hudModal = $id('hudCustomModal');
+  if (hudModal && hudModal.style) hudModal.style.display = 'none';
+  const tpModal = $id('worldTeleport');
+  if (tpModal && !tpModal.classList.contains('hidden')) {
+    if (typeof closeTeleportModal === 'function') closeTeleportModal();
+    else tpModal.classList.add('hidden');
+  }
+  const kbHelpEl = $id('kbHelp');
+  if (kbHelpEl && !kbHelpEl.hidden) kbHelpEl.hidden = true;
+  if (targetId !== 'menu' && typeof heroPickShow === 'function') {
+    try { heroPickShow(false); } catch (e) {}
+  }
+  if (targetId !== 'single') {
+    const infoCard = $id('xiwuInfoCard');
+    if (infoCard) infoCard.hidden = true;
+  }
+  if (targetId !== 'bp') {
+    try { if (typeof showPop === 'function') showPop(null); } catch (e) {}
+  }
+  if (targetId !== 'armory') {
+    const arM = $id('arModal'), arI = $id('arIns');
+    if (arM && !arM.hidden && !(typeof REEL !== 'undefined' && REEL && REEL.on)) arM.hidden = true;
+    if (arI && !arI.hidden) arI.hidden = true;
+  }
+  // 2. 当切到任意非对局页面（targetId != null）时，立即收起对局内专属工具栏与 HUD，防止穿透到菜单页
+  if (targetId) {
+    if (typeof teamCmdClose === 'function' && typeof teamCmdOpen === 'function' && teamCmdOpen()) teamCmdClose();
+    if (typeof dummyBarShow === 'function' && typeof dummyBarOn === 'function' && dummyBarOn()) dummyBarShow(false);
+    for (const hid of ['dummyBarBtn', 'trainLab', 'trainInspect', 'trialHud', 'specHud']) {
+      const el = $id(hid);
+      if (el) el.classList.add('hidden');
+    }
+    if (targetId !== 'pause') {
+      const cap = $id('sfxCaption');
+      if (cap) cap.classList.add('hidden');
+    }
+  }
+}
+
+const SCREEN_LIFECYCLE = {
+  menu: {
+    onEnter(prev) {
+      menuLock = false;
+      const el = $id('menu');
+      if (el) {
+        delete el.dataset.phase;
+        el.classList.remove('hl-single', 'hl-netp');
+      }
+      document.body.classList.remove('menu-handoff');
+      for (const b of document.querySelectorAll('#menu .mcard.pressed')) b.classList.remove('pressed');
+      menuCam.tx = 0; menuCam.tz = 1;
+      if (typeof renderHome === 'function') renderHome();
+      if (typeof setMenuHero === 'function' && typeof menuHeroPick === 'function') setMenuHero(menuHeroPick());
+      const play = !menuEntered || prev === null;
+      if (el) {
+        if (play && typeof prefersReduced === 'function' && !prefersReduced()) {
+          delete el.dataset.enter;
+          if (!menuEntered) el.dataset.enter = 'run';
+          else requestAnimationFrame(() => requestAnimationFrame(() => { if (el.classList.contains('on')) el.dataset.enter = 'run'; }));
+        } else delete el.dataset.enter;
+      }
+      menuEntered = true;
+    },
+    onLeave() {
+      if (typeof heroPickShow === 'function') heroPickShow(false);
+    }
+  },
+  single: {
+    onEnter() {
+      if ($id('modal2v2') && $id('modal2v2').classList.contains('hidden')) levelBarTo(null);
+      if (typeof singleSec === 'function') singleSec(currentSingleTab || 'cpu');
+    },
+    onLeave() {
+      const infoCard = $id('xiwuInfoCard');
+      if (infoCard) infoCard.hidden = true;
+    }
+  },
+  netp: {
+    onEnter() { if (typeof renderLobby === 'function') renderLobby(); }
+  },
+  codex: {
+    onEnter() {
+      if ($id('cxTabs') && !$id('cxTabs').children.length && typeof openCodex === 'function') openCodex();
+    }
+  },
+  settings: {
+    onEnter() {
+      const setRp = $id('setReplays');
+      if (setRp) setRp.hidden = settingsBack !== 'menu';
+    },
+    onLeave() {
+      if (typeof cancelKeyRebind === 'function') cancelKeyRebind();
+    }
+  },
+  acc: {
+    onEnter() { if (typeof renderAccPage === 'function') renderAccPage(); }
+  },
+  bp: {
+    onLeave() {
+      if (typeof bpFinishTimer !== 'undefined' && bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
+      BP = null; watch2v2Bp = null;
+    }
+  },
+  tournament: {
+    onLeave(next) {
+      if (next !== null && typeof tourCancelAuto === 'function') tourCancelAuto();
+    }
+  },
+  pause: {
+    onEnter() {
+      clearAllHumanInputs();
+    }
+  }
+};
+
 function showScreen(id) {
   if (!menuTransitionCompleting && currentScreen === 'menu' && id !== 'menu' && document.body.classList.contains('menu-handoff')) {
-    delete $id('menu').dataset.phase; document.body.classList.remove('menu-handoff'); menuLock = false;
+    const mEl = $id('menu');
+    if (mEl) delete mEl.dataset.phase;
+    document.body.classList.remove('menu-handoff');
+    menuLock = false;
   }
   menuTransition++;
-  const prev = currentScreen; currentScreen = id;
-  for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'mapBriefing', 'buffDraft', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'tournament', 'langPrompt', 'gboss', 'sagaTalk']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
+  const prev = currentScreen;
+  if (prev && prev !== id && SCREEN_LIFECYCLE[prev] && SCREEN_LIFECYCLE[prev].onLeave) {
+    try { SCREEN_LIFECYCLE[prev].onLeave(id); } catch (e) {}
+  }
+  currentScreen = id;
+  for (const s of SCREEN_IDS) {
+    const el = document.getElementById(s);
+    if (el) el.classList.toggle('on', s === id);
+  }
   if (id && $id(id)) $id(id).classList.add('scr-seen');   // 打开过的面板才排版，见 style.css 的 .scr-seen
-  const inMatchOverlay = (id === 'settings' || id === 'help') && settingsBack === 'pause' && M.mode !== 'demo';
-  $id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id) || inMatchOverlay);
-  if (id !== 'settings') cancelKeyRebind();
-  if (id !== 'bp') {
-    try { showPop(null); } catch (e) {}
-    if (typeof bpFinishTimer !== 'undefined' && bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
-    if (prev === 'bp') { BP = null; watch2v2Bp = null; }
-  }
-  if (id === 'single') {
-    if ($id('modal2v2') && $id('modal2v2').classList.contains('hidden')) levelBarTo(null);   // 2v2 弹窗借走的境界栏放回来
-    singleSec(currentSingleTab || 'cpu');
-  }
-  if (id === 'codex' && $id('cxTabs') && !$id('cxTabs').children.length) {
-    openCodex();
-  }
-  if (id === 'menu') {
-    menuLock = false;                                   // 不管从哪条路回家，都要解锁
-    delete $id('menu').dataset.phase;
-    document.body.classList.remove('menu-handoff');
-    $id('menu').classList.remove('hl-single', 'hl-netp');   // 走之前留下的悬停态别带回家
-    for (const b of document.querySelectorAll('#menu .mcard.pressed')) b.classList.remove('pressed');
-    menuCam.tx = 0; menuCam.tz = 1;
-  }
-  if (id === 'netp') renderLobby();
-  const nav = NAV_SCREENS.includes(id) && !inMatchOverlay;   // 对局中打开设置/帮助时不显示首页顶栏，避免误跳转回主页
-  $id('topNav').classList.toggle('hidden', !nav);
+  if (id !== 'settings' && typeof cancelKeyRebind === 'function') cancelKeyRebind();
+  cleanupTransientOverlays(id);
+
+  const inMatchOverlay = isInMatchOverlayScreen(id);
+  const nav = !!(id && typeof NAV_SCREENS !== 'undefined' && NAV_SCREENS.includes(id) && !inMatchOverlay);
+  const topNavEl = $id('topNav');
+  if (topNavEl) topNavEl.classList.toggle('hidden', !nav);
   document.body.classList.toggle('has-nav', nav);
+  if (document.documentElement) document.documentElement.classList.toggle('boot-en', false);
+  // 顶栏已展示完整账号名片与墨锭，避免 #accBar 与 #topNav 在右上角重叠
+  const accBarEl = $id('accBar');
+  if (accBarEl) accBarEl.classList.toggle('hidden', nav || !MENU_SCREENS.includes(id) || inMatchOverlay);
   if (nav) {
     for (const b of document.querySelectorAll('#topNav .tn-tabs [data-nav]')) b.classList.toggle('sel', b.dataset.nav === id);
-    renderTopNav();
+    if (typeof renderTopNav === 'function') renderTopNav();
   }
-  if (id === 'menu') {
-    renderHome(); setMenuHero(menuHeroPick());
-    // 入场只在冷启动和从对局退回时播；设置/任务之间来回属于同一次浏览，不再重放
-    const el = $id('menu'), play = !menuEntered || prev === null;
-    if (play && !prefersReduced()) {
-      delete el.dataset.enter;
-      if (!menuEntered) el.dataset.enter = 'run';          // 首帧就播，避免先亮一下再入场
-      else requestAnimationFrame(() => requestAnimationFrame(() => { if (el.classList.contains('on')) el.dataset.enter = 'run'; }));
-    } else delete el.dataset.enter;
-    menuEntered = true;
+
+  if (id && SCREEN_LIFECYCLE[id] && SCREEN_LIFECYCLE[id].onEnter) {
+    try { SCREEN_LIFECYCLE[id].onEnter(prev); } catch (e) {}
   }
-  if (id === 'settings') $id('setReplays').hidden = settingsBack !== 'menu';
-  if (id === 'acc') renderAccPage();
-  if (typeof bastionSyncHUD === 'function') bastionSyncHUD();
+  if (typeof bastionSyncHUD === 'function') {
+    try { bastionSyncHUD(); } catch (e) {}
+  }
   if (!id) {
-    refocusGame();
-  } else if (document.activeElement && !document.activeElement.closest('#' + id)) {
-    try { document.activeElement.blur(); } catch (e) {}
+    if (typeof refocusGame === 'function') refocusGame();
+  } else {
+    const ae = document.activeElement;
+    if (ae && typeof ae.closest === 'function' && !ae.closest('#' + id)) {
+      try { ae.blur(); } catch (e) {}
+    }
   }
 }
 function selectMode(mode) {

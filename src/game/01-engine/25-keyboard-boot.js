@@ -7,6 +7,7 @@ window.addEventListener('keydown', e => {
   const inTextInput = !!(e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT'));
   const mBoundInCombat = M.mode !== 'demo' && !paused && !document.querySelector('.scr.on') && !!(KEYS[0] && KEYS[0].KeyM);
   if (e.code === 'KeyM' && !inTextInput && (e.altKey || e.ctrlKey || !mBoundInCombat)) { muted = !muted; return; }
+  if (typeof EXT !== 'undefined' && EXT && EXT.on) return;
   if (typeof bastion2dActive === 'function' && bastion2dActive()) return;
   if (e.code === 'Backquote' || e.code === 'F2') { NET_HUD = !NET_HUD; return; }
   if (e.code === 'F1') {
@@ -18,7 +19,7 @@ window.addEventListener('keydown', e => {
     return;
   }
   if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) {
-    const scr = e.target.closest('.scr');
+    const scr = typeof e.target.closest === 'function' ? e.target.closest('.scr') : null;
     if ((scr && !scr.classList.contains('on')) || e.target.offsetParent === null) {
       try { e.target.blur(); } catch (err) {}
       refocusGame();
@@ -30,29 +31,43 @@ window.addEventListener('keydown', e => {
     try { e.target.blur(); } catch (err) {}
     refocusGame();
   }
-  const onBtn = (scr) => e.target && e.target.tagName === 'BUTTON' && e.target.closest('#' + scr);   // 键盘选中了页上某个按钮：Enter / 空格按它，不走快捷键
-  if (paused && document.getElementById('settings') && document.getElementById('settings').classList.contains('on') && e.code === 'Escape') {
-    e.preventDefault();
+  const onBtn = (scr) => !!(e.target && e.target.tagName === 'BUTTON' && typeof e.target.closest === 'function' && e.target.closest('#' + scr));   // 键盘选中了页上某个按钮：Enter / 空格按它，不走快捷键
+  const pauseEl = document.getElementById('pause');
+  const settingsEl = document.getElementById('settings');
+  const helpEl = document.getElementById('help');
+  const endEl = document.getElementById('end');
+  if (paused && helpEl && helpEl.classList.contains('on') && e.code === 'Escape') {
+    if (e.repeat) return;
+    e.preventDefault(); e.stopImmediatePropagation();
+    showScreen(settingsBack === 'pause' ? 'settings' : 'pause');
+    return;
+  }
+  if (paused && settingsEl && settingsEl.classList.contains('on') && e.code === 'Escape') {
+    if (e.repeat) return;
+    e.preventDefault(); e.stopImmediatePropagation();
     showScreen('pause');
     return;
   }
-  if (paused && document.getElementById('pause').classList.contains('on')) {
+  if (paused && pauseEl && pauseEl.classList.contains('on')) {
     if (e.code === 'KeyP' || e.code === 'Escape' || ((e.code === 'Space' || e.code === 'Enter') && !onBtn('pause'))) {
-      e.preventDefault();
+      if (e.repeat) return;
+      e.preventDefault(); e.stopImmediatePropagation();
       paused = false;
       showScreen(null);
       refocusGame();
       return;
     }
   }
-  if (document.getElementById('end') && document.getElementById('end').classList.contains('on')) {
+  if (endEl && endEl.classList.contains('on')) {
     if (e.code === 'Escape') {
-      e.preventDefault();
+      if (e.repeat) return;
+      e.preventDefault(); e.stopImmediatePropagation();
       toMenu();
       return;
     }
     if ((e.code === 'Space' || e.code === 'Enter') && !onBtn('end')) {
-      e.preventDefault();
+      if (e.repeat) return;
+      e.preventDefault(); e.stopImmediatePropagation();
       if (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') {
         toMenu();
         return;
@@ -63,18 +78,28 @@ window.addEventListener('keydown', e => {
     }
   }
   if (typeof teamCmdOpen === 'function' && teamCmdOpen() && e.code === 'Escape') {
-    e.preventDefault();
+    if (e.repeat) return;
+    e.preventDefault(); e.stopImmediatePropagation();
     teamCmdClose();
     return;
   }
-  if ((e.code === 'KeyP' || e.code === 'Escape') && M.mode !== 'demo' && M.mode !== 'net' && !['end', 'perk', 'draft', 'talk'].includes(M.phase)) {   // 抽秘卷、剧情对话时不弹暂停
+  if ((e.code === 'KeyP' || e.code === 'Escape') && !e.repeat && !currentScreen && !document.querySelector('.scr.on') && M.mode !== 'demo' && M.mode !== 'net' && !['end', 'perk', 'draft', 'talk'].includes(M.phase)) {   // 仅在纯对局画面响应暂停；抽秘卷、剧情对话、菜单页不弹暂停
+    e.preventDefault(); e.stopImmediatePropagation();
+    if (REPLAY.on) {
+      const rpPause = document.getElementById('rpPause');
+      if (rpPause) rpPause.click();
+      return;
+    }
     if (e.code === 'Escape' && typeof TRIAL_RUN !== 'undefined' && TRIAL_RUN.active && typeof trialLeaveTest === 'function') {
-      e.preventDefault();
       trialLeaveTest();
       return;
     }
     if (typeof teamCmdClose === 'function') teamCmdClose();
-    paused = !paused; showScreen(paused ? 'pause' : null); if (!paused) refocusGame(); return;
+    if (typeof clearAllHumanInputs === 'function') clearAllHumanInputs();
+    paused = !paused;
+    showScreen(paused ? 'pause' : null);
+    if (!paused) refocusGame();
+    return;
   }
   if (M.mode === 'demo') return;
   if (dummyBarOn()) return;   // 对手行为栏开着：方向键、回车给栏用（26-kbnav.js），不进对局

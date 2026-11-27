@@ -2414,7 +2414,7 @@ box-shadow: 0 4px 18px rgba(184,57,46,.5), inset 0 0 0 1px rgba(255,255,255,.35)
 border-radius: 3px; transform: rotate(-4deg);
 }
 body.lang-en .menuscr .mtitle .seal { margin-top: -50vh; margin-bottom: -50vh; }
-html.boot-en .scr { top: var(--nav-h); }
+html.boot-en .scr.menuscr { top: var(--nav-h); }
 body.lang-en .home-side { line-height: 1.45; }
 body.lang-en .home-side .hn-line { min-height: 2.9em; }
 .menuscr .mcard,
@@ -13025,28 +13025,16 @@ Object.assign(UI_COPY_EN, {
 "训练场": "Training Grounds",
 "教学、自由练习、专项训练": "Lessons, free practice, and focused drills",
 "招式教学、木人自由练习与情景训练": "Move lessons, dummy practice, and scenario drills",
-"从基础招式到实战应对": "From basic moves to match situations",
 "招式教学": "Move Lessons",
-"跟随步骤练习移动、连招、门派技能、格挡、精准招架、腾空闪与奥义。": "Follow guided steps to practice movement, combos, school skills, guarding, precise parries, escape flashes, and ultimates.",
 "开始完整教学": "Start Full Tutorial",
 "自由训练": "Free Practice",
 "自由训练 · 木人桩与 AI 实战对练": "Free Practice · Dummy & AI Sparring",
-"木人桩与自动回血特性": "Dummy & Auto-Heal Traits",
 "开始自由训练": "Start Free Practice",
 "点将选人开练": "Draft Hero & Train",
 "情景训练": "Scenario Drills",
-"情景训练 · 六大专项课题": "Scenario Drills · Six Focused Modules",
-"选择一种实战场景，立即在无限回血与帧判定工具辅助下反复演练。": "Choose a combat scenario to drill with auto-heal and frame inspection.",
 "连招与追击": "Combos and Follow-ups",
-"面对站桩目标练习起手、连段与追击": "Practice openers, combos, and follow-ups against a stationary target",
 "压制与破防": "Pressure and Guard Breaks",
-"面对持续格挡的目标寻找破防时机": "Find openings against a target that keeps guarding",
-"练习观察近身攻击并把握招架时机": "Read close-range attacks and practice the timing for a parry",
 "受压与脱身": "Pressure and Escape",
-"面对连段与腾空闪，练习防守和重新进攻": "Practice defending and turning the tide against combos and escape flashes",
-"实战演练": "Match Practice",
-"用当前选择的电脑境界开始一场完整对局，检验训练成果。": "Start a full match at your selected AI level and put your practice to the test.",
-"前往对战电脑": "Go to AI Match",
 });
 Object.assign(UI_COPY_EN, {
 "墨球蹴鞠": "Ink Ball",
@@ -13984,16 +13972,8 @@ Object.assign(UI_COPY_EN, {
 Object.assign(UI_COPY_EN, {
 "AI 观战": "AI Watch",
 "AI 观战 · 电脑对电脑": "AI Watch · Computer vs Computer",
-"所有模式的 AI 对决都收在这里：用上方「AI 境界」选电脑强弱，挑一个模式坐下来看，研究出招、站位和战术。": "Every AI vs AI match lives here. Pick the AI level above, choose a mode and watch to study moves, spacing and tactics.",
 "1v1 演武": "1v1 Duel",
-"两位电脑侠客单挑，可跟随山河异境投票的地图": "Two AI heroes duel one on one. Follows the Realm Maps vote if you set one.",
 "3v3 车轮": "3v3 Relay",
-"三人接力车轮战，看谁先倒下": "Three-hero relay. See which side holds out longer.",
-"四位天道电脑两两组队对决": "Four top-level AI heroes fight in two teams.",
-"每隔数秒降下随机异象，电脑见招拆招": "A random omen drops every few seconds and the AI has to adapt.",
-"电脑队伍对踢，观察传球与射门": "Two AI teams kick it out. Watch the passing and shooting.",
-"在地利各异的地图上看电脑借势作战": "Watch the AI use terrain on maps with different quirks.",
-"真元暴涨、技能免冷却的神魔大战": "Huge meter and no cooldowns: an all-out clash of gods and demons.",
 "正在载入青锋行": "Loading Qingfeng Run",
 "载入太久？检查一下网络再试": "Taking long? Check your connection and try again",
 });
@@ -40541,8 +40521,7 @@ heroPickShow(true);
 const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'armory', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare', 'gboss'];
 function navTo(name) {
 initAudio();
-if (name === 'settings' && M.mode !== 'demo') {
-if (!paused) paused = true;
+if (name === 'settings' && M.mode !== 'demo' && M.phase !== 'end' && paused) {
 settingsBack = 'pause';
 buildSettings();
 showScreen('settings');
@@ -44701,62 +44680,188 @@ let seen = false; try { seen = !!localStorage.getItem('renying-tut-seen'); } cat
 if (!seen && $id('menu').classList.contains('on')) showScreen('tutask');
 }, 1000);
 let pickMode = 'net', pickLevel = 'normal';   // 可选境界：入门 寻常 劲敌 绝顶 天道（宿敌只留给万仞剑阁内部用）
-function showScreen(id) {
-if (!menuTransitionCompleting && currentScreen === 'menu' && id !== 'menu' && document.body.classList.contains('menu-handoff')) {
-delete $id('menu').dataset.phase; document.body.classList.remove('menu-handoff'); menuLock = false;
+const SCREEN_IDS = [
+'menu', 'pause', 'end', 'replays', 'bp', 'mapBriefing', 'buffDraft',
+'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community',
+'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd',
+'towerModal', 'tournament', 'langPrompt', 'gboss', 'sagaTalk'
+];
+function clearAllHumanInputs() {
+if (typeof human !== 'undefined' && Array.isArray(human)) {
+for (const h of human) {
+if (h && typeof h.clear === 'function') h.clear();
 }
-menuTransition++;
-const prev = currentScreen; currentScreen = id;
-for (const s of ['menu', 'pause', 'end', 'replays', 'bp', 'mapBriefing', 'buffDraft', 'acc', 'lb', 'single', 'netp', 'help', 'codex', 'settings', 'community', 'welfare', 'armory', 'tasks', 'tutask', 'tutdone', 'forestEnd', 'towerModal', 'tournament', 'langPrompt', 'gboss', 'sagaTalk']) document.getElementById(s) && document.getElementById(s).classList.toggle('on', s === id);
-if (id && $id(id)) $id(id).classList.add('scr-seen');   // 打开过的面板才排版，见 style.css 的 .scr-seen
-const inMatchOverlay = (id === 'settings' || id === 'help') && settingsBack === 'pause' && M.mode !== 'demo';
-$id('accBar').classList.toggle('hidden', !MENU_SCREENS.includes(id) || inMatchOverlay);
-if (id !== 'settings') cancelKeyRebind();
-if (id !== 'bp') {
-try { showPop(null); } catch (e) {}
-if (typeof bpFinishTimer !== 'undefined' && bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
-if (prev === 'bp') { BP = null; watch2v2Bp = null; }
 }
-if (id === 'single') {
-if ($id('modal2v2') && $id('modal2v2').classList.contains('hidden')) levelBarTo(null);   // 2v2 弹窗借走的境界栏放回来
-singleSec(currentSingleTab || 'cpu');
+if (typeof TAB_SCOREBOARD !== 'undefined') TAB_SCOREBOARD = false;
 }
-if (id === 'codex' && $id('cxTabs') && !$id('cxTabs').children.length) {
-openCodex();
+function isInMatchOverlayScreen(id) {
+if (!id || M.mode === 'demo') return false;
+if ((id === 'settings' || id === 'help') && typeof settingsBack !== 'undefined' && settingsBack === 'pause') return true;
+if (id === 'replays' && typeof replaysFrom !== 'undefined' && replaysFrom === 'end') return true;
+return false;
 }
-if (id === 'menu') {
-menuLock = false;                                   // 不管从哪条路回家，都要解锁
-delete $id('menu').dataset.phase;
+function cleanupTransientOverlays(targetId) {
+for (const mid of ['modal2v2', 'modalRouge', 'modalWorld', 'rkInfo', 'rkReveal']) {
+const el = $id(mid);
+if (el && !el.classList.contains('hidden')) el.classList.add('hidden');
+}
+const hudModal = $id('hudCustomModal');
+if (hudModal && hudModal.style) hudModal.style.display = 'none';
+const tpModal = $id('worldTeleport');
+if (tpModal && !tpModal.classList.contains('hidden')) {
+if (typeof closeTeleportModal === 'function') closeTeleportModal();
+else tpModal.classList.add('hidden');
+}
+const kbHelpEl = $id('kbHelp');
+if (kbHelpEl && !kbHelpEl.hidden) kbHelpEl.hidden = true;
+if (targetId !== 'menu' && typeof heroPickShow === 'function') {
+try { heroPickShow(false); } catch (e) {}
+}
+if (targetId !== 'single') {
+const infoCard = $id('xiwuInfoCard');
+if (infoCard) infoCard.hidden = true;
+}
+if (targetId !== 'bp') {
+try { if (typeof showPop === 'function') showPop(null); } catch (e) {}
+}
+if (targetId !== 'armory') {
+const arM = $id('arModal'), arI = $id('arIns');
+if (arM && !arM.hidden && !(typeof REEL !== 'undefined' && REEL && REEL.on)) arM.hidden = true;
+if (arI && !arI.hidden) arI.hidden = true;
+}
+if (targetId) {
+if (typeof teamCmdClose === 'function' && typeof teamCmdOpen === 'function' && teamCmdOpen()) teamCmdClose();
+if (typeof dummyBarShow === 'function' && typeof dummyBarOn === 'function' && dummyBarOn()) dummyBarShow(false);
+for (const hid of ['dummyBarBtn', 'trainLab', 'trainInspect', 'trialHud', 'specHud']) {
+const el = $id(hid);
+if (el) el.classList.add('hidden');
+}
+if (targetId !== 'pause') {
+const cap = $id('sfxCaption');
+if (cap) cap.classList.add('hidden');
+}
+}
+}
+const SCREEN_LIFECYCLE = {
+menu: {
+onEnter(prev) {
+menuLock = false;
+const el = $id('menu');
+if (el) {
+delete el.dataset.phase;
+el.classList.remove('hl-single', 'hl-netp');
+}
 document.body.classList.remove('menu-handoff');
-$id('menu').classList.remove('hl-single', 'hl-netp');   // 走之前留下的悬停态别带回家
 for (const b of document.querySelectorAll('#menu .mcard.pressed')) b.classList.remove('pressed');
 menuCam.tx = 0; menuCam.tz = 1;
-}
-if (id === 'netp') renderLobby();
-const nav = NAV_SCREENS.includes(id) && !inMatchOverlay;   // 对局中打开设置/帮助时不显示首页顶栏，避免误跳转回主页
-$id('topNav').classList.toggle('hidden', !nav);
-document.body.classList.toggle('has-nav', nav);
-if (nav) {
-for (const b of document.querySelectorAll('#topNav .tn-tabs [data-nav]')) b.classList.toggle('sel', b.dataset.nav === id);
-renderTopNav();
-}
-if (id === 'menu') {
-renderHome(); setMenuHero(menuHeroPick());
-const el = $id('menu'), play = !menuEntered || prev === null;
-if (play && !prefersReduced()) {
+if (typeof renderHome === 'function') renderHome();
+if (typeof setMenuHero === 'function' && typeof menuHeroPick === 'function') setMenuHero(menuHeroPick());
+const play = !menuEntered || prev === null;
+if (el) {
+if (play && typeof prefersReduced === 'function' && !prefersReduced()) {
 delete el.dataset.enter;
-if (!menuEntered) el.dataset.enter = 'run';          // 首帧就播，避免先亮一下再入场
+if (!menuEntered) el.dataset.enter = 'run';
 else requestAnimationFrame(() => requestAnimationFrame(() => { if (el.classList.contains('on')) el.dataset.enter = 'run'; }));
 } else delete el.dataset.enter;
-menuEntered = true;
 }
-if (id === 'settings') $id('setReplays').hidden = settingsBack !== 'menu';
-if (id === 'acc') renderAccPage();
-if (typeof bastionSyncHUD === 'function') bastionSyncHUD();
+menuEntered = true;
+},
+onLeave() {
+if (typeof heroPickShow === 'function') heroPickShow(false);
+}
+},
+single: {
+onEnter() {
+if ($id('modal2v2') && $id('modal2v2').classList.contains('hidden')) levelBarTo(null);
+if (typeof singleSec === 'function') singleSec(currentSingleTab || 'cpu');
+},
+onLeave() {
+const infoCard = $id('xiwuInfoCard');
+if (infoCard) infoCard.hidden = true;
+}
+},
+netp: {
+onEnter() { if (typeof renderLobby === 'function') renderLobby(); }
+},
+codex: {
+onEnter() {
+if ($id('cxTabs') && !$id('cxTabs').children.length && typeof openCodex === 'function') openCodex();
+}
+},
+settings: {
+onEnter() {
+const setRp = $id('setReplays');
+if (setRp) setRp.hidden = settingsBack !== 'menu';
+},
+onLeave() {
+if (typeof cancelKeyRebind === 'function') cancelKeyRebind();
+}
+},
+acc: {
+onEnter() { if (typeof renderAccPage === 'function') renderAccPage(); }
+},
+bp: {
+onLeave() {
+if (typeof bpFinishTimer !== 'undefined' && bpFinishTimer) { clearTimeout(bpFinishTimer); bpFinishTimer = null; }
+BP = null; watch2v2Bp = null;
+}
+},
+tournament: {
+onLeave(next) {
+if (next !== null && typeof tourCancelAuto === 'function') tourCancelAuto();
+}
+},
+pause: {
+onEnter() {
+clearAllHumanInputs();
+}
+}
+};
+function showScreen(id) {
+if (!menuTransitionCompleting && currentScreen === 'menu' && id !== 'menu' && document.body.classList.contains('menu-handoff')) {
+const mEl = $id('menu');
+if (mEl) delete mEl.dataset.phase;
+document.body.classList.remove('menu-handoff');
+menuLock = false;
+}
+menuTransition++;
+const prev = currentScreen;
+if (prev && prev !== id && SCREEN_LIFECYCLE[prev] && SCREEN_LIFECYCLE[prev].onLeave) {
+try { SCREEN_LIFECYCLE[prev].onLeave(id); } catch (e) {}
+}
+currentScreen = id;
+for (const s of SCREEN_IDS) {
+const el = document.getElementById(s);
+if (el) el.classList.toggle('on', s === id);
+}
+if (id && $id(id)) $id(id).classList.add('scr-seen');   // 打开过的面板才排版，见 style.css 的 .scr-seen
+if (id !== 'settings' && typeof cancelKeyRebind === 'function') cancelKeyRebind();
+cleanupTransientOverlays(id);
+const inMatchOverlay = isInMatchOverlayScreen(id);
+const nav = !!(id && typeof NAV_SCREENS !== 'undefined' && NAV_SCREENS.includes(id) && !inMatchOverlay);
+const topNavEl = $id('topNav');
+if (topNavEl) topNavEl.classList.toggle('hidden', !nav);
+document.body.classList.toggle('has-nav', nav);
+if (document.documentElement) document.documentElement.classList.toggle('boot-en', false);
+const accBarEl = $id('accBar');
+if (accBarEl) accBarEl.classList.toggle('hidden', nav || !MENU_SCREENS.includes(id) || inMatchOverlay);
+if (nav) {
+for (const b of document.querySelectorAll('#topNav .tn-tabs [data-nav]')) b.classList.toggle('sel', b.dataset.nav === id);
+if (typeof renderTopNav === 'function') renderTopNav();
+}
+if (id && SCREEN_LIFECYCLE[id] && SCREEN_LIFECYCLE[id].onEnter) {
+try { SCREEN_LIFECYCLE[id].onEnter(prev); } catch (e) {}
+}
+if (typeof bastionSyncHUD === 'function') {
+try { bastionSyncHUD(); } catch (e) {}
+}
 if (!id) {
-refocusGame();
-} else if (document.activeElement && !document.activeElement.closest('#' + id)) {
-try { document.activeElement.blur(); } catch (e) {}
+if (typeof refocusGame === 'function') refocusGame();
+} else {
+const ae = document.activeElement;
+if (ae && typeof ae.closest === 'function' && !ae.closest('#' + id)) {
+try { ae.blur(); } catch (e) {}
+}
 }
 }
 function selectMode(mode) {
@@ -45740,12 +45845,18 @@ refocusGame();
 });
 function toMenu(returnHome = false) {
 if (typeof trialStop === 'function') trialStop();
+if (typeof tourCancelAuto === 'function') tourCancelAuto();
+if (typeof teamCmdClose === 'function') teamCmdClose();
+if (typeof dummyBarShow === 'function' && typeof dummyBarOn === 'function' && dummyBarOn()) dummyBarShow(false);
+if (typeof clearAllHumanInputs === 'function') clearAllHumanInputs();
 if (typeof competitiveDraftStopTimer === 'function') competitiveDraftStopTimer();
 if (typeof mapBriefingTimer !== 'undefined' && mapBriefingTimer) { clearInterval(mapBriefingTimer); mapBriefingTimer = null; }
 if (typeof competitiveDraft !== 'undefined') competitiveDraft = null;
 if (typeof onlineCompetitiveDraft !== 'undefined') onlineCompetitiveDraft = null;
+if (typeof settingsBack !== 'undefined') settingsBack = 'menu';
+if (typeof replaysFrom !== 'undefined') replaysFrom = 'menu';
 ROLL.on = false; REC.on = false;
-if (REPLAY.on) { REPLAY.on = false; $id('rpBar').classList.add('hidden'); }
+if (REPLAY.on) { REPLAY.on = false; const rpb = $id('rpBar'); if (rpb) rpb.classList.add('hidden'); }
 if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
 if (WORLD.on) worldLeave();
 M.worldKey = null;
@@ -56722,6 +56833,7 @@ initAudio();
 const inTextInput = !!(e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT'));
 const mBoundInCombat = M.mode !== 'demo' && !paused && !document.querySelector('.scr.on') && !!(KEYS[0] && KEYS[0].KeyM);
 if (e.code === 'KeyM' && !inTextInput && (e.altKey || e.ctrlKey || !mBoundInCombat)) { muted = !muted; return; }
+if (typeof EXT !== 'undefined' && EXT && EXT.on) return;
 if (typeof bastion2dActive === 'function' && bastion2dActive()) return;
 if (e.code === 'Backquote' || e.code === 'F2') { NET_HUD = !NET_HUD; return; }
 if (e.code === 'F1') {
@@ -56733,7 +56845,7 @@ say(debugHitbox ? '判定框透视：开启' : '判定框透视：关闭', 0.8, 
 return;
 }
 if (e.target && (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT')) {
-const scr = e.target.closest('.scr');
+const scr = typeof e.target.closest === 'function' ? e.target.closest('.scr') : null;
 if ((scr && !scr.classList.contains('on')) || e.target.offsetParent === null) {
 try { e.target.blur(); } catch (err) {}
 refocusGame();
@@ -56745,29 +56857,43 @@ if (e.target && e.target.tagName === 'BUTTON' && M.mode !== 'demo' && !paused &&
 try { e.target.blur(); } catch (err) {}
 refocusGame();
 }
-const onBtn = (scr) => e.target && e.target.tagName === 'BUTTON' && e.target.closest('#' + scr);   // 键盘选中了页上某个按钮：Enter / 空格按它，不走快捷键
-if (paused && document.getElementById('settings') && document.getElementById('settings').classList.contains('on') && e.code === 'Escape') {
-e.preventDefault();
+const onBtn = (scr) => !!(e.target && e.target.tagName === 'BUTTON' && typeof e.target.closest === 'function' && e.target.closest('#' + scr));   // 键盘选中了页上某个按钮：Enter / 空格按它，不走快捷键
+const pauseEl = document.getElementById('pause');
+const settingsEl = document.getElementById('settings');
+const helpEl = document.getElementById('help');
+const endEl = document.getElementById('end');
+if (paused && helpEl && helpEl.classList.contains('on') && e.code === 'Escape') {
+if (e.repeat) return;
+e.preventDefault(); e.stopImmediatePropagation();
+showScreen(settingsBack === 'pause' ? 'settings' : 'pause');
+return;
+}
+if (paused && settingsEl && settingsEl.classList.contains('on') && e.code === 'Escape') {
+if (e.repeat) return;
+e.preventDefault(); e.stopImmediatePropagation();
 showScreen('pause');
 return;
 }
-if (paused && document.getElementById('pause').classList.contains('on')) {
+if (paused && pauseEl && pauseEl.classList.contains('on')) {
 if (e.code === 'KeyP' || e.code === 'Escape' || ((e.code === 'Space' || e.code === 'Enter') && !onBtn('pause'))) {
-e.preventDefault();
+if (e.repeat) return;
+e.preventDefault(); e.stopImmediatePropagation();
 paused = false;
 showScreen(null);
 refocusGame();
 return;
 }
 }
-if (document.getElementById('end') && document.getElementById('end').classList.contains('on')) {
+if (endEl && endEl.classList.contains('on')) {
 if (e.code === 'Escape') {
-e.preventDefault();
+if (e.repeat) return;
+e.preventDefault(); e.stopImmediatePropagation();
 toMenu();
 return;
 }
 if ((e.code === 'Space' || e.code === 'Enter') && !onBtn('end')) {
-e.preventDefault();
+if (e.repeat) return;
+e.preventDefault(); e.stopImmediatePropagation();
 if (isAiVsAi() || M.watchAi || M.mode === 'watch2v2') {
 toMenu();
 return;
@@ -56778,18 +56904,28 @@ return;
 }
 }
 if (typeof teamCmdOpen === 'function' && teamCmdOpen() && e.code === 'Escape') {
-e.preventDefault();
+if (e.repeat) return;
+e.preventDefault(); e.stopImmediatePropagation();
 teamCmdClose();
 return;
 }
-if ((e.code === 'KeyP' || e.code === 'Escape') && M.mode !== 'demo' && M.mode !== 'net' && !['end', 'perk', 'draft', 'talk'].includes(M.phase)) {   // 抽秘卷、剧情对话时不弹暂停
+if ((e.code === 'KeyP' || e.code === 'Escape') && !e.repeat && !currentScreen && !document.querySelector('.scr.on') && M.mode !== 'demo' && M.mode !== 'net' && !['end', 'perk', 'draft', 'talk'].includes(M.phase)) {   // 仅在纯对局画面响应暂停；抽秘卷、剧情对话、菜单页不弹暂停
+e.preventDefault(); e.stopImmediatePropagation();
+if (REPLAY.on) {
+const rpPause = document.getElementById('rpPause');
+if (rpPause) rpPause.click();
+return;
+}
 if (e.code === 'Escape' && typeof TRIAL_RUN !== 'undefined' && TRIAL_RUN.active && typeof trialLeaveTest === 'function') {
-e.preventDefault();
 trialLeaveTest();
 return;
 }
 if (typeof teamCmdClose === 'function') teamCmdClose();
-paused = !paused; showScreen(paused ? 'pause' : null); if (!paused) refocusGame(); return;
+if (typeof clearAllHumanInputs === 'function') clearAllHumanInputs();
+paused = !paused;
+showScreen(paused ? 'pause' : null);
+if (!paused) refocusGame();
+return;
 }
 if (M.mode === 'demo') return;
 if (dummyBarOn()) return;   // 对手行为栏开着：方向键、回车给栏用（26-kbnav.js），不进对局
@@ -57130,6 +57266,7 @@ if (close) { close.click(); return true; }
 if (!main.classList.contains('scr')) return false;
 const id = main.id;
 if (id === 'pause' || id === 'end' || id === 'sagaTalk' || id === 'menu') return false;   // 暂停、结算、剧情对话有自己的 Esc
+if (id === 'help' && typeof settingsBack !== 'undefined' && settingsBack === 'pause' && M.mode !== 'demo') { showScreen('settings'); return true; }
 if (id === 'bp' && bpMode === 'net') return false;   // 联机禁选时按 Esc 不会把人带出房间
 const btn = KBN_BACK[id] !== undefined ? (KBN_BACK[id] && $id(KBN_BACK[id])) : [...main.querySelectorAll('[data-back]')].find(kbnShown);
 if (KBN_BACK[id] === '') return true;

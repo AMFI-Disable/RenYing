@@ -137,8 +137,7 @@ $id('endChangeHeroBtn').addEventListener('click', () => {
 const NAV_SCREENS = ['menu', 'single', 'netp', 'codex', 'armory', 'tasks', 'community', 'replays', 'lb', 'acc', 'settings', 'help', 'welfare', 'gboss'];
 function navTo(name) {
   initAudio();
-  if (name === 'settings' && M.mode !== 'demo') {
-    if (!paused) paused = true;
+  if (name === 'settings' && M.mode !== 'demo' && M.phase !== 'end' && paused) {
     settingsBack = 'pause';
     buildSettings();
     showScreen('settings');

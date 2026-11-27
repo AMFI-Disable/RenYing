@@ -136,6 +136,7 @@ function kbnBack(roots) {
   if (!main.classList.contains('scr')) return false;
   const id = main.id;
   if (id === 'pause' || id === 'end' || id === 'sagaTalk' || id === 'menu') return false;   // 暂停、结算、剧情对话有自己的 Esc
+  if (id === 'help' && typeof settingsBack !== 'undefined' && settingsBack === 'pause' && M.mode !== 'demo') { showScreen('settings'); return true; }
   if (id === 'bp' && bpMode === 'net') return false;   // 联机禁选时按 Esc 不会把人带出房间
   const btn = KBN_BACK[id] !== undefined ? (KBN_BACK[id] && $id(KBN_BACK[id])) : [...main.querySelectorAll('[data-back]')].find(kbnShown);
   if (KBN_BACK[id] === '') return true;

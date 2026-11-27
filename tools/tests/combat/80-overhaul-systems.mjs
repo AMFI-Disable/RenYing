@@ -1040,7 +1040,7 @@ export default [
         if (trainSubTab !== 'trials') return { pass: false, error: 'Legacy match tab should normalize to trials, got ' + trainSubTab };
         renderComboTrialsPane('qingfeng');
         const selHtml = ($id('trialHeroSelect') || {}).innerHTML || '';
-        const heroPillCount = (selHtml.match(/data-trial-hero="/g) || []).length;
+        const heroPillCount = (selHtml.match(/data-trial-pick="/g) || []).length;
         if (heroPillCount !== 20) return { pass: false, error: 'Expected 20 hero selector pills in #trialHeroSelect, got ' + heroPillCount };
 
         // 2. Start Qingfeng Tier 1, verify single Leave Test control & competing chrome hidden
@@ -1245,6 +1245,83 @@ export default [
         Object.assign(SETTINGS, prev);
         saveSettings();
         toMenu();
+      }
+      return { pass: true };
+    })()`
+  },
+  {
+    name: 'Page Lifecycle Manager: Esc gameplay safety, topNav/accBar isolation across all 26 screens, overlay cleanup, and Pause->Settings->Help / End->Replays navigation',
+    fn: `(() => {
+      try {
+        // 1. Verify SCREEN_IDS covers all 26 screens and topNav/accBar never overlap
+        if (!Array.isArray(SCREEN_IDS) || SCREEN_IDS.length !== 26) {
+          return { pass: false, error: 'Expected 26 SCREEN_IDS, got ' + (SCREEN_IDS ? SCREEN_IDS.length : 0) };
+        }
+        settingsBack = 'menu';
+        replaysFrom = 'menu';
+        M.mode = 'demo';
+        for (const sid of SCREEN_IDS) {
+          showScreen(sid);
+          const wantNav = NAV_SCREENS.includes(sid);
+          const navHidden = $id('topNav').classList.contains('hidden');
+          const accHidden = $id('accBar').classList.contains('hidden');
+          if (wantNav && navHidden) return { pass: false, error: 'topNav unexpectedly hidden on NAV screen: ' + sid };
+          if (!wantNav && !navHidden) return { pass: false, error: 'topNav leaked onto non-NAV screen: ' + sid };
+          if (!navHidden && !accHidden) return { pass: false, error: 'accBar overlapped topNav on screen: ' + sid };
+        }
+
+        // 2. Verify Escape during active gameplay pauses cleanly, clears held inputs, ignores repeat, and resumes cleanly
+        startMatch('cpu', 'normal', [0, 1]);
+        showScreen(null);
+        M.phase = 'fight';
+        paused = false;
+        human[0].held.right = true;
+        human[0].held.atk = true;
+        const dispatchEsc = (repeat = false) => window.dispatchEvent({
+          type: 'keydown', code: 'Escape', key: 'Escape', repeat, isTrusted: true,
+          target: document.body, ctrlKey: false, metaKey: false, altKey: false, shiftKey: false, isComposing: false,
+          preventDefault() {}, stopPropagation() {}, stopImmediatePropagation() {}
+        });
+        dispatchEsc(false);
+        if (!paused || currentScreen !== 'pause') return { pass: false, error: 'First Escape did not pause match' };
+        if (human[0].held.right || human[0].held.atk) return { pass: false, error: 'Pausing did not clear held inputs' };
+        if (!$id('topNav').classList.contains('hidden')) return { pass: false, error: 'topNav leaked on pause screen' };
+        dispatchEsc(true); // repeat must be ignored
+        if (!paused || currentScreen !== 'pause') return { pass: false, error: 'Repeated Escape unexpectedly toggled pause' };
+
+        // 3. Pause -> Settings -> Help -> Escape must return to Settings -> Pause (never leak #menu + #topNav)
+        $id('pauseSet').click();
+        if (currentScreen !== 'settings' || !$id('topNav').classList.contains('hidden')) {
+          return { pass: false, error: 'Pause->Settings leaked topNav or wrong screen: ' + currentScreen };
+        }
+        $id('setHelp').click();
+        if (currentScreen !== 'help' || !$id('topNav').classList.contains('hidden')) {
+          return { pass: false, error: 'Pause->Settings->Help leaked topNav or wrong screen: ' + currentScreen };
+        }
+        dispatchEsc(false);
+        if (currentScreen !== 'settings' || !paused) return { pass: false, error: 'Esc from in-match Help did not return to Settings: ' + currentScreen };
+        dispatchEsc(false);
+        if (currentScreen !== 'pause' || !paused) return { pass: false, error: 'Esc from in-match Settings did not return to Pause: ' + currentScreen };
+        dispatchEsc(false);
+        if (paused || currentScreen !== null) return { pass: false, error: 'Esc from Pause did not resume gameplay' };
+
+        // 4. End -> Replays must keep topNav hidden and return cleanly to End
+        M.phase = 'end';
+        showScreen('end');
+        replaysFrom = 'end';
+        showScreen('replays');
+        if (!$id('topNav').classList.contains('hidden')) return { pass: false, error: 'topNav leaked on End->Replays overlay' };
+
+        // 5. Transient overlays are cleaned up on showScreen('menu')
+        for (const oid of ['modal2v2', 'modalRouge', 'modalWorld', 'rkInfo', 'trainLab', 'trainInspect', 'trialHud', 'specHud']) {
+          $id(oid).classList.remove('hidden');
+        }
+        toMenu(true);
+        for (const oid of ['modal2v2', 'modalRouge', 'modalWorld', 'rkInfo', 'trainLab', 'trainInspect', 'trialHud', 'specHud']) {
+          if (!$id(oid).classList.contains('hidden')) return { pass: false, error: 'Overlay leaked onto menu after toMenu(): ' + oid };
+        }
+      } finally {
+        toMenu(true);
       }
       return { pass: true };
     })()`

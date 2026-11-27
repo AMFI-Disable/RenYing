@@ -158,11 +158,21 @@ async function initRunner() {
   const getEl = id => {
     if (!elCache[id]) {
       const clicks = [];
+      const cls = new Set();
       elCache[id] = Object.assign({}, dummyEl, {
         addEventListener(type, callback) { if (type === 'click') clicks.push(callback); },
         click() { for (const callback of clicks) callback({ target: this }); },
         id, textContent: '', innerHTML: '', style: {},
-        classList: { add: () => {}, remove: () => {}, toggle: () => {}, contains: () => false }
+        classList: {
+          add: (...cs) => { for (const c of cs) if (c) cls.add(c); },
+          remove: (...cs) => { for (const c of cs) cls.delete(c); },
+          toggle: (c, force) => {
+            if (force === undefined) { if (cls.has(c)) { cls.delete(c); return false; } cls.add(c); return true; }
+            if (force) { cls.add(c); return true; }
+            cls.delete(c); return false;
+          },
+          contains: c => cls.has(c)
+        }
       });
     }
     return elCache[id];

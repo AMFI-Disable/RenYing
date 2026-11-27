@@ -152,12 +152,18 @@ document.getElementById('pause').addEventListener('click', e => {
 
 function toMenu(returnHome = false) {
   if (typeof trialStop === 'function') trialStop();
+  if (typeof tourCancelAuto === 'function') tourCancelAuto();
+  if (typeof teamCmdClose === 'function') teamCmdClose();
+  if (typeof dummyBarShow === 'function' && typeof dummyBarOn === 'function' && dummyBarOn()) dummyBarShow(false);
+  if (typeof clearAllHumanInputs === 'function') clearAllHumanInputs();
   if (typeof competitiveDraftStopTimer === 'function') competitiveDraftStopTimer();
   if (typeof mapBriefingTimer !== 'undefined' && mapBriefingTimer) { clearInterval(mapBriefingTimer); mapBriefingTimer = null; }
   if (typeof competitiveDraft !== 'undefined') competitiveDraft = null;
   if (typeof onlineCompetitiveDraft !== 'undefined') onlineCompetitiveDraft = null;
+  if (typeof settingsBack !== 'undefined') settingsBack = 'menu';
+  if (typeof replaysFrom !== 'undefined') replaysFrom = 'menu';
   ROLL.on = false; REC.on = false;
-  if (REPLAY.on) { REPLAY.on = false; $id('rpBar').classList.add('hidden'); }
+  if (REPLAY.on) { REPLAY.on = false; const rpb = $id('rpBar'); if (rpb) rpb.classList.add('hidden'); }
   if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
   if (WORLD.on) worldLeave();
   M.worldKey = null;
