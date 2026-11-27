@@ -114,7 +114,7 @@ function applyHit(att, def, m, pt) {
       if (!m.isProj) {
         att.state = 'hitstun'; att.t = 0; att.stun = 0.18; att.vx = -att.face * 180;
       }
-      SFX.parry();
+      SFX.parry({ x: pt[0] });
       haptic([20, 30, 20]);
       shake = Math.max(shake, 6);
       ring(pt[0], pt[1], 130, '120,230,255', 0.4);
@@ -553,7 +553,7 @@ function hitVisual(ev, quiet) {
   }
   if (ev.blk) {
     shake = Math.max(shake, 3);
-    blockFX(ev.x, ev.y, fdir); SFX.block();
+    blockFX(ev.x, ev.y, fdir); SFX.block({ x: ev.x });
     return;
   }
   if (ev.armor) {
@@ -624,7 +624,7 @@ function hitVisual(ev, quiet) {
       s: ev.blk ? 0.62 : clamp(0.72 + dd / 20, 0.75, 1.25), rgb: ev.blk ? '170,180,200' : big ? '255,210,90' : '255,250,240', edge: fighterByIdx(ev.a) ? fighterByIdx(ev.a).look.slash : '255,255,255' });
   }
   if (ev.root) { for (let i = 0; i < 14; i++) addP({ type: 'ink', x: def.x + rand(-30, 30), y: -rand(0, 30), vx: rand(-60, 60), vy: rand(-200, -40), g: 900, life: 0.7, max: 0.7, r: rand(2, 5), rgb: '15,15,22' }); addP({ type: 'text', text: '定', x: def.x, y: def.y - 130, life: 0.8, max: 0.8, rgb: '210,210,230' }); }
-  SFX.hit(Math.min(1.2, 0.5 + ev.dmg / 12));
+  SFX.hit(Math.min(1.2, 0.5 + ev.dmg / 12), { x: ev.x, combo: ev.cn || 1 });
   if (!ev.blk) {
     const elem = ev.elem || (att && (
       att.ch.id === 'leiming' ? 'thunder' :
@@ -645,7 +645,7 @@ function hitVisual(ev, quiet) {
   if (ev.ko) {
     slowmo = 1.3; shake = 26; flashA = 0.7; flashRGB = '255,255,255';
     camImpact(ev.x, ev.y, 0.42, 1.4);
-    say('斩', 1.6, 'ko'); SFX.ko(); SFX.voiceHurt(0.75);
+    say('斩', 1.6, 'ko'); SFX.ko({ x: ev.x }); SFX.voiceHurt(0.75);
   }
 }
 const PUSH_SKIP_STATES = new Set(['dash', 'special', 'launched', 'knockdown', 'held', 'getup', 'aircharge']);

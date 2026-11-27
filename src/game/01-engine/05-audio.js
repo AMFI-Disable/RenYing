@@ -39,25 +39,77 @@ document.addEventListener('pointerover', e => {
     if (typeof SFX !== 'undefined' && typeof SFX.brush === 'function') SFX.brush();
   }
 }, { passive: true });
-function sNoise(dur, f0, f1, q, vol, type = 'bandpass') {
+// 空间立体声定位、连击升调与音效字幕辅助（纯表现层，零回滚影响）
+function sfxPanFor(worldX) {
+  if (typeof SETTINGS !== 'undefined' && SETTINGS.spatialAudio === false) return 0;
+  if (!Number.isFinite(worldX)) return 0;
+  const cx = typeof cam !== 'undefined' && cam && Number.isFinite(cam.x) ? cam.x : STAGE_W * 0.5;
+  const sc = typeof worldScale === 'function' ? Math.max(0.25, worldScale()) : 1;
+  const halfSpan = Math.max(360, ((typeof W === 'number' && W > 0 ? W : 1280) / sc) * 0.5);
+  return clamp((worldX - cx) / halfSpan, -0.85, 0.85);
+}
+function sfxOut(pan = 0) {
+  if (!AC || !master) return master;
+  if (typeof SETTINGS !== 'undefined' && SETTINGS.spatialAudio === false) return master;
+  if (!Number.isFinite(pan) || Math.abs(pan) < 0.02 || typeof AC.createStereoPanner !== 'function') return master;
+  try {
+    const p = AC.createStereoPanner();
+    p.pan.value = clamp(pan, -0.85, 0.85);
+    p.connect(master);
+    return p;
+  } catch (e) { return master; }
+}
+function comboPitchMul(combo) {
+  const n = Math.max(1, combo | 0);
+  return 1 + Math.min(0.45, (n - 1) * 0.045);
+}
+const SFX_CAPTIONS = [];
+let _sfxCapTimer = 0;
+function sfxCaption(label, kind = 'hit', pan = 0) {
+  if (typeof RESIM !== 'undefined' && RESIM) return;
+  if (typeof SETTINGS === 'undefined' || !SETTINGS.audioCaptions || !label) return;
+  const dir = pan < -0.22 ? '◀ ' : pan > 0.22 ? '▶ ' : '';
+  const text = dir + (typeof cvT === 'function' ? cvT(label) : label);
+  const now = Date.now();
+  SFX_CAPTIONS.push({ text, kind, at: now });
+  while (SFX_CAPTIONS.length > 3) SFX_CAPTIONS.shift();
+  sfxCaptionRender();
+}
+function sfxCaptionRender() {
+  if (typeof document === 'undefined') return;
+  const el = document.getElementById('sfxCaption');
+  if (!el) return;
+  const now = Date.now();
+  while (SFX_CAPTIONS.length && now - SFX_CAPTIONS[0].at > 1600) SFX_CAPTIONS.shift();
+  if (!SFX_CAPTIONS.length || (typeof SETTINGS !== 'undefined' && !SETTINGS.audioCaptions)) {
+    el.classList.add('hidden');
+    el.innerHTML = '';
+    return;
+  }
+  el.classList.remove('hidden');
+  el.innerHTML = SFX_CAPTIONS.map(c => `<span class="sfx-cap-pill k-${c.kind}">${c.text}</span>`).join('');
+  clearTimeout(_sfxCapTimer);
+  _sfxCapTimer = setTimeout(sfxCaptionRender, 600);
+}
+function sNoise(dur, f0, f1, q, vol, type = 'bandpass', pan = 0) {
   if (!AC || muted || ![dur, f0, f1, q, vol].every(Number.isFinite)) return;   // 数值不对就不播，免得浏览器报错
   const t = AC.currentTime, src = AC.createBufferSource(), fl = AC.createBiquadFilter(), g = AC.createGain();
   src.buffer = noiseBuf; fl.type = type; fl.Q.value = q;
   fl.frequency.setValueAtTime(f0, t); fl.frequency.exponentialRampToValueAtTime(f1, t + dur);
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  src.connect(fl).connect(g).connect(master); src.start(t, Math.random() * 0.3); src.stop(t + dur + 0.02);
+  src.connect(fl).connect(g).connect(sfxOut(pan)); src.start(t, Math.random() * 0.3); src.stop(t + dur + 0.02);
 }
-function sTone(f0, f1, dur, vol, type = 'sine') {
+function sTone(f0, f1, dur, vol, type = 'sine', pan = 0) {
   if (!AC || muted || ![f0, f1, dur, vol].every(Number.isFinite)) return;
   const t = AC.currentTime, o = AC.createOscillator(), g = AC.createGain();
   o.type = type; o.frequency.setValueAtTime(f0, t); o.frequency.exponentialRampToValueAtTime(Math.max(20, f1), t + dur);
   g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol, t + 0.008); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-  o.connect(g).connect(master); o.start(t); o.stop(t + dur + 0.02);
+  o.connect(g).connect(sfxOut(pan)); o.start(t); o.stop(t + dur + 0.02);
 }
 // 金属振动：几组不成整数倍的泛音，每组两个略微走音的正弦波产生“嗡嗡”的拍频，这就是刀身的声音
-function metal(f0, dur, vol) {
+function metal(f0, dur, vol, pan = 0) {
   if (!AC || muted || ![f0, dur, vol].every(Number.isFinite)) return;
-  const t = AC.currentTime, ratios = [1, 2.32, 4.25, 6.63, 9.38, 12.5];
+  const t = AC.currentTime, out = sfxOut(pan), ratios = [1, 2.32, 4.25, 6.63, 9.38, 12.5];
   ratios.forEach((r, i) => {
     if (f0 * r > 15000) return;
     for (const det of [1, 1.0037]) {
@@ -65,32 +117,42 @@ function metal(f0, dur, vol) {
       o.frequency.value = f0 * r * det;
       const v = vol * Math.pow(0.6, i) * (det === 1 ? 1 : 0.6), d = dur * Math.pow(0.7, i);
       g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(v, t + 0.002); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-      o.connect(g).connect(master); o.start(t); o.stop(t + d + 0.02);
+      o.connect(g).connect(out); o.start(t); o.stop(t + d + 0.02);
     }
   });
 }
 const SFX = {
   iceSlide() { sNoise(0.13, 4500, 1800, 1.2, 0.07, 'highpass'); },
   cliffFall() { sNoise(0.45, 900, 120, 0.7, 0.18, 'lowpass'); sTone(180, 70, 0.25, 0.08, 'triangle'); },
-  terrainLightning() { sNoise(0.12, 9000, 2200, 1, 0.16, 'highpass'); },
+  terrainLightning() { sNoise(0.12, 9000, 2200, 1, 0.16, 'highpass'); sfxCaption('天雷轰鸣', 'ult', 0); },
   swing() { sNoise(0.16, 3400, 700, 2.2, 0.26); sNoise(0.06, 7000, 5000, 0.7, 0.05, 'highpass'); },          // 挥刀破风
   heavy() { sNoise(0.26, 2400, 380, 1.6, 0.34); sNoise(0.1, 6000, 3000, 0.7, 0.07, 'highpass'); },
-  hit(p = 1) {                                                                                                  // 刀砍中
-    sNoise(0.025, 9000, 4000, 0.7, 0.5 * p, 'highpass');     // 刃口的脆响
-    sNoise(0.15, 4200, 900, 1.1, 0.42 * p);                  // 切开的嘶声
-    metal(2000 + rand(-150, 150), 0.25, 0.05 * p);           // 刀身轻颤
-    sTone(140, 42, 0.17, 0.5 * p);                           // 闷击
+  hit(p = 1, opts = null) {                                                                                     // 刀砍中（支持立体声定位与连击升调）
+    const pan = opts && Number.isFinite(opts.x) ? sfxPanFor(opts.x) : 0;
+    const combo = opts && opts.combo ? (opts.combo | 0) : 1;
+    const pm = comboPitchMul(combo);
+    sNoise(0.025, Math.min(14000, 9000 * pm), Math.min(8000, 4000 * pm), 0.7, 0.5 * p, 'highpass', pan);
+    sNoise(0.15, 4200, 900, 1.1, 0.42 * p, 'bandpass', pan);
+    metal((2000 + rand(-150, 150)) * pm, 0.25, 0.05 * p, pan);
+    sTone(140 * Math.min(1.25, pm), 42, 0.17, 0.5 * p, 'sine', pan);
+    if (combo >= 3) bellAt(880 * pm, 0, 0.18, Math.min(0.05, 0.025 * p), pan);
+    if (combo >= 3) sfxCaption('连击命中', 'hit', pan);
+    else if (p >= 1) sfxCaption('重击命中', 'hit', pan);
   },
-  block() {                                                                                                 // 刀剑相击
+  block(opts = null) {                                                                                          // 刀剑相击
+    const pan = opts && Number.isFinite(opts.x) ? sfxPanFor(opts.x) : 0;
     const f = rand(760, 880);
-    sNoise(0.02, 10000, 5000, 0.7, 0.55, 'highpass');
-    metal(f, 1.1, 0.16); metal(f * 1.51, 0.7, 0.07);
-    sNoise(0.3, 6500, 2600, 7, 0.12);                        // 刃口摩擦的尾音
+    sNoise(0.02, 10000, 5000, 0.7, 0.55, 'highpass', pan);
+    metal(f, 1.1, 0.16, pan); metal(f * 1.51, 0.7, 0.07, pan);
+    sNoise(0.3, 6500, 2600, 7, 0.12, 'bandpass', pan);
+    sfxCaption('格挡抵御', 'block', pan);
   },
-  parry() {                                                                                                 // 招架、拼刀清脆鸣响
+  parry(opts = null) {                                                                                          // 招架、拼刀清脆鸣响
+    const pan = opts && Number.isFinite(opts.x) ? sfxPanFor(opts.x) : 0;
     const f = rand(980, 1120);
-    sNoise(0.015, 12000, 6000, 0.8, 0.6, 'highpass');
-    metal(f, 1.3, 0.22); metal(f * 1.62, 0.8, 0.1);
+    sNoise(0.015, 12000, 6000, 0.8, 0.6, 'highpass', pan);
+    metal(f, 1.3, 0.22, pan); metal(f * 1.62, 0.8, 0.1, pan);
+    sfxCaption('精准招架', 'parry', pan);
   },
   slice() { sNoise(0.02, 9000, 5000, 0.7, 0.35, 'highpass'); sNoise(0.08, 5000, 1500, 1.5, 0.22); metal(2500 + rand(-200, 200), 0.14, 0.035); },
   brush() { sNoise(0.06, 3200, 1100, 0.8, 0.045, 'bandpass'); },
@@ -98,14 +160,22 @@ const SFX = {
   jump() { sNoise(0.1, 600, 1200, 1, 0.08); },
   land() { sTone(95, 50, 0.1, 0.15); },
   thud() { sTone(80, 35, 0.3, 0.4); sNoise(0.2, 800, 100, 0.6, 0.3, 'lowpass'); },
-  superOn() { sNoise(0.45, 1200, 7000, 9, 0.16); metal(1650, 1.4, 0.13); sTone(80, 40, 0.6, 0.3); },          // 拔刀出鞘
-  ko() { metal(520, 2.2, 0.2); metal(780, 1.6, 0.1); sTone(130, 28, 1.1, 0.6); sNoise(0.8, 1600, 80, 0.5, 0.45, 'lowpass'); },
+  superOn(opts = null) {
+    const pan = opts && Number.isFinite(opts.x) ? sfxPanFor(opts.x) : 0;
+    sNoise(0.45, 1200, 7000, 9, 0.16, 'bandpass', pan); metal(1650, 1.4, 0.13, pan); sTone(80, 40, 0.6, 0.3, 'sine', pan);
+    sfxCaption('绝技发动', 'ult', pan);
+  },          // 拔刀出鞘
+  ko(opts = null) {
+    const pan = opts && Number.isFinite(opts.x) ? sfxPanFor(opts.x) : 0;
+    metal(520, 2.2, 0.2, pan); metal(780, 1.6, 0.1, pan); sTone(130, 28, 1.1, 0.6, 'sine', pan); sNoise(0.8, 1600, 80, 0.5, 0.45, 'lowpass', pan);
+    sfxCaption('一击斩决', 'ko', pan);
+  },
   charge() { sNoise(0.6, 800, 3200, 6, 0.07); },                                                            // 刀刃摩擦上扬
-  chargeFull() { metal(1480, 1.2, 0.12); sNoise(0.25, 3000, 8000, 5, 0.08); },
+  chargeFull() { metal(1480, 1.2, 0.12); sNoise(0.25, 3000, 8000, 5, 0.08); sfxCaption('蓄力圆满', 'stance', 0); },
   poof() { sNoise(0.35, 2600, 300, 0.8, 0.32, 'lowpass'); sNoise(0.12, 5000, 2000, 1, 0.1); sTone(620, 220, 0.12, 0.08, 'triangle'); },
   wood() { sTone(430, 180, 0.12, 0.3, 'triangle'); sNoise(0.08, 1800, 600, 2, 0.3); },
   thunder() { sNoise(0.04, 9000, 4000, 0.7, 0.6, 'highpass'); sNoise(0.9, 2500, 60, 0.5, 0.5, 'lowpass'); sTone(70, 30, 0.9, 0.5); },
-  escape() { sNoise(0.25, 600, 5000, 1.2, 0.25); metal(1700, 0.5, 0.06); },
+  escape() { sNoise(0.25, 600, 5000, 1.2, 0.25); metal(1700, 0.5, 0.06); sfxCaption('腾空闪避', 'stance', 0); },
   gong() { metal(210, 2.4, 0.16); sTone(220, 200, 1.4, 0.12, 'triangle'); },
   note(n = 0) { const f0 = [660, 784, 880, 1047][Math.min(3, n | 0)]; sTone(f0, f0 * 0.995, 0.5, 0.12, 'triangle'); sTone(f0 * 2, f0 * 2, 0.25, 0.04); },   // 箫音
   drink() { sNoise(0.25, 500, 900, 3, 0.12); sTone(220, 160, 0.18, 0.08); },   // 咕嘟一口
@@ -181,26 +251,30 @@ const SFX = {
       sTone(310, 150, 0.14, 0.16 * v, 'triangle'); bellAt(1568, 0.015, 0.3, 0.035 * v);
     }
   },
-  relicStance(mode) {
+  relicStance(mode, opts = null) {
+    const pan = opts && Number.isFinite(opts.x) ? sfxPanFor(opts.x) : 0;
+    sfxCaption(mode === 1 ? '攻境切换' : '守境切换', 'stance', pan);
     if (!AC || muted) return;
-    if (mode === 1) {   // 攻境：利刃出鞘升调清鸣
-      sNoise(0.14, 2400, 6800, 3.2, 0.16, 'bandpass');
-      bellAt(1174.7, 0, 0.35, 0.06); bellAt(1760, 0.045, 0.42, 0.065);
-    } else {            // 守境：古钟沉稳护体和鸣
-      metal(330, 0.7, 0.09); bellAt(523.25, 0, 0.55, 0.06); bellAt(784, 0.05, 0.5, 0.045);
+    if (mode === 1) {   // 攻境：利刃出鞘升调清鸣 + 纯五度和弦
+      sNoise(0.14, 2400, 6800, 3.2, 0.16, 'bandpass', pan);
+      bellAt(1174.7, 0, 0.35, 0.06, pan); bellAt(1760, 0.045, 0.42, 0.065, pan);
+      sTone(587.3, 880, 0.18, 0.07, 'triangle', pan);
+    } else {            // 守境：古钟沉稳护体和鸣 + 下行四度厚韵
+      metal(330, 0.7, 0.09, pan); bellAt(523.25, 0, 0.55, 0.06, pan); bellAt(784, 0.05, 0.5, 0.045, pan);
+      sTone(392, 261.6, 0.24, 0.08, 'sine', pan);
     }
   },
 };
 // 铃：一个基音加两个不成整数倍的泛音，起音快、尾音长（delay 秒后响）
-function bellAt(f, delay, dur, vol) {
+function bellAt(f, delay, dur, vol, pan = 0) {
   if (!AC || muted || ![f, delay, dur, vol].every(Number.isFinite)) return;
-  const t = AC.currentTime + delay;
+  const t = AC.currentTime + delay, out = sfxOut(pan);
   for (const [r, v, d] of [[1, 1, 1], [2.76, 0.42, 0.55], [5.4, 0.16, 0.3]]) {
     if (f * r > 15000) continue;
     const o = AC.createOscillator(), g = AC.createGain();
     o.frequency.value = f * r;
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(vol * v, t + 0.004); g.gain.exponentialRampToValueAtTime(0.0001, t + dur * d);
-    o.connect(g).connect(master); o.start(t); o.stop(t + dur * d + 0.03);
+    o.connect(g).connect(out); o.start(t); o.stop(t + dur * d + 0.03);
   }
 }
 function haptic(pattern = 15) {

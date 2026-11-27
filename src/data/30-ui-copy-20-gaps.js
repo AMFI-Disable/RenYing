@@ -453,5 +453,17 @@ Object.assign(UI_COPY_EN, {
   "减弱闪光与震动": "Reduce Flash & Shake",
   "高对比判定框": "High-Contrast Hitboxes",
   "界面字号": "UI Text Scale",
-  "放大": "Large"
+  "放大": "Large",
+  "立体声定位": "Spatial Stereo Audio",
+  "音效字幕": "Audio Captions",
+  "连击命中": "Combo Hit",
+  "重击命中": "Heavy Hit",
+  "格挡抵御": "Guard Block",
+  "绝技发动": "Ultimate Activated",
+  "一击斩决": "KO Finisher",
+  "蓄力圆满": "Full Charge",
+  "腾空闪避": "Aerial Flash",
+  "天雷轰鸣": "Thunder Strike",
+  "攻境切换": "Aggressive Stance",
+  "守境切换": "Defensive Stance"
 });

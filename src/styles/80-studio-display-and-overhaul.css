@@ -1588,3 +1588,32 @@ html[data-reduced-flash="1"] *::after {
   .rp-code-box { flex-wrap: wrap; }
 }
 
+/* Spatial Audio Captions (#59) */
+.sfx-caption {
+  position: fixed;
+  left: 50%;
+  bottom: 58px;
+  transform: translateX(-50%);
+  z-index: 43;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: none;
+  max-width: min(90vw, 520px);
+}
+.sfx-cap-pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(10, 14, 24, 0.86);
+  border: 1px solid rgba(233, 196, 106, 0.45);
+  color: #efe8d8;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.sfx-cap-pill.k-parry { border-color: #38bdf8; color: #bae6fd; }
+.sfx-cap-pill.k-ult,
+.sfx-cap-pill.k-ko { border-color: #f87171; color: #fecaca; }
+.sfx-cap-pill.k-stance { border-color: #a78bfa; color: #ede9fe; }
+

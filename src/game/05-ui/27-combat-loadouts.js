@@ -319,7 +319,7 @@ function trySwitchRelicStance(f) {
   const label = isAtk ? `攻境 · ${(relic && relic.stanceAtk) || '破阵'}` : `守境 · ${(relic && relic.stanceDef) || '镇岳'}`;
   const rgb = isAtk ? '255,112,72' : '110,230,205';
   if (!RESIM) {
-    if (typeof SFX !== 'undefined' && SFX.relicStance) SFX.relicStance(f.relicStance);
+    if (typeof SFX !== 'undefined' && SFX.relicStance) SFX.relicStance(f.relicStance, { x: f.x });
     if (M.mode === 'train' && f.idx === 0) {
       TRAIN.lastStanceT = clock;
       if (typeof trainLogEvent === 'function') trainLogEvent('stance', label, isAtk ? '攻势 +6% · 移速 +6% · 聚气 +10% · 受击 +6%' : '减伤 -7% · 架势稳定 +15% · 回势 +22% · 反击 +10%');

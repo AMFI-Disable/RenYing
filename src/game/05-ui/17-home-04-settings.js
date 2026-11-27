@@ -21,6 +21,8 @@ const SETTING_ROWS = [
   { group: '无障碍与显示', k: 'uiScale', name: '界面字号', opts: [['normal', '标准'], ['large', '放大']] },
   { group: '声音', k: 'music', name: '音乐', range: [0, 1, 0.05] },
   { group: '声音', k: 'sfx', name: '音效', range: [0, 1, 0.05] },
+  { group: '声音', k: 'spatialAudio', name: '立体声定位', opts: [[true, '开启'], [false, '关闭']] },
+  { group: '声音', k: 'audioCaptions', name: '音效字幕', opts: [[false, '关闭'], [true, '开启']] },
   { group: '数据偏好', k: 'stats', name: '匿名统计', opts: [[true, '开（不记名字、账号）'], [false, '关闭']] },
   { group: '数据偏好', k: 'aiTraining', name: 'AI 模型训练', opts: [[true, '开（匿名上传对局操作）'], [false, '关闭']] },
 ];

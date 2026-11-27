@@ -113,7 +113,7 @@ function stripAttrs(root) { if (root.nodeType !== 1) return; for (const el of [r
    ===================================================================== */
 
 // ======================= 设置（保存在浏览器里） =======================
-const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, backgroundPlay: false, stats: true, aiTraining: true, lang: 'zh', colorblind: 'none', reducedFlash: false, highContrastHitbox: false, uiScale: 'normal' };
+const SETTINGS = { bloom: 1.6, fps: 144, shake: 1.4, quality: 'high', blur: true, vig: 1, music: 0.7, sfx: 1, aim: true, aimMigrated: true, vibrate: true, autoSkin: true, backgroundPlay: false, stats: true, aiTraining: true, lang: 'zh', colorblind: 'none', reducedFlash: false, highContrastHitbox: false, uiScale: 'normal', spatialAudio: true, audioCaptions: false };
 const A11Y_TEAM_PALETTES = {
   none: [
     { hex: '#46d3ea', rgb: '70,211,234', shape: 'circle' },
@@ -171,6 +171,8 @@ try {
   if (SETTINGS.uiScale !== 'normal' && SETTINGS.uiScale !== 'large') SETTINGS.uiScale = 'normal';
   SETTINGS.reducedFlash = !!SETTINGS.reducedFlash;
   SETTINGS.highContrastHitbox = !!SETTINGS.highContrastHitbox;
+  SETTINGS.spatialAudio = SETTINGS.spatialAudio !== false;
+  SETTINGS.audioCaptions = !!SETTINGS.audioCaptions;
   if (saved.lang) SETTINGS.lang = saved.lang;
   else {
     const rawL = localStorage.getItem('renying-lang');

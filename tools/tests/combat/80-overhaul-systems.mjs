@@ -1048,4 +1048,46 @@ export default [
       return { pass: true };
     })()`
   },
+  {
+    name: 'Spatial stereo audio panning, combo pitch escalation, stance harmonics, and visual audio captions work cleanly',
+    fn: `(() => {
+      const prev = { spatialAudio: SETTINGS.spatialAudio, audioCaptions: SETTINGS.audioCaptions };
+      try {
+        startMatch('cpu', 'normal', [0, 1]); M.phase = 'fight';
+        cam.x = 900; W = 1280;
+        SETTINGS.spatialAudio = true;
+        const leftPan = sfxPanFor(200), midPan = sfxPanFor(900), rightPan = sfxPanFor(1600);
+        if (!(leftPan < -0.3) || Math.abs(midPan) > 0.01 || !(rightPan > 0.3)) {
+          return { pass: false, error: 'Spatial pan values out of expected bounds: ' + JSON.stringify({ leftPan, midPan, rightPan }) };
+        }
+        SETTINGS.spatialAudio = false;
+        if (sfxPanFor(200) !== 0 || sfxPanFor(1600) !== 0) {
+          return { pass: false, error: 'Disabling spatialAudio did not zero pan' };
+        }
+        SETTINGS.spatialAudio = true;
+        if (!(comboPitchMul(1) === 1 && comboPitchMul(5) > comboPitchMul(2) && comboPitchMul(20) <= 1.45)) {
+          return { pass: false, error: 'comboPitchMul did not escalate monotonically within cap' };
+        }
+        SETTINGS.audioCaptions = true;
+        SFX_CAPTIONS.length = 0;
+        SFX.hit(1.1, { x: 200, combo: 4 });
+        SFX.parry({ x: 1600 });
+        SFX.relicStance(2, { x: 900 });
+        if (SFX_CAPTIONS.length !== 3 || !SFX_CAPTIONS[0].text.includes('◀') || !SFX_CAPTIONS[1].text.includes('▶')) {
+          return { pass: false, error: 'Directional audio captions did not populate cleanly: ' + JSON.stringify(SFX_CAPTIONS) };
+        }
+        buildSettings();
+        const setHtml = ($id('setList') || {}).innerHTML || '';
+        if (!setHtml.includes('立体声定位') || !setHtml.includes('音效字幕')) {
+          return { pass: false, error: 'Settings UI missing Spatial Audio / Audio Captions toggles' };
+        }
+      } finally {
+        SFX_CAPTIONS.length = 0;
+        Object.assign(SETTINGS, prev);
+        saveSettings();
+        toMenu();
+      }
+      return { pass: true };
+    })()`
+  },
 ];
