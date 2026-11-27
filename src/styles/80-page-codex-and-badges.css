@@ -1,0 +1,358 @@
+/* =====================================================================
+   80 — Apple Studio Display (5K / 2560x1440 CSS) & Overhaul UI Polish
+   Eliminates clipping, overlap, and wasted viewport space across all
+   display sizes, plus styles for two-row Hero Selection, Badge Gallery,
+   Archetypes & HUD Editor.
+   ===================================================================== */
+
+/* Badge Gallery tier accents & category tags */
+.badge-cat-tag {
+  font-size: 12px;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: rgba(233, 196, 106, 0.14);
+  border: 1px solid rgba(233, 196, 106, 0.35);
+  color: var(--gold);
+  white-space: nowrap;
+}
+.ar-badge-card.tier-pg {
+  border-color: rgba(217, 166, 255, 0.65);
+  box-shadow: 0 0 18px rgba(185, 110, 255, 0.18);
+}
+.ar-badge-card.tier-gd {
+  border-color: rgba(233, 196, 106, 0.55);
+}
+.ar-badge-card.tier-sv {
+  border-color: rgba(160, 200, 235, 0.42);
+}
+.ar-badge-card.tier-lk {
+  opacity: 0.86;
+}
+.ar-badge-card.compact,
+.ar-loadout.compact {
+  padding: 10px 12px;
+  gap: 5px;
+}
+.ar-badge-card.compact p {
+  font-size: 12.5px;
+  line-height: 1.4;
+  margin: 2px 0;
+}
+.rar-pill {
+  font-size: 12px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 99px;
+  white-space: nowrap;
+}
+.rar-pill.rar-legend {
+  background: rgba(233, 196, 106, 0.22);
+  border: 1px solid rgba(233, 196, 106, 0.65);
+  color: #f8dc8c;
+}
+.rar-pill.rar-epic {
+  background: rgba(192, 132, 252, 0.2);
+  border: 1px solid rgba(192, 132, 252, 0.55);
+  color: #ddb8ff;
+}
+.rar-pill.rar-rare {
+  background: rgba(96, 195, 255, 0.16);
+  border: 1px solid rgba(96, 195, 255, 0.45);
+  color: #8fd8ff;
+}
+.ar-subtabs {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 10px 0 8px;
+}
+.ar-filter-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+.ar-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  margin: 14px 0 6px;
+}
+.ar-pager-info {
+  font-size: 12.5px;
+  color: var(--dim);
+  font-variant-numeric: tabular-nums;
+}
+.ad-fullauto {
+  border-color: rgba(233, 196, 106, 0.48) !important;
+  background: linear-gradient(135deg, rgba(233, 196, 106, 0.1), rgba(150, 96, 255, 0.08)) !important;
+}
+.ad-fullauto-btn {
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+/* Two-Row Hero Selection in Codex (#codex) */
+.cxtabs {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  min-width: 0;
+}
+.cx-top-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  padding-bottom: 8px;
+  border-bottom: 1px solid rgba(239, 232, 216, 0.12);
+}
+.arch-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+}
+.arch-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 13px;
+  font-family: var(--body);
+  padding: 5px 12px;
+  border-radius: 99px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(239, 232, 216, 0.2);
+  color: var(--dim);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: border-color 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+.arch-pill small {
+  font-size: 12px;
+  opacity: 0.72;
+}
+.arch-pill:hover {
+  border-color: rgba(233, 196, 106, 0.55);
+  color: var(--ink);
+}
+.arch-pill.sel {
+  background: rgba(233, 196, 106, 0.22);
+  border-color: var(--gold);
+  color: var(--gold);
+  font-weight: 700;
+}
+.cx-global-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-left: auto;
+}
+.cx-global-auto,
+.cx-global-app {
+  font-size: 13px !important;
+  font-family: var(--body) !important;
+  padding: 6px 14px !important;
+  border-radius: 8px !important;
+  white-space: nowrap;
+}
+.cx-hero-list {
+  display: grid;
+  grid-template-columns: repeat(10, minmax(0, 1fr));
+  gap: 6px;
+  max-height: none;
+  overflow: visible;
+  padding: 2px 0 4px;
+}
+.cx-hero-list .cx-hero-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-family: var(--title);
+  font-size: 17px;
+  padding: 6px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid var(--faint);
+  white-space: nowrap;
+  min-width: 0;
+  transition: transform 0.14s ease, border-color 0.14s ease, background 0.14s ease;
+}
+.cx-hero-list .cx-hero-btn:hover {
+  transform: translateY(-1px);
+  border-color: rgba(233, 196, 106, 0.55);
+}
+.cx-hero-list .cx-hero-btn.sel {
+  color: #14121f !important;
+  background: var(--ink);
+  border-color: var(--gold);
+  box-shadow: 0 0 12px rgba(233, 196, 106, 0.3);
+}
+.cx-eq-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #d9a6ff;
+  box-shadow: 0 0 6px rgba(217, 166, 255, 0.85);
+  flex: none;
+}
+
+/* Per-Hero Badge Box & Heirloom Showcase in Codex */
+.cx-relic-banner {
+  margin-top: 8px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, rgba(218, 175, 92, 0.16), rgba(32, 24, 48, 0.72));
+  border: 1px solid rgba(233, 196, 106, 0.45);
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+.cx-relic-top {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+  font-size: 12px;
+}
+.cx-relic-top b { color: #f6d586; font-weight: 700; }
+.cx-relic-top span { color: var(--ink); opacity: 0.9; }
+.cx-relic-top small {
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: 99px;
+  background: rgba(233, 196, 106, 0.2);
+  color: #ffe399;
+  font-size: 12px;
+}
+.cx-relic-stances {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  font-size: 12px;
+}
+.cx-relic-stances .rs-atk {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(255, 112, 72, 0.18);
+  border: 1px solid rgba(255, 112, 72, 0.45);
+  color: #ffb8a2;
+}
+.cx-relic-stances .rs-def {
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(110, 230, 205, 0.16);
+  border: 1px solid rgba(110, 230, 205, 0.45);
+  color: #a6f5e6;
+}
+.cx-relic-stances .rs-key {
+  margin-left: auto;
+  color: var(--dim);
+  font-size: 12px;
+}
+.cx-badge-box {
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(239, 232, 216, 0.12);
+}
+.cx-badge-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.cx-badge-cur {
+  color: var(--gold);
+  font-weight: 700;
+  font-size: 12.5px;
+}
+.cx-badge-cnt {
+  margin-left: 6px;
+  font-weight: 400;
+  font-size: 12px;
+  color: var(--dim);
+}
+.cx-badge-acts {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.cx-badge-clear,
+.cx-badge-toggle {
+  padding: 2px 10px !important;
+  font-size: 12px !important;
+}
+.cx-badge-desc {
+  margin-top: 5px;
+  font-size: 12px;
+  color: var(--dim);
+  line-height: 1.45;
+}
+.cx-badge-cats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin: 8px 0 6px;
+  padding-top: 7px;
+  border-top: 1px solid rgba(239, 232, 216, 0.1);
+}
+.cx-badge-cat {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(239, 232, 216, 0.18);
+  color: var(--dim);
+  cursor: pointer;
+}
+.cx-badge-cat small { opacity: 0.72; font-size: 12px; }
+.cx-badge-cat.sel {
+  background: rgba(233, 196, 106, 0.22);
+  border-color: var(--gold);
+  color: var(--gold);
+  font-weight: 700;
+}
+.cx-badge-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(124px, 1fr));
+  gap: 5px;
+  max-height: 148px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding-right: 3px;
+  scrollbar-width: thin;
+}
+.cx-badge-item {
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 4px;
+  padding: 4px 7px !important;
+  font-size: 12px !important;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.cx-badge-item em {
+  font-style: normal;
+  font-size: 12px;
+  opacity: 0.78;
+  margin-left: auto;
+}
+

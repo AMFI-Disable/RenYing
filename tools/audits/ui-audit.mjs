@@ -18,10 +18,13 @@ const CHROME = process.env.RENYING_CHROME || [
 if (!CHROME) { console.error('Chrome/Chromium not found - set RENYING_CHROME=/path/to/chrome'); process.exit(1); }
 const URL = process.env.RENYING_URL || 'http://127.0.0.1:8791/';
 const PORT = +(process.env.CDP_PORT || 9345);
-const OUT = process.argv[2] || join(tmpdir(), 'renying-ui-audit');
-const VW = +(process.argv[3] || 1440);
-const VH = +(process.argv[4] || 900);
-const ONLY = process.argv[5] ? process.argv[5].split(',') : null;
+const rawArgs = process.argv.slice(2);
+const EN_MODE = rawArgs.includes('--en');
+const posArgs = rawArgs.filter(a => a !== '--en');
+const OUT = posArgs[0] || join(tmpdir(), 'renying-ui-audit');
+const VW = +(posArgs[1] || 1440);
+const VH = +(posArgs[2] || 900);
+const ONLY = posArgs[3] ? posArgs[3].split(',') : null;
 let TOKEN = '';
 try { TOKEN = readF(process.env.RENYING_TOKEN_FILE || '/tmp/renying-token.txt', 'utf8').trim(); } catch {}
 
@@ -57,12 +60,16 @@ const PANELS = [
   ['stage', `openScreen('stage')`], ['train', `openScreen('train')`], ['tag3', `openScreen('tag3')`], ['netp', `openScreen('netp')`],
   ['help', `openScreen('help')`], ['codex', `openScreen('codex')`], ['settings', `openScreen('settings')`],
   ['community', `openScreen('community')`], ['acc', `showScreen('acc')`], ['lb', `openLeaderboard()`],
-  ['welfare', `openWelfare()`], ['replays', `openScreen('replays')`],
-  ['tasks', `openScreen('tasks')`], ['bp', `PROF.owned = CHARS.map(c => c.id); bpStart('cpu', { mapBriefed: true }); bpCpuT = 9999; bpApply(3); bpApply(6); bpCpuT = 9999; bpSel = 4; renderBP(); showScreen('bp');`], ['pause', `showScreen('pause')`],
+  ['gboss', `openScreen('gboss')`], ['welfare', `openWelfare()`], ['replays', `openScreen('replays')`],
+  ['tasks', `openScreen('tasks')`], ['armory', `openScreen('armory')`],
+  ['mapBriefing', `showScreen('mapBriefing')`], ['buffDraft', `showScreen('buffDraft')`],
+  ['bp', `PROF.owned = CHARS.map(c => c.id); bpStart('cpu', { mapBriefed: true }); bpCpuT = 9999; bpApply(3); bpApply(6); bpCpuT = 9999; bpSel = 4; renderBP(); showScreen('bp');`],
   ['bpquick', `bpStart('tag3', { quickRelay: true }); bpApply(bpValidList()[0]); bpApply(bpValidList()[0]); bpSel = bpValidList()[0]; renderBP();`],
+  ['pause', `showScreen('pause')`], ['end', `__endDemo()`],
   ['endtag3', `M.map = 'ice'; startTag3Match([0,1,2], [3,4,5], 'normal'); M.teamIdx = [3,1]; M.wins = [1,3]; showEnd(1); showScreen('end');`],
-  ['end', `__endDemo()`], ['forestEnd', `__forestDemo()`], ['tutask', `showScreen('tutask')`],
-  ['tutdone', `__tutdoneDemo()`], ['armory', `openScreen('armory')`],
+  ['forestEnd', `__forestDemo()`], ['tutask', `showScreen('tutask')`], ['tutdone', `__tutdoneDemo()`],
+  ['langPrompt', `showScreen('langPrompt')`], ['towerModal', `showScreen('towerModal')`],
+  ['sagaTalk', `showScreen('sagaTalk')`], ['tournament', `if (typeof tourInit === 'function') tourInit('player', 8, 'standard'); showScreen('tournament');`],
 ];
 
 const PROBE = `(() => {
@@ -107,6 +114,10 @@ const PROBE = `(() => {
     if (hasText) { const fs = parseFloat(cs.fontSize);
       if (fs < 12) out.tiny.push({ el:key, fs, text:(el.textContent||'').trim().slice(0,22) }); }
   }
+  const topNav = document.getElementById('topNav'), accBar = document.getElementById('accBar');
+  const navShown = !!(topNav && !topNav.classList.contains('hidden'));
+  const accShown = !!(accBar && !accBar.classList.contains('hidden'));
+  if (navShown && accShown) out.probs.push({ kind: 'overlapChrome', el: '#accBar', text: 'accBar overlaps topNav' });
   if (scr.id === 'bp') {   // composition checks for the draft screen
     const contentH = box => { const r = box.getBoundingClientRect(); let m = 0;
       for (const e of box.querySelectorAll('*')) {
@@ -200,12 +211,13 @@ const { sessionId } = await cdp.send('Target.attachToTarget', { targetId: pageId
 const S = sessionId;
 await cdp.send('Page.enable', {}, S);
 await cdp.send('Runtime.enable', {}, S);
-await cdp.send('Emulation.setDeviceMetricsOverride', { width: VW, height: VH, deviceScaleFactor: 1, mobile: false }, S);
+await cdp.send('Emulation.setDeviceMetricsOverride', { width: VW, height: VH, deviceScaleFactor: 1, mobile: VW <= 500 }, S);
 
 const seed = `(() => {
   localStorage.setItem('renying-token', ${JSON.stringify(TOKEN)});
   localStorage.setItem('renying-tut-seen','1'); localStorage.setItem('renying-tut-done','1');
   localStorage.setItem('renying-net-mode','server');
+  localStorage.setItem('renying-lang', ${JSON.stringify(EN_MODE ? 'en' : 'zh')});
   localStorage.setItem('renying-settings', JSON.stringify({bloom:1,fps:0,shake:1.4,quality:'auto',blur:true,vig:1,music:0,sfx:0,aim:true}));
 })()`;
 await cdp.send('Runtime.evaluate', { expression: seed }, S);

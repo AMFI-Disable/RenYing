@@ -1312,17 +1312,20 @@ export default [
         showScreen('replays');
         if (!$id('topNav').classList.contains('hidden')) return { pass: false, error: 'topNav leaked on End->Replays overlay' };
 
-        // 5. Unified Modal Manager enforces mutual exclusion & clean teardown
+        // 5. Shared #uiModalHost & Unified Modal Manager enforce mutual exclusion & clean teardown
         openUiModal('modal2v2');
-        if (activeUiModal() !== 'modal2v2' || $id('modal2v2').classList.contains('hidden')) {
-          return { pass: false, error: 'openUiModal(modal2v2) did not open modal2v2' };
+        const host = $id('uiModalHost');
+        if (!host || host.classList.contains('hidden') || activeUiModal() !== 'modal2v2' || $id('modal2v2').classList.contains('hidden')) {
+          return { pass: false, error: 'openUiModal(modal2v2) did not activate #uiModalHost and modal2v2' };
         }
         openUiModal('modalRouge');
-        if (activeUiModal() !== 'modalRouge' || !$id('modal2v2').classList.contains('hidden')) {
-          return { pass: false, error: 'Unified Modal Manager failed mutual exclusion between modal2v2 and modalRouge' };
+        if (activeUiModal() !== 'modalRouge' || !$id('modal2v2').classList.contains('hidden') || host.classList.contains('hidden')) {
+          return { pass: false, error: 'Shared Modal Host failed mutual exclusion between modal2v2 and modalRouge' };
         }
         closeAllUiModals();
-        if (activeUiModal() !== null) return { pass: false, error: 'closeAllUiModals did not close all modals' };
+        if (activeUiModal() !== null || !host.classList.contains('hidden')) {
+          return { pass: false, error: 'closeAllUiModals did not hide #uiModalHost and all modals' };
+        }
 
         // 6. Transient overlays are cleaned up on showScreen('menu')
         for (const oid of ['modal2v2', 'modalRouge', 'modalWorld', 'rkInfo', 'trainLab', 'trainInspect', 'trialHud', 'specHud']) {

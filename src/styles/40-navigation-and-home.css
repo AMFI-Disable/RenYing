@@ -103,7 +103,7 @@
   .rki-tier.mine { border-color: rgba(233,196,106,.6); background: rgba(233,196,106,.08); }
   .rki-tier b { display: block; font-family: var(--v-cond); font-size: 16px; color: var(--v-white); letter-spacing: .05em; }
   .rki-tier span { display: block; font-size: 12px; color: rgba(236,232,225,.62); }
-  .rki-tier .rki-subs { font-size: 11px; color: rgba(236,232,225,.45); }
+  .rki-tier .rki-subs { font-size: 12px; color: rgba(236,232,225,.45); }
   .rki-note { font-size: 13px; color: rgba(236,232,225,.66); margin: 14px 0 0; line-height: 1.7; }
   /* 定级 / 晋升展示 */
   .rk-reveal { position: fixed; inset: 0; z-index: 80; display: flex; align-items: center; justify-content: center; background: radial-gradient(ellipse at center, rgba(20,30,45,.9), rgba(3,5,8,.96)); opacity: 0; transition: opacity .3s; }
@@ -145,7 +145,7 @@
   body.has-nav .scr { top: var(--nav-h); }
   .tn-logo { display: flex; align-items: center; gap: 10px; padding: 0 22px 0 18px; border: none; cursor: pointer; background: var(--v-red); color: #fff; clip-path: polygon(0 0, 100% 0, calc(100% - 16px) 100%, 0 100%); }
   .tn-mark { font-family: var(--title); font-size: 28px; line-height: 1; letter-spacing: .06em; }
-  .tn-en { font-family: var(--nav-serif); font-weight: 700; font-size: 11px; letter-spacing: .28em; opacity: .9; }
+  .tn-en { font-family: var(--nav-serif); font-weight: 700; font-size: 12px; letter-spacing: .28em; opacity: .9; }
   .tn-tabs { display: flex; align-items: stretch; gap: 2px; flex: 1; min-width: 0; overflow-x: auto; scrollbar-width: none; justify-content: safe center; }   /* safe：英文标签更长时从左边排，别把第一个切掉 */
   .tn-tabs::-webkit-scrollbar { display: none; }
   .tn-tabs button { flex: none; position: relative; border: none; background: none; color: rgba(236,232,225,.72); font-family: var(--nav-serif); font-weight: 600; font-size: 15.5px; letter-spacing: .14em; padding: 0 16px; cursor: pointer; white-space: nowrap; text-shadow: 0 1px 8px rgba(0,0,0,.45); transition: color .15s, background .15s, text-shadow .15s; }
@@ -173,7 +173,7 @@
   .tn-medal { width: 34px; height: 34px; display: grid; place-items: center; }
   .tn-who { display: flex; flex-direction: column; line-height: 1.15; max-width: 150px; }
   .tn-who b { font-family: var(--nav-serif); font-size: 14px; font-weight: 700; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .tn-who small { font-family: var(--nav-serif); font-weight: 600; font-size: 11.5px; color: rgba(236,232,225,.62); letter-spacing: .06em; white-space: nowrap; }
+  .tn-who small { font-family: var(--nav-serif); font-weight: 600; font-size: 12px; color: rgba(236,232,225,.62); letter-spacing: .06em; white-space: nowrap; }
   .tn-sync { width: 8px; height: 8px; border-radius: 50%; position: absolute; right: 6px; top: 6px; background: transparent; }
   .tn-sync.s-ok { background: #3ddc97; box-shadow: 0 0 6px #3ddc97; }
   .tn-sync.s-pending, .tn-sync.s-syncing { background: var(--gold); animation: tnBlink 1s ease-in-out infinite; }
@@ -283,9 +283,9 @@
   .play2v2-slot.sel { border-color: var(--gold); background: rgba(233,196,106,0.12); box-shadow: 0 0 14px rgba(233,196,106,0.25); }
   .play2v2-slot.team0 { border-left: 3px solid var(--p1); }
   .play2v2-slot.team1 { border-left: 3px solid var(--p2); }
-  .play2v2-slot .p2v2-role { font-size: 11px; margin-bottom: 4px; font-weight: 700; color: var(--gold); }
+  .play2v2-slot .p2v2-role { font-size: 12px; margin-bottom: 4px; font-weight: 700; color: var(--gold); }
   .play2v2-slot .p2v2-hero { font-family: var(--title); font-size: 18px; color: #fff; }
-  .play2v2-slot .p2v2-sub { font-size: 11px; color: var(--dim); margin-top: 2px; }
+  .play2v2-slot .p2v2-sub { font-size: 12px; color: var(--dim); margin-top: 2px; }
   @media (max-height: 620px) { .home-side { display: none; } }
   @media (max-height: 520px) {
     .home-kicker { top: 6%; font-size: 12px; }
@@ -386,7 +386,7 @@
   .ad-stat { padding: 10px 12px; background: rgba(236,232,225,.04); border-left: 3px solid rgba(236,232,225,.18); display: flex; flex-direction: column; }
   .ad-stat span { font-size: 12px; color: rgba(236,232,225,.55); letter-spacing: .1em; }
   .ad-stat b { font-family: var(--v-cond); font-size: 20px; color: var(--v-white); letter-spacing: .03em; }
-  .ad-stat small { font-size: 11.5px; color: rgba(236,232,225,.5); }
+  .ad-stat small { font-size: 12px; color: rgba(236,232,225,.5); }
   .ad-sync { margin-top: 12px; padding: 14px 16px; background: rgba(5,10,16,.55); border: 1px solid var(--line); }
   .ad-sync-head { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
   .ad-sync-head b { font-size: 16px; color: #fff; }

@@ -1,0 +1,167 @@
+/* Global Layout Tightening & Responsive Space Utilization */
+.sub { margin: 4px 0 12px; }
+.row { margin-top: 14px; }
+.go { margin: 14px auto 0; }
+#codex .cxw {
+  max-height: none;
+  overflow: visible;
+  padding: 10px 14px;
+  gap: 8px;
+}
+#codex .bento { gap: 8px; }
+#codex .tile { padding: 10px 12px; }
+#codex .cxtabs { gap: 6px; }
+#settings .setlist { gap: 10px; margin: 10px 0; }
+#settings .setting-group { padding: 10px 12px; gap: 8px; }
+@media (min-width: 860px) {
+  #settings .setlist { column-gap: 16px; row-gap: 10px; }
+}
+#armory .ar-h { margin: 14px 0 8px; }
+#armory .ar-casecard { padding: 12px 14px; }
+#armory .ar-ophead { padding: 12px 14px; }
+#armory .ar-tabs button { padding: 8px 14px; }
+#tasks .task-tabs { margin: 4px 0 10px; }
+#tasks .task-sec-card { padding: 12px 14px; }
+#tasks .trow { padding: 8px 12px; }
+#community .soc { gap: 12px; margin-top: 8px; }
+#community .soc-list,
+#community .soc-main .comlog {
+  height: clamp(320px, calc(100vh - var(--nav-h, 58px) - 220px), 660px);
+}
+#acc .acc-dash:not(.hidden) {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  align-items: stretch;
+}
+#acc .ad-card,
+#acc .ad-stats,
+#acc .ad-dev { grid-column: 1 / -1; }
+#acc .ad-card { padding: 14px 16px; }
+#acc .ad-stats { margin-top: 0; }
+#acc .ad-sync { margin-top: 0; display: flex; flex-direction: column; }
+#acc .ad-sync-btns { margin-top: auto; }
+#acc .ad-tools-k { margin-top: 12px; padding-top: 10px; }
+@media (max-width: 760px) {
+  #acc .acc-dash:not(.hidden) { grid-template-columns: 1fr; }
+}
+#bp .bpw {
+  padding: clamp(4px, 0.8vh, 8px) clamp(8px, 1.2vw, 16px);
+  gap: clamp(4px, 0.7vh, 8px);
+}
+#bp .bp-arch-bar { margin-bottom: 4px; }
+#single .xiwu-preset-strip { padding: 7px 12px; margin-bottom: 8px; }
+#single .single-sec-pane { padding: 12px 14px; }
+#single .bp-rule-banner { margin: 8px 0 10px; padding: 9px 12px; }
+#single .single-action-row { margin-top: 10px; }
+
+@media (min-width: 1680px) {
+  #armory .armp,
+  #single .singlep,
+  #codex .cxw,
+  #netp > .panel,
+  #settings .setp,
+  #tasks .taskp,
+  #community .comp,
+  #replays .taskp,
+  #bp .bpw {
+    width: min(1680px, 95vw);
+    max-width: min(1680px, 95vw);
+    margin-left: auto;
+    margin-right: auto;
+  }
+  #acc .accp {
+    max-width: min(1120px, 94vw);
+  }
+  .ar-grid3 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 12px;
+  }
+  .cx-hero-list {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    max-height: none;
+  }
+  .bpgrid {
+    --bp-cols: 10;
+    max-height: none;
+  }
+}
+
+@media (min-width: 2200px) {
+  /* Apple Studio Display (2560x1440 CSS px) & 5K/4K Displays */
+  body {
+    font-size: 15.5px;
+  }
+  #armory .armp,
+  #single .singlep,
+  #codex .cxw,
+  #netp > .panel,
+  #settings .setp,
+  #tasks .taskp,
+  #community .comp,
+  #replays .taskp,
+  #bp .bpw {
+    width: min(2200px, 92vw);
+    max-width: min(2200px, 92vw);
+  }
+  #acc .accp {
+    max-width: min(1280px, 90vw);
+  }
+  .ar-grid3 {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: 16px;
+  }
+
+  .cx-hero-list {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+    max-height: none;
+    gap: 8px;
+  }
+  .cx-hero-list .cx-hero-btn {
+    font-size: 19px;
+    padding: 7px 12px;
+  }
+  #cxBento {
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 14px;
+  }
+  .bpgrid {
+    --bp-cols: 10;
+    max-height: none;
+  }
+}
+
+@media (max-width: 1080px) {
+  .cx-hero-list {
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+  }
+  .bpgrid {
+    --bp-cols: 5;
+  }
+}
+
+@media (max-width: 720px) {
+  .cx-top-bar {
+    align-items: flex-start;
+  }
+  .cx-global-actions {
+    margin-left: 0;
+  }
+  .cx-hero-list {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    max-height: none;
+  }
+  .cx-hero-list .cx-hero-btn {
+    font-size: 15px;
+    padding: 5px 6px;
+  }
+  .bpgrid {
+    --bp-cols: 4;
+    max-height: none;
+  }
+  .hud-custom-modal .hc-row {
+    grid-template-columns: 1fr;
+    gap: 6px;
+  }
+}
+

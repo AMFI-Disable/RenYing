@@ -261,7 +261,7 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
   .ar-zcard { padding-bottom: 6px; gap: 1px; }
   .ar-zcard b { padding: 3px 2px 0; font-size: 12px; }
   .ar-zcard.t-gold b { font-size: 12px; }
-  .ar-zcard small { padding: 0 2px; font-size: 10px; }
+  .ar-zcard small { padding: 0 2px; font-size: 12px; }
   .ar-zcard:hover, .ar-zcard:focus-visible { transform: translateY(-3px); }
   @media (max-width: 900px) { .ar-zgrid { grid-template-columns: repeat(6, minmax(0, 1fr)); } }
   @media (max-width: 640px) { .ar-pshow.zod .ar-pcard { grid-column: auto; } .ar-zrow { grid-template-columns: minmax(0, 1fr); } .ar-zlab { flex-direction: row; justify-content: center; gap: 8px; } }
@@ -361,11 +361,11 @@ body.lang-en #endTitle .it-seal { width: auto; height: auto; padding: .18em .34e
   /* 玩家市场 */
   .ar-mkc { flex: none; display: flex; flex-direction: column; align-items: flex-end; gap: 2px; min-width: 150px; font-size: 13px; white-space: nowrap; }
   .ar-mkc small { color: var(--dim); font-size: 12px; }
-  .ar-mkp > small:first-child { font-size: 11px; letter-spacing: .08em; }
+  .ar-mkp > small:first-child { font-size: 12px; letter-spacing: .08em; }
   .ar-chk { display: inline-flex; align-items: center; gap: 6px; padding: 0 4px; font-size: 13px; color: var(--dim); cursor: pointer; user-select: none; }
   .ar-chk input { accent-color: var(--gold); }
   .ar-lrow > span:first-child { display: flex; flex-direction: column; gap: 2px; }
-  .ar-lrow > span:first-child small { color: var(--dim); font-size: 11px; }
+  .ar-lrow > span:first-child small { color: var(--dim); font-size: 12px; }
   .ar-lrow.mine { background: rgba(233,196,106,.07); box-shadow: inset 3px 0 0 var(--gold); }
   .ar-empty.sm { padding: var(--sp-4) var(--sp-3); font-size: var(--fs-sm); }
   .ar-qty { display: flex; align-items: center; gap: 10px; margin: 12px 0 6px; }

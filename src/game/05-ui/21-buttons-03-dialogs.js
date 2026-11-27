@@ -45,12 +45,55 @@ function uiConfirm(msg, opt = {}) {
     (inp || wrap.querySelector('button[data-v="0"]') || wrap.querySelector('button[data-v="1"]')).focus({ preventScroll: true });
   });
 }
-// 统一弹窗管理器（UIModal）：互斥打开、点遮罩关闭、onClose 钩子与焦点保存恢复
+// 统一弹窗宿主（#uiModalHost + UIModal）：将 #rkInfo/#rkReveal/#modal2v2/#modalRouge/#modalWorld 统一托管，
+// 实现互斥打开、点遮罩关闭、onClose 钩子与焦点保存恢复。
 const UI_MODAL_IDS = ['rkInfo', 'rkReveal', 'modal2v2', 'modalRouge', 'modalWorld'];
 const UI_DIALOGS = [...UI_MODAL_IDS, 'arModal', 'arIns'];
 const uiDlgOpen = el => !!(el && el.isConnected !== false && !el.hidden && !el.classList.contains('hidden'));
 const uiDlgPrev = new Map();
 const uiModalHooks = new Map();
+
+function ensureUiModalHost() {
+  let host = $id('uiModalHost');
+  if (!host && typeof document !== 'undefined' && document.createElement && document.body) {
+    host = document.createElement('div');
+    host.id = 'uiModalHost';
+    host.className = 'ui-modal-host hidden';
+    if (typeof host.setAttribute === 'function') host.setAttribute('role', 'presentation');
+    if (typeof host.addEventListener === 'function') {
+      host.addEventListener('click', e => {
+        if (e.target === host) {
+          const cur = activeUiModal();
+          if (cur) closeUiModal(cur);
+        }
+      });
+    }
+    document.body.appendChild(host);
+  }
+  return host;
+}
+
+function mountLegacyModalsIntoHost() {
+  const host = ensureUiModalHost();
+  if (!host || typeof host.appendChild !== 'function') return;
+  for (const id of UI_MODAL_IDS) {
+    const el = $id(id);
+    if (el && el.parentNode !== host) {
+      try { host.appendChild(el); } catch (e) {}
+    }
+  }
+}
+
+function syncUiModalHostVisibility() {
+  const host = $id('uiModalHost');
+  if (!host) return;
+  const cur = activeUiModal();
+  host.classList.toggle('hidden', !cur);
+  if (host.dataset) {
+    if (cur) host.dataset.activeModal = cur;
+    else delete host.dataset.activeModal;
+  }
+}
 
 function registerUiModal(id, hooks = {}) {
   if (!id) return;
@@ -59,12 +102,16 @@ function registerUiModal(id, hooks = {}) {
 
 function closeUiModal(id) {
   const el = $id(id);
-  if (!el || el.classList.contains('hidden')) return false;
+  if (!el || el.classList.contains('hidden')) {
+    syncUiModalHostVisibility();
+    return false;
+  }
   el.classList.add('hidden');
   const h = uiModalHooks.get(id);
   if (h && typeof h.onClose === 'function') {
     try { h.onClose(el); } catch (e) {}
   }
+  syncUiModalHostVisibility();
   return true;
 }
 
@@ -74,14 +121,17 @@ function closeAllUiModals(exceptId = null) {
     if (id === exceptId) continue;
     if (closeUiModal(id)) closed++;
   }
+  syncUiModalHostVisibility();
   return closed;
 }
 
 function openUiModal(id) {
   const el = $id(id);
   if (!el) return false;
+  mountLegacyModalsIntoHost();
   closeAllUiModals(id);
   el.classList.remove('hidden');
+  syncUiModalHostVisibility();
   const h = uiModalHooks.get(id);
   if (h && typeof h.onOpen === 'function') {
     try { h.onOpen(el); } catch (e) {}
@@ -105,6 +155,7 @@ function uiDlgWatch(el) {
   let was = uiDlgOpen(el);
   new MutationObserver(() => {
     const now = uiDlgOpen(el); if (now === was) return; was = now;
+    syncUiModalHostVisibility();
     if (now) {
       uiDlgPrev.set(el, document.activeElement);
       requestAnimationFrame(() => {   // 等内容画好再找按钮
@@ -118,6 +169,7 @@ function uiDlgWatch(el) {
     }
   }).observe(el, { attributes: true, attributeFilter: ['class', 'hidden'] });
 }
+mountLegacyModalsIntoHost();
 for (const id of UI_DIALOGS) uiDlgWatch($id(id));
 for (const id of UI_MODAL_IDS) {
   const el = $id(id);

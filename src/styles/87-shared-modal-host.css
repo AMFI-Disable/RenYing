@@ -1,0 +1,48 @@
+/* =====================================================================
+   87 — Shared Modal Host (#uiModalHost)
+   Single unified overlay host adopting #modal2v2, #modalRouge,
+   #modalWorld, #rkInfo, and #rkReveal with mutual exclusion and
+   responsive mobile/tablet containment.
+   ===================================================================== */
+.ui-modal-host {
+  position: fixed;
+  inset: 0;
+  z-index: 940;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  background: rgba(6, 7, 18, 0.72);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  overscroll-behavior: contain;
+}
+.ui-modal-host.hidden {
+  display: none !important;
+}
+.ui-modal-host > .rk-info,
+.ui-modal-host > .rk-reveal {
+  position: relative;
+  inset: auto;
+  z-index: 1;
+  background: transparent;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  padding: 0;
+  max-width: min(860px, calc(100vw - 24px));
+  max-height: calc(100dvh - 32px);
+}
+.ui-modal-host > .rk-info.hidden,
+.ui-modal-host > .rk-reveal.hidden {
+  display: none !important;
+}
+@media (max-width: 720px) {
+  .ui-modal-host {
+    padding: 10px;
+  }
+  .ui-modal-host > .rk-info,
+  .ui-modal-host > .rk-reveal {
+    max-width: calc(100vw - 16px);
+    max-height: calc(100dvh - 20px);
+  }
+}

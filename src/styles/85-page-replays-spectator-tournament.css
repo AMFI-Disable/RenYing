@@ -31,7 +31,7 @@
   accent-color: #e9c46a;
 }
 #rpTime {
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
   color: rgba(239, 232, 216, 0.82);
   white-space: nowrap;
@@ -46,7 +46,7 @@
 .rp-mk,
 .er-tl-pill {
   padding: 2px 7px;
-  font-size: 11px;
+  font-size: 12px;
   border-radius: 999px;
   border: 1px solid rgba(233, 196, 106, 0.35);
   background: rgba(233, 196, 106, 0.12);
@@ -88,7 +88,7 @@
   border-radius: 4px;
   background: #dc2626;
   color: #fff;
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: 0.08em;
 }
@@ -101,7 +101,7 @@
   border: 1px solid rgba(255, 255, 255, 0.16);
   background: rgba(255, 255, 255, 0.06);
   color: #efe8d8;
-  font-size: 11.5px;
+  font-size: 12px;
   cursor: pointer;
 }
 .spec-pill.sel { border-color: #e9c46a; background: rgba(233, 196, 106, 0.2); }
@@ -113,7 +113,7 @@
   background: rgba(70, 211, 234, 0.18);
   border: 1px solid rgba(70, 211, 234, 0.45);
   color: #9ff2ff;
-  font-size: 11px;
+  font-size: 12px;
   font-variant-numeric: tabular-nums;
 }
 .spec-exit-btn {
@@ -122,10 +122,10 @@
   border: 1px solid rgba(248, 113, 113, 0.45);
   background: rgba(248, 113, 113, 0.15);
   color: #fecaca;
-  font-size: 11.5px;
+  font-size: 12px;
   cursor: pointer;
 }
-.spec-ticker { font-size: 11.5px; color: rgba(239, 232, 216, 0.85); font-variant-numeric: tabular-nums; }
+.spec-ticker { font-size: 12px; color: rgba(239, 232, 216, 0.85); font-variant-numeric: tabular-nums; }
 
 .tourp { max-width: 1340px; width: min(97vw, 1340px); }
 .tour-tree {
