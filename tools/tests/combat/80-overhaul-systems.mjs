@@ -1312,7 +1312,19 @@ export default [
         showScreen('replays');
         if (!$id('topNav').classList.contains('hidden')) return { pass: false, error: 'topNav leaked on End->Replays overlay' };
 
-        // 5. Transient overlays are cleaned up on showScreen('menu')
+        // 5. Unified Modal Manager enforces mutual exclusion & clean teardown
+        openUiModal('modal2v2');
+        if (activeUiModal() !== 'modal2v2' || $id('modal2v2').classList.contains('hidden')) {
+          return { pass: false, error: 'openUiModal(modal2v2) did not open modal2v2' };
+        }
+        openUiModal('modalRouge');
+        if (activeUiModal() !== 'modalRouge' || !$id('modal2v2').classList.contains('hidden')) {
+          return { pass: false, error: 'Unified Modal Manager failed mutual exclusion between modal2v2 and modalRouge' };
+        }
+        closeAllUiModals();
+        if (activeUiModal() !== null) return { pass: false, error: 'closeAllUiModals did not close all modals' };
+
+        // 6. Transient overlays are cleaned up on showScreen('menu')
         for (const oid of ['modal2v2', 'modalRouge', 'modalWorld', 'rkInfo', 'trainLab', 'trainInspect', 'trialHud', 'specHud']) {
           $id(oid).classList.remove('hidden');
         }

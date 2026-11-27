@@ -334,13 +334,13 @@ function renderRougeModal() {
 function openRougeModal(chIdx) {
   if (typeof chIdx === 'number' && chIdx >= 0 && chIdx < CHAPTERS.length) rougeStoryChapter = chIdx;
   if (!pendingRaidBoss) pendingRaidBoss = rollRaidBoss(1);
-  const m = $id('modalRouge');
-  if (m) m.classList.remove('hidden');
+  if (typeof openUiModal === 'function') openUiModal('modalRouge');
+  else { const m = $id('modalRouge'); if (m) m.classList.remove('hidden'); }
   renderRougeModal();
 }
 function closeRougeModal() {
-  const m = $id('modalRouge');
-  if (m) m.classList.add('hidden');
+  if (typeof closeUiModal === 'function') closeUiModal('modalRouge');
+  else { const m = $id('modalRouge'); if (m) m.classList.add('hidden'); }
 }
 if ($id('modalRougeClose')) {
   $id('modalRougeClose').addEventListener('click', closeRougeModal);

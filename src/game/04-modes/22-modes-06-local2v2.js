@@ -100,9 +100,11 @@ if ($id('xiwu2v2WatchBtn')) {
     startWatch2v2Draft();
   });
 }
+if (typeof registerUiModal === 'function') registerUiModal('modal2v2', { onClose: () => levelBarTo(null) });
 function open2v2Modal(mode) {
   if (M2_TEXT[mode]) active2v2ModalMode = mode;
-  $id('modal2v2').classList.remove('hidden');
+  if (typeof openUiModal === 'function') openUiModal('modal2v2');
+  else $id('modal2v2').classList.remove('hidden');
   levelBarTo($id('m2LvWrap'));   // 对阵电脑时（你 + 电脑队友、两人 vs 两电脑）电脑的境界：借用共用的那一条，队友和对手一样
   render2v2Modal();
 }
@@ -111,7 +113,10 @@ function open2v2Hub(mode, reveal = true) {   // 先回到放 2v2 卡片的那一
   open2v2Modal(mode);
   return scr;
 }
-function close2v2Modal() { $id('modal2v2').classList.add('hidden'); levelBarTo(null); }
+function close2v2Modal() {
+  if (typeof closeUiModal === 'function') closeUiModal('modal2v2');
+  else { $id('modal2v2').classList.add('hidden'); levelBarTo(null); }
+}
 if ($id('m2Mutator')) $id('m2Mutator').addEventListener('click', e => { const b = e.target.closest('button[data-mut]'); if (b) { teamMutator = b.dataset.mut === 'mayhem' ? 'mayhem' : 'normal'; render2v2Modal(); } });
 $id('modal2v2Seg').addEventListener('click', e => {
   const b = e.target.closest('button[data-m]'); if (!b) return;

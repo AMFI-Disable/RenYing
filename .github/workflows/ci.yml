@@ -191,6 +191,9 @@ jobs:
       - name: Run UI Layout, HUD And Touch Audits
         run: |
           node tools/audits/ui-audit.mjs ci-ui 1440 900
+          node tools/audits/ui-audit.mjs ci-ui-wide 1920 1080
+          node tools/audits/ui-audit.mjs ci-ui-tablet 1024 768
+          node tools/audits/ui-audit.mjs ci-ui-en 1440 900 --en
           node tools/audits/hud-audit.mjs ci-hud 1440 900
           node tools/audits/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2
           node tools/audits/touch-audit.mjs ci-touch

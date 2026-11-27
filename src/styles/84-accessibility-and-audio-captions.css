@@ -1,0 +1,67 @@
+/* Accessibility Suite & Responsive Mobile/Tablet Layout (#58) */
+html[data-ui-scale="large"] body { font-size: 16.5px; }
+html[data-ui-scale="large"] .panel,
+html[data-ui-scale="large"] .setrow,
+html[data-ui-scale="large"] .sub,
+html[data-ui-scale="large"] .tips { font-size: 1.08em; }
+html[data-ui-scale="large"] button,
+html[data-ui-scale="large"] .seg button { font-size: 1.06em; min-height: 36px; }
+html[data-reduced-flash="1"] *,
+html[data-reduced-flash="1"] *::before,
+html[data-reduced-flash="1"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+@media (pointer: coarse) {
+  #settings .seg button,
+  #replays button,
+  #tournament button,
+  .spec-hud button,
+  #rpBar button {
+    min-height: 44px;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+@media (max-width: 1024px) {
+  #settings .setlist { grid-template-columns: 1fr; }
+  #settings .setrow { flex-wrap: wrap; gap: 6px; }
+  .spec-hud { max-width: 96vw; padding: 5px 8px; }
+  #rpBar { flex-wrap: wrap; row-gap: 6px; max-width: 96vw; }
+}
+@media (max-width: 720px) {
+  #settings .seg { flex-wrap: wrap; }
+  .trial-hud { min-width: 0; width: calc(100vw - 20px); padding: 6px 10px; }
+  .rp-code-box { flex-wrap: wrap; }
+}
+
+/* Spatial Audio Captions (#59) */
+.sfx-caption {
+  position: fixed;
+  left: 50%;
+  bottom: 58px;
+  transform: translateX(-50%);
+  z-index: 43;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 6px;
+  pointer-events: none;
+  max-width: min(90vw, 520px);
+}
+.sfx-cap-pill {
+  padding: 3px 10px;
+  border-radius: 999px;
+  background: rgba(10, 14, 24, 0.86);
+  border: 1px solid rgba(233, 196, 106, 0.45);
+  color: #efe8d8;
+  font-size: 12px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+.sfx-cap-pill.k-parry { border-color: #38bdf8; color: #bae6fd; }
+.sfx-cap-pill.k-ult,
+.sfx-cap-pill.k-ko { border-color: #f87171; color: #fecaca; }
+.sfx-cap-pill.k-stance { border-color: #a78bfa; color: #ede9fe; }
+

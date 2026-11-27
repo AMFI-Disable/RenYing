@@ -29,9 +29,13 @@ function isInMatchOverlayScreen(id) {
 
 function cleanupTransientOverlays(targetId) {
   // 1. 关闭跨页可能残留的弹窗与浮层（仅保留目标页自身的合法元素）
-  for (const mid of ['modal2v2', 'modalRouge', 'modalWorld', 'rkInfo', 'rkReveal']) {
-    const el = $id(mid);
-    if (el && !el.classList.contains('hidden')) el.classList.add('hidden');
+  if (typeof closeAllUiModals === 'function') {
+    closeAllUiModals();
+  } else {
+    for (const mid of ['modal2v2', 'modalRouge', 'modalWorld', 'rkInfo', 'rkReveal']) {
+      const el = $id(mid);
+      if (el && !el.classList.contains('hidden')) el.classList.add('hidden');
+    }
   }
   const hudModal = $id('hudCustomModal');
   if (hudModal && hudModal.style) hudModal.style.display = 'none';

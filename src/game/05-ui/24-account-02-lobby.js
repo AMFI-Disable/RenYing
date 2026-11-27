@@ -285,10 +285,13 @@ $id('mmRankInfoBtn').addEventListener('click', () => {
   renderRankInfo();
   const sea = rkSeason();
   $id('rkInfoSeason').textContent = sea.pre ? `季前赛 · 第一赛季 10 月 22 日开启` : `${SEASON.name} · ${SEASON.span}${sea.over ? ' · 已结束' : ' · 剩余 ' + fmtLeft(sea.left)}`;
-  $id('rkInfo').classList.remove('hidden');
+  if (typeof openUiModal === 'function') openUiModal('rkInfo');
+  else $id('rkInfo').classList.remove('hidden');
 });
-$id('rkInfoClose').addEventListener('click', () => $id('rkInfo').classList.add('hidden'));
-$id('rkInfo').addEventListener('click', e => { if (e.target === $id('rkInfo')) $id('rkInfo').classList.add('hidden'); });
+$id('rkInfoClose').addEventListener('click', () => {
+  if (typeof closeUiModal === 'function') closeUiModal('rkInfo');
+  else $id('rkInfo').classList.add('hidden');
+});
 setTimeout(() => { try { rkCheckPending(); } catch (e) {} }, 2500);
 // 在线情况：多少局在打、多少人在匹配、首页全服在线人数
 // 人数有两个来源，谁大用谁：

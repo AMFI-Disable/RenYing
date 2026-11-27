@@ -45,10 +45,58 @@ function uiConfirm(msg, opt = {}) {
     (inp || wrap.querySelector('button[data-v="0"]') || wrap.querySelector('button[data-v="1"]')).focus({ preventScroll: true });
   });
 }
-// 弹窗焦点：弹窗一出来就把焦点放进去（读屏和键盘都从弹窗里开始），关掉以后回到打开它的那个按钮
-const UI_DIALOGS = ['rkInfo', 'rkReveal', 'modal2v2', 'modalRouge', 'modalWorld', 'arModal', 'arIns'];
-const uiDlgOpen = el => el.isConnected && !el.hidden && !el.classList.contains('hidden');
+// 统一弹窗管理器（UIModal）：互斥打开、点遮罩关闭、onClose 钩子与焦点保存恢复
+const UI_MODAL_IDS = ['rkInfo', 'rkReveal', 'modal2v2', 'modalRouge', 'modalWorld'];
+const UI_DIALOGS = [...UI_MODAL_IDS, 'arModal', 'arIns'];
+const uiDlgOpen = el => !!(el && el.isConnected !== false && !el.hidden && !el.classList.contains('hidden'));
 const uiDlgPrev = new Map();
+const uiModalHooks = new Map();
+
+function registerUiModal(id, hooks = {}) {
+  if (!id) return;
+  uiModalHooks.set(id, Object.assign(uiModalHooks.get(id) || {}, hooks));
+}
+
+function closeUiModal(id) {
+  const el = $id(id);
+  if (!el || el.classList.contains('hidden')) return false;
+  el.classList.add('hidden');
+  const h = uiModalHooks.get(id);
+  if (h && typeof h.onClose === 'function') {
+    try { h.onClose(el); } catch (e) {}
+  }
+  return true;
+}
+
+function closeAllUiModals(exceptId = null) {
+  let closed = 0;
+  for (const id of UI_MODAL_IDS) {
+    if (id === exceptId) continue;
+    if (closeUiModal(id)) closed++;
+  }
+  return closed;
+}
+
+function openUiModal(id) {
+  const el = $id(id);
+  if (!el) return false;
+  closeAllUiModals(id);
+  el.classList.remove('hidden');
+  const h = uiModalHooks.get(id);
+  if (h && typeof h.onOpen === 'function') {
+    try { h.onOpen(el); } catch (e) {}
+  }
+  return true;
+}
+
+function activeUiModal() {
+  for (let i = UI_MODAL_IDS.length - 1; i >= 0; i--) {
+    const id = UI_MODAL_IDS[i], el = $id(id);
+    if (uiDlgOpen(el)) return id;
+  }
+  return null;
+}
+
 function uiDlgWatch(el) {
   if (!el || typeof el.hasAttribute !== 'function' || typeof MutationObserver !== 'function') return;   // 测试用的简化页面没有这些：直接跳过
   if (!el.hasAttribute('role')) el.setAttribute('role', 'dialog');
@@ -71,3 +119,7 @@ function uiDlgWatch(el) {
   }).observe(el, { attributes: true, attributeFilter: ['class', 'hidden'] });
 }
 for (const id of UI_DIALOGS) uiDlgWatch($id(id));
+for (const id of UI_MODAL_IDS) {
+  const el = $id(id);
+  if (el) el.addEventListener('click', e => { if (e.target === el) closeUiModal(id); });
+}

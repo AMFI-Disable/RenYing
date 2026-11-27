@@ -107,8 +107,15 @@ function worldEnter(line) {
   WORLD.wantLine = line >= 1 && line <= 9999 ? Math.floor(line) : 0;
   bpStart('world');
 }
-function openWorldModal() { const m = $id('modalWorld'); if (m) m.classList.remove('hidden'); cqLoad(false); }
-function closeWorldModal() { const m = $id('modalWorld'); if (m) m.classList.add('hidden'); }
+function openWorldModal() {
+  if (typeof openUiModal === 'function') openUiModal('modalWorld');
+  else { const m = $id('modalWorld'); if (m) m.classList.remove('hidden'); }
+  cqLoad(false);
+}
+function closeWorldModal() {
+  if (typeof closeUiModal === 'function') closeUiModal('modalWorld');
+  else { const m = $id('modalWorld'); if (m) m.classList.add('hidden'); }
+}
 if ($id('modalWorldClose')) $id('modalWorldClose').addEventListener('click', closeWorldModal);
 if ($id('btnWorldGo')) $id('btnWorldGo').addEventListener('click', () => { closeWorldModal(); worldEnter(0); });
 if ($id('btnWorldLine')) {
