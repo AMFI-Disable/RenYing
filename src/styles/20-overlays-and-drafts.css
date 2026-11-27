@@ -426,7 +426,7 @@
 .keyitem { display: flex; align-items: center; justify-content: space-between; gap: 8px; background: rgba(255,255,255,.035); border: 1px solid var(--faint); border-radius: 8px; padding: 7px 10px; transition: border-color .14s, background .14s; }
 .keyitem.is-custom { border-color: rgba(233,196,106,.42); background: rgba(233,196,106,.06); }
 .keyitem.is-rebinding { border-color: var(--gold); background: rgba(233,196,106,.12); }
-.keyitem .kact { font-size: 12.5px; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.keyitem .kact { font-size: 12.5px; color: var(--ink); white-space: normal; overflow-wrap: anywhere; min-width: 0; }
 .keyitem button { flex: none; min-width: 68px; font: 600 12.5px ui-monospace, Menlo, monospace; padding: 4px 8px; border-radius: 5px; cursor: pointer; background: rgba(0,0,0,.45); color: #8ff0ff; border: 1px solid var(--faint); transition: all .15s; text-align: center; }
 .keyitem button:hover { border-color: #8ff0ff; color: #fff; }
 .keyitem button.is-custom { color: #ffd166; border-color: rgba(233,196,106,.55); }

@@ -6,6 +6,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+- Allowed long key binding labels to wrap in Settings so the full action name remains readable.
+
 ## [1.2.0] - 2026-11-27
 
 ### Added
