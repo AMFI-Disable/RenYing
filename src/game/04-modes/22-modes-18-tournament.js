@@ -1,7 +1,8 @@
 // ======================= 实时观战 HUD 与武林大会赛程 (#56) =======================
 // 1. Live Spectator HUD & Read-Only Online Spectating
 // 纯渲染、只读广播与镜头控制，不修改任何战斗物理、随机数或回滚状态。
-const SPEC_HUD = { focusIdx: -1, clean: false, lastDraw: 0, liveSpecs: 0, liveTitle: '', bcastAcc: 0 };
+const SPEC_HUD = { focusIdx: -1, clean: false, stage: false, lastDraw: 0, liveSpecs: 0, liveTitle: '', bcastAcc: 0 };
+const TOUR_PERSIST_KEY = 'renying-tournament-active';
 const SPEC_BCAST_INTERVAL = 1 / 20;   // 20Hz 被动只读快照广播，不干扰 120Hz 回滚输入通道
 
 function spectatorHudAvail() {
@@ -34,6 +35,13 @@ function specHudToggleClean() {
   SPEC_HUD.lastDraw = 0;
   specHudRender(true);
   return SPEC_HUD.clean;
+}
+function specHudToggleStage() {
+  SPEC_HUD.stage = !SPEC_HUD.stage;
+  if (typeof document !== 'undefined' && document.body) document.body.classList.toggle('spec-stage', SPEC_HUD.stage);
+  SPEC_HUD.lastDraw = 0;
+  specHudRender(true);
+  return SPEC_HUD.stage;
 }
 
 // 房主被动向只读观战者广播当前画面快照（绝不修改任何战斗或 ROLL 状态）
@@ -124,6 +132,11 @@ function specHudRender(force = false) {
     if (sc > 0) countEl.textContent = `${sc} ${cvT('观战中')}`;
   }
   if (exitBtn) exitBtn.classList.toggle('hidden', !isLiveNet);
+  const stageBtn = $id('specStageBtn');
+  if (stageBtn) {
+    stageBtn.setAttribute('aria-pressed', String(SPEC_HUD.stage));
+    stageBtn.textContent = cvT(SPEC_HUD.stage ? '退出大屏' : '大屏模式');
+  }
   if (cleanBtn) {
     cleanBtn.setAttribute('aria-pressed', String(SPEC_HUD.clean));
     cleanBtn.textContent = cvT(SPEC_HUD.clean ? '恢复完整界面' : '纯净直转');
@@ -824,6 +837,7 @@ function tourRender() {
     const rows = tourStandings(TOUR);
     standingsEl.innerHTML = `<div class="tour-st-head"><b>${cvT('实时排名榜')}</b><span>${TOUR.history.length} / ${TOUR.size - 1} ${cvT('场已完赛')}</span></div><div class="tour-st-grid">${rows.map(r => `<div class="tour-st-row${r.place === 1 && TOUR.champion >= 0 ? ' is-champ' : ''}${r.human > 0 ? ' is-human' : ''}"><em>#${r.place}</em><span>${escapeHTML(r.name)}</span><b>${r.wins}-${r.losses}</b></div>`).join('')}</div>`;
   }
+  tourSaveLocal(TOUR);
 }
 
 if ($id('tourFormatSeg')) {
@@ -924,6 +938,99 @@ if ($id('tourResetBtn')) {
     });
   });
 }
+function tourSaveLocal(tour = TOUR) {
+  if (!tour) return false;
+  try {
+    const code = tourEncodeCode(tour);
+    if (code) localStorage.setItem(TOUR_PERSIST_KEY, JSON.stringify({ id: tour.id || '', code, at: Date.now() }));
+    return true;
+  } catch (e) { return false; }
+}
+function tourRestoreLocal() {
+  try {
+    if (typeof location !== 'undefined') {
+      const m = (location.hash || '').match(/tour=(RYTR1:[A-Za-z0-9_-]+)/) || (location.search || '').match(/tour=(RYTR1:[A-Za-z0-9_-]+)/);
+      if (m && m[1]) {
+        const imp = tourImportCode(decodeURIComponent(m[1]));
+        if (imp) return imp;
+      }
+    }
+    const raw = localStorage.getItem(TOUR_PERSIST_KEY);
+    if (!raw) return null;
+    const saved = JSON.parse(raw);
+    if (saved && saved.code) {
+      const parsed = tourDecodeCode(saved.code);
+      if (parsed) { if (saved.id) parsed.id = saved.id; TOUR = parsed; return TOUR; }
+    }
+  } catch (e) {}
+  return null;
+}
+function tourShareUrl(tour = TOUR) {
+  if (!tour) return '';
+  const code = tourEncodeCode(tour);
+  if (!code) return '';
+  const base = typeof location !== 'undefined' && location.origin && location.origin !== 'null' ? (location.origin + location.pathname) : '';
+  return base ? `${base}#tour=${code}` : code;
+}
+async function tourPublishPublic() {
+  if (!TOUR) { toast('尚未开启武林大会赛程'); return false; }
+  const code = tourEncodeCode(TOUR);
+  const url = tourShareUrl(TOUR);
+  const status = TOUR.champion >= 0 ? 'completed' : 'active';
+  const title = `${(typeof ACC !== 'undefined' && ACC.name) || '江湖'} · ${TOUR.size}强武林大会`;
+  if (window.CloudSave && typeof CloudSave.publishTournament === 'function' && CloudSave.getUser && CloudSave.getUser() && CloudSave.getUser().isCloud) {
+    try {
+      const res = await CloudSave.publishTournament({ id: TOUR.id, title, size: TOUR.size, status, code });
+      if (res && res.id) TOUR.id = res.id;
+      tourSaveLocal(TOUR);
+      if (navigator.clipboard && navigator.clipboard.writeText && url) navigator.clipboard.writeText(url).catch(() => {});
+      toast('已发布公开签表并复制观赛链接！');
+      tourLoadPublicList();
+      return true;
+    } catch (err) {
+      toast((err && err.message) || '发布公开签表失败');
+      return false;
+    }
+  }
+  if (navigator.clipboard && navigator.clipboard.writeText && url) {
+    navigator.clipboard.writeText(url).then(() => toast('已复制签表观赛链接（登录云端账号可发布至公开大厅）')).catch(() => toast('已生成签表观赛链接'));
+  } else {
+    toast('已生成签表观赛链接');
+  }
+  return true;
+}
+async function tourLoadPublicList() {
+  const el = $id('tourPublicList');
+  if (!el || !window.CloudSave || typeof CloudSave.tournaments !== 'function') return;
+  try {
+    const r = await CloudSave.tournaments();
+    const list = (r && Array.isArray(r.list)) ? r.list : [];
+    if (!list.length) { el.innerHTML = ''; return; }
+    el.innerHTML = `<div class="tour-st-head"><b>${cvT('公开赛程大厅')}</b><span>${list.length} ${cvT('场进行中/近期赛事')}</span></div><div class="tour-pub-grid">${list.slice(0, 8).map(t => `<button type="button" class="tour-pub-item" data-pub-code="${escapeHTML(t.code)}"><b>${escapeHTML(t.title)}</b><small>${escapeHTML(t.hostName)} · ${t.size}${cvT('强')} · ${cvT(t.status === 'completed' ? '已完赛' : '进行中')}</small></button>`).join('')}</div>`;
+  } catch (e) { el.innerHTML = ''; }
+}
+if ($id('specStageBtn')) $id('specStageBtn').addEventListener('click', () => specHudToggleStage());
+if ($id('tourShareComBtn')) {
+  $id('tourShareComBtn').addEventListener('click', () => {
+    if (!TOUR || typeof socShareMatchCard !== 'function') { toast('尚未开启武林大会赛程'); return; }
+    const champ = TOUR.champion >= 0 ? TOUR.entrants[TOUR.champion] : null;
+    socShareMatchCard({
+      kind: 'tour',
+      mode: '武林大会',
+      title: `${TOUR.size}强单败淘汰赛${champ ? ' · 盟主 ' + champ.name : ''}`,
+      summary: `已完赛 ${TOUR.history.length}/${TOUR.size - 1} 场 · 一键导入签表`,
+      code: tourEncodeCode(TOUR),
+    }, true);
+  });
+}
+if ($id('tourPublishBtn')) $id('tourPublishBtn').addEventListener('click', () => { tourPublishPublic(); });
+if ($id('tourPublicList')) {
+  $id('tourPublicList').addEventListener('click', e => {
+    const b = e.target.closest('[data-pub-code]');
+    if (!b) return;
+    if (tourImportCode(b.dataset.pubCode)) toast('已加载公开赛程签表');
+  });
+}
 if ($id('tourTree')) {
   $id('tourTree').addEventListener('click', e => {
     const play = e.target.closest('[data-tour-play]');
@@ -932,3 +1039,4 @@ if ($id('tourTree')) {
     if (sim) { const [r, m] = sim.dataset.tourSim.split(':').map(Number); tourSimMatch(r, m); }
   });
 }
+tourRestoreLocal();

@@ -64,7 +64,12 @@ function rkState() {
   if (!RKS || RKS.season !== sid) {
     const old = RKS;
     RKS = rkFresh(sid);
-    if (old && old.placed >= RK.PLACE) RKS.last = { season: old.season, label: rkTier(old.pts).label, peak: old.peak || old.pts };
+    if (old && old.placed >= RK.PLACE) {
+      const pts = old.pts || old.est || RK.PLACE_START;
+      RKS.last = { season: old.season, label: rkTier(pts).label, pts, peak: old.peak || pts };
+      PROF.rkHist = (PROF.rkHist && typeof PROF.rkHist === 'object') ? PROF.rkHist : {};
+      PROF.rkHist[old.season] = { pts, peak: old.peak || pts, label: rkTier(pts).label };
+    }
   }
   // Players already on their third or fourth placement under the old rules are placed at their estimate.
   if (RKS.placed >= RK.PLACE && !(RKS.pts > 0)) { RKS.pts = rkClamp(RKS.est, RK.PLACE_CAP); RKS.peak = Math.max(RKS.peak || 0, RKS.pts); }
@@ -365,6 +370,12 @@ function commitNetProgress(w, agreed, isQualifying) {
     PROF.netWins = (PROF.netWins || 0) + 1;
   } else {
     PROF.netLosses = (PROF.netLosses || 0) + 1;
+  }
+  const modeKey = (typeof M !== 'undefined' && M) ? (M.tag3 ? 'tag3' : (M.duo || M.four ? 'duo' : '')) : '';
+  if (modeKey) {
+    PROF.modeStats = (PROF.modeStats && typeof PROF.modeStats === 'object') ? PROF.modeStats : {};
+    const ms = PROF.modeStats[modeKey] || (PROF.modeStats[modeKey] = { w: 0, l: 0 });
+    if (won) ms.w = (ms.w || 0) + 1; else ms.l = (ms.l || 0) + 1;
   }
   $id('endRank').textContent = `+${gain} 墨锭 · 联机${won ? '胜' : '负'}（累计 ${PROF.netWins || 0} 胜）`;
   if (ranked) {

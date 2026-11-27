@@ -830,9 +830,15 @@
   }
   function flag(k) { return flagCache()[k] === true; }
 
-  // 排行榜（不用登录）：k 是 rank（段位榜，s 是赛季）或 wins（战绩榜）
+  // 排行榜（不用登录）：k 支持 rank（段位/历史赛季）、wins、tag3、duo、gboss
   async function leaderboard(k, season) {
     return api('/api/leaderboard?k=' + encodeURIComponent(k) + (season ? '&s=' + encodeURIComponent(season) : ''), { method: 'GET' });
+  }
+  // 持久化公开锦标赛：公开读取（60 秒缓存）+ 云端账号发布
+  async function tournaments() { return api('/api/tournaments', { method: 'GET' }); }
+  async function publishTournament(body) {
+    if (!cloudActive() || !getUser()) { const e = new Error('当前是本地存档，登录后可发布公开赛程'); e.status = 0; throw e; }
+    return api('/api/tournaments', { method: 'POST', body: JSON.stringify(body || {}) });
   }
   // 侠客列传的江湖足迹：看一条路上大家走到哪、选了什么（不用登录）；云端账号走完一节记一笔
   async function saga(hero) { return api('/api/saga?hero=' + encodeURIComponent(hero), { method: 'GET' }); }
@@ -1541,6 +1547,8 @@
       exportAllAccounts,
       importAccountData,
       leaderboard,
+      tournaments,
+      publishTournament,
       onProgress,
       loadFlags,
       flag,

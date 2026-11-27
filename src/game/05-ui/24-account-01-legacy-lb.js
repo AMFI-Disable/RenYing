@@ -247,8 +247,34 @@ if ($id('importFileInput')) {
   });
 }
 
-let lbKind = 'rank', lbTok = 0;
+let lbKind = 'rank', lbSeason = '', lbTok = 0;
+function lbSeasonLabel(id) {
+  if (typeof SEASONS !== 'undefined' && Array.isArray(SEASONS)) {
+    const found = SEASONS.find(s => s.id === id);
+    if (found) return `${found.id} · ${found.name}`;
+  }
+  return id;
+}
+function lbSyncSeasonSelect(seasons, activeId) {
+  const sel = $id('lbSeasonSel');
+  if (!sel) return;
+  const list = Array.isArray(seasons) && seasons.length ? seasons : (typeof SEASONS !== 'undefined' ? SEASONS.map(s => s.id).reverse() : [activeId || 'S2']);
+  const target = list.includes(activeId) ? activeId : list[0];
+  lbSeason = target;
+  if (sel.dataset.opts !== list.join(',')) {
+    sel.dataset.opts = list.join(',');
+    sel.innerHTML = list.map(id => `<option value="${escapeHTML(id)}">${escapeHTML(lbSeasonLabel(id))}</option>`).join('');
+  }
+  sel.value = target;
+  sel.hidden = lbKind !== 'rank';
+}
 $id('lbTabs').addEventListener('click', e => { const b = e.target.closest('button'); if (b) { lbKind = b.dataset.k; openLeaderboard(); } });
+if ($id('lbSeasonSel')) {
+  $id('lbSeasonSel').addEventListener('change', e => {
+    lbSeason = e.target.value || '';
+    openLeaderboard();
+  });
+}
 // 排行榜：读取中、空榜、出错都用通用的 uiState 画在表格的位置上；说明文字只在有人上榜时显示
 function lbShow(sub, state, rows) {
   $id('lbSub').textContent = sub; $id('lbSub').hidden = !sub;
@@ -258,10 +284,14 @@ async function openLeaderboard() {
   menuCam.tz = 1.35; showScreen('lb');
   const tok = ++lbTok, kind = lbKind;
   for (const b of (($id('lbTabs') && $id('lbTabs').children) || [])) b.classList.toggle('sel', b.dataset.k === kind);
+  const curSeason = typeof rkSeason === 'function' ? rkSeason() : { id: 'S2', name: '第二赛季' };
+  const activeSeason = lbSeason || curSeason.id;
+  lbSyncSeasonSelect(null, activeSeason);
   const sTag = $id('lbSeasonTag');
-  if (sTag && typeof rkSeason === 'function') {
-    const s = rkSeason();
-    sTag.textContent = `${s.name}${typeof SEASON !== 'undefined' && SEASON.span ? ' · ' + SEASON.span : ''}`;
+  if (sTag) {
+    sTag.textContent = kind === 'rank' && activeSeason !== curSeason.id
+      ? `${lbSeasonLabel(activeSeason)} · 历史归档`
+      : `${curSeason.name}${typeof SEASON !== 'undefined' && SEASON.span ? ' · ' + SEASON.span : ''}`;
   }
   if (kind === 'mastery') {
     if (typeof masterySummary !== 'function') { lbShow('', uiState('empty', '专精数据尚未加载'), ''); return; }
@@ -273,21 +303,43 @@ async function openLeaderboard() {
   }
   lbShow('', uiState('loading', '正在读取排行榜…'), '');
   const fail = err => { if (tok === lbTok) lbShow('', uiState('error', (err && err.message) || '排行榜暂时读不到，稍后再试'), ''); };
-  if (kind === 'rank') {
-    // 以前这里请求的是网页自己所在网站的 /api/ranklb，GitHub Pages 上没有这个接口，榜单永远“读取失败”；现在走云端 Worker
-    try {
-      const j = await CloudSave.leaderboard('rank', rkSeason().id);
-      if (tok !== lbTok) return;   // 读的时候换了标签：这份结果不要了
-      if (!j.list.length) { lbShow('', uiState('empty', '还没有人完成定级赛。排位赛打满 3 场就能上榜！'), ''); return; }
-      lbShow(`本赛季打满 ${RK.PLACE} 场定级赛后上榜。段位从低到高：${RK_TIERS.map(t => t.l + ' ' + t.n).join('、')}`, '',
+  try {
+    const j = await CloudSave.leaderboard(kind, kind === 'rank' ? activeSeason : '');
+    if (tok !== lbTok) return;   // 读的时候换了标签：这份结果不要了
+    if (Array.isArray(j.seasons) && j.seasons.length) lbSyncSeasonSelect(j.seasons, activeSeason);
+    if (kind === 'rank') {
+      if (!j.list.length) {
+        const msg = activeSeason === curSeason.id
+          ? '还没有人完成定级赛。排位赛打满 3 场就能上榜！'
+          : `${lbSeasonLabel(activeSeason)} 暂无历史归档记录`;
+        lbShow('', uiState('empty', msg), '');
+        return;
+      }
+      const note = activeSeason === curSeason.id
+        ? `本赛季打满 ${RK.PLACE} 场定级赛后上榜。段位从低到高：${RK_TIERS.map(t => t.l + ' ' + t.n).join('、')}`
+        : `${lbSeasonLabel(activeSeason)} 赛季历史归档榜单（共 ${j.list.length} 位上榜侠客）`;
+      lbShow(note, '',
         '<tr><th>名次</th><th>昵称</th><th>段位</th><th class="n">段位分</th></tr>' + j.list.map((r, i) =>
         `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td>${escapeHTML(rkTier(r.pts).label + ' · ' + rkTier(r.pts).name)}</td><td class="n">${r.pts}</td></tr>`).join(''));
-    } catch (err) { fail(err); }
-    return;
-  }
-  try {
-    const j = await CloudSave.leaderboard('wins');
-    if (tok !== lbTok) return;
+      return;
+    }
+    if (kind === 'gboss') {
+      if (!j.list.length) { lbShow('', uiState('empty', '还没有天魔讨伐伤害记录——去天魔讨伐砍出第一刀吧！'), ''); return; }
+      lbShow('全服天魔讨伐累计伤害榜（60 秒缓存，零写入）', '',
+        '<tr><th>名次</th><th>昵称</th><th class="n">累计伤害</th><th class="n">出战次数</th></tr>' + j.list.map((r, i) =>
+        `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td class="n">${(r.dmg || 0).toLocaleString()}</td><td class="n">${r.runs || 0}</td></tr>`).join(''));
+      return;
+    }
+    if (kind === 'tag3' || kind === 'duo') {
+      const lbl = kind === 'tag3' ? '3v3 车轮战' : '2v2 双打';
+      if (!j.list.length) { lbShow('', uiState('empty', `还没有人记录 ${lbl} 胜场——去打赢第一场吧！`), ''); return; }
+      lbShow(`${lbl}公开战绩榜（按胜场排序）`, '',
+        '<tr><th>名次</th><th>昵称</th><th class="n">胜</th><th class="n">负</th><th class="n">胜率</th></tr>' + j.list.map((r, i) => {
+        const g = r.wins + r.losses, rate = g ? Math.round(r.wins / g * 100) + '%' : '-';
+        return `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td class="n">${r.wins}</td><td class="n">${r.losses}</td><td class="n">${rate}</td></tr>`;
+      }).join(''));
+      return;
+    }
     if (!j.list.length) { lbShow('', uiState('empty', '还没有人打过联机——去赢下第一场吧！'), ''); return; }
     lbShow(`已注册玩家 ${j.players} 位，按联机胜场排`, '', '<tr><th>名次</th><th>昵称</th><th class="n">胜</th><th class="n">负</th><th class="n">胜率</th></tr>' + j.list.map((r, i) => {
       const g = r.wins + r.losses, rate = g ? Math.round(r.wins / g * 100) + '%' : '-';

@@ -217,6 +217,19 @@
 .tour-st-row b { color: rgba(239, 232, 216, 0.8); }
 .tour-st-row.is-champ { background: rgba(233, 196, 106, 0.18); border: 1px solid rgba(233, 196, 106, 0.5); }
 .tour-st-row.is-human span { color: #6fe0ff; }
+.tour-public { margin-top: 12px; }
+.tour-pub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 8px; }
+.tour-pub-item { display: flex; flex-direction: column; align-items: flex-start; gap: 3px; padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,.04); border: 1px solid rgba(233,196,106,.24); color: var(--ink); cursor: pointer; text-align: left; font: inherit; }
+.tour-pub-item:hover { background: rgba(233,196,106,.12); border-color: rgba(233,196,106,.5); }
+.tour-pub-item b { font-size: 13px; color: #fbefcf; }
+.tour-pub-item small { font-size: 12px; color: var(--dim); }
+.lb-head-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.lb-season-sel { font: 13px var(--body); padding: 4px 10px; border-radius: 999px; background: rgba(13,21,30,.88); color: var(--gold); border: 1px solid rgba(233,196,106,.45); cursor: pointer; }
+#lbTabs.lb-tabs { display: flex; flex-wrap: wrap; justify-content: center; border-radius: 14px; max-width: 100%; }
+#lbTabs.lb-tabs button { font-size: 13.5px; padding: 6px 14px; white-space: nowrap; }
+body.spec-stage #specHud { top: 10px; padding: 10px 18px; border-color: rgba(233,196,106,.75); box-shadow: 0 12px 36px rgba(0,0,0,.65); }
+body.spec-stage #specTitle { font-size: 17px; letter-spacing: .08em; }
+body.spec-stage .spec-ticker { font-size: 14px; }
 @media (max-width: 860px) {
   .tour-tree,
   .tour-tree[data-size="4"],
