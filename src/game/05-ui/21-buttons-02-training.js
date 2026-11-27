@@ -1,19 +1,20 @@
 // ======================= 木人训练与对手行为栏 =======================
 // 本文件：木人桩：练哪位侠客、木人的特性开关、对手行为栏（稻草人做什么，见 src/data/14-dummy.js）、几种练习的开局。
-let trainSubTab = 'lesson';   // 训练场当前在哪一页（AI 观战页要借用顶上的「AI 境界」条）
+let trainSubTab = 'trials';   // 训练场当前在哪一页（AI 观战页要借用顶上的「AI 境界」条）
 function xiwuTrainingTab(name) {
-  trainSubTab = name;
+  const normalized = name === 'scenario' ? 'free' : (name === 'match' ? 'trials' : name);
+  trainSubTab = normalized;
   const tabs = document.querySelectorAll('#xiwuTrainingTabs [data-training-tab]');
   const panes = document.querySelectorAll('#single [data-training-pane]');
   for (const tab of tabs) {
-    const selected = tab.dataset.trainingTab === name;
+    const selected = tab.dataset.trainingTab === normalized;
     tab.classList.toggle('sel', selected);
     tab.setAttribute('aria-selected', String(selected));
     tab.tabIndex = selected ? 0 : -1;
   }
-  for (const pane of panes) pane.hidden = pane.dataset.trainingPane !== name;
-  if (name === 'trials' && typeof renderComboTrialsPane === 'function') renderComboTrialsPane();
-  if ($id('aiLvHome') && currentSingleTab === 'train') $id('aiLvHome').hidden = name !== 'watch';
+  for (const pane of panes) pane.hidden = pane.dataset.trainingPane !== normalized;
+  if (normalized === 'trials' && typeof renderComboTrialsPane === 'function') renderComboTrialsPane();
+  if ($id('aiLvHome') && currentSingleTab === 'train') $id('aiLvHome').hidden = normalized !== 'watch';
 }
 if ($id('xiwuTrainingTabs')) {
   $id('xiwuTrainingTabs').addEventListener('click', e => {
@@ -31,7 +32,7 @@ if ($id('xiwuTrainingTabs')) {
     const next = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : (at + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
     tabs[next].focus(); tabs[next].click();
   });
-  xiwuTrainingTab('lesson');
+  xiwuTrainingTab('trials');
 }
 let trainChar = 0, trainTargetMode = 'dummy', trainOppMode = 'dummy', trainAiLevel = 'normal';
 const TRAIN_AI_INFO = {
@@ -109,7 +110,7 @@ if (dummyFeatEl) dummyFeatEl.addEventListener('click', e => { const b = e.target
 // 选了动作马上生效：「一直重复」每隔「间隔」秒做一次，「只做一次」做完就站着。
 const DB = { open: false, paused: false };
 const dummyBarKey = () => (Object.values(custom1PKeys).includes('Tab') ? 'F4' : 'Tab');
-const dummyBarAvail = () => M.mode === 'train' && !!B && !FOREST.on && !TUT && !REPLAY.on && M.phase !== 'end';
+const dummyBarAvail = () => M.mode === 'train' && !!B && !FOREST.on && !TUT && !REPLAY.on && !(typeof TRIAL_RUN !== 'undefined' && TRIAL_RUN.active) && M.phase !== 'end';
 function dummyBarOn() { return DB.open; }
 function applyTrainOpponent() {
   if (M.mode !== 'train' || !B) return;
@@ -422,7 +423,8 @@ function trainLabRender(force = false) {
 function trainLabUpdate() {
   const panel = $id('trainLab');
   if (!panel) return;
-  const active = M.mode === 'train' && !TUT && !FOREST.on && !REPLAY.on && M.phase !== 'end' && !currentScreen;
+  const inTrial = typeof TRIAL_RUN !== 'undefined' && TRIAL_RUN.active;
+  const active = M.mode === 'train' && !TUT && !FOREST.on && !REPLAY.on && !inTrial && M.phase !== 'end' && !currentScreen;
   const show = active && !!TRAIN.labOpen && !paused && !DB.open;
   panel.classList.toggle('hidden', !show);
   if (show) trainLabRender(false);
@@ -462,7 +464,8 @@ function trainInspectRender() {
 function trainInspectUpdate() {
   const panel = $id('trainInspect');
   if (!panel) return;
-  const active = M.mode === 'train' && !REPLAY.on && M.phase !== 'end' && !currentScreen;
+  const inTrial = typeof TRIAL_RUN !== 'undefined' && TRIAL_RUN.active;
+  const active = M.mode === 'train' && !REPLAY.on && !inTrial && M.phase !== 'end' && !currentScreen;
   panel.classList.toggle('hidden', !active || paused || DB.open);
   trainInspectRender();
   trainLabUpdate();
@@ -609,7 +612,7 @@ function openReviewTraining(heroId, focus) {
   renderDummyFeatures();
   singleSec('train');
   showScreen('single');
-  xiwuTrainingTab('scenario');
+  xiwuTrainingTab('free');
 }
 const trainBtnEl = $id('trainBtn');
 if (trainBtnEl) trainBtnEl.addEventListener('click', () => {
@@ -620,11 +623,6 @@ const trainPickBtnEl = $id('trainPickBtn');
 if (trainPickBtnEl) trainPickBtnEl.addEventListener('click', () => bpStart('train', { targetMode: 'dummy' }));
 const xiwuFullTutBtn = $id('xiwuFullTutBtn');
 if (xiwuFullTutBtn) xiwuFullTutBtn.addEventListener('click', () => { initAudio(); startTutorial(true); });
-const xiwuTrainingCpuBtn = $id('xiwuTrainingCpuBtn');
-if (xiwuTrainingCpuBtn) xiwuTrainingCpuBtn.addEventListener('click', () => {
-  singleSec('cpu');
-  showScreen('single');
-});
 const xiwuDrillList = document.querySelector('.xiwu-drill-list');
 if (xiwuDrillList) xiwuDrillList.addEventListener('click', e => {
   const b = e.target.closest('button[data-drill]');

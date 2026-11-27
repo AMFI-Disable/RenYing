@@ -151,6 +151,7 @@ document.getElementById('pause').addEventListener('click', e => {
 });
 
 function toMenu(returnHome = false) {
+  if (typeof trialStop === 'function') trialStop();
   if (typeof competitiveDraftStopTimer === 'function') competitiveDraftStopTimer();
   if (typeof mapBriefingTimer !== 'undefined' && mapBriefingTimer) { clearInterval(mapBriefingTimer); mapBriefingTimer = null; }
   if (typeof competitiveDraft !== 'undefined') competitiveDraft = null;

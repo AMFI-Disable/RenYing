@@ -552,33 +552,30 @@ window.RYBoot = (function () {
         <div class="saga-wrap"><div class="saga-heroes" id="sagaHeroes"></div><div class="saga-route" id="sagaRoute"></div></div>
       </div>
 
-      <!-- 训练场：教学、自由训练与情景训练 -->
+      <!-- 训练场：连招试炼、招式教学、自由与情景、AI 观战 -->
       <div data-sec="train" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
           <h3 class="spt">训练场</h3>
-          <span class="sub-badge">从基础招式到实战应对</span>
+          <span class="sub-badge">连招试炼 · 自由对练 · 帧数检视</span>
         </div>
         <div class="xiwu-training-tabs" id="xiwuTrainingTabs" role="tablist" aria-label="训练项目">
-          <button type="button" role="tab" id="xiwuTabLesson" aria-controls="xiwuPaneLesson" aria-selected="true" class="sel" data-training-tab="lesson">招式教学</button>
-          <button type="button" role="tab" id="xiwuTabTrials" aria-controls="xiwuPaneTrials" aria-selected="false" data-training-tab="trials">连招试炼</button>
-          <button type="button" role="tab" id="xiwuTabFree" aria-controls="xiwuPaneFree" aria-selected="false" data-training-tab="free">自由训练</button>
-          <button type="button" role="tab" id="xiwuTabScenario" aria-controls="xiwuPaneScenario" aria-selected="false" data-training-tab="scenario">情景训练</button>
-          <button type="button" role="tab" id="xiwuTabMatch" aria-controls="xiwuPaneMatch" aria-selected="false" data-training-tab="match">实战演练</button>
+          <button type="button" role="tab" id="xiwuTabTrials" aria-controls="xiwuPaneTrials" aria-selected="true" class="sel" data-training-tab="trials">连招试炼</button>
+          <button type="button" role="tab" id="xiwuTabLesson" aria-controls="xiwuPaneLesson" aria-selected="false" data-training-tab="lesson">招式教学</button>
+          <button type="button" role="tab" id="xiwuTabFree" aria-controls="xiwuPaneFree" aria-selected="false" data-training-tab="free">自由与情景</button>
           <button type="button" role="tab" id="xiwuTabWatch" aria-controls="xiwuPaneWatch" aria-selected="false" data-training-tab="watch">AI 观战</button>
         </div>
         <div class="xiwu-training-content">
-          <section class="xiwu-training-card" id="xiwuPaneLesson" role="tabpanel" aria-labelledby="xiwuTabLesson" data-training-pane="lesson">
-            <h4>招式教学</h4>
-            <p>跟随步骤练习移动、连招、门派技能、格挡、精准招架、腾空闪与奥义。</p>
-            <button class="go small" id="xiwuFullTutBtn" type="button">开始完整教学</button>
-          </section>
-          <section class="xiwu-training-card" id="xiwuPaneTrials" role="tabpanel" aria-labelledby="xiwuTabTrials" data-training-pane="trials" hidden>
-            <h4>侠客连招试炼 · 专精历练</h4>
+          <section class="xiwu-training-card" id="xiwuPaneTrials" role="tabpanel" aria-labelledby="xiwuTabTrials" data-training-pane="trials">
+            <div class="trial-hero-select" id="trialHeroSelect" role="group" aria-label="选择试炼侠客"></div>
             <div class="trial-hero-head" id="trialHeroHead"></div>
             <div class="trial-list" id="trialList"></div>
           </section>
+          <section class="xiwu-training-card" id="xiwuPaneLesson" role="tabpanel" aria-labelledby="xiwuTabLesson" data-training-pane="lesson" hidden>
+            <h4>招式教学</h4>
+            <p>按步骤掌握移动、连击、技能、格挡、精准招架、腾空闪与奥义。</p>
+            <button class="go small" id="xiwuFullTutBtn" type="button">开始完整教学</button>
+          </section>
           <section class="xiwu-training-card" id="xiwuPaneFree" role="tabpanel" aria-labelledby="xiwuTabFree" data-training-pane="free" hidden>
-            <h4>自由训练 · 木人桩与 AI 实战对练</h4>
             <div class="xiwu-train-controls">
               <div class="xiwu-train-row">
                 <span class="xl-lbl">对手类型</span>
@@ -599,41 +596,34 @@ window.RYBoot = (function () {
               </div>
               <p class="train-ai-desc" id="trainAiDesc">木人桩模式：可精确控制对手站桩、格挡、弹反、连段与受压闪避，并实时查看帧数差与判定框。</p>
             </div>
-            <div class="sec-sub-label">木人桩与自动回血特性</div>
             <div class="dummy-feat-list" id="dummyFeatList" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px;justify-content:center"></div>
             <div class="single-action-row">
               <button class="go small" id="trainBtn" type="button">开始自由训练</button>
               <button class="ghost small" id="trainPickBtn" type="button">点将选人开练</button>
             </div>
-          </section>
-          <section class="xiwu-training-card xiwu-scenario-card" id="xiwuPaneScenario" role="tabpanel" aria-labelledby="xiwuTabScenario" data-training-pane="scenario" hidden>
-            <h4>情景训练 · 六大专项课题</h4>
-            <p>选择一种实战场景，立即在无限回血与帧判定工具辅助下反复演练。</p>
-            <div class="xiwu-drill-list">
-              <button type="button" data-drill="combo"><b>连招与追击</b><span>面对站桩目标练习起手、连段与追击</span></button>
-              <button type="button" data-drill="block"><b>压制与破防</b><span>面对持续格挡的目标寻找破防时机</span></button>
-              <button type="button" data-drill="parry"><b>精准招架</b><span>练习观察近身攻击并把握招架时机</span></button>
-              <button type="button" data-drill="combo-escape"><b>受压与脱身</b><span>面对连段与腾空闪，练习防守和重新进攻</span></button>
-              <button type="button" data-drill="ai-sparring"><b>AI 实战拆招</b><span>开启真实 AI 难度对练（无数值膨胀），检验立回与确反</span></button>
-              <button type="button" data-drill="anti-air"><b>高台与空战应对</b><span>面对反复起跳目标练习对空截击与落台追击</span></button>
+            <div class="xiwu-drill-wrap">
+              <div class="sec-sub-label">六大专项情景</div>
+              <div class="xiwu-drill-list">
+                <button type="button" data-drill="combo"><b>连招与追击</b><span>站桩目标练习起手、连段与追击</span></button>
+                <button type="button" data-drill="block"><b>压制与破防</b><span>持续格挡目标练习破防时机</span></button>
+                <button type="button" data-drill="parry"><b>精准招架</b><span>近身攻击练习把握招架时机</span></button>
+                <button type="button" data-drill="combo-escape"><b>受压与脱身</b><span>面对连段与腾空闪练习防守反攻</span></button>
+                <button type="button" data-drill="ai-sparring"><b>AI 实战拆招</b><span>真实 AI 难度对练检验立回与确反</span></button>
+                <button type="button" data-drill="anti-air"><b>高台与空战应对</b><span>起跳目标练习对空截击与落台追击</span></button>
+              </div>
             </div>
-          </section>
-          <section class="xiwu-training-card xiwu-match-card" id="xiwuPaneMatch" role="tabpanel" aria-labelledby="xiwuTabMatch" data-training-pane="match" hidden>
-            <h4>实战演练</h4>
-            <p>用当前选择的电脑境界开始一场完整对局，检验训练成果。</p>
-            <button class="go small" id="xiwuTrainingCpuBtn" type="button">前往对战电脑</button>
           </section>
           <section class="xiwu-training-card xiwu-watch-card" id="xiwuPaneWatch" role="tabpanel" aria-labelledby="xiwuTabWatch" data-training-pane="watch" hidden>
             <h4>AI 观战 · 电脑对电脑</h4>
-            <p>所有模式的 AI 对决都收在这里：用上方「AI 境界」选电脑强弱，挑一个模式坐下来看，研究出招、站位和战术。</p>
+            <p>选择上方「AI 境界」与下方模式，观看电脑对战演武。</p>
             <div class="xiwu-watch-list">
-              <button type="button" id="cpuWatchBtn"><b>1v1 演武</b><span>两位电脑侠客单挑，可跟随山河异境投票的地图</span></button>
-              <button type="button" id="tag3WatchBtn"><b>3v3 车轮</b><span>三人接力车轮战，看谁先倒下</span></button>
-              <button type="button" id="xiwu2v2WatchBtn"><b>2v2 组队</b><span>四位天道电脑两两组队对决</span></button>
-              <button type="button" id="chaosWatchBtn"><b>天机乱斗</b><span>每隔数秒降下随机异象，电脑见招拆招</span></button>
-              <button type="button" id="cujuWatchBtn"><b>墨球蹴鞠</b><span>电脑队伍对踢，观察传球与射门</span></button>
-              <button type="button" id="mapsWatchBtn"><b>山河异境</b><span>在地利各异的地图上看电脑借势作战</span></button>
-              <button type="button" id="mayhemWatchBtn"><b>通天神决</b><span>真元暴涨、技能免冷却的神魔大战</span></button>
+              <button type="button" id="cpuWatchBtn"><b>1v1 演武</b><span>两位电脑侠客单挑</span></button>
+              <button type="button" id="tag3WatchBtn"><b>3v3 车轮</b><span>三人接力车轮战</span></button>
+              <button type="button" id="xiwu2v2WatchBtn"><b>2v2 组队</b><span>四位电脑两两组队对决</span></button>
+              <button type="button" id="chaosWatchBtn"><b>天机乱斗</b><span>随机异象下见招拆招</span></button>
+              <button type="button" id="cujuWatchBtn"><b>墨球蹴鞠</b><span>电脑队伍传球与射门</span></button>
+              <button type="button" id="mapsWatchBtn"><b>山河异境</b><span>特殊地形借势作战</span></button>
+              <button type="button" id="mayhemWatchBtn"><b>通天神决</b><span>真元暴涨、技能免冷却</span></button>
             </div>
           </section>
         </div>

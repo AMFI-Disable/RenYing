@@ -68,6 +68,11 @@ window.addEventListener('keydown', e => {
     return;
   }
   if ((e.code === 'KeyP' || e.code === 'Escape') && M.mode !== 'demo' && M.mode !== 'net' && !['end', 'perk', 'draft', 'talk'].includes(M.phase)) {   // 抽秘卷、剧情对话时不弹暂停
+    if (e.code === 'Escape' && typeof TRIAL_RUN !== 'undefined' && TRIAL_RUN.active && typeof trialLeaveTest === 'function') {
+      e.preventDefault();
+      trialLeaveTest();
+      return;
+    }
     if (typeof teamCmdClose === 'function') teamCmdClose();
     paused = !paused; showScreen(paused ? 'pause' : null); if (!paused) refocusGame(); return;
   }

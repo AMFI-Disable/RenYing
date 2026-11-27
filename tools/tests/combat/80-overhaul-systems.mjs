@@ -1033,25 +1033,123 @@ export default [
       const prevInk = PROF.ink || 0;
       try {
         PROF.mastery = {}; PROF.trials = {};
-        // Start Qingfeng basic trial (light -> skill) and complete it via live action detection
+        // 1. Streamlined training tab normalization & 20-hero selector
+        xiwuTrainingTab('scenario');
+        if (trainSubTab !== 'free') return { pass: false, error: 'Legacy scenario tab should normalize to free, got ' + trainSubTab };
+        xiwuTrainingTab('match');
+        if (trainSubTab !== 'trials') return { pass: false, error: 'Legacy match tab should normalize to trials, got ' + trainSubTab };
+        renderComboTrialsPane('qingfeng');
+        const selHtml = ($id('trialHeroSelect') || {}).innerHTML || '';
+        const heroPillCount = (selHtml.match(/data-trial-hero="/g) || []).length;
+        if (heroPillCount !== 20) return { pass: false, error: 'Expected 20 hero selector pills in #trialHeroSelect, got ' + heroPillCount };
+
+        // 2. Start Qingfeng Tier 1, verify single Leave Test control & competing chrome hidden
         if (!startComboTrial('qingfeng', 0) || !TRIAL_RUN.active) return { pass: false, error: 'startComboTrial failed' };
+        trainInspectUpdate();
+        dummyBarUpdate();
+        const hudHtml = ($id('trialHud') || {}).innerHTML || '';
+        if (!hudHtml.includes('id="trialLeaveBtn"') || hudHtml.includes('id="trialHudExit"')) {
+          return { pass: false, error: 'Expected single #trialLeaveBtn in #trialHud' };
+        }
+        if (!$id('trainLab').classList.contains('hidden') || !$id('trainInspect').classList.contains('hidden') || !$id('dummyBarBtn').classList.contains('hidden')) {
+          return { pass: false, error: 'Competing training chrome should be hidden during active combo trial' };
+        }
+
+        // 3. Mistake feedback resets sequence cleanly
         if (!trialRecordAction(A, 'light') || TRIAL_RUN.stepIdx !== 1) return { pass: false, error: 'Trial step 1 (light) did not advance' };
-        if (!trialRecordAction(A, 'skill') || !TRIAL_RUN.done) return { pass: false, error: 'Trial step 2 (skill) did not complete trial' };
+        if (trialRecordAction(A, 'skill2')) return { pass: false, error: 'Wrong move should return false' };
+        if (TRIAL_RUN.stepIdx !== 0 || TRIAL_RUN.feedback.kind !== 'mistake') {
+          return { pass: false, error: 'Mistake did not reset stepIdx or set mistake feedback: ' + JSON.stringify(TRIAL_RUN.feedback) };
+        }
+
+        // 4. Timing window expiration resets sequence with timeout feedback
+        if (!trialRecordAction(A, 'light') || TRIAL_RUN.stepIdx !== 1) return { pass: false, error: 'Re-starting step 1 failed' };
+        clock += TRIAL_LINK_WINDOW + 0.5;
+        trialTickUpdate();
+        if (TRIAL_RUN.stepIdx !== 0 || TRIAL_RUN.feedback.kind !== 'timeout') {
+          return { pass: false, error: 'Link window timeout did not reset or set timeout feedback: ' + JSON.stringify(TRIAL_RUN.feedback) };
+        }
+
+        // 5. Complete Tier 1 -> automatic XP/Ink award -> idempotent replay (no duplicate rewards)
+        const inkBefore = PROF.ink || 0;
+        if (!trialRecordAction(A, 'light') || !trialRecordAction(A, 'skill') || !TRIAL_RUN.done) {
+          return { pass: false, error: 'Tier 1 completion failed' };
+        }
         if (!PROF.trials.qingfeng_t1) return { pass: false, error: 'Completed trial not persisted in PROF.trials' };
         const info = masteryInfo('qingfeng');
         if (info.xp !== 60 || info.trialsDone !== 1 || info.level !== 1) return { pass: false, error: 'Mastery XP/trial count mismatch: ' + JSON.stringify(info) };
-        // Grant enough XP to level up to Lv.2 (>= 100 XP)
-        const g = masteryGrant('qingfeng', 50, { win: true, kos: 2 });
-        if (!g || !g.leveledUp || g.nextLv !== 2) return { pass: false, error: 'Mastery did not level up at 110 XP: ' + JSON.stringify(g) };
+        const inkAfterFirst = PROF.ink || 0;
+        if (inkAfterFirst !== inkBefore + 20) return { pass: false, error: 'Expected +20 Ink on Tier 1 first clear, got ' + (inkAfterFirst - inkBefore) };
+
+        // Replay Tier 1 and verify zero duplicate XP/Ink
+        startComboTrial('qingfeng', 0);
+        trialRecordAction(A, 'light');
+        trialRecordAction(A, 'skill');
+        if (masteryInfo('qingfeng').xp !== 60 || (PROF.ink || 0) !== inkAfterFirst) {
+          return { pass: false, error: 'Duplicate reward granted on combo trial replay' };
+        }
+
+        // 6. Seamless auto-advance through Tier 1 -> Tier 2 -> Tier 3 -> All Cleared
+        if (!trialAdvanceNext() || TRIAL_RUN.tierIdx !== 1 || TRIAL_RUN.done) return { pass: false, error: 'Auto-advance to Tier 2 failed' };
+        trialRecordAction(A, 'light');
+        trialRecordAction(A, 'skill');
+        trialRecordAction(A, 'skill2');
+        if (!TRIAL_RUN.done || !PROF.trials.qingfeng_t2) return { pass: false, error: 'Tier 2 completion failed' };
+        if (!trialAdvanceNext() || TRIAL_RUN.tierIdx !== 2 || A.meter < 100) return { pass: false, error: 'Auto-advance to Tier 3 did not prepare full meter' };
+        trialRecordAction(A, 'charge');
+        trialRecordAction(A, 'skill');
+        trialRecordAction(A, 'ult');
+        if (!TRIAL_RUN.done || !PROF.trials.qingfeng_t3) return { pass: false, error: 'Tier 3 completion failed' };
+        if (trialAdvanceNext() || !TRIAL_RUN.allCleared) return { pass: false, error: 'Completing final tier should set allCleared=true' };
+        if (masteryInfo('qingfeng').xp !== 320 || masteryInfo('qingfeng').trialsDone !== 3) {
+          return { pass: false, error: 'Expected 320 total XP across 3 tiers for qingfeng, got ' + JSON.stringify(masteryInfo('qingfeng')) };
+        }
+
+        // 7. Verify Leave Test button cleanly exits to Training -> Combo Trials
+        trialLeaveTest();
+        if (TRIAL_RUN.active || currentScreen !== 'single' || trainSubTab !== 'trials') {
+          return { pass: false, error: 'trialLeaveTest did not return cleanly to training trials tab' };
+        }
+
+        // 8. Verify all 20 heroes x 3 tiers across base stance, alternate stance, and Heirloom stances
+        for (const ch of CHARS) {
+          if (ch.id === 'qingfeng') continue;
+          const list = heroTrials(ch.id);
+          if (!startComboTrial(ch.id, 0)) return { pass: false, error: 'Failed to start trial for ' + ch.id };
+          for (let ti = 0; ti < list.length; ti++) {
+            // Exercise stances: tier 0 = base, tier 1 = alt stance, tier 2 = heirloom aggressive/defensive
+            A.stanceUnlocked = true;
+            A.stance = ti === 1 ? 1 : 0;
+            A.relicStanceUnlocked = ti === 2;
+            A.relicStance = ti === 2 ? ((CHARS.indexOf(ch) % 2) + 1) : 0;
+            if (!trialActiveStanceLabel(A)) return { pass: false, error: 'Missing stance label for ' + ch.id };
+            for (const stepTag of list[ti].steps) {
+              if (!trialRecordAction(A, stepTag)) {
+                return { pass: false, error: 'Step ' + stepTag + ' failed for ' + ch.id + ' tier ' + ti };
+              }
+            }
+            if (!TRIAL_RUN.done || !PROF.trials[list[ti].id]) {
+              return { pass: false, error: 'Trial did not complete/persist for ' + ch.id + ' tier ' + ti };
+            }
+            if (ti + 1 < list.length) {
+              if (!trialAdvanceNext() || TRIAL_RUN.tierIdx !== ti + 1) {
+                return { pass: false, error: 'Auto-advance failed for ' + ch.id + ' to tier ' + (ti + 1) };
+              }
+            }
+          }
+          if (masteryInfo(ch.id).xp !== 320 || masteryInfo(ch.id).trialsDone !== 3) {
+            return { pass: false, error: 'Expected 320 XP and 3 trials for ' + ch.id + ', got ' + JSON.stringify(masteryInfo(ch.id)) };
+          }
+        }
         const sum = masterySummary();
-        if (sum.rows.length !== 20 || sum.rows[0].heroId !== 'qingfeng' || sum.trialsDone !== 1 || sum.trialsTotal !== 60) {
-          return { pass: false, error: 'masterySummary mismatch: ' + JSON.stringify({ len: sum.rows.length, top: sum.rows[0].heroId, done: sum.trialsDone }) };
+        if (sum.rows.length !== 20 || sum.trialsDone !== 60 || sum.trialsTotal !== 60) {
+          return { pass: false, error: 'masterySummary mismatch after all 60 trials: ' + JSON.stringify({ len: sum.rows.length, done: sum.trialsDone }) };
         }
         // Verify Mastery Leaderboard tab renders locally without errors
         lbKind = 'mastery';
         openLeaderboard();
         const html = ($id('lbTable') || {}).innerHTML || '';
-        if (!html.includes('青锋') || !html.includes('Lv.2')) return { pass: false, error: 'Mastery leaderboard did not render top hero' };
+        if (!html.includes('青锋') || !html.includes('Lv.3')) return { pass: false, error: 'Mastery leaderboard did not render top hero' };
       } finally {
         trialStop();
         PROF.mastery = prevMastery;

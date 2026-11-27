@@ -4862,18 +4862,64 @@ font-variant-numeric: tabular-nums;
 .tour-tree[data-size="8"],
 .tour-tree[data-size="16"] { grid-template-columns: 1fr; }
 }
+.trial-hero-select {
+display: flex;
+flex-wrap: wrap;
+gap: 6px;
+margin-bottom: 10px;
+}
+.trial-hero-pill {
+display: inline-flex;
+align-items: center;
+gap: 5px;
+padding: 4px 10px;
+border-radius: 999px;
+background: rgba(255, 255, 255, 0.04);
+border: 1px solid rgba(255, 255, 255, 0.12);
+color: rgba(239, 232, 216, 0.86);
+font-size: 12px;
+cursor: pointer;
+transition: border-color 0.15s ease, background 0.15s ease, color 0.15s ease;
+}
+.trial-hero-pill small {
+font-size: 11px;
+opacity: 0.65;
+font-variant-numeric: tabular-nums;
+}
+.trial-hero-pill:hover { border-color: rgba(233, 196, 106, 0.5); color: #fbefcf; }
+.trial-hero-pill.is-sel {
+background: rgba(233, 196, 106, 0.2);
+border-color: #e9c46a;
+color: #fbefcf;
+font-weight: 700;
+}
+.trial-hero-pill.is-all { border-color: rgba(74, 222, 128, 0.45); }
+.trial-hero-pill.is-all small { color: #86efac; opacity: 1; }
 .trial-hero-head {
 display: flex;
 justify-content: space-between;
 align-items: center;
-gap: 10px;
-padding: 8px 10px;
+gap: 12px;
+flex-wrap: wrap;
+padding: 10px 12px;
 margin-bottom: 10px;
-border-radius: 8px;
-background: rgba(233, 196, 106, 0.1);
+border-radius: 10px;
+background: rgba(233, 196, 106, 0.09);
 border: 1px solid rgba(233, 196, 106, 0.28);
 font-size: 13px;
 }
+.trial-head-main { display: flex; flex-direction: column; gap: 5px; flex: 1; min-width: 210px; }
+.trial-head-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.trial-head-lv { font-size: 12px; color: var(--gold); font-weight: 700; }
+.trial-head-cnt { font-size: 12px; color: rgba(239, 232, 216, 0.72); font-variant-numeric: tabular-nums; }
+.trial-xp-track {
+height: 5px;
+border-radius: 999px;
+background: rgba(255, 255, 255, 0.12);
+overflow: hidden;
+max-width: 280px;
+}
+.trial-xp-track i { display: block; height: 100%; background: linear-gradient(90deg, #b5282d, #e9c46a); }
 .trial-list { display: flex; flex-direction: column; gap: 8px; }
 .trial-card {
 display: flex;
@@ -4886,39 +4932,79 @@ background: rgba(15, 22, 36, 0.72);
 border: 1px solid rgba(255, 255, 255, 0.1);
 text-align: left;
 }
-.trial-card.is-done { border-color: rgba(74, 222, 128, 0.45); }
+.trial-card.is-next { border-color: rgba(233, 196, 106, 0.55); background: rgba(233, 196, 106, 0.08); }
+.trial-card.is-done { border-color: rgba(74, 222, 128, 0.42); }
 .trial-card-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; }
 .trial-tier { padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; }
 .trial-tier.t-basic { background: rgba(111, 224, 255, 0.18); color: #6fe0ff; }
 .trial-tier.t-advanced { background: rgba(233, 196, 106, 0.2); color: #e9c46a; }
 .trial-tier.t-master { background: rgba(217, 166, 255, 0.2); color: #d9a6ff; }
 .trial-clear-tag { font-size: 11px; color: #86efac; }
-.trial-card-steps { font-size: 12px; color: rgba(239, 232, 216, 0.85); margin-top: 3px; }
+.trial-next-tag { font-size: 11px; color: #e9c46a; font-weight: 700; }
+.trial-card-steps { font-size: 12px; color: rgba(239, 232, 216, 0.88); margin-top: 3px; }
 .trial-card-rew { font-size: 11px; color: rgba(239, 232, 216, 0.62); margin-top: 2px; }
+.xiwu-drill-wrap { margin-top: 14px; padding-top: 12px; border-top: 1px solid rgba(239, 232, 216, 0.12); }
 .trial-hud {
 position: fixed;
 left: 50%;
 top: 12px;
 transform: translateX(-50%);
 z-index: 41;
-padding: 8px 14px;
+padding: 9px 14px;
 border-radius: 10px;
-background: rgba(10, 14, 24, 0.86);
-border: 1px solid rgba(233, 196, 106, 0.4);
+background: rgba(10, 14, 24, 0.9);
+border: 1px solid rgba(233, 196, 106, 0.42);
+box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
 color: #efe8d8;
 display: flex;
 flex-direction: column;
 gap: 6px;
-min-width: 300px;
-max-width: min(92vw, 620px);
+min-width: 340px;
+max-width: min(94vw, 680px);
 }
-.trial-hud-head { display: flex; align-items: center; gap: 8px; justify-content: space-between; font-size: 12.5px; }
+.trial-hud-head { display: flex; align-items: center; gap: 10px; justify-content: space-between; font-size: 12.5px; flex-wrap: wrap; }
+.trial-hud-meta { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.trial-hud-xp { font-size: 11.5px; color: #e9c46a; font-variant-numeric: tabular-nums; }
+.trial-hud-stance {
+font-size: 11px;
+padding: 1px 6px;
+border-radius: 999px;
+background: rgba(111, 224, 255, 0.14);
+border: 1px solid rgba(111, 224, 255, 0.35);
+color: #9ff2ff;
+}
+.trial-leave-btn {
+padding: 4px 12px !important;
+font-size: 12px !important;
+border-color: rgba(248, 113, 113, 0.5) !important;
+color: #fecaca !important;
+background: rgba(248, 113, 113, 0.12) !important;
+white-space: nowrap;
+}
+.trial-leave-btn:hover { background: rgba(248, 113, 113, 0.24) !important; border-color: #f87171 !important; }
 .trial-steps { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 .trial-step { padding: 3px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); font-size: 12px; }
-.trial-step.is-cur { border: 1px solid #e9c46a; background: rgba(233, 196, 106, 0.2); color: #fbefcf; }
-.trial-step.is-done { background: rgba(74, 222, 128, 0.2); color: #86efac; }
+.trial-step.is-cur { border: 1px solid #e9c46a; background: rgba(233, 196, 106, 0.22); color: #fbefcf; font-weight: 700; }
+.trial-step.is-done { background: rgba(74, 222, 128, 0.22); color: #86efac; }
 .trial-arrow { opacity: 0.5; font-size: 12px; }
-.trial-hud-foot { font-size: 11px; color: rgba(239, 232, 216, 0.72); }
+.trial-timer-bar {
+height: 3px;
+border-radius: 999px;
+background: rgba(255, 255, 255, 0.12);
+overflow: hidden;
+}
+.trial-timer-bar i {
+display: block;
+height: 100%;
+background: linear-gradient(90deg, #f87171, #e9c46a, #4ade80);
+transition: width 0.08s linear;
+}
+.trial-hud-foot { font-size: 11.5px; color: rgba(239, 232, 216, 0.8); line-height: 1.35; }
+.trial-hud-foot.is-hit { color: #9ff2ff; }
+.trial-hud-foot.is-mistake,
+.trial-hud-foot.is-timeout { color: #fca5a5; }
+.trial-hud-foot.is-clear,
+.trial-hud-foot.is-allclear { color: #86efac; font-weight: 600; }
 .cx-mastery-bar {
 display: flex;
 align-items: center;
@@ -5506,33 +5592,30 @@ window.RYBoot = (function () {
         <div class="saga-wrap"><div class="saga-heroes" id="sagaHeroes"></div><div class="saga-route" id="sagaRoute"></div></div>
       </div>
 
-      <!-- 训练场：教学、自由训练与情景训练 -->
+      <!-- 训练场：连招试炼、招式教学、自由与情景、AI 观战 -->
       <div data-sec="train" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
           <h3 class="spt">训练场</h3>
-          <span class="sub-badge">从基础招式到实战应对</span>
+          <span class="sub-badge">连招试炼 · 自由对练 · 帧数检视</span>
         </div>
         <div class="xiwu-training-tabs" id="xiwuTrainingTabs" role="tablist" aria-label="训练项目">
-          <button type="button" role="tab" id="xiwuTabLesson" aria-controls="xiwuPaneLesson" aria-selected="true" class="sel" data-training-tab="lesson">招式教学</button>
-          <button type="button" role="tab" id="xiwuTabTrials" aria-controls="xiwuPaneTrials" aria-selected="false" data-training-tab="trials">连招试炼</button>
-          <button type="button" role="tab" id="xiwuTabFree" aria-controls="xiwuPaneFree" aria-selected="false" data-training-tab="free">自由训练</button>
-          <button type="button" role="tab" id="xiwuTabScenario" aria-controls="xiwuPaneScenario" aria-selected="false" data-training-tab="scenario">情景训练</button>
-          <button type="button" role="tab" id="xiwuTabMatch" aria-controls="xiwuPaneMatch" aria-selected="false" data-training-tab="match">实战演练</button>
+          <button type="button" role="tab" id="xiwuTabTrials" aria-controls="xiwuPaneTrials" aria-selected="true" class="sel" data-training-tab="trials">连招试炼</button>
+          <button type="button" role="tab" id="xiwuTabLesson" aria-controls="xiwuPaneLesson" aria-selected="false" data-training-tab="lesson">招式教学</button>
+          <button type="button" role="tab" id="xiwuTabFree" aria-controls="xiwuPaneFree" aria-selected="false" data-training-tab="free">自由与情景</button>
           <button type="button" role="tab" id="xiwuTabWatch" aria-controls="xiwuPaneWatch" aria-selected="false" data-training-tab="watch">AI 观战</button>
         </div>
         <div class="xiwu-training-content">
-          <section class="xiwu-training-card" id="xiwuPaneLesson" role="tabpanel" aria-labelledby="xiwuTabLesson" data-training-pane="lesson">
-            <h4>招式教学</h4>
-            <p>跟随步骤练习移动、连招、门派技能、格挡、精准招架、腾空闪与奥义。</p>
-            <button class="go small" id="xiwuFullTutBtn" type="button">开始完整教学</button>
-          </section>
-          <section class="xiwu-training-card" id="xiwuPaneTrials" role="tabpanel" aria-labelledby="xiwuTabTrials" data-training-pane="trials" hidden>
-            <h4>侠客连招试炼 · 专精历练</h4>
+          <section class="xiwu-training-card" id="xiwuPaneTrials" role="tabpanel" aria-labelledby="xiwuTabTrials" data-training-pane="trials">
+            <div class="trial-hero-select" id="trialHeroSelect" role="group" aria-label="选择试炼侠客"></div>
             <div class="trial-hero-head" id="trialHeroHead"></div>
             <div class="trial-list" id="trialList"></div>
           </section>
+          <section class="xiwu-training-card" id="xiwuPaneLesson" role="tabpanel" aria-labelledby="xiwuTabLesson" data-training-pane="lesson" hidden>
+            <h4>招式教学</h4>
+            <p>按步骤掌握移动、连击、技能、格挡、精准招架、腾空闪与奥义。</p>
+            <button class="go small" id="xiwuFullTutBtn" type="button">开始完整教学</button>
+          </section>
           <section class="xiwu-training-card" id="xiwuPaneFree" role="tabpanel" aria-labelledby="xiwuTabFree" data-training-pane="free" hidden>
-            <h4>自由训练 · 木人桩与 AI 实战对练</h4>
             <div class="xiwu-train-controls">
               <div class="xiwu-train-row">
                 <span class="xl-lbl">对手类型</span>
@@ -5553,41 +5636,34 @@ window.RYBoot = (function () {
               </div>
               <p class="train-ai-desc" id="trainAiDesc">木人桩模式：可精确控制对手站桩、格挡、弹反、连段与受压闪避，并实时查看帧数差与判定框。</p>
             </div>
-            <div class="sec-sub-label">木人桩与自动回血特性</div>
             <div class="dummy-feat-list" id="dummyFeatList" style="display:flex;gap:8px;flex-wrap:wrap;margin:6px 0 12px;justify-content:center"></div>
             <div class="single-action-row">
               <button class="go small" id="trainBtn" type="button">开始自由训练</button>
               <button class="ghost small" id="trainPickBtn" type="button">点将选人开练</button>
             </div>
-          </section>
-          <section class="xiwu-training-card xiwu-scenario-card" id="xiwuPaneScenario" role="tabpanel" aria-labelledby="xiwuTabScenario" data-training-pane="scenario" hidden>
-            <h4>情景训练 · 六大专项课题</h4>
-            <p>选择一种实战场景，立即在无限回血与帧判定工具辅助下反复演练。</p>
-            <div class="xiwu-drill-list">
-              <button type="button" data-drill="combo"><b>连招与追击</b><span>面对站桩目标练习起手、连段与追击</span></button>
-              <button type="button" data-drill="block"><b>压制与破防</b><span>面对持续格挡的目标寻找破防时机</span></button>
-              <button type="button" data-drill="parry"><b>精准招架</b><span>练习观察近身攻击并把握招架时机</span></button>
-              <button type="button" data-drill="combo-escape"><b>受压与脱身</b><span>面对连段与腾空闪，练习防守和重新进攻</span></button>
-              <button type="button" data-drill="ai-sparring"><b>AI 实战拆招</b><span>开启真实 AI 难度对练（无数值膨胀），检验立回与确反</span></button>
-              <button type="button" data-drill="anti-air"><b>高台与空战应对</b><span>面对反复起跳目标练习对空截击与落台追击</span></button>
+            <div class="xiwu-drill-wrap">
+              <div class="sec-sub-label">六大专项情景</div>
+              <div class="xiwu-drill-list">
+                <button type="button" data-drill="combo"><b>连招与追击</b><span>站桩目标练习起手、连段与追击</span></button>
+                <button type="button" data-drill="block"><b>压制与破防</b><span>持续格挡目标练习破防时机</span></button>
+                <button type="button" data-drill="parry"><b>精准招架</b><span>近身攻击练习把握招架时机</span></button>
+                <button type="button" data-drill="combo-escape"><b>受压与脱身</b><span>面对连段与腾空闪练习防守反攻</span></button>
+                <button type="button" data-drill="ai-sparring"><b>AI 实战拆招</b><span>真实 AI 难度对练检验立回与确反</span></button>
+                <button type="button" data-drill="anti-air"><b>高台与空战应对</b><span>起跳目标练习对空截击与落台追击</span></button>
+              </div>
             </div>
-          </section>
-          <section class="xiwu-training-card xiwu-match-card" id="xiwuPaneMatch" role="tabpanel" aria-labelledby="xiwuTabMatch" data-training-pane="match" hidden>
-            <h4>实战演练</h4>
-            <p>用当前选择的电脑境界开始一场完整对局，检验训练成果。</p>
-            <button class="go small" id="xiwuTrainingCpuBtn" type="button">前往对战电脑</button>
           </section>
           <section class="xiwu-training-card xiwu-watch-card" id="xiwuPaneWatch" role="tabpanel" aria-labelledby="xiwuTabWatch" data-training-pane="watch" hidden>
             <h4>AI 观战 · 电脑对电脑</h4>
-            <p>所有模式的 AI 对决都收在这里：用上方「AI 境界」选电脑强弱，挑一个模式坐下来看，研究出招、站位和战术。</p>
+            <p>选择上方「AI 境界」与下方模式，观看电脑对战演武。</p>
             <div class="xiwu-watch-list">
-              <button type="button" id="cpuWatchBtn"><b>1v1 演武</b><span>两位电脑侠客单挑，可跟随山河异境投票的地图</span></button>
-              <button type="button" id="tag3WatchBtn"><b>3v3 车轮</b><span>三人接力车轮战，看谁先倒下</span></button>
-              <button type="button" id="xiwu2v2WatchBtn"><b>2v2 组队</b><span>四位天道电脑两两组队对决</span></button>
-              <button type="button" id="chaosWatchBtn"><b>天机乱斗</b><span>每隔数秒降下随机异象，电脑见招拆招</span></button>
-              <button type="button" id="cujuWatchBtn"><b>墨球蹴鞠</b><span>电脑队伍对踢，观察传球与射门</span></button>
-              <button type="button" id="mapsWatchBtn"><b>山河异境</b><span>在地利各异的地图上看电脑借势作战</span></button>
-              <button type="button" id="mayhemWatchBtn"><b>通天神决</b><span>真元暴涨、技能免冷却的神魔大战</span></button>
+              <button type="button" id="cpuWatchBtn"><b>1v1 演武</b><span>两位电脑侠客单挑</span></button>
+              <button type="button" id="tag3WatchBtn"><b>3v3 车轮</b><span>三人接力车轮战</span></button>
+              <button type="button" id="xiwu2v2WatchBtn"><b>2v2 组队</b><span>四位电脑两两组队对决</span></button>
+              <button type="button" id="chaosWatchBtn"><b>天机乱斗</b><span>随机异象下见招拆招</span></button>
+              <button type="button" id="cujuWatchBtn"><b>墨球蹴鞠</b><span>电脑队伍传球与射门</span></button>
+              <button type="button" id="mapsWatchBtn"><b>山河异境</b><span>特殊地形借势作战</span></button>
+              <button type="button" id="mayhemWatchBtn"><b>通天神决</b><span>真元暴涨、技能免冷却</span></button>
             </div>
           </section>
         </div>
@@ -13548,12 +13624,48 @@ Object.assign(UI_COPY_EN, {
 "连胜折桂": "Undefeated Champion",
 "战全胜登顶": "wins to claim the title",
 "连招试炼": "Combo Trials",
-"侠客连招试炼 · 专精历练": "Hero Combo Trials · Mastery Training",
+"自由与情景": "Free & Drills",
+"连招试炼 · 自由对练 · 帧数检视": "Combo Trials · Free Practice · Frame Data",
+"选择试炼侠客": "Select Trial Hero",
+"六大专项情景": "Six Focused Drills",
+"按步骤掌握移动、连击、技能、格挡、精准招架、腾空闪与奥义。": "Learn movement, combos, skills, guard, perfect parry, aerial flash, and ultimates step by step.",
+"选择上方「AI 境界」与下方模式，观看电脑对战演武。": "Pick an AI difficulty above and a mode below to watch AI matches.",
+"两位电脑侠客单挑": "1v1 AI duel",
+"三人接力车轮战": "3v3 AI relay match",
+"四位电脑两两组队对决": "2v2 AI team match",
+"随机异象下见招拆招": "AI adapts to random mutators",
+"电脑队伍传球与射门": "AI teams pass and score",
+"特殊地形借势作战": "AI fights on special terrain",
+"真元暴涨、技能免冷却": "High meter with zero cooldowns",
+"站桩目标练习起手、连段与追击": "Practice starters, combos, and follow-ups on a standing dummy",
+"持续格挡目标练习破防时机": "Practice guard-break timing against a blocking dummy",
+"近身攻击练习把握招架时机": "Practice parry timing against close attacks",
+"面对连段与腾空闪练习防守反攻": "Practice escaping combos and counterattacking",
+"真实 AI 难度对练检验立回与确反": "Spar against real AI difficulty for neutral and punishes",
+"起跳目标练习对空截击与落台追击": "Practice anti-airs and landing punishes",
 "专精试炼榜": "Mastery & Trials",
 "连招试炼指引": "Combo Trial Guide",
-"退出试炼": "Exit Trial",
-"试炼已达成！可继续练习或返回选择下一阶。": "Trial cleared! Keep practicing or return to pick the next tier.",
-"按顺序打出并命中招式即可完成试炼": "Execute each move in order to complete the trial",
+"离开测试": "Leave Test",
+"开始连招测试": "Start Combo Test",
+"重温全部连招": "Replay All Combos",
+"当前目标": "Next Up",
+"首通奖励已领取": "First-clear reward claimed",
+"连招达成": "Combo Complete",
+"即将自动进入下一阶": "Advancing to next tier automatically",
+"全部连招试炼已通关": "All combo trials cleared",
+"点击「离开测试」返回训练场": "Click Leave Test to return to Training",
+"按顺序打出招式即可自动进阶": "Execute moves in order to advance automatically",
+"招式有误": "Wrong move",
+"起手有误": "Wrong starter",
+"衔接超时": "Link window expired",
+"请加快节奏重新起手": "Link faster and restart from step 1",
+"已重置，请重新起手": "Reset—restart from step 1",
+"请先打出": "Start with",
+"命中": "Landed",
+"已自动进入下一阶": "Advanced to next tier",
+"已通关（不重复计奖）": "Cleared (no duplicate reward)",
+"攻境": "Aggressive",
+"守境": "Defensive",
 "试炼进度": "Trials",
 "已通关": "Cleared",
 "首通奖励": "First Clear",
@@ -43712,7 +43824,56 @@ const roundsWon = (M.wins && M.wins[myTeam]) ? M.wins[myTeam] : (won ? 1 : 0);
 const xp = (won ? 45 : 20) + roundsWon * 10;
 return masteryGrant(lf.ch.id, xp, { win: won, kos: roundsWon });
 }
-const TRIAL_RUN = { active: false, heroId: '', trial: null, stepIdx: 0, done: false, lastState: '', lastMove: '' };
+const TRIAL_LINK_WINDOW = 2.8;        // 相邻招式最大衔接时间（秒）
+const TRIAL_AUTO_ADVANCE_MS = 1300;   // 完成后自动进入下一阶的过渡时间（毫秒）
+const TRIAL_RUN = {
+active: false,
+heroId: '',
+tierIdx: 0,
+trial: null,
+stepIdx: 0,
+done: false,
+allCleared: false,
+lastState: '',
+lastMove: '',
+lastStepAt: 0,
+windowLeft: 1,
+autoTimer: 0,
+feedback: { kind: 'idle', text: '' },
+};
+function trialClearAutoTimer() {
+if (TRIAL_RUN.autoTimer) {
+clearTimeout(TRIAL_RUN.autoTimer);
+TRIAL_RUN.autoTimer = 0;
+}
+}
+function trialActiveStanceLabel(f) {
+if (!f || !f.ch) return '';
+const parts = [];
+if (f.stance === 1 && f.stanceUnlocked && typeof HERO_STANCES !== 'undefined' && HERO_STANCES[f.ch.id]) {
+parts.push(HERO_STANCES[f.ch.id].name);
+} else {
+parts.push(cvT('本式'));
+}
+if (f.relicStanceUnlocked && (f.relicStance === 1 || f.relicStance === 2)) {
+parts.push(cvT(f.relicStance === 2 ? '守境' : '攻境'));
+}
+return parts.join(' · ');
+}
+function trialPrepareArenaForTier(trial) {
+if (!A || !B || !trial) return;
+A.reset(STAGE_W / 2 - 150); A.face = 1;
+A.skillCD = 0; A.skill2CD = 0; A.dashCD = 0;
+A.meter = trial.tier === 'master' ? 100 : Math.max(A.meter || 0, 40);
+B.reset(STAGE_W / 2 + 80); B.face = -1;
+B.maxHp = B.hp = B.lagHp = 300;
+if (typeof projs !== 'undefined' && Array.isArray(projs)) projs.length = 0;
+}
+function trialStepLabel(trial, idx, fallbackTag) {
+if (trial && trial.stepLabels && trial.stepLabels[idx]) return trial.stepLabels[idx];
+const tag = fallbackTag || (trial && trial.steps && trial.steps[idx]) || '';
+return TRIAL_STEP_LABELS[tag] || tag;
+}
 function trialHudRender() {
 const box = $id('trialHud');
 if (!box) return;
@@ -43720,63 +43881,191 @@ const show = TRIAL_RUN.active && M.mode === 'train' && !(typeof currentScreen !=
 box.classList.toggle('hidden', !show);
 if (!show || !TRIAL_RUN.trial) return;
 const tr = TRIAL_RUN.trial;
+const list = heroTrials(TRIAL_RUN.heroId);
 const ch = CHARS.find(c => c.id === tr.heroId);
+const info = masteryInfo(tr.heroId);
+const stanceTag = trialActiveStanceLabel(A);
 const stepsHtml = tr.steps.map((st, i) => {
 const cls = i < TRIAL_RUN.stepIdx || TRIAL_RUN.done ? 'is-done' : (i === TRIAL_RUN.stepIdx ? 'is-cur' : '');
-const lbl = (tr.stepLabels && tr.stepLabels[i]) || TRIAL_STEP_LABELS[st] || st;
-return `<span class="trial-step ${cls}">${i + 1}. ${escapeHTML(lbl)}</span>`;
+const lbl = trialStepLabel(tr, i, st);
+return `<span class="trial-step ${cls}">${i < TRIAL_RUN.stepIdx || TRIAL_RUN.done ? '✓ ' : `${i + 1}. `}${escapeHTML(lbl)}</span>`;
 }).join('<span class="trial-arrow">→</span>');
-box.innerHTML = `<div class="trial-hud-head"><b>${escapeHTML(ch ? ch.name : tr.heroId)} · ${escapeHTML(tr.tierName)}试炼</b><span>${escapeHTML(tr.name)}</span><button type="button" class="ghost small" id="trialHudExit">${cvT('退出试炼')}</button></div><div class="trial-steps">${stepsHtml}</div><div class="trial-hud-foot">${TRIAL_RUN.done ? cvT('试炼已达成！可继续练习或返回选择下一阶。') : cvT('按顺序打出并命中招式即可完成试炼')}</div>`;
+const timingPct = TRIAL_RUN.stepIdx > 0 && !TRIAL_RUN.done ? Math.round(clamp(TRIAL_RUN.windowLeft, 0, 1) * 100) : 0;
+const fb = TRIAL_RUN.feedback || { kind: 'idle', text: '' };
+const footText = fb.text || (TRIAL_RUN.done
+? cvT('试炼已达成！')
+: `${cvT('按顺序打出招式即可自动进阶')} · ${cvT('下一步')}：${trialStepLabel(tr, TRIAL_RUN.stepIdx)}`);
+box.innerHTML = `<div class="trial-hud-head">
+<div class="trial-hud-meta">
+<b>${escapeHTML(ch ? ch.name : tr.heroId)}</b>
+<span class="trial-tier t-${tr.tier}">${escapeHTML(tr.tierName)} ${TRIAL_RUN.tierIdx + 1}/${list.length}</span>
+<span class="trial-hud-xp">Lv.${info.level} · ${info.xp} XP</span>
+${stanceTag ? `<span class="trial-hud-stance">${escapeHTML(stanceTag)}</span>` : ''}
+</div>
+<button type="button" class="trial-leave-btn" id="trialLeaveBtn">${cvT('离开测试')}</button>
+</div>
+<div class="trial-steps">${stepsHtml}</div>
+${timingPct > 0 ? `<div class="trial-timer-bar" aria-hidden="true"><i style="width:${timingPct}%"></i></div>` : ''}
+<div class="trial-hud-foot is-${fb.kind || 'idle'}">${escapeHTML(footText)}</div>`;
 }
 function startComboTrial(heroId, tierIdx = 0) {
+trialClearAutoTimer();
 const list = heroTrials(heroId);
-const trial = list[tierIdx] || list[0];
+const idx = clamp(tierIdx | 0, 0, Math.max(0, list.length - 1));
+const trial = list[idx];
 if (!trial) return false;
 const ci = CHARS.findIndex(c => c.id === heroId);
 if (ci < 0) return false;
 trainChar = ci;
 trainOppMode = 'dummy';
 Object.assign(dummyCfg, { act: 'stand', fixed: false, escape: false, infGuard: true, autoHeal: true });
+if (M.mode !== 'train' || !A || A.chIdx !== ci || !B || !B.dummy) {
 startTraining('dummy', false);
-if (trial.tier === 'master' && A) A.meter = 100;
-Object.assign(TRIAL_RUN, { active: true, heroId, trial, stepIdx: 0, done: false, lastState: '', lastMove: '' });
+}
+trialPrepareArenaForTier(trial);
+Object.assign(TRIAL_RUN, {
+active: true,
+heroId,
+tierIdx: idx,
+trial,
+stepIdx: 0,
+done: false,
+allCleared: false,
+lastState: A ? (A.state || '') : '',
+lastMove: A ? (A.moveName || A.skill || A.sp || '') : '',
+lastStepAt: clock || 0,
+windowLeft: 1,
+feedback: { kind: 'idle', text: `${cvT('当前目标')}：${trial.name}` },
+});
+if (typeof trainInspectUpdate === 'function') trainInspectUpdate();
+if (typeof dummyBarUpdate === 'function') dummyBarUpdate();
 trialHudRender();
-say(`${CHARS[ci].name} · ${trial.name}`, 1.8);
+say(`${CHARS[ci].name} · ${trial.tierName} ${idx + 1}/${list.length}`, 1.4);
+return true;
+}
+function trialAdvanceNext() {
+trialClearAutoTimer();
+if (!TRIAL_RUN.active || !TRIAL_RUN.heroId) return false;
+const list = heroTrials(TRIAL_RUN.heroId);
+const nextIdx = TRIAL_RUN.tierIdx + 1;
+if (nextIdx >= list.length) {
+TRIAL_RUN.allCleared = true;
+const info = masteryInfo(TRIAL_RUN.heroId);
+TRIAL_RUN.feedback = {
+kind: 'allclear',
+text: `${cvT('全部连招试炼已通关')}！Lv.${info.level} (${info.xp} XP) · ${cvT('点击「离开测试」返回训练场')}`,
+};
+trialHudRender();
+return false;
+}
+const nextTrial = list[nextIdx];
+trialPrepareArenaForTier(nextTrial);
+Object.assign(TRIAL_RUN, {
+tierIdx: nextIdx,
+trial: nextTrial,
+stepIdx: 0,
+done: false,
+allCleared: false,
+lastState: A ? (A.state || '') : '',
+lastMove: A ? (A.moveName || A.skill || A.sp || '') : '',
+lastStepAt: clock || 0,
+windowLeft: 1,
+feedback: { kind: 'idle', text: `${cvT('已自动进入下一阶')}：${nextTrial.name}` },
+});
+trialHudRender();
+if (typeof say === 'function') say(`${nextTrial.tierName}试炼 · ${nextTrial.name}`, 1.4);
 return true;
 }
 function trialStop() {
+trialClearAutoTimer();
 TRIAL_RUN.active = false;
 TRIAL_RUN.trial = null;
+TRIAL_RUN.tierIdx = 0;
 TRIAL_RUN.stepIdx = 0;
 TRIAL_RUN.done = false;
+TRIAL_RUN.allCleared = false;
+TRIAL_RUN.feedback = { kind: 'idle', text: '' };
 const box = $id('trialHud');
 if (box) box.classList.add('hidden');
 }
+function trialLeaveTest() {
+trialStop();
+if (typeof toMenu === 'function') toMenu();
+if (typeof singleSec === 'function') singleSec('train');
+if (typeof showScreen === 'function') showScreen('single');
+if (typeof xiwuTrainingTab === 'function') xiwuTrainingTab('trials');
+renderComboTrialsPane();
+}
 function trialRecordAction(fighter, tag) {
 if (!TRIAL_RUN.active || TRIAL_RUN.done || !TRIAL_RUN.trial || fighter !== A) return false;
-const need = TRIAL_RUN.trial.steps[TRIAL_RUN.stepIdx];
+const tr = TRIAL_RUN.trial;
+const need = tr.steps[TRIAL_RUN.stepIdx];
 if (!need) return false;
 const match = (tag === need) || (need === 'light' && (tag === 'light' || tag === 'light3'));
-if (!match) return false;
+if (!match) {
+const gotLabel = TRIAL_STEP_LABELS[tag] || tag;
+const needLabel = trialStepLabel(tr, TRIAL_RUN.stepIdx, need);
+const wasMid = TRIAL_RUN.stepIdx > 0;
+TRIAL_RUN.stepIdx = 0;
+TRIAL_RUN.windowLeft = 1;
+TRIAL_RUN.feedback = {
+kind: 'mistake',
+text: wasMid
+? `${cvT('招式有误')}：${gotLabel} ≠ ${needLabel}（${cvT('已重置，请重新起手')}）`
+: `${cvT('起手有误')}：${gotLabel}，${cvT('请先打出')} ${needLabel}`,
+};
+trialHudRender();
+return false;
+}
+const nowT = typeof clock === 'number' ? clock : 0;
+const elapsed = TRIAL_RUN.stepIdx > 0 ? Math.max(0, nowT - (TRIAL_RUN.lastStepAt || nowT)) : 0;
+const landedLabel = trialStepLabel(tr, TRIAL_RUN.stepIdx, need);
 TRIAL_RUN.stepIdx++;
+TRIAL_RUN.lastStepAt = nowT;
+TRIAL_RUN.windowLeft = 1;
 if (typeof SFX !== 'undefined' && SFX.slice) SFX.slice();
-if (TRIAL_RUN.stepIdx >= TRIAL_RUN.trial.steps.length) {
+if (TRIAL_RUN.stepIdx >= tr.steps.length) {
 TRIAL_RUN.done = true;
 const { trials } = masteryEnsureStore();
-const firstClear = !trials[TRIAL_RUN.trial.id];
-trials[TRIAL_RUN.trial.id] = true;
+const firstClear = !trials[tr.id];
+trials[tr.id] = true;
 if (firstClear) {
-masteryGrant(TRIAL_RUN.heroId, TRIAL_RUN.trial.xp, {});
+masteryGrant(TRIAL_RUN.heroId, tr.xp, {});
 if (typeof PROF !== 'undefined') {
-PROF.ink = (PROF.ink || 0) + TRIAL_RUN.trial.ink;
+PROF.ink = (PROF.ink || 0) + tr.ink;
 if (typeof saveProfile === 'function') saveProfile();
 }
-if (typeof toast === 'function') toast(`连招试炼完成！专精 +${TRIAL_RUN.trial.xp} XP · 墨锭 +${TRIAL_RUN.trial.ink}`);
-} else if (typeof toast === 'function') {
-toast('连招试炼达成！');
 }
-if (typeof say === 'function') say('连招试炼达成！', 1.6);
+const list = heroTrials(TRIAL_RUN.heroId);
+const hasNext = TRIAL_RUN.tierIdx + 1 < list.length;
+const rewardNote = firstClear ? `+${tr.xp} XP · +${tr.ink} ${cvT('墨锭')}` : cvT('已通关（不重复计奖）');
+TRIAL_RUN.feedback = {
+kind: hasNext ? 'clear' : 'allclear',
+text: hasNext
+? `${cvT('连招达成')}！${rewardNote} · ${cvT('即将自动进入下一阶')}…`
+: `${cvT('全部连招试炼已通关')}！${rewardNote}`,
+};
+if (typeof toast === 'function') {
+toast(firstClear ? `连招试炼完成！专精 +${tr.xp} XP · 墨锭 +${tr.ink}` : '连招试炼达成！');
+}
+if (typeof say === 'function') say('连招试炼达成！', 1.2);
 renderComboTrialsPane();
+if (hasNext) {
+trialClearAutoTimer();
+TRIAL_RUN.autoTimer = setTimeout(() => {
+TRIAL_RUN.autoTimer = 0;
+trialAdvanceNext();
+}, TRIAL_AUTO_ADVANCE_MS);
+} else {
+TRIAL_RUN.allCleared = true;
+}
+} else {
+const nextLabel = trialStepLabel(tr, TRIAL_RUN.stepIdx);
+const timingStr = elapsed > 0.01 ? ` (${elapsed.toFixed(2)}s)` : '';
+TRIAL_RUN.feedback = {
+kind: 'hit',
+text: `${cvT('命中')}：${landedLabel}${timingStr} → ${cvT('下一步')}：${nextLabel}`,
+};
 }
 trialHudRender();
 return true;
@@ -43785,6 +44074,18 @@ function trialTickUpdate() {
 if (!TRIAL_RUN.active || M.mode !== 'train' || !A) {
 if ($id('trialHud') && !$id('trialHud').classList.contains('hidden')) $id('trialHud').classList.add('hidden');
 return;
+}
+if (TRIAL_RUN.stepIdx > 0 && !TRIAL_RUN.done && TRIAL_RUN.trial) {
+const elapsed = Math.max(0, (clock || 0) - (TRIAL_RUN.lastStepAt || 0));
+TRIAL_RUN.windowLeft = clamp(1 - elapsed / TRIAL_LINK_WINDOW, 0, 1);
+if (elapsed > TRIAL_LINK_WINDOW) {
+TRIAL_RUN.stepIdx = 0;
+TRIAL_RUN.windowLeft = 1;
+TRIAL_RUN.feedback = {
+kind: 'timeout',
+text: `${cvT('衔接超时')}（>${TRIAL_LINK_WINDOW.toFixed(1)}s）· ${cvT('请加快节奏重新起手')}`,
+};
+}
 }
 const st = A.state || '';
 const mv = A.moveName || A.skill || A.sp || '';
@@ -43804,28 +44105,65 @@ trialRecordAction(A, 'ult');
 trialHudRender();
 }
 function renderComboTrialsPane() {
-const listEl = $id('trialList'), headEl = $id('trialHeroHead');
+const listEl = $id('trialList'), headEl = $id('trialHeroHead'), pickEl = $id('trialHeroSelect');
 if (!listEl) return;
 const ci = typeof menuHeroPick === 'function' ? menuHeroPick() : (trainChar || 0);
 const ch = CHARS[ci] || CHARS[0];
 const info = masteryInfo(ch.id);
 const { trials } = masteryEnsureStore();
-if (headEl) {
-headEl.innerHTML = `<b>${escapeHTML(ch.name)} · Lv.${info.level} ${escapeHTML(info.title)}</b><span>${cvT('试炼进度')} ${info.trialsDone}/${info.trialsTotal} · ${info.xp} XP</span>`;
+if (pickEl) {
+pickEl.innerHTML = CHARS.map((c, idx) => {
+const m = masteryInfo(c.id);
+const sel = idx === ci ? ' sel' : '';
+const all = m.trialsDone >= m.trialsTotal ? ' is-all' : '';
+return `<button type="button" class="trial-hero-pill${sel}${all}" data-trial-pick="${idx}" aria-pressed="${idx === ci}"><b>${escapeHTML(c.name)}</b><small>${m.trialsDone}/${m.trialsTotal}</small></button>`;
+}).join('');
 }
 const items = heroTrials(ch.id);
+const nextUnclearIdx = items.findIndex(t => !trials[t.id]);
+const launchIdx = nextUnclearIdx >= 0 ? nextUnclearIdx : 0;
+if (headEl) {
+const pct = Math.round(info.progress * 100);
+headEl.innerHTML = `<div class="trial-head-left">
+<b>${escapeHTML(ch.name)} · Lv.${info.level} ${escapeHTML(info.title)}</b>
+<span class="trial-head-meta">${cvT('试炼进度')} ${info.trialsDone}/${info.trialsTotal} · ${info.xp}/${info.nextXp} XP</span>
+<div class="trial-xp-track"><i style="width:${pct}%"></i></div>
+</div>
+<button type="button" class="go small" data-trial-hero="${ch.id}" data-trial-idx="${launchIdx}">${cvT(nextUnclearIdx >= 0 ? '开始连招测试' : '重温全部连招')}</button>`;
+}
 listEl.innerHTML = items.map((tr, idx) => {
 const done = !!trials[tr.id];
+const isNext = idx === nextUnclearIdx;
 const stepsTxt = (tr.stepLabels || tr.steps).join(' → ');
-return `<div class="trial-card${done ? ' is-done' : ''}">
+return `<div class="trial-card${done ? ' is-done' : ''}${isNext ? ' is-next' : ''}">
 <div class="trial-card-info">
 <div class="trial-card-top"><span class="trial-tier t-${tr.tier}">${escapeHTML(tr.tierName)}</span><b>${escapeHTML(tr.name)}</b>${done ? `<span class="trial-clear-tag">${cvT('已通关')}</span>` : ''}</div>
 <div class="trial-card-steps">${escapeHTML(stepsTxt)}</div>
-<div class="trial-card-rew">${cvT('首通奖励')}：+${tr.xp} XP · +${tr.ink} ${cvT('墨锭')}</div>
+<div class="trial-card-rew">${done ? cvT('首通奖励已领取') : `${cvT('首通奖励')}：+${tr.xp} XP · +${tr.ink} ${cvT('墨锭')}`}</div>
 </div>
 <button type="button" class="${done ? 'ghost' : 'go'} small" data-trial-hero="${ch.id}" data-trial-idx="${idx}">${cvT(done ? '重练' : '开始试炼')}</button>
 </div>`;
 }).join('');
+}
+if ($id('trialHeroSelect')) {
+$id('trialHeroSelect').addEventListener('click', e => {
+const b = e.target.closest('[data-trial-pick]');
+if (!b) return;
+const idx = +b.dataset.trialPick;
+if (Number.isInteger(idx) && idx >= 0 && idx < CHARS.length) {
+trainChar = idx;
+if (typeof setMenuHero === 'function') setMenuHero(idx);
+renderComboTrialsPane();
+SFX.slice && SFX.slice();
+}
+});
+}
+if ($id('trialHeroHead')) {
+$id('trialHeroHead').addEventListener('click', e => {
+const b = e.target.closest('[data-trial-hero]');
+if (!b) return;
+startComboTrial(b.dataset.trialHero, +b.dataset.trialIdx || 0);
+});
 }
 if ($id('trialList')) {
 $id('trialList').addEventListener('click', e => {
@@ -43836,7 +44174,7 @@ startComboTrial(b.dataset.trialHero, +b.dataset.trialIdx || 0);
 }
 if ($id('trialHud')) {
 $id('trialHud').addEventListener('click', e => {
-if (e.target.closest('#trialHudExit')) { trialStop(); }
+if (e.target.closest('#trialLeaveBtn')) { trialLeaveTest(); }
 });
 }
 const ROLL = { on: false, F: 0, D: 3, N: 240, MAXP: 40, snaps: [], loc: [], rem: [], used: [], remChg: {}, remLast: -1,
@@ -44518,20 +44856,21 @@ if (scr) scr.scrollTop = 0;
 SFX.slice();
 });
 }
-let trainSubTab = 'lesson';   // 训练场当前在哪一页（AI 观战页要借用顶上的「AI 境界」条）
+let trainSubTab = 'trials';   // 训练场当前在哪一页（AI 观战页要借用顶上的「AI 境界」条）
 function xiwuTrainingTab(name) {
-trainSubTab = name;
+const normalized = name === 'scenario' ? 'free' : (name === 'match' ? 'trials' : name);
+trainSubTab = normalized;
 const tabs = document.querySelectorAll('#xiwuTrainingTabs [data-training-tab]');
 const panes = document.querySelectorAll('#single [data-training-pane]');
 for (const tab of tabs) {
-const selected = tab.dataset.trainingTab === name;
+const selected = tab.dataset.trainingTab === normalized;
 tab.classList.toggle('sel', selected);
 tab.setAttribute('aria-selected', String(selected));
 tab.tabIndex = selected ? 0 : -1;
 }
-for (const pane of panes) pane.hidden = pane.dataset.trainingPane !== name;
-if (name === 'trials' && typeof renderComboTrialsPane === 'function') renderComboTrialsPane();
-if ($id('aiLvHome') && currentSingleTab === 'train') $id('aiLvHome').hidden = name !== 'watch';
+for (const pane of panes) pane.hidden = pane.dataset.trainingPane !== normalized;
+if (normalized === 'trials' && typeof renderComboTrialsPane === 'function') renderComboTrialsPane();
+if ($id('aiLvHome') && currentSingleTab === 'train') $id('aiLvHome').hidden = normalized !== 'watch';
 }
 if ($id('xiwuTrainingTabs')) {
 $id('xiwuTrainingTabs').addEventListener('click', e => {
@@ -44549,7 +44888,7 @@ e.preventDefault();
 const next = e.key === 'Home' ? 0 : e.key === 'End' ? tabs.length - 1 : (at + (e.key === 'ArrowRight' ? 1 : tabs.length - 1)) % tabs.length;
 tabs[next].focus(); tabs[next].click();
 });
-xiwuTrainingTab('lesson');
+xiwuTrainingTab('trials');
 }
 let trainChar = 0, trainTargetMode = 'dummy', trainOppMode = 'dummy', trainAiLevel = 'normal';
 const TRAIN_AI_INFO = {
@@ -44621,7 +44960,7 @@ const dummyFeatEl = $id('dummyFeatList');
 if (dummyFeatEl) dummyFeatEl.addEventListener('click', e => { const b = e.target.closest('button[data-feat]'); if (b) dummyFeatToggle(b.dataset.feat); });
 const DB = { open: false, paused: false };
 const dummyBarKey = () => (Object.values(custom1PKeys).includes('Tab') ? 'F4' : 'Tab');
-const dummyBarAvail = () => M.mode === 'train' && !!B && !FOREST.on && !TUT && !REPLAY.on && M.phase !== 'end';
+const dummyBarAvail = () => M.mode === 'train' && !!B && !FOREST.on && !TUT && !REPLAY.on && !(typeof TRIAL_RUN !== 'undefined' && TRIAL_RUN.active) && M.phase !== 'end';
 function dummyBarOn() { return DB.open; }
 function applyTrainOpponent() {
 if (M.mode !== 'train' || !B) return;
@@ -44931,7 +45270,8 @@ body.innerHTML = `
 function trainLabUpdate() {
 const panel = $id('trainLab');
 if (!panel) return;
-const active = M.mode === 'train' && !TUT && !FOREST.on && !REPLAY.on && M.phase !== 'end' && !currentScreen;
+const inTrial = typeof TRIAL_RUN !== 'undefined' && TRIAL_RUN.active;
+const active = M.mode === 'train' && !TUT && !FOREST.on && !REPLAY.on && !inTrial && M.phase !== 'end' && !currentScreen;
 const show = active && !!TRAIN.labOpen && !paused && !DB.open;
 panel.classList.toggle('hidden', !show);
 if (show) trainLabRender(false);
@@ -44970,7 +45310,8 @@ if (advance) advance.disabled = !TRAIN.inspectPaused || M.mode !== 'train' || pa
 function trainInspectUpdate() {
 const panel = $id('trainInspect');
 if (!panel) return;
-const active = M.mode === 'train' && !REPLAY.on && M.phase !== 'end' && !currentScreen;
+const inTrial = typeof TRIAL_RUN !== 'undefined' && TRIAL_RUN.active;
+const active = M.mode === 'train' && !REPLAY.on && !inTrial && M.phase !== 'end' && !currentScreen;
 panel.classList.toggle('hidden', !active || paused || DB.open);
 trainInspectRender();
 trainLabUpdate();
@@ -45115,7 +45456,7 @@ Object.assign(dummyCfg, focus === 'defense'
 renderDummyFeatures();
 singleSec('train');
 showScreen('single');
-xiwuTrainingTab('scenario');
+xiwuTrainingTab('free');
 }
 const trainBtnEl = $id('trainBtn');
 if (trainBtnEl) trainBtnEl.addEventListener('click', () => {
@@ -45126,11 +45467,6 @@ const trainPickBtnEl = $id('trainPickBtn');
 if (trainPickBtnEl) trainPickBtnEl.addEventListener('click', () => bpStart('train', { targetMode: 'dummy' }));
 const xiwuFullTutBtn = $id('xiwuFullTutBtn');
 if (xiwuFullTutBtn) xiwuFullTutBtn.addEventListener('click', () => { initAudio(); startTutorial(true); });
-const xiwuTrainingCpuBtn = $id('xiwuTrainingCpuBtn');
-if (xiwuTrainingCpuBtn) xiwuTrainingCpuBtn.addEventListener('click', () => {
-singleSec('cpu');
-showScreen('single');
-});
 const xiwuDrillList = document.querySelector('.xiwu-drill-list');
 if (xiwuDrillList) xiwuDrillList.addEventListener('click', e => {
 const b = e.target.closest('button[data-drill]');
@@ -45402,6 +45738,7 @@ refocusGame();
 }
 });
 function toMenu(returnHome = false) {
+if (typeof trialStop === 'function') trialStop();
 if (typeof competitiveDraftStopTimer === 'function') competitiveDraftStopTimer();
 if (typeof mapBriefingTimer !== 'undefined' && mapBriefingTimer) { clearInterval(mapBriefingTimer); mapBriefingTimer = null; }
 if (typeof competitiveDraft !== 'undefined') competitiveDraft = null;
@@ -56445,6 +56782,11 @@ teamCmdClose();
 return;
 }
 if ((e.code === 'KeyP' || e.code === 'Escape') && M.mode !== 'demo' && M.mode !== 'net' && !['end', 'perk', 'draft', 'talk'].includes(M.phase)) {   // 抽秘卷、剧情对话时不弹暂停
+if (e.code === 'Escape' && typeof TRIAL_RUN !== 'undefined' && TRIAL_RUN.active && typeof trialLeaveTest === 'function') {
+e.preventDefault();
+trialLeaveTest();
+return;
+}
 if (typeof teamCmdClose === 'function') teamCmdClose();
 paused = !paused; showScreen(paused ? 'pause' : null); if (!paused) refocusGame(); return;
 }
