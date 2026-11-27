@@ -317,6 +317,7 @@ function drawHUDLargeTeam() {
 }
 // 顶部战场小地图条（一眼定位自己、队友与敌人；四象争锋里每个阵营一种颜色）
 function drawLargeMiniMap(top, cx) {
+  if (typeof hudShow === 'function' && !hudShow('minimap')) return;
   ctx.save();
   const bm = typeof battleMapDef === 'function' ? battleMapDef() : null;
   const layered = !!bm;
@@ -351,6 +352,7 @@ function drawLargeMiniMap(top, cx) {
 }
 // 左下角：本机玩家专属状态卡
 function drawLocalCard() {
+  if (typeof hudShow === 'function' && !hudShow('skillBar')) return;
   const lf = fighterByIdx(localIdx());
   ctx.save();
   if (lf && !lf.hidden) {
@@ -380,6 +382,7 @@ function drawLocalCard() {
   ctx.restore();
 }
 function drawSquadTacticalBar() {
+  if (typeof hudShow === 'function' && !hudShow('squadBar')) return;
   if (M.cmd || typeof teamCmdEligible !== 'function' || !teamCmdEligible()) return;
   const t = localTeam();
   const ord = (M.squadOrders && M.squadOrders[t]) || 'auto';

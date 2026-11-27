@@ -37830,6 +37830,7 @@ if (M.cmd) drawCmdPanel();
 ctx.restore();
 }
 function drawLargeMiniMap(top, cx) {
+if (typeof hudShow === 'function' && !hudShow('minimap')) return;
 ctx.save();
 const bm = typeof battleMapDef === 'function' ? battleMapDef() : null;
 const layered = !!bm;
@@ -37863,6 +37864,7 @@ if (isSelf) { ctx.strokeStyle = '#ffffff'; ctx.lineWidth = 1.2; ctx.stroke(); }
 ctx.restore();
 }
 function drawLocalCard() {
+if (typeof hudShow === 'function' && !hudShow('skillBar')) return;
 const lf = fighterByIdx(localIdx());
 ctx.save();
 if (lf && !lf.hidden) {
@@ -37892,6 +37894,7 @@ if (chaosOn()) drawChaosHUD(W / 2, H - 22, true);
 ctx.restore();
 }
 function drawSquadTacticalBar() {
+if (typeof hudShow === 'function' && !hudShow('squadBar')) return;
 if (M.cmd || typeof teamCmdEligible !== 'function' || !teamCmdEligible()) return;
 const t = localTeam();
 const ord = (M.squadOrders && M.squadOrders[t]) || 'auto';
