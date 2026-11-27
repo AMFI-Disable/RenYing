@@ -51,4 +51,5 @@ const ROOM_MODES = {
   pp_cc: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true },
   pp_pp: { bp: 'duo', team: true, us: '我方战队', slots: [[0, 2], [1, 3]], four: true },
   raid: { bp: 'squadNet', team: true, us: '我方战队', slots: [[0], [2]], raid: true },   // 房主 A、好友 C、电脑同袍 D 一起打魔首 B
+  tournament: { bp: 'open', slots: [[0], [1]], rule: 'tournament' },   // 武林大会：联机单败淘汰赛（4/8/16人，含实时观战）
 };

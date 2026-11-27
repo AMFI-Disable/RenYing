@@ -737,21 +737,32 @@ window.RYBoot = (function () {
         </div>
       </div>
 
-      <!-- 武林大会 · 八强单败淘汰赛 -->
+      <!-- 武林大会 · 4/8/16人单败淘汰赛 -->
       <div data-sec="tournament" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
-          <h3 class="spt">武林大会 · 八强单败淘汰</h3>
-          <span class="sub-badge">八人签表 · 参赛与观战</span>
+          <h3 class="spt">武林大会 · 单败淘汰赛</h3>
+          <span class="sub-badge">4 / 8 / 16 强签表 · 参赛与观战</span>
         </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">从二十位侠客中编排八强单败淘汰签表，历经八强赛、半决赛与总决赛角逐武林盟主。支持亲自参赛、本地双人同台或全 AI 观战直转，夺魁可获 +200 墨锭奖励。</p>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">支持 4 强、8 强与 16 强单败淘汰签表，可选标准种子排位或随机抽签、自动推进赛程与分享战绩码。支持单人参赛、本地双人、全 AI 观战或联机好友房举办大会。</p>
+        <div class="sec-sub-label" style="text-align:left;margin-top:6px">参赛规模</div>
+        <div class="seg m2-seg" id="tourSizeSeg" style="margin-bottom:10px">
+          <button data-tsize="4" type="button">4 强 (2 轮)</button>
+          <button data-tsize="8" class="sel" type="button">8 强 (3 轮)</button>
+          <button data-tsize="16" type="button">16 强 (4 轮)</button>
+        </div>
+        <div class="sec-sub-label" style="text-align:left;margin-top:6px">抽签方式</div>
+        <div class="seg m2-seg" id="tourSeedSeg" style="margin-bottom:10px">
+          <button data-tseed="standard" class="sel" type="button">标准种子</button>
+          <button data-tseed="random" type="button">随机抽签</button>
+        </div>
         <div class="sec-sub-label" style="text-align:left;margin-top:6px">赛制编制</div>
         <div class="seg m2-seg" id="tourFormatSeg" style="margin-bottom:12px">
-          <button data-tfmt="player" class="sel" type="button">单人参赛 (1人 + 7 AI)</button>
-          <button data-tfmt="local2" type="button">双人参赛 (2人 + 6 AI)</button>
-          <button data-tfmt="watch8" type="button">全 AI 观战 (8强演武)</button>
+          <button data-tfmt="player" class="sel" type="button">单人参赛 (1P + AI)</button>
+          <button data-tfmt="local2" type="button">双人参赛 (2P + AI)</button>
+          <button data-tfmt="watch" type="button">全 AI 观战演武</button>
         </div>
         <div class="single-action-row">
-          <button class="go" id="tourStartBtn" type="button">开启八强武林大会</button>
+          <button class="go" id="tourStartBtn" type="button">开启武林大会</button>
         </div>
       </div>
 
@@ -861,6 +872,7 @@ window.RYBoot = (function () {
                 <div class="iprow tp-join">
                   <input id="codeIn" maxlength="4" placeholder="输入房号，例如 K7PQ" autocomplete="off" spellcheck="false" aria-label="好友的房间号">
                   <button class="mm-go alt" id="joinBtn" type="button">加入</button>
+                  <button class="ghost small" id="specJoinBtn" type="button" title="以只读实时观战席加入该房间，不影响对战延迟">观战</button>
                 </div>
               </div>
               <details class="tp-more" id="roomMore">
@@ -877,6 +889,7 @@ window.RYBoot = (function () {
                   <button class="ghost small" data-mode="melee" type="button">群雄会战 (6–32人)</button>
                   <button class="ghost small" data-mode="ctf" type="button">夺旗争锋 (4–20人)</button>
                   <button class="ghost small" data-mode="quad" type="button">四象争锋 (8–32人)</button>
+                  <button class="ghost small" data-mode="tournament" type="button">联机武林大会 (4/8/16强)</button>
                 </div>
                 <div class="lobby-modes-seg" id="lobbyTeamSizeSeg" role="group" aria-label="联机团战人数" hidden style="margin-top:6px"></div>
                 <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。常规标准已融合动态天机异变。</p>
@@ -1680,17 +1693,26 @@ window.RYBoot = (function () {
     <div class="panel tourp">
       <div class="cxhead">
         <div>
-          <h2>武林大会 · 八强签表</h2>
-          <p class="sub" id="tourSub" style="margin:2px 0 0;text-align:left">八强单败淘汰赛</p>
+          <h2 id="tourHeading">武林大会 · 八强签表</h2>
+          <p class="sub" id="tourSub" style="margin:2px 0 0;text-align:left">8强单败淘汰赛</p>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button class="go small" id="tourNextBtn" type="button">出战下一场</button>
           <button class="ghost small" id="tourSkipAiBtn" type="button">快结 AI 场次</button>
+          <button class="ghost small" id="tourAutoBtn" type="button" aria-pressed="false">自动推进：关</button>
+          <button class="ghost small" id="tourShareBtn" type="button">分享战绩</button>
+          <button class="ghost small" id="tourImportBtn" type="button">导入战绩</button>
           <button class="ghost small" id="tourResetBtn" type="button">重排签表</button>
           <button class="ghost" data-back type="button">返回</button>
         </div>
       </div>
+      <div class="rp-code-box hidden" id="tourImportBox">
+        <input id="tourImportIn" type="text" placeholder="粘贴 RYTR1: 开头的武林大会战绩分享码" autocomplete="off" spellcheck="false" aria-label="赛果分享码">
+        <button class="go small" id="tourImportApplyBtn" type="button">导入签表</button>
+        <button class="ghost small" id="tourImportCancelBtn" type="button">取消</button>
+      </div>
       <div class="tour-tree" id="tourTree"></div>
+      <div class="tour-standings" id="tourStandings"></div>
     </div>
   </div>
 </div>
@@ -1701,10 +1723,12 @@ window.RYBoot = (function () {
   <div class="spec-row">
     <span class="spec-live-badge">LIVE</span>
     <b id="specTitle">实时观战</b>
+    <span class="spec-count hidden" id="specCount"></span>
     <button type="button" class="spec-nav" id="specPrevBtn" title="上一位侠客">‹</button>
     <div class="spec-fighters" id="specFighters"></div>
     <button type="button" class="spec-nav" id="specNextBtn" title="下一位侠客">›</button>
     <button type="button" class="spec-clean-btn" id="specCleanBtn" aria-pressed="false">纯净直转</button>
+    <button type="button" class="spec-exit-btn hidden" id="specExitBtn">退出观战</button>
   </div>
   <div class="spec-ticker" id="specTicker"></div>
 </div>

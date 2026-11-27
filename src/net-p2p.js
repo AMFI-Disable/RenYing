@@ -46,11 +46,13 @@ const P2P = {
   drop: null,      // 当前直连的“断线”处理（心跳发现对方没了时调用）
   sigTries: 0,     // 和牵线服务器断开后已经重连了几次
   dropped: 0,      // 因为太大没发出去的消息数
+  specs: [],       // 只读观战连接列表（最多 P2P_MAX_SPECS 人，与对战通道完全隔离）
 };
+const P2P_MAX_SPECS = 4;
 // 只接受对方发来的这几种系统消息，其余忽略（防止被改过的网页乱发）
 const P2P_SYS = {
-  host: ['hello', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule', 'map_vote'],
-  client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule', 'map_vote']
+  host: ['hello', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule', 'map_vote', 'tour_sync', 'tour_result', 'tour_start', 'spec_hello'],
+  client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule', 'map_vote', 'tour_sync', 'tour_result', 'tour_start', 'spec_ready', 'spec_frame']
 };
 const P2P_SILENCE = 20000;   // 对方 20 秒没有任何消息就当作断线（双方每 2 秒互发心跳）
 const P2P_T = {
@@ -140,8 +142,37 @@ function p2pLoad() {
 function p2pName(n, dflt) { return (String(n || '').match(/[\w\u4e00-\u9fff]/g) || []).join('').slice(0, 12) || dflt; }
 function p2pOpen() { return !!(P2P.conn && P2P.conn.open); }
 function p2pActive() { return !!(P2P.peer || P2P.conn); }
+function p2pSpecCount() {
+  if (!Array.isArray(P2P.specs)) return 0;
+  let n = 0;
+  for (const c of P2P.specs) if (c && c.open) n++;
+  return n;
+}
+// 只读观战广播：独立于对战回滚通道，不阻塞、不重试、不影响对战延迟
+function p2pSpecBroadcast(o) {
+  if (!Array.isArray(P2P.specs) || !P2P.specs.length) return 0;
+  let len = 0;
+  try { len = JSON.stringify(o).length; } catch (e) { return 0; }
+  if (len > P2P_MAX) return 0;
+  let sent = 0;
+  for (let i = P2P.specs.length - 1; i >= 0; i--) {
+    const c = P2P.specs[i];
+    if (!c || !c.open) { if (!c || c._closed) P2P.specs.splice(i, 1); continue; }
+    try { c.send(o); sent++; } catch (e) {}
+  }
+  return sent;
+}
+function p2pCloseSpecs(notifyLeft) {
+  if (!Array.isArray(P2P.specs) || !P2P.specs.length) return;
+  const list = P2P.specs.splice(0);
+  for (const sc of list) {
+    if (notifyLeft && sc && sc.open) { try { sc.send({ sys: 'left' }); } catch (e) {} }
+    try { sc.close(); } catch (e) {}
+  }
+}
 // 发出去返回 true。太大的消息不发（发了对方也收不全），记一笔
 function p2pSend(o) {
+  if (typeof NET !== 'undefined' && NET.spectating) return false;
   if (!p2pOpen()) return false;
   let n = 0;
   try { n = JSON.stringify(o).length; } catch (e) { return false; }
@@ -151,7 +182,8 @@ function p2pSend(o) {
 // 主动离开：先把 left 发出去，过一会儿再关直连和牵线（立刻关的话 left 多半还没发出去，对方只能干等 20 秒）
 function p2pBye() {
   const c = P2P.conn, p = P2P.peer;
-  if (c && c.open) { try { c.send({ sys: 'left' }); } catch (e) {} }
+  if (c && c.open && !(typeof NET !== 'undefined' && NET.spectating)) { try { c.send({ sys: 'left' }); } catch (e) {} }
+  p2pCloseSpecs(true);
   P2P.conn = P2P.peer = null; P2P.drop = null;
   p2pState('closed');
   if (c || p) setTimeout(() => { if (c) { try { c.close(); } catch (e) {} } if (p) { try { p.destroy(); } catch (e) {} } }, 300);
@@ -161,6 +193,7 @@ function p2pClose() {
   P2P.sess++; P2P.opened = false; P2P.friend = false;
   clearTimeout(P2P.timer);
   P2P.graceUntil = 0; P2P.drop = null; P2P.sigTries = 0; P2P.roomAt = 0;
+  p2pCloseSpecs(false);
   p2pState('idle');
   const c = P2P.conn, p = P2P.peer;
   P2P.conn = P2P.peer = null;
@@ -336,10 +369,49 @@ function p2pHost(sess) {
     if (!P2P.conn) { p2pState('wait'); if (!P2P.roomAt) P2P.roomAt = Date.now(); }
     onSys({ sys: 'room', role: 'host', code });        // 显示房间码（重连成功也会再来一次，房间码不变）
   });
+  const attachSpectator = (sc, m) => {
+    if (m.v !== VERSION) {
+      try { sc.send({ sys: 'version', need: VERSION }); } catch (e) {}
+      setTimeout(() => { try { sc.close(); } catch (e) {} }, 300);
+      return;
+    }
+    if (P2P.specs.length >= P2P_MAX_SPECS) {
+      try { sc.send({ sys: 'full' }); } catch (e) {}
+      setTimeout(() => { try { sc.close(); } catch (e) {} }, 300);
+      return;
+    }
+    if (!P2P.specs.includes(sc)) P2P.specs.push(sc);
+    const dropSpec = () => {
+      sc._closed = true;
+      const idx = P2P.specs.indexOf(sc);
+      if (idx >= 0) P2P.specs.splice(idx, 1);
+    };
+    sc.on('close', dropSpec);
+    sc.on('error', dropSpec);
+    const ch = (typeof A !== 'undefined' && typeof B !== 'undefined') ? [A.chIdx || 0, B.chIdx || 0] : [0, 1];
+    try {
+      sc.send({ sys: 'spec_ready', code, names: (typeof NET !== 'undefined' && NET.names) || { host: (ACC && ACC.name) || '房主', client: '对手' }, ch, map: (typeof M !== 'undefined' && M.map) || '', specs: p2pSpecCount() });
+    } catch (e) {}
+  };
   peer.on('connection', conn => {
     if (!live()) return;
-    if (p2pOpen()) {                                    // 已经有人了
-      conn.on('open', () => { try { conn.send({ sys: 'full' }); } catch (e) {} setTimeout(() => { try { conn.close(); } catch (e) {} }, 400); });
+    if (p2pOpen()) {                                    // 对战席已满：仅接受只读观战握手，拒绝多余对战连接
+      let handled = false;
+      const specCut = setTimeout(() => { if (!handled) { try { conn.send({ sys: 'full' }); } catch (e) {} try { conn.close(); } catch (e) {} } }, 4000);
+      conn.on('data', d => {
+        if (!live() || handled) return;
+        let m = d;
+        if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { return; } }
+        if (!m || typeof m !== 'object') return;
+        if (m.sys === 'spec_hello') {
+          handled = true; clearTimeout(specCut);
+          attachSpectator(conn, m);
+        } else {
+          handled = true; clearTimeout(specCut);
+          try { conn.send({ sys: 'full' }); } catch (e) {}
+          setTimeout(() => { try { conn.close(); } catch (e) {} }, 300);
+        }
+      });
       return;
     }
     if (P2P.conn) { const old = P2P.conn; P2P.conn = null; try { old.close(); } catch (e) {} }   // 上一个人还没连通：多半是他在重试，换成新的
@@ -350,6 +422,13 @@ function p2pHost(sess) {
       if (live() && P2P.conn === conn && !conn.open) { P2P.conn = null; P2P.drop = null; try { conn.close(); } catch (e) {} noRoute(); }
     }, P2P_T.ice);
     p2pWire(conn, sess, 'host', () => { clearTimeout(P2P.timer); netStatus('对手已连入，正在核对版本…'); }, m => {
+      if (m.sys === 'spec_hello') {
+        // 候战时有观战者连入：移交只读观战席，释放对战席位
+        P2P.conn = null; P2P.drop = null; p2pState('wait'); P2P.roomAt = Date.now();
+        attachSpectator(conn, m);
+        netStatus('已有观战者入席，房间仍在等候对手加入…');
+        return;
+      }
       if (m.sys === 'hello') {
         if (m.v !== VERSION) {
           try { conn.send({ sys: 'version', need: VERSION }); } catch (e) {}
@@ -437,6 +516,44 @@ function p2pJoin(sess, code) {
     if (!live()) return;
     if (NET.open && err.type !== 'peer-unavailable') return;
     fail(err.type === 'peer-unavailable' ? `找不到房间 ${code}：请核对房间码，并确认房主网页仍在开启等候` : p2pErrorText(err));
+  });
+}
+
+// ---------- 只读观战：按房间码接入房主广播，不发送任何输入、不影响回滚 ----------
+async function netSpectateP2P(code) {
+  netReset();
+  NET.isRanked = false; NET.leaving = false; NET.base = null; NET.role = 'spectator'; NET.spectating = true;
+  code = String(code || '').trim().toUpperCase();
+  netStatus(`正在以只读观战接入房间 ${code}…`);
+  const sess = P2P.sess;
+  const [ok] = await Promise.all([p2pLoad(), p2pIce()]);
+  if (sess !== P2P.sess) return;
+  if (!ok) { netStatus('直连组件加载失败，检查一下网络后再试'); netReset(); return; }
+  let peer;
+  try { peer = P2P.peer = new Peer(p2pOptions()); }
+  catch (e) { netStatus(p2pErrorText(e)); netReset(); return; }
+  const live = () => sess === P2P.sess && peer === P2P.peer;
+  const fail = text => { if (!live()) return; netStatus(text); netReset(); };
+  p2pState('signal');
+  clearTimeout(P2P.timer);
+  P2P.timer = setTimeout(() => { if (live() && !NET.open) fail(`观战连接超时：请确认房间 ${code} 仍在进行中`); }, P2P_T.signal);
+  peer.on('open', () => {
+    if (!live()) return;
+    const conn = P2P.conn = peer.connect(P2P.prefix + code.toLowerCase(), { reliable: true, serialization: 'json' });
+    p2pWire(conn, sess, 'client', () => {
+      clearTimeout(P2P.timer);
+      NET.code = code;
+      conn.send({ sys: 'spec_hello', v: VERSION, name: (ACC && ACC.name) || '' });
+    }, m => {
+      if (m.sys === 'spec_ready') { clearTimeout(P2P.timer); NET.open = true; onSys(m); return; }
+      if (m.sys === 'spec_frame' || m.sys === 'left' || m.sys === 'full' || m.sys === 'version') onSys(m);
+    }, () => { clearTimeout(P2P.timer); fail(p2pNoRouteText()); });
+  });
+  peer.on('error', err => {
+    clearTimeout(P2P.timer);
+    if (!live()) return;
+    if (NET.open && err.type !== 'peer-unavailable') return;
+    fail(err.type === 'peer-unavailable' ? `找不到房间 ${code}：请核对房间码` : p2pErrorText(err));
   });
 }
 

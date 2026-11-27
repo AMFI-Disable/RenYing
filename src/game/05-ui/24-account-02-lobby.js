@@ -84,7 +84,7 @@ const ROOM_TEAM_SIZES = {
   ctf: [2, 3, 5, 8, 10],
   quad: [2, 4, 5, 8],
 };
-const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '常规标准', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏', bastion: '天枢守境', melee: '群雄会战', ctf: '夺旗争锋', quad: '四象争锋' };
+const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '常规标准', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏', bastion: '天枢守境', melee: '群雄会战', ctf: '夺旗争锋', quad: '四象争锋', tournament: '联机武林大会' };
 function roomRuleLabel(rule, sz) {
   const base = ROOM_RULE_NAMES[rule] || ROOM_RULE_NAMES.normal;
   const opts = ROOM_TEAM_SIZES[rule];
@@ -529,7 +529,15 @@ function joinByCode() {
   if (code.length !== 4) return netStatus('房间码是 4 位');
   netConnect(false, code);
 }
+function spectateByCode() {
+  initAudio();
+  const code = $id('codeIn').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+  roomWrapShow();
+  if (code.length !== 4) return netStatus('房间码是 4 位');
+  if (typeof netSpectateP2P === 'function') netSpectateP2P(code);
+}
 $id('joinBtn').addEventListener('click', joinByCode);
+if ($id('specJoinBtn')) $id('specJoinBtn').addEventListener('click', spectateByCode);
 $id('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') joinByCode(); });
 function checkUrlRoom() {
   try {

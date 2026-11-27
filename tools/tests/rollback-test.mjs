@@ -405,6 +405,42 @@ if (runAll || args.includes('--rollback')) {
   })()`).runInContext(w);
   assert(relicRb.stA === 2 && relicRb.stB === 2 && relicRb.match,
     'Heirloom Dual Stance switching & counter state resimulate identically across rollback', JSON.stringify(relicRb));
+
+  // Issue #56: Passive read-only spectator broadcasting during 120Hz rollback does not alter state hash or determinism
+  const specRb = new vm.Script(`(() => {
+    const framesSent = [];
+    const mockSpec = { open: true, send(o) { framesSent.push(o); }, close() {} };
+    const runMatch = withSpec => {
+      P2P.specs = withSpec ? [mockSpec] : [];
+      SPEC_HUD.bcastAcc = 0;
+      rollStart([0, 3], 5656);
+      M.rseq = 0;   // 两次对照从同一局序号开始，确保比较的是纯观战广播的影响
+      M.phase = 'fight';
+      for (let f = 0; f < 90; f++) {
+        ROLL.loc[f] = { h: (f % 16 < 8) ? 2 : 0, p: f % 11 === 0 ? ['light'] : (f === 30 ? ['skill'] : []) };
+        ROLL.rem[f] = { h: (f % 16 < 8) ? 1 : 4, p: f % 13 === 0 ? ['light'] : (f === 45 ? ['skill2'] : []) };
+        ROLL.remLast = 90;
+        rollFrame(f); ROLL.F = f + 1;
+        if (withSpec) specBroadcastTick(STEP);
+      }
+      const before = hashState(capState());
+      ROLL.pend = 50;
+      rollResim();
+      const after = hashState(capState());
+      P2P.specs = [];
+      return { before, after, match: before === after };
+    };
+    const baseline = runMatch(false);
+    const withSpec = runMatch(true);
+    return {
+      baselineHash: baseline.after,
+      withSpecHash: withSpec.after,
+      identical: baseline.match && withSpec.match && baseline.after === withSpec.after,
+      framesSent: framesSent.length
+    };
+  })()`).runInContext(w);
+  assert(specRb.identical && specRb.framesSent >= 10,
+    `Issue #56: Passive 20Hz live spectator broadcast (${specRb.framesSent} frames) preserves bit-identical rollback state hash`, JSON.stringify(specRb));
 }
 
 // 2. QingFengXing (青锋行) 3D Action Mode Verification

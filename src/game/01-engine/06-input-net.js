@@ -116,7 +116,7 @@ function secretThink(f, networkInput = false) {
 // ======================= 联机（公共部分） =======================
 // 联机只有一种连法：浏览器之间用 WebRTC 直接连（PeerJS 只负责牵线），不需要自己的服务器，见 net-p2p.js。
 // 房主叫 host（青锋那一边），加入的人叫 client。对战用“回滚联机”（见下面 ROLL 一节）：两边每帧只交换按键。
-const NET = { role: null, open: false, remote: new Ctrl(), out: [], presses: [], presses2: [], forfeit: false, forfeitResult: '' };
+const NET = { role: null, open: false, spectating: false, remote: new Ctrl(), out: [], presses: [], presses2: [], forfeit: false, forfeitResult: '' };
 const localIdx = () => M.mode === 'net' && NET.role === 'client' ? 1 : 0;
 const localTeam = () => {
   if (M.mode === '2v2' || (typeof is2v2 === 'function' && is2v2())) {
@@ -135,7 +135,7 @@ function netReset() {
   if (typeof mmStop === 'function') mmStop();
   mmUI(null);
   NET.peerQuit = false; NET.solo = false; NET.forfeit = false; NET.forfeitResult = ''; NET.keepRoom = false;
-  NET.matching = false; NET.hold = false;
+  NET.matching = false; NET.hold = false; NET.spectating = false;
   p2pClose();
   NET.open = false; NET.code = null; NET.out = []; NET.presses.length = 0; NET.remote.clear();
   if (typeof updateNetLobby === 'function') updateNetLobby(false);
@@ -245,16 +245,26 @@ function onSys(m) {
     NET.consensus.gotAck = true;
     tryCommitNet(false);
   }
-  else if (m.sys === 'left') netLost();
+  else if (m.sys === 'tour_sync') { if (typeof tourSyncRecv === 'function') tourSyncRecv(m); }
+  else if (m.sys === 'tour_result') { if (typeof tourRecvRemoteResult === 'function') tourRecvRemoteResult(m); }
+  else if (m.sys === 'tour_start') { if (typeof tourRecvOnlineStart === 'function') tourRecvOnlineStart(m); }
+  else if (m.sys === 'spec_ready') { if (typeof specOnLiveReady === 'function') specOnLiveReady(m); }
+  else if (m.sys === 'spec_frame') { if (typeof specApplyLiveFrame === 'function') specApplyLiveFrame(m); }
+  else if (m.sys === 'left') { if (NET.spectating && typeof specExitLive === 'function') specExitLive('对局已结束或房主已离开'); else netLost(); }
   else if (m.sys === 'full') { netStatus('这间房已经满员'); netReset(); }
   else if (m.sys === 'version') { netStatus(`你的版本与房主不同（房主是 ${m.need}），刷新网页再试`); netReset(); }
 }
-function send(o) { p2pSend(o); }
+function send(o) { if (NET.spectating) return; p2pSend(o); }
 function onNetOpen() {
   netStatus('已连接');
   send({ pskin: mySkinMap() });
   send({ pload: typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {} });
   initAudio();
+  if (typeof netRoomMode === 'string' && netRoomMode === 'tournament') {
+    if (NET.role === 'host' && typeof tourStartOnlineRoom === 'function') tourStartOnlineRoom();
+    else netStatus('已连接，正在同步联机武林大会签表…');
+    return;
+  }
   if (NET.role === 'host') bpStart('net');
   else netStatus('已连接，即刻选人…');
 }
@@ -455,10 +465,13 @@ function playEvent(ev) {
 }
 function netTick(dt) {
   // 排队时每 4 秒告诉服务器“我还在”，不然等久了会被当成掉线清出队列
+  if (NET.spectating) return;
   if (M.mode !== 'net' && bpMode !== 'net') return;
   if (!NET.open) return;
   NET.pingAcc = (NET.pingAcc || 0) + dt;
   if (NET.pingAcc >= 1) { NET.pingAcc = 0; const now = performance.now(); send({ pg: now }); }   // 只量和对手之间的延迟：联机是点对点，没有服务器可量
+  // 房主被动向只读观战席广播画面（20Hz，不修改任何战斗或回滚状态）
+  if (NET.role === 'host' && M.mode === 'net' && typeof specBroadcastTick === 'function') specBroadcastTick(dt);
   if (M.mode !== 'net' || NET.hold || ROLL.on) return;
   const h = human[0].held;
   const hb = (h.left ? 1 : 0) | (h.right ? 2 : 0) | (h.down ? 4 : 0) | (h.atk ? 8 : 0) | (h.jump ? 16 : 0) | (h.aim < 0 ? 32 : 0) | (h.aim ? 64 : 0);

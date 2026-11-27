@@ -4747,19 +4747,41 @@ cursor: pointer;
 .spec-pill.sel { border-color: #e9c46a; background: rgba(233, 196, 106, 0.2); }
 .spec-pill.is-ko { opacity: 0.45; }
 .spec-pill span { margin-left: 5px; opacity: 0.78; font-variant-numeric: tabular-nums; }
+.spec-count {
+padding: 2px 7px;
+border-radius: 999px;
+background: rgba(70, 211, 234, 0.18);
+border: 1px solid rgba(70, 211, 234, 0.45);
+color: #9ff2ff;
+font-size: 11px;
+font-variant-numeric: tabular-nums;
+}
+.spec-exit-btn {
+padding: 3px 8px;
+border-radius: 6px;
+border: 1px solid rgba(248, 113, 113, 0.45);
+background: rgba(248, 113, 113, 0.15);
+color: #fecaca;
+font-size: 11.5px;
+cursor: pointer;
+}
 .spec-ticker { font-size: 11.5px; color: rgba(239, 232, 216, 0.85); font-variant-numeric: tabular-nums; }
-.tourp { max-width: 1160px; width: min(96vw, 1160px); }
+.tourp { max-width: 1340px; width: min(97vw, 1340px); }
 .tour-tree {
 display: grid;
 grid-template-columns: repeat(4, minmax(190px, 1fr));
 gap: 14px;
 margin-top: 14px;
 align-items: center;
+overflow-x: auto;
 }
-.tour-col { display: flex; flex-direction: column; gap: 12px; }
+.tour-tree[data-size="4"] { grid-template-columns: repeat(3, minmax(210px, 1fr)); }
+.tour-tree[data-size="8"] { grid-template-columns: repeat(4, minmax(190px, 1fr)); }
+.tour-tree[data-size="16"] { grid-template-columns: repeat(5, minmax(175px, 1fr)); gap: 10px; }
+.tour-col { display: flex; flex-direction: column; gap: 10px; }
 .tour-col h4 { margin: 0 0 4px; font-size: 13px; color: var(--gold); text-align: center; }
 .tour-match {
-padding: 8px;
+padding: 7px 8px;
 border-radius: 8px;
 background: rgba(15, 22, 36, 0.78);
 border: 1px solid rgba(255, 255, 255, 0.12);
@@ -4799,8 +4821,46 @@ background: linear-gradient(135deg, rgba(233, 196, 106, 0.24), rgba(181, 40, 45,
 }
 .tour-champ-card b { font-size: 16px; color: #fbefcf; }
 .tour-champ-card span { font-size: 12px; color: rgba(239, 232, 216, 0.78); }
+.tour-standings {
+margin-top: 14px;
+padding: 10px 12px;
+border-radius: 10px;
+background: rgba(10, 14, 26, 0.65);
+border: 1px solid rgba(233, 196, 106, 0.2);
+}
+.tour-st-head {
+display: flex;
+justify-content: space-between;
+align-items: center;
+margin-bottom: 8px;
+font-size: 12.5px;
+color: var(--gold);
+}
+.tour-st-grid {
+display: grid;
+grid-template-columns: repeat(auto-fill, minmax(195px, 1fr));
+gap: 6px;
+}
+.tour-st-row {
+display: flex;
+align-items: center;
+gap: 6px;
+padding: 4px 8px;
+border-radius: 6px;
+background: rgba(255, 255, 255, 0.04);
+font-size: 12px;
+font-variant-numeric: tabular-nums;
+}
+.tour-st-row em { font-style: normal; color: var(--gold); font-weight: 700; min-width: 24px; }
+.tour-st-row span { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tour-st-row b { color: rgba(239, 232, 216, 0.8); }
+.tour-st-row.is-champ { background: rgba(233, 196, 106, 0.18); border: 1px solid rgba(233, 196, 106, 0.5); }
+.tour-st-row.is-human span { color: #6fe0ff; }
 @media (max-width: 860px) {
-.tour-tree { grid-template-columns: 1fr; }
+.tour-tree,
+.tour-tree[data-size="4"],
+.tour-tree[data-size="8"],
+.tour-tree[data-size="16"] { grid-template-columns: 1fr; }
 }
 .trial-hero-head {
 display: flex;
@@ -5631,21 +5691,32 @@ window.RYBoot = (function () {
         </div>
       </div>
 
-      <!-- 武林大会 · 八强单败淘汰赛 -->
+      <!-- 武林大会 · 4/8/16人单败淘汰赛 -->
       <div data-sec="tournament" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
-          <h3 class="spt">武林大会 · 八强单败淘汰</h3>
-          <span class="sub-badge">八人签表 · 参赛与观战</span>
+          <h3 class="spt">武林大会 · 单败淘汰赛</h3>
+          <span class="sub-badge">4 / 8 / 16 强签表 · 参赛与观战</span>
         </div>
-        <p class="sub" style="margin:2px 0 10px;text-align:left">从二十位侠客中编排八强单败淘汰签表，历经八强赛、半决赛与总决赛角逐武林盟主。支持亲自参赛、本地双人同台或全 AI 观战直转，夺魁可获 +200 墨锭奖励。</p>
+        <p class="sub" style="margin:2px 0 10px;text-align:left">支持 4 强、8 强与 16 强单败淘汰签表，可选标准种子排位或随机抽签、自动推进赛程与分享战绩码。支持单人参赛、本地双人、全 AI 观战或联机好友房举办大会。</p>
+        <div class="sec-sub-label" style="text-align:left;margin-top:6px">参赛规模</div>
+        <div class="seg m2-seg" id="tourSizeSeg" style="margin-bottom:10px">
+          <button data-tsize="4" type="button">4 强 (2 轮)</button>
+          <button data-tsize="8" class="sel" type="button">8 强 (3 轮)</button>
+          <button data-tsize="16" type="button">16 强 (4 轮)</button>
+        </div>
+        <div class="sec-sub-label" style="text-align:left;margin-top:6px">抽签方式</div>
+        <div class="seg m2-seg" id="tourSeedSeg" style="margin-bottom:10px">
+          <button data-tseed="standard" class="sel" type="button">标准种子</button>
+          <button data-tseed="random" type="button">随机抽签</button>
+        </div>
         <div class="sec-sub-label" style="text-align:left;margin-top:6px">赛制编制</div>
         <div class="seg m2-seg" id="tourFormatSeg" style="margin-bottom:12px">
-          <button data-tfmt="player" class="sel" type="button">单人参赛 (1人 + 7 AI)</button>
-          <button data-tfmt="local2" type="button">双人参赛 (2人 + 6 AI)</button>
-          <button data-tfmt="watch8" type="button">全 AI 观战 (8强演武)</button>
+          <button data-tfmt="player" class="sel" type="button">单人参赛 (1P + AI)</button>
+          <button data-tfmt="local2" type="button">双人参赛 (2P + AI)</button>
+          <button data-tfmt="watch" type="button">全 AI 观战演武</button>
         </div>
         <div class="single-action-row">
-          <button class="go" id="tourStartBtn" type="button">开启八强武林大会</button>
+          <button class="go" id="tourStartBtn" type="button">开启武林大会</button>
         </div>
       </div>
 
@@ -5755,6 +5826,7 @@ window.RYBoot = (function () {
                 <div class="iprow tp-join">
                   <input id="codeIn" maxlength="4" placeholder="输入房号，例如 K7PQ" autocomplete="off" spellcheck="false" aria-label="好友的房间号">
                   <button class="mm-go alt" id="joinBtn" type="button">加入</button>
+                  <button class="ghost small" id="specJoinBtn" type="button" title="以只读实时观战席加入该房间，不影响对战延迟">观战</button>
                 </div>
               </div>
               <details class="tp-more" id="roomMore">
@@ -5771,6 +5843,7 @@ window.RYBoot = (function () {
                   <button class="ghost small" data-mode="melee" type="button">群雄会战 (6–32人)</button>
                   <button class="ghost small" data-mode="ctf" type="button">夺旗争锋 (4–20人)</button>
                   <button class="ghost small" data-mode="quad" type="button">四象争锋 (8–32人)</button>
+                  <button class="ghost small" data-mode="tournament" type="button">联机武林大会 (4/8/16强)</button>
                 </div>
                 <div class="lobby-modes-seg" id="lobbyTeamSizeSeg" role="group" aria-label="联机团战人数" hidden style="margin-top:6px"></div>
                 <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。常规标准已融合动态天机异变。</p>
@@ -6574,17 +6647,26 @@ window.RYBoot = (function () {
     <div class="panel tourp">
       <div class="cxhead">
         <div>
-          <h2>武林大会 · 八强签表</h2>
-          <p class="sub" id="tourSub" style="margin:2px 0 0;text-align:left">八强单败淘汰赛</p>
+          <h2 id="tourHeading">武林大会 · 八强签表</h2>
+          <p class="sub" id="tourSub" style="margin:2px 0 0;text-align:left">8强单败淘汰赛</p>
         </div>
         <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
           <button class="go small" id="tourNextBtn" type="button">出战下一场</button>
           <button class="ghost small" id="tourSkipAiBtn" type="button">快结 AI 场次</button>
+          <button class="ghost small" id="tourAutoBtn" type="button" aria-pressed="false">自动推进：关</button>
+          <button class="ghost small" id="tourShareBtn" type="button">分享战绩</button>
+          <button class="ghost small" id="tourImportBtn" type="button">导入战绩</button>
           <button class="ghost small" id="tourResetBtn" type="button">重排签表</button>
           <button class="ghost" data-back type="button">返回</button>
         </div>
       </div>
+      <div class="rp-code-box hidden" id="tourImportBox">
+        <input id="tourImportIn" type="text" placeholder="粘贴 RYTR1: 开头的武林大会战绩分享码" autocomplete="off" spellcheck="false" aria-label="赛果分享码">
+        <button class="go small" id="tourImportApplyBtn" type="button">导入签表</button>
+        <button class="ghost small" id="tourImportCancelBtn" type="button">取消</button>
+      </div>
       <div class="tour-tree" id="tourTree"></div>
+      <div class="tour-standings" id="tourStandings"></div>
     </div>
   </div>
 </div>
@@ -6595,10 +6677,12 @@ window.RYBoot = (function () {
   <div class="spec-row">
     <span class="spec-live-badge">LIVE</span>
     <b id="specTitle">实时观战</b>
+    <span class="spec-count hidden" id="specCount"></span>
     <button type="button" class="spec-nav" id="specPrevBtn" title="上一位侠客">‹</button>
     <div class="spec-fighters" id="specFighters"></div>
     <button type="button" class="spec-nav" id="specNextBtn" title="下一位侠客">›</button>
     <button type="button" class="spec-clean-btn" id="specCleanBtn" aria-pressed="false">纯净直转</button>
+    <button type="button" class="spec-exit-btn hidden" id="specExitBtn">退出观战</button>
   </div>
   <div class="spec-ticker" id="specTicker"></div>
 </div>
@@ -10160,6 +10244,7 @@ quad: { bp: 'open', slots: [[0], [1]], rule: 'quad', teamSize: 4 },   // 四象�
 pp_cc: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true },
 pp_pp: { bp: 'duo', team: true, us: '我方战队', slots: [[0, 2], [1, 3]], four: true },
 raid: { bp: 'squadNet', team: true, us: '我方战队', slots: [[0], [2]], raid: true },   // 房主 A、好友 C、电脑同袍 D 一起打魔首 B
+tournament: { bp: 'open', slots: [[0], [1]], rule: 'tournament' },   // 武林大会：联机单败淘汰赛（4/8/16人，含实时观战）
 };
 const BP_ORDERS = {
 duel: [[0, 'ban'], [1, 'ban'], [0, 'pick'], [1, 'pick']],                     // 1v1：各禁 1 人、各选 1 人
@@ -13401,29 +13486,55 @@ Object.assign(UI_COPY_EN, {
 "空挥": "Whiff",
 "失防": "Guard Broken",
 "武林大会": "Tournament",
-"八强单败淘汰 · 参赛或观战": "8-slot single elimination · Play or spectate",
-"武林大会 · 八强单败淘汰": "Tournament · 8-Slot Single Elimination",
-"八人签表 · 参赛与观战": "8-Player Bracket · Play & Spectate",
-"从二十位侠客中编排八强单败淘汰签表，历经八强赛、半决赛与总决赛角逐武林盟主。支持亲自参赛、本地双人同台或全 AI 观战直转，夺魁可获 +200 墨锭奖励。": "Draft an 8-fighter single-elimination bracket across all 20 heroes, advancing through Quarterfinals, Semifinals, and Grand Final. Play solo, local 2P, or spectate all-AI bouts; winning grants +200 Ink.",
+"联机武林大会": "Online Tournament",
+"联机武林大会 (4/8/16强)": "Online Tournament (4/8/16)",
+"八强单败淘汰 · 参赛或观战": "4/8/16-slot elimination · Play or spectate",
+"武林大会 · 单败淘汰赛": "Tournament · Single Elimination",
+"4 / 8 / 16 强签表 · 参赛与观战": "4 / 8 / 16-Player Bracket · Play & Spectate",
+"支持 4 强、8 强与 16 强单败淘汰签表，可选标准种子排位或随机抽签、自动推进赛程与分享战绩码。支持单人参赛、本地双人、全 AI 观战或联机好友房举办大会。": "Run 4-, 8-, or 16-player single-elimination brackets with standard seeding or random draw, auto-progression, and shareable standings codes. Play solo, local 2P, all-AI spectate, or online.",
+"参赛规模": "Bracket Size",
+"4 强 (2 轮)": "4 Players (2 Rounds)",
+"8 强 (3 轮)": "8 Players (3 Rounds)",
+"16 强 (4 轮)": "16 Players (4 Rounds)",
+"抽签方式": "Seeding",
+"标准种子": "Standard Seeding",
+"随机抽签": "Random Draw",
 "赛制编制": "Bracket Format",
-"单人参赛 (1人 + 7 AI)": "Solo Entry (1P + 7 AI)",
-"双人参赛 (2人 + 6 AI)": "Local Duo (2P + 6 AI)",
-"全 AI 观战 (8强演武)": "All-AI Spectate (8 AI)",
-"开启八强武林大会": "Start 8-Slot Tournament",
-"武林大会 · 八强签表": "Tournament · 8-Slot Bracket",
-"八强单败淘汰赛": "8-Slot Single Elimination",
+"单人参赛 (1P + AI)": "Solo Entry (1P + AI)",
+"双人参赛 (2P + AI)": "Local Duo (2P + AI)",
+"全 AI 观战演武": "All-AI Spectate",
+"开启武林大会": "Start Tournament",
+"武林大会 · 八强签表": "Tournament · Bracket",
+"8强单败淘汰赛": "8-Slot Single Elimination",
+"强单败淘汰赛": "-Slot Single Elimination",
+"强签表": "-Slot Bracket",
+"强": "-Slot",
 "出战下一场": "Fight Next Match",
 "观战下一场": "Spectate Next Match",
 "快结 AI 场次": "Fast-Sim AI Bouts",
+"自动推进：关": "Auto-Advance: Off",
+"自动推进：开": "Auto-Advance: On",
+"分享战绩": "Share Standings",
+"导入战绩": "Import Standings",
+"导入签表": "Import Bracket",
+"赛果分享码": "Tournament Share Code",
+"粘贴 RYTR1: 开头的武林大会战绩分享码": "Paste a tournament code starting with RYTR1:",
+"实时排名榜": "Live Standings",
+"场已完赛": "bouts completed",
 "重排签表": "Reset Bracket",
 "实时观战面板": "Live Spectator HUD",
 "实时观战": "Live Spectate",
+"联机观战": "Live Online Spectate",
+"观战中": "watching",
+"退出观战": "Leave Spectate",
+"以只读实时观战席加入该房间，不影响对战延迟": "Join as a read-only live spectator without affecting match latency",
 "回放观战": "Replay View",
 "上一位侠客": "Previous fighter",
 "下一位侠客": "Next fighter",
 "自动镜头": "Auto Cam",
 "纯净直转": "Clean Broadcast",
 "恢复完整界面": "Full HUD",
+"十六强赛": "Round of 16",
 "八强赛": "Quarterfinals",
 "半决赛": "Semifinals",
 "总决赛": "Grand Final",
@@ -13435,8 +13546,8 @@ Object.assign(UI_COPY_EN, {
 "观战": "Watch",
 "快结": "Sim",
 "悬念待揭": "Awaiting Champion",
-"八强连胜折桂": "Undefeated Champion",
-"三战全胜登顶": "Win 3 rounds to claim the title",
+"连胜折桂": "Undefeated Champion",
+"战全胜登顶": "wins to claim the title",
 "连招试炼": "Combo Trials",
 "侠客连招试炼 · 专精历练": "Hero Combo Trials · Mastery Training",
 "专精试炼榜": "Mastery & Trials",
@@ -18959,7 +19070,7 @@ finally {
 if (networkInput) { if (hadCombo) foe.lastComboHits = oldCombo; else delete foe.lastComboHits; f.target = oldTarget; }
 }
 }
-const NET = { role: null, open: false, remote: new Ctrl(), out: [], presses: [], presses2: [], forfeit: false, forfeitResult: '' };
+const NET = { role: null, open: false, spectating: false, remote: new Ctrl(), out: [], presses: [], presses2: [], forfeit: false, forfeitResult: '' };
 const localIdx = () => M.mode === 'net' && NET.role === 'client' ? 1 : 0;
 const localTeam = () => {
 if (M.mode === '2v2' || (typeof is2v2 === 'function' && is2v2())) {
@@ -18977,7 +19088,7 @@ if (typeof MM !== 'undefined' && MM.on && typeof statQueueResult === 'function')
 if (typeof mmStop === 'function') mmStop();
 mmUI(null);
 NET.peerQuit = false; NET.solo = false; NET.forfeit = false; NET.forfeitResult = ''; NET.keepRoom = false;
-NET.matching = false; NET.hold = false;
+NET.matching = false; NET.hold = false; NET.spectating = false;
 p2pClose();
 NET.open = false; NET.code = null; NET.out = []; NET.presses.length = 0; NET.remote.clear();
 if (typeof updateNetLobby === 'function') updateNetLobby(false);
@@ -19084,16 +19195,26 @@ NET.consensus.qualifying = NET.consensus.qualifying && !!m.qualifying;
 NET.consensus.gotAck = true;
 tryCommitNet(false);
 }
-else if (m.sys === 'left') netLost();
+else if (m.sys === 'tour_sync') { if (typeof tourSyncRecv === 'function') tourSyncRecv(m); }
+else if (m.sys === 'tour_result') { if (typeof tourRecvRemoteResult === 'function') tourRecvRemoteResult(m); }
+else if (m.sys === 'tour_start') { if (typeof tourRecvOnlineStart === 'function') tourRecvOnlineStart(m); }
+else if (m.sys === 'spec_ready') { if (typeof specOnLiveReady === 'function') specOnLiveReady(m); }
+else if (m.sys === 'spec_frame') { if (typeof specApplyLiveFrame === 'function') specApplyLiveFrame(m); }
+else if (m.sys === 'left') { if (NET.spectating && typeof specExitLive === 'function') specExitLive('对局已结束或房主已离开'); else netLost(); }
 else if (m.sys === 'full') { netStatus('这间房已经满员'); netReset(); }
 else if (m.sys === 'version') { netStatus(`你的版本与房主不同（房主是 ${m.need}），刷新网页再试`); netReset(); }
 }
-function send(o) { p2pSend(o); }
+function send(o) { if (NET.spectating) return; p2pSend(o); }
 function onNetOpen() {
 netStatus('已连接');
 send({ pskin: mySkinMap() });
 send({ pload: typeof armoryCombatLoadoutMap === 'function' ? armoryCombatLoadoutMap() : {} });
 initAudio();
+if (typeof netRoomMode === 'string' && netRoomMode === 'tournament') {
+if (NET.role === 'host' && typeof tourStartOnlineRoom === 'function') tourStartOnlineRoom();
+else netStatus('已连接，正在同步联机武林大会签表…');
+return;
+}
 if (NET.role === 'host') bpStart('net');
 else netStatus('已连接，即刻选人…');
 }
@@ -19278,10 +19399,12 @@ M.wins = ev.wins; M.phase = 'end'; showEnd(ev.w);
 }
 }
 function netTick(dt) {
+if (NET.spectating) return;
 if (M.mode !== 'net' && bpMode !== 'net') return;
 if (!NET.open) return;
 NET.pingAcc = (NET.pingAcc || 0) + dt;
 if (NET.pingAcc >= 1) { NET.pingAcc = 0; const now = performance.now(); send({ pg: now }); }   // 只量和对手之间的延迟：联机是点对点，没有服务器可量
+if (NET.role === 'host' && M.mode === 'net' && typeof specBroadcastTick === 'function') specBroadcastTick(dt);
 if (M.mode !== 'net' || NET.hold || ROLL.on) return;
 const h = human[0].held;
 const hb = (h.left ? 1 : 0) | (h.right ? 2 : 0) | (h.down ? 4 : 0) | (h.atk ? 8 : 0) | (h.jump ? 16 : 0) | (h.aim < 0 ? 32 : 0) | (h.aim ? 64 : 0);
@@ -50896,12 +51019,14 @@ ctx.fillStyle = '#ffeb96';
 ctx.fillText(`[Y] ${cvT('选中')}: ${sel ? cvT(sel.look.name) : cvT('全队')}   [N] ${cvT('任务')}: ${roleId >= 0 ? cvT(CMD_ROLES[roleId].n) : cvT('各异')}`, px + 8, py + 64);
 ctx.restore();
 }
-const SPEC_HUD = { focusIdx: -1, clean: false, lastDraw: 0 };
+const SPEC_HUD = { focusIdx: -1, clean: false, lastDraw: 0, liveSpecs: 0, liveTitle: '', bcastAcc: 0 };
+const SPEC_BCAST_INTERVAL = 1 / 20;   // 20Hz 被动只读快照广播，不干扰 120Hz 回滚输入通道
 function spectatorHudAvail() {
 if (typeof currentScreen !== 'undefined' && currentScreen) return false;
 if (!M || M.phase === 'end' || M.mode === 'demo' || M.mode === 'train') return false;
 if (typeof FOREST !== 'undefined' && FOREST.on) return false;
 if (typeof WORLD !== 'undefined' && WORLD.on) return false;
+if (typeof NET !== 'undefined' && NET.spectating) return true;
 return !!(M.watchAi || (typeof isAiVsAi === 'function' && isAiVsAi()) || (typeof REPLAY !== 'undefined' && REPLAY.on) || (M.tournament && M.tournament.spectate));
 }
 function specHudSetFocus(idx) {
@@ -50924,6 +51049,67 @@ SPEC_HUD.lastDraw = 0;
 specHudRender(true);
 return SPEC_HUD.clean;
 }
+function specBroadcastTick(dt) {
+if (typeof p2pSpecCount !== 'function' || typeof p2pSpecBroadcast !== 'function') return 0;
+const count = p2pSpecCount();
+SPEC_HUD.liveSpecs = count;
+if (count <= 0) { SPEC_HUD.bcastAcc = 0; return 0; }
+SPEC_HUD.bcastAcc += Math.max(0, +dt || 0);
+if (SPEC_HUD.bcastAcc < SPEC_BCAST_INTERVAL) return 0;
+SPEC_HUD.bcastAcc = 0;
+if (typeof snapshot !== 'function' || !A || !B) return 0;
+const payload = {
+sys: 'spec_frame',
+snap: snapshot(),
+ch: [A.chIdx | 0, B.chIdx | 0],
+names: (typeof NET !== 'undefined' && NET.names) || {},
+specs: count,
+label: (M.tournament && M.tournament.label) ? M.tournament.label : ''
+};
+return p2pSpecBroadcast(payload);
+}
+function specOnLiveReady(msg) {
+if (typeof NET === 'undefined') return false;
+NET.spectating = true;
+NET.open = true;
+NET.role = 'spectator';
+NET.names = (msg && msg.names) || {};
+SPEC_HUD.liveSpecs = Math.max(1, +(msg && msg.specs) || 1);
+SPEC_HUD.liveTitle = (msg && msg.code) ? `${cvT('联机观战')} #${msg.code}` : cvT('联机观战');
+if (typeof ROLL !== 'undefined') ROLL.on = false;
+if (typeof initAudio === 'function') initAudio();
+const ch = (msg && Array.isArray(msg.ch) && msg.ch.length >= 2) ? msg.ch : [0, 1];
+if (typeof setChars === 'function') setChars(ch[0], ch[1]);
+M.mode = 'net';
+M.watchAi = true;
+M.phase = 'fight';
+if (typeof showScreen === 'function') showScreen(null);
+SPEC_HUD.focusIdx = -1;
+specHudRender(true);
+if (typeof toast === 'function') toast('已进入只读实时观战席');
+return true;
+}
+function specApplyLiveFrame(msg) {
+if (typeof NET === 'undefined' || !NET.spectating || !msg || !msg.snap) return false;
+if (typeof msg.specs === 'number') SPEC_HUD.liveSpecs = Math.max(1, msg.specs | 0);
+if (msg.label) SPEC_HUD.liveTitle = msg.label;
+if (Array.isArray(msg.ch) && msg.ch.length >= 2 && (A.chIdx !== msg.ch[0] || B.chIdx !== msg.ch[1])) {
+if (typeof setChars === 'function') setChars(msg.ch[0], msg.ch[1]);
+}
+if (typeof applySnapshot === 'function') applySnapshot(msg.snap, true);
+specHudRender(false);
+return true;
+}
+function specExitLive(reason) {
+SPEC_HUD.liveSpecs = 0;
+SPEC_HUD.liveTitle = '';
+SPEC_HUD.focusIdx = -1;
+SPEC_HUD.clean = false;
+if (typeof netReset === 'function') netReset();
+if (typeof toMenu === 'function') toMenu();
+if (reason && typeof toast === 'function') toast(reason);
+if (reason && typeof netStatus === 'function') netStatus(reason);
+}
 function specHudRender(force = false) {
 const el = $id('specHud');
 if (!el) return;
@@ -50931,11 +51117,21 @@ const nowMs = typeof performance !== 'undefined' ? performance.now() : Date.now(
 if (!force && nowMs - SPEC_HUD.lastDraw < 110) return;
 SPEC_HUD.lastDraw = nowMs;
 const active = allFighters().filter(f => !f.hidden);
-const titleEl = $id('specTitle'), pillsEl = $id('specFighters'), tickerEl = $id('specTicker'), cleanBtn = $id('specCleanBtn');
+const titleEl = $id('specTitle'), countEl = $id('specCount'), pillsEl = $id('specFighters'), tickerEl = $id('specTicker'), cleanBtn = $id('specCleanBtn'), exitBtn = $id('specExitBtn');
+const isLiveNet = !!(typeof NET !== 'undefined' && NET.spectating);
 if (titleEl) {
-const tag = (M.tournament && M.tournament.label) ? M.tournament.label : (typeof REPLAY !== 'undefined' && REPLAY.on) ? cvT('回放观战') : cvT('实时观战');
+const tag = (isLiveNet && SPEC_HUD.liveTitle) ? SPEC_HUD.liveTitle
+: (M.tournament && M.tournament.label) ? M.tournament.label
+: (typeof REPLAY !== 'undefined' && REPLAY.on) ? cvT('回放观战')
+: cvT('实时观战');
 titleEl.textContent = tag;
 }
+if (countEl) {
+const sc = isLiveNet ? Math.max(1, SPEC_HUD.liveSpecs || 1) : (typeof p2pSpecCount === 'function' ? p2pSpecCount() : 0);
+countEl.classList.toggle('hidden', sc <= 0);
+if (sc > 0) countEl.textContent = `${sc} ${cvT('观战中')}`;
+}
+if (exitBtn) exitBtn.classList.toggle('hidden', !isLiveNet);
 if (cleanBtn) {
 cleanBtn.setAttribute('aria-pressed', String(SPEC_HUD.clean));
 cleanBtn.textContent = cvT(SPEC_HUD.clean ? '恢复完整界面' : '纯净直转');
@@ -50953,12 +51149,22 @@ return `<button type="button" class="spec-pill${sel}${ko}" data-spec-focus="${f.
 pillsEl.innerHTML = autoBtn + fighterBtns;
 }
 if (tickerEl) {
+if (SPEC_HUD.focusIdx < 0 && active.length >= 2) {
+const fmtSide = f => {
+const st = (M.combatStats && M.combatStats[f.idx]) || {};
+const gPct = Math.round(clamp((f.guard || 0) / Math.max(1, f.maxGuard || 100), 0, 1) * 100);
+const fn = cvT(f.look ? f.look.name : f.ch.name);
+return `${fn} (${cvT('架势')}${gPct}% · ${cvT('伤害')}${Math.round(+st.damage || 0)} · ${cvT('连击')}${+st.combo || 0})`;
+};
+tickerEl.textContent = `${fmtSide(active[0])}  VS  ${fmtSide(active[1])}`;
+} else {
 const focusF = SPEC_HUD.focusIdx >= 0 ? fighterByIdx(SPEC_HUD.focusIdx) : active[0];
 const st = M.combatStats && focusF ? (M.combatStats[focusF.idx] || {}) : {};
 const dmg = Math.round(+st.damage || 0), maxC = +st.combo || 0, brk = +st.breaks || 0;
 const gPct = focusF ? Math.round(clamp((focusF.guard || 0) / Math.max(1, focusF.maxGuard || 100), 0, 1) * 100) : 0;
 const fname = focusF ? cvT(focusF.look ? focusF.look.name : focusF.ch.name) : '—';
 tickerEl.textContent = `${fname} · ${cvT('架势')} ${gPct}% · ${cvT('伤害')} ${dmg} · ${cvT('最长连击')} ${maxC} · ${cvT('破防')} ${brk}`;
+}
 }
 }
 function specHudUpdate() {
@@ -50980,6 +51186,7 @@ if (btn) { specHudSetFocus(+btn.dataset.specFocus); return; }
 if (e.target.closest('#specCleanBtn')) { specHudToggleClean(); return; }
 if (e.target.closest('#specPrevBtn')) { specHudCycleFocus(-1); return; }
 if (e.target.closest('#specNextBtn')) { specHudCycleFocus(1); return; }
+if (e.target.closest('#specExitBtn')) { specExitLive('已退出实时观战'); return; }
 });
 }
 window.addEventListener('keydown', e => {
@@ -50990,7 +51197,29 @@ else if (e.code === 'BracketRight') { e.preventDefault(); specHudCycleFocus(1); 
 });
 let TOUR = null;
 let tourFormat = 'player';
+let tourSize = 8;
+let tourSeedMode = 'standard';
+let tourAutoTimer = 0;
+const TOUR_SIZES = [4, 8, 16];
 const TOUR_ROUND_NAMES = ['八强赛', '半决赛', '总决赛'];
+function tourRoundNames(size) {
+if (size === 4) return ['半决赛', '总决赛'];
+if (size === 16) return ['十六强赛', '八强赛', '半决赛', '总决赛'];
+return ['八强赛', '半决赛', '总决赛'];
+}
+function tourSeedPairs(size) {
+const n = TOUR_SIZES.includes(size) ? size : 8;
+let order = [0, 1];
+while (order.length < n) {
+const next = [];
+const sum = order.length * 2 - 1;
+for (const s of order) next.push(s, sum - s);
+order = next;
+}
+const pairs = [];
+for (let i = 0; i < order.length; i += 2) pairs.push([order[i], order[i + 1]]);
+return pairs;
+}
 function tourSeededRng(seed) {
 let s = (Math.floor(+seed || Date.now()) >>> 0) || 1;
 return () => {
@@ -50998,9 +51227,21 @@ s = (Math.imul(1664525, s) + 1013904223) >>> 0;
 return s / 4294967296;
 };
 }
+function tourHeroRating(chIdx) {
+const st = (CHARS[chIdx] && CHARS[chIdx].stat) || {};
+return (+st.hp || 850) * 0.4 + (+st.atk || 60) * 6 + (+st.spd || 60) * 4 + (chIdx % 7);
+}
+function tourCancelAuto() {
+if (tourAutoTimer) { clearTimeout(tourAutoTimer); tourAutoTimer = 0; }
+}
 function tourCreate(opts = {}) {
-const format = ['player', 'local2', 'watch8'].includes(opts.format) ? opts.format : tourFormat || 'player';
+tourCancelAuto();
+const size = TOUR_SIZES.includes(+opts.size) ? (+opts.size) : (TOUR_SIZES.includes(tourSize) ? tourSize : 8);
+const rawFmt = opts.format || tourFormat || 'player';
+const format = ['player', 'local2', 'watch', 'watch8', 'online'].includes(rawFmt) ? rawFmt : 'player';
+const seedMode = opts.seedMode === 'random' ? 'random' : (opts.seedMode === 'standard' ? 'standard' : (tourSeedMode || 'standard'));
 const level = ['easy', 'normal', 'hard', 'impossible', 'god'].includes(opts.level) ? opts.level : (typeof pickLevel === 'string' ? pickLevel : 'normal');
+const autoAdvance = !!opts.autoAdvance;
 const rng = tourSeededRng(opts.seed || Date.now());
 const pool = CHARS.map((_, i) => i);
 const p1Hero = Number.isInteger(opts.playerHero) && opts.playerHero >= 0 && opts.playerHero < CHARS.length
@@ -51012,31 +51253,63 @@ if (pos >= 0) pool.splice(pos, 1);
 picked.push(idx);
 return idx;
 };
-if (format === 'player' || format === 'local2') take(p1Hero);
-if (format === 'local2') {
+if (format === 'player' || format === 'local2' || format === 'online') take(p1Hero);
+if (format === 'local2' || format === 'online') {
 const p2Hero = Number.isInteger(opts.p2Hero) && opts.p2Hero >= 0 && opts.p2Hero < CHARS.length && opts.p2Hero !== p1Hero
 ? opts.p2Hero : pool[Math.floor(rng() * pool.length)];
 take(p2Hero);
 }
-while (picked.length < 8 && pool.length) {
+while (picked.length < size && pool.length) {
 const k = Math.floor(rng() * pool.length);
 take(pool[k]);
 }
-const entrants = picked.map((chIdx, i) => {
-const humanSlot = format === 'player' ? (i === 0 ? 1 : 0) : format === 'local2' ? (i === 0 ? 1 : i === 1 ? 2 : 0) : 0;
+const hostName = opts.hostName || (typeof NET !== 'undefined' && NET.names && NET.names.host) || (typeof ACC !== 'undefined' && ACC.name) || '你';
+const clientName = opts.clientName || (typeof NET !== 'undefined' && NET.names && NET.names.client) || '对手';
+let entrants = picked.map((chIdx, i) => {
+const humanSlot = format === 'player' ? (i === 0 ? 1 : 0)
+: (format === 'local2' || format === 'online') ? (i === 0 ? 1 : i === 1 ? 2 : 0) : 0;
 const heroName = (CHARS[chIdx] || {}).name || '侠客';
-const label = humanSlot === 1 ? (format === 'local2' ? `1P · ${heroName}` : `${(typeof ACC !== 'undefined' && ACC.name) || '你'} · ${heroName}`)
-: humanSlot === 2 ? `2P · ${heroName}` : `AI · ${heroName}`;
+const label = humanSlot === 1
+? (format === 'local2' ? `1P · ${heroName}` : `${hostName} · ${heroName}`)
+: humanSlot === 2
+? (format === 'online' ? `${clientName} · ${heroName}` : `2P · ${heroName}`)
+: `AI · ${heroName}`;
 return { id: i, seed: i + 1, chIdx, human: humanSlot, name: label };
 });
-const qfPairs = [[0, 7], [3, 4], [1, 6], [2, 5]];
-const rounds = [
-qfPairs.map(([a, b], idx) => ({ round: 0, idx, a, b, winner: -1, score: null })),
-[0, 1].map(idx => ({ round: 1, idx, a: -1, b: -1, winner: -1, score: null })),
-[{ round: 2, idx: 0, a: -1, b: -1, winner: -1, score: null }]
-];
-TOUR = { id: `tour-${Date.now().toString(36)}`, format, level, entrants, rounds, champion: -1, rewardPaid: false, history: [] };
+if (seedMode === 'standard') {
+const humans = entrants.filter(e => e.human > 0).sort((a, b) => a.human - b.human);
+const ais = entrants.filter(e => e.human === 0).sort((a, b) => tourHeroRating(b.chIdx) - tourHeroRating(a.chIdx));
+entrants = [...humans, ...ais];
+} else {
+for (let i = entrants.length - 1; i > 0; i--) {
+const j = Math.floor(rng() * (i + 1));
+const tmp = entrants[i]; entrants[i] = entrants[j]; entrants[j] = tmp;
+}
+}
+entrants.forEach((e, i) => { e.id = i; e.seed = i + 1; });
+const roundCount = Math.round(Math.log2(size));
+const r0Pairs = tourSeedPairs(size);
+const rounds = [r0Pairs.map(([a, b], idx) => ({ round: 0, idx, a, b, winner: -1, score: null }))];
+for (let r = 1; r < roundCount; r++) {
+const cnt = size >> (r + 1);
+rounds.push(Array.from({ length: cnt }, (_, idx) => ({ round: r, idx, a: -1, b: -1, winner: -1, score: null })));
+}
+TOUR = {
+id: `tour-${Date.now().toString(36)}`,
+size,
+format,
+seedMode,
+level,
+autoAdvance,
+online: format === 'online',
+entrants,
+rounds,
+champion: -1,
+rewardPaid: false,
+history: []
+};
 tourRender();
+if (TOUR.online && typeof NET !== 'undefined' && NET.open && NET.role === 'host') tourSyncSend();
 return TOUR;
 }
 function tourNextPending() {
@@ -51049,9 +51322,10 @@ if (bout.winner < 0 && bout.a >= 0 && bout.b >= 0) return bout;
 }
 return null;
 }
-function tourReportResult(roundIdx, matchIdx, winnerSide, score = null) {
+function tourReportResult(roundIdx, matchIdx, winnerSide, score = null, fromRemote = false) {
 if (!TOUR || !TOUR.rounds[roundIdx] || !TOUR.rounds[roundIdx][matchIdx]) return false;
 const bout = TOUR.rounds[roundIdx][matchIdx];
+if (bout.winner >= 0) return false;
 if (bout.a < 0 || bout.b < 0 || (winnerSide !== 0 && winnerSide !== 1)) return false;
 const winId = winnerSide === 0 ? bout.a : bout.b;
 bout.winner = winId;
@@ -51063,12 +51337,17 @@ if (matchIdx % 2 === 0) nextBout.a = winId; else nextBout.b = winId;
 } else {
 TOUR.champion = winId;
 const champ = TOUR.entrants[winId];
+const reward = TOUR.size === 16 ? 350 : TOUR.size === 4 ? 120 : 200;
 if (!TOUR.rewardPaid && champ && champ.human > 0 && typeof PROF !== 'undefined') {
 TOUR.rewardPaid = true;
-PROF.ink = (PROF.ink || 0) + 200;
+PROF.ink = (PROF.ink || 0) + reward;
 if (typeof saveProfile === 'function') saveProfile();
-if (typeof toast === 'function') toast('武林大会夺魁！获得 +200 墨锭');
+if (typeof toast === 'function') toast(`武林大会夺魁！获得 +${reward} 墨锭`);
 }
+}
+if (!fromRemote && TOUR.online && typeof NET !== 'undefined' && NET.open) {
+if (NET.role === 'host') tourSyncSend();
+else send({ sys: 'tour_result', round: roundIdx, match: matchIdx, winnerSide, score: bout.score });
 }
 tourRender();
 return true;
@@ -51099,7 +51378,91 @@ count++;
 tourRender();
 return count;
 }
+function tourAutoStep() {
+tourCancelAuto();
+if (!TOUR || !TOUR.autoAdvance || TOUR.champion >= 0) return 0;
+const isWatchAll = TOUR.format === 'watch' || TOUR.format === 'watch8';
+if (!isWatchAll) {
+if (TOUR.online && typeof NET !== 'undefined' && NET.role === 'client') return 0;
+return tourSimAllAi();
+}
+const next = tourNextPending();
+if (!next) return 0;
+tourAutoTimer = setTimeout(() => {
+tourAutoTimer = 0;
+if (!TOUR || !TOUR.autoAdvance || TOUR.champion >= 0) return;
+const b = tourNextPending();
+if (b) tourPlayMatch(b.round, b.idx, true);
+}, 1600);
+return 1;
+}
+function tourToggleAuto(forceVal) {
+if (!TOUR) return false;
+TOUR.autoAdvance = typeof forceVal === 'boolean' ? forceVal : !TOUR.autoAdvance;
+if (!TOUR.autoAdvance) tourCancelAuto();
+else tourAutoStep();
+tourRender();
+return TOUR.autoAdvance;
+}
+function tourSerialize(tour) {
+if (!tour) return null;
+return {
+id: tour.id,
+size: tour.size,
+format: tour.format,
+seedMode: tour.seedMode,
+level: tour.level,
+autoAdvance: !!tour.autoAdvance,
+online: !!tour.online,
+champion: tour.champion,
+entrants: tour.entrants.map(e => ({ id: e.id, seed: e.seed, chIdx: e.chIdx, human: e.human, name: e.name })),
+rounds: tour.rounds.map(r => r.map(b => ({ round: b.round, idx: b.idx, a: b.a, b: b.b, winner: b.winner, score: b.score }))),
+history: tour.history.map(h => ({ round: h.round, idx: h.idx, a: h.a, b: h.b, winner: h.winner, score: h.score }))
+};
+}
+function tourSyncSend() {
+if (!TOUR || !TOUR.online || typeof NET === 'undefined' || !NET.open || NET.role !== 'host') return false;
+send({ sys: 'tour_sync', tour: tourSerialize(TOUR) });
+return true;
+}
+function tourSyncRecv(msg) {
+if (!msg || !msg.tour || !Array.isArray(msg.tour.entrants) || !Array.isArray(msg.tour.rounds)) return false;
+TOUR = Object.assign({ rewardPaid: false }, msg.tour, { online: true });
+tourRender();
+if (typeof showScreen === 'function' && currentScreen !== 'tournament' && M.phase !== 'fight') showScreen('tournament');
+return true;
+}
+function tourStartOnlineRoom(opts = {}) {
+const t = tourCreate(Object.assign({
+format: 'online',
+size: tourSize,
+seedMode: tourSeedMode,
+level: typeof pickLevel === 'string' ? pickLevel : 'normal',
+autoAdvance: true,
+hostName: (typeof NET !== 'undefined' && NET.names && NET.names.host) || (typeof ACC !== 'undefined' && ACC.name) || '房主',
+clientName: (typeof NET !== 'undefined' && NET.names && NET.names.client) || '对手'
+}, opts));
+if (typeof showScreen === 'function') showScreen('tournament');
+return t;
+}
+function tourRecvRemoteResult(msg) {
+if (!TOUR || !msg) return false;
+const ok = tourReportResult(msg.round | 0, msg.match | 0, msg.winnerSide | 0, msg.score || null, true);
+if (ok && typeof NET !== 'undefined' && NET.role === 'host') {
+if (TOUR.autoAdvance) tourAutoStep();
+tourSyncSend();
+}
+return ok;
+}
+function tourRecvOnlineStart(msg) {
+if (!TOUR || !msg) return false;
+const rNames = tourRoundNames(TOUR.size);
+const label = msg.label || `${cvT('联机武林大会')} · ${cvT(rNames[msg.round] || '淘汰赛')} #${(msg.match | 0) + 1}`;
+M.tournament = { round: msg.round | 0, match: msg.match | 0, online: true, spectate: false, label };
+return true;
+}
 function tourPlayMatch(roundIdx, matchIdx, spectate = false) {
+tourCancelAuto();
 if (!TOUR || !TOUR.rounds[roundIdx] || !TOUR.rounds[roundIdx][matchIdx]) return false;
 const bout = TOUR.rounds[roundIdx][matchIdx];
 if (bout.winner >= 0 || bout.a < 0 || bout.b < 0) return false;
@@ -51107,13 +51470,31 @@ const eA = TOUR.entrants[bout.a], eB = TOUR.entrants[bout.b];
 const bothHuman = !spectate && eA.human > 0 && eB.human > 0;
 const oneHuman = !spectate && ((eA.human > 0) !== (eB.human > 0));
 const aiWatch = spectate || (!bothHuman && !oneHuman);
-const label = `${cvT('武林大会')} · ${cvT(TOUR_ROUND_NAMES[roundIdx] || '淘汰赛')} #${matchIdx + 1}`;
+const rNames = tourRoundNames(TOUR.size);
+const label = `${cvT(TOUR.online ? '联机武林大会' : '武林大会')} · ${cvT(rNames[roundIdx] || '淘汰赛')} #${matchIdx + 1}`;
 if (typeof initAudio === 'function') initAudio();
 paused = false;
+if (TOUR.online && bothHuman && typeof NET !== 'undefined' && NET.open) {
+if (NET.role !== 'host') {
+if (typeof toast === 'function') toast('请等待擂主开启本场联机对决');
+return false;
+}
+const hostOnA = eA.human === 1;
+const chPair = hostOnA ? [eA.chIdx, eB.chIdx] : [eB.chIdx, eA.chIdx];
+const seed = (Date.now() ^ ((roundIdx + 1) * 7919) ^ ((matchIdx + 1) * 104729)) >>> 0;
+showScreen(null);
+M.tournament = { round: roundIdx, match: matchIdx, online: true, swapped: !hostOnA, spectate: false, label };
+send({ sys: 'tour_start', round: roundIdx, match: matchIdx, ch: chPair, label });
+send({ rstart: { ch: chPair, seed } });
+if (typeof rollStart === 'function') rollStart(chPair, seed);
+SPEC_HUD.focusIdx = -1;
+say(label, 1.5);
+return true;
+}
 showScreen(null);
 const mode = bothHuman ? 'pvp' : 'cpu';
 startMatch(mode, TOUR.level, [eA.chIdx, eB.chIdx]);
-M.tournament = { round: roundIdx, match: matchIdx, spectate: aiWatch, label };
+M.tournament = { round: roundIdx, match: matchIdx, online: !!TOUR.online, spectate: aiWatch, label };
 if (aiWatch) {
 M.watchAi = true;
 A.ctrl = new AICtrl(TOUR.level);
@@ -51128,28 +51509,233 @@ return true;
 }
 function tourOnMatchEnd(w) {
 if (!TOUR || !M.tournament) return false;
-const { round, match } = M.tournament;
-const winnerSide = w === 1 ? 1 : 0;
-const score = [M.wins ? M.wins[0] : (winnerSide === 0 ? 2 : 0), M.wins ? M.wins[1] : (winnerSide === 1 ? 2 : 0)];
+const { round, match, swapped } = M.tournament;
+const rawSide = w === 1 ? 1 : 0;
+const winnerSide = swapped ? (1 - rawSide) : rawSide;
+const rawScore = [M.wins ? M.wins[0] : (rawSide === 0 ? 2 : 0), M.wins ? M.wins[1] : (rawSide === 1 ? 2 : 0)];
+const score = swapped ? [rawScore[1], rawScore[0]] : rawScore;
 M.tournament = null;
 tourReportResult(round, match, winnerSide, score);
+if (TOUR.autoAdvance && TOUR.champion < 0) tourAutoStep();
 if (typeof scheduleEndScreen === 'function') scheduleEndScreen(() => showScreen('tournament'));
 else showScreen('tournament');
 return true;
 }
+const TOUR_B64 = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+function tourB64UrlEncode(str) {
+const bytes = [];
+for (let i = 0; i < str.length; i++) {
+let c = str.charCodeAt(i);
+if (c < 0x80) bytes.push(c);
+else if (c < 0x800) bytes.push(0xc0 | (c >> 6), 0x80 | (c & 0x3f));
+else if (c >= 0xd800 && c <= 0xdbff && i + 1 < str.length) {
+const c2 = str.charCodeAt(++i);
+const cp = 0x10000 + ((c - 0xd800) << 10) + (c2 - 0xdc00);
+bytes.push(0xf0 | (cp >> 18), 0x80 | ((cp >> 12) & 0x3f), 0x80 | ((cp >> 6) & 0x3f), 0x80 | (cp & 0x3f));
+} else bytes.push(0xe0 | (c >> 12), 0x80 | ((c >> 6) & 0x3f), 0x80 | (c & 0x3f));
+}
+let out = '';
+for (let i = 0; i < bytes.length; i += 3) {
+const a = bytes[i], b = i + 1 < bytes.length ? bytes[i + 1] : 0, c = i + 2 < bytes.length ? bytes[i + 2] : 0;
+out += TOUR_B64[a >> 2] + TOUR_B64[((a & 3) << 4) | (b >> 4)];
+if (i + 1 < bytes.length) out += TOUR_B64[((b & 15) << 2) | (c >> 6)];
+if (i + 2 < bytes.length) out += TOUR_B64[c & 63];
+}
+return out;
+}
+function tourB64UrlDecode(b64) {
+const clean = String(b64 || '').replace(/[^A-Za-z0-9\-_]/g, '');
+const bytes = [];
+for (let i = 0; i < clean.length; i += 4) {
+const v0 = TOUR_B64.indexOf(clean[i]);
+const v1 = i + 1 < clean.length ? TOUR_B64.indexOf(clean[i + 1]) : -1;
+const v2 = i + 2 < clean.length ? TOUR_B64.indexOf(clean[i + 2]) : -1;
+const v3 = i + 3 < clean.length ? TOUR_B64.indexOf(clean[i + 3]) : -1;
+if (v0 < 0 || v1 < 0) break;
+bytes.push((v0 << 2) | (v1 >> 4));
+if (v2 >= 0) bytes.push(((v1 & 15) << 4) | (v2 >> 2));
+if (v3 >= 0) bytes.push(((v2 & 3) << 6) | v3);
+}
+let out = '';
+for (let i = 0; i < bytes.length;) {
+const b0 = bytes[i++];
+if (b0 < 0x80) out += String.fromCharCode(b0);
+else if ((b0 & 0xe0) === 0xc0 && i < bytes.length) out += String.fromCharCode(((b0 & 0x1f) << 6) | (bytes[i++] & 0x3f));
+else if ((b0 & 0xf0) === 0xe0 && i + 1 < bytes.length) out += String.fromCharCode(((b0 & 0x0f) << 12) | ((bytes[i++] & 0x3f) << 6) | (bytes[i++] & 0x3f));
+else if ((b0 & 0xf8) === 0xf0 && i + 2 < bytes.length) {
+const cp = ((b0 & 7) << 18) | ((bytes[i++] & 0x3f) << 12) | ((bytes[i++] & 0x3f) << 6) | (bytes[i++] & 0x3f);
+const u = cp - 0x10000;
+out += String.fromCharCode(0xd800 + (u >> 10), 0xdc00 + (u & 0x3ff));
+}
+}
+return out;
+}
+function tourStandings(tour = TOUR) {
+if (!tour || !Array.isArray(tour.entrants)) return [];
+const totalRounds = tour.rounds.length;
+const stats = tour.entrants.map(e => ({
+id: e.id,
+seed: e.seed,
+name: e.name,
+chIdx: e.chIdx,
+human: e.human,
+wins: 0,
+losses: 0,
+elimRound: -1,
+place: 0
+}));
+for (let r = 0; r < totalRounds; r++) {
+for (const b of tour.rounds[r]) {
+if (b.winner < 0) continue;
+const loser = b.winner === b.a ? b.b : b.a;
+if (stats[b.winner]) stats[b.winner].wins++;
+if (stats[loser]) {
+stats[loser].losses++;
+stats[loser].elimRound = r;
+}
+}
+}
+for (const s of stats) {
+if (tour.champion === s.id) s.place = 1;
+else if (s.elimRound >= 0) s.place = (1 << (totalRounds - 1 - s.elimRound)) + 1;
+else s.place = 0;
+}
+stats.sort((a, b) => {
+const pa = a.place || 999, pb = b.place || 999;
+if (a.place !== b.place) {
+if (a.place === 0 && b.place > 0) return -1;
+if (b.place === 0 && a.place > 0) return 1;
+return pa - pb;
+}
+if (b.wins !== a.wins) return b.wins - a.wins;
+return a.seed - b.seed;
+});
+let running = 1;
+for (let i = 0; i < stats.length; i++) {
+if (stats[i].place === 0) stats[i].place = running;
+running = i + 2;
+}
+return stats;
+}
+function tourEncodeCode(tour = TOUR) {
+if (!tour || !Array.isArray(tour.entrants)) return '';
+const payload = {
+v: 1,
+sz: tour.size,
+fm: tour.format,
+sm: tour.seedMode || 'standard',
+lv: tour.level || 'normal',
+en: tour.entrants.map(e => [e.chIdx, e.human, e.name]),
+h: tour.history.map(h => [h.round, h.idx, h.winner === h.b ? 1 : 0, (h.score && h.score[0]) || 0, (h.score && h.score[1]) || 0])
+};
+return 'RYTR1:' + tourB64UrlEncode(JSON.stringify(payload));
+}
+function tourDecodeCode(code) {
+const raw = String(code || '').trim();
+if (!raw.startsWith('RYTR1:')) return null;
+let d;
+try { d = JSON.parse(tourB64UrlDecode(raw.slice(6))); } catch (e) { return null; }
+if (!d || d.v !== 1 || !TOUR_SIZES.includes(d.sz) || !Array.isArray(d.en) || d.en.length !== d.sz) return null;
+const entrants = d.en.map((row, i) => ({
+id: i,
+seed: i + 1,
+chIdx: clamp((row[0] | 0), 0, Math.max(0, CHARS.length - 1)),
+human: clamp((row[1] | 0), 0, 2),
+name: String(row[2] || `侠客 #${i + 1}`).slice(0, 28)
+}));
+const roundCount = Math.round(Math.log2(d.sz));
+const r0Pairs = tourSeedPairs(d.sz);
+const rounds = [r0Pairs.map(([a, b], idx) => ({ round: 0, idx, a, b, winner: -1, score: null }))];
+for (let r = 1; r < roundCount; r++) {
+const cnt = d.sz >> (r + 1);
+rounds.push(Array.from({ length: cnt }, (_, idx) => ({ round: r, idx, a: -1, b: -1, winner: -1, score: null })));
+}
+const reconstructed = {
+id: `tour-imp-${Date.now().toString(36)}`,
+size: d.sz,
+format: ['player', 'local2', 'watch', 'watch8', 'online'].includes(d.fm) ? d.fm : 'player',
+seedMode: d.sm === 'random' ? 'random' : 'standard',
+level: ['easy', 'normal', 'hard', 'impossible', 'god'].includes(d.lv) ? d.lv : 'normal',
+autoAdvance: false,
+online: d.fm === 'online',
+entrants,
+rounds,
+champion: -1,
+rewardPaid: true,
+history: []
+};
+if (Array.isArray(d.h)) {
+for (const item of d.h) {
+if (!Array.isArray(item) || item.length < 3) continue;
+const r = item[0] | 0, m = item[1] | 0, ws = item[2] === 1 ? 1 : 0;
+const bout = reconstructed.rounds[r] && reconstructed.rounds[r][m];
+if (!bout || bout.a < 0 || bout.b < 0 || bout.winner >= 0) continue;
+const winId = ws === 0 ? bout.a : bout.b;
+bout.winner = winId;
+bout.score = [item[3] | 0, item[4] | 0];
+reconstructed.history.push({ round: r, idx: m, a: bout.a, b: bout.b, winner: winId, score: bout.score });
+if (r + 1 < reconstructed.rounds.length) {
+const nb = reconstructed.rounds[r + 1][Math.floor(m / 2)];
+if (m % 2 === 0) nb.a = winId; else nb.b = winId;
+} else {
+reconstructed.champion = winId;
+}
+}
+}
+return reconstructed;
+}
+function tourImportCode(code) {
+const parsed = tourDecodeCode(code);
+if (!parsed) return null;
+tourCancelAuto();
+TOUR = parsed;
+tourRender();
+return TOUR;
+}
+function tourFormatStandingsText(tour = TOUR) {
+if (!tour) return '';
+const rows = tourStandings(tour);
+const code = tourEncodeCode(tour);
+const lines = [`【刃影 · 武林大会 ${tour.size}强战绩榜】`];
+for (const r of rows) {
+lines.push(`#${r.place}  [种子${r.seed}] ${r.name}  (${r.wins}胜-${r.losses}负)`);
+}
+lines.push(`分享码：${code}`);
+return lines.join('\n');
+}
+function tourShareStandings() {
+if (!TOUR) return '';
+const text = tourFormatStandingsText(TOUR);
+const done = ok => {
+if (typeof toast === 'function') toast(ok ? '已复制战绩榜与分享码！' : '已生成赛果分享码');
+};
+if (typeof navigator !== 'undefined' && navigator.clipboard && navigator.clipboard.writeText) {
+navigator.clipboard.writeText(text).then(() => done(true)).catch(() => done(false));
+} else {
+done(false);
+}
+return text;
+}
 function tourRender() {
-const tree = $id('tourTree'), sub = $id('tourSub'), nextBtn = $id('tourNextBtn'), skipBtn = $id('tourSkipAiBtn');
+const tree = $id('tourTree'), sub = $id('tourSub'), heading = $id('tourHeading');
+const nextBtn = $id('tourNextBtn'), skipBtn = $id('tourSkipAiBtn'), autoBtn = $id('tourAutoBtn'), standingsEl = $id('tourStandings');
 if (!tree) return;
 if (!TOUR) {
 tree.innerHTML = `<p class="sub">${cvT('尚未开启武林大会赛程。')}</p>`;
+if (standingsEl) standingsEl.innerHTML = '';
 return;
 }
+const rNames = tourRoundNames(TOUR.size);
 const next = tourNextPending();
 const champ = TOUR.champion >= 0 ? TOUR.entrants[TOUR.champion] : null;
+if (heading) {
+heading.textContent = `${cvT(TOUR.online ? '联机武林大会' : '武林大会')} · ${TOUR.size}${cvT('强签表')}`;
+}
 if (sub) {
+const seedTag = cvT(TOUR.seedMode === 'random' ? '随机抽签' : '标准种子');
 sub.textContent = champ
-? `${cvT('武林盟主诞生')}：${champ.name} · ${cvT(LV_NAME[TOUR.level] || TOUR.level)}`
-: `${cvT('八强单败淘汰赛')} · ${cvT(LV_NAME[TOUR.level] || TOUR.level)} · ${cvT('待决场次')}：${next ? `${cvT(TOUR_ROUND_NAMES[next.round])} #${next.idx + 1}` : '—'}`;
+? `${cvT('武林盟主诞生')}：${champ.name} · ${TOUR.size}${cvT('强')} · ${seedTag} · ${cvT(LV_NAME[TOUR.level] || TOUR.level)}`
+: `${TOUR.size}${cvT('强单败淘汰赛')} · ${seedTag} · ${cvT(LV_NAME[TOUR.level] || TOUR.level)} · ${cvT('待决场次')}：${next ? `${cvT(rNames[next.round])} #${next.idx + 1}` : '—'}`;
 }
 if (nextBtn) {
 nextBtn.disabled = !next;
@@ -51165,6 +51751,12 @@ if (skipBtn) {
 const canSkip = !!(next && TOUR.entrants[next.a].human === 0 && TOUR.entrants[next.b].human === 0);
 skipBtn.disabled = !canSkip;
 }
+if (autoBtn) {
+autoBtn.setAttribute('aria-pressed', String(!!TOUR.autoAdvance));
+autoBtn.classList.toggle('sel', !!TOUR.autoAdvance);
+autoBtn.textContent = cvT(TOUR.autoAdvance ? '自动推进：开' : '自动推进：关');
+}
+tree.dataset.size = String(TOUR.size);
 const slotHtml = (id, bout) => {
 if (id < 0) return `<div class="tour-slot is-tbd"><span>${cvT('待定')}</span><b>—</b></div>`;
 const e = TOUR.entrants[id];
@@ -51175,7 +51767,7 @@ return `<div class="tour-slot${winCls}${humCls}"><span>#${e.seed} ${escapeHTML(e
 };
 const cols = TOUR.rounds.map((round, rIdx) => `
 <div class="tour-col">
-<h4>${cvT(TOUR_ROUND_NAMES[rIdx] || '')}</h4>
+<h4>${cvT(rNames[rIdx] || '')}</h4>
 ${round.map(b => {
 const isNext = next && next.round === b.round && next.idx === b.idx;
 const canAct = b.winner < 0 && b.a >= 0 && b.b >= 0;
@@ -51188,8 +51780,13 @@ ${canAct ? `<div class="tour-m-acts"><button type="button" class="go small" data
 </div>`;
 }).join('')}
 </div>`).join('');
-const trophyCol = `<div class="tour-col tour-champ-col"><h4>${cvT('武林盟主')}</h4><div class="tour-champ-card${champ ? ' is-crowned' : ''}"><b>${champ ? escapeHTML(champ.name) : cvT('悬念待揭')}</b><span>${champ ? cvT('八强连胜折桂') : cvT('三战全胜登顶')}</span></div></div>`;
+const winsToCrown = Math.round(Math.log2(TOUR.size));
+const trophyCol = `<div class="tour-col tour-champ-col"><h4>${cvT('武林盟主')}</h4><div class="tour-champ-card${champ ? ' is-crowned' : ''}"><b>${champ ? escapeHTML(champ.name) : cvT('悬念待揭')}</b><span>${champ ? cvT('连胜折桂') : `${winsToCrown} ${cvT('战全胜登顶')}`}</span></div></div>`;
 tree.innerHTML = cols + trophyCol;
+if (standingsEl) {
+const rows = tourStandings(TOUR);
+standingsEl.innerHTML = `<div class="tour-st-head"><b>${cvT('实时排名榜')}</b><span>${TOUR.history.length} / ${TOUR.size - 1} ${cvT('场已完赛')}</span></div><div class="tour-st-grid">${rows.map(r => `<div class="tour-st-row${r.place === 1 && TOUR.champion >= 0 ? ' is-champ' : ''}${r.human > 0 ? ' is-human' : ''}"><em>#${r.place}</em><span>${escapeHTML(r.name)}</span><b>${r.wins}-${r.losses}</b></div>`).join('')}</div>`;
+}
 }
 if ($id('tourFormatSeg')) {
 $id('tourFormatSeg').addEventListener('click', e => {
@@ -51200,9 +51797,34 @@ for (const x of $id('tourFormatSeg').querySelectorAll('button[data-tfmt]')) x.cl
 SFX.slice && SFX.slice();
 });
 }
+if ($id('tourSizeSeg')) {
+$id('tourSizeSeg').addEventListener('click', e => {
+const b = e.target.closest('button[data-tsize]');
+if (!b) return;
+const sz = +b.dataset.tsize;
+if (TOUR_SIZES.includes(sz)) tourSize = sz;
+for (const x of $id('tourSizeSeg').querySelectorAll('button[data-tsize]')) x.classList.toggle('sel', x === b);
+SFX.slice && SFX.slice();
+});
+}
+if ($id('tourSeedSeg')) {
+$id('tourSeedSeg').addEventListener('click', e => {
+const b = e.target.closest('button[data-tseed]');
+if (!b) return;
+tourSeedMode = b.dataset.tseed === 'random' ? 'random' : 'standard';
+for (const x of $id('tourSeedSeg').querySelectorAll('button[data-tseed]')) x.classList.toggle('sel', x === b);
+SFX.slice && SFX.slice();
+});
+}
 if ($id('tourStartBtn')) {
 $id('tourStartBtn').addEventListener('click', () => {
-tourCreate({ format: tourFormat, level: pickLevel || 'normal', playerHero: typeof menuHeroPick === 'function' ? menuHeroPick() : 0 });
+tourCreate({
+format: tourFormat,
+size: tourSize,
+seedMode: tourSeedMode,
+level: pickLevel || 'normal',
+playerHero: typeof menuHeroPick === 'function' ? menuHeroPick() : 0
+});
 showScreen('tournament');
 });
 }
@@ -51218,9 +51840,50 @@ const n = tourSimAllAi();
 if (n > 0 && typeof toast === 'function') toast(`已快速结算 ${n} 场 AI 对局`);
 });
 }
+if ($id('tourAutoBtn')) {
+$id('tourAutoBtn').addEventListener('click', () => {
+const on = tourToggleAuto();
+if (typeof toast === 'function') toast(on ? '已开启自动推进赛程' : '已关闭自动推进赛程');
+});
+}
+if ($id('tourShareBtn')) {
+$id('tourShareBtn').addEventListener('click', () => tourShareStandings());
+}
+if ($id('tourImportBtn')) {
+$id('tourImportBtn').addEventListener('click', () => {
+const box = $id('tourImportBox');
+if (box) { box.classList.toggle('hidden'); if (!box.classList.contains('hidden') && $id('tourImportIn')) $id('tourImportIn').focus(); }
+});
+}
+if ($id('tourImportApplyBtn')) {
+$id('tourImportApplyBtn').addEventListener('click', () => {
+const inp = $id('tourImportIn');
+if (!inp) return;
+const ok = tourImportCode(inp.value);
+if (ok) {
+inp.value = '';
+if ($id('tourImportBox')) $id('tourImportBox').classList.add('hidden');
+if (typeof toast === 'function') toast(`已导入 ${ok.size} 强武林大会战绩榜`);
+} else if (typeof toast === 'function') {
+toast('赛果分享码无效，请检查是否以 RYTR1: 开头');
+}
+});
+}
+if ($id('tourImportCancelBtn')) {
+$id('tourImportCancelBtn').addEventListener('click', () => {
+if ($id('tourImportBox')) $id('tourImportBox').classList.add('hidden');
+});
+}
 if ($id('tourResetBtn')) {
 $id('tourResetBtn').addEventListener('click', () => {
-tourCreate({ format: tourFormat, level: pickLevel || 'normal', playerHero: typeof menuHeroPick === 'function' ? menuHeroPick() : 0 });
+tourCreate({
+format: TOUR ? TOUR.format : tourFormat,
+size: TOUR ? TOUR.size : tourSize,
+seedMode: TOUR ? TOUR.seedMode : tourSeedMode,
+autoAdvance: TOUR ? TOUR.autoAdvance : false,
+level: pickLevel || 'normal',
+playerHero: typeof menuHeroPick === 'function' ? menuHeroPick() : 0
+});
 });
 }
 if ($id('tourTree')) {
@@ -55272,7 +55935,7 @@ melee: [3, 5, 8, 10, 16],
 ctf: [2, 3, 5, 8, 10],
 quad: [2, 4, 5, 8],
 };
-const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '常规标准', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏', bastion: '天枢守境', melee: '群雄会战', ctf: '夺旗争锋', quad: '四象争锋' };
+const ROOM_RULE_NAMES = { normal: '3v3 车轮战', pp_cc: '2v2 · 两人打两电脑', pp_pp: '2v2 · 两人对两人', raid: '联机打魔首', chaos: '常规标准', mayhem: '通天神决', maps: '山河异境', cuju: '墨球蹴鞠', koth: '灵坛争锋', party: '江湖百戏', bastion: '天枢守境', melee: '群雄会战', ctf: '夺旗争锋', quad: '四象争锋', tournament: '联机武林大会' };
 function roomRuleLabel(rule, sz) {
 const base = ROOM_RULE_NAMES[rule] || ROOM_RULE_NAMES.normal;
 const opts = ROOM_TEAM_SIZES[rule];
@@ -55683,7 +56346,15 @@ roomWrapShow();
 if (code.length !== 4) return netStatus('房间码是 4 位');
 netConnect(false, code);
 }
+function spectateByCode() {
+initAudio();
+const code = $id('codeIn').value.trim().toUpperCase().replace(/[^A-Z0-9]/g, '');
+roomWrapShow();
+if (code.length !== 4) return netStatus('房间码是 4 位');
+if (typeof netSpectateP2P === 'function') netSpectateP2P(code);
+}
 $id('joinBtn').addEventListener('click', joinByCode);
+if ($id('specJoinBtn')) $id('specJoinBtn').addEventListener('click', spectateByCode);
 $id('codeIn').addEventListener('keydown', e => { if (e.key === 'Enter') joinByCode(); });
 function checkUrlRoom() {
 try {
@@ -56719,10 +57390,12 @@ graceUntil: 0,   // ICE 断了一下：到这个时间还没恢复就算断线
 drop: null,      // 当前直连的“断线”处理（心跳发现对方没了时调用）
 sigTries: 0,     // 和牵线服务器断开后已经重连了几次
 dropped: 0,      // 因为太大没发出去的消息数
+specs: [],       // 只读观战连接列表（最多 P2P_MAX_SPECS 人，与对战通道完全隔离）
 };
+const P2P_MAX_SPECS = 4;
 const P2P_SYS = {
-host: ['hello', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule', 'map_vote'],
-client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule', 'map_vote']
+host: ['hello', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule', 'map_vote', 'tour_sync', 'tour_result', 'tour_start', 'spec_hello'],
+client: ['ready', 'version', 'full', 'left', 'match_finish', 'match_ack', 'ping', 'pong', 'rematch', 'room_rule', 'map_vote', 'tour_sync', 'tour_result', 'tour_start', 'spec_ready', 'spec_frame']
 };
 const P2P_SILENCE = 20000;   // 对方 20 秒没有任何消息就当作断线（双方每 2 秒互发心跳）
 const P2P_T = {
@@ -56806,7 +57479,35 @@ return P2P.loading;
 function p2pName(n, dflt) { return (String(n || '').match(/[\w\u4e00-\u9fff]/g) || []).join('').slice(0, 12) || dflt; }
 function p2pOpen() { return !!(P2P.conn && P2P.conn.open); }
 function p2pActive() { return !!(P2P.peer || P2P.conn); }
+function p2pSpecCount() {
+if (!Array.isArray(P2P.specs)) return 0;
+let n = 0;
+for (const c of P2P.specs) if (c && c.open) n++;
+return n;
+}
+function p2pSpecBroadcast(o) {
+if (!Array.isArray(P2P.specs) || !P2P.specs.length) return 0;
+let len = 0;
+try { len = JSON.stringify(o).length; } catch (e) { return 0; }
+if (len > P2P_MAX) return 0;
+let sent = 0;
+for (let i = P2P.specs.length - 1; i >= 0; i--) {
+const c = P2P.specs[i];
+if (!c || !c.open) { if (!c || c._closed) P2P.specs.splice(i, 1); continue; }
+try { c.send(o); sent++; } catch (e) {}
+}
+return sent;
+}
+function p2pCloseSpecs(notifyLeft) {
+if (!Array.isArray(P2P.specs) || !P2P.specs.length) return;
+const list = P2P.specs.splice(0);
+for (const sc of list) {
+if (notifyLeft && sc && sc.open) { try { sc.send({ sys: 'left' }); } catch (e) {} }
+try { sc.close(); } catch (e) {}
+}
+}
 function p2pSend(o) {
+if (typeof NET !== 'undefined' && NET.spectating) return false;
 if (!p2pOpen()) return false;
 let n = 0;
 try { n = JSON.stringify(o).length; } catch (e) { return false; }
@@ -56815,7 +57516,8 @@ try { P2P.conn.send(o); return true; } catch (e) { return false; }
 }
 function p2pBye() {
 const c = P2P.conn, p = P2P.peer;
-if (c && c.open) { try { c.send({ sys: 'left' }); } catch (e) {} }
+if (c && c.open && !(typeof NET !== 'undefined' && NET.spectating)) { try { c.send({ sys: 'left' }); } catch (e) {} }
+p2pCloseSpecs(true);
 P2P.conn = P2P.peer = null; P2P.drop = null;
 p2pState('closed');
 if (c || p) setTimeout(() => { if (c) { try { c.close(); } catch (e) {} } if (p) { try { p.destroy(); } catch (e) {} } }, 300);
@@ -56824,6 +57526,7 @@ function p2pClose() {
 P2P.sess++; P2P.opened = false; P2P.friend = false;
 clearTimeout(P2P.timer);
 P2P.graceUntil = 0; P2P.drop = null; P2P.sigTries = 0; P2P.roomAt = 0;
+p2pCloseSpecs(false);
 p2pState('idle');
 const c = P2P.conn, p = P2P.peer;
 P2P.conn = P2P.peer = null;
@@ -56989,10 +57692,49 @@ P2P.opened = true; P2P.sigTries = 0;
 if (!P2P.conn) { p2pState('wait'); if (!P2P.roomAt) P2P.roomAt = Date.now(); }
 onSys({ sys: 'room', role: 'host', code });        // 显示房间码（重连成功也会再来一次，房间码不变）
 });
+const attachSpectator = (sc, m) => {
+if (m.v !== VERSION) {
+try { sc.send({ sys: 'version', need: VERSION }); } catch (e) {}
+setTimeout(() => { try { sc.close(); } catch (e) {} }, 300);
+return;
+}
+if (P2P.specs.length >= P2P_MAX_SPECS) {
+try { sc.send({ sys: 'full' }); } catch (e) {}
+setTimeout(() => { try { sc.close(); } catch (e) {} }, 300);
+return;
+}
+if (!P2P.specs.includes(sc)) P2P.specs.push(sc);
+const dropSpec = () => {
+sc._closed = true;
+const idx = P2P.specs.indexOf(sc);
+if (idx >= 0) P2P.specs.splice(idx, 1);
+};
+sc.on('close', dropSpec);
+sc.on('error', dropSpec);
+const ch = (typeof A !== 'undefined' && typeof B !== 'undefined') ? [A.chIdx || 0, B.chIdx || 0] : [0, 1];
+try {
+sc.send({ sys: 'spec_ready', code, names: (typeof NET !== 'undefined' && NET.names) || { host: (ACC && ACC.name) || '房主', client: '对手' }, ch, map: (typeof M !== 'undefined' && M.map) || '', specs: p2pSpecCount() });
+} catch (e) {}
+};
 peer.on('connection', conn => {
 if (!live()) return;
-if (p2pOpen()) {                                    // 已经有人了
-conn.on('open', () => { try { conn.send({ sys: 'full' }); } catch (e) {} setTimeout(() => { try { conn.close(); } catch (e) {} }, 400); });
+if (p2pOpen()) {                                    // 对战席已满：仅接受只读观战握手，拒绝多余对战连接
+let handled = false;
+const specCut = setTimeout(() => { if (!handled) { try { conn.send({ sys: 'full' }); } catch (e) {} try { conn.close(); } catch (e) {} } }, 4000);
+conn.on('data', d => {
+if (!live() || handled) return;
+let m = d;
+if (typeof m === 'string') { try { m = JSON.parse(m); } catch (e) { return; } }
+if (!m || typeof m !== 'object') return;
+if (m.sys === 'spec_hello') {
+handled = true; clearTimeout(specCut);
+attachSpectator(conn, m);
+} else {
+handled = true; clearTimeout(specCut);
+try { conn.send({ sys: 'full' }); } catch (e) {}
+setTimeout(() => { try { conn.close(); } catch (e) {} }, 300);
+}
+});
 return;
 }
 if (P2P.conn) { const old = P2P.conn; P2P.conn = null; try { old.close(); } catch (e) {} }   // 上一个人还没连通：多半是他在重试，换成新的
@@ -57003,6 +57745,12 @@ P2P.timer = setTimeout(() => {                      // 有人来了但 15 秒还
 if (live() && P2P.conn === conn && !conn.open) { P2P.conn = null; P2P.drop = null; try { conn.close(); } catch (e) {} noRoute(); }
 }, P2P_T.ice);
 p2pWire(conn, sess, 'host', () => { clearTimeout(P2P.timer); netStatus('对手已连入，正在核对版本…'); }, m => {
+if (m.sys === 'spec_hello') {
+P2P.conn = null; P2P.drop = null; p2pState('wait'); P2P.roomAt = Date.now();
+attachSpectator(conn, m);
+netStatus('已有观战者入席，房间仍在等候对手加入…');
+return;
+}
 if (m.sys === 'hello') {
 if (m.v !== VERSION) {
 try { conn.send({ sys: 'version', need: VERSION }); } catch (e) {}
@@ -57087,6 +57835,42 @@ clearTimeout(P2P.timer);
 if (!live()) return;
 if (NET.open && err.type !== 'peer-unavailable') return;
 fail(err.type === 'peer-unavailable' ? `找不到房间 ${code}：请核对房间码，并确认房主网页仍在开启等候` : p2pErrorText(err));
+});
+}
+async function netSpectateP2P(code) {
+netReset();
+NET.isRanked = false; NET.leaving = false; NET.base = null; NET.role = 'spectator'; NET.spectating = true;
+code = String(code || '').trim().toUpperCase();
+netStatus(`正在以只读观战接入房间 ${code}…`);
+const sess = P2P.sess;
+const [ok] = await Promise.all([p2pLoad(), p2pIce()]);
+if (sess !== P2P.sess) return;
+if (!ok) { netStatus('直连组件加载失败，检查一下网络后再试'); netReset(); return; }
+let peer;
+try { peer = P2P.peer = new Peer(p2pOptions()); }
+catch (e) { netStatus(p2pErrorText(e)); netReset(); return; }
+const live = () => sess === P2P.sess && peer === P2P.peer;
+const fail = text => { if (!live()) return; netStatus(text); netReset(); };
+p2pState('signal');
+clearTimeout(P2P.timer);
+P2P.timer = setTimeout(() => { if (live() && !NET.open) fail(`观战连接超时：请确认房间 ${code} 仍在进行中`); }, P2P_T.signal);
+peer.on('open', () => {
+if (!live()) return;
+const conn = P2P.conn = peer.connect(P2P.prefix + code.toLowerCase(), { reliable: true, serialization: 'json' });
+p2pWire(conn, sess, 'client', () => {
+clearTimeout(P2P.timer);
+NET.code = code;
+conn.send({ sys: 'spec_hello', v: VERSION, name: (ACC && ACC.name) || '' });
+}, m => {
+if (m.sys === 'spec_ready') { clearTimeout(P2P.timer); NET.open = true; onSys(m); return; }
+if (m.sys === 'spec_frame' || m.sys === 'left' || m.sys === 'full' || m.sys === 'version') onSys(m);
+}, () => { clearTimeout(P2P.timer); fail(p2pNoRouteText()); });
+});
+peer.on('error', err => {
+clearTimeout(P2P.timer);
+if (!live()) return;
+if (NET.open && err.type !== 'peer-unavailable') return;
+fail(err.type === 'peer-unavailable' ? `找不到房间 ${code}：请核对房间码` : p2pErrorText(err));
 });
 }
 const MM = { on: false, kind: '', t0: 0, peer: null, myId: '', band: 0, timer: 0, busy: false, tries: 0, avoid: null };

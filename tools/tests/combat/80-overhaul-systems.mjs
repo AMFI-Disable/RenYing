@@ -910,9 +910,9 @@ export default [
     })()`
   },
   {
-    name: 'Live Spectator HUD focus switcher/clean toggle and 8-slot Single-Elimination Tournament Bracket run end-to-end',
+    name: 'Tournament bracket (4/8/16, standard & random seeding, auto-progression, online sync, RYTR1 standings) and read-only Live Spectator HUD work end-to-end',
     fn: `(() => {
-      // 1. Live Spectator HUD activates in AI watch mode, cycles fighter focus, and toggles clean mode
+      // 1. Live Spectator HUD activates in AI watch mode, cycles focus, renders side-by-side telemetry, and toggles clean mode
       startMatch('cpu', 'normal', [0, 1]);
       M.watchAi = true; M.phase = 'fight';
       A.ctrl = new AICtrl('normal'); B.ctrl = new AICtrl('normal');
@@ -927,28 +927,89 @@ export default [
       specHudToggleClean();
       specHudSetFocus(-1);
 
-      // 2. 8-slot Tournament Bracket creates 8 unique heroes, plays/sims all 7 bouts, and crowns champion
+      // 2. Read-only live online spectating: specOnLiveReady, specApplyLiveFrame, p2pSend blocked, and specBroadcastTick
+      const snap = snapshot();
+      if (!specOnLiveReady({ code: 'AB12', names: { host: 'Host', client: 'Guest' }, ch: [0, 1], specs: 2 })) {
+        return { pass: false, error: 'specOnLiveReady failed' };
+      }
+      if (!NET.spectating || ROLL.on || !spectatorHudAvail()) {
+        return { pass: false, error: 'Live spectator mode did not activate read-only state' };
+      }
+      if (p2pSend({ test: 1 }) !== false) {
+        return { pass: false, error: 'Read-only spectator was allowed to call p2pSend' };
+      }
+      if (!specApplyLiveFrame({ snap, ch: [0, 1], specs: 3, label: '联机观战 #AB12' }) || SPEC_HUD.liveSpecs !== 3) {
+        return { pass: false, error: 'specApplyLiveFrame did not apply snapshot and viewer count' };
+      }
+      specExitLive('');
+      if (NET.spectating) return { pass: false, error: 'specExitLive did not clear NET.spectating' };
+
+      // 3. 4-, 8-, and 16-entrant brackets with standard seeding (Seed #1 and #2 in opposite halves) & random draw
+      for (const sz of [4, 8, 16]) {
+        const b = tourCreate({ size: sz, format: 'local2', seedMode: 'standard', playerHero: 0, p2Hero: 1, level: 'normal', seed: 100 + sz });
+        if (!b || b.entrants.length !== sz) return { pass: false, error: 'Expected ' + sz + ' entrants' };
+        if (new Set(b.entrants.map(e => e.chIdx)).size !== sz) return { pass: false, error: 'Duplicate heroes in ' + sz + '-slot bracket' };
+        if (b.rounds.length !== Math.round(Math.log2(sz))) return { pass: false, error: 'Wrong round count for size ' + sz };
+        const pairs = tourSeedPairs(sz);
+        const half = pairs.length / 2;
+        const seed1Half = pairs.findIndex(p => p.includes(0)) < half ? 0 : 1;
+        const seed2Half = pairs.findIndex(p => p.includes(1)) < half ? 0 : 1;
+        if (seed1Half === seed2Half) return { pass: false, error: 'Standard seeding put #1 and #2 in same half for size ' + sz };
+      }
+      const randA = tourCreate({ size: 8, format: 'watch', seedMode: 'random', seed: 777 });
+      const randB = tourCreate({ size: 8, format: 'watch', seedMode: 'random', seed: 777 });
+      if (randA.entrants.map(e => e.chIdx).join(',') !== randB.entrants.map(e => e.chIdx).join(',')) {
+        return { pass: false, error: 'Seeded random draw was not deterministic' };
+      }
+
+      // 4. 16-slot tournament auto-progression, completion, champion Ink reward (+350), and RYTR1 shareable standings round-trip
       const ink0 = PROF.ink || 0;
-      const t = tourCreate({ format: 'player', playerHero: 0, level: 'normal', seed: 42 });
-      if (!t || t.entrants.length !== 8) return { pass: false, error: 'Expected 8 tournament entrants' };
-      const uniqueHeroes = new Set(t.entrants.map(e => e.chIdx));
-      if (uniqueHeroes.size !== 8) return { pass: false, error: 'Tournament entrants did not have 8 unique heroes' };
-      // Play QF #1 (human entrant 0 vs entrant 7) and report human win
+      const t16 = tourCreate({ size: 16, format: 'player', seedMode: 'standard', autoAdvance: true, playerHero: 0, level: 'normal', seed: 42 });
       if (!tourPlayMatch(0, 0, false) || !M.tournament || M.tournament.round !== 0) {
-        return { pass: false, error: 'tourPlayMatch failed to launch QF #1' };
+        return { pass: false, error: 'tourPlayMatch failed to launch R16 #1' };
       }
       tourReportResult(0, 0, 0, [2, 0]);
-      // Fast-sim remaining AI QFs (QF #2, #3, #4)
-      const simmed = tourSimAllAi();
-      if (simmed !== 3) return { pass: false, error: 'Expected 3 AI quarterfinals fast-simmed, got ' + simmed };
-      // Semifinal 1 has human entrant 0; advance human to Grand Final and win
-      tourReportResult(1, 0, 0, [2, 1]);
-      tourSimMatch(1, 1);
-      tourReportResult(2, 0, 0, [2, 0]);
-      if (TOUR.champion !== 0) return { pass: false, error: 'Expected entrant 0 crowned champion, got ' + TOUR.champion };
-      if ((PROF.ink || 0) < ink0 + 200) return { pass: false, error: 'Champion Ink reward (+200) not credited' };
+      const autoSimmed = tourAutoStep();
+      if (autoSimmed !== 7) return { pass: false, error: 'Expected tourAutoStep to auto-sim 7 AI R16 bouts, got ' + autoSimmed };
+      // Finish remaining rounds with auto-progression
+      for (let r = 1; r < 4; r++) {
+        tourReportResult(r, 0, 0, [2, 1]);
+        tourAutoStep();
+      }
+      if (TOUR.champion !== 0 || TOUR.history.length !== 15) {
+        return { pass: false, error: '16-slot tournament did not complete cleanly: champ=' + TOUR.champion + ' hist=' + TOUR.history.length };
+      }
+      if ((PROF.ink || 0) < ink0 + 350) return { pass: false, error: '16-slot Champion Ink reward (+350) not credited' };
+      const standings = tourStandings(TOUR);
+      if (standings.length !== 16 || standings[0].place !== 1 || standings[0].id !== 0 || standings[1].place !== 2) {
+        return { pass: false, error: 'Invalid 16-slot standings: ' + JSON.stringify(standings.slice(0, 3)) };
+      }
+      const shareCode = tourEncodeCode(TOUR);
+      if (!shareCode.startsWith('RYTR1:')) return { pass: false, error: 'Share code missing RYTR1: prefix' };
+      const decoded = tourDecodeCode(shareCode);
+      if (!decoded || decoded.size !== 16 || decoded.champion !== 0 || decoded.history.length !== 15) {
+        return { pass: false, error: 'RYTR1 share code decode mismatch' };
+      }
+      if (tourDecodeCode('BAD_CODE') !== null) return { pass: false, error: 'tourDecodeCode accepted malformed code' };
+      const textSummary = tourFormatStandingsText(TOUR);
+      if (!textSummary.includes('RYTR1:') || !textSummary.includes('#1')) {
+        return { pass: false, error: 'Standings text summary missing rank or share code' };
+      }
+
+      // 5. Online tournament sync round-trip (tourSerialize -> tourSyncRecv -> tourRecvRemoteResult)
+      const onlineT = tourCreate({ size: 4, format: 'online', seedMode: 'standard', playerHero: 0, p2Hero: 2, hostName: 'HostA', clientName: 'GuestB', seed: 99 });
+      const payload = tourSerialize(onlineT);
+      TOUR = null;
+      if (!tourSyncRecv({ tour: payload }) || !TOUR || !TOUR.online || TOUR.size !== 4) {
+        return { pass: false, error: 'Online tournament tourSyncRecv failed' };
+      }
+      if (!tourRecvRemoteResult({ round: 0, match: 0, winnerSide: 0, score: [2, 0] }) || TOUR.rounds[0][0].winner !== 0) {
+        return { pass: false, error: 'Online tournament tourRecvRemoteResult failed' };
+      }
+
       PROF.ink = ink0;
       M.tournament = null;
+      tourCancelAuto();
       toMenu();
       return { pass: true };
     })()`

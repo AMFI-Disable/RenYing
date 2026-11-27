@@ -259,7 +259,7 @@ function checkModes(env) {
     if (!shape(w, md, { ...MODE, slots: 'arr', 'four?': 'bool', 'raid?': 'bool', 'rule?': 'str', 'teamSize?': 'num' })) continue;
     order(w, md);
     if (md.local) err(w, '联机房间不能写 local');
-    if (md.rule && !['chaos', 'mayhem', 'maps', 'cuju', 'koth', 'party', 'bastion', 'melee', 'ctf', 'quad'].includes(md.rule)) err(w, `rule 只能是 chaos、mayhem、maps、cuju、koth、party、bastion、melee、ctf 或 quad，现在是 ${md.rule}`);
+    if (md.rule && !['chaos', 'mayhem', 'maps', 'cuju', 'koth', 'party', 'bastion', 'melee', 'ctf', 'quad', 'tournament'].includes(md.rule)) err(w, `rule 只能是 chaos、mayhem、maps、cuju、koth、party、bastion、melee、ctf、quad 或 tournament，现在是 ${md.rule}`);
     const ok = md.slots.length === 2 && md.slots.every(s => Array.isArray(s) && s.length && s.every(i => [0, 1, 2, 3].includes(i)));
     if (!ok) { err(w, 'slots 要写成 [[房主控制的编号…], [加入的人控制的编号…]]，编号 0~3'); continue; }
     unique(w + ' slots', md.slots.flat(), '侠客编号');
