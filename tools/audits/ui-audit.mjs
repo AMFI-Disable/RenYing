@@ -237,10 +237,10 @@ for (const a of audit) {
   const flags = [];
   if (a.needsScroll) flags.push(`SCROLLS ${a.panelScroll}>${a.panelClient}`);
   if (a.probs.length) flags.push(`${a.probs.length} overflow`);
-  if (a.tiny.length) flags.push(`${a.tiny.filter(t=>t.fs<11.5).length} tiny`);
+  if (a.tiny.length) flags.push(`${a.tiny.length} tiny`);
   console.log(`${a.panel.padEnd(11)} ${flags.length ? flags.join(' | ') : 'ok'}`);
   for (const p of a.probs) console.log(`     [${p.kind}] ${p.el} ${p.sw?`sw${p.sw}/cw${p.cw}`:''}${p.right?` L${p.left}/R${p.right}`:''} "${p.text}"`);
-  for (const t of a.tiny) if (t.fs < 11.5) console.log(`     [font ${t.fs}px] ${t.el} "${t.text}"`);
+  for (const t of a.tiny) console.log(`     [font ${t.fs}px] ${t.el} "${t.text}"`);
   for (const x of (a.scrollX || [])) console.log(`     note: ${x.el} scrolls horizontally (${x.sw}>${x.cw}) "${x.text}"`);
   if (a.bp) { const b = a.bp;
     console.log(`     composition: ${b.cards} cards, ${b.rows} row(s) of ${b.perRow}${b.partialLastRow ? ` (last row centred=${b.lastRowCentered}, gaps ${b.gaps})` : ' (no orphan row)'}`

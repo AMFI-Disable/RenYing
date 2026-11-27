@@ -6,6 +6,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+- Raised the Codex mastery progress text to the 12 px minimum and made layout failures print every undersized label.
+
 - Added bilingual contributor navigation and updated feedback templates.
 
 ### Added

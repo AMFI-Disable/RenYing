@@ -1547,7 +1547,7 @@
 .cx-m-lv { color: var(--gold); font-weight: 700; }
 .cx-m-track { flex: 1; min-width: 80px; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
 .cx-m-track i { display: block; height: 100%; background: linear-gradient(90deg, #b5282d, #e9c46a); }
-.cx-m-meta { font-size: 11.5px; color: rgba(239, 232, 216, 0.78); font-variant-numeric: tabular-nums; }
+.cx-m-meta { font-size: 12px; color: rgba(239, 232, 216, 0.78); font-variant-numeric: tabular-nums; }
 .lb-head-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
 /* Accessibility Suite & Responsive Mobile/Tablet Layout (#58) */
