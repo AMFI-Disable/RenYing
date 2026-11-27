@@ -11,3 +11,7 @@ CREATE TABLE IF NOT EXISTS public_tournaments (
     created_at INTEGER NOT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_public_tournaments_updated ON public_tournaments (updated_at DESC);
+
+-- 回滚：
+-- DROP INDEX IF EXISTS idx_public_tournaments_updated;
+-- DROP TABLE IF EXISTS public_tournaments;

@@ -39,4 +39,10 @@ D1 数据库的表结构都写在这里，一个文件一次改动，按编号�
 | `0006_check_constraints.sql` | 重建 `econ`、`mkt`、`sanctions`，加 CHECK（墨锭不为负、挂单状态只有 0/1/2、标价至少 1、记过次数不为负…） |
 | `0007_world_chron.sql` | 全服肉鸽 · 江湖长卷：加 `chron`（全服共享的剧情进度，只有一行）、`chron_rep`（分线上报去重）、`chron_part`（谁在哪一节出过力）、`chron_done`（完成了的节和奖励）、`chron_claim`（谁领过哪一节）。只加新表，不动已有的表 |
 | `0008_play_stats.sql` | 匿名游玩统计：加 `play_visitors`（匿名编号第一次和最近一次来的日子）、`play_days`（哪天来过谁，算每天人数和留存）、`play_counts`（每天每件事几次：打开、教学、各模式开局）。不存名字、账号、邮箱、IP。只加新表 |
+| `0009_ai_training.sql` | 匿名 AI 训练样本：加 `ai_training_matches` 表与时间索引，仅存校验后的状态、动作与奖励 |
+| `0010_ai_players.sql` | （历史）AI 玩家表初始化 |
+| `0011_ai_players_lifecycle.sql` | （历史）AI 玩家生命周期字段扩展 |
+| `0012_rename_first_25_ai.sql` | （历史）首批 AI 玩家昵称迁移 |
+| `0013_remove_ai_players.sql` | 移除持久化 AI 玩家账号与关联记录，回归纯真人服务器榜单与在线统计 |
 | `0014_retired_hero_skins.sql` | 退场侠客（幽篁、破浪）的 14 款饰品：`mkt` 里的挂单和成交记录换成接替的那一款（和 `C.RETIRED` 一一对应），只改 `k` 和 `item_json` 里的 `k` |
+| `0015_v120_tournaments.sql` | v1.2.0 持久化公开锦标赛：加 `public_tournaments` 表与 `updated_at` 降序索引，支持网页持久保存与 60 秒内存缓存读取 |

@@ -76,7 +76,7 @@
     #grid(
       columns: (1fr, 1.2fr, 1fr),
       align(center)[*Collaborator:* LuffyXing55],
-      align(center)[*Repo:* `AMFI-Disable/RenYing`],
+      align(center)[*Repo:* `BigBrainDevBros/RenYing`],
       align(center)[*Branch:* `main` (Merged)]
     )
   ]
@@ -90,8 +90,8 @@
   inset: (x: 8pt, y: 5pt),
   radius: (right: 3pt)
 )[
-  *⚠️ 重要通告：架构重构与单文件合并已全面完成！* \
-  你当前本地可能持有一个体积巨大的独立单文件 HTML（如 `renying-overlappingchanges/index.html` 或历史单页副本）。*请注意：当前仓库 `AMFI-Disable/RenYing` 已经完成了所有特性的全面重构与合并*（包括 12 名英雄完整机制、醉翁 2.0 山水与留客重构、AI 自动训练套件、对战平衡系数 `BAL`、P2P 联机与 Firebase 云存档等）。*你现在可以完全放心、安全地废弃旧单文件，直接使用本工程代码库进行开发！*
+  *重要通告：架构重构与单文件合并已全面完成！* \
+  你当前本地可能持有一个体积巨大的独立单文件 HTML（如 `renying-overlappingchanges/index.html` 或历史单页副本）。*请注意：当前仓库 `BigBrainDevBros/RenYing` 已经完成了所有特性的全面重构与合并*（包括 20 名侠客完整机制、多层战场与 32 人混战、AI 自动训练套件、对战平衡系数 `BAL`、PeerJS P2P 联机与 Cloudflare Worker + D1 云端存档等）。*你现在可以完全放心、安全地废弃旧单文件，直接使用本工程代码库进行开发！*
 ]
 
 = 1. 项目架构与构建体系
@@ -99,10 +99,10 @@
 本项目采用 *模块化源码开发 + 自动化一键打包* 的工程体系：
 
 - *`src/` (核心源码目录)*：
-  - `src/game.js`：核心物理引擎、战斗判定、角色状态机、12英雄机制、AI行为逻辑与UI交互。
+  - `src/game/`：按 01-engine / 02-combat / 03-render / 04-modes / 05-ui 拆分的 20 侠客战斗、渲染、模式与 UI 模块。
   - `src/page.html`：页面骨架模版、Bento 风格角色图鉴、弹窗与 HUD DOM。
   - `src/style.css`：水墨国风样式、排版与动效。
-  - `src/cloud.js`：Firebase 匿名登录、云存档同步与防篡改限速。
+  - `src/cloud.js`：Cloudflare Worker + D1 云端账号登录、存档同步、排行榜与公开锦标赛客户端。
   - `src/net-p2p.js`：基于 PeerJS 的 WebRTC 零延迟联机对战。
 - *`tools/` (工具链)*：
   - `python3 tools/build.py`：*打包总入口*。将 `src/` 编译并生成根目录产物：
@@ -112,7 +112,7 @@
 
 = 2. 协作者 GitHub 认证与代码推送指南 (LuffyXing55)
 
-本仓库地址：`https://github.com/AMFI-Disable/RenYing.git`，协作者账号已配置为 *LuffyXing55*。
+本仓库地址：`https://github.com/BigBrainDevBros/RenYing.git`，协作者账号已配置为 *LuffyXing55*。
 
 == 2.1 安装与登录 GitHub CLI (`gh`)
 ```bash
@@ -124,7 +124,7 @@ gh auth setup-git          # 配置 Git 凭证助手，使 git push 自动鉴权
 
 == 2.2 克隆代码库与配置身份
 ```bash
-git clone https://github.com/AMFI-Disable/RenYing.git
+git clone https://github.com/BigBrainDevBros/RenYing.git
 cd RenYing
 git config user.name "LuffyXing55"
 git config user.email "your_email@example.com"  # 填入与 GitHub 绑定的邮箱地址

@@ -1,7 +1,9 @@
 # 《刃影》(RenYing) 全历史演练与工程演进总录
 # (RenYing Complete Master Walkthrough & Engineering Chronicle)
 
-本演练文档汇编并整合了历次开发会话中关于《刃影》（RenYing）的**全部演练记录（Walkthroughs）**。内容严格限定于《刃影》本身，涵盖从项目立项与工程规范初始化、核心战斗与页面深度优化、纯前端 WebRTC P2P 免服务器公网联机体系，到九大英雄专属骨骼动作、纯机制招式互动及挣脱平衡体系的完整演进全貌。
+> **历史归档说明**：本文档记录早期 v1.x–v4.5 阶段的开发演练。文中提及的 Google Firebase / Cloud Firestore 与 `firestore.rules` 已被 **Cloudflare Worker + D1 + PresenceHub Durable Object**（见 `cloudflare/worker/`、`cloudflare/migrations/` 与 `docs/project/codebase-and-heroes.md`）彻底替代，当前正式版已升级至 20 位侠客。
+
+本演练文档汇编并整合了早期开发会话中关于《刃影》（RenYing）的**历史演练记录（Walkthroughs）**。内容涵盖从项目立项与工程规范初始化、核心战斗与页面深度优化、纯前端 WebRTC P2P 免服务器公网联机体系，到早期英雄专属骨骼动作、纯机制招式互动及挣脱平衡体系的完整演进全貌。
 
 ---
 
@@ -235,7 +237,7 @@ flowchart LR
   - 在 [`src/cloud.js`](../../src/cloud.js) 中集成 Firebase Auth 与 Cloud Firestore，玩家输入 Firebase 凭据即可直连 Google Cloud 后端，无需搭建或运维任何中间层服务。
   - 严格支持 **离线缓存降级**：即便未配置云端或网络断开，自动安全读写本地 `localStorage('renying-profile')` 与 `localStorage('renying-cloud-cache')`，联网后自动按时间戳防冲突双向合并同步。
 - **专职子代理与生产级安全规则**：
-  - 经由专职子代理 `firestore-rules-author` 编写并校验了生产级安全规则 [`firestore.rules`](firestore.rules)。
+  - 早期曾使用安全规则文件 `firestore.rules`（已随 Cloudflare Worker + D1 架构迁出并移除）。
   - 根目录集合 `users/{userId}` 严格限制只有登录用户本人（`request.auth.uid == userId`）可读写自己的存档文档，严格校验全部 13 项字段类型与边界范围，从协议底层杜绝越权篡改。
 
 ---
