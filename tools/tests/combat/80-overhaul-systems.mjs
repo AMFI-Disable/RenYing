@@ -953,4 +953,52 @@ export default [
       return { pass: true };
     })()`
   },
+  {
+    name: 'All 20 heroes have 3-tier Combo Trials (60 total), live step detection, Extended Mastery Tracks, and zero-D1-write Mastery Leaderboard',
+    fn: `(() => {
+      const map = comboTrialsMap();
+      const heroIds = Object.keys(map);
+      if (heroIds.length !== 20) return { pass: false, error: 'Expected 20 hero trial sets, got ' + heroIds.length };
+      let totalTrials = 0;
+      for (const ch of CHARS) {
+        const list = heroTrials(ch.id);
+        if (list.length !== 3) return { pass: false, error: 'Expected 3 trials for ' + ch.id + ', got ' + list.length };
+        totalTrials += list.length;
+      }
+      if (totalTrials !== 60) return { pass: false, error: 'Expected 60 total Combo Trials, got ' + totalTrials };
+
+      const prevMastery = PROF.mastery ? JSON.parse(JSON.stringify(PROF.mastery)) : {};
+      const prevTrials = PROF.trials ? JSON.parse(JSON.stringify(PROF.trials)) : {};
+      const prevInk = PROF.ink || 0;
+      try {
+        PROF.mastery = {}; PROF.trials = {};
+        // Start Qingfeng basic trial (light -> skill) and complete it via live action detection
+        if (!startComboTrial('qingfeng', 0) || !TRIAL_RUN.active) return { pass: false, error: 'startComboTrial failed' };
+        if (!trialRecordAction(A, 'light') || TRIAL_RUN.stepIdx !== 1) return { pass: false, error: 'Trial step 1 (light) did not advance' };
+        if (!trialRecordAction(A, 'skill') || !TRIAL_RUN.done) return { pass: false, error: 'Trial step 2 (skill) did not complete trial' };
+        if (!PROF.trials.qingfeng_t1) return { pass: false, error: 'Completed trial not persisted in PROF.trials' };
+        const info = masteryInfo('qingfeng');
+        if (info.xp !== 60 || info.trialsDone !== 1 || info.level !== 1) return { pass: false, error: 'Mastery XP/trial count mismatch: ' + JSON.stringify(info) };
+        // Grant enough XP to level up to Lv.2 (>= 100 XP)
+        const g = masteryGrant('qingfeng', 50, { win: true, kos: 2 });
+        if (!g || !g.leveledUp || g.nextLv !== 2) return { pass: false, error: 'Mastery did not level up at 110 XP: ' + JSON.stringify(g) };
+        const sum = masterySummary();
+        if (sum.rows.length !== 20 || sum.rows[0].heroId !== 'qingfeng' || sum.trialsDone !== 1 || sum.trialsTotal !== 60) {
+          return { pass: false, error: 'masterySummary mismatch: ' + JSON.stringify({ len: sum.rows.length, top: sum.rows[0].heroId, done: sum.trialsDone }) };
+        }
+        // Verify Mastery Leaderboard tab renders locally without errors
+        lbKind = 'mastery';
+        openLeaderboard();
+        const html = ($id('lbTable') || {}).innerHTML || '';
+        if (!html.includes('青锋') || !html.includes('Lv.2')) return { pass: false, error: 'Mastery leaderboard did not render top hero' };
+      } finally {
+        trialStop();
+        PROF.mastery = prevMastery;
+        PROF.trials = prevTrials;
+        PROF.ink = prevInk;
+        toMenu();
+      }
+      return { pass: true };
+    })()`
+  },
 ];

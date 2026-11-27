@@ -12,6 +12,7 @@ function xiwuTrainingTab(name) {
     tab.tabIndex = selected ? 0 : -1;
   }
   for (const pane of panes) pane.hidden = pane.dataset.trainingPane !== name;
+  if (name === 'trials' && typeof renderComboTrialsPane === 'function') renderComboTrialsPane();
   if ($id('aiLvHome') && currentSingleTab === 'train') $id('aiLvHome').hidden = name !== 'watch';
 }
 if ($id('xiwuTrainingTabs')) {

@@ -4802,6 +4802,80 @@ background: linear-gradient(135deg, rgba(233, 196, 106, 0.24), rgba(181, 40, 45,
 @media (max-width: 860px) {
 .tour-tree { grid-template-columns: 1fr; }
 }
+.trial-hero-head {
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 10px;
+padding: 8px 10px;
+margin-bottom: 10px;
+border-radius: 8px;
+background: rgba(233, 196, 106, 0.1);
+border: 1px solid rgba(233, 196, 106, 0.28);
+font-size: 13px;
+}
+.trial-list { display: flex; flex-direction: column; gap: 8px; }
+.trial-card {
+display: flex;
+justify-content: space-between;
+align-items: center;
+gap: 10px;
+padding: 10px 12px;
+border-radius: 8px;
+background: rgba(15, 22, 36, 0.72);
+border: 1px solid rgba(255, 255, 255, 0.1);
+text-align: left;
+}
+.trial-card.is-done { border-color: rgba(74, 222, 128, 0.45); }
+.trial-card-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; }
+.trial-tier { padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+.trial-tier.t-basic { background: rgba(111, 224, 255, 0.18); color: #6fe0ff; }
+.trial-tier.t-advanced { background: rgba(233, 196, 106, 0.2); color: #e9c46a; }
+.trial-tier.t-master { background: rgba(217, 166, 255, 0.2); color: #d9a6ff; }
+.trial-clear-tag { font-size: 11px; color: #86efac; }
+.trial-card-steps { font-size: 12px; color: rgba(239, 232, 216, 0.85); margin-top: 3px; }
+.trial-card-rew { font-size: 11px; color: rgba(239, 232, 216, 0.62); margin-top: 2px; }
+.trial-hud {
+position: fixed;
+left: 50%;
+top: 12px;
+transform: translateX(-50%);
+z-index: 41;
+padding: 8px 14px;
+border-radius: 10px;
+background: rgba(10, 14, 24, 0.86);
+border: 1px solid rgba(233, 196, 106, 0.4);
+color: #efe8d8;
+display: flex;
+flex-direction: column;
+gap: 6px;
+min-width: 300px;
+max-width: min(92vw, 620px);
+}
+.trial-hud-head { display: flex; align-items: center; gap: 8px; justify-content: space-between; font-size: 12.5px; }
+.trial-steps { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.trial-step { padding: 3px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); font-size: 12px; }
+.trial-step.is-cur { border: 1px solid #e9c46a; background: rgba(233, 196, 106, 0.2); color: #fbefcf; }
+.trial-step.is-done { background: rgba(74, 222, 128, 0.2); color: #86efac; }
+.trial-arrow { opacity: 0.5; font-size: 12px; }
+.trial-hud-foot { font-size: 11px; color: rgba(239, 232, 216, 0.72); }
+.cx-mastery-bar {
+display: flex;
+align-items: center;
+gap: 8px;
+margin-top: 8px;
+padding: 6px 10px;
+border-radius: 8px;
+background: rgba(233, 196, 106, 0.08);
+border: 1px solid rgba(233, 196, 106, 0.24);
+font-size: 12px;
+flex-wrap: wrap;
+}
+.cx-m-lv { color: var(--gold); font-weight: 700; }
+.cx-m-track { flex: 1; min-width: 80px; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.cx-m-track i { display: block; height: 100%; background: linear-gradient(90deg, #b5282d, #e9c46a); }
+.cx-m-meta { font-size: 11.5px; color: rgba(239, 232, 216, 0.78); font-variant-numeric: tabular-nums; }
+.lb-head-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 </style>
 </head>
 <body>
@@ -5317,6 +5391,7 @@ window.RYBoot = (function () {
         </div>
         <div class="xiwu-training-tabs" id="xiwuTrainingTabs" role="tablist" aria-label="训练项目">
           <button type="button" role="tab" id="xiwuTabLesson" aria-controls="xiwuPaneLesson" aria-selected="true" class="sel" data-training-tab="lesson">招式教学</button>
+          <button type="button" role="tab" id="xiwuTabTrials" aria-controls="xiwuPaneTrials" aria-selected="false" data-training-tab="trials">连招试炼</button>
           <button type="button" role="tab" id="xiwuTabFree" aria-controls="xiwuPaneFree" aria-selected="false" data-training-tab="free">自由训练</button>
           <button type="button" role="tab" id="xiwuTabScenario" aria-controls="xiwuPaneScenario" aria-selected="false" data-training-tab="scenario">情景训练</button>
           <button type="button" role="tab" id="xiwuTabMatch" aria-controls="xiwuPaneMatch" aria-selected="false" data-training-tab="match">实战演练</button>
@@ -5327,6 +5402,11 @@ window.RYBoot = (function () {
             <h4>招式教学</h4>
             <p>跟随步骤练习移动、连招、门派技能、格挡、精准招架、腾空闪与奥义。</p>
             <button class="go small" id="xiwuFullTutBtn" type="button">开始完整教学</button>
+          </section>
+          <section class="xiwu-training-card" id="xiwuPaneTrials" role="tabpanel" aria-labelledby="xiwuTabTrials" data-training-pane="trials" hidden>
+            <h4>侠客连招试炼 · 专精历练</h4>
+            <div class="trial-hero-head" id="trialHeroHead"></div>
+            <div class="trial-list" id="trialList"></div>
           </section>
           <section class="xiwu-training-card" id="xiwuPaneFree" role="tabpanel" aria-labelledby="xiwuTabFree" data-training-pane="free" hidden>
             <h4>自由训练 · 木人桩与 AI 实战对练</h4>
@@ -6027,8 +6107,8 @@ window.RYBoot = (function () {
 
   <div id="lb" class="scr">
     <div class="panel">
-      <h2>排行榜</h2>
-      <div class="seg" id="lbTabs"><button data-k="rank" class="sel">段位榜</button><button data-k="wins">战绩榜</button></div>
+      <div class="lb-head-row"><h2>排行榜</h2><span class="season-tag" id="lbSeasonTag"></span></div>
+      <div class="seg" id="lbTabs"><button data-k="rank" class="sel">段位榜</button><button data-k="wins">战绩榜</button><button data-k="mastery">专精试炼榜</button></div>
       <p class="sub" id="lbSub"></p>
       <div class="lbwrap"><div id="lbState"></div><table class="lbt" id="lbTable"></table></div>
       <div class="row"><button class="ghost" id="lbBack">返回</button></div>
@@ -6446,6 +6526,7 @@ window.RYBoot = (function () {
   </div>
 </div>
 
+<div id="trialHud" class="trial-hud hidden" aria-label="连招试炼指引"></div>
 <div id="specHud" class="spec-hud hidden" aria-label="实时观战面板">
   <div class="spec-row">
     <span class="spec-live-badge">LIVE</span>
@@ -10356,6 +10437,65 @@ xuanji:    { tip: '三臂星规中远距消耗，展开星场聚拢敌人并削�
 qingluan:  { tip: '团队治疗与青鸾风场控场，大招兼顾回血与清场击飞。', combo: 'Q 鸾羽灵风 → 右键 翠风斩 → E 鸾鸣九霄' },
 xuanwu:    { tip: '高耐力铁壁坦克，站稳据点用重锤震地与护盾反震拖垮敌军。', combo: 'Q 玄甲震岳 → 右键 龟盾反震 → 重击(U)' },
 };
+const MASTERY_LEVEL_XP = [0, 100, 250, 450, 700, 1000, 1400, 1900, 2500, 3200];
+const MASTERY_TITLES = [
+'初窥门径', '登堂入室', '炉火纯青', '出神入化', '一代宗师',
+'武林泰斗', '剑心通明', '天人合一', '绝世无双', '万法归宗'
+];
+const TRIAL_STEP_LABELS = {
+light: '普攻命中',
+light3: '普攻三连',
+charge: '蓄力斩',
+air: '空中攻击',
+skill: 'Q 门派技',
+skill2: 'R 特殊技',
+ult: 'E 终极奥义',
+};
+function buildComboTrials() {
+const map = {};
+if (typeof CHARS === 'undefined' || !Array.isArray(CHARS)) return map;
+for (const ch of CHARS) {
+const sk1 = (typeof SKILLS !== 'undefined' && SKILLS[ch.skill] && SKILLS[ch.skill].name) ? SKILLS[ch.skill].name.split('·')[0].trim() : 'Q 技能';
+const sk2 = (typeof SKILLS !== 'undefined' && SKILLS[ch.skill2] && SKILLS[ch.skill2].name) ? SKILLS[ch.skill2].name.split('·')[0].trim() : 'R 技能';
+const ul = (typeof ULTS !== 'undefined' && ULTS[ch.ult] && ULTS[ch.ult].name) ? ULTS[ch.ult].name.split('·')[0].trim() : 'E 奥义';
+map[ch.id] = [
+{
+id: `${ch.id}_t1`,
+heroId: ch.id,
+tier: 'basic',
+tierName: '入门',
+name: `基础起手 · 普攻接${sk1}`,
+steps: ['light', 'skill'],
+stepLabels: ['普攻命中', `Q · ${sk1}`],
+xp: 60,
+ink: 20,
+},
+{
+id: `${ch.id}_t2`,
+heroId: ch.id,
+tier: 'advanced',
+tierName: '进阶',
+name: `双技连携 · ${sk1}转${sk2}`,
+steps: ['light', 'skill', 'skill2'],
+stepLabels: ['普攻命中', `Q · ${sk1}`, `R · ${sk2}`],
+xp: 100,
+ink: 35,
+},
+{
+id: `${ch.id}_t3`,
+heroId: ch.id,
+tier: 'master',
+tierName: '宗师',
+name: `绝学收尾 · 破势接${ul}`,
+steps: ['charge', 'skill', 'ult'],
+stepLabels: ['蓄力斩', `Q · ${sk1}`, `E · ${ul}`],
+xp: 160,
+ink: 60,
+},
+];
+}
+return map;
+}
 const DIFFICULTIES = [
 {
 id: 'easy', name: '入门',
@@ -13232,7 +13372,19 @@ Object.assign(UI_COPY_EN, {
 "快结": "Sim",
 "悬念待揭": "Awaiting Champion",
 "八强连胜折桂": "Undefeated Champion",
-"三战全胜登顶": "Win 3 rounds to claim the title"
+"三战全胜登顶": "Win 3 rounds to claim the title",
+"连招试炼": "Combo Trials",
+"侠客连招试炼 · 专精历练": "Hero Combo Trials · Mastery Training",
+"专精试炼榜": "Mastery & Trials",
+"连招试炼指引": "Combo Trial Guide",
+"退出试炼": "Exit Trial",
+"试炼已达成！可继续练习或返回选择下一阶。": "Trial cleared! Keep practicing or return to pick the next tier.",
+"按顺序打出并命中招式即可完成试炼": "Execute each move in order to complete the trial",
+"试炼进度": "Trials",
+"已通关": "Cleared",
+"首通奖励": "First Clear",
+"重练": "Replay",
+"开始试炼": "Start Trial"
 });
 Object.assign(UI_COPY_EN, {
 "旧版本录的，可能对不上": "Recorded with an older version. Playback may differ.",
@@ -28011,6 +28163,7 @@ if (menuTransition === transition && M.phase === phase) show();
 function showEnd(w) {
 if (REPLAY.on) { replayEnd(w); return; }
 if (typeof statMatchEnd === 'function') statMatchEnd(w);
+if (typeof masteryRecordMatch === 'function') masteryRecordMatch(w);
 if (M.tournament && typeof tourOnMatchEnd === 'function') {
 if (REC.on) recSave(w);
 tourOnMatchEnd(w); return;
@@ -32912,6 +33065,7 @@ touchUIUpdate();
 dummyBarUpdate();
 trainInspectUpdate();
 if (typeof specHudUpdate === 'function') specHudUpdate();
+if (typeof trialTickUpdate === 'function') trialTickUpdate();
 }
 function updateCamera(dt) {
 cam.userZoom = damp(cam.userZoom || 1, cam.userZoomTarget || 1, 10, dt);
@@ -41646,7 +41800,9 @@ const rar = CHAR_RARITY[c.id] || 'rare', own = ownsHero(c.id), free = heroesFree
 const skMeta = skin && SKINS[skin], skG = skMeta && skinGrade(skin);
 const skPill = skMeta ? `<span class="pill sk-pill" style="--tc:${skG.c}">${skG.n} · ${skMeta.name}</span>` : '';
 const archLbl = HERO_ARCH_NAMES[heroArchetype(c.id)] || '武师';
-$id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill" style="color:var(--gold)">${archLbl}</span><span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar] || '160,210,255'})">${RAR_NAME[rar] || '珍品'}</span><span class="pill">${own ? '已拥有' : heroesFree() ? '限时免费' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span>${balNote(c.id) ? `<span class="pill" title="按电脑对打的胜率调过强度；招式说明里写的伤害是调整前的数">平衡 · ${balNote(c.id)}</span>` : ''}</div>`;
+const mInfo = typeof masteryInfo === 'function' ? masteryInfo(c.id) : null;
+const mStrip = mInfo ? `<div class="cx-mastery-bar"><span class="cx-m-lv">专精 Lv.${mInfo.level} · ${mInfo.title}</span><div class="cx-m-track"><i style="width:${Math.round(mInfo.progress * 100)}%"></i></div><span class="cx-m-meta">${mInfo.xp} XP · 试炼 ${mInfo.trialsDone}/${mInfo.trialsTotal}</span><button type="button" class="ghost small" data-cx-trial="${c.id}">连招试炼</button></div>` : '';
+$id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill" style="color:var(--gold)">${archLbl}</span><span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar] || '160,210,255'})">${RAR_NAME[rar] || '珍品'}</span><span class="pill">${own ? '已拥有' : heroesFree() ? '限时免费' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span>${balNote(c.id) ? `<span class="pill" title="按电脑对打的胜率调过强度；招式说明里写的伤害是调整前的数">平衡 · ${balNote(c.id)}</span>` : ''}</div>${mStrip}`;
 const skList = Object.entries(SKINS).filter(([k, v]) => v.char === c.id);
 const skScn = skMeta && SCENES[skin];
 const skDesc = skMeta ? `<span style="font-size:12px;color:var(--dim);margin-left:6px">（${skMeta.rarity === 'legend' ? '✨' : '🌟'}<span>${skMeta.rarity === 'legend' ? '专属全景天象与奥义特效' : '专属灵光天色与命中特效'}</span>）</span>` : '';
@@ -41870,6 +42026,12 @@ if ($id('codex') && $id('codex').classList.contains('on')) renderCodex();
 }
 }
 window.openCodex = openCodex;
+if ($id('cxName')) {
+$id('cxName').addEventListener('click', e => {
+const btn = e.target.closest('[data-cx-trial]');
+if (btn && typeof startComboTrial === 'function') startComboTrial(btn.dataset.cxTrial, 0);
+});
+}
 $id('cxSkins').addEventListener('click', async e => {
 const b = e.target.closest('button'); if (!b) return;
 const id = CHARS[cxIdx].id;
@@ -43078,6 +43240,215 @@ setTimeout(() => rkReveal(r), 2600);
 if (window.CloudSave) CloudSave.saveProfile(PROF);
 applyProfile(PROF);
 }
+let COMBO_TRIALS = null;
+function comboTrialsMap() {
+if (!COMBO_TRIALS || !Object.keys(COMBO_TRIALS).length) COMBO_TRIALS = buildComboTrials();
+return COMBO_TRIALS;
+}
+function heroTrials(heroId) {
+return (comboTrialsMap()[heroId] || []);
+}
+function masteryEnsureStore() {
+if (typeof PROF === 'undefined' || !PROF) return { mastery: {}, trials: {} };
+if (!PROF.mastery || typeof PROF.mastery !== 'object') PROF.mastery = {};
+if (!PROF.trials || typeof PROF.trials !== 'object') PROF.trials = {};
+return { mastery: PROF.mastery, trials: PROF.trials };
+}
+function masteryLevelForXp(xp) {
+const v = Math.max(0, Math.floor(+xp || 0));
+let lv = 1;
+for (let i = 0; i < MASTERY_LEVEL_XP.length; i++) {
+if (v >= MASTERY_LEVEL_XP[i]) lv = i + 1;
+}
+return lv;
+}
+function masteryInfo(heroId) {
+const { mastery, trials } = masteryEnsureStore();
+const rec = mastery[heroId] || { xp: 0, wins: 0, kos: 0 };
+const xp = Math.max(0, Math.floor(+rec.xp || 0));
+const level = masteryLevelForXp(xp);
+const curBase = MASTERY_LEVEL_XP[level - 1] || 0;
+const nextXp = level < MASTERY_LEVEL_XP.length ? MASTERY_LEVEL_XP[level] : MASTERY_LEVEL_XP[MASTERY_LEVEL_XP.length - 1];
+const progress = level >= MASTERY_LEVEL_XP.length ? 1 : clamp((xp - curBase) / Math.max(1, nextXp - curBase), 0, 1);
+const list = heroTrials(heroId);
+const trialsDone = list.filter(t => !!trials[t.id]).length;
+return {
+heroId,
+xp,
+level,
+title: MASTERY_TITLES[level - 1] || MASTERY_TITLES[0],
+nextXp,
+progress,
+wins: Math.max(0, Math.floor(+rec.wins || 0)),
+kos: Math.max(0, Math.floor(+rec.kos || 0)),
+trialsDone,
+trialsTotal: list.length,
+};
+}
+function masteryGrant(heroId, xpGain, opts = {}) {
+if (!heroId || !(xpGain > 0)) return null;
+const { mastery } = masteryEnsureStore();
+if (!mastery[heroId] || typeof mastery[heroId] !== 'object') mastery[heroId] = { xp: 0, wins: 0, kos: 0 };
+const rec = mastery[heroId];
+const prevLv = masteryLevelForXp(rec.xp);
+rec.xp = Math.max(0, Math.floor((+rec.xp || 0) + xpGain));
+if (opts.win) rec.wins = (+rec.wins || 0) + 1;
+if (opts.kos > 0) rec.kos = (+rec.kos || 0) + Math.floor(opts.kos);
+const nextLv = masteryLevelForXp(rec.xp);
+if (typeof saveProfile === 'function') saveProfile();
+if (nextLv > prevLv && typeof toast === 'function') {
+const ch = CHARS.find(c => c.id === heroId);
+toast(`${ch ? ch.name : heroId} 专精升至 Lv.${nextLv} · ${MASTERY_TITLES[nextLv - 1]}`);
+}
+return { prevLv, nextLv, leveledUp: nextLv > prevLv, info: masteryInfo(heroId) };
+}
+function masterySummary() {
+const { trials } = masteryEnsureStore();
+const rows = CHARS.map(c => ({ hero: c, ...masteryInfo(c.id) }));
+rows.sort((a, b) => b.level - a.level || b.xp - a.xp || b.trialsDone - a.trialsDone || a.hero.id.localeCompare(b.hero.id));
+const totalLevel = rows.reduce((s, r) => s + r.level, 0);
+const totalXp = rows.reduce((s, r) => s + r.xp, 0);
+const trialsTotal = CHARS.length * 3;
+const trialsDone = Object.keys(trials).filter(k => !!trials[k]).length;
+return { totalLevel, maxLevel: CHARS.length * MASTERY_LEVEL_XP.length, totalXp, trialsDone, trialsTotal, rows };
+}
+function masteryRecordMatch(w) {
+if (!A || !A.ch || M.mode === 'demo' || M.mode === 'train' || M.watchAi || (typeof isAiVsAi === 'function' && isAiVsAi()) || (typeof REPLAY !== 'undefined' && REPLAY.on)) return null;
+const myTeam = typeof localTeam === 'function' ? localTeam() : 0;
+const lf = typeof fighterByIdx === 'function' ? fighterByIdx(localIdx()) : A;
+if (!lf || !lf.ch) return null;
+const won = w === myTeam;
+const roundsWon = (M.wins && M.wins[myTeam]) ? M.wins[myTeam] : (won ? 1 : 0);
+const xp = (won ? 45 : 20) + roundsWon * 10;
+return masteryGrant(lf.ch.id, xp, { win: won, kos: roundsWon });
+}
+const TRIAL_RUN = { active: false, heroId: '', trial: null, stepIdx: 0, done: false, lastState: '', lastMove: '' };
+function trialHudRender() {
+const box = $id('trialHud');
+if (!box) return;
+const show = TRIAL_RUN.active && M.mode === 'train' && !(typeof currentScreen !== 'undefined' && currentScreen) && !paused;
+box.classList.toggle('hidden', !show);
+if (!show || !TRIAL_RUN.trial) return;
+const tr = TRIAL_RUN.trial;
+const ch = CHARS.find(c => c.id === tr.heroId);
+const stepsHtml = tr.steps.map((st, i) => {
+const cls = i < TRIAL_RUN.stepIdx || TRIAL_RUN.done ? 'is-done' : (i === TRIAL_RUN.stepIdx ? 'is-cur' : '');
+const lbl = (tr.stepLabels && tr.stepLabels[i]) || TRIAL_STEP_LABELS[st] || st;
+return `<span class="trial-step ${cls}">${i + 1}. ${escapeHTML(lbl)}</span>`;
+}).join('<span class="trial-arrow">→</span>');
+box.innerHTML = `<div class="trial-hud-head"><b>${escapeHTML(ch ? ch.name : tr.heroId)} · ${escapeHTML(tr.tierName)}试炼</b><span>${escapeHTML(tr.name)}</span><button type="button" class="ghost small" id="trialHudExit">${cvT('退出试炼')}</button></div><div class="trial-steps">${stepsHtml}</div><div class="trial-hud-foot">${TRIAL_RUN.done ? cvT('试炼已达成！可继续练习或返回选择下一阶。') : cvT('按顺序打出并命中招式即可完成试炼')}</div>`;
+}
+function startComboTrial(heroId, tierIdx = 0) {
+const list = heroTrials(heroId);
+const trial = list[tierIdx] || list[0];
+if (!trial) return false;
+const ci = CHARS.findIndex(c => c.id === heroId);
+if (ci < 0) return false;
+trainChar = ci;
+trainOppMode = 'dummy';
+Object.assign(dummyCfg, { act: 'stand', fixed: false, escape: false, infGuard: true, autoHeal: true });
+startTraining('dummy', false);
+if (trial.tier === 'master' && A) A.meter = 100;
+Object.assign(TRIAL_RUN, { active: true, heroId, trial, stepIdx: 0, done: false, lastState: '', lastMove: '' });
+trialHudRender();
+say(`${CHARS[ci].name} · ${trial.name}`, 1.8);
+return true;
+}
+function trialStop() {
+TRIAL_RUN.active = false;
+TRIAL_RUN.trial = null;
+TRIAL_RUN.stepIdx = 0;
+TRIAL_RUN.done = false;
+const box = $id('trialHud');
+if (box) box.classList.add('hidden');
+}
+function trialRecordAction(fighter, tag) {
+if (!TRIAL_RUN.active || TRIAL_RUN.done || !TRIAL_RUN.trial || fighter !== A) return false;
+const need = TRIAL_RUN.trial.steps[TRIAL_RUN.stepIdx];
+if (!need) return false;
+const match = (tag === need) || (need === 'light' && (tag === 'light' || tag === 'light3'));
+if (!match) return false;
+TRIAL_RUN.stepIdx++;
+if (typeof SFX !== 'undefined' && SFX.slice) SFX.slice();
+if (TRIAL_RUN.stepIdx >= TRIAL_RUN.trial.steps.length) {
+TRIAL_RUN.done = true;
+const { trials } = masteryEnsureStore();
+const firstClear = !trials[TRIAL_RUN.trial.id];
+trials[TRIAL_RUN.trial.id] = true;
+if (firstClear) {
+masteryGrant(TRIAL_RUN.heroId, TRIAL_RUN.trial.xp, {});
+if (typeof PROF !== 'undefined') {
+PROF.ink = (PROF.ink || 0) + TRIAL_RUN.trial.ink;
+if (typeof saveProfile === 'function') saveProfile();
+}
+if (typeof toast === 'function') toast(`连招试炼完成！专精 +${TRIAL_RUN.trial.xp} XP · 墨锭 +${TRIAL_RUN.trial.ink}`);
+} else if (typeof toast === 'function') {
+toast('连招试炼达成！');
+}
+if (typeof say === 'function') say('连招试炼达成！', 1.6);
+renderComboTrialsPane();
+}
+trialHudRender();
+return true;
+}
+function trialTickUpdate() {
+if (!TRIAL_RUN.active || M.mode !== 'train' || !A) {
+if ($id('trialHud') && !$id('trialHud').classList.contains('hidden')) $id('trialHud').classList.add('hidden');
+return;
+}
+const st = A.state || '';
+const mv = A.moveName || A.skill || A.sp || '';
+if (st !== TRIAL_RUN.lastState || mv !== TRIAL_RUN.lastMove) {
+TRIAL_RUN.lastState = st;
+TRIAL_RUN.lastMove = mv;
+if (st === 'attack') {
+if (mv === 'cs1' || mv === 'cs2') trialRecordAction(A, 'charge');
+else if (mv === 'a1' || mv === 'a2') trialRecordAction(A, 'air');
+else trialRecordAction(A, 'light');
+} else if (st === 'skill') {
+trialRecordAction(A, mv === A.ch.skill2 ? 'skill2' : 'skill');
+} else if (st === 'special') {
+trialRecordAction(A, 'ult');
+}
+}
+trialHudRender();
+}
+function renderComboTrialsPane() {
+const listEl = $id('trialList'), headEl = $id('trialHeroHead');
+if (!listEl) return;
+const ci = typeof menuHeroPick === 'function' ? menuHeroPick() : (trainChar || 0);
+const ch = CHARS[ci] || CHARS[0];
+const info = masteryInfo(ch.id);
+const { trials } = masteryEnsureStore();
+if (headEl) {
+headEl.innerHTML = `<b>${escapeHTML(ch.name)} · Lv.${info.level} ${escapeHTML(info.title)}</b><span>${cvT('试炼进度')} ${info.trialsDone}/${info.trialsTotal} · ${info.xp} XP</span>`;
+}
+const items = heroTrials(ch.id);
+listEl.innerHTML = items.map((tr, idx) => {
+const done = !!trials[tr.id];
+const stepsTxt = (tr.stepLabels || tr.steps).join(' → ');
+return `<div class="trial-card${done ? ' is-done' : ''}">
+<div class="trial-card-info">
+<div class="trial-card-top"><span class="trial-tier t-${tr.tier}">${escapeHTML(tr.tierName)}</span><b>${escapeHTML(tr.name)}</b>${done ? `<span class="trial-clear-tag">${cvT('已通关')}</span>` : ''}</div>
+<div class="trial-card-steps">${escapeHTML(stepsTxt)}</div>
+<div class="trial-card-rew">${cvT('首通奖励')}：+${tr.xp} XP · +${tr.ink} ${cvT('墨锭')}</div>
+</div>
+<button type="button" class="${done ? 'ghost' : 'go'} small" data-trial-hero="${ch.id}" data-trial-idx="${idx}">${cvT(done ? '重练' : '开始试炼')}</button>
+</div>`;
+}).join('');
+}
+if ($id('trialList')) {
+$id('trialList').addEventListener('click', e => {
+const b = e.target.closest('[data-trial-hero]');
+if (!b) return;
+startComboTrial(b.dataset.trialHero, +b.dataset.trialIdx || 0);
+});
+}
+if ($id('trialHud')) {
+$id('trialHud').addEventListener('click', e => {
+if (e.target.closest('#trialHudExit')) { trialStop(); }
+});
+}
 const ROLL = { on: false, F: 0, D: 3, N: 240, MAXP: 40, snaps: [], loc: [], rem: [], used: [], remChg: {}, remLast: -1,
 lastRemH: 0, lastSentH: 0, locMax: -1, pend: Infinity, out: [], peerAdv: 0, skipT: 0, stall: 0, ckOut: null, ended: false,
 rollbacks: 0, rbFrames: 0, desyncs: 0, ctrls: null };
@@ -43769,6 +44140,7 @@ tab.setAttribute('aria-selected', String(selected));
 tab.tabIndex = selected ? 0 : -1;
 }
 for (const pane of panes) pane.hidden = pane.dataset.trainingPane !== name;
+if (name === 'trials' && typeof renderComboTrialsPane === 'function') renderComboTrialsPane();
 if ($id('aiLvHome') && currentSingleTab === 'train') $id('aiLvHome').hidden = name !== 'watch';
 }
 if ($id('xiwuTrainingTabs')) {
@@ -54485,7 +54857,20 @@ $id('lbState').innerHTML = state; $id('lbTable').innerHTML = rows;
 async function openLeaderboard() {
 menuCam.tz = 1.35; showScreen('lb');
 const tok = ++lbTok, kind = lbKind;
-for (const b of $id('lbTabs').children) b.classList.toggle('sel', b.dataset.k === kind);
+for (const b of (($id('lbTabs') && $id('lbTabs').children) || [])) b.classList.toggle('sel', b.dataset.k === kind);
+const sTag = $id('lbSeasonTag');
+if (sTag && typeof rkSeason === 'function') {
+const s = rkSeason();
+sTag.textContent = `${s.name}${typeof SEASON !== 'undefined' && SEASON.span ? ' · ' + SEASON.span : ''}`;
+}
+if (kind === 'mastery') {
+if (typeof masterySummary !== 'function') { lbShow('', uiState('empty', '专精数据尚未加载'), ''); return; }
+const sum = masterySummary();
+lbShow(`本机二十侠客专精总览：总专精 ${sum.totalLevel}/${sum.maxLevel} · 连招试炼 ${sum.trialsDone}/${sum.trialsTotal} · 零云端写入`, '',
+'<tr><th>名次</th><th>侠客</th><th>专精等级</th><th class="n">专精经验</th><th class="n">连招试炼</th></tr>' + sum.rows.map((r, i) =>
+`<tr class="${i < 3 ? 'top' + (i + 1) : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.hero.name)}</td><td>Lv.${r.level} · ${escapeHTML(r.title)}</td><td class="n">${r.xp}</td><td class="n">${r.trialsDone}/${r.trialsTotal}</td></tr>`).join(''));
+return;
+}
 lbShow('', uiState('loading', '正在读取排行榜…'), '');
 const fail = err => { if (tok === lbTok) lbShow('', uiState('error', (err && err.message) || '排行榜暂时读不到，稍后再试'), ''); };
 if (kind === 'rank') {

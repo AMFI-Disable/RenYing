@@ -560,6 +560,7 @@ window.RYBoot = (function () {
         </div>
         <div class="xiwu-training-tabs" id="xiwuTrainingTabs" role="tablist" aria-label="训练项目">
           <button type="button" role="tab" id="xiwuTabLesson" aria-controls="xiwuPaneLesson" aria-selected="true" class="sel" data-training-tab="lesson">招式教学</button>
+          <button type="button" role="tab" id="xiwuTabTrials" aria-controls="xiwuPaneTrials" aria-selected="false" data-training-tab="trials">连招试炼</button>
           <button type="button" role="tab" id="xiwuTabFree" aria-controls="xiwuPaneFree" aria-selected="false" data-training-tab="free">自由训练</button>
           <button type="button" role="tab" id="xiwuTabScenario" aria-controls="xiwuPaneScenario" aria-selected="false" data-training-tab="scenario">情景训练</button>
           <button type="button" role="tab" id="xiwuTabMatch" aria-controls="xiwuPaneMatch" aria-selected="false" data-training-tab="match">实战演练</button>
@@ -570,6 +571,11 @@ window.RYBoot = (function () {
             <h4>招式教学</h4>
             <p>跟随步骤练习移动、连招、门派技能、格挡、精准招架、腾空闪与奥义。</p>
             <button class="go small" id="xiwuFullTutBtn" type="button">开始完整教学</button>
+          </section>
+          <section class="xiwu-training-card" id="xiwuPaneTrials" role="tabpanel" aria-labelledby="xiwuTabTrials" data-training-pane="trials" hidden>
+            <h4>侠客连招试炼 · 专精历练</h4>
+            <div class="trial-hero-head" id="trialHeroHead"></div>
+            <div class="trial-list" id="trialList"></div>
           </section>
           <section class="xiwu-training-card" id="xiwuPaneFree" role="tabpanel" aria-labelledby="xiwuTabFree" data-training-pane="free" hidden>
             <h4>自由训练 · 木人桩与 AI 实战对练</h4>
@@ -1270,8 +1276,8 @@ window.RYBoot = (function () {
 
   <div id="lb" class="scr">
     <div class="panel">
-      <h2>排行榜</h2>
-      <div class="seg" id="lbTabs"><button data-k="rank" class="sel">段位榜</button><button data-k="wins">战绩榜</button></div>
+      <div class="lb-head-row"><h2>排行榜</h2><span class="season-tag" id="lbSeasonTag"></span></div>
+      <div class="seg" id="lbTabs"><button data-k="rank" class="sel">段位榜</button><button data-k="wins">战绩榜</button><button data-k="mastery">专精试炼榜</button></div>
       <p class="sub" id="lbSub"></p>
       <div class="lbwrap"><div id="lbState"></div><table class="lbt" id="lbTable"></table></div>
       <div class="row"><button class="ghost" id="lbBack">返回</button></div>
@@ -1689,6 +1695,7 @@ window.RYBoot = (function () {
   </div>
 </div>
 
+<div id="trialHud" class="trial-hud hidden" aria-label="连招试炼指引"></div>
 <div id="specHud" class="spec-hud hidden" aria-label="实时观战面板">
   <div class="spec-row">
     <span class="spec-live-badge">LIVE</span>

@@ -64,7 +64,9 @@ function renderCodex() {
   const skMeta = skin && SKINS[skin], skG = skMeta && skinGrade(skin);
   const skPill = skMeta ? `<span class="pill sk-pill" style="--tc:${skG.c}">${skG.n} · ${skMeta.name}</span>` : '';
   const archLbl = HERO_ARCH_NAMES[heroArchetype(c.id)] || '武师';
-  $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill" style="color:var(--gold)">${archLbl}</span><span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar] || '160,210,255'})">${RAR_NAME[rar] || '珍品'}</span><span class="pill">${own ? '已拥有' : heroesFree() ? '限时免费' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span>${balNote(c.id) ? `<span class="pill" title="按电脑对打的胜率调过强度；招式说明里写的伤害是调整前的数">平衡 · ${balNote(c.id)}</span>` : ''}</div>`;
+  const mInfo = typeof masteryInfo === 'function' ? masteryInfo(c.id) : null;
+  const mStrip = mInfo ? `<div class="cx-mastery-bar"><span class="cx-m-lv">专精 Lv.${mInfo.level} · ${mInfo.title}</span><div class="cx-m-track"><i style="width:${Math.round(mInfo.progress * 100)}%"></i></div><span class="cx-m-meta">${mInfo.xp} XP · 试炼 ${mInfo.trialsDone}/${mInfo.trialsTotal}</span><button type="button" class="ghost small" data-cx-trial="${c.id}">连招试炼</button></div>` : '';
+  $id('cxName').innerHTML = `<div class="nm" style="color:${col}">${c.name}</div><div class="pills">${skPill}<span class="pill" style="color:var(--gold)">${archLbl}</span><span class="pill">${c.role}</span><span class="pill" style="color:rgb(${RAR_RGB[rar] || '160,210,255'})">${RAR_NAME[rar] || '珍品'}</span><span class="pill">${own ? '已拥有' : heroesFree() ? '限时免费' : free ? '本周限免' : '未拥有'}</span><span class="pill">难度 ${'●'.repeat(c.diff)}${'○'.repeat(3 - c.diff)}</span>${balNote(c.id) ? `<span class="pill" title="按电脑对打的胜率调过强度；招式说明里写的伤害是调整前的数">平衡 · ${balNote(c.id)}</span>` : ''}</div>${mStrip}`;
   const skList = Object.entries(SKINS).filter(([k, v]) => v.char === c.id);
   const skScn = skMeta && SCENES[skin];
   const skDesc = skMeta ? `<span style="font-size:12px;color:var(--dim);margin-left:6px">（${skMeta.rarity === 'legend' ? '✨' : '🌟'}<span>${skMeta.rarity === 'legend' ? '专属全景天象与奥义特效' : '专属灵光天色与命中特效'}</span>）</span>` : '';
@@ -296,6 +298,12 @@ function openCodex() {
   }
 }
 window.openCodex = openCodex;
+if ($id('cxName')) {
+  $id('cxName').addEventListener('click', e => {
+    const btn = e.target.closest('[data-cx-trial]');
+    if (btn && typeof startComboTrial === 'function') startComboTrial(btn.dataset.cxTrial, 0);
+  });
+}
 $id('cxSkins').addEventListener('click', async e => {
   const b = e.target.closest('button'); if (!b) return;
   const id = CHARS[cxIdx].id;

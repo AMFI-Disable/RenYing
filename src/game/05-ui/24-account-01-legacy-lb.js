@@ -257,7 +257,20 @@ function lbShow(sub, state, rows) {
 async function openLeaderboard() {
   menuCam.tz = 1.35; showScreen('lb');
   const tok = ++lbTok, kind = lbKind;
-  for (const b of $id('lbTabs').children) b.classList.toggle('sel', b.dataset.k === kind);
+  for (const b of (($id('lbTabs') && $id('lbTabs').children) || [])) b.classList.toggle('sel', b.dataset.k === kind);
+  const sTag = $id('lbSeasonTag');
+  if (sTag && typeof rkSeason === 'function') {
+    const s = rkSeason();
+    sTag.textContent = `${s.name}${typeof SEASON !== 'undefined' && SEASON.span ? ' · ' + SEASON.span : ''}`;
+  }
+  if (kind === 'mastery') {
+    if (typeof masterySummary !== 'function') { lbShow('', uiState('empty', '专精数据尚未加载'), ''); return; }
+    const sum = masterySummary();
+    lbShow(`本机二十侠客专精总览：总专精 ${sum.totalLevel}/${sum.maxLevel} · 连招试炼 ${sum.trialsDone}/${sum.trialsTotal} · 零云端写入`, '',
+      '<tr><th>名次</th><th>侠客</th><th>专精等级</th><th class="n">专精经验</th><th class="n">连招试炼</th></tr>' + sum.rows.map((r, i) =>
+      `<tr class="${i < 3 ? 'top' + (i + 1) : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.hero.name)}</td><td>Lv.${r.level} · ${escapeHTML(r.title)}</td><td class="n">${r.xp}</td><td class="n">${r.trialsDone}/${r.trialsTotal}</td></tr>`).join(''));
+    return;
+  }
   lbShow('', uiState('loading', '正在读取排行榜…'), '');
   const fail = err => { if (tok === lbTok) lbShow('', uiState('error', (err && err.message) || '排行榜暂时读不到，稍后再试'), ''); };
   if (kind === 'rank') {

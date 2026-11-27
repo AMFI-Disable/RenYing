@@ -432,5 +432,17 @@ Object.assign(UI_COPY_EN, {
   "快结": "Sim",
   "悬念待揭": "Awaiting Champion",
   "八强连胜折桂": "Undefeated Champion",
-  "三战全胜登顶": "Win 3 rounds to claim the title"
+  "三战全胜登顶": "Win 3 rounds to claim the title",
+  "连招试炼": "Combo Trials",
+  "侠客连招试炼 · 专精历练": "Hero Combo Trials · Mastery Training",
+  "专精试炼榜": "Mastery & Trials",
+  "连招试炼指引": "Combo Trial Guide",
+  "退出试炼": "Exit Trial",
+  "试炼已达成！可继续练习或返回选择下一阶。": "Trial cleared! Keep practicing or return to pick the next tier.",
+  "按顺序打出并命中招式即可完成试炼": "Execute each move in order to complete the trial",
+  "试炼进度": "Trials",
+  "已通关": "Cleared",
+  "首通奖励": "First Clear",
+  "重练": "Replay",
+  "开始试炼": "Start Trial"
 });

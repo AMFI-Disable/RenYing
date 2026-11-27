@@ -110,6 +110,7 @@ function frameBody(now) {
   dummyBarUpdate();
   trainInspectUpdate();
   if (typeof specHudUpdate === 'function') specHudUpdate();
+  if (typeof trialTickUpdate === 'function') trialTickUpdate();
 }
 function updateCamera(dt) {
   cam.userZoom = damp(cam.userZoom || 1, cam.userZoomTarget || 1, 10, dt);

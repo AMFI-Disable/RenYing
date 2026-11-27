@@ -1474,3 +1474,79 @@
   .tour-tree { grid-template-columns: 1fr; }
 }
 
+/* Hero Combo Trials, Mastery Tracks & Seasonal Leaderboard (#57) */
+.trial-hero-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  background: rgba(233, 196, 106, 0.1);
+  border: 1px solid rgba(233, 196, 106, 0.28);
+  font-size: 13px;
+}
+.trial-list { display: flex; flex-direction: column; gap: 8px; }
+.trial-card {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  background: rgba(15, 22, 36, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: left;
+}
+.trial-card.is-done { border-color: rgba(74, 222, 128, 0.45); }
+.trial-card-top { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; font-size: 13px; }
+.trial-tier { padding: 1px 6px; border-radius: 4px; font-size: 11px; font-weight: 700; }
+.trial-tier.t-basic { background: rgba(111, 224, 255, 0.18); color: #6fe0ff; }
+.trial-tier.t-advanced { background: rgba(233, 196, 106, 0.2); color: #e9c46a; }
+.trial-tier.t-master { background: rgba(217, 166, 255, 0.2); color: #d9a6ff; }
+.trial-clear-tag { font-size: 11px; color: #86efac; }
+.trial-card-steps { font-size: 12px; color: rgba(239, 232, 216, 0.85); margin-top: 3px; }
+.trial-card-rew { font-size: 11px; color: rgba(239, 232, 216, 0.62); margin-top: 2px; }
+.trial-hud {
+  position: fixed;
+  left: 50%;
+  top: 12px;
+  transform: translateX(-50%);
+  z-index: 41;
+  padding: 8px 14px;
+  border-radius: 10px;
+  background: rgba(10, 14, 24, 0.86);
+  border: 1px solid rgba(233, 196, 106, 0.4);
+  color: #efe8d8;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 300px;
+  max-width: min(92vw, 620px);
+}
+.trial-hud-head { display: flex; align-items: center; gap: 8px; justify-content: space-between; font-size: 12.5px; }
+.trial-steps { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.trial-step { padding: 3px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.08); font-size: 12px; }
+.trial-step.is-cur { border: 1px solid #e9c46a; background: rgba(233, 196, 106, 0.2); color: #fbefcf; }
+.trial-step.is-done { background: rgba(74, 222, 128, 0.2); color: #86efac; }
+.trial-arrow { opacity: 0.5; font-size: 12px; }
+.trial-hud-foot { font-size: 11px; color: rgba(239, 232, 216, 0.72); }
+.cx-mastery-bar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  padding: 6px 10px;
+  border-radius: 8px;
+  background: rgba(233, 196, 106, 0.08);
+  border: 1px solid rgba(233, 196, 106, 0.24);
+  font-size: 12px;
+  flex-wrap: wrap;
+}
+.cx-m-lv { color: var(--gold); font-weight: 700; }
+.cx-m-track { flex: 1; min-width: 80px; height: 6px; border-radius: 999px; background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.cx-m-track i { display: block; height: 100%; background: linear-gradient(90deg, #b5282d, #e9c46a); }
+.cx-m-meta { font-size: 11.5px; color: rgba(239, 232, 216, 0.78); font-variant-numeric: tabular-nums; }
+.lb-head-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+
