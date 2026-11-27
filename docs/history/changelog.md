@@ -6,6 +6,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+- Translated the missing Qing Luan and Xuan Wu skill names in English match advice.
+
 - Raised the Codex mastery progress text to the 12 px minimum and made layout failures print every undersized label.
 
 - Added bilingual contributor navigation and updated feedback templates.
