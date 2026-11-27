@@ -6,6 +6,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+- Reset airborne recovery between rounds so a previous escape cannot affect the next round.
+
 - Allowed long key binding labels to wrap in Settings so the full action name remains readable.
 
 ## [1.2.0] - 2026-11-27

@@ -327,7 +327,9 @@ export default [
       if (B.invul > 0) return fail('Team-fight launch protection must not raise the shared invulnerability');
       if (aiInv(B, D) !== 0 || !(aiInv(B, A) > 1)) return fail('CPU fighters should see per-attacker invulnerability');
       // 浮空连击上限：一个人 3 下，两个人 4 下
-      B.reset(1200); B.hitGuard = {}; B.juggle = 0; B.jugBy = [];
+      B.airRecover = true;
+      B.reset(1200);
+      if (B.airRecover) return fail("Fighter reset retained the previous air recovery");
       const air = a => { B.state = 'launched'; B.y = -120; B.plat = -1; B.invul = 0; applyHit(a, B, { dmg: 5, kb: [50, -300], stun: 0.3, hs: 0.02 }, [B.x, B.y - 40]); return B.airRecover; };
       air(A); air(C); air(A);
       if (B.airRecover) return fail('Two attackers should get a 4th juggle hit before the escape');
