@@ -1197,17 +1197,24 @@
           const pv = progAdopt(u.uid, res.prog, local);
           if (pv) progPut(merged, pv);
 
+          let hasDirty = false;
+          try { hasDirty = !!localStorage.getItem(dirtyKey()); } catch (e) {}
+
           if (res.ledger) {
-            // 对齐墨锭账本
+            // 对齐墨锭账本：仅在存在未同步的本机脏标记时补记差额，避免服务器封顶或跨设备消费后每次启动重复上传 (O2)
             ledgerLoad(u.uid);
-            if (LEDGER.s === null) { LEDGER.s = res.ledger.ink; LEDGER.v = -1; }
-            if (local && local.ink) ledgerNote(u.uid, local.ink);
+            if (LEDGER.s === null) {
+              LEDGER.s = res.ledger.ink; LEDGER.v = -1;
+              if (hasDirty && local && Number.isFinite(+local.ink) && local.ink > res.ledger.ink) ledgerNote(u.uid, local.ink);
+            } else if (hasDirty && LEDGER.un.length === 0 && local && Number.isFinite(+local.ink)) {
+              ledgerNote(u.uid, local.ink);
+            }
             adoptProfile(u.uid, merged, res.ledger);
           }
 
           // 合并后和云端那份不一样（本机多了角色、皮肤、关卡星、列传、碎片……），或者还有没报上去的墨锭，就补传
-          const localChanged = !!local && progressKey(merged) !== progressKey(cloudData) ||
-            (res.ledger ? LEDGER.un.length > 0 : (merged.ink || 0) > (cloudData.ink || 0));
+          const localChanged = (!!local && progressKey(merged) !== progressKey(cloudData)) ||
+            (res.ledger ? LEDGER.un.length > 0 : (hasDirty && (merged.ink || 0) > (cloudData.ink || 0)));
 
           try {
             localStorage.removeItem(dirtyKey());

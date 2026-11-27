@@ -208,6 +208,19 @@ const quietBefore = worker.posts.length;
 await CloudSave.loadProfile();
 await sleep(1200);
 ok(worker.posts.length === quietBefore, 'no write when nothing changed', worker.posts.length - quietBefore);
+
+// O2 regression: stale higher local ink with no dirty marker (e.g. server daily cap or spend on another device) must not trigger a boot upload
+const staleInkProf = JSON.parse(store.get('renying-prof-' + carolUid));
+staleInkProf.ink = (staleInkProf.ink || 0) + 500;
+store.set('renying-prof-' + carolUid, JSON.stringify(staleInkProf));
+store.delete('renying-sync-dirty-' + carolUid);
+const o2Before = worker.posts.length;
+const o2Loaded = await CloudSave.loadProfile();
+await sleep(1200);
+ok(worker.posts.length === o2Before, 'O2: stale higher local ink without dirty marker does not re-upload on boot', worker.posts.length - o2Before);
+ok(o2Loaded && o2Loaded.ink === 131, 'O2: loaded profile snaps ink to authoritative server ledger', o2Loaded && o2Loaded.ink);
+ok(CloudSave.getSyncState().state === 'ok', 'O2: sync state remains ok after clean boot', CloudSave.getSyncState().state);
+
 const offlineStars = JSON.parse(store.get('renying-prof-' + carolUid));
 offlineStars.stageStars = { ...offlineStars.stageStars, s3: 1 };
 store.set('renying-prof-' + carolUid, JSON.stringify(offlineStars));

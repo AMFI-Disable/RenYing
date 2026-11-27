@@ -7923,14 +7923,20 @@ local = JSON.parse(localStorage.getItem('renying-prof-' + u.uid) || 'null');
 const merged = mergeProfiles(local, cloudData);
 const pv = progAdopt(u.uid, res.prog, local);
 if (pv) progPut(merged, pv);
+let hasDirty = false;
+try { hasDirty = !!localStorage.getItem(dirtyKey()); } catch (e) {}
 if (res.ledger) {
 ledgerLoad(u.uid);
-if (LEDGER.s === null) { LEDGER.s = res.ledger.ink; LEDGER.v = -1; }
-if (local && local.ink) ledgerNote(u.uid, local.ink);
+if (LEDGER.s === null) {
+LEDGER.s = res.ledger.ink; LEDGER.v = -1;
+if (hasDirty && local && Number.isFinite(+local.ink) && local.ink > res.ledger.ink) ledgerNote(u.uid, local.ink);
+} else if (hasDirty && LEDGER.un.length === 0 && local && Number.isFinite(+local.ink)) {
+ledgerNote(u.uid, local.ink);
+}
 adoptProfile(u.uid, merged, res.ledger);
 }
-const localChanged = !!local && progressKey(merged) !== progressKey(cloudData) ||
-(res.ledger ? LEDGER.un.length > 0 : (merged.ink || 0) > (cloudData.ink || 0));
+const localChanged = (!!local && progressKey(merged) !== progressKey(cloudData)) ||
+(res.ledger ? LEDGER.un.length > 0 : (hasDirty && (merged.ink || 0) > (cloudData.ink || 0)));
 try {
 localStorage.removeItem(dirtyKey());
 localStorage.setItem(profKey(u.uid), JSON.stringify(merged));
@@ -16516,7 +16522,7 @@ localStorage.setItem('renying-settings', JSON.stringify(SETTINGS));
 if (SETTINGS.lang) localStorage.setItem('renying-lang', SETTINGS.lang);
 } catch (e) {}
 }
-const VERSION = '1.0.12';        // 每次更新改一下，联机时双方版本必须一样
+const VERSION = '1.1.0';         // 每次更新改一下，联机时双方版本必须一样
 const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用
 const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上加全服排行榜

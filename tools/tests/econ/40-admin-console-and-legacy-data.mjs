@@ -45,8 +45,13 @@ section('管理后台的查询：总览、找号、操作记录、饰品目录')
     const ps = await adm('GET', '/api/admin/playstats?days=7');
     const y = ps.rows.find(r => r.day === day - 1), t = ps.rows.find(r => r.day === day);
     ok(ps.ok && ps.rows.length === 7 && y.fresh === 1 && y.back1 === 1 && y.back7 === null && t.players >= 2 && t.ev['m:cpu'] === 2 && t.ev['out:cpu:w'] === 1 && t.ev['h:qingfeng:w'] === 1 && t.ev['map:ice:l'] === 1 && t.back1 === null && !!vid, '管理网页游玩统计：人数、留存、模式结果及侠客地图结果', { y, t });
+    T += 61e3;   // 新的一分钟窗口，并临时放宽 D1_SHIELD 每分钟遥测预算以单独验证单 IP 每小时 120 次限速
+    const prevBudget = ENV.D1_TELEMETRY_BUDGET_PER_MIN;
+    ENV.D1_TELEMETRY_BUDGET_PER_MIN = 300;
     let kept = 0;
     for (let i = 0; i < 125; i++) if ((await call('POST', '/api/stats', { vid: 'statsflood0000001', ev: ['open'] }, null, '9.9.9.2')).kept) kept++;
+    if (prevBudget === undefined) delete ENV.D1_TELEMETRY_BUDGET_PER_MIN;
+    else ENV.D1_TELEMETRY_BUDGET_PER_MIN = prevBudget;
     ok(kept === 120, '匿名统计：同一个 IP 一小时最多记 120 次', kept);
   }
 

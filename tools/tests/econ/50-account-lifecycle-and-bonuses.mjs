@@ -233,9 +233,9 @@ section('数据库迁移：cloudflare/migrations/ 按编号跑，记在 schema_m
   d2.exec(`INSERT INTO users (id, username, password_hash, salt, profile_json, created_at, updated_at) VALUES ('u_old1', 'oldtimer', 'h', 's', '{"name":"oldtimer"}', 1, 2);
     INSERT INTO sessions (token, user_id, created_at, expires_at) VALUES ('${'a'.repeat(64)}', 'u_old1', ${T}, ${T + 86400e3});
     INSERT INTO econ (uid, state_json, srv_json, ink, ver, updated_at) VALUES ('u_old1', '{"v":1}', '{}', 1234, 7, 3), ('u_neg', '{}', '{}', -5, 1, 3);
-    INSERT INTO mkt (id, seller, k, st, item_json, price, at, state, buyer, done_at, paid, tx) VALUES ('mk1', 'u_old1', 'qf_p1', -1, '{"i":1}', 50, 4, 0, NULL, NULL, 0, 't1'), ('mk2', 'u_old1', 'qf_p1', 3, '{"i":2}', 80, 5, 1, 'u_x', 6, 1, 't2'), ('mk3', 'u_old1', 'qf_p1', -1, '{"i":3}', 80, 5, 9, NULL, NULL, 2, NULL);
+    INSERT INTO mkt (id, seller, k, st, item_json, price, at, state, buyer, done_at, paid, tx) VALUES ('mk1', 'u_old1', 'qf_p1', -1, '{"i":1}', 50, ${T}, 0, NULL, NULL, 0, 't1'), ('mk2', 'u_old1', 'qf_p1', 3, '{"i":2}', 80, ${T}, 1, 'u_x', ${T}, 1, 't2'), ('mk3', 'u_old1', 'qf_p1', -1, '{"i":3}', 80, ${T}, 9, NULL, NULL, 2, NULL);
     INSERT INTO sanctions (uid, strikes, ban_until, perm, log_json, at, pardon) VALUES ('u_old1', 2, 99, 0, '[{"r":"x"}]', 8, 0);
-    INSERT INTO econ_log (uid, at, act, ok, detail) VALUES ('u_old1', 9, 'sync', 1, '{}');`);
+    INSERT INTO econ_log (uid, at, act, ok, detail) VALUES ('u_old1', ${T}, 'sync', 1, '{}');`);
   const before2 = { econ: d2.prepare("SELECT * FROM econ WHERE uid = 'u_old1'").get(), mkt: d2.prepare("SELECT * FROM mkt WHERE id IN ('mk1', 'mk2') ORDER BY id").all(), sanc: d2.prepare('SELECT * FROM sanctions').all(), log: d2.prepare('SELECT * FROM econ_log').all(), users: d2.prepare('SELECT * FROM users').all() };
   const rnd = Math.random; Math.random = () => 0.5;   // 2% 的请求会顺手清理过期的流水和挂单，这里的老数据时间戳很早，别让它被清掉
   const r2 = await hit1(await fresh(), e2, '6.6.6.2').finally(() => { Math.random = rnd; });

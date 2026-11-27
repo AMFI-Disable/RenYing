@@ -6,6 +6,12 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-11-27
+
+### Fixed
+
+- **Boot Profile Re-Upload Prevention (`O2`) & Release Alignment (`src/cloud.js`, `src/game/01-engine/01-core.js`, `tools/tests/cloud-test.mjs`, `tools/tests/world-test.mjs`, `docs/bugs/bug-status.md`, `docs/history/version-history.md`, `docs/wiki/version-history.md`, `docs/project/codebase-and-heroes.md`, `readme.md`, `readme.zh-cn.md`)**: updated `loadProfile()` in `src/cloud.js` to check `dirtyKey()` before calling `ledgerNote()`, preventing redundant `POST /api/profile` uploads on clean boot when local ink exceeds the authoritative server ledger (such as after daily allowance capping or cross-device Armory spending) while preserving offline progress upload; added O2 regression coverage in `tools/tests/cloud-test.mjs`; bumped `VERSION` to `1.1.0`; and refreshed release documentation, README badges, bug board, and architecture maps to reflect the Cloudflare Worker + D1 + PeerJS stack and 20-hero roster. No Worker change.
+
 - Translated the missing Qing Luan and Xuan Wu skill names in English match advice.
 
 - Raised the Codex mastery progress text to the 12 px minimum and made layout failures print every undersized label.

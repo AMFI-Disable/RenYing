@@ -12,9 +12,9 @@
 
 | | Critical | High | Medium | Low | Total |
 | :--- | ---: | ---: | ---: | ---: | ---: |
-| **Fixed on this branch** | 1 | 3 | 2 | 1 | **7** |
-| **Superseded upstream** | 2 | 4 | 1 | 0 | **7** |
-| **Still open** | 0 | 0 | 2 | 2 | **4** |
+| **Fixed (through v1.1.0)** | 1 | 3 | 4 | 3 | **11** |
+| **Superseded by Worker rewrite** | 2 | 4 | 1 | 0 | **7** |
+| **Still open** | 0 | 0 | 0 | 0 | **0** |
 
 Two rounds of work landed here. The first shipped against the old Firestore client and was merged as PR #2; when
 main's history was replaced by a single commit with the Worker rewrite, that work was re-applied to the new code
@@ -103,82 +103,38 @@ longer exists. They are kept here so the history is not rewritten.
 
 ---
 
-## 4. Still Open
+## 4. Resolved Follow-Up Items (O1 To O5)
 
-### 4.1 Medium
+All four previously open follow-up items (`O1`–`O4`) and the combat flake (`O5`) are resolved on `main` as of `v1.1.0`:
 
-**O1 — A full-backup import switches the active account without saying so.**
-`importAccountData()` writes `renying-local-current` and sets `currentUser` for the account it imports, so restoring
-a backup silently signs the player into it. The single-account branch the UI uses does the same. It is arguably the
-intended "restore" behaviour, but it is not announced: the toast says the account was restored, not that the
-session changed. Needs a decision — either an explicit "switch to this account?" prompt or a line in the toast.
-
-**O2 — `loadProfile()` re-uploads once per boot when local ink exceeds the cloud's.**
-`localChanged` compares the merged profile against the cloud copy, and `mergeProfiles()` takes the maximum ink, so
-any local gain triggers a delayed `saveProfile()` on every load. Usually harmless (the server recomputes ink from
-the ledger), but it is one extra write per app start and could keep a "pending" dot on screen. Not fixed because
-the correct rule depends on how the ledger's `owed` accounting is meant to settle.
-
-### 4.2 Low
-
-**O3 — A `weak` (v1) backup is accepted silently.**
-The import note is attached to the returned profile (`_importNote`) but the UI does not display it yet. The
-information is now available; surfacing it is a two-line change in the import handler.
-
-**O4 — `mergeProfiles()` takes the maximum of `netWins` / `netLosses`.**
-Correct for "never lose progress", wrong for a loss that only exists on one side: merging two devices can raise the
-loss count without a corresponding win. The rating path is server-owned, so this only affects the displayed record.
-
-**Fixed during this pass — the combat suite flake (was O5).**
-`tools/tests/combat-test.mjs --sim` used to fail intermittently on "2v2 Single KO Survival: Surviving teammate did not
-receive last stand meter buff" (reproduced 2/3 runs on `903dfaa`, so it predates this branch). It was a test bug
-with two causes, both now fixed, and the suite passes 10/10 consecutive runs:
-
-- `M.flags['buff_<idx>']` is per-match state, so the first mode that triggered the buff left the flag set and the
-  following modes short-circuited the guard — the check silently passed when it should have exercised the mechanic.
-- The check read `D.meter` **after** `step()`, by which time the AI had already spent the meter it was granted, and
-  occasionally the whole round had restarted. The assertion now clears the flag per mode and reads the meter
-  immediately after `applyHit()`, before the engine gets a frame.
-
-The game behaviour was correct all along: the last-stand buff fires once per fighter per match and grants full
-meter, which the AI is free to spend on the next frame.
+| ID | Issue | Resolution | Guard |
+| :--- | :--- | :--- | :--- |
+| O1 | Full-backup import switched active account silently | `importAccountData()` returns `{ uid, name, profile, note }` and the UI announces the switched account | `tools/tests/cloud-test.mjs` |
+| O2 | `loadProfile()` re-uploaded once per boot when local ink exceeded cloud ink | `loadProfile()` checks `dirtyKey()` before calling `ledgerNote()`, snapping clean boots to the authoritative server ledger with zero redundant `POST /api/profile` writes | `tools/tests/cloud-test.mjs` |
+| O3 | Weak (v1) backup accepted silently | `importAccountData()` surfaces `note` ("旧版备份：只有墨锭与胜负经过校验") in the UI | `tools/tests/cloud-test.mjs` |
+| O4 | `mergeProfiles()` took max of `netWins` / `netLosses` | `netWins`, `netLosses`, and hero fragments moved to the incremental progress ledger (`progAdopt` / `progAck`) | `tools/tests/sync-test.mjs` |
+| O5 | Intermittent 2v2 last-stand meter test flake | Cleared per-mode `M.flags` and asserted immediately after `applyHit()` | `tools/tests/combat-test.mjs` |
 
 ---
 
 ## 5. Regression Coverage
 
-`tools/tests/cloud-test.mjs` is new and runs in CI as **Cloud Save Client Tests**. It loads `src/cloud.js` in a Node
-`vm` with a fake Worker, a fake `localStorage` and a fake `document`, and asserts twenty behaviours:
-
-| Group | Checks |
-| :--- | :--- |
-| Per-account mirrors | no shared key at boot, per-account mirror written, a new account inherits nothing |
-| Pending save ownership | nothing written to the next account, stale payload dropped |
-| Refusal handling | 4xx reports `blocked`, dirty marker cleared, exactly one attempt, 429 still retries |
-| Local passwords | Chinese password registers, logs back in, stored as `v2$` |
-| Export signatures | signature produced, `stageStars` and `frags` tampering detected, `ok` / `tampered` / `unsigned` |
-
-It has no dependencies (no `linkedom`, no network), so it runs anywhere Node runs.
+`tools/tests/cloud-test.mjs` runs in CI as **Cloud Save Client Tests** in a Node `vm` with a mock Worker, `localStorage`, and `document`, verifying per-account mirrors, pending save ownership, 4xx refusal handling, non-Latin-1 local passwords, SHA-256 v2 export signatures, and O2 clean-boot sync idempotency.
 
 Full local run:
 
 ```bash
 python3 tools/build.py --check
-node tools/tests/cloud-test.mjs          # 20 checks
-node tools/tests/econ-test.mjs           # 396 checks
-node tools/tests/combat-test.mjs --sim   # 22 checks
+node tools/tests/cloud-test.mjs
+node tools/tests/sync-test.mjs
+node tools/tests/econ-test.mjs --bundle
+node tools/tests/predeploy-check.mjs
+node tools/tests/combat-test.mjs --sim
 ```
 
 ---
 
-## 6. Notes On The Two Rounds
+## 6. Notes On Architecture History
 
-- **Round one** (merged as PR #2, `539503c`) fixed C2, C3, C4, C5, C10, D6, L2 against the Firestore client and
-  shipped three documents: an audit, a remediation plan and a status board.
-- Upstream then replaced `main` with a single commit (`903dfaa`) containing the Worker rewrite. The branch was
-  reset onto it and the fixes re-applied by hand; C3 was already fixed upstream (`owned` defaults to `['qingfeng']`,
-  a blank name to `侠客`), so it is not re-claimed here.
-- The audit and plan documents were written against files that no longer exist (`firestore.rules`, `server.py`).
-  They were not restored; their still-relevant findings are the ones carried into this board.
-- `docs/project/codebase-and-heroes.md` still describes the Firebase-era layout in places (it references `server.py` and
-  `firestore.rules`). It is otherwise accurate about the game core and needs a refresh pass, not a correction.
+- The original audit targeted legacy files (`firestore.rules`, `server.py`) that were completely replaced by the Cloudflare Worker + D1 architecture (`cloudflare/worker/` and `cloudflare/migrations/`).
+- `docs/project/codebase-and-heroes.md` has been refreshed for `v1.1.0` to reflect the Cloudflare Worker + D1 + PeerJS architecture and 20-hero roster.

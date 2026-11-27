@@ -1,9 +1,8 @@
 # RenYing — Codebase Map & Full Hero Reference
 
 > [!NOTE]
-> Generated from the working tree at commit `351e61b` (`fix: resilient spawn runner`), game `VERSION = '4.5'`.
-> Every number below was read out of the source — `src/game.js` line references are given so you can check them.
-> Since the refactor, `src/game.js` is split into numbered files under `src/game/` (concatenated in order they are the old file), so old line numbers are approximate; the table in §14 names the new files.
+> Refreshed for release `v1.1.0` (`VERSION = '1.1.0'`).
+> The runtime source lives in modular directories under `src/game/` (`01-engine/` through `05-ui/`), `src/styles/`, `src/data/`, and `cloudflare/worker/`. Historical per-hero combat math notes in §§10–12 remain a conceptual reference; `src/data/heroes/` and `docs/ai/frame-data.json` are the live source of truth for the 20-hero roster.
 
 ---
 
@@ -12,13 +11,10 @@
 **RenYing (刃影)** is an ink-wash martial-arts fighting game that runs entirely in a browser tab. It is written in
 plain JavaScript against a single `<canvas>` (no framework, no bundler, no npm dependencies at runtime), with:
 
-* a deterministic 120 Hz fixed-step core so two browsers can run **rollback netcode** over WebRTC,
-* an optional zero-dependency Python server (`server.py`, standard library only) for LAN play, accounts, ranked, chat,
-  replays and reconnect,
-* an optional Firebase/Firestore cloud-save layer that degrades to `localStorage`,
-* a second, separate 3D mini-game (**青锋行 / Qingfengxing**, three.js) embedded in an iframe and packed into the same build,
-* twelve playable heroes, 34 skins, 9 music tracks, and a family of headless simulation/balancing/training tools that
-  produce the neural-network AI models in `models/`.
+* a deterministic 120 Hz fixed-step core supporting up to 32 simultaneous fighters and **rollback netcode** over WebRTC/PeerJS,
+* a **Cloudflare Worker + D1 + Durable Objects** backend (`cloudflare/worker/`, `WorldLine`, `PresenceHub`) for authoritative accounts, PBKDF2 auth, ink/progress ledgers, Armory economy, player marketplace, admin console, and open-world lines, degrading cleanly to `localStorage` offline,
+* a second, separate 3D action-roguelike mini-game (**青锋行 / Qingfengxing**, three.js) embedded in an iframe and packed into the same build,
+* **20 playable heroes** across 6 archetypes, Heirloom dual-stance skins, 60 Combo Trials, 4/8/16-entrant Tournaments, Match Review 2.0, 9 orchestral music tracks, and headless simulation/balancing/audit suites under `tools/`.
 
 The pages at the repository root (`index.html`, `renying-offline.html`, `assets/qingfengxing.html`) are **generated**;
 `src/` is the source of truth.
@@ -29,37 +25,35 @@ The pages at the repository root (`index.html`, `renying-offline.html`, `assets/
 
 | Path | Size | What it is |
 | :--- | ---: | :--- |
-| `index.html` | 1.5 MB | **Generated** online build (GitHub Pages + `server.py`). Loads music and the mini-game on demand. |
-| `renying-offline.html` | 9.7 MB | **Generated** single-file build: music + mini-game inlined as base64. Double-click and play. |
-| `renying.html` | 0.6 KB | **Generated** redirect stub for the old URL. |
-| `src/page.html` | 85 KB | HTML skeleton with `<!--@style-->`, `<!--@music-->`, `<!--@scripts-->`, `<!--@qfx-->` build markers. |
-| `src/style.css` | 116 KB | All UI styling (ink-wash theme, responsive + touch layouts). |
-| `src/game.js` | 849 KB, 13 819 lines | The entire 2D game: engine, menus, codex, AI, netcode, store, replays. |
-| `src/net-p2p.js` | 24 KB, 471 lines | Serverless WebRTC/PeerJS transport. |
-| `src/cloud.js` | 41 KB, ~1 005 lines | Firebase Auth + Firestore cloud save, local fallback, `window.CloudSave`. |
-| `src/social.js` | 35 KB, 603 lines | 江湖驿站: P2P hall chat, friends, DMs, groups, with store-and-forward outbox. |
-| `src/qfx/` | 4 640 lines (20 files + `page.html`) | Qingfengxing mini-game sources, numbered so filename order == load order. |
-| `server.py` | 1 303 lines | Optional LAN server: HTTP + hand-rolled RFC 6455 WebSocket + SQLite. |
-| `assets/` | 6.4 MB | PeerJS, three.js, Firebase compat bundles, 9 MP3s, Qingfengxing build, skin artwork. |
-| `models/` | 864 KB | 12 per-hero neural nets + global/2v2 nets and dated training snapshots. |
-| `tools/` | 19 files | Build script, data import/export, headless simulators, trainers, UI/touch/net audits. |
-| `firestore.rules` | — | Security rules for the optional cloud save. |
-| `export.py`, `renying-export.json` | 39 lines / 37 KB | Legacy production-DB export helper and a sample export. |
-| `docs/history/changelog.md`, `docs/project/walkthrough.md`, `readme*.md`, `docs/project/project.pdf`, `license`, `.github/security.md` | — | Documentation. |
-| `.github/workflows/ci.yml`, `pages.yml` | — | CI quality gates and GitHub Pages deployment. |
+| `index.html` | ~3.7 MB | **Generated** online build (GitHub Pages + Cloudflare Worker API). Loads music and Qingfengxing on demand. |
+| `renying-offline.html` | ~12 MB | **Generated** single-file offline build: music + Qingfengxing inlined as base64. Double-click and play. |
+| `renying.html` | 1.6 KB | **Generated** redirect stub for the old URL. |
+| `src/page.html` | ~1 730 lines | HTML skeleton with `<!--@style-->`, `<!--@music-->`, `<!--@scripts-->`, `<!--@qfx-->` build markers and 26 `.scr` screens. |
+| `src/style.css` + `src/styles/` | Modular CSS | Base tokens plus numbered per-page/feature modules (`20-*` through `87-shared-modal-host.css`, min 12px typography). |
+| `src/game/` | Modular JS | Domain layers: `01-engine/`, `02-combat/`, `03-render/`, `04-modes/`, `05-ui/`. |
+| `src/data/` | Modular JS | 20 hero definitions (`heroes/`), modes, maps, combo trials, guides, and bilingual UI copy (`30-ui-copy-*.js`). |
+| `src/net-p2p.js` | WebRTC/PeerJS | Serverless P2P transport, online tournaments, and read-only live spectating (`P2P.specs`). |
+| `src/cloud.js` | ~1 580 lines | Cloudflare Worker + D1 cloud account client, ink/progress ledgers, rotating refresh tokens, local fallback (`window.CloudSave`). |
+| `src/social.js` | P2P Social | 江湖驿站: P2P hall chat, friends, DMs, groups, with store-and-forward outbox. |
+| `src/armory-core.js`, `src/armory.js` | Armory | Cosmetic weapon cases, player-to-player market, Heirloom collection (`c14`), badges, and pets. |
+| `src/qfx/` | 3D Roguelike | Qingfengxing mini-game sources, numbered so filename order == load order. |
+| `cloudflare/` | Backend | Modular Worker (`worker/`), D1 migrations (`migrations/0001`–`0014`), Durable Objects (`WorldLine`, `PresenceHub`), and `/admin` console. |
+| `assets/` | Media/Vendor | PeerJS, three.js, 9 orchestral MP3s, compiled `qingfengxing.html`, favicon. |
+| `src/models/ai-brain.json` | AI Brain | Calibrated 20-hero evolutionary AI genes and per-difficulty `lvGenes`. |
+| `tools/` | Tooling | `build.py`, `checks/`, `tests/`, `audits/` (26-screen bilingual Playwright matrix), `ai/`, `admin/`, `music/`. |
+| `docs/` | Documentation | Changelog, version history, wiki, AI specs, design tokens, ops runbook. |
+| `.github/workflows/` | CI/CD | `ci.yml`, `pages.yml`, `full-regression.yml`, `ai-ladder-audit.yml`. |
 
 ---
 
 ## 2. Build Pipeline (`tools/build.py`, Python Stdlib Only)
 
 ```text
-src/page.html ──┐
-src/style.css ──┤  CSS comment-stripped, blank lines dropped
-src/game.js  ───┤  cloud.js → game.js → net-p2p.js → social.js
-src/net-p2p.js ─┤  each JS file: block comments removed, blank lines removed
-src/cloud.js ───┤  (line numbers survive; only comments/blank lines are dropped)
-src/social.js ──┘
-assets/*.js    ─── inlined raw: peerjs (always), firebase ×3 (online only)
+src/page.html ─────────┐
+src/style.css + styles/┤  CSS comment-stripped, ordered by numeric prefix
+src/data/ + src/game/ ─┤  cloud.js → armory → data → game layers → ai → net-p2p → social
+cloudflare/worker/ ────┤  assembled into cloudflare/worker.js + worker.bundle.js + migrations.gen.js
+assets/*.js ───────────┘  inlined raw: peerjs (always)
 assets/music/*.mp3 ─ base64 → window.MUSIC_DATA          (offline only)
 models/heroes/*.json + renying_ai_watch2v2.json ── quantized → window.RENYING_HERO_MODELS / RENYING_2V2_MODEL
 src/qfx/page.html + src/qfx/NN-*.js ─ concatenated inside one IIFE → assets/qingfengxing.html
@@ -225,31 +219,24 @@ Practical consequences: `stat.dmg` is baked into the move table, `BAL` is a seco
   each other without a server; ranked bands, probes every 3 s, avoids the same opponent for 10 min.
 * Works from GitHub Pages with no backend; blocked on some campus networks.
 
-### 7.2 Dedicated Server (`server.py`, Stdlib Only)
+### 7.2 Cloudflare Worker & D1 Backend (`cloudflare/worker/`)
 
 ```text
-HTTP:  /  /index.html  /renying.html
-       /assets/... (js/png/html) and /music/*.mp3
-       /health
-       /api/register /login /logout /me /leaderboard /posts /post /profile /welfare
-       /api/gacha /craft /claim /progress /tutorial /ranklb /skingacha /equip /redeem /qfx
-WS:    /ws?create=1 | join=CODE | match=1 | rank=1 | resume=CODE&rt=...   (+ &v=VERSION&t=token)
+HTTP:  /api/health /api/flags /api/register /api/login /api/logout /api/refresh /api/devices
+       /api/profile /api/econ /api/market /api/leaderboard /api/gboss /api/saga
+       /api/world/chron /api/presence /api/stats /api/err /api/ai-training /api/ac
+       /admin & /api/admin/* (role-based admin console, strict CSP)
+DO:    WorldLine (open-world co-op lines & shared roguelike) | PresenceHub (in-memory online count, 0 D1 writes)
 ```
 
-* Hand-rolled RFC 6455 framing (`read_frame`, `frame`, `Peer`), per-peer send queues, heartbeat.
-* Rooms: 4-character code, 2 slots, 60 s reconnect grace, `finish_room()` handles forfeits/results.
-* Ranked: placement matches, six tiers, rating deltas; both players must be logged in for a rated result.
-* Data: SQLite `data/renying.db` — users (salted PBKDF2-SHA256), profiles, matches, posts.
-* Also serves quick match, chat/social posts with rate limits, daily/weekly tasks, 问剑阁 gacha, skins.
+* Authoritative D1 database managed by numbered SQL migrations (`cloudflare/migrations/0001_init.sql` through `0014_retired_hero_skins.sql`) applied automatically on first request.
+* PBKDF2-SHA256 passwords, hashed session tokens, rotating 30-minute refresh tokens, Turnstile anti-abuse, and `D1_SHIELD` quota protection.
 
-### 7.3 Cloud Save (`src/cloud.js`)
+### 7.3 Cloud Save Client (`src/cloud.js`)
 
-* Firebase **Auth + Firestore**, config from `window.FIREBASE_CONFIG` or `localStorage`.
-* `window.CloudSave` exposes login/register/logout/save/load and a sync state machine:
-  `local → idle → pending → syncing → ok / offline / error`, with retry, `pagehide` flush, and a dirty flag so the next
-  visit retries.
-* Accounts that were local (`local_…`) are migrated up to the cloud on login.
-* `firestore.rules` validates starter profiles and per-user documents.
+* Connects to the Cloudflare Worker API (`DEFAULT_ENDPOINT` or `window.RENYING_CLOUD_API`), degrading gracefully to `localStorage` offline.
+* `window.CloudSave` exposes login/register/logout/save/load, incremental ink and win/loss/fragment ledgers (`LEDGER`, `PROG`), multi-tab `BroadcastChannel` sync, SHA-256 v2 backup export/import, and a sync state machine (`local → idle → pending → syncing → ok / offline / error / blocked / expired`).
+* Accounts created locally (`local_…`) can upgrade seamlessly to cloud accounts while carrying eligible ink and progress.
 
 ### 7.4 Social (`src/social.js`)
 
@@ -293,8 +280,7 @@ Dying ends the run; 剑魄 and the 藏经阁 upgrades carry over, and clearing a
 | `75-meta.js` | Saves (`qfx2`, run in `rl`), 剑魄 currency, permanent upgrades, settings. |
 | `80-ui.js`, `85-tutorial.js`, `90-main.js` | UI, six-step tutorial, flow and loop. |
 
-The main game embeds it in an iframe; clearing chapters reports back to `server.py` (`/api/qfx`) for ink and an
-exclusive Qingfeng skin (`qf_qfx`).
+The main game embeds it in an iframe; clearing chapters reports rewards back to the main client and Cloudflare Worker ledger for ink and the exclusive Qingfeng skin (`qf_qfx`).
 
 ---
 
@@ -686,8 +672,8 @@ These are worth knowing before you touch balance or the codex UI:
 | English translation of a UI string | `UI_COPY_EN` — feature chunks in `src/data/30-ui-copy-*.js` (numbered sentences: `PATTERNS_EN` in `src/i18n.js`) |
 | UI copy / numbers shown in codex | `HERO_HIT_DETAILS`, `PASSIVE_SHORT` — `src/game/18-codex-content.js`; `statRows` and rendering — `src/game/18-codex.js` |
 | Netcode | rollback in `src/game/20-tutorial-rollback-touch.js`, shared net code in `06-input-net.js`, transport in `src/net-p2p.js` |
-| Server features | `server.py` (`routes` dict at ~1200) |
-| Cloud save | `src/cloud.js`, `firestore.rules` |
+| Server features | `cloudflare/worker/` (router in `80-request-router.js`), `cloudflare/migrations/` |
+| Cloud save | `src/cloud.js`, `cloudflare/worker/10-auth-and-sessions.js`, `20-economy-and-profiles.js` |
 | Mini-game | `src/qfx/NN-*.js` + `src/qfx/page.html` |
 | Build/packaging | `tools/build.py`, `src/page.html` markers |
 
