@@ -605,7 +605,7 @@ function socLastText(key) {
 function socRenderList() {
   const el = $id('socList'); if (!el || !SOC.data) return;
   const D = SOC.data, on = new Set(SOC.online);
-  let h = socItem('hall', '江湖大厅', socStateText());
+  let h = socItem('hall', '江湖大厅', socStateText()).replace('<small>', '<small class="soc-state">');
   const reqs = Object.keys(D.reqIn);
   if (reqs.length) h += `<div class="soc-sec">好友申请</div>` + reqs.map(n => `<div class="soc-req"><span>${escapeHTML(n)}</span><button type="button" class="go small" data-acc="${escapeHTML(n)}">同意</button><button type="button" class="ghost small" data-dec="${escapeHTML(n)}">忽略</button></div>`).join('');
   const fs = Object.keys(D.friends).sort((a, b) => (on.has(b) - on.has(a)) || a.localeCompare(b, 'zh'));

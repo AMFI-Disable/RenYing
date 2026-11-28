@@ -672,6 +672,7 @@ grid-column: 1 / -1;
 .soc-n { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .soc-n b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .soc-n small { color: var(--dim); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.soc-n small.soc-state { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
 .soc-it em { font-style: normal; font-size: 12px; min-width: 18px; padding: 1px 6px; border-radius: 999px; background: var(--p2); color: #fff; text-align: center; }
 .soc-on { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.18); flex-shrink: 0; }
 .soc-on.y { background: #4ade80; box-shadow: 0 0 6px rgba(74,222,128,.7); }
@@ -4661,6 +4662,15 @@ flex-wrap: wrap;
 .cx-m-track i { display: block; height: 100%; background: linear-gradient(90deg, #b5282d, #e9c46a); }
 .cx-m-meta { font-size: 12px; color: rgba(239, 232, 216, 0.78); font-variant-numeric: tabular-nums; }
 .lb-head-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.trial-card-info { min-width: 0; overflow-wrap: anywhere; }
+.trial-card > .go, .trial-card > .ghost { flex-shrink: 0; white-space: nowrap; }
+@media (max-width: 480px) {
+.train-pre-group { min-width: 0; max-width: 100%; }
+.train-pre-group .seg { display: flex; flex-wrap: wrap; max-width: 100%; }
+.train-pre-group .seg button { padding: 8px 12px; }
+.trial-card { flex-wrap: wrap; }
+.trial-card-info { flex: 1 1 100%; }
+}
 .team-cmd-panel {
 position: fixed;
 right: 16px;
@@ -60427,7 +60437,7 @@ const m = c[c.length - 1]; return (m.sys ? '' : m.from === SOC.me ? '我：' : k
 function socRenderList() {
 const el = $id('socList'); if (!el || !SOC.data) return;
 const D = SOC.data, on = new Set(SOC.online);
-let h = socItem('hall', '江湖大厅', socStateText());
+let h = socItem('hall', '江湖大厅', socStateText()).replace('<small>', '<small class="soc-state">');
 const reqs = Object.keys(D.reqIn);
 if (reqs.length) h += `<div class="soc-sec">好友申请</div>` + reqs.map(n => `<div class="soc-req"><span>${escapeHTML(n)}</span><button type="button" class="go small" data-acc="${escapeHTML(n)}">同意</button><button type="button" class="ghost small" data-dec="${escapeHTML(n)}">忽略</button></div>`).join('');
 const fs = Object.keys(D.friends).sort((a, b) => (on.has(b) - on.has(a)) || a.localeCompare(b, 'zh'));

@@ -504,3 +504,13 @@
 .cx-m-meta { font-size: 12px; color: rgba(239, 232, 216, 0.78); font-variant-numeric: tabular-nums; }
 .lb-head-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
 
+/* 英文按钮比中文长：试炼卡的按钮不被挤窄，信息栏自己换行 */
+.trial-card-info { min-width: 0; overflow-wrap: anywhere; }
+.trial-card > .go, .trial-card > .ghost { flex-shrink: 0; white-space: nowrap; }
+@media (max-width: 480px) {
+  .train-pre-group { min-width: 0; max-width: 100%; }
+  .train-pre-group .seg { display: flex; flex-wrap: wrap; max-width: 100%; }
+  .train-pre-group .seg button { padding: 8px 12px; }
+  .trial-card { flex-wrap: wrap; }
+  .trial-card-info { flex: 1 1 100%; }
+}
