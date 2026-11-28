@@ -928,7 +928,7 @@ $id('rpPause').addEventListener('click', () => { REPLAY.paused = !REPLAY.paused;
 $id('rpHz').addEventListener('input', e => { REPLAY.hz = Math.max(1, Math.min(120, Math.round(+e.target.value || 120))); REPLAY.frameAcc = 0; replayInspectRender(); });
 $id('rpHitbox').addEventListener('click', () => { if (!REPLAY.on || M.phase === 'end') return; debugHitbox = !debugHitbox; replayInspectRender(); });
 $id('rpStep').addEventListener('click', replayStep);
-$id('rpExit').addEventListener('click', toMenu);
+$id('rpExit').addEventListener('click', () => toMenu());
 if ($id('rpScrub')) {
   $id('rpScrub').addEventListener('input', e => { if (REPLAY.on) replaySeek(+e.target.value); });
 }
