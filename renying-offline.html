@@ -45941,7 +45941,7 @@ B.reset(isDummy && dummyCfg.fixed ? STAGE_W / 2 : STAGE_W / 2 + 120);
 B.face = -1; B.meter = 0;
 if (isDummy) { B.maxHp = B.hp = B.lagHp = 300; }
 if (typeof applyCombatLoadouts === 'function') applyCombatLoadouts();
-Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0, lastHitDmg: 0, maxHitDmg: 0, hitCount: 0, parries: 0, breaks: 0, events: [], advantage: null, frameProbe: null, lastBadgeT: -99, lastBadgeMsg: '', lastPetT: -99, lastStanceT: -99 });
+Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0, lastHitDmg: 0, maxHitDmg: 0, peakDps: 0, hitCount: 0, parries: 0, breaks: 0, events: [], advantage: null, frameProbe: null, lastBadgeT: -99, lastBadgeMsg: '', lastPetT: -99, lastStanceT: -99 });
 for (const cu of comboUI) { cu.n = 0; cu.dmg = 0; cu.t = 0; }
 projs.length = 0;
 SFX.slice && SFX.slice();
@@ -46092,7 +46092,10 @@ ${modDesc('q', sm.q)}${modDesc('r', sm.r)}${modDesc('e', sm.e)}
 } else if (tab === 'stats') {
 const cu = comboUI[0] || { n: 0, dmg: 0, t: 0 };
 const dps = TRAIN.hits.reduce((acc, h) => acc + h[1], 0) / 5;
-const advTxt = TRAIN.advantage == null ? '—' : `${TRAIN.advantage >= 0 ? '+' : ''}${TRAIN.advantage}F`;
+if (dps > (TRAIN.peakDps || 0)) TRAIN.peakDps = dps;
+const advVal = TRAIN.advantage;
+const advTxt = advVal == null ? '—' : `${advVal >= 0 ? '+' : ''}${advVal}F`;
+const advStyle = advVal == null ? '' : (advVal > 0 ? ' style="color:#70ff90"' : advVal < 0 ? ' style="color:#ff7070"' : '');
 const logs = (TRAIN.events || []).slice(0, 6);
 body.innerHTML = `
 <div class="tlab-sec">
@@ -46100,8 +46103,8 @@ body.innerHTML = `
 <div class="tlab-kv"><span>当前连击</span><b>${cu.t > 0 ? `${cu.n} 段 · ${Math.round(cu.dmg)} 伤` : '—'}</b></div>
 <div class="tlab-kv"><span>最高连击</span><b>${TRAIN.best || 0} 段 · ${Math.round(TRAIN.bestDmg || 0)} 伤</b></div>
 <div class="tlab-kv"><span>最近单次 / 单击峰值</span><b>${Math.round(TRAIN.lastHitDmg || 0)} / ${Math.round(TRAIN.maxHitDmg || 0)}</b></div>
-<div class="tlab-kv"><span>累计伤害 / 5s DPS</span><b>${Math.round(TRAIN.total || 0)} · ${dps.toFixed(1)}/s</b></div>
-<div class="tlab-kv"><span>帧优势 (Frame Adv)</span><b>${advTxt}</b></div>
+<div class="tlab-kv"><span>累计伤害 / 5s DPS (峰值)</span><b>${Math.round(TRAIN.total || 0)} · ${dps.toFixed(1)}/s (${(TRAIN.peakDps || 0).toFixed(1)})</b></div>
+<div class="tlab-kv"><span>帧优势 (Frame Adv)</span><b${advStyle}>${advTxt}</b></div>
 <div class="tlab-kv"><span>精准招架 / 破防次数</span><b>${TRAIN.parries || 0} 次 / ${TRAIN.breaks || 0} 次</b></div>
 </div>
 <div class="tlab-sec">
@@ -46251,9 +46254,15 @@ if (again && document.activeElement !== again) { try { again.focus({ preventScro
 $id('dummyBarBtn').addEventListener('click', () => dummyBarShow(true));
 window.addEventListener('keydown', e => {
 if (e.ctrlKey || e.metaKey || e.altKey) return;
+const tag = e.target && e.target.tagName;
+if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
 if (DB.open && (e.code === 'Escape' || (e.code === dummyBarKey() && dummyBarKey() !== 'Tab'))) { e.preventDefault(); e.stopImmediatePropagation(); dummyBarShow(false); return; }
-if (!DB.open && e.code === dummyBarKey() && !e.repeat && dummyBarAvail() && !paused && !document.querySelector('.scr.on')) {
-e.preventDefault(); e.stopImmediatePropagation(); if (typeof kbnOn === 'function' && e.isTrusted) kbnOn(); dummyBarShow(true);
+if (!DB.open && !e.repeat && dummyBarAvail() && !paused && !document.querySelector('.scr.on')) {
+if (e.code === dummyBarKey()) {
+e.preventDefault(); e.stopImmediatePropagation(); if (typeof kbnOn === 'function' && e.isTrusted) kbnOn(); dummyBarShow(true); return;
+}
+if (e.code === 'Backspace') { e.preventDefault(); e.stopImmediatePropagation(); trainLabReset(); return; }
+if (e.code === 'F2') { e.preventDefault(); e.stopImmediatePropagation(); trainLabFullMeter(); return; }
 }
 });
 }
@@ -46268,7 +46277,7 @@ const foeIdx = trainOppMode === 'ai'
 ? (TRAIN_PRE.freeOppHero >= 0 && TRAIN_PRE.freeOppHero < CHARS.length ? TRAIN_PRE.freeOppHero : ((trainChar + 1) % CHARS.length))
 : 0;
 startMatch('train', { ...dummyCfg }, [trainChar, foeIdx]);
-Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0, lastHitDmg: 0, maxHitDmg: 0, hitCount: 0, parries: 0, breaks: 0, events: [], advantage: null, frameProbe: null, lastBadgeT: -99, lastBadgeMsg: '', lastPetT: -99, lastStanceT: -99, labOpen: true });
+Object.assign(TRAIN, { total: 0, hits: [], best: 0, bestDmg: 0, lastHitDmg: 0, maxHitDmg: 0, peakDps: 0, hitCount: 0, parries: 0, breaks: 0, events: [], advantage: null, frameProbe: null, lastBadgeT: -99, lastBadgeMsg: '', lastPetT: -99, lastStanceT: -99, labOpen: true });
 _tlabLastDraw = 0;
 if (trainOppMode === 'ai') {
 B.dummy = false;

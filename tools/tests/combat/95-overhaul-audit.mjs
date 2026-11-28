@@ -71,5 +71,25 @@ export default [
       b1.rand = origRand;
       return { pass: qfFired && yxFired, error: JSON.stringify({ qfFired, yxFired }) };
     })()`
+   },
+  {
+    name: 'Training quick-reset (Backspace) and full-meter (F2) hotkeys work in training and stay isolated from combat modes',
+    fn: `(() => {
+      startDummyTraining();
+      M.phase = 'fight';
+      A.meter = 0; A.skillCD = 5; TRAIN.total = 420; TRAIN.peakDps = 88;
+      trainLabFullMeter();
+      if (A.meter !== 100 || A.skillCD !== 0) return { pass: false, error: 'trainLabFullMeter did not refill meter/clear CD' };
+      trainLabReset();
+      if (A.meter !== 0 || TRAIN.total !== 0 || TRAIN.peakDps !== 0) return { pass: false, error: 'trainLabReset did not clear state/peakDps' };
+      // Verify isolation outside training mode
+      startMatch('cpu', 'normal', [0, 1]);
+      M.phase = 'fight';
+      A.meter = 35;
+      trainLabFullMeter();
+      if (A.meter !== 35) return { pass: false, error: 'trainLabFullMeter leaked into cpu mode' };
+      toMenu();
+      return { pass: true };
+    })()`
   }
 ];
