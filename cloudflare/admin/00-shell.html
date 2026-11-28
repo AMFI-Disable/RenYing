@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="color-scheme" content="dark">
+<title>刃影管理后台</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='2' y='2' width='28' height='28' rx='6' fill='%23b8392e'/%3E%3Cpath d='M10 9h12M16 9v15M11 15l5 4 5-4' stroke='%23fbeee0' stroke-width='2.6' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
+<!--
+  刃影管理后台：Worker 的 /admin 回这一页（python3 tools/build.py 把它打包进 cloudflare/worker.bundle.js）。
+  只连这个 Worker 自己的 /api/admin/*。先用管理员账号（名字 + 密码）或者 ADMIN_SECRET 口令登录，换一个 1 小时的管理令牌；
+  令牌只放在内存里（不写 sessionStorage / localStorage），刷新网页、过期都要重新登录。管理员账号分四种角色，服务器按角色放行。
+  整页只有最下面一段脚本：Worker 按它的 sha256 放行，别的脚本、onclick 这种都不会跑，所以事件一律用 addEventListener。
+  服务器给的字（昵称、原因、说明）一律经过 H`` 转义再放进网页。
+  文件结构：上面的样式 → 页面骨架（登录框、侧栏、各个面板的空容器）→ 最下面一段脚本。
+  脚本按「/* ---------- 名称 ---------- */」分段：工具（转义、数字时间、请求）→ 各个面板（总览、玩家、补偿、兑换码、
+  操作记录、错误、统计、世界监控、登录记录、功能开关、批量、管理员账号）→ 快捷命令面板 → 按钮和表单的事件 → 登录退出。
+  找 bug 提示：按钮没反应先看浏览器控制台有没有 CSP 报错（多半是写了内联事件）；接口报错时回包里的 error 会显示在页面右上角。
+-->
+<style>
+/*@admin-css*/
+</style>
+</head>
+<body>
+<div id="login" class="login hidden">
+  <form id="loginForm">
+    <div class="seal big">刃</div>
+    <h1>刃影管理后台</h1>
+    <p class="hint">只给开发组用。每一笔修改都要写原因，都记在流水里。</p>
+    <label class="f">管理员名字<input id="admName" type="text" autocomplete="username" spellcheck="false" maxlength="20" placeholder="用 ADMIN_SECRET 口令登录就不填"></label>
+    <label class="f">密码<input id="tok" type="password" autocomplete="current-password" spellcheck="false" required></label>
+    <button class="btn wide" id="loginBtn">进入</button>
+    <p id="loginMsg" class="msg" role="alert"></p>
+    <p class="hint">有管理员账号就填名字和密码。没有的话名字留空，密码填 Cloudflare 里 ADMIN_SECRET 的值（写成「名字:口令」的，只输入冒号后面那一段），用它建管理员账号。登录 1 小时有效，刷新网页也要重新登录。</p>
+  </form>
+</div>
+
+<div id="app" class="hidden">
+  <header class="top">
+    <div class="brand"><div class="seal">刃</div><div><h1>刃影管理后台</h1><small>系统健康、玩家管理、补偿兑换码、全服共斗、审计与数据库维护</small></div></div>
+    <div class="me">
+      <button class="btn ghost sm" data-act="cmdk" title="全局快捷命令面板 (Cmd/Ctrl + K)">⌘K 快捷面板</button>
+      <span id="sessTimer" class="badge">剩余 60分00秒</span>
+      <button class="btn ghost sm" id="btnRenew" data-act="renew" title="给管理令牌续期 1 小时">续期</button>
+      <button class="btn ghost sm" id="btnRefresh" data-act="reload" title="刷新当前页">刷新</button>
+      <button class="btn ghost sm" id="btnAutoRefresh" data-act="toggleauto" aria-pressed="false" title="每 30 秒自动刷新">自动刷新: 关</button>
+      <span>管理员 <b id="who"></b> <span class="badge" id="role"></span></span>
+      <button class="btn ghost sm" data-act="logout">退出</button>
+    </div>
+  </header>
+  <nav class="tabs" aria-label="分页"><div role="tablist">
+    <button role="tab" data-act="tab" data-tab="home">总览</button>
+    <button role="tab" data-act="tab" data-tab="players">玩家</button>
+    <button role="tab" data-act="tab" data-tab="gifts">补偿</button>
+    <button role="tab" data-act="tab" data-tab="codes">兑换码</button>
+    <button role="tab" data-act="tab" data-tab="flags">功能开关</button>
+    <button role="tab" data-act="tab" data-tab="maint">世界与维护</button>
+    <button role="tab" data-act="tab" data-tab="auth">登录记录</button>
+    <button role="tab" data-act="tab" data-tab="audit">操作记录</button>
+    <button role="tab" data-act="tab" data-tab="errors">错误</button>
+    <button role="tab" data-act="tab" data-tab="play">游玩统计</button>
+    <button role="tab" data-act="tab" data-tab="admins" data-need="all">管理员</button>
+  </div></nav>
+  <main id="main"></main>
+  <footer>刃影 · 管理后台 · 所有修改都记在流水里，谁做的、为什么都查得到（按 ⌘K / Ctrl+K 呼出快捷命令）</footer>
+</div>
+
+<dialog id="dlg"></dialog>
+<dialog id="cmdDlg"></dialog>
+<div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+/*@admin-js*/
+</script>
+</body>
+</html>

@@ -370,9 +370,27 @@ def admin_names():
     return {"skins": skins, "heroes": heroes}
 
 
+def admin_js_parts():
+    folder = os.path.join(ROOT, "cloudflare", "admin")
+    return sorted(n for n in os.listdir(folder) if re.match(r"^\d\d-[a-z0-9-]+\.js$", n))
+
+
+def admin_source():
+    """管理后台网页源码：由 cloudflare/admin/00-shell.html + 01-styles.css + 编号 JS 模块拼成"""
+    folder = os.path.join(ROOT, "cloudflare", "admin")
+    shell = read(folder, "00-shell.html")
+    css = read(folder, "01-styles.css")
+    js = "".join(read(folder, n) for n in admin_js_parts())
+    for mark, body in (("/*@admin-css*/", css), ("/*@admin-js*/", js)):
+        if shell.count(mark) != 1:
+            raise SystemExit("cloudflare/admin/00-shell.html 里应该正好有一个 " + mark)
+        shell = shell.replace(mark, body, 1)
+    return shell
+
+
 def admin_page():
     """管理网页：填上名字表，再算出页面里那一段脚本的 sha256（Worker 只许浏览器跑这一段）。返回 (网页, 脚本, sha256)"""
-    html = read(ROOT, "cloudflare", "admin.html")
+    html = admin_source()
     if html.count(NAMES_MARK) != 1:
         raise SystemExit("cloudflare/admin.html 里应该正好有一个 " + NAMES_MARK)
     html = html.replace(NAMES_MARK, json.dumps(admin_names(), ensure_ascii=False, separators=(",", ":")))
@@ -431,6 +449,7 @@ def outputs():
         "renying.html": REDIRECT,
         "assets/qingfengxing.html": qfx_page(),
         "src/armory-core.js": armory_core_source(),
+        "cloudflare/admin.html": admin_source(),
         "cloudflare/worker.js": worker_source(),
         "cloudflare/worker.bundle.js": worker_bundle(),
         "cloudflare/migrations.gen.js": migrations_js(),

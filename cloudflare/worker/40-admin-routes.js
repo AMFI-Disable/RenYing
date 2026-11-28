@@ -144,7 +144,10 @@ async function handleAdmin(env, request, path, now, ip) {
   if (route === 'GET /api/admin/stats') {   // 总览与深度数据统计
     await cfgNow(env, now);
     const one = (sql, ...b) => env.DB.prepare(sql).bind(...b).first();
-    const [users, fresh, eco, open, deals, banned, gone, inkFlow, opens24, signups, inkFlow7, caseOpens, pres] = await Promise.all([
+    const safeOne = (sql, ...b) => one(sql, ...b).catch(() => null);
+    const safeAll = (sql, ...b) => env.DB.prepare(sql).bind(...b).all().catch(() => ({ results: [] }));
+    const day7Cut = new Date(now - 7 * DAY_MS + 8 * 3600e3).toISOString().slice(0, 10);
+    const [users, fresh, eco, open, deals, banned, gone, inkFlow, opens24, signups, inkFlow7, caseOpens, pres, errs24, logRows, authRows, mktRows, errRows, topModesRes] = await Promise.all([
       one("SELECT COUNT(*) AS n FROM users WHERE deleted_at = 0 AND COALESCE(password_algo, '') != 'ai-bot-locked'"),
       one("SELECT COUNT(*) AS n FROM users WHERE created_at > ? AND COALESCE(password_algo, '') != 'ai-bot-locked'", now - DAY_MS),
       one("SELECT COUNT(*) AS n, COALESCE(SUM(e.ink), 0) AS ink FROM econ e LEFT JOIN users u ON u.id = e.uid WHERE COALESCE(u.password_algo, '') != 'ai-bot-locked'"),
@@ -158,6 +161,12 @@ async function handleAdmin(env, request, path, now, ip) {
       env.DB.prepare("SELECT CAST((at / 86400000) AS INTEGER) AS d, COALESCE(SUM(CASE WHEN ink1 > ink0 THEN ink1 - ink0 ELSE 0 END), 0) AS inkIn, COALESCE(SUM(CASE WHEN ink0 > ink1 THEN ink0 - ink1 ELSE 0 END), 0) AS inkOut FROM econ_log WHERE at > ? GROUP BY d ORDER BY d").bind(now - 7 * DAY_MS).all(),
       env.DB.prepare("SELECT detail FROM econ_log WHERE act IN ('open', 'openAll') AND ok = 1 AND at > ? LIMIT 1000").bind(now - 7 * DAY_MS).all(),
       presenceCounts(env, now),
+      safeOne('SELECT COUNT(*) AS types, COALESCE(SUM(n), 0) AS total FROM errs WHERE last_at > ?', now - DAY_MS),
+      safeOne('SELECT COUNT(*) AS n FROM econ_log'),
+      safeOne('SELECT COUNT(*) AS n FROM auth_log'),
+      safeOne('SELECT COUNT(*) AS n FROM mkt'),
+      safeOne('SELECT COUNT(*) AS n FROM errs'),
+      safeAll("SELECT substr(ev, 3) AS mode, SUM(n) AS n FROM play_counts WHERE day >= ? AND ev LIKE 'm:%' GROUP BY ev ORDER BY n DESC LIMIT 5", day7Cut),
     ]);
     const signups7d = (signups && signups.results || []).map(r => r.n);
     const inkFlow7d = (inkFlow7 && inkFlow7.results || []).map(r => ({ d: r.d, inkIn: r.inkIn || 0, inkOut: r.inkOut || 0 }));
@@ -182,6 +191,18 @@ async function handleAdmin(env, request, path, now, ip) {
       playing: (pres && pres.playing) || 0,
       waiting: (pres && pres.waiting) || 0,
       d1Shield: d1ShieldSnapshot(env, now),
+      errors24: { types: (errs24 && errs24.types) || 0, total: (errs24 && errs24.total) || 0 },
+      dbRows: {
+        users: (users && users.n) || 0,
+        econ: (eco && eco.n) || 0,
+        econ_log: (logRows && logRows.n) || 0,
+        mkt: (mktRows && mktRows.n) || 0,
+        auth_log: (authRows && authRows.n) || 0,
+        errs: (errRows && errRows.n) || 0,
+      },
+      topModes7d: (topModesRes && topModesRes.results) || [],
+      version: '1.1.0',
+      aiSummary: { heroes: C.HERO_IDS.length, modes: C.MODES.length, difficulties: C.LEVELS.length },
       cfgId: CFG_CACHE.id,
     });
   }
