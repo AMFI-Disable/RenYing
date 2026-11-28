@@ -10071,6 +10071,7 @@ return;
 }
 if (this.watch2v2(me, foe, d, to)) return;
 if (this.aiTeamTactics(me, foe, d, to)) return;
+if (typeof this.aiRelayAndInk === 'function' && this.aiRelayAndInk(me, foe, d, to)) return;
 const cm = typeof squadAiMod === 'function' ? squadAiMod(me, foe, d) : (M.cmd ? cmdAiMod(me, foe, d) : null);   // 战队指挥战术与阵型：适用于 2v2、3v3–16v16 团战、夺旗、四象
 if (cm && cm.retreat && !this.holdAtk) {
 this.dir = cm.dir || -to;
@@ -10498,6 +10499,30 @@ if (d < 340 && d > 90 && !this.queue.length) { this.dir = to; return true; }
 }
 return false;
 },
+aiRelayAndInk(me, foe, d, to) {
+if (!me.onGround() || !AI_FREE.includes(me.state) || this.L.read < 0.35 || clock < (this.relayInkNext || 0)) return false;
+if (M.mode === 'tag3' && M.tag3Assist && typeof tag3BenchSlot === 'function') {
+const side = me.idx % 2;
+const st = M.tag3Assist;
+const bench = tag3BenchSlot(side);
+if (st && bench) {
+const hotCost = typeof TAG3_HOTTAG_COST === 'number' ? TAG3_HOTTAG_COST : 35;
+const astCost = typeof TAG3_ASSIST_COST === 'number' ? TAG3_ASSIST_COST : 25;
+const tagLock = (st.tagLock && st.tagLock[side]) || 0;
+const cd = (st.cd && st.cd[side]) || 0;
+if (this.L.read >= 0.45 && me.hp < me.maxHp * 0.32 && me.meter >= hotCost && tagLock <= 0 && this.chance(0.5 * this.L.read)) {
+this.stopAll(); this.holdDown = 0.08; this.press('rally', 'tag3_hottag'); this.relayInkNext = clock + 1.2; return true;
+}
+if (cd <= 0 && me.meter >= astCost && d < 340 && (AI_HURT.includes(foe.state) || d < 220) && this.chance(0.42 * this.L.skill)) {
+this.stopAll(); this.holdDown = 0; this.press('rally', 'tag3_assist'); this.relayInkNext = clock + 1.0; return true;
+}
+}
+}
+if (this.L.read >= 0.45 && typeof inkZoneAt === 'function' && inkZoneAt(me.x, me.y) && foe.state === 'attack' && d < 165 && this.chance(0.38 * this.L.punish)) {
+this.stopAll(); this.holdDown = 0; this.press('light', 'ink_clash'); this.relayInkNext = clock + 0.65; return true;
+}
+return false;
+},
 lingqueRoute(me, foe, d, to) {
 const L = this.L, free = AI_FREE.includes(me.state) || me.state === 'air';
 if (!free || foe.hp <= 0 || aiInv(foe, me) > 0 || !this.seen) return false;
@@ -10653,7 +10678,9 @@ chaos: { bp: 'open', slots: [[0], [1]], rule: 'chaos' },
 mayhem: { bp: 'open', slots: [[0], [1]], rule: 'mayhem' },
 maps: { bp: 'open', slots: [[0], [1]], rule: 'maps' },   // 山河异境：两边各投一票选地图
 cuju: { bp: 'open', slots: [[0], [1]], rule: 'cuju' },   // 墨球蹴鞠：好友房联机踢球
+cuju2v2: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true, rule: 'cuju' },   // 2v2 墨球蹴鞠好友房
 koth: { bp: 'open', slots: [[0], [1]], rule: 'koth' },   // 灵坛争锋：好友房抢坛
+koth2v2: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true, rule: 'koth' },   // 2v2 灵坛争锋好友房
 party: { bp: 'open', slots: [[0], [1]], rule: 'party' },   // 江湖百戏：好友房趣味百戏
 bastion: { bp: 'open', slots: [[0], [1]], rule: 'bastion' },   // 天枢守境：随时加入传音守城与远征
 melee: { bp: 'open', slots: [[0], [1]], rule: 'melee', teamSize: 8 },   // 群雄会战：联机大型团战（支持至 16v16 = 32 人）
@@ -16950,7 +16977,7 @@ localStorage.setItem('renying-settings', JSON.stringify(SETTINGS));
 if (SETTINGS.lang) localStorage.setItem('renying-lang', SETTINGS.lang);
 } catch (e) {}
 }
-const VERSION = '1.3.0';         // 每次更新改一下，联机时双方版本必须一样
+const VERSION = '1.4.0';         // 每次更新改一下，联机时双方版本必须一样
 const BUILD = window.RENYING_BUILD || {};
 const OFFLINE_BUILD = !!BUILD.offline;   // 离线版：不连服务器，全部角色和皮肤可用
 const TOY_BUILD = !!BUILD.toy;           // B站 Toy 版：在离线版基础上加全服排行榜
@@ -28334,7 +28361,7 @@ spawnProj(foeSetter, { kind: 'bolt', x: hx, y: -360, vx: 0, w: 68, h: 720, life:
 }
 }
 }
-const mayhemOn = () => M.mode === 'mayhem' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'mayhem') || ((['cpu', 'pvp', 'maps', 'tag3', 'melee', 'ctf', '2v2', 'watch2v2', 'replay', 'net'].includes(M.mode)) && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
+const mayhemOn = () => M.mode === 'mayhem' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'mayhem') || ((['cpu', 'pvp', 'maps', 'tag3', 'melee', 'ctf', 'quad', 'gauntlet', '2v2', 'watch2v2', 'replay', 'net'].includes(M.mode)) && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
 const mapsOn = () => {
 if (M.mode === 'replay' && REPLAY.on) {
 const m = REPLAY.m || {};
@@ -28821,6 +28848,21 @@ announceQueue.push(item);
 }
 function randomPair() { const a = Math.random() * CHARS.length | 0; let b = Math.random() * (CHARS.length - 1) | 0; if (b >= a) b++; return [a, b]; }
 function netDropWaiting() { if (!NET.open && p2pActive()) { netLeave(); $id('roomCode').textContent = ''; netStatus(''); } }
+function resetMatchState(keep = {}) {
+M.subMode = null;
+M.cujuFour = false; M.cujuPvp = false; M.cujuTarget = 3; M.cujuChaos = false;
+M.kothFour = false; M.kothPvp = false;
+M.party = null; M.partyPvp = false;
+M.bastionPvp = false;
+M.raidSquadSize = 0;
+M.worldKey = null;
+M.hasBuffs = false; M.competitiveScrolls = null;
+M.stage = null;
+M.tag3Assist = null; M.tag3BenchHp = null;
+M.inkZones = []; M.synergyCount = 0;
+if (!keep.map) M.map = null;
+if (!keep.scrolls) { M.towerPerks = []; M.foeScrolls = []; M.scRun = {}; }
+}
 function startMatch(mode, level, chars, isWatch = false) {
 debugHitbox = mode === 'train';
 TRAIN.inspectHz = 120; TRAIN.inspectAcc = 0; TRAIN.inspectPaused = false;
@@ -28833,6 +28875,7 @@ if (duo) chars = [duo[0][0], duo[1][0]];
 setChars(chars[0], chars[1]);
 if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
 const keepMap = M.map;
+resetMatchState({ map: true, scrolls: mode === 'tower' || mode === 'raid' || mode === 'saga' });
 M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false; M.map = keepMap || null; M.teamSize = 0;
 M.teamMutator = (['cpu', 'pvp', 'maps'].includes(mode) && typeof teamMutator !== 'undefined' && teamMutator === 'mayhem') ? 'mayhem' : 'normal';
 M.watchAi = !!isWatch;
@@ -34166,6 +34209,8 @@ REPLAY.speed = +b.dataset.sp;
 for (const x of document.querySelectorAll('#rpBar [data-sp]')) x.classList.toggle('sel', x === b);
 });
 window.addEventListener('keydown', e => { if (REPLAY.on && e.code === 'Space' && M.phase !== 'end') { e.preventDefault(); e.stopImmediatePropagation(); $id('rpPause').click(); } }, true);
+const QFX_REW = [[3, 200, ''], [6, 300, ''], [10, 500, 'qf_qfx']];
+const QFX = { busy: false };
 const REPLAY_TAKEOVER = { active: false, savedState: null, savedMeta: null, side: 0, timer: 0, maxDur: 8.0, totalFrame: 0, segIdx: 0, p: 0, f: 0, nf: 0, kind: 'loc', ev: [] };
 class TakeoverOppCtrl extends Ctrl {
 constructor(oppIdx, kind, ev, startP, startF, startNf) {
@@ -34288,8 +34333,6 @@ $id('endScrollBtn').addEventListener('click', () => {
 if (typeof exportBattleScrollPng === 'function') exportBattleScrollPng();
 });
 }
-const QFX_REW = [[3, 200, ''], [6, 300, ''], [10, 500, 'qf_qfx']];
-const QFX = { busy: false };
 function qfxBest() { try { return +localStorage.getItem('renying-qfx') || 0; } catch (e) { return 0; } }
 function extToast(msg, dur = 4.5) {
 const el = $id('extToast'); if (!el) return;
@@ -34666,12 +34709,38 @@ setting.draw();
 ctx.restore();
 }
 }
+let _bgStaticLayer = null;
+function getBgStaticLayer(sky, bg) {
+if (typeof document === 'undefined' || W <= 0 || H <= 0) return null;
+const key = W + 'x' + H + '|' + sky.join(',');
+if (_bgStaticLayer && _bgStaticLayer.key === key) return _bgStaticLayer.cv;
+const cv2 = document.createElement('canvas');
+cv2.width = Math.max(1, Math.round(W));
+cv2.height = Math.max(1, Math.round(H));
+const x2 = cv2.getContext && cv2.getContext('2d');
+if (!x2) return null;
+const skyG = x2.createLinearGradient(0, 0, 0, H);
+skyG.addColorStop(0, sky[0]); skyG.addColorStop(0.48, sky[1]); skyG.addColorStop(0.78, sky[2]); skyG.addColorStop(1, sky[3]);
+x2.fillStyle = skyG; x2.fillRect(0, 0, W, H);
+const wash = x2.createRadialGradient(W * 0.65, H * 0.24, H * 0.05, W * 0.55, H * 0.35, W * 0.75);
+wash.addColorStop(0, 'rgba(239, 230, 210, 0.08)');
+wash.addColorStop(0.5, 'rgba(180, 195, 220, 0.02)');
+wash.addColorStop(1, 'rgba(4, 6, 12, 0.28)');
+x2.fillStyle = wash; x2.fillRect(0, 0, W, H);
+_bgStaticLayer = { key, cv: cv2 };
+return cv2;
+}
 function drawBackground(sc) {
 const setting = storyBackdrop();
 const T = setting || SCN, sky = T ? T.sky : ['#060914', '#141b30', '#262b44', '#181c2b'], mc = T ? T.mist : SCN_DEF.mist;
 const bg = bgGrads(sky, mc, !!(T && T.legend));
+const cachedBg = getBgStaticLayer(sky, bg);
+if (cachedBg) {
+ctx.drawImage(cachedBg, 0, 0, W, H);
+} else {
 ctx.fillStyle = bg.sky; ctx.fillRect(0, 0, W, H);
 ctx.fillStyle = bg.wash; ctx.fillRect(0, 0, W, H);
+}
 if (T && T.storm) { const k = Math.floor(clock * 0.4), ph = clock * 0.4 - k; if (hash(k) < 0.45 && ph < 0.12) { ctx.fillStyle = `rgba(200,170,255,${0.22 * (1 - ph / 0.12)})`; ctx.fillRect(0, 0, W, H); } }
 ctx.fillStyle = '#fff';
 for (let i = 0, ns = 90 * (T && T.stars !== undefined ? T.stars : 1); i < ns; i++) {
@@ -47118,7 +47187,18 @@ rematch: () => bpStart('chaos', { level: pickLevel, isWatch: false }),
 toMenuScreen: () => { singleSec('chaos'); showScreen('single'); },
 },
 saga: {
+rematch: () => {
+if (typeof SG !== 'undefined' && SG.hero && SG.node >= 0 && typeof sagaPlay === 'function') sagaPlay(SG.hero, SG.node);
+else { singleSec('saga'); showScreen('single'); }
+},
 toMenuScreen: () => { singleSec('saga'); showScreen('single'); },
+},
+train: {
+toMenuScreen: () => {
+const tab = (typeof trainSubTab === 'string' && ['trials', 'lesson', 'free', 'watch'].includes(trainSubTab)) ? trainSubTab : 'free';
+singleSec('train-' + tab);
+showScreen('single');
+},
 },
 melee: {
 toMenuScreen: () => { singleSec('melee'); showScreen('single'); },   // 大型团战：退出后回习武大厅的团战页，不回首页
@@ -47214,19 +47294,17 @@ ROLL.on = false; REC.on = false;
 if (REPLAY.on) { REPLAY.on = false; const rpb = $id('rpBar'); if (rpb) rpb.classList.add('hidden'); }
 if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
 if (WORLD.on) worldLeave();
-M.worldKey = null;
-M.hasBuffs = false; M.competitiveScrolls = null;
-M.stage = null;
+const wasTut = !!TUT;
 if (TUT) endTutorial();
 const keepRoom = !!(NET.keepRoom && !NET.open && typeof P2P !== 'undefined' && P2P.friend && P2P.peer);
 paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (!keepRoom && (M.mode === 'net' || bpMode === 'net')) netLeave(); bpMode = 'cpu';
 const prevMode = M.mode;
 const handler = MODE_HANDLERS[prevMode];
 if (handler && handler.onLeave) handler.onLeave();
-M.map = null;
-M.towerPerks = []; M.foeScrolls = []; M.scRun = {};
+if (typeof resetMatchState === 'function') resetMatchState();
+else { M.map = null; M.towerPerks = []; M.foeScrolls = []; M.scRun = {}; M.worldKey = null; M.hasBuffs = false; M.competitiveScrolls = null; M.stage = null; }
 M.mode = 'demo';
-if (returnHome) showScreen('menu');
+if (returnHome || wasTut) showScreen('menu');
 else if (handler && handler.toMenuScreen) handler.toMenuScreen();
 else showScreen('menu');
 if (prevMode !== 'demo') startMatch('demo');   // 首页背景那场比武本来就还在打，别重新摆一次

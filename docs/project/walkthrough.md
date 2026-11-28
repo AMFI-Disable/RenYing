@@ -128,7 +128,7 @@ sequenceDiagram
 - **单一源码构建流水线**：由 [`tools/build.py`](../../tools/build.py) 统筹生成在线版 [`index.html`](../../index.html) 与全内嵌离线单文件 [`renying-offline.html`](../../renying-offline.html)。
 
 ### 2. 双模联机切换与环境自动探测
-- **环境自适应**：访问页面时自动探测宿主环境。在静态托管（`https://amfi-disable.github.io/RenYing/`）下默认激活 **WebRTC 免服务器直连**，杜绝了试图连接 `ws://127.0.0.1:8765` 导致的浏览器 Mixed Content 安全拦截。
+- **环境自适应**：访问页面时自动探测宿主环境。在静态托管（`https://bigbraindevbros.github.io/RenYing/`）下默认激活 **WebRTC 免服务器直连**，杜绝了试图连接 `ws://127.0.0.1:8765` 导致的浏览器 Mixed Content 安全拦截。
 - **低延迟 STUN 矩阵**：内置腾讯 QQ、小米、Cloudflare、Google 与 Twilio 多路 STUN 节点，大幅提升国内各运营商网络下的 NAT 穿透成功率。
 - **一键分享与 URL 直连**：生成纯字母 4 位友好房间码，支持一键复制房间链接；通过链接带参（`?room=XXXX`）打开即可全自动连接入房。
 - **状态机健壮性保障**：实现版本握手校验（版本不一致温和提示）、20 秒心跳静默超时判定、角色协商（房主/加入者隔离）及离开单人模式自动解绑，防止残留事件扰乱对局。

@@ -28,6 +28,23 @@ All notable changes, features, and architectural capabilities of this project ar
 
 - Allowed long key binding labels to wrap in Settings so the full action name remains readable.
 
+## [1.4.0] - 2026-11-28
+
+### Added
+
+- **Online 2v2 Ink Ball & Altar Friend Rooms + Mayhem Mode Gating (`src/data/10-modes.js`, `src/game/02-combat/08-fighter-02-maps-arena.js`)**: added 4-fighter rollback-synchronized `cuju2v2` (墨球蹴鞠 2v2) and `koth2v2` (灵坛争锋 2v2) room modes to `ROOM_MODES`, and extended `mayhemOn()` so `quad` (四象争锋) and `gauntlet` (无尽车轮) honor the Mayhem (`通天神决`) mutator cleanly. No Worker change.
+- **AI 3v3 Bench Assist, Hot-Tag Escape & Living Ink Clash Mastery (`src/ai/05-brain-hero-routes-and-team.js`, `src/ai/04-brain-offense-and-neutral.js`)**: added `aiRelayAndInk()` in `AIBrain` so computer opponents trigger 3v3 Hot-Tag Relay Swaps (`Down + T`) at low HP, summon Bench Assists (`T`) during pressure/hitstun windows, and actively contest melee clashes inside Living Ink zones (`残墨`/`墨爆`). No Worker change.
+- **32-Player Frame-Time CI Gate & v1.4.0 Regression Suite (`tools/tests/perf-budget.mjs`, `tools/tests/combat/97-v140-mode-ai-perf.mjs`, `tools/tests/combat-test.mjs`)**: added standalone 32-player 240-frame performance and memory-bound gate (`<= 12 ms/frame`, bounded particles/ink zones, zero NaNs; measured `1.47 ms/frame` in headless Node) plus 3 combat regression checks (`132/132` passing). No Worker change.
+
+### Changed
+
+- **Unified Match State Reset, Mode Exit/Rematch Parity & Replay Takeover Modularization (`src/game/02-combat/08-fighter-03-lifecycle.js`, `src/game/05-ui/22-match-flow.js`, `src/game/02-combat/11-loop-03-replay.js`, `src/game/02-combat/11-loop-03b-replay-takeover.js`, `tools/audits/mode-switch-audit.mjs`)**: introduced `resetMatchState()` to clear match-scoped flags (`M.subMode`, `M.cujuFour`, `M.kothFour`, `M.party`, `M.raidSquadSize`, `M.inkZones`, `M.tag3Assist`) on match start and menu return; added `MODE_HANDLERS.saga.rematch` and `MODE_HANDLERS.train.toMenuScreen`; extracted Replay Takeover drills into `11-loop-03b-replay-takeover.js`; and expanded `mode-switch-audit.mjs` leak assertions. No Worker change.
+- **20-Hero Bilingual Documentation & Pages URL Parity (`readme.md`, `readme.zh-cn.md`, `docs/project/walkthrough.md`, `src/game/01-engine/01-core.js`, `docs/wiki/version-history.md`)**: updated both README hero tables to all 20 heroes (`chixiao`, `xuanji`, `qingluan`, `xuanwu`), corrected the deprecated Pages URL in `docs/project/walkthrough.md` to `https://bigbraindevbros.github.io/RenYing/`, and bumped `VERSION` to `1.4.0`. Zero Cloudflare D1 reads/writes added; no Worker change.
+
+### Performance
+
+- **Offscreen Static Stage Layer Caching (`src/game/03-render/12-draw-01-stages.js`)**: added `getBgStaticLayer()` offscreen canvas caching for static sky/wash gradients in `drawBackground()`, eliminating redundant per-frame full-viewport gradient redraws across 1v1 and 32-player arenas. No Worker change.
+
 ## [1.3.0] - 2026-11-27
 
 ### Added

@@ -8,7 +8,7 @@
 *Made by Even, Luffy, Opus 5.5 and Gemini 4 Argon. Plain JavaScript on one canvas, peer-to-peer online play, and an optional Cloudflare Worker for accounts.*
 
 [![Play: GitHub Pages](https://img.shields.io/badge/Play-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://bigbraindevbros.github.io/RenYing/)
-[![Client: 1.3.0](https://img.shields.io/badge/Client-1.3.0-blue.svg?style=flat-square)](docs/history/changelog.md)
+[![Client: 1.4.0](https://img.shields.io/badge/Client-1.4.0-blue.svg?style=flat-square)](docs/history/changelog.md)
 [![Heroes: 20](https://img.shields.io/badge/Heroes-20-red.svg?style=flat-square)](#heroes)
 [![Tech: HTML5 Canvas](https://img.shields.io/badge/Tech-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](#how-it-works)
 [![Online: WebRTC + Rollback](https://img.shields.io/badge/Online-WebRTC%20%2B%20Rollback-blue.svg?style=flat-square)](#how-it-works)
@@ -51,7 +51,7 @@
 
 ## What It Is
 
-**RenYing (刃影)** is a fast 2D fighting game drawn in an ink-wash style. Sixteen heroes, each with their own reach, weight, passive and three skills, fight one-on-one, in 2v2 teams or in 3v3 relay matches. Everything on screen, from brush trails to scarves and hit flashes, is drawn in code on a single canvas; there are no sprite sheets.
+**RenYing (刃影)** is a fast 2D fighting game drawn in an ink-wash style. Twenty heroes, each with their own reach, weight, passive and three skills, fight one-on-one, in 2v2 teams, in 3v3 relay matches with bench assists and hot-tag swaps, or in up to 16v16 and 8v8v8v8 large team battles with cross-hero synergies and living ink battlefields. Everything on screen, from brush trails to scarves and hit flashes, is drawn in code on a single canvas; there are no sprite sheets.
 
 The game is made for playing with friends straight away. Open the link, share a four-character room code, and the two browsers connect directly to each other. There is also a single-file offline edition that works with no network at all.
 
@@ -162,7 +162,7 @@ Some modes (ranked, open world, Demon Raid, the armory market) need the server a
 
 ## Heroes
 
-Sixteen heroes. Each has a passive, a skill on `Q`, a second skill on `R`and an ultimate on `E`.
+Twenty heroes across six martial archetypes. Each has a passive, a skill on `Q`, a second skill on `R`, and an ultimate on `E`.
 
 | Hero | Style | Q | R | E |
 | :--- | :--- | :--- | :--- | :--- |
@@ -182,6 +182,10 @@ Sixteen heroes. Each has a passive, a skill on `Q`, a second skill on `R`and an 
 | 离影 Li Ying | Soul-Parted Blade | 留影 Mist Mark | 渡影 Mist Crossing | 万影归一 Myriad Mists |
 | 磁仙 Ci Xian | Two-Pole Adept | 极性反转 Pole Swap | 磁极 Magnet Poles | 天地磁合 Heaven-Earth Clamp |
 | 千机 Qian Ji | Puppet Engineer | 金丝回环 Silk Loop | 穿丝急袭 Tether Lash | 机轮三穿 Gearwheel Triple Pass |
+| 炽霄 Chi Xiao | Furnace Fire Patrol | 炎戟突 Flame Rake | 炽焰环 Blaze Ring | 焚天落 Skyfall Inferno |
+| 玄机 Xuan Ji | Clepsydra Timekeeper | 星枢球 Star Orb | 引力井 Gravity Well | 天枢星陨 Celestial Collapse |
+| 青鸾 Qing Luan | Bell-Staff Healer | 翠羽风 Jade Breeze | 鸾鸣回春 Luan Mend | 鸾凤和鸣 Phoenix Chorus |
+| 玄武 Xuan Wu | Mountain Shield Guard | 玄甲撞 Shell Bash | 镇岳壁 Earth Fort | 玄岳压顶 Tortoise Slam |
 
 Full move lists and frame data: [wiki: Heroes And Combat](https://github.com/BigBrainDevBros/RenYing/wiki/Heroes-and-Combat) and [docs/ai/frame-data.md](docs/ai/frame-data.md).
 

@@ -8,7 +8,7 @@
 *由 Even、Luffy、Opus 5.5 和 Gemini 4 Argon 制作。纯 JavaScript 画在一块 canvas 上，点对点联机，账号和存档用可选的 Cloudflare Worker。*
 
 [![在线游玩](https://img.shields.io/badge/在线游玩-GitHub%20Pages-success.svg?style=flat-square&logo=github)](https://bigbraindevbros.github.io/RenYing/)
-[![客户端 1.3.0](https://img.shields.io/badge/客户端-1.3.0-blue.svg?style=flat-square)](docs/history/changelog.md)
+[![客户端 1.4.0](https://img.shields.io/badge/客户端-1.4.0-blue.svg?style=flat-square)](docs/history/changelog.md)
 [![侠客 20 位](https://img.shields.io/badge/侠客-20%20位-red.svg?style=flat-square)](#侠客)
 [![技术 HTML5 Canvas](https://img.shields.io/badge/技术-HTML5%20Canvas-orange.svg?style=flat-square&logo=html5)](#工作原理)
 [![联机 WebRTC 回滚](https://img.shields.io/badge/联机-WebRTC%20%2B%20回滚-blue.svg?style=flat-square)](#工作原理)
@@ -51,7 +51,7 @@
 
 ## 这是什么
 
-**刃影（RenYing）** 是一款节奏很快的水墨风 2D 格斗游戏。十六位侠客各有自己的攻击距离、体量、被动和三个招式，可以一对一、2v2 组队，或者 3v3 车轮战。画面上的一切，从笔触拖尾到围巾飘动、受击闪光，都是代码在一块 canvas 上实时画出来的，没有贴图序列帧。
+**刃影（RenYing）** 是一款节奏很快的水墨风 2D 格斗游戏。二十位侠客各有自己的攻击距离、体量、被动和三个招式，支持一对一、2v2 组队、带援护与换阵连携的 3v3 车轮战，以及最高 16v16 与 8v8v8v8 大规模团战、跨侠客武学共鸣与残墨战场。画面上的一切，从笔触拖尾到围巾飘动、受击闪光，都是代码在一块 canvas 上实时画出来的，没有贴图序列帧。
 
 它是为了和同学朋友马上开打而做的：打开链接，把四位房间号发给对方，两个浏览器就直接连上。另有一个单文件离线版，完全不用网络。
 
@@ -162,7 +162,7 @@
 
 ## 侠客
 
-一共十六位。每位都有一个被动，`Q`一个技能，`R`第二个技能，`E` 大招。
+一共二十位，覆盖六大武学定位。每位都有一个被动，`Q` 一个技能，`R` 第二个技能，`E` 大招。
 
 | 侠客 | 定位 | Q | R | E |
 | :--- | :--- | :--- | :--- | :--- |
@@ -182,6 +182,10 @@
 | 离影 | 离魂刀客 | 留影 | 渡影 | 万影归一 |
 | 磁仙 | 两极方士 | 极性反转 | 磁极 | 天地磁合 |
 | 千机 | 机关傀客 | 金丝回环 | 穿丝急袭 | 机轮三穿 |
+| 炽霄 | 巡火人 | 炎戟突 | 炽焰环 | 焚天落 |
+| 玄机 | 报时匠 | 星枢球 | 引力井 | 天枢星陨 |
+| 青鸾 | 翠羽铃医 | 翠羽风 | 鸾鸣回春 | 鸾凤和鸣 |
+| 玄武 | 镇山玄卫 | 玄甲撞 | 镇岳壁 | 玄岳压顶 |
 
 完整招式和帧数见 [Wiki：侠客与战斗](https://github.com/BigBrainDevBros/RenYing/wiki/Heroes-and-Combat) 和 [docs/ai/frame-data.md](docs/ai/frame-data.md)。
 
