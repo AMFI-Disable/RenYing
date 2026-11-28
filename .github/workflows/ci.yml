@@ -187,6 +187,7 @@ jobs:
           node tools/audits/bp-flow-test.mjs
           node tools/audits/kb-flow-test.mjs ci-kb 1440 900
           node tools/audits/kb-flow-test.mjs ci-kb-en 844 390 --en
+          node tools/audits/mode-switch-audit.mjs ci-mode-switch 1440 900
 
       - name: Run UI Layout, HUD And Touch Audits
         run: |
