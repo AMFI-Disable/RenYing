@@ -1,0 +1,243 @@
+  <div id="acc" class="scr">
+    <div class="panel narrowp accp">
+      <div class="acc-dash hidden" id="accDash">
+        <div class="ad-card">
+          <span class="ad-avatar" id="adAvatar">侠</span>
+          <div class="ad-who">
+            <span class="ad-kicker" id="adKind">云端账号</span>
+            <b class="ad-name" id="adName">大侠</b>
+            <span class="ad-rank" id="adRank"></span>
+          </div>
+          <span class="ad-medal" id="adMedal"></span>
+        </div>
+        <div class="ad-stats" id="adStats"></div>
+
+        <div class="ad-sync">
+          <div class="ad-sync-head"><span class="ad-dot" id="adSyncDot"></span><b id="adSyncT">已同步</b><span id="adSyncS"></span></div>
+          <p class="ad-sync-note" id="adSyncNote">存档先存在本机，再自动上传到云端；上传失败会自动重试，没传完就关了网页，下次打开会补传。</p>
+          <div class="ad-sync-btns"><button class="mm-go ad-btn" id="adSyncNow" type="button">立即上传</button><button class="mm-go ad-btn hidden" id="adPromoteBtn" type="button" style="background:#46d3ea;color:#0a0e17">一键升级为云端账号</button><button class="mm-cancel" id="adPull" type="button">双向合并同步</button><button class="mm-cancel" id="adLogout" type="button">退出登录</button></div>
+          <p class="netstatus" id="adMsg" role="status"></p>
+        </div>
+        <div class="ad-sync ad-dev hidden" id="adDev">
+          <div class="ad-sync-head"><b>登录的设备</b><span>在别处登录过、现在不用的，可以在这里退出</span></div>
+          <div class="ad-dev-list" id="adDevList"></div>
+          <div class="ad-sync-btns"><button class="mm-cancel" id="adDevAll" type="button">所有设备都退出</button></div>
+        </div>
+      </div>
+      <div class="acc-in" id="accIn">
+      <span class="ad-kicker">账号</span>
+      <h2>登录刃影</h2>
+      <p class="sub">登录后，角色、墨锭、战绩和排位分数都跟着账号走，换电脑也能接着玩</p>
+      <div class="form">
+        <label>昵称<input id="accName" maxlength="12" autocomplete="username" spellcheck="false"></label>
+        <label>密码<input id="accPass" type="password" maxlength="64" autocomplete="current-password"></label>
+      </div>
+      <p class="netstatus" id="accMsg" role="status"></p>
+      <div class="row"><button class="go small" id="loginBtn">登录</button><button class="go small alt" id="regBtn">注册</button><button class="ghost" id="accBack">返回</button></div>
+      </div>
+      <span class="ad-kicker ad-tools-k">存档管理</span>
+      <div id="accActionBtns" style="margin-top:12px;display:flex;justify-content:center;gap:8px;flex-wrap:wrap">
+        <button class="ghost small" id="exportAccBtn" style="font-size:12px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px" title="将当前账号的角色、皮肤、墨锭与战绩导出为本地 JSON 备份文件"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>导出当前存档</button>
+        <button class="ghost small" id="toggleCloudCfgBtn" style="font-size:12px;padding:3px 10px;display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"/></svg>云存档设置</button>
+        <button class="ghost small hidden" id="devAdminBtn" style="font-size:12px;padding:3px 10px;color:#46d3ea;border-color:rgba(70,211,234,.4);display:inline-flex;align-items:center;gap:5px" title="开发者管理后台：查账号、调墨锭、发补偿、改经济数值（要管理口令）"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5z"/><path d="m9 12 2 2 4-4"/></svg>管理后台</button>
+        <button class="ghost small" id="toggleImportBoxBtn" style="font-size:12px;padding:3px 10px;color:var(--gold);display:inline-flex;align-items:center;gap:5px"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 4v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4M5 4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2zM9 7h6M9 11h6M9 15h4"/></svg>存档导入与继承</button>
+      </div>
+      <div id="cloudCfgBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(70,211,234,.3);border-radius:8px;background:rgba(10,15,25,.6);text-align:left">
+        <p style="margin:0 0 8px;font-size:13px;color:#46d3ea"><b>云端账号服务配置</b>（Cloudflare Workers + D1）</p>
+        <p class="netnote" style="margin:0 0 6px">当前云端服务接口已默认连接：</p>
+        <input id="fbCfgIn" style="width:100%;font-size:12px;font-family:monospace;background:rgba(0,0,0,.4);color:#eee;border:1px solid var(--faint);border-radius:4px;padding:6px;box-sizing:border-box" placeholder="https://renying.evengao6688.workers.dev">
+        <div class="row" style="margin:8px 0 0"><button class="go small" id="fbCfgSaveBtn">保存接口</button><button class="ghost small" id="fbCfgClearBtn">恢复默认</button></div>
+      </div>
+      <div id="importBox" class="hidden" style="margin-top:14px;padding:12px;border:1px solid rgba(233,196,106,.3);border-radius:8px;background:rgba(20,24,35,.75);text-align:left">
+        <p style="margin:0 0 6px;font-size:13px;color:var(--gold)"><b>存档导入与继承</b></p>
+        <p class="netnote" style="margin:0 0 8px;font-size:12px;line-height:1.4">支持上传你导出的存档文件 (.json) 恢复英雄、皮肤、墨锭与战绩：</p>
+        <div style="display:flex;gap:8px;align-items:center;margin-top:4px">
+          <label class="ghost small" style="cursor:pointer;font-size:12px;padding:4px 10px;display:inline-flex;align-items:center;gap:4px">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>上传导出文件 (.json)
+            <input type="file" id="importFileInput" accept=".json,application/json" style="display:none">
+          </label>
+          <span id="importFileStatus" style="font-size:12px;color:var(--dim);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">支持任一 renying-account 备份文件</span>
+        </div>
+        <div id="importSelectArea" class="hidden" style="margin-top:8px"></div>
+        <p id="importMsg" class="netstatus" style="margin:6px 0 0;font-size:12px" role="status"></p>
+      </div>
+      <p class="netnote" id="accFootNote" style="margin-top:14px">登录或注册后，角色解锁、墨锭余额与战绩都会保存下来。</p>
+    </div>
+  </div>
+
+  <div id="lb" class="scr">
+    <div class="panel">
+      <div class="lb-head-row"><h2>排行榜</h2><span class="season-tag" id="lbSeasonTag"></span><select id="lbSeasonSel" class="lb-season-sel" aria-label="选择赛季"></select></div>
+      <div class="seg lb-tabs" id="lbTabs"><button data-k="rank" class="sel">段位榜</button><button data-k="wins">战绩榜</button><button data-k="tag3">3v3 车轮</button><button data-k="duo">2v2 双打</button><button data-k="gboss">天魔榜</button><button data-k="mastery">专精试炼</button></div>
+      <p class="sub" id="lbSub"></p>
+      <div class="lbwrap"><div id="lbState"></div><table class="lbt" id="lbTable"></table></div>
+      <div class="row"><button class="ghost" id="lbBack">返回</button></div>
+    </div>
+  </div>
+
+  <div id="gboss" class="scr">
+    <div class="panel gbp">
+      <h2>天魔讨伐</h2>
+      <p class="sub">全服侠客各自出战，伤害累计在同一只天魔身上</p>
+      <div id="gbBody"></div>
+      <div class="row"><button class="go" id="gbGo" type="button" disabled>出战</button><button class="ghost" type="button" data-back>返回</button></div>
+      <p class="netnote" id="gbMsg"></p>
+    </div>
+  </div>
+
+  <div id="welfare" class="scr">
+    <div class="panel">
+      <h2 id="wTitle">新手福利</h2>
+      <p class="sub" id="wSub">人人开局都有青锋。再从下面挑一位角色，免费相赠，永久拥有。</p>
+      <div class="wgrid" id="wGrid"></div>
+      <button class="go" id="wGo" disabled>就选这个</button>
+      <button class="ghost hidden" id="wLater" type="button">稍后再选</button>
+      <p class="netnote" id="wMsg"></p>
+    </div>
+  </div>
+
+  <div id="armory" class="scr">
+    <div class="panel armp">
+      <div class="cxhead ar-head">
+        <div class="ar-title"><h2>刃影武库</h2><p class="sub">武器箱 · 货郎 · 玩家市场 · 熔铸契 · 江湖行动</p></div>
+        <div class="ar-wallet">
+          <span class="ar-cur ar-ink" title="墨锭：打对局、做任务、在市场卖饰品得到；用来买武器箱"><i>墨</i><b class="gInk">0</b></span>
+          <button class="ghost" type="button" data-back>返回</button>
+        </div>
+      </div>
+      <div class="seg ar-tabs" id="arTabs" role="tablist"></div>
+      <p class="ar-msg" id="arMsg" aria-live="polite"></p>
+      <div class="ar-main" id="arMain"></div>
+      <template id="arRecovery">
+        <p class="ar-banner" role="alert">武库暂时无法加载，请重试。</p>
+        <button type="button" class="go small" data-armory-retry>重试</button>
+      </template>
+    </div>
+    <div class="ar-modal" id="arModal" hidden></div>
+    <div class="ar-ins" id="arIns" hidden>
+      <div class="ar-insbox"><div class="ar-stage"><canvas id="arInsCv" aria-label="穿上后的样子"></canvas></div><div class="ar-insinfo" id="arInsInfo"></div></div>
+    </div>
+  </div>
+
+  <div id="replays" class="scr">
+    <div class="panel taskp">
+      <div class="cxhead">
+        <h2>对战回放</h2>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="go small" id="rpTrainUploadBtn" type="button" style="padding:4px 14px;font-size:13px;background:linear-gradient(135deg,#38bdf8,#0284c7);color:#fff">导入训练集</button>
+          <button class="ghost small" id="rpCodeImportBtn" type="button" style="padding:4px 14px;font-size:13px">输入回放码</button>
+          <button class="ghost small" id="rpImportBtn" type="button" style="padding:4px 14px;font-size:13px">导入回放</button>
+          <button class="ghost" id="rpBack" type="button">返回</button>
+        </div>
+      </div>
+      <div class="rp-code-box hidden" id="rpCodeBox">
+        <input id="rpCodeIn" type="text" placeholder="粘贴 RYRP2: 开头的回放分享码" autocomplete="off" spellcheck="false" aria-label="回放分享码">
+        <button class="go small" id="rpCodeApplyBtn" type="button">导入回放码</button>
+        <button class="ghost small" id="rpCodeCancelBtn" type="button">取消</button>
+      </div>
+      <div class="tlist" id="rpList"></div>
+      <p class="tips" style="margin-top:10px">自动保存最近 10 场可回放战斗（本地对战、模式变式与联机），保存在这台设备的浏览器里。回放可暂停、慢放、快进、拖动进度条与关键帧跳转，也能生成回放码或导出导入，与人对传。<br>「训AI」导出的是这一局真实采集的逐帧数据：s 是 19 维状态（双方血量、护甲、内力、奥义槽、站位、朝向、滞空、硬直、是否正对），a 是这一帧按住的键（位掩码），r 由本帧双方回血/掉血和终局胜负算出。.jsonl 训练集可以导入合并、再整包导出。</p>
+    </div>
+  </div>
+
+  <div id="tasks" class="scr">
+    <div class="panel taskp">
+      <div class="cxhead">
+        <div>
+          <h2>任务与秘笈</h2>
+          <p class="sub" style="margin:2px 0 0;text-align:left">修行历练 · 礼包兑换 · 墨锭经济全录</p>
+        </div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <button class="go small hidden" id="claimAllBtn" style="padding:4px 14px;font-size:13px" type="button">一键领取全部</button>
+          <div class="inkbox">墨锭 <b class="gInk">0</b></div>
+          <button class="ghost" data-back>返回</button>
+        </div>
+      </div>
+
+      <div class="task-tabs" id="taskTabs">
+        <button data-ttab="quests" class="sel" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M19 4v16a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V4M5 4a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2zM9 7h6M9 11h6M9 15h4"/></svg></span>挑战任务</button>
+        <button data-ttab="redeem" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 12 20 22 4 22 4 12"/><rect x="2" y="7" width="20" height="5"/><line x1="12" y1="22" x2="12" y2="7"/><path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/><path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/></svg></span>礼包兑换</button>
+        <button data-ttab="guide" type="button"><span class="tab-ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="6 3 18 3 22 9 12 22 2 9 6 3"/><polyline points="2 9 12 13 22 9"/><line x1="12" y1="22" x2="12" y2="13"/></svg></span>墨锭秘笈</button>
+      </div>
+
+      <!-- Tab 1: 挑战任务 -->
+      <div id="taskTabQuests" class="task-tab-pane">
+        <div class="task-sec-card evt-card" id="tEvtCard" hidden style="margin-bottom:14px">
+          <div class="sec-head-row">
+            <h3 class="spt">限时福利</h3>
+            <span class="sub-badge" id="tEvtLeft"></span>
+          </div>
+          <div class="tlist" id="tEvt"></div>
+        </div>
+        <div class="task-sec-card">
+          <div class="sec-head-row">
+            <h3 class="spt">每日挑战</h3>
+            <span class="sub-badge">每天 0 点刷新</span>
+          </div>
+          <div class="tlist" id="tDaily"></div>
+        </div>
+        <div class="task-sec-card" style="margin-top:14px">
+          <div class="sec-head-row">
+            <h3 class="spt">每周任务</h3>
+            <span class="sub-badge">每周一 0 点刷新</span>
+          </div>
+          <div class="tlist" id="tWeekly"></div>
+        </div>
+      </div>
+
+      <!-- Tab 2: 礼包兑换 -->
+      <div id="taskTabRedeem" class="task-tab-pane" style="display:none">
+        <div class="task-sec-card">
+          <div class="sec-head-row">
+            <h3 class="spt">礼包码兑换</h3>
+            <span class="sub-badge">输入有效密令</span>
+          </div>
+          <p class="sub" style="margin:4px 0 14px;text-align:left">输入官方发布的礼包兑换码或密令，兑换丰厚墨锭与珍稀福利。</p>
+          <div class="row redeemrow">
+            <input id="rdCode" maxlength="32" placeholder="输入礼包兑换码" autocomplete="off" spellcheck="false">
+            <button class="go" id="rdBtn">兑换</button>
+          </div>
+          <p class="netnote" id="tMsg" style="min-height:22px;margin-top:6px"></p>
+        </div>
+      </div>
+
+      <!-- Tab 3: 墨锭秘笈 -->
+      <div id="taskTabGuide" class="task-tab-pane" style="display:none">
+        <div class="task-sec-card">
+          <div class="sec-head-row">
+            <h3 class="spt">墨锭经济与武库秘笈</h3>
+            <span class="sub-badge">系统规则全公开</span>
+          </div>
+          <p class="sub" style="margin:4px 0 14px;text-align:left">《刃影》所有侠客都能直接用，皮肤都能靠游玩拿到。以下为获取与消耗规则：</p>
+          <div class="ink-grid">
+            <div class="ink-card">
+              <div class="ink-card-head"><span class="ink-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg></span><b>对战收益</b></div>
+              <ul>
+                <li>联机对战：胜 <b>+60</b> / 负 <b>+30</b> 墨锭</li>
+                <li>排位天梯：胜 <b>+80</b> / 负 <b>+40</b> 墨锭</li>
+                <li>对战电脑（每日限前10局）：<br>· 入门：胜 <b>+10</b> / 负 <b>+5</b><br>· 寻常：胜 <b>+20</b> / 负 <b>+10</b><br>· 劲敌：胜 <b>+40</b> / 负 <b>+20</b></li>
+              </ul>
+            </div>
+            <div class="ink-card">
+              <div class="ink-card-head"><span class="ink-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 9H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h2M18 9h2a2 2 0 0 0 2-2V5a2 2 0 0 0-2-2h-2M4 3h16v6a8 8 0 0 1-16 0V3zM12 17v4M8 21h8"/></svg></span><b>成长与首胜</b></div>
+              <ul>
+                <li>每日首胜：胜场额外加赠 <b>+150 墨锭</b>（联机或寻常以上电脑）</li>
+                <li>新手教学：通关教学立赠 <b>+300 墨锭</b></li>
+                <li>账号注册：新号初始免费赠送 <b>+500 墨锭</b> 启动金</li>
+              </ul>
+            </div>
+            <div class="ink-card">
+              <div class="ink-card-head"><span class="ink-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg></span><b>武库开箱</b></div>
+              <ul>
+                <li>武器箱：两百墨锭上下一个，每周最多买 <b>5</b> 个，开箱不用钥匙</li>
+                <li>斩数版：开出来有 <b>20%</b> 的机会，穿着它每击倒一个对手记一笔</li>
+                <li>货郎：一次报一件饰品的价，想要就买下，不要就换，最多看 <b>5</b> 件</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+

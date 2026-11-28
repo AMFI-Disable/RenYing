@@ -255,8 +255,17 @@ def qfx_page():
 # ===========================================================================
 # src/page.html 里有几个占位标记，按下面 parts 的顺序换成样式和脚本。
 # 脚本的先后顺序有讲究：后面的文件会用到前面定义的全局变量，不要随便调换。
-def page(offline):
+def page_html():
+    """主页面模板：展开 src/page.html 里的 <!--@partial:pages/...--> 局部片断"""
     html = read(SRC, "page.html")
+    def _expand(match):
+        rel = match.group(1).strip()
+        return read(SRC, *rel.split("/"))
+    return re.sub(r"<!--@partial:([a-z0-9_./-]+)-->\n?", _expand, html)
+
+
+def page(offline):
+    html = page_html()
     build = {"offline": offline}
     qfx_b64 = base64.b64encode(qfx_page().encode("utf-8")).decode() if offline else ""
     parts = {

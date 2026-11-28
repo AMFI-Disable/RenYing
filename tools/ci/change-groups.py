@@ -58,11 +58,11 @@ def main():
             "tools/tests/predeploy-check.mjs", "tools/tests/world-test.mjs",
             "tools/tests/rollback-test.mjs", "tools/tests/test.mjs", "tools/build.py",
         )) for path in paths),
-        "browser": any(matches(path, ("src/data/", "src/game/", "src/styles/", "tools/audits/"), (
+        "browser": any(matches(path, ("src/data/", "src/game/", "src/styles/", "src/pages/", "tools/audits/"), (
             "src/page.html", "src/style.css", "src/armory.js", "src/social.js",
             "index.html", "tools/build.py", "tools/tests/test.mjs",
         )) for path in paths),
-        "offline": any(matches(path, ("src/qfx/", "src/data/", "src/game/", "assets/"), (
+        "offline": any(matches(path, ("src/qfx/", "src/data/", "src/game/", "src/pages/", "assets/"), (
             "src/ai.js", "renying-offline.html", "tools/build.py", "tools/tests/rollback-test.mjs",
             "tools/tests/test.mjs",
         )) for path in paths),

@@ -1,0 +1,276 @@
+  <div id="langPrompt" class="scr">
+    <div class="panel narrowp" style="max-width:440px;text-align:center;">
+      <h2 id="lpTitle" style="font-size:26px;margin-bottom:6px;">选择语言</h2>
+      <p class="sub" id="lpSub" style="margin:0 0 20px;font-size:14px;line-height:1.6;color:rgba(239,232,216,0.8);">请选择您的偏好语言（可随时在设置中更改）<br><span style="font-size:12px;opacity:0.75;">选择你惯用的语言，之后可在「设置」里随时更改</span></p>
+      <div style="display:flex;flex-direction:column;gap:12px;margin-bottom:20px;">
+        <button class="go" id="lpPickZh" type="button" style="padding:12px 56px 12px 32px;font-size:18px;letter-spacing:.12em;display:flex;justify-content:center;align-items:center;gap:10px;">
+          <span>🇨🇳 简体中文</span>
+        </button>
+        <button class="go alt" id="lpPickEn" type="button" style="padding:12px 56px 12px 32px;font-size:18px;letter-spacing:.12em;display:flex;justify-content:center;align-items:center;gap:10px;">
+          <span>🇬🇧 英文</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div id="tutask" class="scr">
+    <div class="panel narrowp">
+      <h2>初来乍到？</h2>
+      <p class="sub">一分钟学会基本招式。登录的玩家完成后，还能领 300 墨锭。</p>
+      <div class="row"><button class="go" id="tutYes">快速上手</button><button class="ghost" id="tutNo">以后再说</button></div>
+    </div>
+  </div>
+
+  <div id="forestEnd" class="scr">
+    <div class="panel narrowp">
+      <h2 id="feWave">1.1 通关</h2>
+      <p class="stars" id="feStars"></p>
+      <p class="sub" id="feInfo"></p>
+      <div class="row"><button class="go" id="feNext">下一关</button><button class="ghost" id="feAgain">再来一次</button><button class="ghost" id="feMenu">关卡列表</button></div>
+    </div>
+  </div>
+
+  <div id="tutdone" class="scr">
+    <div class="panel narrowp">
+      <h2>教学完成</h2>
+      <p class="sub" id="tutReward">该会的都会了。去找电脑或是同学，过几招吧。</p>
+      <div class="row"><button class="go" id="tutCpu">和电脑打一局</button><button class="go" id="tutNet">和朋友联机</button></div>
+      <div class="row"><button class="ghost" id="tutMenu">返回菜单</button><button class="ghost" id="tutStay">继续练习</button></div>
+    </div>
+  </div>
+
+  <div class="tutbox hidden" id="tutBox"><div class="tn" id="tutN"></div><div class="tt" id="tutT"></div><div class="td" id="tutD"></div></div>
+  <div class="toast" id="toast" role="status" aria-live="polite" aria-atomic="true"></div>
+  <div class="rk-reveal hidden" id="rkReveal" role="dialog" aria-modal="true" aria-label="段位"></div>
+  <!-- 2v2 组队：唯一的 2v2 入口（对战页的 2v2 卡片打开它；离线版从单人页打开）。先选对阵，再选在哪打 -->
+  <div class="rk-info hidden" id="modal2v2" role="dialog" aria-modal="true" aria-label="2v2 组队">
+    <div class="rk-info-panel m2-panel">
+      <div class="rk-info-head">
+        <b id="modal2v2Title">2v2 组队</b>
+        <button class="mm-cancel" id="modal2v2Close" type="button">关闭</button>
+      </div>
+      <div class="m2-body" id="modal2v2Body">
+        <div class="sec-sub-label">对阵</div>
+        <div class="seg m2-seg" id="modal2v2Seg">
+          <button data-m="p_cc" type="button">你 + 电脑队友</button>
+          <button data-m="pp_cc" class="sel" type="button">两人 vs 两电脑</button>
+          <button data-m="pp_pp" type="button">两人 vs 两人</button>
+        </div>
+        <p class="sub m2-desc" id="modal2v2Desc"></p>
+        <div class="sec-sub-label">战场规则</div><div class="mutator-pills" id="m2Mutator" role="group" aria-label="战场规则"><button type="button" data-mut="normal">常规标准</button><button type="button" data-mut="mayhem">通天神决</button></div>
+        <div id="m2LvWrap">
+          <div class="sec-sub-label">电脑的境界</div>
+          <!-- 弹窗开着时，模式大厅那一条电脑境界（#levels）会挪到这里，关了再放回去：全游戏只有一条 -->
+        </div>
+        <div class="sec-sub-label">在哪打</div>
+        <div class="m2-ways" id="modal2v2Options">
+          <button class="m2-way" id="btn2v2GoLocal" type="button" data-kb-default><b>同一台电脑</b><span id="modal2v2LocalDesc"></span></button>
+          <button class="m2-way tn-online" id="btn2v2GoOnline" type="button"><b>好友房间</b><span>建房拿到房间号，发给朋友加入</span></button>
+        </div>
+        <div class="m2-foot"><button class="mm-link" id="btn2v2GoWatch" type="button">旁观四个天道电脑打 2v2</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="rk-info hidden" id="modalRouge" role="dialog" aria-modal="true" aria-label="同袍肉鸽 · 斩妖列传">
+    <div class="rk-info-panel mr-panel">
+      <div class="rk-info-head">
+        <b id="modalRougeTitle">同袍肉鸽 · 二十侠客斩妖列传</b>
+        <button class="mm-cancel" id="modalRougeClose" type="button">关闭</button>
+      </div>
+      <div class="m2-body">
+        <p class="m2-desc" id="modalRougeDesc">斩妖剧情闯关与多人肉鸽合二为一！三名侠客并肩体验<b>二十侠客专属斩妖故事</b>、横扫群妖波次、<b>全队共享秘卷与回血增益</b>，终幕迎战<b>随机三侠 6 项绝技、300% 气血、125% 伤害</b>的融魂魔首，大捷全员共享海量墨锭！</p>
+        <div class="sec-sub-label">选择侠客斩妖列传篇章（每位侠客专属故事）</div>
+        <div class="mr-story-tabs" id="rougeStoryTabs"></div>
+        <div class="mr-story-box" id="rougeStoryBox"></div>
+        <div class="sec-sub-label">征讨流程（固定三人一队：没人接手的位置由电脑同袍顶上）</div>
+        <div class="seg m2-seg" id="rougePhaseSeg" role="tablist">
+          <button class="sel" data-ph="story" type="button">完整斩妖列传 (群妖剧情波次 + 共享秘卷 + 六技魔首)</button>
+          <button data-ph="boss" type="button">直讨终幕魔首 (直接迎战三侠六技融魂首领)</button>
+        </div>
+        <div class="mr-boss-box" id="rougeBossPreview"></div>
+        <div class="sec-sub-label">结阵方式</div>
+        <div class="m2-ways" id="modalRougeOptions">
+          <button class="m2-way" id="btnRougeGoLocal" type="button" data-kb-default><b>同屏/单机集结</b><span id="modalRougeLocalDesc">1P 键盘主控，2P/3P 随时按键参战或由天道同袍协战</span></button>
+          <button class="m2-way tn-online" id="btnRougeGoMatch" type="button"><b>全服肉鸽 · 随时加入</b><span>无须匹配等待，直接踏入江湖分线，全线共享秘卷无限叠层！</span></button>
+          <button class="m2-way tn-online" id="btnRougeGoOnline" type="button"><b>好友共斗房间</b><span>建房拿到房间号，呼朋引伴共讨魔首</span></button>
+        </div>
+        <div class="m2-foot"><button class="mm-link" id="btnRougeReroll" type="button">🎲 重新卜算当期融魂首领（切换三侠六技）</button></div>
+      </div>
+    </div>
+  </div>
+  <div class="rk-info hidden" id="modalWorld" role="dialog" aria-modal="true" aria-label="开放世界 · 江湖共斗">
+    <div class="rk-info-panel mw-panel">
+      <div class="rk-info-head">
+        <b>开放世界 · 江湖共斗</b>
+        <button class="mm-cancel" id="modalWorldClose" type="button">关闭</button>
+      </div>
+      <div class="m2-body">
+        <p class="m2-desc">一张大地图，谁都能随时加入，人数不设上限。先在点将台选好侠客，再进分线。</p>
+        <p class="m2-desc mw-chron" id="worldChron" aria-live="polite"></p>
+        <div class="m2-ways mw-ways">
+          <button class="m2-way" id="btnWorldGo" type="button" data-kb-default><b>直接进入</b><span>自动分到一条线</span></button>
+        </div>
+        <div class="m2-foot world-line"><label for="worldLineIn">找朋友：填对方的线号</label><input id="worldLineIn" type="number" min="1" max="9999" inputmode="numeric" placeholder="线号" autocomplete="off"><button class="ghost" id="btnWorldLine" type="button">进这条线</button></div>
+      </div>
+    </div>
+  </div>
+  <!-- 木人试剑：对手行为栏（src/game/21-buttons-02-training.js 的 dummyBar*，动作表在 src/data/14-dummy.js） -->
+  <button class="dummy-bar-btn hidden" id="dummyBarBtn" type="button">对手行为</button>
+  <div class="dummy-bar hidden" id="dummyBar" role="dialog" aria-modal="true" aria-label="对手行为">
+    <div class="db-head"><b>对手行为与 AI 难度</b><span class="db-key" id="dummyBarKey"></span><button class="mm-cancel" id="dummyBarClose" type="button">继续练</button></div>
+    <div class="db-lab">对手模式（木人桩 / 纯智能 AI 对练）</div>
+    <div class="db-seg db-opp-seg" id="dummyBarOpp"></div>
+    <div class="db-lab">动作</div>
+    <div class="db-acts" id="dummyActs"></div>
+    <div class="db-row">
+      <div><div class="db-lab">次数</div><div class="db-seg" id="dummyRep"><button type="button" data-rep="1">一直重复</button><button type="button" data-rep="0">只做一次</button></div></div>
+      <div><div class="db-lab">间隔</div><div class="db-seg" id="dummyGap"></div></div>
+    </div>
+    <div class="db-lab">特性</div>
+    <div class="db-feats" id="dummyFeats"></div>
+    <p class="db-note" id="dummyNote"></p>
+  </div>
+  <!-- 习武训练场：实时状态、徽记灵宠机制解析与战斗数据面板 -->
+  <aside class="train-lab hidden" id="trainLab" aria-label="训练场状态与机制面板">
+    <div class="tlab-head">
+      <b id="trainLabHero">训练状态</b>
+      <span class="tlab-opp" id="trainLabOpp">木人桩</span>
+      <button class="tlab-min" id="trainLabMin" type="button" title="收起面板" aria-label="收起面板">−</button>
+    </div>
+    <div class="tlab-tabs" id="trainLabTabs" role="tablist">
+      <button type="button" role="tab" data-tltab="status" class="sel" aria-selected="true">状态</button>
+      <button type="button" role="tab" data-tltab="loadout" aria-selected="false">徽记与灵宠</button>
+      <button type="button" role="tab" data-tltab="stats" aria-selected="false">战绩</button>
+      <button type="button" role="tab" data-tltab="attrs" aria-selected="false">属性</button>
+    </div>
+    <div class="tlab-body" id="trainLabBody"></div>
+  </aside>
+  <!-- 战队实时指挥抽屉（仅在多人团队对抗中按 Tab 开关，停靠右上角不遮挡战局） -->
+  <div class="team-cmd-panel hidden" id="teamCmdPanel" role="dialog" aria-label="战队指挥面板">
+    <div class="tcp-box">
+      <div class="tcp-head">
+        <div>
+          <b id="tcpTitle">战队指挥</b>
+          <span class="tcp-badge" id="tcpModeBadge"></span>
+          <span class="tcp-sub" id="tcpSub">1/2/3/4 速切战术 · Tab 或 Esc 收起</span>
+        </div>
+        <button class="mm-cancel" id="tcpCloseBtn" type="button" data-tcp-close>关闭</button>
+      </div>
+      <div class="tcp-body" id="tcpBody"></div>
+    </div>
+  </div>
+  <div class="train-inspect hidden" id="trainInspect" aria-label="训练帧控制">
+    <button id="trainLabToggle" type="button" aria-pressed="true">状态面板：开</button>
+    <button class="train-inspect-hitbox" id="trainHitboxBtn" type="button" aria-pressed="true">F1 判定框：开</button>
+    <button id="trainFullMeterBtn" type="button" title="回满真元并清除技能与灵宠冷却">满怒清冷</button>
+    <button id="trainResetBtn" type="button" title="重置双方位置、气血、架势与统计">重置状态</button>
+    <label class="train-inspect-rate" for="trainHz"><span>模拟频率</span><input id="trainHz" type="range" min="1" max="120" step="1" value="120"><output id="trainHzValue" for="trainHz">120 Hz</output></label>
+    <button id="trainPauseBtn" type="button" aria-pressed="false">暂停时间</button>
+    <button id="trainStepBtn" type="button" disabled>推进 1 帧</button>
+  </div>
+  <div id="touchUI" class="hidden">
+    <button class="tbtn tpause" id="tPause" aria-label="暂停">❚❚</button>
+    <button class="tbtn tdummy hidden" id="tDummy" type="button">对手行为</button>
+    <div class="tstick" id="tStick"><div class="tknob" id="tKnob"></div></div>
+    <div class="tpad">
+      <button class="tbtn tatk" data-a="atk">攻击</button>
+      <button class="tbtn tjump" data-a="jump">跳</button>
+      <button class="tbtn tr" data-a="skill2">远程</button>
+      <button class="tbtn tq" data-a="skill">技能</button>
+      <button class="tbtn tesc" data-a="dash">闪</button>
+      <button class="tbtn tult" data-a="special">大招</button>
+      <button class="tbtn tstance" data-a="stance">架势</button>
+    </div>
+  </div>
+  <div id="rotateTip">请把手机横过来玩</div>
+
+  <div class="bppop" id="bpPop"><canvas id="bpPopCv"></canvas><div class="pn" id="bpPopName"></div><div class="pk" id="bpPopKeys"></div></div>
+
+  <div id="pause" class="scr">
+    <div class="panel"><h2>暂停</h2>
+      <div class="row"><button class="go" id="resumeBtn">继续</button><button class="ghost" id="pauseSet">设置</button><button class="ghost" id="quitBtn">返回菜单</button></div>
+    </div>
+  </div>
+
+  <div id="end" class="scr">
+    <div class="panel"><div class="end-kicker" id="endKicker"></div><h2 id="endTitle" class="ink-title"><span class="it-name">青锋</span><span class="it-comma">，</span><span class="it-seal">胜</span></h2><div class="erk hidden" id="endRk"></div><p class="sub" id="endSub"></p><p class="rankline" id="endRank"></p><div class="combat-card" id="endCombatCard"></div><div class="combat-card hidden" id="endRelayTeams"></div><p class="end-arm" id="endArm"></p>
+      <button class="ghost hidden" id="endReviewBtn" type="button" aria-expanded="false" aria-controls="endReview">AI 复盘</button>
+      <section class="end-review hidden" id="endReview" aria-live="polite"></section>
+      <div class="row end-qol-row"><button class="ghost hidden" id="endChangeHeroBtn" type="button">换侠客再战</button><button class="ghost" id="endShareComBtn" type="button">分享到社区</button><button class="ghost" id="endHistoryBtn" type="button">查看战绩</button></div>
+      <div class="row">
+        <button class="go" id="againBtn">再战</button>
+        <button class="ghost hidden" id="netRepickBtn">换人再战</button>
+        <button class="ghost" id="rpWatch">看回放</button>
+        <button class="ghost" id="menuBtn">返回菜单</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="sagaTalk" class="scr">
+    <div class="saga-talk">
+      <div class="st-place" id="stPlace"></div>
+      <div class="st-who" id="stWho"></div>
+      <div class="st-line" id="stLine"></div>
+      <div class="st-opts" id="stOpts"></div>
+      <div class="st-hint" id="stHint">点击或按空格继续 · Esc 跳过对话</div>
+    </div>
+  </div>
+
+  <div id="towerModal" class="scr">
+    <div class="panel">
+      <h2 id="towerTitle" style="color:var(--gold);font-family:var(--title)">问剑悟道 · 秘卷三选一</h2>
+      <p class="sub" id="towerFloorBadge" style="margin-bottom:14px">突破守关者 · 顿悟绝学</p>
+      <div class="tower-choices" id="towerChoices"></div>
+    </div>
+  </div>
+
+  <div id="tournament" class="scr">
+    <div class="panel tourp">
+      <div class="cxhead">
+        <div>
+          <h2 id="tourHeading">武林大会 · 八强签表</h2>
+          <p class="sub" id="tourSub" style="margin:2px 0 0;text-align:left">8强单败淘汰赛</p>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+          <button class="go small" id="tourNextBtn" type="button">出战下一场</button>
+          <button class="ghost small" id="tourSkipAiBtn" type="button">快结 AI 场次</button>
+          <button class="ghost small" id="tourAutoBtn" type="button" aria-pressed="false">自动推进：关</button>
+          <button class="ghost small" id="tourShareBtn" type="button">分享战绩</button>
+          <button class="ghost small" id="tourShareComBtn" type="button">发到社区</button>
+          <button class="ghost small" id="tourPublishBtn" type="button">发布公开签表</button>
+          <button class="ghost small" id="tourImportBtn" type="button">导入战绩</button>
+          <button class="ghost small" id="tourResetBtn" type="button">重排签表</button>
+          <button class="ghost" data-back type="button">返回</button>
+        </div>
+      </div>
+      <div class="rp-code-box hidden" id="tourImportBox">
+        <input id="tourImportIn" type="text" placeholder="粘贴 RYTR1: 开头的武林大会战绩分享码" autocomplete="off" spellcheck="false" aria-label="赛果分享码">
+        <button class="go small" id="tourImportApplyBtn" type="button">导入签表</button>
+        <button class="ghost small" id="tourImportCancelBtn" type="button">取消</button>
+      </div>
+      <div class="tour-tree" id="tourTree"></div>
+      <div class="tour-standings" id="tourStandings"></div>
+      <div class="tour-public" id="tourPublicList"></div>
+    </div>
+  </div>
+</div>
+
+<div id="sfxCaption" class="sfx-caption hidden" role="status" aria-live="polite"></div>
+<div id="trialHud" class="trial-hud hidden" aria-label="连招试炼指引"></div>
+<div id="specHud" class="spec-hud hidden" aria-label="实时观战面板">
+  <div class="spec-row">
+    <span class="spec-live-badge">LIVE</span>
+    <b id="specTitle">实时观战</b>
+    <span class="spec-count hidden" id="specCount"></span>
+    <button type="button" class="spec-nav" id="specPrevBtn" title="上一位侠客">‹</button>
+    <div class="spec-fighters" id="specFighters"></div>
+    <button type="button" class="spec-nav" id="specNextBtn" title="下一位侠客">›</button>
+    <button type="button" class="spec-clean-btn" id="specStageBtn" aria-pressed="false">大屏模式</button>
+    <button type="button" class="spec-clean-btn" id="specCleanBtn" aria-pressed="false">纯净直转</button>
+    <button type="button" class="spec-exit-btn hidden" id="specExitBtn">退出观战</button>
+  </div>
+  <div class="spec-ticker" id="specTicker"></div>
+</div>
+<div id="rpBar" class="hidden"><span id="rpInfo">回放</span><div class="rp-scrub-wrap"><input id="rpScrub" type="range" min="0" max="1" step="1" value="0" aria-label="回放进度"><span id="rpTime">00:00 / 00:00</span></div><div class="rp-markers" id="rpMarkers" aria-label="关键事件标记"></div><button id="rpPause">暂停</button><button data-sp="0.25">0.25×</button><button data-sp="0.5">0.5×</button><button data-sp="1" class="sel">1×</button><button data-sp="2">2×</button><button data-sp="4">4×</button><label class="rp-rate" for="rpHz"><span>频率</span><input id="rpHz" type="range" min="1" max="120" step="1" value="120"><output id="rpHzValue" for="rpHz">120 Hz</output></label><button id="rpHitbox" type="button" aria-pressed="false">F1 判定框：关</button><button id="rpStep" type="button" disabled>推进 1 帧</button><button id="rpExit">退出</button></div>
+<div id="extGame" class="hidden"><iframe id="extFrame" title="青锋行" allow="autoplay; fullscreen; gamepad"></iframe><div id="extToast"></div><button id="extBack">返回刃影</button></div>
+<div id="bastionGame" class="hidden"><canvas id="bastionCanvas" tabindex="0"></canvas><div id="bastionTopBar" class="b2d-topbar"></div><div id="bastionMinimapWrap" class="b2d-minimap-wrap"><canvas id="bastionMinimap" width="180" height="135"></canvas><div class="b2d-mm-hint">点击地图队友或按 [T] 传音降临</div></div><div id="bastionCardModal" class="b2d-card-modal hidden"></div><div id="bastionHudBar" class="bastion-hud-bar"></div><div id="bastionDrawer" class="bastion-drawer hidden"></div><button id="bastionBack" type="button">返回刃影</button></div>

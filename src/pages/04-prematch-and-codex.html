@@ -1,0 +1,204 @@
+  <div id="help" class="scr">
+    <div class="panel">
+      <h2>说明</h2>
+      <p class="help-tut"><button type="button" class="ghost" id="helpTut">完整教学 · 格挡、精准招架都会教</button></p>
+      <div class="keys keyonly">
+        <div class="p1"><dl>
+          <dt>移动</dt><dd><kbd>A</kbd> <kbd>D</kbd></dd>
+          <dt>跳跃</dt><dd><kbd>W</kbd> 或 <kbd>空格</kbd>，可二段跳；燕翎在空中按住可以飞</dd>
+          <dt>防御</dt><dd><kbd>S</kbd> 按住</dd>
+          <dt>攻击</dt><dd>鼠标左键或 <kbd>X</kbd>，连点五段</dd>
+          <dt>蓄力斩</dt><dd>按住左键（或 <kbd>X</kbd>）蓄力，松开便出；蓄力时能缓步挪动</dd>
+          <dt>远程招式</dt><dd>按住左键再点右键（或 <kbd>R</kbd>），各家不同</dd>
+          <dt>腾空闪</dt><dd>点一下鼠标右键（或 <kbd>左 Shift</kbd>），任何状态都能用</dd>
+          <dt>朝向</dt><dd>最后按的是 <kbd>A</kbd> 就朝左，是 <kbd>D</kbd> 就朝右；按住防御时自动面向对手（设置里可以改成一直自动面向对手）</dd>
+          <dt>技能</dt><dd><kbd>Q</kbd>，各家不同</dd>
+          <dt>大招</dt><dd><kbd>E</kbd>，气满时</dd>
+          <dt>回合</dt><dd>50 秒内击倒对手才算赢；没分出胜负就进 20 秒加时，加时里伤害翻倍。活下来的人带着剩余血量 +80 进下一回合，倒下的人满血再来</dd>
+          <dt>木人桩</dt><dd>练习时按 <kbd>1</kbd> <kbd>2</kbd> <kbd>3</kbd> <kbd>4</kbd> 切换：任打不还手 / 一味死守 / 被连便闪 / 钉在原地</dd>
+          <dt>只用键盘</dt><dd>菜单、选人、暂停和结算页：方向键或 <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> 移动金色选中框，<kbd>Enter</kbd> 或 <kbd>空格</kbd> 确认，<kbd>Esc</kbd> 返回；对局里用 <kbd>X</kbd> 攻击，全程不用鼠标</dd>
+        </dl></div>
+      </div>
+      <p class="tips touchonly"><b>手机操作</b>：左边摇杆移动（往下推防御，往上推跳）。右边按键：<b>攻击</b>（点是普攻，按住蓄力、松开出蓄力斩）、<b>跳</b>、<b>远程</b>、<b>技能</b>、<b>闪</b>（腾空闪）、<b>大招</b>（气满时发光）。左上角暂停。</p>
+      <p class="tips">人机对战开打前双方各禁用一个角色、各选一个角色，每回合双方都满血。联机对战（房间、匹配、排位）各禁 1 人、各选 3 人车轮接力：先由第一人出战，输掉一回合的一方换上下一人（满血），活下来的人只回 80 血继续守擂，谁的三人都被击倒谁输。从首页点「开始人机对战」不用选人，直接用首页的角色开打。在选人界面双击角色卡即可确认。<br>
+      <b>腾空闪</b>：被连击、被挑飞、倒地都能用，立刻解除受制并向上闪起；落地或出手之前，对手碰不到你。冷却 9 秒，被大招锁住时用不出。<br>
+      <b>蓄力斩</b>：蓄满时角色会闪一下，松开便是满蓄力的一斩，能打穿防御。蓄力斩会把对手直接打倒，倒地期间打不到。<br><b>远程招式</b>（按住左键再点右键）：都会把对手短暂打飞，打中后可以接着连。<br>
+      连招示例：五段连击的最后一下把对手打飞，马上跳起追上去，空中连点两下左键（第二下是下砸）；远程招式也会把对手短暂打飞，可以接着连。<br>
+      触控板两指点按就是右键。单人练习时按 P 暂停，M 静音。</p>
+      <div class="row"><button class="ghost" data-back>返回</button></div>
+    </div>
+  </div>
+
+  <div id="codex" class="scr">
+    <div class="cxw">
+      <div class="cxhead"><h2>角色图鉴</h2><button class="ghost" data-back>返回</button></div>
+      <div class="cxtabs" id="cxTabs"></div>
+      <div class="bento" id="cxBento">
+        <div class="tile t-art"><canvas id="cxCard" width="900" height="1200"></canvas></div>
+        <div class="tile t-name" id="cxName"></div>
+        <div class="tile t-skin"><div class="th"><span class="ic" data-ic="skin"></span><span class="tl" id="cxSkinT">皮肤</span></div><div class="cxskins" id="cxSkins"></div></div>
+        <div class="tile t-demo">
+          <canvas id="cxDemo"></canvas>
+          <div class="demo-ctrls">
+            <div class="demo-tabs" id="cxDemoTabs">
+              <button class="sel" data-m="full">全套连贯</button>
+              <button data-m="light">普攻</button>
+              <button data-m="charge">蓄力</button>
+              <button data-m="air">空中</button>
+              <button data-m="skill">Q技能</button>
+              <button data-m="ranged">R特殊</button>
+              <button data-m="ult">E奥义</button>
+            </div>
+            <button class="ghost small demo-spd" id="cxDemoSpd">正常 1.0x</button>
+          </div>
+        </div>
+        <div class="tile t-stats"><div class="th"><span class="ic" data-ic="stats"></span><span class="tl">属性</span></div><div class="cxstats" id="cxStats"></div></div>
+        <div id="cxMoves" style="display:contents"></div>
+      </div>
+    </div>
+  </div>
+
+  <div id="settings" class="scr">
+    <div class="panel setp">
+      <h2>设置</h2>
+      <div class="setting-presets" id="settingPresets" role="group" aria-label="显示预设"></div>
+      <div class="setlist" id="setList"></div>
+      <p class="netnote">设置保存在当前浏览器中。默认启用原生极高画质与 144 帧高刷，尽享丝滑水墨对战。</p>
+      <div class="row"><button class="ghost small" id="setHelp" type="button">操作说明</button><button class="ghost small" id="setReplays" type="button">对局回放</button><button class="go small" id="setDone">完成</button></div>
+    </div>
+  </div>
+
+  <div id="community" class="scr">
+    <div class="panel comp">
+      <div class="cxhead">
+        <div style="display:flex;align-items:center;gap:10px">
+          <h2>江湖驿站</h2>
+          <span class="soc-status" id="socStatus">连接中…</span>
+        </div>
+        <button class="ghost" data-back>返回菜单</button>
+      </div>
+      <div class="soc">
+        <aside class="soc-side">
+          <div class="soc-list" id="socList"></div>
+          <div class="soc-tools">
+            <div class="soc-addrow"><input id="socAddIn" maxlength="12" placeholder="输入几个字搜人加好友" autocomplete="off"><button type="button" class="go small" id="socAddBtn">加好友</button></div>
+            <div class="soc-find" id="socFind" hidden></div>
+            <button type="button" class="ghost small" id="socGroupBtn">建群</button>
+          </div>
+        </aside>
+        <section class="soc-main">
+          <div class="soc-head"><button type="button" class="ghost small soc-back" id="socBackList" aria-label="返回列表">‹</button><div class="soc-hd" id="socHead"></div></div>
+          <div class="comlog" id="comLog"></div>
+          <div class="comin">
+            <input id="comIn" maxlength="200" placeholder="在大厅说点什么（回车发送）" autocomplete="off">
+            <button type="button" class="ghost small" id="socShareLastBtn" title="分享最近一局战绩与回放码">战绩卡</button>
+            <button class="go small" id="comSend" style="display:inline-flex;align-items:center;gap:4px">
+              <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>发送
+            </button>
+          </div>
+          <div class="emobar" id="comEmo"></div>
+        </section>
+      </div>
+    </div>
+  </div>
+
+  <!-- 战场通览与地图快报 -->
+  <div id="mapBriefing" class="scr map-briefing-scr" role="dialog" aria-modal="true" aria-label="战场通览">
+    <div class="mb-wrap">
+      <div class="mb-header">
+        <div class="mb-badge">山河风貌 · 战场通览</div>
+        <h2 class="mb-title" id="mbTitle">断崖台</h2>
+        <p class="mb-subtitle" id="mbSub">险峰孤绝，云海翻涌</p>
+      </div>
+      <div class="mb-body">
+        <div class="mb-landscape" id="mbLandscape">
+          <div class="mb-topo-tag" id="mbTopoTag">特殊地形：深渊断崖</div>
+          <p class="mb-desc" id="mbDesc">两侧没有墙壁，被重击击飞将直接坠崖，损耗气血后弹回边缘。</p>
+        </div>
+        <div class="mb-fav-panel">
+          <div class="mb-fav-title">
+            <span class="mb-fav-icon">⚡</span>
+            <span>地利豪杰 · 战术协同 (5-6位)</span>
+          </div>
+          <div class="mb-fav-grid" id="mbFavGrid"></div>
+        </div>
+      </div>
+      <div class="mb-footer">
+        <div class="mb-hint">按 <kbd>空格</kbd> 或 <kbd>回车</kbd> 快速进入点将台</div>
+        <button type="button" class="go mb-continue-btn" id="mbContinueBtn">进入点将台 (<span id="mbTimer">4</span>s)</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 顿悟密卷 (Insight Scroll Draft) -->
+  <div id="buffDraft" class="scr buff-draft-scr" role="dialog" aria-modal="true" aria-label="顿悟密卷">
+    <div class="bd-wrap">
+      <div class="bd-header">
+        <div class="bd-badge">武道境界 · 顿悟密卷</div>
+        <h2 class="bd-title">顿悟密卷 · 武学进境</h2>
+        <div class="bd-timer-wrap">
+          <svg class="bd-timer-ring" viewBox="0 0 40 40">
+            <circle class="bd-timer-bg" cx="20" cy="20" r="17"></circle>
+            <circle class="bd-timer-fg" id="bdTimerFg" cx="20" cy="20" r="17"></circle>
+          </svg>
+          <span class="bd-timer-text" id="bdTimerText">7.5</span>s
+        </div>
+      </div>
+      <div class="bd-tabs" id="bdTabs"></div>
+      <div class="bd-hero-intro" id="bdHeroIntro">为先锋挑选专属对局秘术，战斗中实时生效</div>
+      <div class="bd-cards-grid" id="bdCardsGrid"></div>
+      <div class="bd-footer">
+        <div class="bd-status" id="bdStatus">请选择一卷强化秘术（倒计时结束将自动选择【天时】推荐）</div>
+        <button type="button" class="go bd-confirm-btn" id="bdConfirmBtn" disabled>确认密卷</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bp" class="scr bpscr">
+    <div class="bpw">
+      <div class="bp-map hidden" id="bpMap" role="note" aria-live="polite"></div>   <!-- 山河异境：这局的地图和地利侠客（renderBP 里的 bpMapBanner 填；别的点将台藏着） -->
+      <div class="bph">
+        <div class="bps" id="bpS0"></div>
+        <div class="bpc0"><div class="bpstep" id="bpStep" role="status" aria-live="polite"></div><div class="bptime" id="bpTime"></div></div>
+        <div class="bps right" id="bpS1"></div>
+      </div>
+      <div class="bp-arch-bar" id="bpArchBar" role="tablist" aria-label="侠客流派筛选"></div>
+      <div class="bpgrid" id="bpGrid"></div>
+      <div class="bpbot">
+        <div class="bpdetail" id="bpDetail"></div>
+        <div class="bpmovedeck" id="bpMoveDeck">
+          <div class="deckhead">
+            <span class="decktitle" style="display:inline-flex;align-items:center;gap:6px"><svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg>招式打击速览</span>
+            <div class="decktabs" id="bpDeckTabs">
+              <button class="sel" data-m="light">普攻连击</button>
+              <button data-m="charge">蓄力重斩</button>
+              <button data-m="skill">Q 门派技</button>
+              <button data-m="ranged">R 特殊技</button>
+              <button data-m="ult">E 终极奥义</button>
+            </div>
+          </div>
+          <div class="deckstage">
+            <div class="deckcvwrap">
+              <canvas id="bpDeckCanvas"></canvas>
+            </div>
+            <div class="deckinfo" id="bpDeckInfo">
+              <div class="dhitname" id="bpdHitName">普攻五段</div>
+              <div class="dhitbadge" id="bpdHitBadge"><span class="badge-break">末段击飞</span></div>
+              <div class="dhitdesc" id="bpdHitDesc">轻刃连削，终末强力扫飞对手浮空。</div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="bpact"><button class="ghost" id="bpQuit">返回菜单</button><button class="ghost" id="bpUndo" type="button" hidden>撤销上一名</button><button class="ghost" id="bpSwap" type="button" hidden>交换先锋与中坚</button><button class="ghost" id="bpRotate" type="button" hidden>轮换三人顺序</button><button class="go" id="bpGo" disabled>确认</button></div>
+      <div class="bpchat hidden" id="bpChat">
+        <div class="chatlog" id="chatLog"></div>
+        <div class="chatside">
+          <div class="chatin"><input id="chatIn" maxlength="40" placeholder="说点什么，回车发送" autocomplete="off"><button class="ghost" id="chatSend">发送</button></div>
+          <div class="emobar" id="emoBar"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="netOv" class="netov" role="status"></div>
+

@@ -1,0 +1,210 @@
+  <div id="netp" class="scr">
+    <div class="panel">
+      <div class="sec-head-row" style="justify-content:center;position:relative;margin-bottom:8px;">
+        <h2 style="margin:0;font-size:clamp(26px,3vw,36px)">月下对弈 · 3v3 联机擂台</h2>
+        <span class="sub-badge" id="netLobbyBadge" style="position:absolute;right:0;top:50%;transform:translateY(-50%);display:inline-flex;align-items:center;gap:5px;">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M2 12h20"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg> 3v3 车轮接力 · 毫秒回滚
+        </span>
+      </div>
+
+      <!-- 对战页：一张 3v3 卡（快速匹配、排位、好友约战），进了房间下面再露出候战厅 -->
+      <div class="mm-hero" id="mmHero">
+        <div class="season-bar">
+          <span class="season-tag" id="seasonName">第二赛季</span>
+          <span class="season-range" id="seasonRange">11.22 – 12.22</span>
+          <span class="season-left" id="seasonLeft"></span>
+        </div>
+        <!-- 联机对战只有这一张 3v3 卡：快速匹配、排位赛都是 3v3 车轮战（各禁 1 人、蛇形各选 3 人，输一回合换下一人）；
+             好友约战直接在卡上建房、输房号加入，2v2、天机、神决、山河异境、联机打魔首这些规则收在「更多规则」里 -->
+        <div class="tag-portal" id="tagPortal">
+          <div class="tp-head">
+            <span class="mm-kicker">联机对战</span>
+            <h3 class="tp-title">3v3 车轮战</h3>
+            <span class="mm-en">3V3 RELAY</span>
+            <p class="tp-desc">两边各禁 1 名侠客，再轮流各选 3 人；输掉一回合就换下一位上场，三人都倒下的一方输。</p>
+          </div>
+          <div class="mm-cards tp-cards">
+            <div class="mm-card mm-ranked" id="mmRankCard">
+              <div class="mm-card-bg" aria-hidden="true"></div>
+              <div class="mm-rank-row">
+                <span class="mm-medal" id="mmMedal"></span>
+                <div class="mm-rank-txt">
+                  <span class="mm-title">排位赛</span>
+                  <span class="mm-en">COMPETITIVE</span>
+                  <span class="mm-rank-label" id="mmRankLabel">登录后开启排位</span>
+                  <span class="mm-rank-sub" id="mmRankSub"></span>
+                  <span class="mm-bar"><i id="mmRankBar"></i></span>
+                </div>
+              </div>
+              <div class="mm-rank-actions">
+                <button class="mm-go" id="mmRankBtn" type="button">开始排位</button>
+                <button class="mm-link" id="mmRankInfoBtn" type="button">段位与战绩</button>
+              </div>
+            </div>
+            <div class="mm-card mm-friend" id="mmFriendCard">
+              <div class="mm-card-bg" aria-hidden="true"></div>
+              <span class="mm-title">好友约战</span>
+              <span class="mm-en">FRIEND ROOM</span>
+              <div class="tp-room" id="netCols">
+                <div class="tp-host">
+                  <button class="mm-go" id="hostBtn" type="button">建房</button>
+                  <p class="roomcode" id="roomCode" title="点击复制房间码"></p>
+                  <div class="tp-share">
+                    <button class="ghost small hidden" id="copyCodeBtn" style="margin-top:6px;font-size:13px;padding:5px 14px;border-radius:6px;display:inline-flex;align-items:center;gap:5px" type="button">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                                    复制房间码 / 链接
+                                  </button>
+                    <button class="ghost small hidden" id="postToComBtn" style="margin-top:6px;font-size:13px;padding:5px 14px;border-radius:6px;display:inline-flex;align-items:center;gap:5px;color:var(--gold);border-color:rgba(233,196,106,0.4)" type="button">
+                                    <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+                                    发约战到驿站
+                                  </button>
+                  </div>
+                </div>
+                <div class="iprow tp-join">
+                  <input id="codeIn" maxlength="4" placeholder="输入房号，例如 K7PQ" autocomplete="off" spellcheck="false" aria-label="好友的房间号">
+                  <button class="mm-go alt" id="joinBtn" type="button">加入</button>
+                  <button class="ghost small" id="specJoinBtn" type="button" title="以只读实时观战席加入该房间，不影响对战延迟">观战</button>
+                </div>
+              </div>
+              <details class="tp-more" id="roomMore">
+                <summary>更多规则 · <span id="roomRuleNow">3v3 车轮战</span></summary>
+                <div class="lobby-modes-seg" id="lobbyModesSeg" role="group" aria-label="好友房规则">
+                  <button class="ghost small sel" data-mode="normal" type="button">3v3 车轮战 (6人)</button>
+                  <button class="ghost small" data-mode="pp_cc" type="button">2v2 · 两人打两电脑 (4人)</button>
+                  <button class="ghost small" data-mode="pp_pp" type="button">2v2 · 两人对两人 (4人)</button>
+                  <button class="ghost small" data-mode="raid" type="button">联机打魔首 (3v1)</button>
+                  <button class="ghost small" data-mode="mayhem" type="button">通天神决 (1v1)</button>
+                  <button class="ghost small" data-mode="cuju" type="button">墨球蹴鞠 (1v1)</button>
+                  <button class="ghost small" data-mode="koth" type="button">灵坛争锋 (1v1)</button>
+                  <button class="ghost small" data-mode="party" type="button">江湖百戏 (1v1)</button>
+                  <button class="ghost small" data-mode="melee" type="button">群雄会战 (6–32人)</button>
+                  <button class="ghost small" data-mode="ctf" type="button">夺旗争锋 (4–20人)</button>
+                  <button class="ghost small" data-mode="quad" type="button">四象争锋 (8–32人)</button>
+                  <button class="ghost small" data-mode="tournament" type="button">联机武林大会 (4/8/16强)</button>
+                </div>
+                <div class="lobby-modes-seg" id="lobbyTeamSizeSeg" role="group" aria-label="联机团战人数" hidden style="margin-top:6px"></div>
+                <p class="tp-note">建房前选好；进了房间以后房主还能改，对面会跟着变。常规标准已融合动态天机异变。</p>
+              </details>
+            </div>
+          </div>
+        </div>
+        <div class="mm-search hidden" id="mmSearch" role="status">
+          <span class="mm-spin" aria-hidden="true"></span>
+          <div class="mm-search-txt"><b id="mmSearchTitle">正在寻找对手</b><span id="mmSearchSub">0:00</span></div>
+          <button class="mm-cancel" id="mmCancelBtn" type="button">取消</button>
+        </div>
+      </div>
+
+      <div id="roomWrap" class="hidden">
+      <!-- 战绩与段位概览条 -->
+      <div class="net-profile-strip" id="netProfileStrip">
+        <div class="nps-item">
+          <span class="nps-label">天梯段位</span>
+          <span class="nps-val" id="netRankBadge">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#e9c46a" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            <b id="netRankName">登堂入室</b>
+          </span>
+        </div>
+        <div class="nps-div"></div>
+        <div class="nps-item">
+          <span class="nps-label">联机胜绩</span>
+          <span class="nps-val" id="netRecordBadge">
+            <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="#46d3ea" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.5 17.5L3 6V3h3l11.5 11.5M13 19l6-6M16 16l4 4M19 21l2-2M7 4l-4 4"/></svg>
+            <span id="netWinsCount">0 胜 0 负</span>
+          </span>
+        </div>
+        <div class="nps-div"></div>
+        <div class="nps-item">
+          <span class="nps-label">实时状态</span>
+          <span class="nps-val" id="netLiveStatus">
+            <span class="net-dot online"></span>
+            <span id="netOnlineOverview">全服待命中</span>
+          </span>
+        </div>
+      </div>
+
+      <div id="netPanel" class="net">
+        <div id="netBannerP2P" class="net-banner p2p">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+          <span><b>WebRTC 免服务器对战</b>：点击「设擂建房」生成 4 位房间码分享给好友，或输入好友的房间码加入，无需下载或配置服务器！</span>
+        </div>
+
+        <!-- 交互式等待室卡片（建房/加入后展示双方状态） -->
+        <div class="wuxia-card lobby-card hidden" id="netLobbyBox" style="margin-top:12px;padding:18px 22px;">
+          <div class="lobby-head" style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+            <span class="lobby-title" style="font-family:var(--title);font-size:20px;color:var(--gold);display:inline-flex;align-items:center;gap:6px">
+              <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+              武林擂台 · 候战厅
+            </span>
+            <span class="lobby-room-badge" id="lobbyRoomBadge" style="font-family:ui-monospace,Menlo,monospace;font-size:16px;color:var(--gold);background:rgba(233,196,106,0.12);padding:2px 10px;border-radius:6px;border:1px solid rgba(233,196,106,0.3)">房间密令：----</span>
+          </div>
+
+          <div class="lobby-duo" style="display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:14px;margin:14px 0">
+            <!-- 房主方 -->
+            <div class="lobby-side host-side" style="padding:12px 16px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-align:center">
+              <div class="lobby-role" style="font-size:12px;color:var(--gold);margin-bottom:4px">【擂主】</div>
+              <div class="lobby-name" id="lobbyHostName" style="font-family:var(--title);font-size:20px;color:var(--p1)">侠客 (房主)</div>
+              <div class="lobby-state" id="lobbyHostState" style="font-size:12px;color:#2bd49a;margin-top:4px">● 设擂就绪</div>
+            </div>
+
+            <!-- 对决剑标 -->
+            <div class="lobby-vs" style="display:flex;flex-direction:column;align-items:center;gap:4px">
+              <span style="font-family:var(--title);font-size:24px;color:var(--dim);letter-spacing:1px">VS</span>
+              <span class="lobby-ping" id="lobbyPingText" style="font-size:12px;color:var(--dim);white-space:nowrap">延迟检测中</span>
+            </div>
+
+            <!-- 应战方 -->
+            <div class="lobby-side peer-side" style="padding:12px 16px;border-radius:10px;background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.06);text-align:center">
+              <div class="lobby-role" style="font-size:12px;color:var(--dim);margin-bottom:4px">【应战侠士】</div>
+              <div class="lobby-name" id="lobbyPeerName" style="font-family:var(--title);font-size:20px;color:var(--p2)">静候对手入局…</div>
+              <div class="lobby-state" id="lobbyPeerState" style="font-size:12px;color:var(--dim);margin-top:4px">等待加入</div>
+            </div>
+          </div>
+
+          <div id="lobbyMutator" class="mutator-pills" role="group" aria-label="战场规则"><span>战场规则：</span><button type="button" data-mut="normal">常规标准</button><button type="button" data-mut="mayhem">通天神决</button></div>
+          <!-- 山河异境：两边各投一票 -->
+          <div class="lobby-map-vote hidden" id="lobbyMapVote">
+            <div class="sec-sub-label">地图投票：双方各一票，按票数决定选到哪张图</div>
+            <button class="ghost small" id="lobbyMapRandom" type="button" aria-pressed="true">全部随机</button>
+            <div class="map-vote" id="lobbyMapCards"></div>
+          </div>
+
+          <!-- 擂台操作 -->
+          <div style="display:flex;justify-content:center;gap:12px;margin-top:12px">
+            <button class="ghost small" id="lobbyCancelBtn" type="button" style="padding:6px 20px;font-size:13px">解散擂台 / 退出</button>
+          </div>
+        </div>
+
+        <p id="netStatus" class="netstatus" role="status"></p>
+
+        <!-- 网络诊断状态条 -->
+        <div class="net-diag-bar" id="netDiagBar">
+          <div class="diag-item">
+            <span class="diag-dot" id="diagRttDot"></span>
+            <span class="diag-label">往返延迟:</span>
+            <span class="diag-val" id="diagRttVal">检测中</span>
+          </div>
+          <div class="diag-div"></div>
+          <div class="diag-item">
+            <span class="diag-label">连线模式:</span>
+            <span class="diag-val" id="diagProtoVal">WebRTC P2P</span>
+          </div>
+          <div class="diag-div"></div>
+          <div class="diag-item">
+            <span class="diag-label">回滚状态:</span>
+            <span class="diag-val" id="diagRollVal">v2.6 待命</span>
+          </div>
+        </div>
+
+      </div>
+      </div><!-- /roomWrap -->
+      <div class="row" style="margin-top:0"><button class="ghost" data-back>返回主菜单</button></div>
+      <div class="rk-info hidden" id="rkInfo" role="dialog" aria-modal="true" aria-label="段位与战绩">
+        <div class="rk-info-panel">
+          <div class="rk-info-head"><b>段位与战绩</b><span id="rkInfoSeason"></span><button class="mm-cancel" id="rkInfoClose" type="button">关闭</button></div>
+          <div id="rkInfoBody"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
