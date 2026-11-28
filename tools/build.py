@@ -179,6 +179,15 @@ def ai_source():
     return "".join(read(SRC, *p) for p in ai_parts())
 
 
+def armory_core_parts():
+    """武库核心规则模块：src/armory-core/ 下按编号排好的文件"""
+    return [("armory-core", n) for n in numbered("armory-core")]
+
+
+def armory_core_source():
+    return "".join(read(SRC, *p) for p in armory_core_parts())
+
+
 def iife_parts(folder):
     """通用闭包模块目录（如 src/cloud/、src/armory/）：按编号顺序拼进同一立即执行函数"""
     return [(folder, n) for n in numbered(folder)]
@@ -304,7 +313,7 @@ def page(offline):
             + "<script>\n" + compact_js(read(SRC, "net-p2p.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "social.js")) + "\n</script>\n"
             + boot_step(0.92)
-            + "<script>\n" + compact_js(read(SRC, "armory-core.js")) + "\n</script>\n"
+            + "<script>\n" + compact_js(armory_core_source()) + "\n</script>\n"
             + "<script>\n" + compact_js(iife_source("armory")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "anticheat.js")) + "\n</script>\n"
             + boot_step(0.97)
@@ -334,7 +343,7 @@ NAMES_MARK = "/*@names*/null"
 
 def admin_names():
     """管理网页里饰品、侠客的名字：原有皮肤从 src/game/ 读，侠客从 src/data/heroes/ 读，武库的新皮肤从 src/armory-core.js 读"""
-    game, core = game_source(), read(SRC, "armory-core.js")
+    game, core = game_source(), armory_core_source()
     a = game.index("const SKINS = {")
     b = game.index("\n};", a)
     skins = dict(re.findall(r"^ {2}([a-z]{2}_[a-z0-9]+): \{ char: '[a-z]+', rarity: '[a-z]+', name: '([^']+)'", game[a:b], re.M))
@@ -409,7 +418,7 @@ def worker_bundle():
     src = src.replace(MIG_IMPORT, migrations_js().split("\n", 1)[1].replace("export const", "const", 1))
     src = src.replace(CHRON_IMPORT, "/* === src/data/13-chron.js === */\n" + read(SRC, "data", "13-chron.js") + "\n")   # 全服肉鸽的长卷节点表：浏览器和服务器用同一份
     head = "// 由 python3 tools/build.py 生成，不要直接改：改 cloudflare/worker/*.js、cloudflare/admin.html、cloudflare/migrations/*.sql、src/armory-core.js 和 src/data/13-chron.js 再重新生成。\n"
-    return head + src.replace(CORE_IMPORT, "/* === src/armory-core.js === */\n" + read(SRC, "armory-core.js") + "\n/* === cloudflare/worker.js === */\n")
+    return head + src.replace(CORE_IMPORT, "/* === src/armory-core.js === */\n" + armory_core_source() + "\n/* === cloudflare/worker.js === */\n")
 
 
 # ===========================================================================
@@ -421,6 +430,7 @@ def outputs():
         "renying-offline.html": page(offline=True),
         "renying.html": REDIRECT,
         "assets/qingfengxing.html": qfx_page(),
+        "src/armory-core.js": armory_core_source(),
         "cloudflare/worker.js": worker_source(),
         "cloudflare/worker.bundle.js": worker_bundle(),
         "cloudflare/migrations.gen.js": migrations_js(),
