@@ -36,9 +36,9 @@ The pages at the repository root (`index.html`, `renying-offline.html`, `assets/
 | `src/net-p2p.js` | WebRTC/PeerJS | Serverless P2P transport, online tournaments, and read-only live spectating (`P2P.specs`). |
 | `src/cloud/` | 4 modular JS files | Cloudflare Worker + D1 cloud account client (`01-config-and-ledgers.js` – `04-sync-and-accounts.js`), ledgers, rotating refresh tokens, local fallback (`window.CloudSave`). |
 | `src/social.js` | P2P Social | 江湖驿站: P2P hall chat, friends, DMs, groups, with store-and-forward outbox. |
-| `src/armory-core.js`, `src/armory/` | Shared core + 5 UI modules | Cosmetic weapon cases, player-to-player market, Heirloom collection (`c14`), badges, and pets (`01-skins-and-state.js` – `05-bridge-and-hooks.js`). |
+| `src/armory-core/`, `src/armory/` | 4 core + 5 UI modules | Modular armory core (`01-catalog-and-config.js` – `04-actions-engine.js`, assembled to `src/armory-core.js`) and UI (`01-skins-and-state.js` – `05-bridge-and-hooks.js`) for cases, market, Heirloom (`c14`), badges, and pets. |
 | `src/qfx/` | 3D Roguelike | Qingfengxing mini-game sources, numbered so filename order == load order. |
-| `cloudflare/` | Backend | Modular Worker (`worker/`), D1 migrations (`migrations/0001`–`0014`), Durable Objects (`WorldLine`, `PresenceHub`), and `/admin` console. |
+| `cloudflare/` | Backend | Modular Worker (`worker/`), modular `/admin` dashboard (`admin/00-shell.html` – `60-events-and-boot.js`, assembled to `admin.html`), D1 migrations (`migrations/0001`–`0015`), and Durable Objects (`WorldLine`, `PresenceHub`). |
 | `assets/` | Media/Vendor | PeerJS, three.js, 9 orchestral MP3s, compiled `qingfengxing.html`, favicon. |
 | `src/models/ai-brain.json` | AI Brain | Calibrated 20-hero evolutionary AI genes and per-difficulty `lvGenes`. |
 | `tools/` | Tooling | `build.py`, `checks/`, `tests/`, `audits/` (26-screen bilingual Playwright matrix), `ai/`, `admin/`, `music/`. |

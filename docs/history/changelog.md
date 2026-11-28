@@ -6,6 +6,12 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ## [Unreleased]
 
+- **Complete Admin Panel Overhaul, Removal Of `经济数值 - 在线可调` & Modularisation (`cloudflare/admin/`, `cloudflare/worker/40-admin-routes.js`, `tools/build.py`)**: split `cloudflare/admin.html` into 8 focused modules (`00-shell.html`, `01-styles.css`, `10-core-and-api.js` – `60-events-and-boot.js`); removed the `经济数值 - 在线可调` tab, tile, forms, and live-config UI while preserving backend endpoints for compatibility; fixed 3 admin defects (`psort` column sorting, `unlockall`, and `bannerreset`); extended `/api/admin/stats` with 24h error counts, D1 table row totals, top modes, version, and AI benchmark summary; and redesigned the Admin Home dashboard into a compact 1380px high-density console. Needs a Worker redeploy.
+
+- **Armory Core Modularisation (`src/armory-core/`, `tools/build.py`)**: decomposed `src/armory-core.js` (1,851 lines) into 4 modules (`01-catalog-and-config.js`, `02-helpers-and-pricing.js`, `03-state-and-inventory.js`, `04-actions-engine.js`) assembled cleanly into `index.html`, `renying-offline.html`, and `cloudflare/worker.bundle.js`.
+
+- **Combat Loop Optimization, AI Determinism/Routes & Training Ergonomics (`src/game/02-combat/11-loop-*.js`, `src/ai/*.js`, `src/game/05-ui/21-buttons-02-training.js`, `tools/ai/ai-train.mjs`, `tools/tests/combat/95-overhaul-audit.mjs`)**: eliminated hot-path pose, trail, ghost, and camera allocations (16.8% faster multi-fighter simulation); routed `AIBrain.prototype.rand()` through `grnd()` during `netSim()`; added `qingfengRoute`, `yuxiaoRoute`, and ally-peel rescue in `aiTeamTactics()`; added `--report` JSON export to `tools/ai/ai-train.mjs`; added mode-isolated Training Lab hotkeys (`Backspace` reset, `F2` full meter), rolling Peak 5s DPS, and color-coded Frame Advantage; and expanded `tools/tests/combat/95-overhaul-audit.mjs` (125/125 combat checks passing). No Worker change.
+
 - Reset airborne recovery between rounds so a previous escape cannot affect the next round.
 
 - Allowed long key binding labels to wrap in Settings so the full action name remains readable.
