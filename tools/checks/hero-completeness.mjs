@@ -3,7 +3,7 @@
 // 强制校验：CHARGE_POSES 全覆盖、AIR_SKILL_POSE 全覆盖与 POSES 合法性、AI_KIT/AI_ULT/AI_HERO_TACTICS、
 // ai-brain.json 精确 20 侠客一致、皮肤与天工传世皮肤覆盖、地图地利、英文名与上手文案、ai.range 与克制关系。
 // 用法：node tools/checks/hero-completeness.mjs [--report] [--strict]
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import vm from 'node:vm';
 import { fileURLToPath } from 'node:url';
 import { makeEnv } from '../ai/ai-arena.mjs';
@@ -18,7 +18,11 @@ const env = await makeEnv();
 // 载入武库皮肤表，确保统计完整皮肤与天工传世（c14）覆盖
 env.window.crypto = globalThis.crypto;
 new vm.Script(readFileSync(ROOT + 'src/armory-core.js', 'utf8')).runInContext(env.window);
-new vm.Script(readFileSync(ROOT + 'src/armory.js', 'utf8')).runInContext(env.window);
+const armoryDir = ROOT + 'src/armory/';
+const armoryJs = "(function () {\n  'use strict';\n"
+  + readdirSync(armoryDir).filter(n => /^\d\d-[a-z0-9-]+\.js$/.test(n)).sort().map(n => readFileSync(armoryDir + n, 'utf8')).join('\n')
+  + "\n})();\n";
+new vm.Script(armoryJs).runInContext(env.window);
 
 const data = env.run(`(() => ({
   heroes: HEROES.map(h => ({ id: h.id, en: h.en, name: h.char.name, skill: h.char.skill, skill2: h.char.skill2, ult: h.char.ult, ai: h.char.ai, beats: h.char.beats, weakTo: h.char.weakTo })),

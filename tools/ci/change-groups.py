@@ -53,13 +53,13 @@ def main():
         "economy": any(matches(path, ("src/armory", "src/cloud/", "cloudflare/", "src/game/05-ui/19-progress-03-", "src/game/19-progress-03-"), (
             "src/anticheat.js", "tools/tests/econ-test.mjs", "tools/tests/test.mjs",
         )) for path in paths),
-        "worker": any(matches(path, ("src/cloud/", "cloudflare/"), (
-            "src/armory-core.js", "src/armory.js",
+        "worker": any(matches(path, ("src/cloud/", "src/armory/", "cloudflare/"), (
+            "src/armory-core.js",
             "tools/tests/predeploy-check.mjs", "tools/tests/world-test.mjs",
             "tools/tests/rollback-test.mjs", "tools/tests/test.mjs", "tools/build.py",
         )) for path in paths),
-        "browser": any(matches(path, ("src/data/", "src/game/", "src/styles/", "src/pages/", "tools/audits/"), (
-            "src/page.html", "src/style.css", "src/armory.js", "src/social.js",
+        "browser": any(matches(path, ("src/data/", "src/game/", "src/styles/", "src/pages/", "src/armory/", "tools/audits/"), (
+            "src/page.html", "src/style.css", "src/social.js",
             "index.html", "tools/build.py", "tools/tests/test.mjs",
         )) for path in paths),
         "offline": any(matches(path, ("src/qfx/", "src/data/", "src/game/", "src/ai/", "src/pages/", "assets/"), (

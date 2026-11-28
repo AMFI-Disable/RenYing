@@ -305,7 +305,7 @@ def page(offline):
             + "<script>\n" + compact_js(read(SRC, "social.js")) + "\n</script>\n"
             + boot_step(0.92)
             + "<script>\n" + compact_js(read(SRC, "armory-core.js")) + "\n</script>\n"
-            + "<script>\n" + compact_js(read(SRC, "armory.js")) + "\n</script>\n"
+            + "<script>\n" + compact_js(iife_source("armory")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "anticheat.js")) + "\n</script>\n"
             + boot_step(0.97)
         ),
@@ -459,11 +459,11 @@ def check_js(strict_copy=False):
 
     # ---- 1. 列出所有检查：(出错时的标题, 命令参数, 标准输入) ----
     jobs = []
-    for name in ("i18n.js", "net-p2p.js", "social.js", "armory-core.js", "armory.js", "anticheat.js"):
+    for name in ("i18n.js", "net-p2p.js", "social.js", "armory-core.js", "anticheat.js"):
         # 源文件本身，和 compact_js 压缩后的样子各查一遍（压缩出错说明 compact_js 把代码切坏了）
         jobs.append((f"src/{name} 语法错误：", [node, "--check", os.path.join(SRC, name)], None, name))
         jobs.append((f"src/{name} 压缩后语法错误：", [node, "--check", "-"], compact_js(read(SRC, name)), name))
-    for folder in ("cloud",):
+    for folder in ("cloud", "armory"):
         jobs.append((f"src/{folder}/ 语法错误：", [node, "--check", "-"], iife_source(folder), None))
         jobs.append((f"src/{folder}/ 压缩后语法错误：", [node, "--check", "-"], compact_js(iife_source(folder)), None))
     for part in ai_parts():
