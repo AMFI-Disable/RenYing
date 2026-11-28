@@ -30,8 +30,8 @@ const DEFAULT_1P_KEYS = {
   heavyStrike: 'KeyU', lowKick: 'KeyI', iaido: 'KeyO', grapple: 'KeyH',
   stance: 'KeyZ', relicStance: 'KeyM', feint: 'KeyC', parry: 'KeyF', pet: 'KeyV',
   lock: 'KeyG', beacon: 'KeyB', rally: 'KeyT', scoreboard: 'Tab',
-  orderFocus: 'Digit1', orderProtect: 'Digit2', orderSpread: 'Digit3',
-  cmdSelect: 'KeyY', cmdRole: 'KeyN'   // 统帅：选队友 / 给他分任务（Tab 轻点换战术在 25-keyboard-boot.js）
+  orderFocus: 'Digit1', orderProtect: 'Digit2', orderSpread: 'Digit3', orderAuto: 'Digit4',
+  cmdSelect: 'KeyY', cmdRole: 'KeyN'   // 统帅：选队友 / 给他分任务（Tab 开关战术面板）
 };
 let custom1PKeys = { ...DEFAULT_1P_KEYS };
 try {
@@ -72,7 +72,7 @@ const human = [new Ctrl(), new Ctrl(), new Ctrl(), new Ctrl()];
 let secretSettingsClicks = 0, secretLastClick = 0, secretEnabled = false, secretBrain = null;
 let secretHumanUntil = 0;
 const secretHumanHeld = { left: false, right: false, down: false, atk: false, jump: false };
-const SECRET_TACTICAL_ACTS = new Set(['orderFocus', 'orderProtect', 'orderSpread', 'cmdSelect', 'cmdRole', 'lock', 'beacon', 'rally']);
+const SECRET_TACTICAL_ACTS = new Set(['orderFocus', 'orderProtect', 'orderSpread', 'orderAuto', 'cmdSelect', 'cmdRole', 'lock', 'beacon', 'rally']);
 function secretNoteHumanInput(act, down) {
   if (!secretEnabled) return;
   if (SECRET_TACTICAL_ACTS.has(act)) return;

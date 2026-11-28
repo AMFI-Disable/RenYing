@@ -355,6 +355,17 @@ window.RYBoot = (function () {
               </div>
               <span class="mutator-hint">常规标准已融合动态天机异变，全模式同步生效</span>
             </div>
+            <!-- 默认团队战术：仅在含 AI 队友的多人对抗模式显示 -->
+            <div class="xiwu-tactic-row" id="xiwuTacticRow" hidden>
+              <span class="mutator-label">默认战术：</span>
+              <div class="xiwu-tactic-pills" id="xiwuTacticPills" role="group" aria-label="默认团队战术">
+                <button type="button" class="sel" data-dtac="auto" aria-pressed="true">智策 · 自适应</button>
+                <button type="button" data-dtac="spear" aria-pressed="false">锋矢 · 集火</button>
+                <button type="button" data-dtac="wall" aria-pressed="false">铁壁 · 固守</button>
+                <button type="button" data-dtac="raid" aria-pressed="false">游袭 · 包抄</button>
+              </div>
+              <span class="xiwu-tactic-hint" id="xiwuTacticHint">根据阵容、地形与战局实时切换最优战术与分工</span>
+            </div>
 
 
       <div class="xiwu-mode-content">
@@ -1655,14 +1666,14 @@ window.RYBoot = (function () {
     </div>
     <div class="tlab-body" id="trainLabBody"></div>
   </aside>
-  <!-- 战队实时指挥面板（对局中按 Tab 开启，可配置战术、阵型、集火目标与队友职责） -->
-  <div class="team-cmd-panel hidden" id="teamCmdPanel" role="dialog" aria-modal="true" aria-label="战队指挥面板">
+  <!-- 战队实时指挥抽屉（仅在多人团队对抗中按 Tab 开关，停靠右上角不遮挡战局） -->
+  <div class="team-cmd-panel hidden" id="teamCmdPanel" role="dialog" aria-label="战队指挥面板">
     <div class="tcp-box">
       <div class="tcp-head">
         <div>
-          <b id="tcpTitle">战队指挥面板</b>
+          <b id="tcpTitle">战队指挥</b>
           <span class="tcp-badge" id="tcpModeBadge"></span>
-          <span class="tcp-sub" id="tcpSub">配置全队战术、阵型、集火目标与队友职责（按 Tab 或 Esc 关闭）</span>
+          <span class="tcp-sub" id="tcpSub">1/2/3/4 速切战术 · Tab 或 Esc 收起</span>
         </div>
         <button class="mm-cancel" id="tcpCloseBtn" type="button" data-tcp-close>关闭</button>
       </div>

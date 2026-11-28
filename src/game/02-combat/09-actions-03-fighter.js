@@ -648,16 +648,19 @@ function tryTacticalKeys(f, foe) {
     }
   }
   if (M.cmd) cmdHandleKeys(f, c);
-  else if (isMulti() && f.idx < 2 && !cpuTeamwork(f)) {
+  else if (typeof teamCmdEligible === 'function' && teamCmdEligible() && f.idx < 2 && !cpuTeamwork(f)) {
     if (c.consume('orderFocus')) {
       M.squadOrders[fighterTeam(f)] = 'focus';
-      if (!RESIM) addP({ type: 'text', text: '令 · 全军集火', x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '255,165,100' });
+      if (!RESIM) addP({ type: 'text', text: `${cvT('令')} · ${cvT('锋矢')}（${cvT('集火突击')}）`, x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '255,165,100' });
     } else if (c.consume('orderProtect')) {
       M.squadOrders[fighterTeam(f)] = 'protect';
-      if (!RESIM) addP({ type: 'text', text: '令 · 回防掩护', x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '130,220,255' });
+      if (!RESIM) addP({ type: 'text', text: `${cvT('令')} · ${cvT('铁壁')}（${cvT('抱团固守')}）`, x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '130,220,255' });
     } else if (c.consume('orderSpread')) {
       M.squadOrders[fighterTeam(f)] = 'spread';
-      if (!RESIM) addP({ type: 'text', text: '令 · 分散游击', x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '140,240,180' });
+      if (!RESIM) addP({ type: 'text', text: `${cvT('令')} · ${cvT('游袭')}（${cvT('分散缠斗')}）`, x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '140,240,180' });
+    } else if (c.consume('orderAuto')) {
+      M.squadOrders[fighterTeam(f)] = 'auto';
+      if (!RESIM) addP({ type: 'text', text: `${cvT('令')} · ${cvT('智策')}（${cvT('智能自适应')}）`, x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '233,196,106' });
     }
   }
   if (f.rallyCD <= 0 && c.consume('rally')) {

@@ -163,10 +163,16 @@ function singleSec(sec) {
     xiwuTrainingTab(sub, true);
   }
   const supportsMutator = ['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'melee', 'ctf', 'maps'].includes(active);
+  const supportsTactic = ['watch2v2', 'melee', 'ctf', 'quad'].includes(active);
   if ($id('aiLvHome')) $id('aiLvHome').hidden = !(['cpu', 'chaos', 'mayhem', 'tag3', 'watch2v2', 'maps', 'cuju', 'koth', 'party', 'tournament', 'melee', 'ctf', 'quad', 'gauntlet', 'train-watch'].includes(active));
   if ($id('xiwuPresetBar')) $id('xiwuPresetBar').hidden = !supportsMutator;
   const mutators = $id('mutatorPills');
   if (mutators && mutators.parentElement) mutators.parentElement.hidden = !supportsMutator;
+  const tacRow = $id('xiwuTacticRow');
+  if (tacRow) {
+    tacRow.hidden = !supportsTactic;
+    if (supportsTactic && typeof syncXiwuTacticUI === 'function') syncXiwuTacticUI();
+  }
   updateXiwuSummary();
   const scr = $id('single');
   if (scr && !sec) scr.scrollTop = 0;
@@ -252,4 +258,32 @@ for (const btn of document.querySelectorAll('.mode-info-btn[data-mode-info]')) {
   };
   btn.addEventListener('click', trigger);
   btn.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') trigger(e); });
+}
+const XIWU_TACTIC_HINTS = {
+  auto: '根据阵容、地形与战局实时切换最优战术与分工',
+  spear: '全队同步集火残血与受控目标，爆发强推',
+  wall: '围绕统帅构筑防线，高格挡反击并优先破连护卫',
+  raid: '高速分散包抄落单与后排目标，灵活拉扯脱战',
+};
+function syncXiwuTacticUI() {
+  const cur = typeof getDefaultTeamTactic === 'function' ? getDefaultTeamTactic() : 'auto';
+  const wrap = $id('xiwuTacticPills');
+  if (wrap) {
+    for (const b of wrap.querySelectorAll('button[data-dtac]')) {
+      const on = b.dataset.dtac === cur;
+      b.classList.toggle('sel', on);
+      b.setAttribute('aria-pressed', String(on));
+    }
+  }
+  const hint = $id('xiwuTacticHint');
+  if (hint) hint.textContent = cvT(XIWU_TACTIC_HINTS[cur] || XIWU_TACTIC_HINTS.auto);
+}
+if ($id('xiwuTacticPills')) {
+  $id('xiwuTacticPills').addEventListener('click', e => {
+    const b = e.target.closest('button[data-dtac]'); if (!b) return;
+    if (typeof setDefaultTeamTactic === 'function') setDefaultTeamTactic(b.dataset.dtac);
+    syncXiwuTacticUI();
+    if (typeof updateXiwuSummary === 'function') updateXiwuSummary();
+    if (typeof SFX !== 'undefined' && SFX.slice) SFX.slice();
+  });
 }

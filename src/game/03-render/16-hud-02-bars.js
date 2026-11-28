@@ -398,24 +398,27 @@ function drawSquadTacticalBar() {
   if (M.cmd || typeof teamCmdEligible !== 'function' || !teamCmdEligible()) return;
   const t = localTeam();
   const ord = (M.squadOrders && M.squadOrders[t]) || 'auto';
-  const cw = 264, ch = 52, px = 14, py = H - ch - 34;
+  const sub = (M.squadAuto && M.squadAuto[t] && M.squadAuto[t].sub) || 'spear';
+  const cw = 292, ch = 56, px = 14, py = H - ch - 34;
   const opts = [
-    ['focus', '1', '集火', '255,165,100'],
-    ['protect', '2', '掩护', '130,220,255'],
-    ['spread', '3', '游击', '140,240,180'],
+    ['auto', '4', '智策', '233,196,106'],
+    ['focus', '1', '锋矢', '255,165,100'],
+    ['protect', '2', '铁壁', '130,220,255'],
+    ['spread', '3', '游袭', '140,240,180'],
   ];
   ctx.save();
   ctx.fillStyle = 'rgba(8,10,24,0.82)'; ctx.fillRect(px, py, cw, ch);
   ctx.strokeStyle = 'rgba(233,196,106,0.55)'; ctx.lineWidth = 1.2; ctx.strokeRect(px, py, cw, ch);
   ctx.font = `bold 12px ${TITLE_FONT}`; ctx.fillStyle = '#e9c46a'; ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-  ctx.fillText(`${cvT('战队指令')}  [Tab ${cvT('指挥面板')}]`, px + 8, py + 5);
-  const bw = (cw - 16 - 12) / 3;
+  const head = ord === 'auto' ? `${cvT('智策')}→${cvT(cmdTacName(sub))}  [Tab ${cvT('面板')}]` : `${cvT('战队战术')}  [Tab ${cvT('面板')}]`;
+  ctx.fillText(head, px + 8, py + 5);
+  const bw = (cw - 16 - 15) / 4;
   opts.forEach(([id, k, n, rgb], i) => {
-    const x = px + 8 + i * (bw + 6), on = ord === id;
-    ctx.fillStyle = on ? `rgba(${rgb},0.34)` : 'rgba(255,255,255,0.05)'; ctx.fillRect(x, py + 23, bw, 22);
-    ctx.strokeStyle = on ? `rgb(${rgb})` : 'rgba(255,255,255,0.18)'; ctx.lineWidth = on ? 1.8 : 1; ctx.strokeRect(x, py + 23, bw, 22);
+    const x = px + 8 + i * (bw + 5), on = ord === id;
+    ctx.fillStyle = on ? `rgba(${rgb},0.34)` : 'rgba(255,255,255,0.05)'; ctx.fillRect(x, py + 24, bw, 24);
+    ctx.strokeStyle = on ? `rgb(${rgb})` : 'rgba(255,255,255,0.18)'; ctx.lineWidth = on ? 1.8 : 1; ctx.strokeRect(x, py + 24, bw, 24);
     ctx.font = `bold 12px ${BODY_FONT}`; ctx.fillStyle = on ? '#ffffff' : 'rgba(239,232,216,0.82)'; ctx.textAlign = 'center';
-    ctx.fillText(`${k} ${cvT(n)}`, x + bw / 2, py + 28);
+    ctx.fillText(`${k} ${cvT(n)}`, x + bw / 2, py + 30);
   });
   ctx.restore();
 }

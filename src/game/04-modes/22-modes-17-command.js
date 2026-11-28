@@ -13,11 +13,13 @@
 //   · 电脑统帅每十几秒看一眼对面队伍的站位（是不是围着一个人、是不是散开、是不是抱团），再决定要不要换克制它的战术。
 // 找 bug 提示：战术没效果先看 cmdTacticOf（统帅倒下会返回 null）；电脑队友乱走看 cmdPickTarget 和 ai.js 里的 cmdAiMod。
 const CMD_TACTICS = {
+  auto: { n: '智策', sub: '智能自适应', key: '4', rgb: '233,196,106', hex: '#e9c46a', beats: null },
   spear: { n: '锋矢', sub: '集火突击', key: '1', rgb: '255,165,100', hex: '#ffa564', beats: 'wall' },
   wall: { n: '铁壁', sub: '抱团固守', key: '2', rgb: '130,220,255', hex: '#82dcff', beats: 'raid' },
   raid: { n: '游袭', sub: '分散缠斗', key: '3', rgb: '140,240,180', hex: '#8cf0b4', beats: 'spear' },
 };
 const CMD_ORDER = ['spear', 'wall', 'raid'];
+const CMD_UI_ORDER = ['auto', 'spear', 'wall', 'raid'];
 const CMD_BEATEN_BY = { wall: 'spear', raid: 'wall', spear: 'raid' };   // 谁克它
 const CMD_ROLES = [
   { id: 'auto', n: '自由', g: '' },
@@ -34,25 +36,73 @@ const CMD_FORMATIONS = [
 const CMD_HP_BONUS = 1.35;
 const CMD_BEAT_MUL = 1.18, CMD_BEATEN_MUL = 0.88;
 
+// 二十位侠客团队战术画像：基于属性、射程、机动、招式定位与团队协同构建
+const HERO_TACTIC_PROFILE = {
+  qingfeng:   { arch: 'skirmisher', prefRole: 'main', rangeBand: 0.96, peel: 0.55, burst: 0.82, flank: 0.68, retreatHp: 0.26, synergy: ['cc', 'vanguard'], stanceAggr: 1.08 },
+  feiying:    { arch: 'assassin',   prefRole: 'lure', rangeBand: 0.86, peel: 0.35, burst: 0.90, flank: 0.96, retreatHp: 0.32, synergy: ['vanguard', 'cc'], stanceAggr: 1.12 },
+  tieshan:    { arch: 'vanguard',   prefRole: 'peel', rangeBand: 0.82, peel: 0.94, burst: 0.66, flank: 0.25, retreatHp: 0.18, synergy: ['zoner', 'assassin'], stanceAggr: 0.92 },
+  lingshuang: { arch: 'skirmisher', prefRole: 'peel', rangeBand: 1.12, peel: 0.78, burst: 0.72, flank: 0.52, retreatHp: 0.28, synergy: ['zoner', 'vanguard'], stanceAggr: 1.04 },
+  liuyun:     { arch: 'zoner',      prefRole: 'lure', rangeBand: 1.16, peel: 0.45, burst: 0.70, flank: 0.86, retreatHp: 0.34, synergy: ['vanguard', 'cc'], stanceAggr: 1.06 },
+  leiming:    { arch: 'skirmisher', prefRole: 'main', rangeBand: 0.90, peel: 0.76, burst: 0.86, flank: 0.64, retreatHp: 0.22, synergy: ['cc', 'support'], stanceAggr: 1.10 },
+  moyu:       { arch: 'zoner',      prefRole: 'lure', rangeBand: 1.24, peel: 0.58, burst: 0.76, flank: 0.42, retreatHp: 0.36, synergy: ['vanguard', 'cc'], stanceAggr: 1.00 },
+  yuehua:     { arch: 'support',    prefRole: 'peel', rangeBand: 1.08, peel: 0.86, burst: 0.56, flank: 0.40, retreatHp: 0.34, synergy: ['skirmisher', 'vanguard'], stanceAggr: 0.95 },
+  yanling:    { arch: 'assassin',   prefRole: 'lure', rangeBand: 1.06, peel: 0.32, burst: 0.84, flank: 0.94, retreatHp: 0.35, synergy: ['vanguard', 'cc'], stanceAggr: 1.10 },
+  yuxiao:     { arch: 'zoner',      prefRole: 'peel', rangeBand: 1.20, peel: 0.74, burst: 0.68, flank: 0.45, retreatHp: 0.36, synergy: ['vanguard', 'support'], stanceAggr: 0.98 },
+  zuixian:    { arch: 'vanguard',   prefRole: 'peel', rangeBand: 0.90, peel: 0.88, burst: 0.74, flank: 0.46, retreatHp: 0.20, synergy: ['assassin', 'zoner'], stanceAggr: 1.02 },
+  gouchen:    { arch: 'vanguard',   prefRole: 'peel', rangeBand: 0.95, peel: 0.90, burst: 0.78, flank: 0.55, retreatHp: 0.22, synergy: ['assassin', 'skirmisher'], stanceAggr: 1.05 },
+  lingque:    { arch: 'assassin',   prefRole: 'main', rangeBand: 1.00, peel: 0.42, burst: 0.95, flank: 0.90, retreatHp: 0.30, synergy: ['cc', 'vanguard'], stanceAggr: 1.12 },
+  liying:     { arch: 'assassin',   prefRole: 'lure', rangeBand: 1.04, peel: 0.48, burst: 0.82, flank: 0.92, retreatHp: 0.32, synergy: ['vanguard', 'zoner'], stanceAggr: 1.06 },
+  cixian:     { arch: 'controller', prefRole: 'peel', rangeBand: 1.08, peel: 0.84, burst: 0.80, flank: 0.56, retreatHp: 0.28, synergy: ['assassin', 'skirmisher'], stanceAggr: 1.04 },
+  qianji:     { arch: 'controller', prefRole: 'lure', rangeBand: 1.16, peel: 0.62, burst: 0.78, flank: 0.62, retreatHp: 0.30, synergy: ['vanguard', 'zoner'], stanceAggr: 1.05 },
+  chixiao:    { arch: 'skirmisher', prefRole: 'main', rangeBand: 1.02, peel: 0.64, burst: 0.88, flank: 0.60, retreatHp: 0.24, synergy: ['cc', 'support'], stanceAggr: 1.10 },
+  xuanji:     { arch: 'zoner',      prefRole: 'lure', rangeBand: 1.22, peel: 0.70, burst: 0.82, flank: 0.48, retreatHp: 0.34, synergy: ['vanguard', 'assassin'], stanceAggr: 1.02 },
+  qingluan:   { arch: 'support',    prefRole: 'peel', rangeBand: 1.15, peel: 0.92, burst: 0.52, flank: 0.50, retreatHp: 0.38, synergy: ['vanguard', 'skirmisher'], stanceAggr: 0.90 },
+  xuanwu:     { arch: 'vanguard',   prefRole: 'peel', rangeBand: 0.88, peel: 0.96, burst: 0.68, flank: 0.22, retreatHp: 0.16, synergy: ['zoner', 'support'], stanceAggr: 0.94 },
+};
+function heroTacticProfile(f) {
+  const id = f && f.ch && f.ch.id;
+  return HERO_TACTIC_PROFILE[id] || { arch: 'skirmisher', prefRole: 'main', rangeBand: 1.0, peel: 0.55, burst: 0.72, flank: 0.55, retreatHp: 0.28, synergy: [], stanceAggr: 1.0 };
+}
+
+// 赛前默认战术偏好（持久化于 localStorage，默认为 auto 智能自适应）
+let defaultTeamTactic = 'auto';
+try {
+  const savedTac = localStorage.getItem('renying-default-tactic');
+  if (savedTac && CMD_TACTICS[savedTac]) defaultTeamTactic = savedTac;
+} catch (e) {}
+function getDefaultTeamTactic() { return CMD_TACTICS[defaultTeamTactic] ? defaultTeamTactic : 'auto'; }
+function setDefaultTeamTactic(tac) {
+  const next = CMD_TACTICS[tac] ? tac : 'auto';
+  defaultTeamTactic = next;
+  try { localStorage.setItem('renying-default-tactic', next); } catch (e) {}
+  return next;
+}
+
 const cmdOn = () => !!M.cmd;
 const cmdFighter = t => { const T = M.cmd && M.cmd.team[t]; return T ? FIGHTERS[T.cmdr] : null; };
 const cmdIs = f => !!(M.cmd && f && M.cmd.team[fighterTeam(f)] && M.cmd.team[fighterTeam(f)].cmdr === f.idx);
 const cmdIsPlayerCtrl = c => !!(c && (human.includes(c) || c.net));
 const cmdIsHumanTeam = t => { const c = cmdFighter(t); return !!(c && cmdIsPlayerCtrl(c.ctrl)); };
-// 这一队现在生效的战术：统帅倒下时是 null（没有克制，队友回到默认打法）
+// 这一队现在生效的战术姿态（spear/wall/raid）：当选「智策」时返回实时推演的子战术；统帅倒下时为 null
 function cmdTacticOf(t) {
   const T = M.cmd && M.cmd.team[t];
   if (!T || !T.tactic) return null;
   const c = FIGHTERS[T.cmdr];
-  return c && c.hp > 0 && !c.hidden ? T.tactic : null;
+  if (!c || c.hp <= 0 || c.hidden) return null;
+  if (T.tactic === 'auto') return T.autoSub || 'spear';
+  return T.tactic;
 }
-const cmdTacName = id => id ? CMD_TACTICS[id].n : '无令';
+function cmdSelectedTacticOf(t) {
+  const T = M.cmd && M.cmd.team[t];
+  return T ? T.tactic : null;
+}
+const cmdTacName = id => (id && CMD_TACTICS[id]) ? CMD_TACTICS[id].n : '无令';
 
 const cmdRand = (a, b) => a + grnd() * (b - a);
 
 function cmdRoundInit() {
   M.cmd = null;
-  if (!isLargeTeam() || M.watchAi || M.mode === 'demo') return;
+  if (!isLargeTeam() || M.watchAi || M.mode === 'demo' || M.mode === 'replay') return;
   const tc = teamCount();
   const C = { team: [], role: new Array(MAX_FIGHTERS).fill(0), sel: -1, tgtCount: new Array(MAX_FIGHTERS).fill(0), obsT: 0, tabAt: 0, hint: 0 };
   for (let t = 0; t < tc; t++) {
@@ -61,19 +111,29 @@ function cmdRoundInit() {
     const pool = humans.length ? humans : members;   // 有真人就从真人里随机，没有就从电脑里随机
     const cmdr = pool[(grnd() * pool.length) | 0];
     C.team.push({
-      cmdr: cmdr ? cmdr.idx : t, tactic: null, since: clock, nextEval: clock + cmdRand(5, 9), focus: -1, focusT: 0,
+      cmdr: cmdr ? cmdr.idx : t, tactic: null, autoSub: 'spear', autoReason: '均衡协同', since: clock, nextEval: clock + cmdRand(4, 7), focus: -1, focusT: 0,
       obs: { cx: 0, spread: 0, focus: 0, n: 0 }, dealt: 0, taken: 0, log: [],
     });
   }
   M.cmd = C;
+  const pref = getDefaultTeamTactic();
   for (let t = 0; t < tc; t++) {
     const cmdr = FIGHTERS[C.team[t].cmdr];
     if (cmdr) cmdApplyHp(cmdr);
-    if (!cmdIsHumanTeam(t)) { C.team[t].tactic = CMD_ORDER[(grnd() * 3) | 0]; C.team[t].log.push(C.team[t].tactic); }
+    if (cmdIsHumanTeam(t)) {
+      C.team[t].tactic = pref;
+      C.team[t].log.push(pref);
+    } else {
+      C.team[t].tactic = 'auto';
+      C.team[t].autoSub = CMD_ORDER[(grnd() * 3) | 0];
+      C.team[t].log.push('auto');
+    }
   }
   for (const f of allFighters()) { f.cmdTgt = -1; f.cmdTgtT = 0; f.cmdHitBy = -1; f.cmdHitT = -99; }
+  cmdObserve();
+  for (let t = 0; t < tc; t++) if (C.team[t].tactic === 'auto') cmdAdaptiveEval(t);
   const lt = localTeam();
-  if (cmdIsHumanTeam(lt)) say('你是统帅 · 1/2/3 或 Tab 下令', 2.4, 'go');
+  if (cmdIsHumanTeam(lt)) say(`你是统帅 · ${CMD_TACTICS[pref].n}（1/2/3/4 或 Tab）`, 2.4, 'go');
 }
 function cmdApplyHp(f) {
   f.maxHp = Math.round(f.maxHp * CMD_HP_BONUS); f.hp = f.lagHp = f.maxHp;
@@ -99,12 +159,14 @@ function cmdOnTeamOut(t) { if (M.cmd && M.cmd.team[t]) M.cmd.team[t].tactic = nu
 // ----- 下令（真人统帅按键，或电脑统帅自己决定） -----
 function cmdSet(t, tac, byHuman) {
   const T = M.cmd && M.cmd.team[t];
-  if (!T || T.tactic === tac) return false;
+  if (!T || !CMD_TACTICS[tac] || T.tactic === tac) return false;
   T.tactic = tac; T.since = clock; T.log.push(tac);
+  if (tac === 'auto') cmdAdaptiveEval(t);
   const c = FIGHTERS[T.cmdr];
   if (byHuman && c && !RESIM) {
     const d = CMD_TACTICS[tac];
-    addP({ type: 'text', text: `${cvT('令')} · ${cvT(d.n)}（${cvT(d.sub)}）`, x: c.x, y: c.y - 140, life: 1.1, max: 1.1, rgb: d.rgb });
+    const extra = tac === 'auto' && T.autoSub ? `→${cvT(CMD_TACTICS[T.autoSub].n)}` : '';
+    addP({ type: 'text', text: `${cvT('令')} · ${cvT(d.n)}${extra}（${cvT(d.sub)}）`, x: c.x, y: c.y - 140, life: 1.1, max: 1.1, rgb: d.rgb });
     ring(c.x, c.y - 56, 150, d.rgb, 0.5);
     for (const m of sideFighters(t)) if (m !== c && m.hp > 0 && !m.hidden) ring(m.x, m.y - 50, 60, d.rgb, 0.4);
     SFX.gong ? SFX.gong() : SFX.dash();
@@ -116,16 +178,17 @@ function cmdCycleTactic() {
   const t = localTeam(), c = cmdFighter(t);
   if (!c || !human.includes(c.ctrl) || c.hp <= 0 || (M.phase !== 'fight' && M.phase !== 'intro')) return;
   const T = M.cmd.team[t];
-  const i = CMD_ORDER.indexOf(T.tactic);
-  cmdSet(t, CMD_ORDER[(i + 1) % 3], true);
+  const i = CMD_UI_ORDER.indexOf(T.tactic);
+  cmdSet(t, CMD_UI_ORDER[(i + 1) % CMD_UI_ORDER.length], true);
 }
-// 统帅的按键：1/2/3 直接选战术，Y 选队友，N 给他分任务。返回 true 表示这个人在带队（不再走老的「全军集火」指令）
+// 统帅的按键：1/2/3/4 直接选战术，Y 选队友，N 给他分任务。返回 true 表示这个人在带队
 function cmdHandleKeys(f, c) {
   if (!M.cmd || !cmdIs(f) || !cmdIsPlayerCtrl(f.ctrl)) return false;
   const t = fighterTeam(f);
   if (c.consume('orderFocus')) cmdSet(t, 'spear', true);
   else if (c.consume('orderProtect')) cmdSet(t, 'wall', true);
   else if (c.consume('orderSpread')) cmdSet(t, 'raid', true);
+  else if (c.consume('orderAuto')) cmdSet(t, 'auto', true);
   if (c.consume('cmdSelect')) cmdSelectNext(t);
   if (c.consume('cmdRole')) cmdRoleCycle(t);
   return true;
@@ -145,13 +208,19 @@ function cmdRoleCycle(t) {
   const c = cmdFighter(t);
   if (c && !RESIM) addP({ type: 'text', text: `${C.sel >= 0 ? cvT(targets[0].look.name) : cvT('全队')} · ${cvT(CMD_ROLES[next].n)}`, x: c.x, y: c.y - 128, life: 0.9, max: 0.9, rgb: '255,235,150' });
 }
-// Tab：在任何含 AI 队友的团队模式中直接开关交互式「战队指挥面板」（可配置目标集火、战术、阵型与队友分工）
+// 严格模式白名单：仅在含 AI 队友的真实多人对抗模式显示战术面板与战术条（排除训练、教学、单挑、观战、闯关、列传、爬塔、无尽、百戏、回放、蹴鞠）
+const CMD_EXCLUDED_MODES = new Set(['demo', 'train', 'tut', 'tutorial', 'cpu', 'pvp', 'tag3', 'stage', 'saga', 'tower', 'gauntlet', 'party', 'boss', 'replay', 'world', 'bastion', 'cuju']);
 let TEAM_CMD_OPEN = false;
 function teamCmdEligible() {
-  if (M.mode === 'demo' || M.watchAi || !isMulti()) return false;
+  if (!M || M.watchAi || CMD_EXCLUDED_MODES.has(M.mode)) return false;
+  if (typeof isMulti !== 'function' || !isMulti()) return false;
+  if (typeof isRaid === 'function' && isRaid()) return false;
+  if (typeof cujuOn === 'function' && cujuOn()) return false;
   const t = localTeam();
   const mates = sideFighters(t).filter(f => !f.hidden);
-  return mates.length > 1 && mates.some(f => human.includes(f.ctrl));
+  const hasHuman = mates.some(f => human.includes(f.ctrl));
+  const hasAiMate = mates.some(f => !human.includes(f.ctrl) && !(f.ctrl && f.ctrl.net));
+  return mates.length > 1 && hasHuman && hasAiMate;
 }
 function teamCmdOpen() {
   const el = typeof $id === 'function' ? $id('teamCmdPanel') : null;
@@ -181,12 +250,13 @@ function toggleTeamCmdPanel(force) {
 }
 function teamCmdSetTactic(tac) {
   const t = localTeam();
-  const orderMap = { spear: 'focus', wall: 'protect', raid: 'spread' };
+  const orderMap = { spear: 'focus', wall: 'protect', raid: 'spread', auto: 'auto' };
   if (M.cmd) {
     cmdSet(t, tac, true);
   } else {
     if (!Array.isArray(M.squadOrders)) M.squadOrders = ['auto', 'auto', 'auto', 'auto'];
     M.squadOrders[t] = orderMap[tac] || 'auto';
+    if (tac === 'auto') squadAdaptiveEval(t);
     const lf = sideFighters(t).find(m => human.includes(m.ctrl)) || fighterByIdx(localIdx());
     const d = CMD_TACTICS[tac];
     if (lf && d && !RESIM) {
@@ -235,57 +305,55 @@ function teamCmdSetRole(fighterIdx, roleIdx) {
   }
   if (teamCmdOpen()) renderTeamCmdPanel();
 }
+const CMD_ARCH_LABELS = { vanguard: '前排', skirmisher: '游斗', assassin: '刺客', controller: '控场', zoner: '远程', support: '辅助' };
 function renderTeamCmdPanel() {
   const body = typeof $id === 'function' ? $id('tcpBody') : null;
   if (!body || !teamCmdEligible()) return;
   const t = localTeam();
-  const curTac = M.cmd && M.cmd.team[t] ? M.cmd.team[t].tactic : ({ focus: 'spear', protect: 'wall', spread: 'raid' }[M.squadOrders?.[t]] || '');
+  const T = M.cmd && M.cmd.team[t] ? M.cmd.team[t] : null;
+  const curTac = T ? T.tactic : ({ focus: 'spear', protect: 'wall', spread: 'raid', auto: 'auto' }[M.squadOrders?.[t]] || 'auto');
+  const activeSub = T ? cmdTacticOf(t) : (curTac === 'auto' ? ((M.squadAuto && M.squadAuto[t] && M.squadAuto[t].sub) || 'spear') : curTac);
+  const autoReason = T ? (T.autoReason || '均衡协同') : ((M.squadAuto && M.squadAuto[t] && M.squadAuto[t].reason) || '均衡协同');
   const curForm = (M.teamFormation && M.teamFormation[t]) || 'auto';
   const curFocus = (M.teamFocus && M.teamFocus[t] >= 0) ? M.teamFocus[t] : -1;
   const lf = sideFighters(t).find(m => human.includes(m.ctrl)) || fighterByIdx(localIdx());
   const foes = lf ? foesOf(lf).filter(e => !e.hidden) : [];
   const mates = sideFighters(t).filter(m => !m.hidden && !human.includes(m.ctrl));
   const badge = $id('tcpModeBadge');
-  if (badge) badge.textContent = M.cmd ? `${cvT('统帅战术')} · ${cvT(cmdTacName(curTac))}` : `${cvT('小队协同')} · ${mates.length} ${cvT('名 AI 队友')}`;
+  if (badge) {
+    badge.textContent = curTac === 'auto'
+      ? `${cvT('智策')}→${cvT(cmdTacName(activeSub))} · ${cvT(autoReason)}`
+      : `${cvT(M.cmd ? '统帅战术' : '小队协同')} · ${cvT(cmdTacName(curTac))}`;
+  }
 
-  const tacBtns = CMD_ORDER.map(id => {
+  const tacBtns = CMD_UI_ORDER.map(id => {
     const d = CMD_TACTICS[id];
-    return `<button type="button" class="tcp-btn${curTac === id ? ' sel' : ''}" data-tcp-tac="${id}"><b>[${d.key}]</b> ${cvT(d.n)} <small>${cvT(d.sub)}</small></button>`;
+    const isSub = curTac === 'auto' && activeSub === id;
+    return `<button type="button" class="tcp-btn tcp-tac-btn${curTac === id ? ' sel' : ''}${isSub ? ' is-sub' : ''}" data-tcp-tac="${id}"><span class="tcp-k">${d.key}</span><span class="tcp-tac-txt"><b>${cvT(d.n)}</b><small>${cvT(d.sub)}</small></span></button>`;
   }).join('');
   const formBtns = CMD_FORMATIONS.map(f => `<button type="button" class="tcp-btn${curForm === f.id ? ' sel' : ''}" data-tcp-form="${f.id}" title="${cvT(f.sub)}">${cvT(f.n)}</button>`).join('');
-  const focusBtns = `<button type="button" class="tcp-btn${curFocus < 0 ? ' sel' : ''}" data-tcp-focus="-1">${cvT('自动 / 跟随统帅')}</button>` + foes.map(e => {
+  const focusBtns = `<button type="button" class="tcp-btn${curFocus < 0 ? ' sel' : ''}" data-tcp-focus="-1">${cvT('自动集火')}</button>` + foes.map(e => {
     const dead = e.hp <= 0;
     const pct = Math.max(0, Math.round((e.hp / Math.max(1, e.maxHp)) * 100));
     return `<button type="button" class="tcp-btn${curFocus === e.idx ? ' sel' : ''}${dead ? ' dead' : ''}" data-tcp-focus="${e.idx}"${dead ? ' disabled' : ''}>${escapeHTML(cvT(e.look.name))} <small>${dead ? cvT('阵亡') : pct + '%'}</small></button>`;
   }).join('');
-  const allRoleBtns = CMD_ROLES.map((r, ri) => `<button type="button" class="tcp-btn tcp-role-drop" data-tcp-role-all="${ri}" data-tcp-drop-role="${ri}">${cvT('全队')}${cvT(r.n)}</button>`).join('');
+  const allRoleBtns = CMD_ROLES.map((r, ri) => `<button type="button" class="tcp-btn tcp-role-drop" data-tcp-role-all="${ri}" data-tcp-drop-role="${ri}">${cvT(r.n)}</button>`).join('');
   const mateRows = mates.length ? mates.map(m => {
     const curR = (M.cmd && M.cmd.role ? M.cmd.role[m.idx] : (M.teamRoles ? M.teamRoles[m.idx] : 0)) || 0;
     const pct = Math.max(0, Math.round((m.hp / Math.max(1, m.maxHp)) * 100));
-    return `<div class="tcp-mate-row" data-tcp-drag-mate="${m.idx}" data-tcp-mate-name="${escapeHTML(cvT(m.look.name))}"><div class="tcp-mate-info"><span class="tcp-drag-grip" title="${cvT('拖拽至分工或敌方目标')}">⋮⋮</span><b>${escapeHTML(cvT(m.look.name))}</b><span class="tcp-mate-hp">${m.hp <= 0 ? cvT('阵亡') : `${Math.round(m.hp)}/${m.maxHp} (${pct}%)`}</span></div><div class="tcp-role-grp">${CMD_ROLES.map((r, ri) => `<button type="button" class="tcp-btn${curR === ri ? ' sel' : ''}" data-tcp-mate="${m.idx}" data-tcp-role="${ri}" data-tcp-drop-role="${ri}">${cvT(r.n)}</button>`).join('')}</div></div>`;
+    const archTag = CMD_ARCH_LABELS[heroTacticProfile(m).arch] || '游斗';
+    return `<div class="tcp-mate-row" data-tcp-drag-mate="${m.idx}" data-tcp-mate-name="${escapeHTML(cvT(m.look.name))}"><div class="tcp-mate-info"><span class="tcp-drag-grip" title="${cvT('拖拽至分工或敌方目标')}">⋮⋮</span><b>${escapeHTML(cvT(m.look.name))}</b><span class="tcp-arch">${cvT(archTag)}</span><span class="tcp-mate-hp">${m.hp <= 0 ? cvT('阵亡') : `${pct}%`}</span></div><div class="tcp-role-grp">${CMD_ROLES.map((r, ri) => `<button type="button" class="tcp-btn${curR === ri ? ' sel' : ''}" data-tcp-mate="${m.idx}" data-tcp-role="${ri}" data-tcp-drop-role="${ri}">${cvT(r.n)}</button>`).join('')}</div></div>`;
   }).join('') : `<div class="tcp-mate-hp">${cvT('当前队伍暂无 AI 队友')}</div>`;
 
-  const tc = isLargeTeam() ? teamCount() : 2;
-  const ovCols = Array.from({ length: tc }, (_, ti) => {
-    const list = sideFighters(ti).filter(f => !f.hidden);
-    const title = tc > 2 ? cvT(QUAD_TEAMS[ti].n) + (ti === t ? ' (' + cvT('我方') + ')' : '') : cvT(ti === t ? '我方阵营' : '敌方阵营');
-    const col = tc > 2 ? QUAD_TEAMS[ti].hex : (ti === t ? '#6fe0ff' : '#ff7878');
-    return `<div class="tcp-team-col"><b style="color:${col}">${title}</b>${list.map(f => {
-      const isAllyAi = ti === t && !human.includes(f.ctrl) && f.hp > 0;
-      const isEnemyAlive = ti !== t && f.hp > 0;
-      const dragAttr = isAllyAi ? ` data-tcp-drag-mate="${f.idx}" data-tcp-mate-name="${escapeHTML(cvT(f.look.name))}"` : '';
-      const dropAttr = isEnemyAlive ? ` data-tcp-drop-focus="${f.idx}"` : '';
-      const cls = `tcp-ov-row${isAllyAi ? ' tcp-draggable' : ''}${isEnemyAlive ? ' tcp-enemy-drop' : ''}${curFocus === f.idx ? ' is-focus' : ''}`;
-      return `<div class="${cls}"${dragAttr}${dropAttr}><span>${isAllyAi ? '<i class="tcp-drag-grip">⋮⋮</i> ' : ''}${f.idx === localIdx() ? '★ ' : ''}${cmdIs(f) ? cvT('帅') + ' ' : ''}${escapeHTML(cvT(f.look.name))}</span><span>${f.hp <= 0 ? cvT('阵亡') : `${Math.round(f.hp)}/${f.maxHp}`}</span></div>`;
-    }).join('')}</div>`;
-  }).join('');
+  const autoNote = curTac === 'auto'
+    ? `<div class="tcp-auto-bar"><span class="tcp-auto-dot"></span><span>${cvT('智策推演')}：<b>${cvT(cmdTacName(activeSub))}</b> · ${cvT(autoReason)}</span></div>`
+    : '';
 
   body.innerHTML = `
-    <section class="tcp-sec"><div class="tcp-sec-h"><span>${cvT('战队战术')}</span><small>${cvT('锋矢 > 铁壁 > 游袭 > 锋矢')}</small></div><div class="tcp-btns">${tacBtns}</div></section>
-    <section class="tcp-sec"><div class="tcp-sec-h"><span>${cvT('阵型与集结')}</span><small>${cvT('控制 AI 队友站位与聚散')}</small></div><div class="tcp-btns">${formBtns}</div></section>
-    <section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('目标集火')}</span><small>${cvT('点击或将队友拖至目标以指定集火')}</small></div><div class="tcp-btns">${focusBtns}</div></section>
+    <section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('战队战术')}</span><small>${cvT('锋矢 > 铁壁 > 游袭 > 锋矢')}</small></div>${autoNote}<div class="tcp-tac-grid">${tacBtns}</div></section>
+    <section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('阵型站位')}</span><small>${cvT('聚散与护卫')}</small></div><div class="tcp-btns">${formBtns}</div></section>
+    <section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('目标集火')}</span><small>${cvT('点选或拖入队友')}</small></div><div class="tcp-btns">${focusBtns}</div></section>
     <section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('队友分工')}</span><div class="tcp-btns">${allRoleBtns}</div></div><div class="tcp-mates">${mateRows}</div></section>
-    <section class="tcp-sec full"><div class="tcp-sec-h"><span>${cvT('战况总览')}</span><small>${cvT('可拖动标题栏移动面板 · 拖动队友至分工或敌方目标')}</small></div><div class="tcp-overview">${ovCols}</div></section>
   `;
 }
 if (typeof document !== 'undefined') {
@@ -418,7 +486,7 @@ if (typeof document !== 'undefined') {
 function cmdTabDown() { toggleTeamCmdPanel(); }
 function cmdTabUp() {}
 
-// ----- 每一帧：观察对面、电脑统帅决策、刷新目标统计 -----
+// ----- 每一帧：观察对面、智能自适应推演、电脑统帅决策、刷新目标统计 -----
 function cmdTick() {
   const C = M.cmd;
   if (C && M.phase === 'intro') {   // 开战前就能下令：按键在这里处理（fight 阶段由 tryTacticalKeys 处理）
@@ -435,11 +503,15 @@ function cmdTick() {
     for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.cmdTgt >= 0 && clock < f.cmdTgtT) C.tgtCount[f.cmdTgt]++;
     for (let t = 0; t < C.team.length; t++) {
       const T = C.team[t];
-      if (cmdIsHumanTeam(t)) continue;
       const c = FIGHTERS[T.cmdr];
       if (!c || c.hp <= 0) continue;
-      if (!T.tactic || clock >= T.nextEval) cmdAiEval(t);
+      if (T.tactic === 'auto') {
+        cmdAdaptiveEval(t);
+      } else if (!cmdIsHumanTeam(t) && (!T.tactic || clock >= T.nextEval)) {
+        cmdAiEval(t);
+      }
     }
+    if (teamCmdOpen() && typeof renderTeamCmdPanel === 'function') renderTeamCmdPanel();
   }
 }
 // 观察每一队能被对面看到的东西：队伍中心、分散程度、有多少人在打同一个人
@@ -457,7 +529,124 @@ function cmdObserve() {
     o.cx = cx; o.spread = Math.sqrt(v / alive.length); o.focus = alive.length > 1 ? best / alive.length : 0;
   }
 }
-// 电脑统帅：找最近的、还有人的对手队伍，看它的站位像哪一种战术，选克制它的；难度越高越准
+// 统计一支队伍的阵容构成（20侠客画像）
+function cmdCompStats(fighters) {
+  const s = { vanguard: 0, skirmisher: 0, assassin: 0, controller: 0, zoner: 0, support: 0, avgHp: 0, lowCnt: 0, hurtCnt: 0, avgBurst: 0, avgPeel: 0, avgFlank: 0, n: 0 };
+  for (const f of fighters) {
+    if (!f || f.hidden || f.hp <= 0) continue;
+    const p = heroTacticProfile(f);
+    s.n++;
+    s[p.arch] = (s[p.arch] || 0) + 1;
+    const hpR = f.hp / Math.max(1, f.maxHp);
+    s.avgHp += hpR;
+    if (hpR < 0.36) s.lowCnt++;
+    if (['hitstun', 'launched', 'knockdown', 'held'].includes(f.state) || (clock - (f.cmdHitT || -99) < 0.7)) s.hurtCnt++;
+    s.avgBurst += p.burst;
+    s.avgPeel += p.peel;
+    s.avgFlank += p.flank;
+  }
+  if (s.n > 0) { s.avgHp /= s.n; s.avgBurst /= s.n; s.avgPeel /= s.n; s.avgFlank /= s.n; }
+  return s;
+}
+// 智能自适应战术推演（auto）：综合我方阵容、敌方阵容与态势、地形、模式（夺旗/四象/团战/2v2）与实时血线/受控状态
+function cmdComputeAdaptive(t, mates, foes, rivalObs, cmdr, rivalCmdr) {
+  const myS = cmdCompStats(mates);
+  const foeS = cmdCompStats(foes);
+  const sc = { spear: 0, wall: 0, raid: 0 };
+  let reason = '均衡协同';
+
+  // 1. 阵容协同基线（基于20侠客画像）
+  sc.spear += (myS.skirmisher + myS.assassin) * 0.45 + myS.avgBurst * 1.4;
+  sc.wall += (myS.vanguard + myS.support + myS.controller) * 0.52 + myS.avgPeel * 1.3;
+  sc.raid += (myS.assassin + myS.zoner) * 0.48 + myS.avgFlank * 1.35;
+  // 针对敌方阵容：敌方远程/辅助多则游袭切后；敌方刺客多则铁壁护阵；敌方重装前排多则锋矢集火破点
+  if (foeS.zoner + foeS.support >= 2) { sc.raid += 1.45; }
+  if (foeS.assassin >= 2) { sc.wall += 1.35; }
+  if (foeS.vanguard >= 2) { sc.spear += 1.25; }
+
+  // 2. 地图与地形机制感知
+  const mp = typeof mapNow === 'function' ? mapNow() : null;
+  if (mp) {
+    if (mp.cliff) sc.raid += 0.9;
+    if (mp.thunder || mp.wind) sc.raid += 0.55;
+    if (mp.ice) sc.wall += 0.45;
+  }
+  if (typeof battleMapOn === 'function' && battleMapOn()) sc.raid += 0.35;
+
+  // 3. 模式目标优先（夺旗 / 四象）
+  if (typeof ctfOn === 'function' && ctfOn() && M.ctf && M.ctf.flags) {
+    const myFlag = M.ctf.flags[t], foeFlag = M.ctf.flags[1 - t];
+    if (myFlag && myFlag.carrier >= 0) { sc.spear += 3.2; reason = '截杀夺旗'; }
+    else if (foeFlag && foeFlag.carrier >= 0) { sc.wall += 2.8; reason = '护送战旗'; }
+  } else if (typeof quadOn === 'function' && quadOn()) {
+    if (myS.n <= 2) { sc.wall += 1.6; reason = '四象保帅'; }
+    else if (foeS.n >= myS.n + 2) { sc.raid += 1.4; reason = '四象游斗'; }
+  }
+
+  // 4. 实时战局态势（人数、血线、统帅安危、集火窗口、队友受控）
+  const myCmdrHp = cmdr && cmdr.hp > 0 ? cmdr.hp / Math.max(1, cmdr.maxHp) : 1;
+  const foeCmdrHp = rivalCmdr && rivalCmdr.hp > 0 ? rivalCmdr.hp / Math.max(1, rivalCmdr.maxHp) : 1;
+  const foeCC = foes.some(e => !e.hidden && e.hp > 0 && (['hitstun', 'launched', 'knockdown', 'held'].includes(e.state) || (e.jailT || 0) > 0 || (e.guard || 100) < 25));
+  if (myCmdrHp < 0.42 || (myS.avgHp < 0.46 && myS.n <= foeS.n) || myS.hurtCnt >= Math.max(2, Math.ceil(myS.n * 0.5))) {
+    sc.wall += 3.0;
+    reason = myCmdrHp < 0.42 ? '护卫统帅' : '稳守反击';
+  } else if (foeCmdrHp < 0.42 || myS.n >= foeS.n + 2 || (foeS.lowCnt >= 1 && myS.avgHp > 0.52) || foeCC) {
+    sc.spear += 2.6;
+    reason = foeCmdrHp < 0.42 ? '斩首敌帅' : foeCC ? '乘势集火' : '集火残血';
+  }
+
+  // 5. 敌方实时阵型反制（克制对手姿态）
+  if (rivalObs && rivalObs.n >= 2) {
+    const n = Math.max(2, rivalObs.n);
+    if (rivalObs.n >= 3 && rivalObs.focus >= 0.52) {
+      sc.raid += 2.1;
+      if (reason === '均衡协同') reason = '游袭破锋';
+    } else if (rivalObs.spread > 235 + n * 28) {
+      sc.wall += 1.9;
+      if (reason === '均衡协同') reason = '铁壁制游';
+    } else if (rivalObs.spread < 125 + n * 16) {
+      sc.spear += 1.9;
+      if (reason === '均衡协同') reason = '锋矢破壁';
+    }
+  }
+
+  let best = 'spear';
+  if (sc.wall > sc[best]) best = 'wall';
+  if (sc.raid > sc[best]) best = 'raid';
+  if (reason === '均衡协同') {
+    reason = best === 'spear' ? '锋矢强攻' : best === 'wall' ? '铁壁护阵' : '包抄后排';
+  }
+  return { sub: best, reason, scores: sc };
+}
+function cmdAdaptiveEval(t) {
+  const C = M.cmd; if (!C || !C.team[t]) return;
+  const T = C.team[t], me = T.obs;
+  let rival = -1, rd = Infinity;
+  for (let k = 0; k < C.team.length; k++) {
+    if (k === t || C.team[k].obs.n === 0) continue;
+    const d = Math.abs(C.team[k].obs.cx - me.cx);
+    if (d < rd) { rd = d; rival = k; }
+  }
+  const mates = sideFighters(t).filter(f => !f.hidden && f.hp > 0);
+  const foes = rival >= 0 ? sideFighters(rival).filter(f => !f.hidden && f.hp > 0) : [];
+  const res = cmdComputeAdaptive(t, mates, foes, rival >= 0 ? C.team[rival].obs : null, cmdFighter(t), rival >= 0 ? cmdFighter(rival) : null);
+  // 滞回防抖：刚切换不满 1.8 秒且差距不大时保持当前子战术，避免高频抖动
+  const cur = T.autoSub || 'spear';
+  if (cur !== res.sub && clock - (T.autoAt || -9) < 1.8 && (res.scores[res.sub] - res.scores[cur]) < 1.2) return;
+  if (cur !== res.sub) T.autoAt = clock;
+  T.autoSub = res.sub;
+  T.autoReason = res.reason;
+}
+function squadAdaptiveEval(t) {
+  const mates = sideFighters(t).filter(f => !f.hidden && f.hp > 0);
+  const lf = mates.find(f => human.includes(f.ctrl)) || mates[0];
+  const foes = lf ? foesOf(lf).filter(e => !e.hidden && e.hp > 0) : [];
+  const res = cmdComputeAdaptive(t, mates, foes, null, lf, foes[0] || null);
+  if (!M.squadAuto) M.squadAuto = [{}, {}, {}, {}];
+  M.squadAuto[t] = res;
+  return res;
+}
+// 电脑统帅：找最近的、还有人的对手队伍，结合智策评估动态切换战术；难度越高越准
 function cmdAiEval(t) {
   const C = M.cmd, T = C.team[t], me = C.team[t].obs;
   const skill = clamp((LEVELS[M.level] || {}).read !== undefined ? (LEVELS[M.level].read * 0.8 + 0.2) : 0.55, 0.2, 0.95);
@@ -467,40 +656,47 @@ function cmdAiEval(t) {
     const d = Math.abs(C.team[k].obs.cx - me.cx);
     if (d < rd) { rd = d; rival = k; }
   }
-  T.nextEval = clock + cmdRand(11, 18);
+  T.nextEval = clock + cmdRand(8, 14);
   if (rival < 0) { if (!T.tactic) cmdSet(t, CMD_ORDER[(grnd() * 3) | 0], false); return; }
-  const o = C.team[rival].obs, n = Math.max(2, o.n);
-  let guess = null;
-  if (o.n >= 3 && o.focus >= 0.5) guess = 'spear';
-  else if (o.spread > 230 + n * 28) guess = 'raid';
-  else if (o.spread < 120 + n * 16) guess = 'wall';
-  if (!guess || grnd() > skill) guess = CMD_ORDER[(grnd() * 3) | 0];
-  let next = CMD_BEATEN_BY[guess];   // 克制 guess 的战术：guess 被谁克，就选谁
-  // 结合团队血线与人数动态调整：残血劣势转铁壁稳守，敌帅残血或人数碾压转锋矢强推
-  const myAlive = sideFighters(t).filter(f => !f.hidden && f.hp > 0);
-  const myHpAvg = myAlive.length ? myAlive.reduce((s, f) => s + f.hp / Math.max(1, f.maxHp), 0) / myAlive.length : 0;
-  const rivalCmdr = cmdFighter(rival);
-  if (skill >= 0.45) {
-    if (myHpAvg < 0.45 && me.n <= o.n) next = 'wall';
-    else if ((rivalCmdr && rivalCmdr.hp > 0 && rivalCmdr.hp < rivalCmdr.maxHp * 0.4) || me.n >= o.n + 2) next = 'spear';
-  }
-  // 这边正占上风就不换（打得好别折腾）
+  const mates = sideFighters(t).filter(f => !f.hidden && f.hp > 0);
+  const foes = sideFighters(rival).filter(f => !f.hidden && f.hp > 0);
+  let next = grnd() < skill
+    ? cmdComputeAdaptive(t, mates, foes, C.team[rival].obs, cmdFighter(t), cmdFighter(rival)).sub
+    : CMD_ORDER[(grnd() * 3) | 0];
   const winning = T.dealt > T.taken * 1.3;
-  if (T.tactic && winning && grnd() < 0.6) next = T.tactic;
+  if (T.tactic && T.tactic !== 'auto' && winning && grnd() < 0.55) next = T.tactic;
   T.dealt *= 0.4; T.taken *= 0.4;
   cmdSet(t, next, false);
 }
 
-// ----- 队友怎么选目标 -----
+// ----- 队友智能分工（基于20侠客画像 + 实时血线 + 队友受击求援 + 战术协同） -----
 function cmdRoleOf(f) {
   const C = M.cmd; if (!C) return 'auto';
   if (C.role[f.idx]) return CMD_ROLES[C.role[f.idx]].id;
   const t = fighterTeam(f), tac = cmdTacticOf(t);
   if (!tac) return 'auto';
-  const r = ((f.idx * 37 + 11) % 100) / 100;   // 每个人固定的伪随机数：同一战术下谁主攻谁牵制不会乱跳
-  if (tac === 'spear') return r < 0.7 ? 'main' : 'peel';
-  if (tac === 'raid') return r < 0.35 ? 'lure' : 'auto';
-  return r < 0.4 ? 'peel' : 'auto';
+  const prof = heroTacticProfile(f);
+  const hpPct = f.hp / Math.max(1, f.maxHp);
+  // 1. 残血保护：低血量前排/刺客自动转为牵制或破连，避免无脑送头
+  if (hpPct < prof.retreatHp + 0.08 && prof.arch !== 'vanguard') return 'lure';
+  // 2. 紧急护卫：若统帅或高价值辅助正在挨打，擅长破连的队友立即补位破连
+  const cmdr = cmdFighter(t);
+  const allyInDanger = sideFighters(t).some(m => m !== f && !m.hidden && m.hp > 0 && (clock - (m.cmdHitT || -99) < 0.85) && (m === cmdr || m.hp < m.maxHp * 0.45 || heroTacticProfile(m).arch === 'support'));
+  if (allyInDanger && prof.peel >= 0.72) return 'peel';
+  // 3. 按当前生效战术与侠客画像自然分工
+  if (tac === 'spear') {
+    if (prof.burst >= 0.78 || prof.arch === 'skirmisher' || prof.arch === 'assassin') return 'main';
+    return prof.peel >= 0.80 ? 'peel' : 'main';
+  }
+  if (tac === 'wall') {
+    if (prof.peel >= 0.68 || prof.arch === 'vanguard' || prof.arch === 'support' || prof.arch === 'controller') return 'peel';
+    return 'lure';
+  }
+  if (tac === 'raid') {
+    if (prof.flank >= 0.62 || prof.arch === 'assassin' || prof.arch === 'zoner') return 'lure';
+    return prof.peel >= 0.82 ? 'peel' : 'main';
+  }
+  return prof.prefRole || 'auto';
 }
 const cmdAlive = (e, list) => e && !e.hidden && e.hp > 0 && list.includes(e);
 function cmdFocusOf(t, list, distance) {
@@ -513,70 +709,86 @@ function cmdFocusOf(t, list, distance) {
     if (M.teamFocus) M.teamFocus[t] = -1;
   }
   if (cmdr && cmdIsPlayerCtrl(cmdr.ctrl)) {
-    // 真人统帅：锁定（G）的人，没锁就是统帅现在打的人
     const c = cmdr.lockIdx >= 0 ? FIGHTERS[cmdr.lockIdx] : cmdr.target;
-    return cmdAlive(c, list) ? c : null;
+    if (cmdAlive(c, list)) return c;
   }
   const cur = T.focus >= 0 ? FIGHTERS[T.focus] : null;
   if (cmdAlive(cur, list) && clock < T.focusT) return cur;
   const base = cmdr && cmdr.hp > 0 ? cmdr : (sideFighters(t).find(m => m.hp > 0) || null);
   if (!base) return null;
+  const ctfActive = typeof ctfOn === 'function' && ctfOn() && M.ctf && M.ctf.flags;
+  const myFlag = ctfActive ? M.ctf.flags[t] : null;
   let best = null, bs = Infinity;
   for (const e of list) {
     if (e.hp <= 0 || e.hidden) continue;
-    const s = distance(e, base) - (1 - e.hp / e.maxHp) * 420 - (cmdIs(e) ? 140 : 0);   // 近的、残血的、敌帅优先
+    const ep = heroTacticProfile(e);
+    const stunned = ['hitstun', 'launched', 'knockdown', 'held'].includes(e.state) || (e.jailT || 0) > 0;
+    const s = distance(e, base)
+      - (1 - e.hp / Math.max(1, e.maxHp)) * 460
+      - (cmdIs(e) ? 160 : 0)
+      - (stunned ? 170 : 0)
+      - ((e.guard || 100) < 28 ? 110 : 0)
+      - (ep.arch === 'support' ? 120 : 0)
+      - (myFlag && myFlag.carrier === e.idx ? 520 : 0);
     if (s < bs) { bs = s; best = e; }
   }
-  if (best) { T.focus = best.idx; T.focusT = clock + cmdRand(3, 5); }
+  if (best) { T.focus = best.idx; T.focusT = clock + cmdRand(2.4, 4.2); }
   return best;
 }
-// 谁正在打我方队友：最近 1.2 秒内打中过队友的敌人
+// 谁正在打我方队友：优先保护统帅、残血队友与辅助
 function cmdPeelTarget(f, list, distance) {
-  let best = null, bd = Infinity;
-  for (const m of sideFighters(fighterTeam(f))) {
-    if (m === f || m.hidden || m.hp <= 0 || clock - m.cmdHitT > 1.2 || m.cmdHitBy < 0) continue;
+  const t = fighterTeam(f), cmdr = cmdFighter(t);
+  let best = null, bs = Infinity;
+  for (const m of sideFighters(t)) {
+    if (m === f || m.hidden || m.hp <= 0 || clock - m.cmdHitT > 1.35 || m.cmdHitBy < 0) continue;
     const e = FIGHTERS[m.cmdHitBy];
     if (!cmdAlive(e, list)) continue;
-    const d = distance(e, f);
-    if (d < bd) { bd = d; best = e; }
+    const prio = (m === cmdr ? 260 : 0) + (m.hp < m.maxHp * 0.45 ? 180 : 0) + (heroTacticProfile(m).arch === 'support' ? 140 : 0);
+    const s = distance(e, f) - prio;
+    if (s < bs) { bs = s; best = e; }
   }
   return best;
 }
-// 牵制：缠住主攻目标身边的人，别让他们去支援
+// 牵制：缠住敌方后排远程/辅助或主攻目标身边的增援
 function cmdLureTarget(f, list, focus, distance) {
   const ref = focus || f;
+  const myProf = heroTacticProfile(f);
   let best = null, bs = Infinity;
   for (const e of list) {
-    if (e.hp <= 0 || e.hidden || e === focus) continue;
-    const s = distance(e, ref) + distance(e, f) * 0.5 + (M.cmd.tgtCount[e.idx] || 0) * 90;
+    if (e.hp <= 0 || e.hidden || (e === focus && list.length > 1)) continue;
+    const ep = heroTacticProfile(e);
+    const backlineBonus = (myProf.arch === 'assassin' || myProf.flank >= 0.75) && (ep.arch === 'zoner' || ep.arch === 'support') ? 220 : 0;
+    const s = distance(e, ref) * 0.7 + distance(e, f) * 0.55 + (M.cmd ? (M.cmd.tgtCount[e.idx] || 0) * 110 : 0) - backlineBonus;
     if (s < bs) { bs = s; best = e; }
   }
   return best || focus;
 }
-// 游袭：找离同伴最远的落单者，已经有很多人盯的就换人
+// 游袭：找离同伴最远的落单者或脆皮后排，避免多人扎堆打同一人
 function cmdRaidTarget(f, list, distance) {
   let best = null, bs = Infinity;
   for (const e of list) {
     if (e.hp <= 0 || e.hidden) continue;
     let iso = 700;
     for (const o of sideFighters(fighterTeam(e))) { if (o !== e && o.hp > 0 && !o.hidden) iso = Math.min(iso, Math.abs(o.x - e.x)); }
-    const s = distance(e, f) - iso * 0.45 + (M.cmd.tgtCount[e.idx] || 0) * 170;
+    const ep = heroTacticProfile(e);
+    const squishy = (ep.arch === 'zoner' || ep.arch === 'support') ? 140 : 0;
+    const s = distance(e, f) - iso * 0.52 - squishy + (M.cmd.tgtCount[e.idx] || 0) * 190;
     if (s < bs) { bs = s; best = e; }
   }
   return best;
 }
-// 铁壁：只打闯进统帅身边的人（没人闯进来就返回 null，走默认的就近目标）
+// 铁壁：优先拦截闯进统帅或辅助身边的敌人
 function cmdWallTarget(f, list, distance) {
   const cmdr = cmdFighter(fighterTeam(f)), anchor = cmdr && cmdr.hp > 0 ? cmdr : f;
-  let best = null, bd = 520;
+  let best = null, bd = 560;
   for (const e of list) {
     if (e.hp <= 0 || e.hidden) continue;
-    const d = distance(e, anchor);
+    const d = distance(e, anchor) - (clock - (anchor.cmdHitT || -99) < 1.2 && anchor.cmdHitBy === e.idx ? 220 : 0);
     if (d < bd) { bd = d; best = e; }
   }
   return best;
 }
-// foeOf 的钩子：返回这个电脑队友这一刻该打谁（null 就走原来的就近目标）。选好的目标留 0.7 秒左右，免得一帧一换
+// foeOf 的钩子：返回这个电脑队友这一刻该打谁（null 就走原来的就近目标）。选好的目标留 0.65 秒左右，免得一帧一换
 function cmdPickTarget(f, list, distance) {
   const C = M.cmd, t = fighterTeam(f);
   if (!C || !C.team[t] || cmdIsPlayerCtrl(f.ctrl) || !list.length) return null;
@@ -586,80 +798,139 @@ function cmdPickTarget(f, list, distance) {
   const focus = cmdFocusOf(t, list, distance);
   let pick = null;
   if (role === 'main') pick = focus;
-  else if (role === 'peel') pick = cmdPeelTarget(f, list, distance) || focus;
+  else if (role === 'peel') pick = cmdPeelTarget(f, list, distance) || (tac === 'wall' ? cmdWallTarget(f, list, distance) : null) || focus;
   else if (role === 'lure') pick = cmdLureTarget(f, list, focus, distance);
   else if (tac === 'spear') pick = focus;
   else if (tac === 'raid') pick = cmdRaidTarget(f, list, distance);
-  else if (tac === 'wall') pick = cmdWallTarget(f, list, distance);
+  else if (tac === 'wall') pick = cmdPeelTarget(f, list, distance) || cmdWallTarget(f, list, distance);
   if (!pick) return null;
-  f.cmdTgt = pick.idx; f.cmdTgtT = clock + 0.6 + (f.idx % 5) * 0.08;
+  f.cmdTgt = pick.idx; f.cmdTgtT = clock + 0.55 + (f.idx % 5) * 0.07;
   return pick;
 }
 
-// ai.js 的 neutral() 用：统一处理团战统帅战术（M.cmd）与 2v2 / 同袍肉鸽小队战术、阵型集结与角色分工
+// 统一计算团队战术对 AI 决策的深度修正（攻势、间距、格挡、技能/奥义同步、低血撤退、包抄与破连）
+function buildTacticAiMod(me, foe, d, tac, role, fm, anchor, allies) {
+  const prof = heroTacticProfile(me);
+  const stanceMul = me.stance ? prof.stanceAggr : 1;
+  const hpPct = me.hp / Math.max(1, me.maxHp);
+  const foeStunned = foe && (['hitstun', 'launched', 'knockdown', 'held'].includes(foe.state) || (foe.jailT || 0) > 0 || (foe.guard || 100) < 25);
+  const m = {
+    aggr: stanceMul,
+    range: prof.rangeBand,
+    block: 0,
+    dir: 0,
+    skillMul: 1,
+    ultMul: 1,
+    retreat: false,
+    comboSync: false,
+    flankBias: prof.flank,
+    peelUrgent: false,
+  };
+
+  // 1. 三大战术姿态深度差异
+  if (tac === 'spear') {
+    m.aggr *= 1.36;
+    m.range *= 0.84;
+    m.skillMul *= 1.28;
+    m.ultMul *= 1.32;
+    m.comboSync = true;
+    if (foeStunned) { m.skillMul *= 1.35; m.ultMul *= 1.45; }
+  } else if (tac === 'wall') {
+    m.aggr *= 0.74;
+    m.range *= 1.06;
+    m.block += 0.36;
+    m.skillMul *= 0.94;
+    m.ultMul *= 1.12;
+    m.peelUrgent = true;
+    if (foe && (foe.state === 'attack' || foe.state === 'skill')) m.skillMul *= 1.22;
+  } else if (tac === 'raid') {
+    m.aggr *= 1.16;
+    m.range *= 1.18;
+    m.skillMul *= 1.24;
+    m.ultMul *= 1.08;
+    m.flankBias *= 1.45;
+  }
+
+  // 2. 队友职责细化修正
+  if (role === 'main') {
+    m.aggr *= 1.14;
+    m.skillMul *= 1.14;
+    m.comboSync = true;
+  } else if (role === 'lure') {
+    m.aggr *= 0.88;
+    m.range *= 1.14;
+    m.block += 0.14;
+    m.flankBias *= 1.25;
+  } else if (role === 'peel') {
+    m.aggr *= 1.18;
+    m.block += 0.12;
+    m.peelUrgent = true;
+    if (foe && allies.some(a => a !== me && !a.hidden && a.hp > 0 && clock - (a.cmdHitT || -99) < 0.85 && a.cmdHitBy === foe.idx)) {
+      m.skillMul *= 1.35;
+      m.aggr *= 1.2;
+    }
+  }
+
+  // 3. 低血量智能撤退与脱战重整（按战术与侠客血线阈值动态决定）
+  const retreatTh = prof.retreatHp * (tac === 'wall' ? 1.28 : tac === 'raid' ? 1.15 : 0.65);
+  const foesNear = typeof foesOf === 'function' ? foesOf(me).filter(e => !e.hidden && e.hp > 0 && Math.abs(e.y - me.y) < 120 && Math.abs(e.x - me.x) < 320).length : 1;
+  const alliesNear = allies.filter(a => a !== me && !a.hidden && a.hp > 0 && Math.abs(a.y - me.y) < 120 && Math.abs(a.x - me.x) < 340).length;
+  if (hpPct < retreatTh && (foesNear > alliesNear || (prof.arch === 'zoner' || prof.arch === 'support')) && d < 280) {
+    m.retreat = true;
+    m.aggr *= 0.55;
+    m.block += 0.24;
+    const safeAlly = allies.find(a => a !== me && !a.hidden && a.hp > a.maxHp * 0.45 && Math.abs(a.x - me.x) > 120);
+    m.dir = safeAlly ? Math.sign(safeAlly.x - me.x) : -Math.sign((foe ? foe.x : me.x) - me.x);
+    return m;
+  }
+
+  // 4. 阵型与站位牵引
+  if (fm === 'escort' && anchor && anchor !== me && anchor.hp > 0 && Math.abs(me.x - anchor.x) > 210 && d > 210) {
+    m.dir = Math.sign(anchor.x - me.x);
+  } else if (fm === 'group') {
+    const alive = allies.filter(x => !x.hidden && x.hp > 0);
+    if (alive.length > 1) {
+      const cx = alive.reduce((s, x) => s + x.x, 0) / alive.length;
+      if (Math.abs(me.x - cx) > 200 && d > 210) m.dir = Math.sign(cx - me.x);
+    }
+  } else if (fm === 'spread' || tac === 'raid') {
+    const nearMate = allies.find(x => x !== me && !x.hidden && x.hp > 0 && Math.abs(x.y - me.y) < 110 && Math.abs(x.x - me.x) < 155);
+    if (nearMate && d > 180) m.dir = Math.sign(me.x - nearMate.x) || (me.idx % 2 ? 1 : -1);
+  } else if (tac === 'wall' && anchor && anchor !== me && anchor.hp > 0 && d > 310 && Math.abs(me.x - anchor.x) > 260) {
+    m.dir = Math.sign(anchor.x - me.x);
+  } else if (tac === 'spear' && d > 250 && prof.arch !== 'zoner') {
+    m.dir = Math.sign(foe.x - me.x);
+  }
+  return m;
+}
+// ai.js 的 neutral() 用：统一处理团战统帅战术（M.cmd）与 2v2 小队战术、阵型集结与角色分工
 function cmdAiMod(me, foe, d) {
   const C = M.cmd; if (!C || cmdIsPlayerCtrl(me.ctrl)) return null;
   const t = fighterTeam(me), tac = cmdTacticOf(t), role = cmdRoleOf(me);
   const fm = (M.teamFormation && M.teamFormation[t]) || 'auto';
   if (!tac && role === 'auto' && fm === 'auto') return null;
-  const m = { aggr: 1, range: 1, block: 0, dir: 0 };
-  if (tac === 'spear') { m.aggr = 1.3; m.range = 0.88; }
-  else if (tac === 'raid') { m.aggr = 1.12; m.range = 1.14; }
-  else if (tac === 'wall') { m.aggr = 0.78; m.block = 0.3; }
-  if (role === 'main') m.aggr *= 1.12;
-  else if (role === 'lure') { m.aggr *= 0.82; m.range *= 1.12; m.block += 0.12; }
-  else if (role === 'peel') m.aggr *= 1.18;
-  const cmdr = cmdFighter(t);
-  if (fm === 'escort' && cmdr && cmdr !== me && cmdr.hp > 0 && Math.abs(me.x - cmdr.x) > 220 && d > 220) {
-    m.dir = Math.sign(cmdr.x - me.x);
-  } else if (fm === 'group') {
-    const alive = sideFighters(t).filter(x => !x.hidden && x.hp > 0);
-    if (alive.length > 1) {
-      const cx = alive.reduce((s, x) => s + x.x, 0) / alive.length;
-      if (Math.abs(me.x - cx) > 210 && d > 220) m.dir = Math.sign(cx - me.x);
-    }
-  } else if (fm === 'spread') {
-    const nearMate = sideFighters(t).find(x => x !== me && !x.hidden && x.hp > 0 && Math.abs(x.x - me.x) < 150);
-    if (nearMate && d > 190) m.dir = Math.sign(me.x - nearMate.x) || (me.idx % 2 ? 1 : -1);
-  } else if (tac === 'wall' && cmdr && cmdr !== me && cmdr.hp > 0 && d > 330 && Math.abs(me.x - cmdr.x) > 300) {
-    m.dir = Math.sign(cmdr.x - me.x);
-  } else if (tac === 'spear' && d > 260) {
-    m.dir = Math.sign(foe.x - me.x);
-  }
-  return m;
+  return buildTacticAiMod(me, foe, d, tac, role, fm, cmdFighter(t), sideFighters(t));
 }
 function squadAiMod(me, foe, d) {
   if (M.cmd) return cmdAiMod(me, foe, d);
-  if (!isMulti() || human.includes(me.ctrl)) return null;
+  if (!isMulti() || human.includes(me.ctrl) || (typeof isRaid === 'function' && isRaid())) return null;
   const t = fighterTeam(me);
   const ord = (M.squadOrders && M.squadOrders[t]) || 'auto';
   const fm = (M.teamFormation && M.teamFormation[t]) || 'auto';
   const roleIdx = (M.teamRoles && M.teamRoles[me.idx]) || 0;
-  const role = CMD_ROLES[roleIdx] ? CMD_ROLES[roleIdx].id : 'auto';
-  if (ord === 'auto' && fm === 'auto' && role === 'auto') return null;
-  const m = { aggr: 1, range: 1, block: 0, dir: 0 };
-  if (ord === 'focus') { m.aggr = 1.26; m.range = 0.9; }
-  else if (ord === 'protect') { m.aggr = 0.82; m.block = 0.28; }
-  else if (ord === 'spread') { m.aggr = 1.1; m.range = 1.14; }
-  if (role === 'main') m.aggr *= 1.12;
-  else if (role === 'lure') { m.aggr *= 0.84; m.range *= 1.12; m.block += 0.12; }
-  else if (role === 'peel') m.aggr *= 1.16;
-  const leader = sideFighters(t).find(x => !x.hidden && x.hp > 0 && human.includes(x.ctrl));
-  if ((fm === 'escort' || ord === 'protect') && leader && leader !== me && Math.abs(me.x - leader.x) > 240 && d > 240) {
-    m.dir = Math.sign(leader.x - me.x);
-  } else if (fm === 'group') {
-    const alive = sideFighters(t).filter(x => !x.hidden && x.hp > 0);
-    if (alive.length > 1) {
-      const cx = alive.reduce((s, x) => s + x.x, 0) / alive.length;
-      if (Math.abs(me.x - cx) > 210 && d > 220) m.dir = Math.sign(cx - me.x);
+  let role = CMD_ROLES[roleIdx] ? CMD_ROLES[roleIdx].id : 'auto';
+  let tac = ({ focus: 'spear', protect: 'wall', spread: 'raid' }[ord]) || null;
+  if (ord === 'auto') {
+    if (!M.squadAuto || !M.squadAuto[t] || (clock - (M.squadAutoT || -9) >= 0.5)) {
+      M.squadAutoT = clock;
+      squadAdaptiveEval(t);
     }
-  } else if (fm === 'spread' || ord === 'spread') {
-    const nearMate = sideFighters(t).find(x => x !== me && !x.hidden && x.hp > 0 && Math.abs(x.x - me.x) < 150);
-    if (nearMate && d > 190) m.dir = Math.sign(me.x - nearMate.x) || 1;
-  } else if (ord === 'focus' && d > 260) {
-    m.dir = Math.sign(foe.x - me.x);
+    tac = (M.squadAuto && M.squadAuto[t] && M.squadAuto[t].sub) || 'spear';
+    if (role === 'auto') role = heroTacticProfile(me).prefRole;
   }
-  return m;
+  const allies = sideFighters(t);
+  const leader = allies.find(x => !x.hidden && x.hp > 0 && human.includes(x.ctrl)) || allies[0];
+  return buildTacticAiMod(me, foe, d, tac, role, fm, leader, allies);
 }
 
 // ----- 伤害：相克和战术自带的小加成 -----
@@ -669,7 +940,10 @@ function cmdDmgMul(att, def) {
   let mul = 1;
   if (ta === 'spear') mul *= 1.05;
   if (td === 'wall') mul *= 0.93;
-  if (ta && td) { if (CMD_TACTICS[ta].beats === td) mul *= CMD_BEAT_MUL; else if (CMD_TACTICS[td].beats === ta) mul *= CMD_BEATEN_MUL; }
+  if (ta && td && CMD_TACTICS[ta] && CMD_TACTICS[td]) {
+    if (CMD_TACTICS[ta].beats === td) mul *= CMD_BEAT_MUL;
+    else if (CMD_TACTICS[td].beats === ta) mul *= CMD_BEATEN_MUL;
+  }
   return mul;
 }
 function cmdNoteHit(att, def, dmg) {
@@ -679,7 +953,15 @@ function cmdNoteHit(att, def, dmg) {
   if (C.team[td]) C.team[td].taken += dmg;
   def.cmdHitBy = att.idx; def.cmdHitT = clock;
 }
-const cmdSpeedMul = f => (M.cmd && cmdTacticOf(fighterTeam(f)) === 'raid') ? 1.06 : 1;
+const cmdSpeedMul = f => {
+  if (!f) return 1;
+  if (M.cmd) return cmdTacticOf(fighterTeam(f)) === 'raid' ? 1.06 : 1;
+  if (isMulti() && M.squadOrders) {
+    const t = fighterTeam(f), o = M.squadOrders[t];
+    if (o === 'spread' || (o === 'auto' && M.squadAuto && M.squadAuto[t] && M.squadAuto[t].sub === 'raid')) return 1.05;
+  }
+  return 1;
+};
 
 // ----- 画面 -----
 // 头顶的帅旗：每队统帅都看得见（敌帅也是显眼的目标）；自己队的队友另外显示被分到的任务
@@ -713,32 +995,36 @@ function cmdDrawCrown(f, hx, hy, px) {
   }
   ctx.restore();
 }
-// 左下角的指挥牌：三种战术的按钮、相克提示、选中的队友和任务。不显示对方的战术
+// 左下角的紧凑战术指挥条：仅在符合条件的多人团队对抗模式显示（不遮挡战场中心）
 function drawCmdPanel() {
-  const C = M.cmd; if (!C) return;
+  const C = M.cmd; if (!C || !teamCmdEligible()) return;
   const t = localTeam(), T = C.team[t], c = cmdFighter(t);
   if (!T || !c || !human.includes(c.ctrl)) return;
-  const cw = 264, ch = 78, px = 14, py = H - 76 - 34 - ch - 8;
+  const cw = 292, ch = 82, px = 14, py = H - 76 - 34 - ch - 8;
   const down = c.hp <= 0;
+  const activeSub = cmdTacticOf(t);
   ctx.save();
   ctx.fillStyle = 'rgba(8,10,24,0.82)'; ctx.fillRect(px, py, cw, ch);
   ctx.strokeStyle = 'rgba(233,196,106,0.6)'; ctx.lineWidth = 1.2; ctx.strokeRect(px, py, cw, ch);
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   ctx.font = `bold 12px ${TITLE_FONT}`; ctx.fillStyle = '#e9c46a';
-  ctx.fillText(`${cvT('统帅')} · ${cvT('战术')}${down ? ' (' + cvT('暂停') + ')' : ''}  [Tab ${cvT('指挥面板')}]`, px + 8, py + 6);
-  const bw = (cw - 16 - 12) / 3;
-  CMD_ORDER.forEach((id, i) => {
-    const d = CMD_TACTICS[id], x = px + 8 + i * (bw + 6), on = T.tactic === id;
+  ctx.fillText(`${cvT('统帅战术')}${down ? ' (' + cvT('暂停') + ')' : ''}  [Tab ${cvT('面板')}]`, px + 8, py + 6);
+  const bw = (cw - 16 - 15) / 4;
+  CMD_UI_ORDER.forEach((id, i) => {
+    const d = CMD_TACTICS[id], x = px + 8 + i * (bw + 5), on = T.tactic === id;
     ctx.fillStyle = on ? `rgba(${d.rgb},0.34)` : 'rgba(255,255,255,0.05)'; ctx.fillRect(x, py + 24, bw, 22);
     ctx.strokeStyle = on ? `rgb(${d.rgb})` : 'rgba(255,255,255,0.18)'; ctx.lineWidth = on ? 1.8 : 1; ctx.strokeRect(x, py + 24, bw, 22);
-    ctx.font = `bold 12px ${BODY_FONT}`; ctx.fillStyle = on ? '#ffffff' : 'rgba(239,232,216,0.8)'; ctx.textAlign = 'center';
+    ctx.font = `bold 12px ${BODY_FONT}`; ctx.fillStyle = on ? '#ffffff' : 'rgba(239,232,216,0.82)'; ctx.textAlign = 'center';
     ctx.fillText(`${d.key} ${cvT(d.n)}`, x + bw / 2, py + 29);
   });
-  ctx.textAlign = 'left'; ctx.font = `11px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.82)';
-  ctx.fillText(`${cvT('锋矢')}>${cvT('铁壁')}>${cvT('游袭')}>${cvT('锋矢')}  ${T.tactic ? cvT(CMD_TACTICS[T.tactic].sub) : cvT('尚未下令')}`, px + 8, py + 50);
+  ctx.textAlign = 'left'; ctx.font = `12px ${BODY_FONT}`; ctx.fillStyle = 'rgba(239,232,216,0.88)';
+  const statusTxt = T.tactic === 'auto'
+    ? `${cvT('智策')}→${cvT(cmdTacName(activeSub))} · ${cvT(T.autoReason || '均衡协同')}`
+    : `${cvT('锋矢')}>${cvT('铁壁')}>${cvT('游袭')} · ${T.tactic ? cvT(CMD_TACTICS[T.tactic].sub) : cvT('尚未下令')}`;
+  ctx.fillText(statusTxt, px + 8, py + 50);
   const sel = C.sel >= 0 ? FIGHTERS[C.sel] : null;
   const roleId = sel ? C.role[sel.idx] : (C.role.some((r, i) => r && fighterTeam(FIGHTERS[i]) === t) ? -1 : 0);
   ctx.fillStyle = '#ffeb96';
-  ctx.fillText(`[Y] ${cvT('选中')}: ${sel ? cvT(sel.look.name) : cvT('全队')}   [N] ${cvT('任务')}: ${roleId >= 0 ? cvT(CMD_ROLES[roleId].n) : cvT('各异')}`, px + 8, py + 64);
+  ctx.fillText(`[Y] ${sel ? cvT(sel.look.name) : cvT('全队')}  [N] ${roleId >= 0 ? cvT(CMD_ROLES[roleId].n) : cvT('各异')}`, px + 8, py + 66);
   ctx.restore();
 }

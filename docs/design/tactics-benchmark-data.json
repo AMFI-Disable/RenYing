@@ -1,0 +1,760 @@
+{
+  "wallSec": 74.22555166699999,
+  "totalMatches": 720,
+  "totalFrames": 2385151,
+  "totalMs": 585504.7249680001,
+  "matchups": {
+    "auto_vs_spear": {
+      "games": 101,
+      "winsA": 63,
+      "frames": 333000,
+      "ms": 86362.20750199998
+    },
+    "auto_vs_wall": {
+      "games": 101,
+      "winsA": 66,
+      "frames": 333000,
+      "ms": 84306.48078600006
+    },
+    "auto_vs_raid": {
+      "games": 98,
+      "winsA": 63,
+      "frames": 322800,
+      "ms": 78741.80879300002
+    },
+    "spear_vs_wall": {
+      "games": 101,
+      "winsA": 68,
+      "frames": 333000,
+      "ms": 86518.79730300001
+    },
+    "wall_vs_raid": {
+      "games": 101,
+      "winsA": 75,
+      "frames": 332551,
+      "ms": 93926.44674800002
+    },
+    "raid_vs_spear": {
+      "games": 101,
+      "winsA": 69,
+      "frames": 333000,
+      "ms": 82479.00404800002
+    },
+    "spear_vs_raid": {
+      "games": 21,
+      "winsA": 7,
+      "frames": 71400,
+      "ms": 13022.93708299999
+    },
+    "spear_vs_auto": {
+      "games": 18,
+      "winsA": 8,
+      "frames": 61200,
+      "ms": 10829.590457999991
+    },
+    "wall_vs_auto": {
+      "games": 21,
+      "winsA": 9,
+      "frames": 71400,
+      "ms": 13021.778919000011
+    },
+    "wall_vs_spear": {
+      "games": 18,
+      "winsA": 8,
+      "frames": 61200,
+      "ms": 11460.783709000003
+    },
+    "raid_vs_auto": {
+      "games": 21,
+      "winsA": 9,
+      "frames": 71400,
+      "ms": 13250.507747999996
+    },
+    "raid_vs_wall": {
+      "games": 18,
+      "winsA": 4,
+      "frames": 61200,
+      "ms": 11584.38187099999
+    }
+  },
+  "modes": {
+    "2v2_2v2": {
+      "games": 108,
+      "autoWins": 32,
+      "autoGames": 54,
+      "frames": 301951,
+      "ms": 30460.036001
+    },
+    "melee_3v3": {
+      "games": 372,
+      "autoWins": 69,
+      "autoGames": 126,
+      "frames": 1291200,
+      "ms": 254317.03146000006
+    },
+    "melee_5v5": {
+      "games": 96,
+      "autoWins": 37,
+      "autoGames": 48,
+      "frames": 345600,
+      "ms": 126413.30258799999
+    },
+    "melee_8v8": {
+      "games": 36,
+      "autoWins": 13,
+      "autoGames": 18,
+      "frames": 100800,
+      "ms": 72491.33733400001
+    },
+    "ctf_3v3": {
+      "games": 60,
+      "autoWins": 18,
+      "autoGames": 30,
+      "frames": 192000,
+      "ms": 48423.31133299999
+    },
+    "quad_2v2": {
+      "games": 48,
+      "autoWins": 23,
+      "autoGames": 24,
+      "frames": 153600,
+      "ms": 53399.706252000025
+    }
+  },
+  "diffs": {
+    "normal": {
+      "games": 145,
+      "autoWins": 37,
+      "autoGames": 62,
+      "frames": 480800
+    },
+    "hard": {
+      "games": 144,
+      "autoWins": 45,
+      "autoGames": 58,
+      "frames": 476800
+    },
+    "impossible": {
+      "games": 144,
+      "autoWins": 39,
+      "autoGames": 63,
+      "frames": 476351
+    },
+    "easy": {
+      "games": 144,
+      "autoWins": 36,
+      "autoGames": 58,
+      "frames": 476800
+    },
+    "god": {
+      "games": 143,
+      "autoWins": 35,
+      "autoGames": 59,
+      "frames": 474400
+    }
+  },
+  "heroes": {
+    "qingfeng": {
+      "id": "qingfeng",
+      "name": "青锋",
+      "arch": "skirmisher",
+      "prefRole": "main",
+      "games": 233,
+      "wins": 112,
+      "dmg": 66998.84588920396,
+      "surv": 232,
+      "byTac": {
+        "auto": [
+          31,
+          47
+        ],
+        "spear": [
+          22,
+          55
+        ],
+        "wall": [
+          31,
+          65
+        ],
+        "raid": [
+          28,
+          66
+        ]
+      }
+    },
+    "feiying": {
+      "id": "feiying",
+      "name": "绯影",
+      "arch": "assassin",
+      "prefRole": "lure",
+      "games": 254,
+      "wins": 134,
+      "dmg": 69076.2576963722,
+      "surv": 247,
+      "byTac": {
+        "auto": [
+          40,
+          61
+        ],
+        "spear": [
+          24,
+          59
+        ],
+        "wall": [
+          33,
+          61
+        ],
+        "raid": [
+          37,
+          73
+        ]
+      }
+    },
+    "tieshan": {
+      "id": "tieshan",
+      "name": "铁山",
+      "arch": "vanguard",
+      "prefRole": "peel",
+      "games": 238,
+      "wins": 148,
+      "dmg": 74597.44811164701,
+      "surv": 237,
+      "byTac": {
+        "auto": [
+          46,
+          64
+        ],
+        "spear": [
+          32,
+          65
+        ],
+        "wall": [
+          35,
+          58
+        ],
+        "raid": [
+          35,
+          51
+        ]
+      }
+    },
+    "lingshuang": {
+      "id": "lingshuang",
+      "name": "凌霜",
+      "arch": "skirmisher",
+      "prefRole": "peel",
+      "games": 232,
+      "wins": 120,
+      "dmg": 58745.613864593004,
+      "surv": 229,
+      "byTac": {
+        "auto": [
+          39,
+          57
+        ],
+        "spear": [
+          24,
+          56
+        ],
+        "wall": [
+          35,
+          67
+        ],
+        "raid": [
+          22,
+          52
+        ]
+      }
+    },
+    "liuyun": {
+      "id": "liuyun",
+      "name": "流云",
+      "arch": "zoner",
+      "prefRole": "lure",
+      "games": 238,
+      "wins": 126,
+      "dmg": 69935.67203108793,
+      "surv": 238,
+      "byTac": {
+        "auto": [
+          32,
+          47
+        ],
+        "spear": [
+          33,
+          62
+        ],
+        "wall": [
+          32,
+          66
+        ],
+        "raid": [
+          29,
+          63
+        ]
+      }
+    },
+    "leiming": {
+      "id": "leiming",
+      "name": "雷鸣",
+      "arch": "skirmisher",
+      "prefRole": "main",
+      "games": 229,
+      "wins": 124,
+      "dmg": 68462.23253591928,
+      "surv": 225,
+      "byTac": {
+        "auto": [
+          35,
+          56
+        ],
+        "spear": [
+          26,
+          49
+        ],
+        "wall": [
+          30,
+          52
+        ],
+        "raid": [
+          33,
+          72
+        ]
+      }
+    },
+    "moyu": {
+      "id": "moyu",
+      "name": "墨羽",
+      "arch": "zoner",
+      "prefRole": "lure",
+      "games": 240,
+      "wins": 118,
+      "dmg": 64007.15667596848,
+      "surv": 238,
+      "byTac": {
+        "auto": [
+          40,
+          63
+        ],
+        "spear": [
+          28,
+          53
+        ],
+        "wall": [
+          29,
+          68
+        ],
+        "raid": [
+          21,
+          56
+        ]
+      }
+    },
+    "yuehua": {
+      "id": "yuehua",
+      "name": "月华",
+      "arch": "support",
+      "prefRole": "peel",
+      "games": 230,
+      "wins": 108,
+      "dmg": 54171.58719693337,
+      "surv": 227,
+      "byTac": {
+        "auto": [
+          30,
+          57
+        ],
+        "spear": [
+          23,
+          52
+        ],
+        "wall": [
+          27,
+          57
+        ],
+        "raid": [
+          28,
+          64
+        ]
+      }
+    },
+    "yanling": {
+      "id": "yanling",
+      "name": "燕翎",
+      "arch": "assassin",
+      "prefRole": "lure",
+      "games": 226,
+      "wins": 124,
+      "dmg": 67461.54771008629,
+      "surv": 223,
+      "byTac": {
+        "auto": [
+          54,
+          70
+        ],
+        "spear": [
+          28,
+          56
+        ],
+        "wall": [
+          28,
+          57
+        ],
+        "raid": [
+          14,
+          43
+        ]
+      }
+    },
+    "yuxiao": {
+      "id": "yuxiao",
+      "name": "玉箫",
+      "arch": "zoner",
+      "prefRole": "peel",
+      "games": 239,
+      "wins": 117,
+      "dmg": 66095.8133111137,
+      "surv": 232,
+      "byTac": {
+        "auto": [
+          41,
+          64
+        ],
+        "spear": [
+          24,
+          62
+        ],
+        "wall": [
+          28,
+          56
+        ],
+        "raid": [
+          24,
+          57
+        ]
+      }
+    },
+    "zuixian": {
+      "id": "zuixian",
+      "name": "醉翁",
+      "arch": "vanguard",
+      "prefRole": "peel",
+      "games": 250,
+      "wins": 109,
+      "dmg": 58109.6359920139,
+      "surv": 247,
+      "byTac": {
+        "auto": [
+          35,
+          61
+        ],
+        "spear": [
+          19,
+          61
+        ],
+        "wall": [
+          21,
+          60
+        ],
+        "raid": [
+          34,
+          68
+        ]
+      }
+    },
+    "gouchen": {
+      "id": "gouchen",
+      "name": "勾陈",
+      "arch": "vanguard",
+      "prefRole": "peel",
+      "games": 246,
+      "wins": 112,
+      "dmg": 58932.580462256185,
+      "surv": 243,
+      "byTac": {
+        "auto": [
+          43,
+          69
+        ],
+        "spear": [
+          23,
+          56
+        ],
+        "wall": [
+          20,
+          56
+        ],
+        "raid": [
+          26,
+          65
+        ]
+      }
+    },
+    "lingque": {
+      "id": "lingque",
+      "name": "凌雀",
+      "arch": "assassin",
+      "prefRole": "main",
+      "games": 233,
+      "wins": 92,
+      "dmg": 53093.13616746452,
+      "surv": 218,
+      "byTac": {
+        "auto": [
+          18,
+          46
+        ],
+        "spear": [
+          29,
+          69
+        ],
+        "wall": [
+          24,
+          66
+        ],
+        "raid": [
+          21,
+          52
+        ]
+      }
+    },
+    "liying": {
+      "id": "liying",
+      "name": "离影",
+      "arch": "assassin",
+      "prefRole": "lure",
+      "games": 226,
+      "wins": 85,
+      "dmg": 52790.728152416756,
+      "surv": 219,
+      "byTac": {
+        "auto": [
+          29,
+          64
+        ],
+        "spear": [
+          12,
+          54
+        ],
+        "wall": [
+          19,
+          56
+        ],
+        "raid": [
+          25,
+          52
+        ]
+      }
+    },
+    "cixian": {
+      "id": "cixian",
+      "name": "磁仙",
+      "arch": "controller",
+      "prefRole": "peel",
+      "games": 211,
+      "wins": 92,
+      "dmg": 53063.30222217239,
+      "surv": 207,
+      "byTac": {
+        "auto": [
+          33,
+          55
+        ],
+        "spear": [
+          19,
+          57
+        ],
+        "wall": [
+          21,
+          52
+        ],
+        "raid": [
+          19,
+          47
+        ]
+      }
+    },
+    "qianji": {
+      "id": "qianji",
+      "name": "千机",
+      "arch": "controller",
+      "prefRole": "lure",
+      "games": 253,
+      "wins": 165,
+      "dmg": 85671.20503485123,
+      "surv": 242,
+      "byTac": {
+        "auto": [
+          45,
+          53
+        ],
+        "spear": [
+          45,
+          75
+        ],
+        "wall": [
+          38,
+          52
+        ],
+        "raid": [
+          37,
+          73
+        ]
+      }
+    },
+    "chixiao": {
+      "id": "chixiao",
+      "name": "炽霄",
+      "arch": "skirmisher",
+      "prefRole": "main",
+      "games": 231,
+      "wins": 113,
+      "dmg": 63610.32335948854,
+      "surv": 229,
+      "byTac": {
+        "auto": [
+          39,
+          54
+        ],
+        "spear": [
+          25,
+          61
+        ],
+        "wall": [
+          28,
+          58
+        ],
+        "raid": [
+          21,
+          58
+        ]
+      }
+    },
+    "xuanji": {
+      "id": "xuanji",
+      "name": "玄机",
+      "arch": "zoner",
+      "prefRole": "lure",
+      "games": 226,
+      "wins": 119,
+      "dmg": 62444.63999361446,
+      "surv": 223,
+      "byTac": {
+        "auto": [
+          44,
+          69
+        ],
+        "spear": [
+          31,
+          56
+        ],
+        "wall": [
+          27,
+          52
+        ],
+        "raid": [
+          17,
+          49
+        ]
+      }
+    },
+    "qingluan": {
+      "id": "qingluan",
+      "name": "青鸾",
+      "arch": "support",
+      "prefRole": "peel",
+      "games": 265,
+      "wins": 132,
+      "dmg": 60271.10798786559,
+      "surv": 263,
+      "byTac": {
+        "auto": [
+          46,
+          71
+        ],
+        "spear": [
+          33,
+          65
+        ],
+        "wall": [
+          29,
+          62
+        ],
+        "raid": [
+          24,
+          67
+        ]
+      }
+    },
+    "xuanwu": {
+      "id": "xuanwu",
+      "name": "玄武",
+      "arch": "vanguard",
+      "prefRole": "peel",
+      "games": 252,
+      "wins": 126,
+      "dmg": 67135.11716719253,
+      "surv": 249,
+      "byTac": {
+        "auto": [
+          42,
+          60
+        ],
+        "spear": [
+          30,
+          65
+        ],
+        "wall": [
+          27,
+          67
+        ],
+        "raid": [
+          27,
+          60
+        ]
+      }
+    }
+  },
+  "coord": {
+    "auto": {
+      "focusSamples": 32853,
+      "focusSum": 23680.84761904762,
+      "peelSaves": 15290,
+      "ccBursts": 9412,
+      "lowSurv": 106,
+      "lowTotal": 118,
+      "switches": 2900,
+      "frames": 988800
+    },
+    "spear": {
+      "focusSamples": 15475,
+      "focusSum": 13696.475,
+      "peelSaves": 7473,
+      "ccBursts": 4544,
+      "lowSurv": 56,
+      "lowTotal": 62,
+      "switches": 0,
+      "frames": 465600
+    },
+    "wall": {
+      "focusSamples": 15440,
+      "focusSum": 11207.320238095239,
+      "peelSaves": 9972,
+      "ccBursts": 4431,
+      "lowSurv": 57,
+      "lowTotal": 65,
+      "switches": 0,
+      "frames": 465151
+    },
+    "raid": {
+      "focusSamples": 15460,
+      "focusSum": 9737.733333333332,
+      "peelSaves": 8212,
+      "ccBursts": 4028,
+      "lowSurv": 58,
+      "lowTotal": 69,
+      "switches": 0,
+      "frames": 465600
+    }
+  }
+}

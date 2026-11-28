@@ -144,11 +144,11 @@ window.addEventListener('keydown', e => {
     }
     if (p > 0 && c === human[0] && KEYS[0]?.[e.code]) continue;
     if (c === human[0] && typeof secretNoteHumanInput === 'function') secretNoteHumanInput(act, true);
-    if (act === 'orderFocus' || act === 'orderProtect' || act === 'orderSpread') {
-      if (!e.repeat) {
+    if (act === 'orderFocus' || act === 'orderProtect' || act === 'orderSpread' || act === 'orderAuto') {
+      if (!e.repeat && typeof teamCmdEligible === 'function' && teamCmdEligible()) {
         c.press(act);
         if (typeof teamCmdOpen === 'function' && teamCmdOpen()) {
-          const tMap = { orderFocus: 'spear', orderProtect: 'wall', orderSpread: 'raid' };
+          const tMap = { orderFocus: 'spear', orderProtect: 'wall', orderSpread: 'raid', orderAuto: 'auto' };
           if (typeof teamCmdSetTactic === 'function') teamCmdSetTactic(tMap[act]);
         }
       }

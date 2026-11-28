@@ -122,9 +122,10 @@ export default [
     })()`
   },
   {
-    name: 'Commander: each team gets one commander with +35% HP (yours is you), AI commanders are random, and the bonus survives respawn',
+    name: 'Commander: each team gets one commander with +35% HP (yours is you), AI commanders are random, default tactic applies, and the bonus survives respawn',
     fn: `(() => {
       const fail = error => ({ pass: false, error });
+      setDefaultTeamTactic('auto');
       startMelee(8, 0, 'normal', 'normal');
       if (!M.cmd || M.cmd.team.length !== 2) return fail('No commander state in 8v8 melee');
       if (M.cmd.team[0].cmdr !== A.idx || !cmdIs(A)) return fail('The player must command their own team');
@@ -132,8 +133,8 @@ export default [
       if (!aiC || fighterTeam(aiC) !== 1 || human.includes(aiC.ctrl)) return fail('Enemy commander must be a computer fighter of team 1');
       const base = Math.round(aiC.ch.stat.hp * ((BAL[aiC.ch.id] || {}).hp || 1) * HERO_HP_SCALE);
       if (aiC.maxHp !== Math.round(base * CMD_HP_BONUS)) return fail('Commander HP bonus missing: ' + aiC.maxHp + ' vs ' + base);
-      if (cmdTacticOf(0) !== null) return fail('The player team must start with no tactic');
-      if (!CMD_TACTICS[cmdTacticOf(1)] && cmdTacticOf(1) !== 'spear') return fail('The computer team must start with a tactic');
+      if (cmdSelectedTacticOf(0) !== 'auto' || !CMD_ORDER.includes(cmdTacticOf(0))) return fail('The player team must start with adaptive auto tactic resolving to spear/wall/raid');
+      if (!CMD_TACTICS[cmdTacticOf(1)]) return fail('The computer team must start with a tactic');
       const seen = new Set();
       for (let k = 0; k < 40; k++) { startMelee(8, 0, 'normal', 'normal'); seen.add(M.cmd.team[1].cmdr); }
       if (seen.size < 3) return fail('Enemy commander is not random: ' + seen.size + ' distinct picks in 40 rounds');
@@ -159,16 +160,19 @@ export default [
     })()`
   },
   {
-    name: 'Commander keys: 1/2/3 pick spear/wall/raid, Tab cycles, a fallen commander pauses the tactic, enemy tactics stay hidden',
+    name: 'Commander keys: 1/2/3/4 pick spear/wall/raid/auto, cycle wraps cleanly, a fallen commander pauses the tactic, strict mode visibility enforced',
     fn: `(() => {
       const fail = error => ({ pass: false, error });
       startMelee(8, 0, 'normal', 'normal'); M.phase = 'fight';
-      const keyed = (key, want) => { A.ctrl.press(key); updateFighter(A, foeOf(A)); return cmdTacticOf(0) === want; };
+      const keyed = (key, want) => { A.ctrl.press(key); updateFighter(A, foeOf(A)); return cmdSelectedTacticOf(0) === want; };
       if (!keyed('orderFocus', 'spear')) return fail('1 did not select spear');
       if (!keyed('orderProtect', 'wall')) return fail('2 did not select wall');
       if (!keyed('orderSpread', 'raid')) return fail('3 did not select raid');
-      cmdCycleTactic(); if (cmdTacticOf(0) !== 'spear') return fail('Tab did not cycle raid -> spear');
-      cmdCycleTactic(); if (cmdTacticOf(0) !== 'wall') return fail('Tab did not cycle spear -> wall');
+      if (!keyed('orderAuto', 'auto') || !CMD_ORDER.includes(cmdTacticOf(0))) return fail('4 did not select adaptive auto');
+      cmdCycleTactic(); if (cmdSelectedTacticOf(0) !== 'spear') return fail('Cycle did not advance auto -> spear');
+      cmdCycleTactic(); if (cmdSelectedTacticOf(0) !== 'wall') return fail('Cycle did not advance spear -> wall');
+      cmdCycleTactic(); if (cmdSelectedTacticOf(0) !== 'raid') return fail('Cycle did not advance wall -> raid');
+      cmdCycleTactic(); if (cmdSelectedTacticOf(0) !== 'auto') return fail('Cycle did not wrap raid -> auto');
       if (M.squadOrders[0] !== 'auto') return fail('Old squad orders must not be used while a commander exists');
       A.hp = 0;
       if (cmdTacticOf(0) !== null) return fail('A fallen commander must pause the tactic');
@@ -350,7 +354,18 @@ export default [
       if (!sm || sm.dir !== -1) return fail('2v2 AI teammate did not honor escort formation');
       toggleTeamCmdPanel(false);
       if (teamCount() !== 2) return fail('2v2 must have two teams');
-      startMatch('train'); if (M.cmd) return fail('Training must not have commanders');
+      // Strict visibility: tactics panel must NEVER be eligible in solo, training, tutorial, or spectate modes
+      startMatch('train'); if (M.cmd || teamCmdEligible()) return fail('Training must not expose tactics panel');
+      startMatch('cpu', 'normal', [0, 1]); if (M.cmd || teamCmdEligible()) return fail('1v1 CPU must not expose tactics panel');
+      startMatch('tower', 'normal', [0, 1]); if (M.cmd || teamCmdEligible()) return fail('Tower must not expose tactics panel');
+      start2v2LocalCoop(0, 1, 2, 3, 'normal', true); M.watchAi = true;
+      if (teamCmdEligible()) return fail('Full-AI watch mode must not expose tactics panel');
+      M.watchAi = false;
+      // Pre-match default tactic persists and applies on match start
+      setDefaultTeamTactic('wall');
+      startMelee(5, 0, 'normal', 'normal');
+      if (cmdSelectedTacticOf(0) !== 'wall') return fail('Saved pre-match default tactic wall did not apply on start');
+      setDefaultTeamTactic('auto');
       toMenu();
       return { pass: true };
     })()`

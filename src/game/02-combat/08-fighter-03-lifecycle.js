@@ -47,7 +47,11 @@ function applyMayhemStats(f) {
 }
 function startRound() {
   M.cmd = null;
-  M.squadOrders = ['auto', 'auto', 'auto', 'auto'];
+  const defTac = typeof getDefaultTeamTactic === 'function' ? getDefaultTeamTactic() : 'auto';
+  const defOrd = ({ spear: 'focus', wall: 'protect', raid: 'spread', auto: 'auto' })[defTac] || 'auto';
+  M.squadOrders = [defOrd, 'auto', 'auto', 'auto'];
+  M.squadAuto = [{}, {}, {}, {}];
+  M.squadAutoT = -9;
   M.teamFormation = ['auto', 'auto', 'auto', 'auto'];
   M.teamFocus = [-1, -1, -1, -1];
   M.teamRoles = new Array(MAX_FIGHTERS).fill(0);

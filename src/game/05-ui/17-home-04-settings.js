@@ -61,9 +61,10 @@ const KEY_ACTIONS = [
   ['beacon', '归位自标', 'vision'],
   ['scoreboard', '战况总览', 'vision'],
   ['rally', '战意号令', 'tactics'],
-  ['orderFocus', '全军集火', 'tactics'],
-  ['orderProtect', '回防掩护', 'tactics'],
-  ['orderSpread', '分散游击', 'tactics'],
+  ['orderFocus', '锋矢集火', 'tactics'],
+  ['orderProtect', '铁壁固守', 'tactics'],
+  ['orderSpread', '游袭包抄', 'tactics'],
+  ['orderAuto', '智策自适应', 'tactics'],
   ['cmdSelect', '选中队友', 'tactics'],
   ['cmdRole', '分派任务', 'tactics']
 ];

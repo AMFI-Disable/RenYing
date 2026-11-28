@@ -1334,7 +1334,12 @@ class AIBrain {
     }
     if (this.watch2v2(me, foe, d, to)) return;
     if (this.aiTeamTactics(me, foe, d, to)) return;
-    const cm = typeof squadAiMod === 'function' ? squadAiMod(me, foe, d) : (M.cmd ? cmdAiMod(me, foe, d) : null);   // 战队指挥战术与阵型：适用于 2v2、3v3–16v16 团战、夺旗、四象、同袍肉鸽
+    const cm = typeof squadAiMod === 'function' ? squadAiMod(me, foe, d) : (M.cmd ? cmdAiMod(me, foe, d) : null);   // 战队指挥战术与阵型：适用于 2v2、3v3–16v16 团战、夺旗、四象
+    if (cm && cm.retreat && !this.holdAtk) {
+      this.dir = cm.dir || -to;
+      if (d < 170 && (foe.state === 'attack' || foe.state === 'skill')) this.holdDown = Math.max(this.holdDown, 0.18);
+      return;
+    }
     if (cm && cm.dir && !this.holdDown && !this.holdAtk) { this.dir = cm.dir; return; }
     // 假动作（绝顶/天道）：贴近半步骗对手出手或乱闪，再退开等它收招
     if (this.feint && clock < this.feint.end) { this.dir = clock < this.feint.turn ? to : -to; return; }
@@ -1342,9 +1347,9 @@ class AIBrain {
       && d < aiFrame(me, 'l1').max + 110 && d > aiFrame(me, 'l1').max - 10 && Math.random() < 0.05 * L.bait) {
       this.feint = { turn: clock + 0.14, end: clock + 0.34 }; this.dir = to; return;
     }
-    // 大招：确定打得到就放
+    // 大招：确定打得到就放（结合团队战术 ultMul 与集火受控协同）
     const isMayhem = M.mode === 'mayhem' || (typeof mayhemOn === 'function' && mayhemOn());
-    const ultWeight = aiModeActionWeight(me, foe, 'special', d) * (isMayhem ? 1.2 : 1);
+    const ultWeight = aiModeActionWeight(me, foe, 'special', d) * (isMayhem ? 1.2 : 1) * (cm && cm.ultMul ? cm.ultMul : 1);
     if (me.meter >= 100 && this.ultWouldHit(me, foe, d, false) && Math.random() < Math.min(1, L.ult * (1 - g.ultSave * 0.6) * ultWeight)) { this.press('special'); return; }
     // 低难度：技能乱放
     if (Math.random() > L.skill && Math.random() < 0.12) {
@@ -1381,7 +1386,7 @@ class AIBrain {
         if (K.role === 'proj' && foe.state === 'skill' && AI_KIT[foe.skill] && AI_KIT[foe.skill].reflect) continue;
         if (K.jail) v *= 2;
         if (K.role === 'proj') v *= 0.5 + g.zone;
-        v *= k === 'skill' ? 0.5 + g.qn : 0.5 + g.rn;
+        v *= (k === 'skill' ? 0.5 + g.qn : 0.5 + g.rn) * (cm && cm.skillMul ? cm.skillMul : 1);
       } else if (k === 'cs1' || k === 'cs2') {
         v *= (0.25 + g.charge) * (k === 'cs2' && this.habit('blockRate', 0.5) > 0.55 ? 1.5 : 1);
         // 蓄力要先按住 0.3 秒：对手一伸手就打得到的距离上别起手（会被打断，松手还会漏出一记空挥）。越会玩的越讲究
@@ -1777,11 +1782,13 @@ class AIBrain {
       const frontAlly = allies.find(a => sameFloor(a, foe) && Math.abs(a.x - foe.x) < 210 && ['vanguard', 'skirmisher'].includes(aiHeroTactic(a.ch.id).teamRole));
       if (frontAlly && this.chance(0.55)) { this.dir = -to; return true; }
     }
-    // 3. 刺客/游斗职业：队友已在一侧压制目标时，跳越夹击形成左右包抄
-    if ((role === 'assassin' || role === 'skirmisher') && d > 70 && d < 220 && !this.queue.length && clock > (this.flankCd || 0)) {
+    // 3. 刺客/游斗职业：队友已在一侧压制目标时，结合游袭/包抄权重跳越夹击形成左右包抄
+    const cmT = typeof squadAiMod === 'function' ? squadAiMod(me, foe, d) : null;
+    const flankP = 0.18 * this.L.read * (cmT && cmT.flankBias ? Math.max(0.6, cmT.flankBias) : 1);
+    if ((role === 'assassin' || role === 'skirmisher' || (cmT && cmT.flankBias > 1.0)) && d > 70 && d < 230 && !this.queue.length && clock > (this.flankCd || 0)) {
       const sameSideAlly = allies.find(a => sameFloor(a, foe) && Math.abs(a.x - foe.x) < 190 && Math.sign(a.x - foe.x) === Math.sign(me.x - foe.x));
-      if (sameSideAlly && this.chance(0.18 * this.L.read)) {
-        this.dir = to; this.plan([['jump', 0], ['light', 0.42]]); this.flankCd = clock + 2.4; return true;
+      if (sameSideAlly && this.chance(Math.min(0.65, flankP))) {
+        this.dir = to; this.plan([['jump', 0], ['light', 0.42]]); this.flankCd = clock + 2.2; return true;
       }
     }
     // 4. 目标架势见底且在近身距离：果断施压破防
