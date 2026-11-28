@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document specifies the redesigned team tactics engine (`src/game/04-modes/22-modes-17-command.js`), AI tactical integration (`src/ai.js`), non-obstructive in-combat tactics drawer (`src/styles/84-page-team-command.css`, `src/page.html`), strict multi-fighter mode visibility rules, pre-match default tactic selector, 20-hero tactical profiles, and empirical validation results from **2,385,151 simulated combat frames** across **720 headless matches** (`tools/tests/tactics-bench.mjs`).
+This document specifies the redesigned team tactics engine (`src/game/04-modes/22-modes-17-command.js`), AI tactical integration (`src/ai/`), non-obstructive in-combat tactics drawer (`src/styles/84-page-team-command.css`, `src/pages/06-modals-and-overlays.html`), strict multi-fighter mode visibility rules, pre-match default tactic selector (`src/pages/02-mode-hall.html`), 20-hero tactical profiles, and empirical validation results from **2,385,151 simulated combat frames** across **720 headless matches** (`tools/tests/tactics-bench.mjs`).
 
 ## Mode Visibility And Pre-Match Configuration
 
@@ -28,7 +28,7 @@ The in-combat panel (`#teamCmdPanel`) was redesigned from a centered 820px modal
 
 ### Deep Behavioral Modifiers
 
-Every tactic modifies AI decision-making across `buildTacticAiMod()` (`22-modes-17-command.js`) and `AIBrain` (`src/ai.js`):
+Every tactic modifies AI decision-making across `buildTacticAiMod()` (`22-modes-17-command.js`) and `AIBrain` (`src/ai/04-brain-offense-and-neutral.js`, `src/ai/05-brain-hero-routes-and-team.js`):
 
 | Tactic | Key | Counter | Aggression | Spacing | Guard Bonus | Skill / Ult Sync | Retreat Threshold | Core AI Behavior |
 | :--- | :---: | :---: | :---: | :---: | :---: | :---: | :---: | :--- |

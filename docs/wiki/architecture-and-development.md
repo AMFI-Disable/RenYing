@@ -10,15 +10,15 @@
 
 | Path | Contents |
 | :--- | :--- |
-| `src/page.html` | Page markup with build markers |
-| `src/style.css` | All styles; design tokens are documented in `docs/design/design-tokens.md` |
+| `src/page.html` + `src/pages/` | Lightweight HTML shell (`page.html`) expanding 6 numbered screen partials (`src/pages/01-*.html` – `06-*.html`) |
+| `src/style.css` + `src/styles/` | Base design tokens plus numbered per-page CSS modules (`docs/design/design-tokens.md`) |
 | `src/data/` | Data tables, built **before** `src/game/` |
 | `src/data/heroes/` | One file per hero (`NN-<id>.js`) |
 | `src/data/10-modes.js`, `11-bp-orders.js` | Local and online modes, draft orders |
 | `src/data/12-maps.js`, `13-chron.js`, `14-dummy.js`, `20-levels.js` | Terrain maps, world story, dummy options, AI levels |
 | `src/data/30-ui-copy-*.js`, `31-hero-copy.js` | Chinese → English text for the interface and heroes |
-| `src/game/` | The game, numbered files joined in order (`01-core.js` constants and RNG, `02-heroes.js`, `03-skills.js`, `04-ults.js`, … `26-kbnav.js` keyboard navigation) |
-| `src/ai.js`, `src/models/ai-brain.json` | Computer opponents and the trained model behind the top level |
+| `src/game/` | Layered game modules (`01-engine/`, `02-combat/`, `03-render/` including `15-skin-weapons/`, `04-modes/` including `22-modes-12-bastion/`, `05-ui/`) |
+| `src/ai/`, `src/models/ai-brain.json` | Modular computer AI (`01-kit-and-profiles.js` – `05-brain-hero-routes-and-team.js`) and trained gene model |
 | `src/net-p2p.js`, `src/social.js` | Peer-to-peer connection, community features |
 | `src/cloud.js`, `src/errlog.js` | Accounts, sync, error reports |
 | `src/armory-core.js`, `src/armory.js` | Armory rules (shared with the Worker) and screens |
@@ -50,7 +50,7 @@ Never edit `index.html`, `renying-offline.html`, `assets/qingfengxing.html`, `cl
 ### A Hero / 加侠客
 
 1. Create `src/data/heroes/NN-<id>.js` with `defHero({...})`, following the field reference in `src/data/00-heroes.js`.
-2. Add the skill to `src/game/03-skills.js`, the ultimate to `src/game/04-ults.js`, skins and weapon looks in `src/game/13-skins.js` to `15-skin-weapons.js`, and the AI profile in `src/ai.js`.
+2. Add the skill in `src/game/02-combat/03-skills/`, the ultimate in `src/game/02-combat/04-ults/`, skins and weapon looks in `src/game/03-render/13-skins.js` and `15-skin-weapons/`, and the AI profile in `src/ai/01-kit-and-profiles.js`.
 3. Add the English text to `src/data/31-hero-copy.js`, the id to `C.HERO_IDS` in `src/armory-core.js`.
 4. Rebuild, then run `node tools/tests/combat-test.mjs --sim` and `node tools/checks/frame-data.mjs`.
 
