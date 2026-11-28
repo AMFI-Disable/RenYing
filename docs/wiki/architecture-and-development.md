@@ -20,8 +20,8 @@
 | `src/game/` | Layered game modules (`01-engine/`, `02-combat/`, `03-render/` including `15-skin-weapons/`, `04-modes/` including `22-modes-12-bastion/`, `05-ui/`) |
 | `src/ai/`, `src/models/ai-brain.json` | Modular computer AI (`01-kit-and-profiles.js` – `05-brain-hero-routes-and-team.js`) and trained gene model |
 | `src/net-p2p.js`, `src/social.js` | Peer-to-peer connection, community features |
-| `src/cloud.js`, `src/errlog.js` | Accounts, sync, error reports |
-| `src/armory-core.js`, `src/armory.js` | Armory rules (shared with the Worker) and screens |
+| `src/cloud/`, `src/errlog.js` | Modular cloud client (`01-config-and-ledgers.js` – `04-sync-and-accounts.js`), sync, error reports |
+| `src/armory-core.js`, `src/armory/` | Armory rules (shared with the Worker) and modular armory UI (`01-skins-and-state.js` – `05-bridge-and-hooks.js`) |
 | `src/anticheat.js` | Client-side integrity checks |
 | `src/i18n.js` | Translation lookup (the text itself is in `src/data/30-ui-copy-*.js`) |
 | `src/qfx/` | 青锋行 mini-game, built into `assets/qingfengxing.html` |

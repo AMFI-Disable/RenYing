@@ -34,9 +34,9 @@ The pages at the repository root (`index.html`, `renying-offline.html`, `assets/
 | `src/game/` | Modular JS | Domain layers: `01-engine/`, `02-combat/`, `03-render/` (including `15-skin-weapons/`), `04-modes/` (including `22-modes-12-bastion/`), `05-ui/`. |
 | `src/data/` | Modular JS | 20 hero definitions (`heroes/`), modes, maps, combo trials, guides, and bilingual UI copy (`30-ui-copy-*.js`). |
 | `src/net-p2p.js` | WebRTC/PeerJS | Serverless P2P transport, online tournaments, and read-only live spectating (`P2P.specs`). |
-| `src/cloud.js` | ~1 580 lines | Cloudflare Worker + D1 cloud account client, ink/progress ledgers, rotating refresh tokens, local fallback (`window.CloudSave`). |
+| `src/cloud/` | 4 modular JS files | Cloudflare Worker + D1 cloud account client (`01-config-and-ledgers.js` – `04-sync-and-accounts.js`), ledgers, rotating refresh tokens, local fallback (`window.CloudSave`). |
 | `src/social.js` | P2P Social | 江湖驿站: P2P hall chat, friends, DMs, groups, with store-and-forward outbox. |
-| `src/armory-core.js`, `src/armory.js` | Armory | Cosmetic weapon cases, player-to-player market, Heirloom collection (`c14`), badges, and pets. |
+| `src/armory-core.js`, `src/armory/` | Shared core + 5 UI modules | Cosmetic weapon cases, player-to-player market, Heirloom collection (`c14`), badges, and pets (`01-skins-and-state.js` – `05-bridge-and-hooks.js`). |
 | `src/qfx/` | 3D Roguelike | Qingfengxing mini-game sources, numbered so filename order == load order. |
 | `cloudflare/` | Backend | Modular Worker (`worker/`), D1 migrations (`migrations/0001`–`0014`), Durable Objects (`WorldLine`, `PresenceHub`), and `/admin` console. |
 | `assets/` | Media/Vendor | PeerJS, three.js, 9 orchestral MP3s, compiled `qingfengxing.html`, favicon. |
