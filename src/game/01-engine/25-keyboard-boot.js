@@ -77,11 +77,31 @@ window.addEventListener('keydown', e => {
       return;
     }
   }
-  if (typeof teamCmdOpen === 'function' && teamCmdOpen() && e.code === 'Escape') {
-    if (e.repeat) return;
-    e.preventDefault(); e.stopImmediatePropagation();
-    teamCmdClose();
-    return;
+  // 优先关闭最上层浮层弹窗（对手行为栏 / 世界传送 / HUD 定制 / 战队指挥面板），避免 Esc 直接穿透触发暂停
+  if (e.code === 'Escape' && !e.repeat) {
+    const hudModal = document.getElementById('hudCustomModal');
+    if (hudModal && hudModal.style && hudModal.style.display && hudModal.style.display !== 'none') {
+      e.preventDefault(); e.stopImmediatePropagation();
+      hudModal.style.display = 'none';
+      return;
+    }
+    const tpModal = document.getElementById('worldTeleport');
+    if (tpModal && tpModal.parentNode && !tpModal.classList.contains('hidden')) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      if (typeof closeTeleportModal === 'function') closeTeleportModal();
+      else tpModal.classList.add('hidden');
+      return;
+    }
+    if (typeof dummyBarOn === 'function' && dummyBarOn()) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      if (typeof dummyBarShow === 'function') dummyBarShow(false);
+      return;
+    }
+    if (typeof teamCmdOpen === 'function' && teamCmdOpen()) {
+      e.preventDefault(); e.stopImmediatePropagation();
+      teamCmdClose();
+      return;
+    }
   }
   if ((e.code === 'KeyP' || e.code === 'Escape') && !e.repeat && !currentScreen && !document.querySelector('.scr.on') && M.mode !== 'demo' && M.mode !== 'net' && !['end', 'perk', 'draft', 'talk'].includes(M.phase)) {   // 仅在纯对局画面响应暂停；抽秘卷、剧情对话、菜单页不弹暂停
     e.preventDefault(); e.stopImmediatePropagation();
@@ -101,7 +121,10 @@ window.addEventListener('keydown', e => {
     if (!paused) refocusGame();
     return;
   }
-  if (M.mode === 'demo') return;
+  // 非纯对局状态（演示、暂停、菜单/弹窗/结算页打开、对手行为栏打开）不向战斗控制器泄漏按键
+  if (M.mode === 'demo' || paused) return;
+  if (currentScreen && currentScreen !== 'menu') return;
+  if (currentScreen === 'menu' && M.phase !== 'fight') return;
   if (dummyBarOn()) return;   // 对手行为栏开着：方向键、回车给栏用（26-kbnav.js），不进对局
   if (typeof bastionOn === 'function' && bastionOn() && !M.bastionPvp && !e.repeat) {
     if (e.code === 'KeyT' && typeof bastionTpToAlly === 'function') { e.preventDefault(); bastionTpToAlly(); return; }
@@ -109,7 +132,7 @@ window.addEventListener('keydown', e => {
     if (e.code === 'KeyG' && typeof bastionCastCompanionSkill === 'function') { e.preventDefault(); bastionCastCompanionSkill(); return; }
     if (e.code === 'KeyB' && typeof bastionToggleArmory === 'function') { e.preventDefault(); bastionToggleArmory(); return; }
   }
-  if ((e.code === 'Tab' || (KEYS[0] && KEYS[0][e.code] === 'scoreboard')) && typeof teamCmdEligible === 'function' && teamCmdEligible() && !paused && !document.querySelector('.scr.on')) {
+  if ((e.code === 'Tab' || (KEYS[0] && KEYS[0][e.code] === 'scoreboard')) && typeof teamCmdEligible === 'function' && teamCmdEligible()) {
     e.preventDefault();
     if (!e.repeat) toggleTeamCmdPanel();
     return;

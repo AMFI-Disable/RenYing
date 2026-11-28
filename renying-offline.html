@@ -2937,7 +2937,7 @@ body.touchdev .dummy-bar-btn { display: none; }
 .train-inspect-rate output { min-width: 48px; color: #e9c46a; font: 600 12px ui-monospace, monospace; text-align: right; }
 @media (max-width: 560px) { .train-inspect { left: 12px; right: 12px; bottom: calc(12px + env(safe-area-inset-bottom)); justify-content: center; gap: 5px; padding: 7px; } .train-inspect-rate { grid-template-columns: auto minmax(80px, 1fr) auto; flex: 1 1 100%; order: -1; } .train-inspect button { min-height: 36px; } }
 @media (pointer: coarse) and (orientation: landscape) { .train-inspect { top: calc(10px + env(safe-area-inset-top)); right: calc(10px + env(safe-area-inset-right)); bottom: auto; left: auto; z-index: 14; max-width: min(560px, calc(100vw - 230px)); } }
-.dummy-bar { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 30; width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; box-sizing: border-box;
+.dummy-bar { position: fixed; left: 50%; top: 50%; transform: translate(-50%, -50%); z-index: 910; width: min(760px, calc(100vw - 24px)); max-height: calc(100vh - 24px); max-height: calc(100dvh - 24px); overflow-y: auto; box-sizing: border-box;
 padding: 14px 16px 12px; border-radius: 14px; background: rgba(8,8,20,.94); border: 1px solid rgba(233,196,106,.45); color: #efe8d8; font: 13px var(--body); box-shadow: 0 10px 40px rgba(0,0,0,.5); }
 .dummy-bar .db-head { display: flex; align-items: center; gap: 10px; margin-bottom: 6px; }
 .dummy-bar .db-head b { font: 600 18px var(--title); color: #e9c46a; }
@@ -45238,6 +45238,14 @@ const arM = $id('arModal'), arI = $id('arIns');
 if (arM && !arM.hidden && !(typeof REEL !== 'undefined' && REEL && REEL.on)) arM.hidden = true;
 if (arI && !arI.hidden) arI.hidden = true;
 }
+if (targetId !== 'replays') {
+const rpCodeBox = $id('rpCodeBox');
+if (rpCodeBox) rpCodeBox.classList.add('hidden');
+}
+if (targetId !== 'tournament') {
+const tourImportBox = $id('tourImportBox');
+if (tourImportBox) tourImportBox.classList.add('hidden');
+}
 if (targetId) {
 if (typeof teamCmdClose === 'function' && typeof teamCmdOpen === 'function' && teamCmdOpen()) teamCmdClose();
 if (typeof dummyBarShow === 'function' && typeof dummyBarOn === 'function' && dummyBarOn()) dummyBarShow(false);
@@ -45245,9 +45253,12 @@ for (const hid of ['dummyBarBtn', 'trainLab', 'trainInspect', 'trialHud', 'specH
 const el = $id(hid);
 if (el) el.classList.add('hidden');
 }
-if (targetId !== 'pause') {
-const cap = $id('sfxCaption');
-if (cap) cap.classList.add('hidden');
+const keepMatchOverlay = targetId === 'pause' || isInMatchOverlayScreen(targetId);
+if (!keepMatchOverlay) {
+for (const hid of ['sfxCaption', 'tutBox', 'rpBar']) {
+const el = $id(hid);
+if (el) el.classList.add('hidden');
+}
 }
 }
 }
@@ -45315,14 +45326,33 @@ if (typeof bpFinishTimer !== 'undefined' && bpFinishTimer) { clearTimeout(bpFini
 BP = null; watch2v2Bp = null;
 }
 },
+replays: {
+onLeave() {
+const rpCodeBox = $id('rpCodeBox');
+if (rpCodeBox) rpCodeBox.classList.add('hidden');
+}
+},
 tournament: {
 onLeave(next) {
+const tourImportBox = $id('tourImportBox');
+if (tourImportBox) tourImportBox.classList.add('hidden');
 if (next !== null && typeof tourCancelAuto === 'function') tourCancelAuto();
 }
 },
 pause: {
 onEnter() {
 clearAllHumanInputs();
+},
+onLeave(next) {
+if (next === null && M.mode === 'train') {
+if (typeof trainUiSync === 'function') try { trainUiSync(); } catch (e) {}
+else {
+for (const hid of ['dummyBarBtn', 'trainLab', 'trainInspect']) {
+const el = $id(hid);
+if (el) el.classList.remove('hidden');
+}
+}
+}
 }
 }
 };
@@ -58089,11 +58119,30 @@ if (againBtn && !againBtn.disabled && againBtn.style.display !== 'none') againBt
 return;
 }
 }
-if (typeof teamCmdOpen === 'function' && teamCmdOpen() && e.code === 'Escape') {
-if (e.repeat) return;
+if (e.code === 'Escape' && !e.repeat) {
+const hudModal = document.getElementById('hudCustomModal');
+if (hudModal && hudModal.style && hudModal.style.display && hudModal.style.display !== 'none') {
+e.preventDefault(); e.stopImmediatePropagation();
+hudModal.style.display = 'none';
+return;
+}
+const tpModal = document.getElementById('worldTeleport');
+if (tpModal && tpModal.parentNode && !tpModal.classList.contains('hidden')) {
+e.preventDefault(); e.stopImmediatePropagation();
+if (typeof closeTeleportModal === 'function') closeTeleportModal();
+else tpModal.classList.add('hidden');
+return;
+}
+if (typeof dummyBarOn === 'function' && dummyBarOn()) {
+e.preventDefault(); e.stopImmediatePropagation();
+if (typeof dummyBarShow === 'function') dummyBarShow(false);
+return;
+}
+if (typeof teamCmdOpen === 'function' && teamCmdOpen()) {
 e.preventDefault(); e.stopImmediatePropagation();
 teamCmdClose();
 return;
+}
 }
 if ((e.code === 'KeyP' || e.code === 'Escape') && !e.repeat && !currentScreen && !document.querySelector('.scr.on') && M.mode !== 'demo' && M.mode !== 'net' && !['end', 'perk', 'draft', 'talk'].includes(M.phase)) {   // 仅在纯对局画面响应暂停；抽秘卷、剧情对话、菜单页不弹暂停
 e.preventDefault(); e.stopImmediatePropagation();
@@ -58113,7 +58162,9 @@ showScreen(paused ? 'pause' : null);
 if (!paused) refocusGame();
 return;
 }
-if (M.mode === 'demo') return;
+if (M.mode === 'demo' || paused) return;
+if (currentScreen && currentScreen !== 'menu') return;
+if (currentScreen === 'menu' && M.phase !== 'fight') return;
 if (dummyBarOn()) return;   // 对手行为栏开着：方向键、回车给栏用（26-kbnav.js），不进对局
 if (typeof bastionOn === 'function' && bastionOn() && !M.bastionPvp && !e.repeat) {
 if (e.code === 'KeyT' && typeof bastionTpToAlly === 'function') { e.preventDefault(); bastionTpToAlly(); return; }
@@ -58121,7 +58172,7 @@ if (e.code === 'KeyV' && typeof bastionFireSos === 'function') { e.preventDefaul
 if (e.code === 'KeyG' && typeof bastionCastCompanionSkill === 'function') { e.preventDefault(); bastionCastCompanionSkill(); return; }
 if (e.code === 'KeyB' && typeof bastionToggleArmory === 'function') { e.preventDefault(); bastionToggleArmory(); return; }
 }
-if ((e.code === 'Tab' || (KEYS[0] && KEYS[0][e.code] === 'scoreboard')) && typeof teamCmdEligible === 'function' && teamCmdEligible() && !paused && !document.querySelector('.scr.on')) {
+if ((e.code === 'Tab' || (KEYS[0] && KEYS[0][e.code] === 'scoreboard')) && typeof teamCmdEligible === 'function' && teamCmdEligible()) {
 e.preventDefault();
 if (!e.repeat) toggleTeamCmdPanel();
 return;

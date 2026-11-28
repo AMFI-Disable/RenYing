@@ -61,6 +61,14 @@ function cleanupTransientOverlays(targetId) {
     if (arM && !arM.hidden && !(typeof REEL !== 'undefined' && REEL && REEL.on)) arM.hidden = true;
     if (arI && !arI.hidden) arI.hidden = true;
   }
+  if (targetId !== 'replays') {
+    const rpCodeBox = $id('rpCodeBox');
+    if (rpCodeBox) rpCodeBox.classList.add('hidden');
+  }
+  if (targetId !== 'tournament') {
+    const tourImportBox = $id('tourImportBox');
+    if (tourImportBox) tourImportBox.classList.add('hidden');
+  }
   // 2. 当切到任意非对局页面（targetId != null）时，立即收起对局内专属工具栏与 HUD，防止穿透到菜单页
   if (targetId) {
     if (typeof teamCmdClose === 'function' && typeof teamCmdOpen === 'function' && teamCmdOpen()) teamCmdClose();
@@ -69,9 +77,12 @@ function cleanupTransientOverlays(targetId) {
       const el = $id(hid);
       if (el) el.classList.add('hidden');
     }
-    if (targetId !== 'pause') {
-      const cap = $id('sfxCaption');
-      if (cap) cap.classList.add('hidden');
+    const keepMatchOverlay = targetId === 'pause' || isInMatchOverlayScreen(targetId);
+    if (!keepMatchOverlay) {
+      for (const hid of ['sfxCaption', 'tutBox', 'rpBar']) {
+        const el = $id(hid);
+        if (el) el.classList.add('hidden');
+      }
     }
   }
 }
@@ -140,14 +151,33 @@ const SCREEN_LIFECYCLE = {
       BP = null; watch2v2Bp = null;
     }
   },
+  replays: {
+    onLeave() {
+      const rpCodeBox = $id('rpCodeBox');
+      if (rpCodeBox) rpCodeBox.classList.add('hidden');
+    }
+  },
   tournament: {
     onLeave(next) {
+      const tourImportBox = $id('tourImportBox');
+      if (tourImportBox) tourImportBox.classList.add('hidden');
       if (next !== null && typeof tourCancelAuto === 'function') tourCancelAuto();
     }
   },
   pause: {
     onEnter() {
       clearAllHumanInputs();
+    },
+    onLeave(next) {
+      if (next === null && M.mode === 'train') {
+        if (typeof trainUiSync === 'function') try { trainUiSync(); } catch (e) {}
+        else {
+          for (const hid of ['dummyBarBtn', 'trainLab', 'trainInspect']) {
+            const el = $id(hid);
+            if (el) el.classList.remove('hidden');
+          }
+        }
+      }
     }
   }
 };
