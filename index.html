@@ -9,7 +9,7 @@
 <!-- 刃影主页面的骨架：tools/build.py 把下面几个 @ 占位标记换成样式和脚本，生成根目录的 index.html（每个标记只能有一个）。
      @style 全部样式（src/style.css + src/styles/）；@music 背景音乐（只有离线版内嵌）；@scripts 游戏和各模块的脚本；@qfx 青锋行。
      每个界面是 #wrap 里一个 class="scr" 的 div（菜单 #menu、单人 #single、联机 #netp、点将台 #bp、账号 #acc、
-     武库 #armory、任务 #tasks、结算 #end ……），showScreen(id)（src/game/21-buttons-01-screen-controls.js）按一张固定的名单
+     武库 #armory、任务 #tasks、结算 #end ……），showScreen(id)（src/game/05-ui/21-buttons-01-screen-controls.js）按一张固定的名单
      切换 on，新加的界面要记得加进那张名单。
      找 bug 提示：某个界面打不开，先看这里有没有那个 id；按钮没反应去 src/game/21-buttons-*.js 找它的 id。 -->
 <script>try { if (localStorage.getItem('renying-lang') === 'en') document.documentElement.classList.add('boot-en'); } catch (e) {}</script>   <!-- 以前选过英文：首页一开始就给顶栏留位置（style.css 的 html.boot-en） -->
@@ -672,6 +672,7 @@ grid-column: 1 / -1;
 .soc-n { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .soc-n b { font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .soc-n small { color: var(--dim); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.soc-n small.soc-state { white-space: normal; overflow: visible; overflow-wrap: anywhere; }
 .soc-it em { font-style: normal; font-size: 12px; min-width: 18px; padding: 1px 6px; border-radius: 999px; background: var(--p2); color: #fff; text-align: center; }
 .soc-on { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.18); flex-shrink: 0; }
 .soc-on.y { background: #4ade80; box-shadow: 0 0 6px rgba(74,222,128,.7); }
@@ -2841,6 +2842,16 @@ body.kbnav :focus, body.kbnav :focus-visible { outline: none !important; }
 box-shadow: 0 0 0 3px rgba(233,196,106,.22), 0 0 18px rgba(233,196,106,.45); transition: left .09s ease-out, top .09s ease-out, width .09s ease-out, height .09s ease-out; }
 body.kbnav #kbRing.on { display: block; }
 @media (prefers-reduced-motion: reduce) { #kbRing { transition: none; } }
+.bpmovedeck .dhitname { white-space: normal; flex-wrap: wrap; }
+html:lang(en) #bp .slot2, html:lang(en) #bp .slot2 .lab { overflow-wrap: anywhere; }
+@media (max-width: 480px) {
+.go, .ghost, .soc-status { white-space: normal; overflow-wrap: anywhere; }
+#community .cxhead > div { flex-wrap: wrap; min-width: 0; }
+.saga-heroes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.saga-heroes button, .saga-route { min-width: 0; overflow-wrap: anywhere; }
+.soc-n small { white-space: normal; }
+html #single .single-action-row .go, html #single .single-action-row .go.alt { height: auto !important; padding-top: 8px !important; padding-bottom: 8px !important; }
+}
 .world-vote { position: fixed; left: 50%; bottom: calc(18px + env(safe-area-inset-bottom)); transform: translateX(-50%); z-index: 40; display: flex; flex-direction: column; align-items: center; gap: 6px; max-width: calc(100vw - 24px); pointer-events: auto; }
 .world-vote .wv-h { font-size: 12px; color: #e9c46a; background: rgba(10,10,16,.78); padding: 3px 10px; border-radius: 10px; }
 .world-vote .wv-row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
@@ -4651,6 +4662,15 @@ flex-wrap: wrap;
 .cx-m-track i { display: block; height: 100%; background: linear-gradient(90deg, #b5282d, #e9c46a); }
 .cx-m-meta { font-size: 12px; color: rgba(239, 232, 216, 0.78); font-variant-numeric: tabular-nums; }
 .lb-head-row { display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap; }
+.trial-card-info { min-width: 0; overflow-wrap: anywhere; }
+.trial-card > .go, .trial-card > .ghost { flex-shrink: 0; white-space: nowrap; }
+@media (max-width: 480px) {
+.train-pre-group { min-width: 0; max-width: 100%; }
+.train-pre-group .seg { display: flex; flex-wrap: wrap; max-width: 100%; }
+.train-pre-group .seg button { padding: 8px 12px; }
+.trial-card { flex-wrap: wrap; }
+.trial-card-info { flex: 1 1 100%; }
+}
 .team-cmd-panel {
 position: fixed;
 right: 16px;
@@ -5535,7 +5555,7 @@ window.RYBoot = (function () {
         </div>
         <p class="xiwu-info-body" id="xiwuInfoBody"></p>
       </div>
-      <!-- 电脑境界：大厅最上面，对电脑的各模式（论剑、3v3、2v2、天机、山河异境、神决）共用这一条，选了会记住。见 src/game/21-buttons-01-screen-controls.js 的 setPickLevel -->
+      <!-- 电脑境界：大厅最上面，对电脑的各模式（论剑、3v3、2v2、天机、山河异境、神决）共用这一条，选了会记住。见 src/game/05-ui/21-buttons-01-screen-controls.js 的 setPickLevel -->
       <div id="aiLvHome">
         <div class="ai-lv-bar" id="aiLvBar">
           <div class="sec-head-row">
@@ -5958,7 +5978,7 @@ window.RYBoot = (function () {
         </div>
       </div>
 
-      <!-- 墨球蹴鞠 · 把墨球打进对方球门（src/game/22-modes-09-cuju.js） -->
+      <!-- 墨球蹴鞠 · 把墨球打进对方球门（src/game/04-modes/22-modes-09-cuju/） -->
       <div data-sec="cuju" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
           <h3 class="spt">墨球蹴鞠 · 先进三球</h3>
@@ -6860,7 +6880,7 @@ window.RYBoot = (function () {
       </div>
     </div>
   </div>
-  <!-- 木人试剑：对手行为栏（src/game/21-buttons-02-training.js 的 dummyBar*，动作表在 src/data/14-dummy.js） -->
+  <!-- 木人试剑：对手行为栏（src/game/05-ui/21-buttons-02-training.js 的 dummyBar*，动作表在 src/data/14-dummy.js） -->
   <button class="dummy-bar-btn hidden" id="dummyBarBtn" type="button">对手行为</button>
   <div class="dummy-bar hidden" id="dummyBar" role="dialog" aria-modal="true" aria-label="对手行为">
     <div class="db-head"><b>对手行为与 AI 难度</b><span class="db-key" id="dummyBarKey"></span><button class="mm-cancel" id="dummyBarClose" type="button">继续练</button></div>
@@ -8518,6 +8538,14 @@ try { if (typeof updateVerLine === 'function') updateVerLine(); } catch (e) {}
 }
 const EN_DUR = s => String(s).replace(/(\d+)\s*天/g, '$1d').replace(/(\d+)\s*小时/g, '$1h').replace(/(\d+)\s*分(?:钟)?/g, '$1m');
 const PATTERNS_EN = [
+[/^专精 Lv\.(\d+)$/, (m0, n) => `Mastery Lv.${n}`],
+[/^Lv\.(\d+) (.+)$/, (m, n, t) => lookup(t) ? `Lv.${n} ${lookup(t)}` : m],
+[/^试炼 (\d+)\/(\d+)$/, (m0, a, b) => `Trials ${a}/${b}`],
+[/^基础起手 · 普攻接(.+)$/, (m, mv) => lookup(mv) ? `Opener · Light Attack into ${lookup(mv)}` : m],
+[/^双技连携 · (.+)转(.+)$/, (m, a, b) => lookup(a) && lookup(b) ? `Skill Link · ${lookup(a)} into ${lookup(b)}` : m],
+[/^绝学收尾 · 破势接(.+)$/, (m, mv) => lookup(mv) ? `Finisher · Guard Break into ${lookup(mv)}` : m],
+[/^(.+) → (.+)$/, m => { const out = m.split(' → ').map(p => (/[一-鿿]/.test(p) ? lookup(p.trim()) : p)); return out.every(Boolean) ? out.join(' → ') : m; }],
+[/^(.+式)$/, m => { const hs = typeof window !== 'undefined' && window.HERO_STANCES; const hit = hs && Object.values(hs).find(v => v && v.name === m); return hit && hit.en ? hit.en : m; }],
 [/^“蓄满(.+)，格挡在它面前像纸一样薄。”$/, (m, move) => lookup(move) ? `“Fully charge ${lookup(move)} to break a guard.”` : m],
 [/^“凌空使出(.+)，制空追击一气呵成。”$/, (m, move) => lookup(move) ? `“Use ${lookup(move)} to follow up in midair.”` : m],
 [/^“(.+)一出，(.+)让对手措手不及。”$/, (m, move, effect) => lookup(move) && lookup(effect) ? `“Catch your opponent off guard with ${lookup(move)}. Effect: ${lookup(effect)}.”` : m],
@@ -10600,7 +10628,7 @@ cpuWatch: { bp: 'duel', local: true, sides: ['苍龙 (AI)', '赤凤 (AI)'] },
 chaos: { bp: 'open', local: true, foe: '电脑' },
 mayhem: { bp: 'open', local: true, foe: '电脑' },
 maps: { bp: 'open', local: true, foe: '电脑' },   // 山河异境：投票选地图（src/data/12-maps.js）
-cuju: { bp: 'open', local: true, foe: '电脑' },   // 墨球蹴鞠：把墨球打进对方球门（src/game/04-modes/22-modes-09-cuju.js）
+cuju: { bp: 'open', local: true, foe: '电脑' },   // 墨球蹴鞠：把墨球打进对方球门（src/game/04-modes/22-modes-09-cuju/）
 cuju2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 墨球蹴鞠
 koth: { bp: 'open', local: true, foe: '电脑' },   // 灵坛争锋：占领灵坛 + 无限复活
 koth2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 灵坛争锋
@@ -14497,6 +14525,54 @@ Object.assign(UI_COPY_EN, {
 "分派任务": "Assign Task",
 "战意号令": "Battle Cry",
 "FULL AUTO：一键全自动优化全阵容徽记、皮肤、灵宠、架势、招式并清理重复饰品": "FULL AUTO: one click to optimize emblems, skins, pets, stances and moves for the whole roster, and clear duplicate cosmetics",
+});
+Object.assign(UI_COPY_EN, {
+"招式教学：自选侠客、架势与课程范围，循序渐进掌握全部攻防核心机制！": "Move Lessons: choose a hero, a stance and a lesson range, then learn every core attack and defense mechanic step by step.",
+"自选侠客与架势，按步骤掌握移动、连击、蓄力斩、技能、格挡、精准招架、腾空闪与奥义。": "Choose a hero and a stance, then learn movement, combos, charged slashes, skills, blocking, perfect parries, air dodges and ultimates step by step.",
+"选择教学侠客": "Choose a hero for the lesson",
+"教学架势": "Lesson stance",
+"教学课程范围": "Lesson range",
+"自由与情景：木人桩与无数值膨胀 AI 实战对练、实时帧数检视与六大专项情景！": "Free Play and Scenarios: dummy practice, AI sparring with standard stats, live frame data and six focused drills.",
+"对手类型": "Opponent type",
+"AI 实战对练（纯智能难度）": "AI sparring (skill-based difficulty only)",
+"站立": "Stand",
+"格挡": "Block",
+"招架": "Parry",
+"连段": "Combo",
+"起跳": "Jump",
+"AI 境界": "AI Level",
+"木人桩模式：可精确控制对手站桩、格挡、弹反、连段与受压闪避，并实时查看帧数差与判定框。": "Dummy mode: set exactly how the dummy stands, blocks, parries, combos and escapes pressure, and watch frame advantage and hitboxes live.",
+"AI 实战拆招": "AI Sparring Breakdown",
+"高台与空战应对": "High Ground and Air Defense",
+"选择训练侠客": "Choose a hero to train",
+"训练架势": "Training stance",
+"训练对手类型": "Training opponent type",
+"木人桩行为": "Dummy behavior",
+"训练 AI 境界": "Training AI level",
+"选择AI对手侠客": "Choose the AI opponent's hero",
+"连招试炼：选择 20 位侠客与架势，精准命中校验自动进阶并赢取专精经验与墨锭！": "Combo Trials: pick any of the 20 heroes and a stance. Each clean hit advances the trial and earns mastery XP and Ink.",
+"试炼架势": "Trial stance",
+"普攻命中": "Light Attack Hit",
+"宗师": "Master",
+"天道演武": "AI Exhibition",
+"天道演武：挑选 AI 境界与对战模式，观摩全 AI 高手同屏演武切磋！": "AI Exhibition: pick an AI Level and a mode, then watch all-AI masters fight.",
+"先在上方挑选「AI 境界」，再选择下方玩法模式，观摩顶尖电脑侠客同屏演武。": "Pick an AI Level above, then choose a mode below to watch the strongest computer heroes fight.",
+"八强单败淘汰武林大会：亲自参赛或观战全 AI 演武角逐盟主！": "Eight-player single-elimination tournament: enter yourself or watch an all-AI bracket compete for the title.",
+"初窥门径": "First Steps",
+"登堂入室": "Adept",
+"炉火纯青": "Refined",
+"出神入化": "Masterful",
+"武林泰斗": "Martial Luminary",
+"剑心通明": "Clear Blade Heart",
+"天人合一": "One With Heaven",
+"绝世无双": "Peerless",
+"万法归宗": "All Paths United",
+"默认团队战术": "Default team tactic",
+"锋矢集火": "Spearhead Focus Fire",
+"铁壁固守": "Ironwall Hold",
+"游袭包抄": "Raiders Flank",
+"二式": "Stance II",
+"分享最近一局战绩与回放码": "Share your latest match result and replay code",
 });
 Object.assign(UI_COPY_EN, {
 "剑意": "Sword Intent",
@@ -28777,7 +28853,7 @@ f.guard = f.maxGuard = 500; f.meter = 100;
 }
 function startRound() {
 M.cmd = null;
-const defTac = typeof getDefaultTeamTactic === 'function' ? getDefaultTeamTactic() : 'auto';
+const defTac = typeof matchDefaultTactic === 'function' ? matchDefaultTactic() : 'auto';
 const defOrd = ({ spear: 'focus', wall: 'protect', raid: 'spread', auto: 'auto' })[defTac] || 'auto';
 M.squadOrders = [defOrd, 'auto', 'auto', 'auto'];
 M.squadAuto = [{}, {}, {}, {}];
@@ -31659,7 +31735,7 @@ function applyHit(att, def, m, pt) {
 if (typeof bastionOn === 'function' && bastionOn() && typeof bastionModifyHit === 'function') m = bastionModifyHit(att, def, m);
 if (M.mode === 'net' && !RESIM) NET.matchHits = (NET.matchHits || 0) + 1;   // 回滚重算不能再记一次，不然两边会算成不一样
 if (def.forestProxy) { forestHit(att, m, pt); return; }
-if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 22-world.js
+if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 src/game/04-modes/22-world-01-net-combat.js
 if (cujuOn()) def.hp = def.lagHp = def.maxHp;   // 墨球蹴鞠不比气血：挨打照样硬直、倒地，但永远打不倒
 if (typeof partyOn === 'function' && partyOn() && M.party) {
 if (M.party.kind === 'potato') partyTransferBomb(def.idx);
@@ -32972,13 +33048,14 @@ superFreeze -= STEP;
 rpPoint(); updateFighter(superOwner, foeOf(superOwner)); rpPost(); if (!RESIM) { animFighter(superOwner); updateFX(STEP); }
 return;
 }
-if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（22-world.js）
+if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（src/game/04-modes/22-world-03-rogue-coop.js）
 if (M.mode === 'world') worldUpdate(); else if (!isClient()) updateMatch(); else M.t += STEP;
 const fs = allFighters();
 if (isMulti() && M.phase !== 'ko') {
 for (let i = 0; i < fs.length; i++) { const f = fs[i]; if (!f.hidden && f.hp > 0) foeOf(f); }
 }
 if (M.cmd) cmdTick();   // 团战的统帅：观察对面、电脑统帅换战术（22-modes-17-command/）
+else if (typeof squadAutoTick === 'function') squadAutoTick();   // 没有统帅的多人局：「智策」自动战术每 0.5 秒重算一次
 if (!ROLL.on && !REPLAY.on) {
 for (let i = 0; i < fs.length; i++) { if (fs[i].ctrl === human[0]) { secretThink(fs[i]); break; } }
 }
@@ -33237,7 +33314,7 @@ function recBegin(kind) {
 M.reviewReady = false;
 const active = allFighters();
 Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], trStart: null, post: ['', ''], last: [-1, -1],
-meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), trainSlots: kind === 'net' ? [...((ROLL.slots || [])[localIdx()] || [])] : active.filter(f => human.includes(f.ctrl)).map(f => f.idx), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], trEvery: TR_EVERY, st0: capState(), t: Date.now() } });
+meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), trainSlots: kind === 'net' ? [...((ROLL.slots || [])[localIdx()] || [])] : active.filter(f => human.includes(f.ctrl)).map(f => f.idx), mapActive: !!mapNow(), level: M.level || '', tac0: typeof getDefaultTeamTactic === 'function' ? getDefaultTeamTactic() : 'auto', ch: [A.chIdx, B.chIdx], trEvery: TR_EVERY, st0: capState(), t: Date.now() } });
 if (M.hasBuffs && M.competitiveScrolls) REC.meta.competitiveScrolls = JSON.parse(JSON.stringify(M.competitiveScrolls));
 if (isLargeTeam()) {
 const tc = teamCount(), n = active.length;
@@ -34074,7 +34151,7 @@ $id('rpPause').addEventListener('click', () => { REPLAY.paused = !REPLAY.paused;
 $id('rpHz').addEventListener('input', e => { REPLAY.hz = Math.max(1, Math.min(120, Math.round(+e.target.value || 120))); REPLAY.frameAcc = 0; replayInspectRender(); });
 $id('rpHitbox').addEventListener('click', () => { if (!REPLAY.on || M.phase === 'end') return; debugHitbox = !debugHitbox; replayInspectRender(); });
 $id('rpStep').addEventListener('click', replayStep);
-$id('rpExit').addEventListener('click', toMenu);
+$id('rpExit').addEventListener('click', () => toMenu());
 if ($id('rpScrub')) {
 $id('rpScrub').addEventListener('input', e => { if (REPLAY.on) replaySeek(+e.target.value); });
 }
@@ -46579,7 +46656,7 @@ function trainInspectUpdate() {
 const panel = $id('trainInspect');
 if (!panel) return;
 const inTrial = typeof TRIAL_RUN !== 'undefined' && TRIAL_RUN.active;
-const active = M.mode === 'train' && !REPLAY.on && !inTrial && M.phase !== 'end' && !currentScreen;
+const active = M.mode === 'train' && !TUT && !FOREST.on && !REPLAY.on && !inTrial && M.phase !== 'end' && !currentScreen;
 panel.classList.toggle('hidden', !active || paused || DB.open);
 trainInspectRender();
 trainLabUpdate();
@@ -47043,6 +47120,18 @@ toMenuScreen: () => { singleSec('chaos'); showScreen('single'); },
 saga: {
 toMenuScreen: () => { singleSec('saga'); showScreen('single'); },
 },
+melee: {
+toMenuScreen: () => { singleSec('melee'); showScreen('single'); },   // 大型团战：退出后回习武大厅的团战页，不回首页
+},
+ctf: {
+toMenuScreen: () => { singleSec('ctf'); showScreen('single'); },   // 大型团战：退出后回习武大厅的团战页，不回首页
+},
+quad: {
+toMenuScreen: () => { singleSec('quad'); showScreen('single'); },   // 大型团战：退出后回习武大厅的团战页，不回首页
+},
+gauntlet: {
+toMenuScreen: () => { singleSec('gauntlet'); showScreen('single'); },   // 大型团战：退出后回习武大厅的团战页，不回首页
+},
 cpu: {
 rematch: () => {
 if (M.quick) {   // 从首页直接开打的：同一个角色、同一个难度，换个随机对手再来
@@ -47134,6 +47223,8 @@ paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (!keepRoom && 
 const prevMode = M.mode;
 const handler = MODE_HANDLERS[prevMode];
 if (handler && handler.onLeave) handler.onLeave();
+M.map = null;
+M.towerPerks = []; M.foeScrolls = []; M.scRun = {};
 M.mode = 'demo';
 if (returnHome) showScreen('menu');
 else if (handler && handler.toMenuScreen) handler.toMenuScreen();
@@ -47141,7 +47232,7 @@ else showScreen('menu');
 if (prevMode !== 'demo') startMatch('demo');   // 首页背景那场比武本来就还在打，别重新摆一次
 if (keepRoom && !returnHome) selectMode('net');
 }
-document.getElementById('quitBtn').addEventListener('click', toMenu);
+document.getElementById('quitBtn').addEventListener('click', () => toMenu());
 document.getElementById('menuBtn').addEventListener('click', () => { if (typeof statMatchQuit === 'function') statMatchQuit(); toMenu(true); });
 const TAG3_ASSIST_CD = 14.0;
 const TAG3_ASSIST_COST = 25;
@@ -52235,6 +52326,11 @@ const savedTac = localStorage.getItem('renying-default-tactic');
 if (savedTac && CMD_TACTICS[savedTac]) defaultTeamTactic = savedTac;
 } catch (e) {}
 function getDefaultTeamTactic() { return CMD_TACTICS[defaultTeamTactic] ? defaultTeamTactic : 'auto'; }
+function matchDefaultTactic() {
+if (M.mode === 'net') return 'auto';
+if (M.mode === 'replay') { const t = REPLAY.m && REPLAY.m.tac0; return CMD_TACTICS[t] ? t : 'auto'; }
+return getDefaultTeamTactic();
+}
 function setDefaultTeamTactic(tac) {
 const next = CMD_TACTICS[tac] ? tac : 'auto';
 defaultTeamTactic = next;
@@ -52262,7 +52358,7 @@ const cmdTacName = id => (id && CMD_TACTICS[id]) ? CMD_TACTICS[id].n : '无令';
 const cmdRand = (a, b) => a + grnd() * (b - a);
 function cmdRoundInit() {
 M.cmd = null;
-if (!isLargeTeam() || M.watchAi || M.mode === 'demo' || M.mode === 'replay') return;
+if (!isLargeTeam() || M.watchAi || M.mode === 'demo') return;   // 回放也要建统帅：统帅加气血、电脑统帅换战术都在模拟里，少了回放就和实战对不上
 const tc = teamCount();
 const C = { team: [], role: new Array(MAX_FIGHTERS).fill(0), sel: -1, tgtCount: new Array(MAX_FIGHTERS).fill(0), obsT: 0, tabAt: 0, hint: 0 };
 for (let t = 0; t < tc; t++) {
@@ -52276,7 +52372,7 @@ obs: { cx: 0, spread: 0, focus: 0, n: 0 }, dealt: 0, taken: 0, log: [],
 });
 }
 M.cmd = C;
-const pref = getDefaultTeamTactic();
+const pref = matchDefaultTactic();
 for (let t = 0; t < tc; t++) {
 const cmdr = FIGHTERS[C.team[t].cmdr];
 if (cmdr) cmdApplyHp(cmdr);
@@ -52289,11 +52385,11 @@ C.team[t].autoSub = CMD_ORDER[(grnd() * 3) | 0];
 C.team[t].log.push('auto');
 }
 }
-for (const f of allFighters()) { f.cmdTgt = -1; f.cmdTgtT = 0; f.cmdHitBy = -1; f.cmdHitT = -99; }
+for (const f of allFighters()) { f.cmdTgt = -1; f.cmdTgtT = 0; f.cmdHitBy = -1; f.cmdHitT = -99; f.target = null; }
 cmdObserve();
 for (let t = 0; t < tc; t++) if (C.team[t].tactic === 'auto') cmdAdaptiveEval(t);
 const lt = localTeam();
-if (cmdIsHumanTeam(lt)) say(`你是统帅 · ${CMD_TACTICS[pref].n}（1/2/3/4 或 Tab）`, 2.4, 'go');
+if (cmdIsHumanTeam(lt) && M.mode !== 'replay') say(`你是统帅 · ${CMD_TACTICS[pref].n}（1/2/3/4 或 Tab）`, 2.4, 'go');
 }
 function cmdApplyHp(f) {
 f.maxHp = Math.round(f.maxHp * CMD_HP_BONUS); f.hp = f.lagHp = f.maxHp;
@@ -52769,14 +52865,23 @@ if (cur !== res.sub) T.autoAt = clock;
 T.autoSub = res.sub;
 T.autoReason = res.reason;
 }
-function squadAdaptiveEval(t) {
+function squadAdaptiveCompute(t) {
 const mates = sideFighters(t).filter(f => !f.hidden && f.hp > 0);
-const lf = mates.find(f => human.includes(f.ctrl)) || mates[0];
+const lf = mates.find(f => !cpuTeamwork(f)) || mates[0];
 const foes = lf ? foesOf(lf).filter(e => !e.hidden && e.hp > 0) : [];
-const res = cmdComputeAdaptive(t, mates, foes, null, lf, foes[0] || null);
+return cmdComputeAdaptive(t, mates, foes, null, lf, foes[0] || null);
+}
+function squadAdaptiveEval(t) {
+const res = squadAdaptiveCompute(t);
 if (!M.squadAuto) M.squadAuto = [{}, {}, {}, {}];
 M.squadAuto[t] = res;
 return res;
+}
+function squadAutoTick() {
+if (M.cmd || !isMulti() || (typeof isRaid === 'function' && isRaid()) || !M.squadOrders) return;
+if (clock - (M.squadAutoT === undefined ? -9 : M.squadAutoT) < 0.5) return;
+M.squadAutoT = clock;
+for (let t = 0; t < teamCount(); t++) if ((M.squadOrders[t] || 'auto') === 'auto') squadAdaptiveEval(t);
 }
 function cmdAiEval(t) {
 const C = M.cmd, T = C.team[t], me = C.team[t].obs;
@@ -53022,7 +53127,7 @@ return buildTacticAiMod(me, foe, d, tac, role, fm, cmdFighter(t), sideFighters(t
 }
 function squadAiMod(me, foe, d) {
 if (M.cmd) return cmdAiMod(me, foe, d);
-if (!isMulti() || human.includes(me.ctrl) || (typeof isRaid === 'function' && isRaid())) return null;
+if (!isMulti() || !cpuTeamwork(me) || (typeof isRaid === 'function' && isRaid())) return null;
 const t = fighterTeam(me);
 const ord = (M.squadOrders && M.squadOrders[t]) || 'auto';
 const fm = (M.teamFormation && M.teamFormation[t]) || 'auto';
@@ -53030,15 +53135,12 @@ const roleIdx = (M.teamRoles && M.teamRoles[me.idx]) || 0;
 let role = CMD_ROLES[roleIdx] ? CMD_ROLES[roleIdx].id : 'auto';
 let tac = ({ focus: 'spear', protect: 'wall', spread: 'raid' }[ord]) || null;
 if (ord === 'auto') {
-if (!M.squadAuto || !M.squadAuto[t] || (clock - (M.squadAutoT || -9) >= 0.5)) {
-M.squadAutoT = clock;
-squadAdaptiveEval(t);
-}
-tac = (M.squadAuto && M.squadAuto[t] && M.squadAuto[t].sub) || 'spear';
+const cached = M.squadAuto && M.squadAuto[t] && M.squadAuto[t].sub ? M.squadAuto[t] : squadAdaptiveCompute(t);   // 只读：重算在 squadAutoTick
+tac = cached.sub || 'spear';
 if (role === 'auto') role = heroTacticProfile(me).prefRole;
 }
 const allies = sideFighters(t);
-const leader = allies.find(x => !x.hidden && x.hp > 0 && human.includes(x.ctrl)) || allies[0];
+const leader = allies.find(x => !x.hidden && x.hp > 0 && !cpuTeamwork(x)) || allies[0];
 return buildTacticAiMod(me, foe, d, tac, role, fm, leader, allies);
 }
 function cmdDmgMul(att, def) {
@@ -60955,7 +61057,7 @@ const m = c[c.length - 1]; return (m.sys ? '' : m.from === SOC.me ? '我：' : k
 function socRenderList() {
 const el = $id('socList'); if (!el || !SOC.data) return;
 const D = SOC.data, on = new Set(SOC.online);
-let h = socItem('hall', '江湖大厅', socStateText());
+let h = socItem('hall', '江湖大厅', socStateText()).replace('<small>', '<small class="soc-state">');
 const reqs = Object.keys(D.reqIn);
 if (reqs.length) h += `<div class="soc-sec">好友申请</div>` + reqs.map(n => `<div class="soc-req"><span>${escapeHTML(n)}</span><button type="button" class="go small" data-acc="${escapeHTML(n)}">同意</button><button type="button" class="ghost small" data-dec="${escapeHTML(n)}">忽略</button></div>`).join('');
 const fs = Object.keys(D.friends).sort((a, b) => (on.has(b) - on.has(a)) || a.localeCompare(b, 'zh'));

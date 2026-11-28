@@ -78,6 +78,18 @@ const MODE_HANDLERS = {
   saga: {
     toMenuScreen: () => { singleSec('saga'); showScreen('single'); },
   },
+  melee: {
+    toMenuScreen: () => { singleSec('melee'); showScreen('single'); },   // 大型团战：退出后回习武大厅的团战页，不回首页
+  },
+  ctf: {
+    toMenuScreen: () => { singleSec('ctf'); showScreen('single'); },   // 大型团战：退出后回习武大厅的团战页，不回首页
+  },
+  quad: {
+    toMenuScreen: () => { singleSec('quad'); showScreen('single'); },   // 大型团战：退出后回习武大厅的团战页，不回首页
+  },
+  gauntlet: {
+    toMenuScreen: () => { singleSec('gauntlet'); showScreen('single'); },   // 大型团战：退出后回习武大厅的团战页，不回首页
+  },
   cpu: {
     rematch: () => {
       if (M.quick) {   // 从首页直接开打的：同一个角色、同一个难度，换个随机对手再来
@@ -176,6 +188,9 @@ function toMenu(returnHome = false) {
   const prevMode = M.mode;
   const handler = MODE_HANDLERS[prevMode];
   if (handler && handler.onLeave) handler.onLeave();
+  // 离开对局后清掉只属于上一局的地图和秘卷：不然山河异境的地图会带进 3v3 / 2v2，问剑密卷的秘卷会带进守关
+  M.map = null;
+  M.towerPerks = []; M.foeScrolls = []; M.scRun = {};
   M.mode = 'demo';
   if (returnHome) showScreen('menu');
   else if (handler && handler.toMenuScreen) handler.toMenuScreen();
@@ -184,5 +199,6 @@ function toMenu(returnHome = false) {
   if (keepRoom && !returnHome) selectMode('net');
 }
 
-document.getElementById('quitBtn').addEventListener('click', toMenu);
+// 暂停里的「退出」回到这个模式自己的大厅（和结算页按 Esc 一样）；直接把 toMenu 当监听函数会把点击事件当成 returnHome 传进去，永远回首页
+document.getElementById('quitBtn').addEventListener('click', () => toMenu());
 document.getElementById('menuBtn').addEventListener('click', () => { if (typeof statMatchQuit === 'function') statMatchQuit(); toMenu(true); });

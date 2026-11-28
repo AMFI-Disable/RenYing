@@ -20,13 +20,13 @@ flowchart LR
 1. The host creates a room. The 4-character room code is registered with the PeerJS broker, which only introduces the two browsers.
 2. Both sides gather network candidates with public STUN servers and open a WebRTC DataChannel directly.
 3. On networks that block direct links (school, office, symmetric NAT) the page asks the Worker for short-lived TURN credentials and relays through TURN instead. Without the Worker (offline edition, server down) only STUN is used.
-4. Both sides must run the same game version (`VERSION` in `src/game/01-core.js`); a mismatch is reported before the match starts.
+4. Both sides must run the same game version (`VERSION` in `src/game/01-engine/01-core.js`); a mismatch is reported before the match starts.
 
-Code: `src/net-p2p.js` (connection), `src/game/06-input-net.js` (inputs), `src/game/20-tutorial-rollback-touch.js` (rollback and resync).
+Code: `src/net-p2p.js` (connection), `src/game/01-engine/06-input-net.js` (inputs), `src/game/01-engine/20-rollback.js` (rollback and resync).
 
 ## Rollback / 回滚
 
-- The game logic runs at a fixed **120 steps per second** (`STEP` in `src/game/01-core.js`), independent of the screen refresh rate.
+- The game logic runs at a fixed **120 steps per second** (`STEP` in `src/game/01-engine/01-core.js`), independent of the screen refresh rate.
 - Everything that affects the match uses a seeded random generator (`grnd()`), never `Math.random`. Visual-only effects may differ between the two sides; the fight itself may not.
 - Each side keeps recent snapshots of the match state in a ring buffer. When a remote input arrives for a past frame, the game restores that snapshot, re-simulates up to the present with the correct input (`RESIM`), and draws the result.
 - Platforms, wind, lightning, clones, puppet balls and every other piece of match state live in the snapshot, so maps and summons rewind correctly too.

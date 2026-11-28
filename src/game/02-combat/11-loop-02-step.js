@@ -11,7 +11,7 @@ function step() {
     rpPoint(); updateFighter(superOwner, foeOf(superOwner)); rpPost(); if (!RESIM) { animFighter(superOwner); updateFX(STEP); }
     return;
   }
-  if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（22-world.js）
+  if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（src/game/04-modes/22-world-03-rogue-coop.js）
   if (M.mode === 'world') worldUpdate(); else if (!isClient()) updateMatch(); else M.t += STEP;
   const fs = allFighters();
   // 多人对局：每帧开头所有人先选一次目标（foeOf 会记住目标）。以前只有电脑在想招时选，回放里没人想招，目标换得晚一帧就走样了
@@ -19,6 +19,7 @@ function step() {
     for (let i = 0; i < fs.length; i++) { const f = fs[i]; if (!f.hidden && f.hp > 0) foeOf(f); }
   }
   if (M.cmd) cmdTick();   // 团战的统帅：观察对面、电脑统帅换战术（22-modes-17-command/）
+  else if (typeof squadAutoTick === 'function') squadAutoTick();   // 没有统帅的多人局：「智策」自动战术每 0.5 秒重算一次
   if (!ROLL.on && !REPLAY.on) {
     for (let i = 0; i < fs.length; i++) { if (fs[i].ctrl === human[0]) { secretThink(fs[i]); break; } }
   }

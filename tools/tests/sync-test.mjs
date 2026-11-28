@@ -1,5 +1,5 @@
 // 云存档“两边新增加起来”的端到端测试：本机把 cloudflare/worker.js 跑起来（D1 用 node:sqlite 模拟），
-// 再开几台“设备”（各自一份 localStorage、各自一份 src/cloud.js），走真实的注册、登录、存档、加载。
+// 再开几台“设备”（各自一份 localStorage、各自一份 src/cloud/），走真实的注册、登录、存档、加载。
 // 覆盖：两台设备各自新增的胜负、碎片在云端加起来；重试、刷新、重新登录、断线重连都不重复加；
 //       老存档第一次对账不丢也不多；换号不串；老版本服务器照旧能用；关卡星、侠客、列传、排位按规则合并。
 // 用法：node tools/tests/sync-test.mjs           （Node 22 以上，不用装任何包）
@@ -101,7 +101,7 @@ function makeDevice(label, store = new Map()) {   // 传同一个 store：同一
     vm.runInContext(CLOUD_JS, vm.createContext(g), { filename: 'cloud.js' });
     dev.CS = g.CloudSave;
     dev.CS.setConfig({ endpoint: 'https://w.test' });
-    // 和游戏里 24-account-01-profile.js 一样：别的设备加的，加到当前存档上
+    // 和游戏里 src/game/05-ui/19-progress-02-profile.js 一样：别的设备加的，加到当前存档上
     if (dev.CS.onProgress) dev.CS.onProgress(d => {
       dev.heard.push(d);
       if (!dev.PROF) return;

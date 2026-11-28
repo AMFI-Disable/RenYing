@@ -2,7 +2,7 @@
 // 规则：键必须和源码里的中文一字不差（改了中文要同步改这里，否则那句会退回中文）；同一个键只写一次，
 // 后写的会悄悄盖掉先写的（tools/checks/data-check.mjs 会查重、查过期）。
 Object.assign(UI_COPY_EN, {
-  // 秘卷说明和流派共鸣（src/game/22-scrolls.js 的 d、SC_RESO）
+  // 秘卷说明和流派共鸣（src/game/04-modes/22-scrolls.js 的 d、SC_RESO）
   "近战斩击伤害 +15%，命中时在地面激起墨浪。": "Melee slash damage +15%; hits splash an ink wave on the ground.",
   "近身攻击的击退与挑飞力度 +35%，命中伴随雷爆。": "Melee knockback and launch force +35%; hits crackle with thunder.",
   "对浮空、被挑飞的敌人伤害 +35%。": "+35% damage to airborne or launched enemies.",

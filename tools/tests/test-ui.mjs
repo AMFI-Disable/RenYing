@@ -5,6 +5,7 @@
 //   - hud-audit.mjs (Battle HUD layout & minimum text size)
 //   - hud-overlap-audit.mjs (Battle HUD overlap and bounds check)
 //   - kb-flow-test.mjs (Pure keyboard mode flow navigation)
+//   - mode-switch-audit.mjs (Quit every mode, check nothing leaks into the next screen or match)
 //   - touch-audit.mjs (Mobile virtual stick & synthetic touch controls)
 //   - perf-audit.mjs (Frame rate & memory performance against budget)
 //   - firstload-audit.mjs (Cold load FCP, LCP, layout shift)
@@ -110,6 +111,9 @@ async function main() {
 
     // 4. Keyboard Navigation Flow
     await runStep('Pure Keyboard Navigation Flow Test', 'tools/audits/kb-flow-test.mjs', ['ci-kb', '1440', '900']);
+
+    // 4b. Mode Switch Isolation
+    await runStep('Mode Switch Isolation Audit', 'tools/audits/mode-switch-audit.mjs', ['ci-mode-switch', '1440', '900']);
 
     // 5. Touch Controls Emulation
     await runStep('Mobile Virtual Controls & Touch Emulation', 'tools/audits/touch-audit.mjs', ['ci-touch']);

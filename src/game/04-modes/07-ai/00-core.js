@@ -3,9 +3,9 @@
 //   1. 自适应难度（ADAPT）：按你最近的胜负微调电脑强度
 //   2. 斩妖列传（FOREST / 关卡 / 小怪）：选关、刷波、小怪出招、过关结算、画面和 HUD
 //   3. 木人桩的稻草人（DummyCtrl / DUMMY_JOBS）：按 src/data/14-dummy.js 的设定行动
-//   4. AICtrl：把 src/ai.js 的大脑接到一位侠客身上（每帧问大脑要按键）
-// 找 bug 提示：电脑行为不对，先在 src/ai.js 里找；这里只负责"把想法变成按键"。
-// 难度、打法和大脑都在 src/ai.js
+//   4. AICtrl：把 src/ai/ 的大脑接到一位侠客身上（每帧问大脑要按键）
+// 找 bug 提示：电脑行为不对，先在 src/ai/ 里找；这里只负责"把想法变成按键"。
+// 难度、打法和大脑都在 src/ai/
 // 个性化电脑：以困难为基础，按你对它的输赢自动调强弱；禁你胜率最高的角色，用你最常用的角色
 const ADAPT = { s: 1, use: {}, win: {} };
 function adaptKey() { return 'renying-adapt' + (ACC && ACC.name ? '-' + ACC.name : ''); }
@@ -179,7 +179,7 @@ class DummyCtrl extends Ctrl {
 }
 const TRAIN = { total: 0, hits: [], best: 0, bestDmg: 0, lastHitDmg: 0, maxHitDmg: 0, hitCount: 0, parries: 0, breaks: 0, events: [], lastBadgeT: -99, lastBadgeMsg: '', lastPetT: -99, lastStanceT: -99, labOpen: true, labTab: 'status', inspectHz: 120, inspectAcc: 0, inspectPaused: false };
 
-// 电脑：按键都由 src/ai.js 里的 AIBrain 决定，这里只是接到操作上；各侠客针对特定模式与变体的专属调优可注册进 HERO_AI_REGISTRY
+// 电脑：按键都由 src/ai/ 里的 AIBrain 决定，这里只是接到操作上；各侠客针对特定模式与变体的专属调优可注册进 HERO_AI_REGISTRY
 const HERO_AI_REGISTRY = {};
 function registerHeroAI(heroId, mode = '*', variant = '*', spec = {}) {
   HERO_AI_REGISTRY[`${heroId}:${mode}:${variant}`] = spec;

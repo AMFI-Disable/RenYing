@@ -616,7 +616,8 @@ function trainInspectUpdate() {
   const panel = $id('trainInspect');
   if (!panel) return;
   const inTrial = typeof TRIAL_RUN !== 'undefined' && TRIAL_RUN.active;
-  const active = M.mode === 'train' && !REPLAY.on && !inTrial && M.phase !== 'end' && !currentScreen;
+  // 和状态面板（trainLabUpdate）同一套条件：新手教学、守关斩妖也借用木人训练，那里不显示帧检查器
+  const active = M.mode === 'train' && !TUT && !FOREST.on && !REPLAY.on && !inTrial && M.phase !== 'end' && !currentScreen;
   panel.classList.toggle('hidden', !active || paused || DB.open);
   trainInspectRender();
   trainLabUpdate();

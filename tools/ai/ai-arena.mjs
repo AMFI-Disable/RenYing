@@ -13,7 +13,7 @@ import { aiSource, gameJs, heroData } from './ai-code.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
-// ---------- 1. 无画面沙盒：假的 window / document / canvas，载入 src/ai.js 和整个游戏 ----------
+// ---------- 1. 无画面沙盒：假的 window / document / canvas，载入 src/ai/ 和整个游戏 ----------
 // 返回的 env 能直接读写游戏的全局状态（env.A、env.M…），env.run(code) 在沙盒里执行任意代码，env.seed(n) 固定随机数
 export async function makeEnv(tuneFile) {
   const vm = await import('node:vm');

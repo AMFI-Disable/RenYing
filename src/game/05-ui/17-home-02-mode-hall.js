@@ -48,7 +48,7 @@ function menuGo(name) {
     setTimeout(() => { if (menuTransition === completed) document.body.classList.remove('menu-handoff'); }, 320);
   }, prefersReduced() ? 0 : (spot !== undefined ? MENU_DOLLY : 220));
 }
-// AI_PROFILES（每档难度的标签、介绍、关键词）从 src/data/20-levels.js 来，见 src/game/01-core.js
+// AI_PROFILES（每档难度的标签、介绍、关键词）从 src/data/20-levels.js 来，见 src/game/01-engine/01-core.js
 function updateAIBrief() {
   const lv = pickLevel || 'normal';
   const p = AI_PROFILES[lv] || AI_PROFILES.normal;

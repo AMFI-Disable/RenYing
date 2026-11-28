@@ -38,6 +38,7 @@ Rebuilds if needed and runs the main suites in one go. `--full` adds the long UI
 | HUD overlap | `node tools/audits/hud-overlap-audit.mjs ci-hud-ov 1440 900 watch2v2` | HUD text and bars never overlap or leave the canvas |
 | Touch | `node tools/audits/touch-audit.mjs ci-touch` | Phone and tablet touch controls |
 | Keyboard | `node tools/audits/kb-flow-test.mjs ci-kb 1440 900` | A new player with no mouse: language prompt → home → match → results |
+| Mode switch | `node tools/audits/mode-switch-audit.mjs ci-mode-switch 1440 900` | Quits every local mode from the pause menu: lands on the mode's own hall tab, leaves no in-match overlay behind and clears the terrain map and run scrolls before the next match |
 | Performance | `node tools/audits/perf-audit.mjs ci-perf` | Load time, panel switching and AI-vs-AI frame rate within `tools/audits/perf-budget.json` |
 | First load | `node tools/audits/firstload-audit.mjs ci-firstload 3` | First paint, largest paint, layout shift, fonts; no music on the first screen |
 | Frame data | `node tools/checks/frame-data.mjs --check` | Move timing did not change by accident |

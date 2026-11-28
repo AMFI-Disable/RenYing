@@ -379,7 +379,7 @@
   /* 首页右侧的任务、版本动态卡片：行高原来是 normal，跟着字体走（后备字体约 1.2 倍，网络字体约 1.45 倍），英文的版本动态
      还会从一行折成两行，卡片变高、整栏往上跳。英文时把行高定成网络字体下的 1.45，版本动态那行先留好两行的高度 */
   /* 以前选过英文的人打开网页：第一次绘制就给顶栏留出位置。不然首页先画在最上面，等翻译完、顶栏出来再往下挪 58px，
-     英文要多翻一遍整页，这一下挪得比中文更集中，首屏布局跳动超过 0.1（见 page.html 开头和 src/game/01-core.js 开头） */
+     英文要多翻一遍整页，这一下挪得比中文更集中，首屏布局跳动超过 0.1（见 page.html 开头和 src/game/01-engine/01-core.js 开头） */
   html.boot-en .scr.menuscr { top: var(--nav-h); }
   body.lang-en .home-side { line-height: 1.45; }
   body.lang-en .home-side .hn-line { min-height: 2.9em; }
@@ -829,3 +829,18 @@
     box-shadow: 0 0 0 3px rgba(233,196,106,.22), 0 0 18px rgba(233,196,106,.45); transition: left .09s ease-out, top .09s ease-out, width .09s ease-out, height .09s ease-out; }
   body.kbnav #kbRing.on { display: block; }
   @media (prefers-reduced-motion: reduce) { #kbRing { transition: none; } }
+
+/* 点将台在窄屏（如 1024 宽）上：招式卡标题的伤害说明可以换行，不再横向撑出卡片；
+   英文的阵位名（Vanguard 等）比 50px 的选人槽宽，和矮屏的快速车轮战一样允许在词中换行 */
+.bpmovedeck .dhitname { white-space: normal; flex-wrap: wrap; }
+html:lang(en) #bp .slot2, html:lang(en) #bp .slot2 .lab { overflow-wrap: anywhere; }
+
+/* 手机竖屏（390 宽）英文：按钮、状态条的英文比中文长，允许换行，不再撑出面板 */
+@media (max-width: 480px) {
+  .go, .ghost, .soc-status { white-space: normal; overflow-wrap: anywhere; }
+  #community .cxhead > div { flex-wrap: wrap; min-width: 0; }
+  .saga-heroes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .saga-heroes button, .saga-route { min-width: 0; overflow-wrap: anywhere; }
+  .soc-n small { white-space: normal; }
+  html #single .single-action-row .go, html #single .single-action-row .go.alt { height: auto !important; padding-top: 8px !important; padding-bottom: 8px !important; }
+}

@@ -673,6 +673,6 @@ const HERO_MOVE_SEQS = {
   }
 };
 
-// Card replays follow the phase order and timings in src/game/04-ults.js.
+// Card replays follow the phase order and timings in src/game/02-combat/04-ults/.
 // Shortened only where needed to fit the miniature loop; repeat hits stay
 // separate so the target reacts to the actual rhythm of each ultimate.

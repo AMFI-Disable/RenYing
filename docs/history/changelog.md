@@ -12,6 +12,18 @@ All notable changes, features, and architectural capabilities of this project ar
 
 - **Combat Loop Optimization, AI Determinism/Routes & Training Ergonomics (`src/game/02-combat/11-loop-*.js`, `src/ai/*.js`, `src/game/05-ui/21-buttons-02-training.js`, `tools/ai/ai-train.mjs`, `tools/tests/combat/95-overhaul-audit.mjs`)**: eliminated hot-path pose, trail, ghost, and camera allocations (16.8% faster multi-fighter simulation); routed `AIBrain.prototype.rand()` through `grnd()` during `netSim()`; added `qingfengRoute`, `yuxiaoRoute`, and ally-peel rescue in `aiTeamTactics()`; added `--report` JSON export to `tools/ai/ai-train.mjs`; added mode-isolated Training Lab hotkeys (`Backspace` reset, `F2` full meter), rolling Peak 5s DPS, and color-coded Frame Advantage; and expanded `tools/tests/combat/95-overhaul-audit.mjs` (125/125 combat checks passing). No Worker change.
 
+- Pause → Quit now returns to the mode's own hall tab (Relay, Chaos, Mayhem, Ink Ball, Altar, Party, Bastion, Grand Melee, Capture The Flag, Quad Clash, Gauntlet) instead of always going home. No Worker change.
+
+- Leaving a match clears its terrain map and run scrolls, so a Terrain Clash map no longer decides the next Relay or 2v2 arena and Sword Pagoda scrolls no longer carry into Stages. No Worker change.
+
+- The training frame inspector no longer shows over the tutorial or stage waves. No Worker change.
+
+- English mode: the training combo cards, mastery levels, second stances, AI tiers and default team tactic now show English, and long labels in the Draft, Community, Saga and Single Player panels wrap on phones instead of clipping. No Worker change.
+
+- Added `tools/audits/mode-switch-audit.mjs` to CI: it quits every local mode and fails if an overlay or match-scoped state leaks into the next screen.
+
+- Added `docs/design/mode-feature-matrix.md`, corrected stale source paths in comments and docs, and renumbered `src/data/30-ui-copy-23-training-watch.js`, `src/data/30-ui-copy-24-heirloom-and-modes.js`, `src/game/05-ui/24-account-02-legacy-lb.js` and `src/game/05-ui/24-account-03-lobby.js` so no two files share a number.
+
 - Reset airborne recovery between rounds so a previous escape cannot affect the next round.
 
 - Allowed long key binding labels to wrap in Settings so the full action name remains readable.

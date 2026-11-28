@@ -55,7 +55,7 @@ Ask the maintainer (see [security.md](https://github.com/BigBrainDevBros/RenYing
 
 ## For Developers / 开发者
 
-- Client: `src/cloud.js` (sync, tokens, offline queue) and `src/game/24-account.js` (account page).
+- Client: `src/cloud/` (sync, tokens, offline queue) and `src/game/05-ui/24-account-01-auth.js` (account page).
 - Server: `cloudflare/worker.js`; tables in `cloudflare/schema.sql`, changes as numbered files in `cloudflare/migrations/`.
 - Tests: `node tools/tests/cloud-test.mjs` and `node tools/tests/sync-test.mjs`.
 - Admin tools and roles: [docs/ops/admin.md](https://github.com/BigBrainDevBros/RenYing/blob/main/docs/ops/admin.md) (Chinese).

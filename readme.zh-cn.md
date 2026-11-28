@@ -231,10 +231,10 @@ flowchart LR
 | `src/page.html`、`src/style.css`、`src/styles/` | 页面结构（带构建标记）和按文件名顺序拼接的样式 |
 | `src/game/`| 游戏本体，按编号拆成多个文件，`tools/build.py` 按顺序拼起来 |
 | `src/data/`| 数据表：`src/data/heroes/`一位侠客一个文件，还有模式、点将台顺序、地图、电脑难度、界面英文。构建时由 `tools/checks/data-check.mjs` 检查 |
-| `src/ai.js` | 电脑对手 |
+| `src/ai/` | 电脑对手 |
 | `src/net-p2p.js` | 点对点连接 |
-| `src/cloud.js` | 账号和云存档 |
-| `src/armory-core.js`、`src/armory.js` | 武库规则和武库界面 |
+| `src/cloud/` | 账号和云存档 |
+| `src/armory-core.js`、`src/armory/` | 武库规则和武库界面 |
 | `src/anticheat.js` | 客户端完整性检查 |
 | `src/social.js`、`src/errlog.js`、`src/i18n.js` | 社区功能、错误上报、翻译查表 |
 | `src/qfx/` | 青锋行小游戏的源码 |

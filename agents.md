@@ -15,7 +15,7 @@ RenYing (刃影) is a browser fighting game with offline play, online rollback n
 | Modes, draft orders, maps | `src/data/10-modes.js`, `src/data/11-bp-orders.js`, `src/data/12-maps.js` |
 | English interface text | `src/data/30-ui-copy-*.js` (`src/i18n.js` only looks it up) |
 | Page markup and styles | `src/page.html`, `src/style.css`, numbered styles in `src/styles/` |
-| Armory and market | `src/armory-core.js`, `src/armory.js` |
+| Armory and market | `src/armory-core.js`, `src/armory/` |
 | Server | Worker source modules in `cloudflare/worker/`; generated entry points in `cloudflare/worker.js` and `cloudflare/worker.bundle.js`; migrations in `cloudflare/migrations/` |
 | Build entrypoint | `tools/build.py` |
 | AI simulation and training | `tools/ai/` |
@@ -50,7 +50,7 @@ Put new code in the numbered file that owns the feature. Do not add new top-leve
 - Combat: `node tools/tests/combat-test.mjs --sim`.
 - Netplay and rollback: `node tools/tests/netplay-test.mjs`, `node tools/tests/rollback-test.mjs`.
 - Economy and server: `node tools/tests/econ-test.mjs --bundle`, `node tools/tests/sync-test.mjs --bundle`, `node tools/tests/cloud-test.mjs`, `node tools/tests/predeploy-check.mjs`.
-- Interface (needs Chromium and a local server on port 8791): `node tools/audits/kb-flow-test.mjs`, `node tools/audits/kb-flow-test.mjs --en`, `node tools/audits/ui-audit.mjs`, `node tools/audits/touch-audit.mjs`, `node tools/audits/hud-overlap-audit.mjs`, `node tools/audits/en-coverage-audit.mjs`.
+- Interface (needs Chromium and a local server on port 8791): `node tools/audits/kb-flow-test.mjs`, `node tools/audits/kb-flow-test.mjs --en`, `node tools/audits/mode-switch-audit.mjs`, `node tools/audits/ui-audit.mjs`, `node tools/audits/touch-audit.mjs`, `node tools/audits/hud-overlap-audit.mjs`, `node tools/audits/en-coverage-audit.mjs`.
 
 Pull requests use `.github/workflows/ci.yml`, which runs repository checks on every change and selects parallel test groups from changed paths. The complete suite runs on a schedule or by manual dispatch in `.github/workflows/full-regression.yml`. Specialized workflows retain their path-triggered checks on `main` and skip duplicate work on pull requests.
 
