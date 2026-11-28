@@ -86,7 +86,7 @@ await load();
 // [name, start expression, expected screen after Pause -> Quit, expected hall tab (single only)]
 const CASES = [
   ['cpu', `startMatch('cpu', 'normal', [0, 2])`, 'menu'],
-  ['train', `startTraining('dummy')`, 'menu'],
+  ['train', `startTraining('dummy')`, 'single'],
   ['tag3', `startTag3Match([0, 1, 2], [3, 4, 5], 'normal')`, 'single', 'tag3'],
   ['chaos', `startChaos(0, 2, 'normal')`, 'single', 'chaos'],
   ['mayhem', `startMayhem(0, 2, 'normal')`, 'single', 'mayhem'],
@@ -121,12 +121,13 @@ for (const [name, start, wantScr, wantTab] of CASES) {
   await ev(`M.towerPerks = (M.towerPerks && M.towerPerks.length) ? M.towerPerks : [Object.keys(SC_BY)[0]]`);
   await ev(`clearAllHumanInputs(); paused = true; showScreen('pause')`); await sleep(200);
   await ev(`document.getElementById('quitBtn').click()`); await sleep(700);
-  const s = await ev(`({ scr: currentScreen, tab: currentSingleTab, mode: M.mode, map: M.map, perks: (M.towerPerks || []).length, foe: (M.foeScrolls || []).length, leaks: ${visibleOverlays} })`);
+  const s = await ev(`({ scr: currentScreen, tab: currentSingleTab, mode: M.mode, map: M.map, perks: (M.towerPerks || []).length, foe: (M.foeScrolls || []).length, subMode: M.subMode, cujuFour: !!M.cujuFour, kothFour: !!M.kothFour, party: M.party, raidSz: M.raidSquadSize || 0, leaks: ${visibleOverlays} })`);
   check(name, s.scr === wantScr, `quit went to #${s.scr}, expected #${wantScr}`);
   if (wantTab) check(name, s.tab === wantTab, `quit opened the ${s.tab} tab, expected ${wantTab}`);
   check(name, s.mode === 'demo', `M.mode is still ${s.mode}`);
   check(name, !s.map, `terrain map ${s.map} carried over`);
   check(name, !s.perks && !s.foe, `${s.perks + s.foe} scroll(s) carried over`);
+  check(name, !s.subMode && !s.cujuFour && !s.kothFour && !s.party && !s.raidSz, `match-scoped flags leaked: subMode=${s.subMode} cuju4=${s.cujuFour} koth4=${s.kothFour} party=${s.party} raid=${s.raidSz}`);
   check(name, !s.leaks.length, `overlays still visible: ${s.leaks.join(', ')}`);
   console.log(`  ${fails.some(f => f.startsWith(name + ':')) ? 'FAIL' : 'ok  '} ${name.padEnd(9)} -> #${s.scr}${s.scr === 'single' ? ' / ' + s.tab : ''}`);
 }

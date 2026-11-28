@@ -12,6 +12,22 @@ function say(text, dur = 1.1, style = 'big', sub = '') {
 function randomPair() { const a = Math.random() * CHARS.length | 0; let b = Math.random() * (CHARS.length - 1) | 0; if (b >= a) b++; return [a, b]; }
 // 还在等人进房间或在排队时开始单人模式：先关掉房间，免得有人进来把你拉去选人
 function netDropWaiting() { if (!NET.open && p2pActive()) { netLeave(); $id('roomCode').textContent = ''; netStatus(''); } }
+// 统一清理单局作用域状态，防止上局模式参数泄漏到下一局
+function resetMatchState(keep = {}) {
+  M.subMode = null;
+  M.cujuFour = false; M.cujuPvp = false; M.cujuTarget = 3; M.cujuChaos = false;
+  M.kothFour = false; M.kothPvp = false;
+  M.party = null; M.partyPvp = false;
+  M.bastionPvp = false;
+  M.raidSquadSize = 0;
+  M.worldKey = null;
+  M.hasBuffs = false; M.competitiveScrolls = null;
+  M.stage = null;
+  M.tag3Assist = null; M.tag3BenchHp = null;
+  M.inkZones = []; M.synergyCount = 0;
+  if (!keep.map) M.map = null;
+  if (!keep.scrolls) { M.towerPerks = []; M.foeScrolls = []; M.scRun = {}; }
+}
 function startMatch(mode, level, chars, isWatch = false) {
   // 训练场默认开启判定框透视；进入任何正式对局时强制关闭观察工具。
   debugHitbox = mode === 'train';
@@ -26,6 +42,7 @@ function startMatch(mode, level, chars, isWatch = false) {
   setChars(chars[0], chars[1]);
   if (mode === 'net') { setupNetMatch(); send({ mstart: 1 }); startRound(); return; }
   const keepMap = M.map;
+  resetMatchState({ map: true, scrolls: mode === 'tower' || mode === 'raid' || mode === 'saga' });
   M.mode = mode; M.level = level; M.wins = [0, 0]; M.round = 1; M.carry = null; M.stage = null; M.duo = duo; M.quick = false; M.map = keepMap || null; M.teamSize = 0;
   M.teamMutator = (['cpu', 'pvp', 'maps'].includes(mode) && typeof teamMutator !== 'undefined' && teamMutator === 'mayhem') ? 'mayhem' : 'normal';
   M.watchAi = !!isWatch;

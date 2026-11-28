@@ -76,7 +76,18 @@ const MODE_HANDLERS = {
     toMenuScreen: () => { singleSec('chaos'); showScreen('single'); },
   },
   saga: {
+    rematch: () => {
+      if (typeof SG !== 'undefined' && SG.hero && SG.node >= 0 && typeof sagaPlay === 'function') sagaPlay(SG.hero, SG.node);
+      else { singleSec('saga'); showScreen('single'); }
+    },
     toMenuScreen: () => { singleSec('saga'); showScreen('single'); },
+  },
+  train: {
+    toMenuScreen: () => {
+      const tab = (typeof trainSubTab === 'string' && ['trials', 'lesson', 'free', 'watch'].includes(trainSubTab)) ? trainSubTab : 'free';
+      singleSec('train-' + tab);
+      showScreen('single');
+    },
   },
   melee: {
     toMenuScreen: () => { singleSec('melee'); showScreen('single'); },   // 大型团战：退出后回习武大厅的团战页，不回首页
@@ -178,9 +189,7 @@ function toMenu(returnHome = false) {
   if (REPLAY.on) { REPLAY.on = false; const rpb = $id('rpBar'); if (rpb) rpb.classList.add('hidden'); }
   if (FOREST.on) { FOREST.on = false; FOREST.mons = []; FOREST.shots = []; B.forestProxy = false; B.hidden = false; }
   if (WORLD.on) worldLeave();
-  M.worldKey = null;
-  M.hasBuffs = false; M.competitiveScrolls = null;
-  M.stage = null;
+  const wasTut = !!TUT;
   if (TUT) endTutorial();
   // 好友房的房主在结算页，对手已经走了、房间还开着：不关房间，回到联机页继续等人
   const keepRoom = !!(NET.keepRoom && !NET.open && typeof P2P !== 'undefined' && P2P.friend && P2P.peer);
@@ -188,11 +197,11 @@ function toMenu(returnHome = false) {
   const prevMode = M.mode;
   const handler = MODE_HANDLERS[prevMode];
   if (handler && handler.onLeave) handler.onLeave();
-  // 离开对局后清掉只属于上一局的地图和秘卷：不然山河异境的地图会带进 3v3 / 2v2，问剑密卷的秘卷会带进守关
-  M.map = null;
-  M.towerPerks = []; M.foeScrolls = []; M.scRun = {};
+  // 统一清空上一局的地图、秘卷、子模式与 v1.3.0 战场状态
+  if (typeof resetMatchState === 'function') resetMatchState();
+  else { M.map = null; M.towerPerks = []; M.foeScrolls = []; M.scRun = {}; M.worldKey = null; M.hasBuffs = false; M.competitiveScrolls = null; M.stage = null; }
   M.mode = 'demo';
-  if (returnHome) showScreen('menu');
+  if (returnHome || wasTut) showScreen('menu');
   else if (handler && handler.toMenuScreen) handler.toMenuScreen();
   else showScreen('menu');
   if (prevMode !== 'demo') startMatch('demo');   // 首页背景那场比武本来就还在打，别重新摆一次
