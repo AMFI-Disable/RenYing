@@ -20,6 +20,67 @@
   font-family: ui-monospace, Menlo, monospace;
   font-size: 12px;
 }
+.rp-code-preview {
+  margin: -4px 0 10px;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: rgba(70, 211, 234, 0.12);
+  border: 1px solid rgba(70, 211, 234, 0.35);
+  color: #bff4ff;
+  font-size: 12px;
+}
+.rp-filter-bar {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 10px;
+  flex-wrap: wrap;
+}
+.rp-filter-bar select,
+.rp-filter-bar input {
+  padding: 6px 10px;
+  border-radius: 6px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: rgba(10, 15, 25, 0.65);
+  color: #efe8d8;
+  font-size: 12.5px;
+}
+.rp-filter-bar input { flex: 1; min-width: 160px; }
+.rprow.is-pinned { border-color: rgba(233, 196, 106, 0.55); background: rgba(233, 196, 106, 0.08); }
+.rp-pin-tag {
+  display: inline-block;
+  margin-right: 6px;
+  padding: 1px 6px;
+  border-radius: 999px;
+  background: rgba(233, 196, 106, 0.22);
+  border: 1px solid rgba(233, 196, 106, 0.55);
+  color: #f4d88c;
+  font-size: 12px;
+  vertical-align: middle;
+}
+.rp-pin-btn.is-pinned { border-color: rgba(233, 196, 106, 0.65); color: #f4d88c; }
+.ad-season-hist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  background: rgba(15, 22, 36, 0.55);
+  border: 1px solid rgba(233, 196, 106, 0.22);
+  font-size: 12px;
+}
+.ad-sh-label { color: var(--gold); font-weight: 700; margin-right: 4px; }
+.ad-sh-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  color: #efe8d8;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+}
 .rp-scrub-wrap {
   display: inline-flex;
   align-items: center;

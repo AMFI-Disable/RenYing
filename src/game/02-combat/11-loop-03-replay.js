@@ -1,6 +1,6 @@
 // ======================= 对战回放 =======================
 // 对战的逻辑完全由“开场状态 + 每一帧双方的操作”决定，所以只记操作，回放时重新算一遍
-const RP_KEY = 'renying-replays', RP_MAX = 10, RP_KEYFRAME_EVERY = 120, RP_KEYFRAME_MAX = 240, RP_CODE_PREFIX = 'RYRP2:';
+const RP_KEY = 'renying-replays', RP_MAX = 10, RP_PIN_MAX = 5, RP_KEYFRAME_EVERY = 120, RP_KEYFRAME_MAX = 240, RP_CODE_PREFIX = 'RYRP2:';
 function rpStripForCode(m) {
   if (!m || typeof m !== 'object') return null;
   const keep = ['v', 'kind', 'mode', 'room', 'ranked', 'sub', 'four', 'raid', 'large', 'teamCount', 'teamSize', 'fighterCount', 'ch', 'ch4', 'chAll', 'pl', 'slots', 'names', 'skins', 'w', 'wins', 'frames', 't', 'level', 'playerSide', 'mapActive', 'stats', 'competitiveScrolls', 'raidSquadSize', 'raidWave', 'tag3', 'teams', 'teamIdx', 'round', 'mutator', 'towerFloor', 'scrolls', 'chapter', 'chapterNode', 'runId', 'st0', 'ev'];
@@ -126,6 +126,17 @@ function recNet() {
   }
 }
 function rpList() { try { const l = JSON.parse(localStorage.getItem(RP_KEY) || '[]'); return Array.isArray(l) ? l : []; } catch (e) { return []; } }
+function rpTrimList(list) {
+  if (!Array.isArray(list)) return [];
+  while (list.length > RP_MAX) {
+    let drop = -1;
+    for (let i = list.length - 1; i >= 0; i--) { if (!(list[i] && list[i].pinned)) { drop = i; break; } }
+    if (drop >= 0) list.splice(drop, 1);
+    else list.pop();
+  }
+  list.sort((a, b) => ((b && b.pinned) ? 1 : 0) - ((a && a.pinned) ? 1 : 0));
+  return list;
+}
 function rpStore(list) {
   for (;;) {
     try { localStorage.setItem(RP_KEY, JSON.stringify(list)); return; }
@@ -217,6 +228,7 @@ function trEpisodes(m) {
   }
   return episodes;
 }
+function trSamples(m) { return trEpisodes(m).flatMap(ep => ep.rows); }
 function trSet() { try { const l = JSON.parse(localStorage.getItem(TR_KEY) || '[]'); return Array.isArray(l) ? l : []; } catch (e) { return []; } }
 function trSetSave(list) {
   try { localStorage.setItem(TR_KEY, JSON.stringify(list.slice(-TR_SET_MAX))); return true; } catch (e) { return false; }
@@ -268,7 +280,7 @@ function recSave(w) {
   }
   RP.last = m;
   M.reviewReady = true;
-  const list = rpList(); list.unshift(m); while (list.length > RP_MAX) list.pop();
+  const list = rpList(); list.unshift(m); rpTrimList(list);
   rpStore(list);
   if (typeof aiTrainMatch === 'function') aiTrainMatch(m, M.worldKey ? 'world' : undefined);
   return m;
@@ -279,7 +291,7 @@ function rpRunBegin(mode) {
 function rpRunStore(replay) {
   const list = rpList(), prior = list.findIndex(x => x && x.runId === replay.runId);
   if (prior >= 0) list.splice(prior, 1);
-  list.unshift(replay); while (list.length > RP_MAX) list.pop();
+  list.unshift(replay); rpTrimList(list);
   rpStore(list);
 }
 function rpRunReplay(run, winner) {
@@ -624,160 +636,7 @@ function replayModeTag(m) {
   if (m.mode === 'saga') return `${cvT('侠客列传')} · ${cvT(CHARS.find(c => c.id === m.chapter)?.name || '')} · ${cvT('第')} ${(m.chapterNode || 0) + 1}`;
   return cvT('本地对战');
 }
-function renderReplays() {
-  const list = rpList(), setN = trSet().length;
-  // 训练集是本机攒下来的样本（导入的 .jsonl 并在这里），能整包导出、也能清掉
-  const trRow = setN ? `<div class="rprow"><div class="rpm"><div class="rpt">训练集</div><div class="rps">${setN} 个样本</div></div><div style="display:flex;gap:6px;"><button class="ghost" data-trdl="1">导出</button><button class="ghost" data-trclear="1">清空</button></div></div>` : '';
-  $id('rpList').innerHTML = (list.length ? list.map((m, i) => `<div class="rprow"><div class="rpm"><div class="rpt">${escapeHTML(rpTitle(m))}</div><div class="rps">${escapeHTML(rpSub(m))}</div></div><div style="display:flex;gap:6px;flex-wrap:wrap;"><button class="go" data-rp="${i}">播放</button><button class="ghost" data-rpcode="${i}">回放码</button><button class="ghost" data-rptrain="${i}">训AI</button><button class="ghost" data-rpexp="${i}">导出</button><button class="ghost" data-rpdel="${i}">删除</button></div></div>`).join('')
-    : uiState('empty', '还没有回放。完成一场支持录像的战斗后，回放会自动保存在这里。')) + trRow;
-}
-$id('rpList').addEventListener('click', e => {
-  const b = e.target.closest('button'); if (!b) return;
-  const list = rpList();
-  if (b.dataset.trdl !== undefined) {
-    const set = trSet();
-    if (trDownload(set, `renying-train-set_${Date.now()}.jsonl`)) toast(`已导出训练集：${set.length} 个样本`);
-    return;
-  }
-  if (b.dataset.trclear !== undefined) {
-    try { localStorage.removeItem(TR_KEY); } catch (e) {}
-    renderReplays(); toast('训练集已清空');
-    return;
-  }
-  if (b.dataset.rp !== undefined) { const m = list[+b.dataset.rp]; if (m) startReplay(m); }
-  else if (b.dataset.rpcode !== undefined) {
-    const m = list[+b.dataset.rpcode];
-    if (!m) return;
-    try {
-      const code = rpEncodeCode(m);
-      if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(code).then(() => toast('回放码已复制到剪贴板')).catch(() => toast('回放码已生成'));
-      else toast('回放码已生成');
-    } catch (err) { toast(err.message || '生成回放码失败'); }
-  }
-  else if (b.dataset.rpdel !== undefined) { list.splice(+b.dataset.rpdel, 1); rpStore(list); renderReplays(); }
-  else if (b.dataset.rptrain !== undefined) {
-    const m = list[+b.dataset.rptrain];
-    if (!m) return;
-    const samples = trSamples(m);
-    if (!samples.length) {
-      // 老版本录的回放、或从别处导入的回放里没有逐帧状态：说清楚，别再造一份假的出来
-      toast('这局没有采集到逐帧状态（旧版本录的或导入的回放），没法生成训练轨迹');
-      return;
-    }
-    if (trDownload(samples, `user_fight_${m.t || Date.now()}.jsonl`)) {
-      toast(`已导出这一局的真实轨迹：${samples.length} 个样本（s = 19 维状态，a = 按键位掩码，r = 本帧回血/掉血与终局胜负）`);
-    }
-  }
-  else if (b.dataset.rpexp !== undefined) {
-    const m = list[+b.dataset.rpexp];
-    if (!m) return;
-    const blob = new Blob([JSON.stringify(m, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `RenYing-Replay-${m.t || Date.now()}.json`;
-    a.click();
-    setTimeout(() => URL.revokeObjectURL(url), 1000);
-    toast('录像已导出');
-  }
-});
-if ($id('rpTrainUploadBtn')) {
-  $id('rpTrainUploadBtn').addEventListener('click', () => {
-    const inp = document.createElement('input');
-    inp.type = 'file';
-    inp.accept = '.json,.jsonl,application/json';
-    inp.onchange = e => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = evt => {
-        try {
-          const txt = evt.target.result;
-          if (file.name.endsWith('.jsonl')) {
-            // 逐行真的读进来，并进训练集；坏行报数字，不再只是弹个提示然后把文件丢掉
-            const r = trImportText(txt);
-            if (!r.added) throw new Error(r.bad.length ? `没有可用的样本（第 ${r.bad.slice(0, 3).join('、')} 行格式不对）` : '文件里没有样本');
-            if (r.ok === false) throw new Error('本机空间不够，训练集没存下');
-            renderReplays();
-            toast(`已加入 ${r.added} 个样本${r.bad.length ? `（跳过 ${r.bad.length} 行格式不对的）` : ''} · 训练集共 ${r.total} 个`);
-          } else {
-            const m = JSON.parse(txt);
-            if (!m || !Array.isArray(m.ch)) throw new Error('无效战局录像');
-            const list = rpList();
-            list.unshift(m);
-            while (list.length > RP_MAX) list.pop();
-            rpStore(list);
-            renderReplays();
-            toast('战局已成功导入！点击「训AI」即可生成训练数据集');
-          }
-        } catch (err) {
-          toast(err.message || '战局上传失败');
-        }
-      };
-      reader.readAsText(file);
-    };
-    inp.click();
-  });
-}
-if ($id('rpImportBtn')) {
-  $id('rpImportBtn').addEventListener('click', () => {
-    const inp = document.createElement('input');
-    inp.type = 'file';
-    inp.accept = '.json,application/json';
-    inp.onchange = e => {
-      const file = e.target.files && e.target.files[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = evt => {
-        try {
-          const m = JSON.parse(evt.target.result);
-          if (!m || !m.ev || !m.st0 || !Array.isArray(m.ch)) {
-            throw new Error('录像文件格式不正确');
-          }
-          const list = rpList();
-          list.unshift(m);
-          while (list.length > RP_MAX) list.pop();
-          rpStore(list);
-          renderReplays();
-          toast('录像导入成功');
-        } catch (err) {
-          toast(err.message || '录像解析失败');
-        }
-      };
-      reader.readAsText(file);
-    };
-    inp.click();
-  });
-}
-if ($id('rpCodeImportBtn')) {
-  $id('rpCodeImportBtn').addEventListener('click', () => {
-    const box = $id('rpCodeBox'), inp = $id('rpCodeIn');
-    if (!box) return;
-    box.classList.toggle('hidden');
-    if (!box.classList.contains('hidden') && inp) { inp.value = ''; inp.focus(); }
-  });
-}
-if ($id('rpCodeCancelBtn')) {
-  $id('rpCodeCancelBtn').addEventListener('click', () => {
-    if ($id('rpCodeBox')) $id('rpCodeBox').classList.add('hidden');
-  });
-}
-if ($id('rpCodeApplyBtn')) {
-  $id('rpCodeApplyBtn').addEventListener('click', () => {
-    const inp = $id('rpCodeIn');
-    if (!inp) return;
-    try {
-      const m = rpDecodeCode(inp.value);
-      const list = rpList();
-      list.unshift(m);
-      while (list.length > RP_MAX) list.pop();
-      rpStore(list);
-      if ($id('rpCodeBox')) $id('rpCodeBox').classList.add('hidden');
-      renderReplays();
-      toast('回放码导入成功');
-    } catch (err) { toast(err.message || '回放码导入失败'); }
-  });
-}
+// 回放库界面、置顶保护、筛选搜索与回放码预览已拆分至 11-loop-03c-replay-ui.js
 function startReplay(m) {
   if (!m || !m.ev || !m.st0) return;
   debugHitbox = false;
