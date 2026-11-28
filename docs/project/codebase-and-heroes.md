@@ -31,7 +31,7 @@ The pages at the repository root (`index.html`, `renying-offline.html`, `assets/
 | `src/page.html` + `src/pages/` | ~109-line shell + 6 partials | HTML shell expanding `<!--@partial:pages/...-->`, `<!--@style-->`, `<!--@music-->`, `<!--@scripts-->`, `<!--@qfx-->` across 26 `.scr` screens. |
 | `src/style.css` + `src/styles/` | Modular CSS | Base tokens plus numbered per-page/feature modules (`20-*` through `87-shared-modal-host.css`, min 12px typography). |
 | `src/ai/` | 5 modular JS files | Modular combat AI (`01-kit-and-profiles.js` through `05-brain-hero-routes-and-team.js`) loaded by `tools/build.py` and `tools/ai/ai-code.mjs`. |
-| `src/game/` | Modular JS | Domain layers: `01-engine/`, `02-combat/`, `03-render/` (including `15-skin-weapons/`), `04-modes/` (including `22-modes-12-bastion/`), `05-ui/`. |
+| `src/game/` | Modular JS | Domain layers: `01-engine/`, `02-combat/` (including `09-actions-03-fighter/`), `03-render/` (including `15-skin-weapons/`), `04-modes/` (including `22-modes-12-bastion/`, `22-modes-17-command/`, `22-modes-18-tournament/`), `05-ui/` (including `18-codex-content/`). |
 | `src/data/` | Modular JS | 20 hero definitions (`heroes/`), modes, maps, combo trials, guides, and bilingual UI copy (`30-ui-copy-*.js`). |
 | `src/net-p2p.js` | WebRTC/PeerJS | Serverless P2P transport, online tournaments, and read-only live spectating (`P2P.specs`). |
 | `src/cloud/` | 4 modular JS files | Cloudflare Worker + D1 cloud account client (`01-config-and-ledgers.js` – `04-sync-and-accounts.js`), ledgers, rotating refresh tokens, local fallback (`window.CloudSave`). |
