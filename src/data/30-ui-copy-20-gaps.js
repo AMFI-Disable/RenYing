@@ -600,5 +600,24 @@ Object.assign(UI_COPY_EN, {
   "锋矢强攻": "Spear Push",
   "铁壁护阵": "Wall Defense",
   "包抄后排": "Backline Flank",
-  "智策自适应": "Smart Adaptive Tactic"
+  "智策自适应": "Smart Adaptive Tactic",
+  // v1.3.0: 援护换阵、跨侠客武学共鸣、泼墨山河与复盘接管
+  "援": "Ast",
+  "援护": "Assist",
+  "换阵连携": "Hot-Tag Swap",
+  "武学共鸣": "Synergy",
+  "炽风烈卷": "Flame Cyclone",
+  "墨雷导引": "Conductive Ink",
+  "玄冰碎甲": "Frost Shatter",
+  "月箫和鸣": "Harmonic Echo",
+  "影锁夺魂": "Shadow Hook",
+  "御风逐羽": "Gale Feather",
+  "玄壁鸾护": "Iron Aegis",
+  "千丝合鸣": "Silk Resonance",
+  "墨爆": "Ink Flash",
+  "战局墨卷": "Battle Scroll",
+  "接管此局": "Take Over",
+  "复盘接管 · 8秒残局演练": "Replay Takeover · 8s Drill",
+  "已重置残局接管帧": "Takeover frame reset",
+  "已导出本局战局墨卷": "Battle Scroll PNG exported"
 });

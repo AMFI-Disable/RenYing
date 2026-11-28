@@ -157,6 +157,9 @@ function startRound() {
   if (typeof ctfOn === 'function' && ctfOn()) ctfRoundInit();
   if (typeof gauntletOn === 'function' && gauntletOn()) gauntletRoundInit();
   battlePerksInit();
+  if (typeof tag3AssistInit === 'function') tag3AssistInit();
+  if (typeof inkZoneInit === 'function') inkZoneInit();
+  M.synergyCount = 0;
   hitstop = slowmo = superFreeze = 0; particles.length = 0; decoys.length = 0; projs.length = 0;
   for (const cu of comboUI) cu.t = 0;
   if (M.mode !== 'demo' && M.mode !== 'train') {

@@ -369,6 +369,7 @@ function tryHit(f, foe, m) {
           ring(cx, cy, 140, '255,225,120', 0.35);
           for (let i = 0; i < 7; i++) addP({ type: 'spark', x: cx, y: cy, vx: rand(-260, 260), vy: rand(-260, 260), rgb: '255,220,120', life: 0.22, max: 0.22 });
           addP({ type: 'text', text: '⚔️ 拼刀', x: cx, y: cy - 40, life: 0.6, max: 0.6, rgb: '255,225,120' });
+          if (typeof inkZoneOnClash === 'function') inkZoneOnClash(cx, cy, f, primary);
           return;
         }
       }

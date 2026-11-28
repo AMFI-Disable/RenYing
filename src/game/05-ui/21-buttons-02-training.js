@@ -360,6 +360,7 @@ function trainLabFullMeter() {
   trainLabRender(true);
 }
 function trainLabReset() {
+  if (typeof REPLAY_TAKEOVER !== 'undefined' && REPLAY_TAKEOVER.active && typeof replayTakeoverReset === 'function') { replayTakeoverReset(); return; }
   if (M.mode !== 'train' || !A || !B) return;
   A.reset(STAGE_W / 2 - 180); A.face = 1; A.meter = 0;
   const isDummy = !!B.dummy;
@@ -684,6 +685,7 @@ if ($id('dummyBar')) {
     if (e.ctrlKey || e.metaKey || e.altKey) return;
     const tag = e.target && e.target.tagName;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+    if (typeof REPLAY_TAKEOVER !== 'undefined' && REPLAY_TAKEOVER.active && e.code === 'Escape' && !e.repeat) { e.preventDefault(); e.stopImmediatePropagation(); replayTakeoverExit(); return; }
     if (DB.open && (e.code === 'Escape' || (e.code === dummyBarKey() && dummyBarKey() !== 'Tab'))) { e.preventDefault(); e.stopImmediatePropagation(); dummyBarShow(false); return; }
     if (!DB.open && !e.repeat && dummyBarAvail() && !paused && !document.querySelector('.scr.on')) {
       if (e.code === dummyBarKey()) {

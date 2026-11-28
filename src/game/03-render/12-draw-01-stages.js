@@ -443,6 +443,8 @@ function drawGround() {
       ctx.restore();
     }
   }
+  // 泼墨山河：确定性残墨晕染（上限 12 处）
+  if (typeof drawLivingInkZones === 'function') drawLivingInkZones();
   // 地面重击裂痕 / 焦痕
   if (ARENA2V2.scars && ARENA2V2.scars.length) {
     for (let i = ARENA2V2.scars.length - 1; i >= 0; i--) {
