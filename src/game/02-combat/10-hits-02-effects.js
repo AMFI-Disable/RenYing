@@ -382,6 +382,7 @@ function applyHit(att, def, m, pt) {
   if (!m.ult) att.meter = Math.min(100, att.meter + m.dmg * 0.18 * mm * chaosMeterMul * relicMeterMul);
   def.meter = Math.min(100, def.meter + m.dmg * (m.isProj ? 0.08 : 0.14));
   if (typeof applyCombatBadgeHit === 'function') applyCombatBadgeHit(att, def, m, ev);
+  if (typeof checkCrossHeroSynergy === 'function') checkCrossHeroSynergy(att, def, m, pt);
   if (!m.noStun || def.hp <= 0) def.move = null;
   if (isBlockedCs2 && def.hp > 0) {
     // 格挡满蓄力斩：强制被压倒在地（保留当前层高），伤害减轻且快速起身
@@ -452,6 +453,9 @@ function applyHit(att, def, m, pt) {
   if (def.hp <= 0 && M.phase === 'fight') {
     def.vx = fx * 480; def.vy = Math.min(def.vy, -520); def.state = 'launched'; def.plat = -1; def.y = Math.min(def.y - 1, -1);
     fighterDown(def, att, ev);
+  }
+  if (typeof inkZoneSpawn === 'function' && !ev.blk && (ev.ko || ev.guardBreak || ev.big || (ev.dd || 0) >= 22)) {
+    inkZoneSpawn(def.x, def.y, ev.ko ? 78 : ev.guardBreak ? 68 : 52, att.look && att.look.slash ? att.look.slash : '28,32,48', ev.ko ? 'ko' : ev.guardBreak ? 'break' : 'heavy');
   }
   hitVisual(ev); netEmit(ev);
 }

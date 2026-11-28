@@ -635,6 +635,23 @@ function drawHUD() {
         }
         ctx.restore();
       }
+      if (typeof tag3BenchSlot === 'function' && tag3BenchSlot(i)) {
+        const ax = i === 0 ? cx - gap - 14 - slotTitles.length * 26 : cx + gap + 14 + slotTitles.length * 26;
+        const ay = top + bh + 18;
+        const cd = (M.tag3Assist && M.tag3Assist.cd && M.tag3Assist.cd[i]) || 0;
+        const ready = cd <= 0.05 && f.meter >= (typeof TAG3_ASSIST_COST !== 'undefined' ? TAG3_ASSIST_COST : 25);
+        ctx.save();
+        ctx.translate(ax, ay);
+        ctx.fillStyle = ready ? 'rgba(233,196,106,0.28)' : 'rgba(255,255,255,0.08)';
+        ctx.strokeStyle = ready ? '#e9c46a' : 'rgba(255,255,255,0.28)';
+        ctx.lineWidth = ready ? 1.4 : 1;
+        ctx.beginPath(); ctx.arc(0, 0, 9, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+        ctx.font = `bold 12px ${BODY_FONT}`;
+        ctx.fillStyle = ready ? '#ffe9a8' : 'rgba(239,232,216,0.55)';
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        ctx.fillText(cd > 0.05 ? String(Math.ceil(cd)) : cvT('援'), 0, 1);
+        ctx.restore();
+      }
     } else if (M.mode !== 'world' && !cujuOn()) {
       for (let r = 0; r < 2; r++) {
         const px = i === 0 ? cx - gap - 12 - r * 20 : cx + gap + 12 + r * 20, py = top + bh + 18;

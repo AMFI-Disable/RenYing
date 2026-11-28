@@ -38,17 +38,20 @@ function tryTacticalKeys(f, foe) {
       if (!RESIM) addP({ type: 'text', text: `${cvT('令')} · ${cvT('智策')}（${cvT('智能自适应')}）`, x: f.x, y: f.y - 132, life: 0.9, max: 0.9, rgb: '233,196,106' });
     }
   }
-  if (f.rallyCD <= 0 && c.consume('rally')) {
-    f.rallyCD = 6.0;
-    for (const mate of sideFighters(fighterTeam(f))) {
-      if (!mate.hidden && mate.hp > 0 && Math.abs(mate.x - f.x) < 620) {
-        mate.guard = Math.min(mate.maxGuard || 100, (mate.guard || 0) + 12);
+  if (c.consume('rally')) {
+    if (typeof tryTag3Assist === 'function' && tryTag3Assist(f, foe, !!(c.held && c.held.down))) return true;
+    if (f.rallyCD <= 0) {
+      f.rallyCD = 6.0;
+      for (const mate of sideFighters(fighterTeam(f))) {
+        if (!mate.hidden && mate.hp > 0 && Math.abs(mate.x - f.x) < 620) {
+          mate.guard = Math.min(mate.maxGuard || 100, (mate.guard || 0) + 12);
+        }
       }
-    }
-    if (!RESIM) {
-      ring(f.x, f.y - 56, 145, '233,196,106', 0.45);
-      addP({ type: 'text', text: '战意号令!', x: f.x, y: f.y - 122, life: 0.85, max: 0.85, rgb: '255,220,130' });
-      SFX.gong ? SFX.gong() : SFX.dash();
+      if (!RESIM) {
+        ring(f.x, f.y - 56, 145, '233,196,106', 0.45);
+        addP({ type: 'text', text: '战意号令!', x: f.x, y: f.y - 122, life: 0.85, max: 0.85, rgb: '255,220,130' });
+        SFX.gong ? SFX.gong() : SFX.dash();
+      }
     }
   }
   if (f.petCD <= 0 && c.consume('pet')) {

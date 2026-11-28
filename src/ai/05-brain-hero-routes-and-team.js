@@ -264,6 +264,13 @@ Object.assign(AIBrain.prototype, {
     if ((foe.guard || 100) < 30 && d < 200 && this.L.punish >= 0.5 && foe.state === 'block' && this.chance(0.45)) {
       this.startCharge(me, foe, d, 'cs2'); return true;
     }
+    // 5. 跨侠客武学共鸣窗口：队友刚挂上可触发共鸣的标记时主动跟进引爆
+    if (foe.synTag && foe.synTag.team === myTeam && (clock - foe.synTag.t) < 2.0 && typeof hasCrossHeroSynergyPair === 'function' && hasCrossHeroSynergyPair(me.ch.id, foe.synTag.heroId)) {
+      if (d < 260 && me.skillCD <= 0 && this.chance(0.55 * this.L.skill)) {
+        this.stopAll(); this.press('skill', 'synergy_detonate'); return true;
+      }
+      if (d < 340 && d > 90 && !this.queue.length) { this.dir = to; return true; }
+    }
     return false;
   },
   lingqueRoute(me, foe, d, to) {
