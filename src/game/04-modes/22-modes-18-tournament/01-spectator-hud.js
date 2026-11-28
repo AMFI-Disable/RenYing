@@ -154,6 +154,16 @@ function specHudRender(force = false) {
     pillsEl.innerHTML = autoBtn + fighterBtns;
   }
   if (tickerEl) {
+    const extra = [];
+    if (Array.isArray(M.inkZones) && M.inkZones.length) extra.push(`${cvT('残墨')} ${M.inkZones.length}/12`);
+    if (M.mode === 'tag3' && M.tag3Assist && Array.isArray(M.tag3Assist.cd)) {
+      const cd0 = M.tag3Assist.cd[0] > 0.1 ? `${Math.ceil(M.tag3Assist.cd[0])}s` : cvT('就绪');
+      const cd1 = M.tag3Assist.cd[1] > 0.1 ? `${Math.ceil(M.tag3Assist.cd[1])}s` : cvT('就绪');
+      extra.push(`${cvT('援')} ${cd0}/${cd1}`);
+    }
+    const synActive = active.some(f => f && f.synTag && (clock - f.synTag.t) < 2.4);
+    if (synActive) extra.push(cvT('武学共鸣'));
+    const suffix = extra.length ? `  |  ${extra.join(' · ')}` : '';
     if (SPEC_HUD.focusIdx < 0 && active.length >= 2) {
       const fmtSide = f => {
         const st = (M.combatStats && M.combatStats[f.idx]) || {};
@@ -161,14 +171,14 @@ function specHudRender(force = false) {
         const fn = cvT(f.look ? f.look.name : f.ch.name);
         return `${fn} (${cvT('架势')}${gPct}% · ${cvT('伤害')}${Math.round(+st.damage || 0)} · ${cvT('连击')}${+st.combo || 0})`;
       };
-      tickerEl.textContent = `${fmtSide(active[0])}  VS  ${fmtSide(active[1])}`;
+      tickerEl.textContent = `${fmtSide(active[0])}  VS  ${fmtSide(active[1])}${suffix}`;
     } else {
       const focusF = SPEC_HUD.focusIdx >= 0 ? fighterByIdx(SPEC_HUD.focusIdx) : active[0];
       const st = M.combatStats && focusF ? (M.combatStats[focusF.idx] || {}) : {};
       const dmg = Math.round(+st.damage || 0), maxC = +st.combo || 0, brk = +st.breaks || 0;
       const gPct = focusF ? Math.round(clamp((focusF.guard || 0) / Math.max(1, focusF.maxGuard || 100), 0, 1) * 100) : 0;
       const fname = focusF ? cvT(focusF.look ? focusF.look.name : focusF.ch.name) : '—';
-      tickerEl.textContent = `${fname} · ${cvT('架势')} ${gPct}% · ${cvT('伤害')} ${dmg} · ${cvT('最长连击')} ${maxC} · ${cvT('破防')} ${brk}`;
+      tickerEl.textContent = `${fname} · ${cvT('架势')} ${gPct}% · ${cvT('伤害')} ${dmg} · ${cvT('最长连击')} ${maxC} · ${cvT('破防')} ${brk}${suffix}`;
     }
   }
 }

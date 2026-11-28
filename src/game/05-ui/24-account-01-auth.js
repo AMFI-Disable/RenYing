@@ -49,7 +49,7 @@ function renderAcc() {
         expAll.className = 'ghost small';
         expAll.style.cssText = 'font-size:12px;padding:3px 10px;color:var(--gold)';
         expAll.title = '将本机所有账号与数据打包备份';
-        expAll.textContent = '📦 备份所有账号';
+        expAll.textContent = '备份所有账号';
         expAll.addEventListener('click', () => {
           if (window.CloudSave) {
             try {
@@ -172,6 +172,22 @@ function agoText(t) {
   return new Date(t).toLocaleString();
 }
 function curName() { const u = window.CloudSave && CloudSave.getUser(); return (u && u.name) || ACC.name || ''; }
+function rkPeakArchive(curState) {
+  const s = curState || (typeof rkState === 'function' ? rkState() : {});
+  const hist = (PROF && PROF.rkHist && typeof PROF.rkHist === 'object') ? PROF.rkHist : {};
+  let bestPts = Math.max(0, +s.peak || 0), bestSeason = bestPts ? (rkSeason().id || 'S2') : '';
+  const entries = [];
+  for (const [sid, rec] of Object.entries(hist)) {
+    if (!rec || typeof rec !== 'object') continue;
+    const pk = Math.max(0, +rec.peak || +rec.pts || 0);
+    const pts = Math.max(0, +rec.pts || pk);
+    const label = rec.label || (pk ? rkTier(pk).label : '—');
+    entries.push({ sid, pts, peak: pk, label });
+    if (pk > bestPts) { bestPts = pk; bestSeason = sid; }
+  }
+  entries.sort((a, b) => a.sid.localeCompare(b.sid));
+  return { bestPts, bestSeason, bestLabel: bestPts ? rkTier(bestPts).label : '—', entries };
+}
 function renderAccPage() {
   if (!$id('accDash')) return;
   const u = window.CloudSave && CloudSave.getUser(), name = curName();
@@ -180,6 +196,7 @@ function renderAccPage() {
   $id('accFootNote').classList.toggle('hidden', !!name);
   if (!name) return;
   const s = rkState(), placed = rkPlaced(s), t = placed ? rkTier(s.pts) : null;
+  const arch = rkPeakArchive(s);
   $id('adAvatar').textContent = name.slice(0, 1);
   $id('adAvatar').style.setProperty('--tier', placed ? RK_TIERS[t.li].c1 : '#8a94a3');
   $id('adName').textContent = name;
@@ -193,9 +210,16 @@ function renderAccPage() {
     ['皮肤', String((PROF.skins || []).length)],
     ['联机战绩', `${w} 胜 ${l} 负`, w + l ? `胜率 ${Math.round(w / (w + l) * 100)}%` : ''],
     ['本赛季排位', `${s.w} 胜 ${s.l} 负`, rkSeason().pre ? '季前赛' : SEASON.name],
-    ['赛季最高', s.peak ? rkTier(s.peak).label : '—', s.peak ? s.peak.toLocaleString() + ' 分' : ''],
+    [arch.entries.length ? '历史最高' : '赛季最高', arch.bestPts ? arch.bestLabel : '—', arch.bestPts ? `${arch.bestPts.toLocaleString()} 分${arch.bestSeason && arch.entries.length ? ' · ' + arch.bestSeason : ''}` : ''],
   ];
   $id('adStats').innerHTML = stats.map(([k, v, sub]) => `<div class="ad-stat"><span>${k}</span><b>${escapeHTML(v)}</b>${sub ? `<small>${escapeHTML(sub)}</small>` : ''}</div>`).join('');
+  const histEl = $id('adSeasonHist');
+  if (histEl) {
+    histEl.classList.toggle('hidden', !arch.entries.length);
+    histEl.innerHTML = arch.entries.length
+      ? `<span class="ad-sh-label">${cvT('赛季履历')}</span>` + arch.entries.map(e => `<span class="ad-sh-chip">${escapeHTML(e.sid)} · ${escapeHTML(e.label)} (${e.peak.toLocaleString()})</span>`).join('')
+      : '';
+  }
   renderAccSync();
   renderAccDevices();
 }
@@ -276,7 +300,7 @@ if ($id('adPromoteBtn')) {
       const loaded = await CloudSave.loadProfile();   // 换成服务器认的那份（墨锭以服务器为准）
       if (loaded) applyProfile(loaded);
       renderAccPage();
-      $id('adMsg').textContent = '✅ 已成功升级为云端账号并同步！';
+      $id('adMsg').textContent = '已成功升级为云端账号并同步！';
       toast('已成功升级为云端账号！');
     } catch (e) {
       $id('adMsg').textContent = '升级失败：' + e.message;
@@ -291,7 +315,7 @@ $id('adPull').addEventListener('click', async () => {
     applyProfile(d);
     RKS = null;
     renderAccPage();
-    $id('adMsg').textContent = '✅ 云端与本地已智能融合同步完成';
+    $id('adMsg').textContent = '云端与本地已智能融合同步完成';
     toast('云端存档双向合并同步成功！');
   } catch (e) {
     $id('adMsg').textContent = e.message;

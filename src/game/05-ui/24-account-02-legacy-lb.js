@@ -125,7 +125,7 @@ function claimLegacyAccount(accData) {
 if ($id('toggleImportBoxBtn')) {
   $id('toggleImportBoxBtn').addEventListener('click', () => {
     $id('importBox').classList.toggle('hidden');
-    $id('toggleImportBoxBtn').textContent = $id('importBox').classList.contains('hidden') ? '📜 存档导入与继承' : '收起导入设置';
+    $id('toggleImportBoxBtn').textContent = $id('importBox').classList.contains('hidden') ? '存档导入与继承' : '收起导入设置';
   });
 }
 
@@ -315,9 +315,11 @@ async function openLeaderboard() {
         lbShow('', uiState('empty', msg), '');
         return;
       }
+      const myHist = activeSeason !== curSeason.id && PROF && PROF.rkHist && PROF.rkHist[activeSeason];
+      const myNote = myHist ? ` · ${cvT('你的历史成绩')}：${myHist.label || rkTier(myHist.peak || myHist.pts || 0).label} (${(myHist.peak || myHist.pts || 0).toLocaleString()})` : '';
       const note = activeSeason === curSeason.id
         ? `本赛季打满 ${RK.PLACE} 场定级赛后上榜。段位从低到高：${RK_TIERS.map(t => t.l + ' ' + t.n).join('、')}`
-        : `${lbSeasonLabel(activeSeason)} 赛季历史归档榜单（共 ${j.list.length} 位上榜侠客）`;
+        : `${lbSeasonLabel(activeSeason)} 赛季历史归档榜单（共 ${j.list.length} 位上榜侠客）${myNote}`;
       lbShow(note, '',
         '<tr><th>名次</th><th>昵称</th><th>段位</th><th class="n">段位分</th></tr>' + j.list.map((r, i) =>
         `<tr class="${i < 3 ? 'top' + (i + 1) : ''}${r.me ? ' me' : ''}"><td class="rk">${i + 1}</td><td>${escapeHTML(r.name)}${r.me ? '（你）' : ''}</td><td>${escapeHTML(rkTier(r.pts).label + ' · ' + rkTier(r.pts).name)}</td><td class="n">${r.pts}</td></tr>`).join(''));
