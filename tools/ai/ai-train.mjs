@@ -18,6 +18,7 @@
 import { readFileSync, writeFileSync, existsSync, appendFileSync } from 'node:fs';
 import os from 'node:os';
 import { ARENA_MODES, Pool, HEROES, NAMES, score } from './ai-arena.mjs';
+import { aiSource } from './ai-code.mjs';
 
 import { fileURLToPath } from 'node:url';
 // 文件结构：1. 参数和读入冠军基因  2. 存档和日志  3. 评估一组基因（全局 / 单个侠客，冠军和挑战者用同一串随机数）  4. 主循环
@@ -34,8 +35,8 @@ const OPPONENTS = (arg('opponents') ? arg('opponents').split(',') : HEROES).map(
 // 每次比较的场数（每对角色左右各 REP 场）与接受门槛（胜率差）
 const REP = +arg('rep', STAGE === 'global' ? 4 : 12), GAIN = +arg('gain', STAGE === 'global' ? 0.02 : 0.03);
 
-// 基因的取值范围（和 src/ai.js 的 AI_GENE_DEF 一致）
-const src = readFileSync(ROOT + 'src/ai.js', 'utf8'), i0 = src.indexOf('const AI_GENE_DEF = {');
+// 基因的取值范围（和 src/ai/ 的 AI_GENE_DEF 一致）
+const src = aiSource(), i0 = src.indexOf('const AI_GENE_DEF = {');
 const DEF = Function('"use strict";return (' + src.slice(i0 + 'const AI_GENE_DEF = '.length, src.indexOf('};', i0) + 1) + ')')();
 const KEYS = arg('genes') ? arg('genes').split(',') : Object.keys(DEF);
 if (!['global', 'hero'].includes(STAGE) || MODES.some(mode => !ARENA_MODES.includes(mode)) || ONLY.some(hero => !HEROES.includes(hero)) || KEYS.some(key => !Object.hasOwn(DEF, key))) {

@@ -9,7 +9,7 @@ import { readFileSync, existsSync } from 'node:fs';
 import os from 'node:os';
 import { Worker, isMainThread, parentPort, workerData } from 'node:worker_threads';
 import { fileURLToPath } from 'node:url';
-import { gameJs, heroData } from './ai-code.mjs';
+import { aiSource, gameJs, heroData } from './ai-code.mjs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
 
@@ -45,7 +45,7 @@ export async function makeEnv(tuneFile) {
   if (tuneFile && existsSync(tuneFile)) w.RENYING_AI_TUNE = JSON.parse(readFileSync(tuneFile, 'utf8'));
   vm.createContext(w);
   new vm.Script(readFileSync(ROOT + 'src/net-p2p.js', 'utf8')).runInContext(w);
-  new vm.Script(readFileSync(ROOT + 'src/ai.js', 'utf8'), { filename: 'ai.js' }).runInContext(w);
+  new vm.Script(aiSource(), { filename: 'ai.js' }).runInContext(w);
   new vm.Script(gameJs(), { filename: 'game.js' }).runInContext(w);
   // 试改平衡（AI_BAL=文件路径，{ "tieshan": { "normal": 0.9, "hp": 0.95 } }，写法和 game.js 的 BAL 一样）：调平衡时不用改 game.js 就能比较
   if (process.env.AI_BAL) new vm.Script(`for (const [id, s] of Object.entries(${readFileSync(process.env.AI_BAL, 'utf8')})) if (BAL[id]) Object.assign(BAL[id], s);`).runInContext(w);

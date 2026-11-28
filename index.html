@@ -9017,98 +9017,6 @@ celestial: { far: true, sure: (m, o) => aiInv(o, m) <= 0 && (o.breakCD > 0.5 || 
 phoenixchorus: { far: true, heal: true, sure: (m, o, d) => m.hp < m.maxHp * 0.68 || (typeof sideFighters === 'function' && typeof fighterTeam === 'function' && sideFighters(fighterTeam(m)).some(a => a !== m && !a.hidden && a.hp > 0 && a.hp < a.maxHp * 0.6)) || d < 380 },
 tortoiseslam: { contact: true, sure: (m, o, d) => d < 280 && (o.onGround() || o.y > -90) },
 };
-const AI_GENE_DEF = {
-range: [0.7, 1.35, 1],      // 立回站位：相对“我够得着、对手够不着”的理想距离的倍率
-aggr: [0.15, 1, 0.6],       // 立回时主动出手的倾向
-poke: [0, 1, 0.5],          // 用轻击点人的比例（其余用蓄力、技能、跳入）
-charge: [0, 1, 0.3],        // 蓄力斩（破防、不可挡）的使用
-qn: [0, 1, 0.5],            // 立回时放 Q 的倾向
-rn: [0, 1, 0.5],            // 立回时放 R 的倾向
-cancel: [0, 1, 0.8],        // 连招中取消接技能的倾向
-cancelAt: [1, 4.99, 2],     // 连段第几下开始取消接技能
-jumpIn: [0, 0.6, 0.15],     // 跳入进攻
-antiAir: [0, 1, 0.6],       // 对空
-zone: [0, 1, 0.5],          // 拉开距离用远程压制（有远程技能的角色）
-breakAt: [1, 5.99, 3],      // 被连到第几下用腾空闪
-okiCharge: [0, 1, 0.35],    // 压起身时用蓄力（不可挡）的比例
-bait: [0, 1, 0.5],          // 骗闪倾向
-lead: [0.05, 0.6, 0.25],    // 血量领先多少开始避战
-ultSave: [0, 1, 0.3],       // 留着大招当无敌反打的倾向
-jg: [0, 1, 0.8],            // 用精准招架代替普通格挡的倾向
-back: [0, 1, 0.3],          // 立回中后撤诱招
-adapt: [0, 1.5, 1],         // 针对打法的力度（按双方角色特性调整，0 = 不针对）
-};
-const AI_GENE_KEYS = Object.keys(AI_GENE_DEF);
-function aiDefaultGenes() { const g = {}; for (const k of AI_GENE_KEYS) g[k] = AI_GENE_DEF[k][2]; return g; }
-let AI_BRAIN = null;
-function aiTuneReload() { AI_BRAIN = (typeof window !== 'undefined' && (window.RENYING_AI_TUNE || window.RENYING_AI_BRAIN)) || {}; }
-function aiBrainData() { if (!AI_BRAIN) aiTuneReload(); return AI_BRAIN; }
-function aiGenes(heroId, lv) {
-const B = aiBrainData(), g = B.genes && B.genes[heroId], o = lv && B.lvGenes && B.lvGenes[lv] && B.lvGenes[lv][heroId];
-return Object.assign(aiDefaultGenes(), g || {}, o || {});
-}
-const AI_FRAME_DEFAULT = { min: 0, max: 0, hit: 0.3, dmg: 0, dur: 0.6, move: 0, blockable: true, adv: -0.2 };
-function aiFrame(f, key) {
-const t = aiBrainData().frames;
-if ((key === 'skill' || key === 'skill2') && f && f.bossSkills && f.ch) {
-const skId = f.ch[key];
-const owner = CHARS.find(c => c.skill === skId || c.skill2 === skId);
-if (owner && t && t[owner.id]) {
-const oKey = owner.skill2 === skId ? 'skill2' : 'skill';
-if (t[owner.id][oKey]) return t[owner.id][oKey];
-}
-}
-const F = t && t[f.ch.id];
-if (F && F[key]) return F[key];
-if (key === 'l1' || key === 'dl') { const m = f.moves[key]; return { min: 0, max: m.box[2] + 18, hit: m.su, dmg: m.dmg, dur: m.su + m.ac + m.rc, blockable: true, adv: -0.13 }; }
-return AI_FRAME_DEFAULT;
-}
-function aiHitTime(F, d) {
-const h = F && F.ht;
-if (!h) return F ? F.hit : 0.3;
-const i = Math.max(0, Math.min(h.length - 1, Math.round((d - 20) / 20)));
-if (h[i]) return h[i];
-for (let k = 1; k < 6; k++) { if (h[i - k]) return h[i - k]; if (h[i + k]) return h[i + k]; }
-return F.hit;
-}
-function aiGuardLoss(att, def, dmg, gbMul) {
-const mr = Math.max(0.45, Math.min(2.5, ((att.ch.stat && att.ch.stat.weight) || 1) / ((def.ch.stat && def.ch.stat.weight) || 1)));
-return dmg * 1.5 * Math.sqrt(mr) * (gbMul || 1) / ((def.ch.stat && def.ch.stat.guardStab) || 1);
-}
-function aiInRange(F, d, foe, slack = 0) {
-if (!F || F.max <= 0) return false;
-const w = 18 * ((foe && foe.size) || 1) - 18;
-return d >= F.min - slack && d <= F.max + w + slack;
-}
-function aiPredict(f, t) {
-if (f.onGround()) {
-const sliding = !['walk', 'idle', 'dash', 'attack', 'charge'].includes(f.state);
-return { x: clamp(f.x + (sliding ? f.vx * (1 - Math.exp(-8.5 * t)) / 8.5 : f.vx * t), WALL, STAGE_W - WALL), y: f.y };
-}
-let g = GRAV;
-if (f.state === 'launched') g *= LAUNCH_GRAV * (1 + (f.juggle || 0) * 0.12) * Math.min(1.25, Math.max(0.85, Math.pow((f.ch.stat && f.ch.stat.weight) || 1, 0.35)));
-else if (f.state === 'attack' && f.move && f.move.air) g *= 0.45;
-else if (f.flying || f.airHover > 0) g = 0;
-return { x: clamp(f.x + f.vx * t, WALL, STAGE_W - WALL), y: Math.min(0, f.y + f.vy * t + 0.5 * g * t * t) };
-}
-function aiLandTime(f) {
-if (f.onGround()) return 0;
-for (let t = 0.05; t < 2; t += 0.05) if (aiPredict(f, t).y >= 0) return t;
-return 2;
-}
-class FoeModel {
-constructor() {
-this.escHits = 3; this.escN = 0;        // 对手平均被连到第几下用腾空闪
-this.escRate = 0.5;                       // 被连时腾空闪的几率
-this.wake = { block: 1, attack: 1, escape: 1, skill: 1 };   // 起身选择次数
-this.blockRate = 0.5;                     // 我出手时对手挡住的比例
-this.jumpRate = 0.2;                      // 立回时对手跳的频率
-this.aggr = 0.5;                          // 对手主动出手的频率
-this.projRate = 0.3;
-}
-ema(k, v, a = 0.15) { this[k] += (v - this[k]) * a; }
-wakeTop() { let best = 'block', n = -1; for (const k in this.wake) if (this.wake[k] > n) { n = this.wake[k]; best = k; } return best; }
-}
 const AI_FREE = ['idle', 'walk', 'block'];
 const AI_ACT_KEYS = ['l1', 'dl', 'cs1', 'cs2', 'air', 'skill', 'skill2', 'special'];
 const AI_ACT_REL = { l1: 1, dl: 0.75, cs1: 0.5, cs2: 0.4, air: 0.5 };   // 可靠程度：蓄力和跳入太好躲
@@ -9203,6 +9111,98 @@ if (key === 'skill' || key === 'skill2') weight *= 1.12;
 } else if (mu.type === 'guard_stab' && (key === 'cs2' || key === 'dl')) weight *= 1.08;
 }
 return weight * aiScrollActionWeight(f, key);
+}
+const AI_GENE_DEF = {
+range: [0.7, 1.35, 1],      // 立回站位：相对“我够得着、对手够不着”的理想距离的倍率
+aggr: [0.15, 1, 0.6],       // 立回时主动出手的倾向
+poke: [0, 1, 0.5],          // 用轻击点人的比例（其余用蓄力、技能、跳入）
+charge: [0, 1, 0.3],        // 蓄力斩（破防、不可挡）的使用
+qn: [0, 1, 0.5],            // 立回时放 Q 的倾向
+rn: [0, 1, 0.5],            // 立回时放 R 的倾向
+cancel: [0, 1, 0.8],        // 连招中取消接技能的倾向
+cancelAt: [1, 4.99, 2],     // 连段第几下开始取消接技能
+jumpIn: [0, 0.6, 0.15],     // 跳入进攻
+antiAir: [0, 1, 0.6],       // 对空
+zone: [0, 1, 0.5],          // 拉开距离用远程压制（有远程技能的角色）
+breakAt: [1, 5.99, 3],      // 被连到第几下用腾空闪
+okiCharge: [0, 1, 0.35],    // 压起身时用蓄力（不可挡）的比例
+bait: [0, 1, 0.5],          // 骗闪倾向
+lead: [0.05, 0.6, 0.25],    // 血量领先多少开始避战
+ultSave: [0, 1, 0.3],       // 留着大招当无敌反打的倾向
+jg: [0, 1, 0.8],            // 用精准招架代替普通格挡的倾向
+back: [0, 1, 0.3],          // 立回中后撤诱招
+adapt: [0, 1.5, 1],         // 针对打法的力度（按双方角色特性调整，0 = 不针对）
+};
+const AI_GENE_KEYS = Object.keys(AI_GENE_DEF);
+function aiDefaultGenes() { const g = {}; for (const k of AI_GENE_KEYS) g[k] = AI_GENE_DEF[k][2]; return g; }
+let AI_BRAIN = null;
+function aiTuneReload() { AI_BRAIN = (typeof window !== 'undefined' && (window.RENYING_AI_TUNE || window.RENYING_AI_BRAIN)) || {}; }
+function aiBrainData() { if (!AI_BRAIN) aiTuneReload(); return AI_BRAIN; }
+function aiGenes(heroId, lv) {
+const B = aiBrainData(), g = B.genes && B.genes[heroId], o = lv && B.lvGenes && B.lvGenes[lv] && B.lvGenes[lv][heroId];
+return Object.assign(aiDefaultGenes(), g || {}, o || {});
+}
+const AI_FRAME_DEFAULT = { min: 0, max: 0, hit: 0.3, dmg: 0, dur: 0.6, move: 0, blockable: true, adv: -0.2 };
+function aiFrame(f, key) {
+const t = aiBrainData().frames;
+if ((key === 'skill' || key === 'skill2') && f && f.bossSkills && f.ch) {
+const skId = f.ch[key];
+const owner = CHARS.find(c => c.skill === skId || c.skill2 === skId);
+if (owner && t && t[owner.id]) {
+const oKey = owner.skill2 === skId ? 'skill2' : 'skill';
+if (t[owner.id][oKey]) return t[owner.id][oKey];
+}
+}
+const F = t && t[f.ch.id];
+if (F && F[key]) return F[key];
+if (key === 'l1' || key === 'dl') { const m = f.moves[key]; return { min: 0, max: m.box[2] + 18, hit: m.su, dmg: m.dmg, dur: m.su + m.ac + m.rc, blockable: true, adv: -0.13 }; }
+return AI_FRAME_DEFAULT;
+}
+function aiHitTime(F, d) {
+const h = F && F.ht;
+if (!h) return F ? F.hit : 0.3;
+const i = Math.max(0, Math.min(h.length - 1, Math.round((d - 20) / 20)));
+if (h[i]) return h[i];
+for (let k = 1; k < 6; k++) { if (h[i - k]) return h[i - k]; if (h[i + k]) return h[i + k]; }
+return F.hit;
+}
+function aiGuardLoss(att, def, dmg, gbMul) {
+const mr = Math.max(0.45, Math.min(2.5, ((att.ch.stat && att.ch.stat.weight) || 1) / ((def.ch.stat && def.ch.stat.weight) || 1)));
+return dmg * 1.5 * Math.sqrt(mr) * (gbMul || 1) / ((def.ch.stat && def.ch.stat.guardStab) || 1);
+}
+function aiInRange(F, d, foe, slack = 0) {
+if (!F || F.max <= 0) return false;
+const w = 18 * ((foe && foe.size) || 1) - 18;
+return d >= F.min - slack && d <= F.max + w + slack;
+}
+function aiPredict(f, t) {
+if (f.onGround()) {
+const sliding = !['walk', 'idle', 'dash', 'attack', 'charge'].includes(f.state);
+return { x: clamp(f.x + (sliding ? f.vx * (1 - Math.exp(-8.5 * t)) / 8.5 : f.vx * t), WALL, STAGE_W - WALL), y: f.y };
+}
+let g = GRAV;
+if (f.state === 'launched') g *= LAUNCH_GRAV * (1 + (f.juggle || 0) * 0.12) * Math.min(1.25, Math.max(0.85, Math.pow((f.ch.stat && f.ch.stat.weight) || 1, 0.35)));
+else if (f.state === 'attack' && f.move && f.move.air) g *= 0.45;
+else if (f.flying || f.airHover > 0) g = 0;
+return { x: clamp(f.x + f.vx * t, WALL, STAGE_W - WALL), y: Math.min(0, f.y + f.vy * t + 0.5 * g * t * t) };
+}
+function aiLandTime(f) {
+if (f.onGround()) return 0;
+for (let t = 0.05; t < 2; t += 0.05) if (aiPredict(f, t).y >= 0) return t;
+return 2;
+}
+class FoeModel {
+constructor() {
+this.escHits = 3; this.escN = 0;        // 对手平均被连到第几下用腾空闪
+this.escRate = 0.5;                       // 被连时腾空闪的几率
+this.wake = { block: 1, attack: 1, escape: 1, skill: 1 };   // 起身选择次数
+this.blockRate = 0.5;                     // 我出手时对手挡住的比例
+this.jumpRate = 0.2;                      // 立回时对手跳的频率
+this.aggr = 0.5;                          // 对手主动出手的频率
+this.projRate = 0.3;
+}
+ema(k, v, a = 0.15) { this[k] += (v - this[k]) * a; }
+wakeTop() { let best = 'block', n = -1; for (const k in this.wake) if (this.wake[k] > n) { n = this.wake[k]; best = k; } return best; }
 }
 const AI_HURT = ['hitstun', 'launched', 'knockdown', 'held'];
 class AIBrain {
@@ -9661,6 +9661,8 @@ if (p.kind === 'popcorn' || p.kind === 'chord') return { x: p.x, kind: p.kind, u
 }
 return null;
 }
+}
+Object.assign(AIBrain.prototype, {
 tactic(me, foe, d, to) {
 const L = this.L;
 if (me.ch.id === 'lingque') { const mk = foe.needleMark || 0; if (me.state === 'skill' && me.skill === 'shadowdash' && this.lqMark > 0 && mk <= 0) this.lqBurst = clock; this.lqMark = mk; }
@@ -9689,7 +9691,7 @@ if (clock < this.next || this.queue.length || this.holdDown > 0.05) return;
 this.next = clock + rand(L.think[0], L.think[1]);
 if (this.mode === 'keep') return this.keepAway(me, foe, d, to);
 this.neutral(me, foe, d, to);
-}
+},
 updateMode(me, foe, d) {
 const L = this.L, g = this.g;
 const mine = me.hp / me.maxHp, theirs = foe.hp / foe.maxHp, lead = mine - theirs;
@@ -9702,7 +9704,7 @@ if ((foe.state === 'knockdown' || (foe.state === 'getup' && foe.invul > 0) || (f
 if (this.mode === 'oki' && (foe.state === 'getup' || foe.state === 'knockdown' || foe.state === 'launched')) return;
 if (L.lead > 0 && lead > g.lead && (late || lead > g.lead + 0.25) && Math.random() < L.lead && !(typeof is2v2 === 'function' && is2v2())) { this.mode = 'keep'; return; }
 this.mode = 'neutral';
-}
+},
 inAttack(me, foe, d, to) {
 const L = this.L, g = this.g, m = me.move;
 if (!m) return;
@@ -9740,7 +9742,7 @@ const guardLow = (foe.guard || 100) < 35 || willBreak;
 if (m.next.light && (guardLow || Math.random() < 0.35 * L.aggr) && hits < 4) this.press('light');
 else if (Math.random() < L.block * 0.7) this.holdDown = 0.2;
 }
-}
+},
 inCharge(me, foe, d, to) {
 this.dir = d > 140 ? to : 0;
 const full = me.t >= CHARGE_FULL, F = aiFrame(me, full ? 'cs2' : 'cs1');
@@ -9750,7 +9752,7 @@ if (aiInRange(F, d, foe, 10) || me.t > CHARGE_FULL + 0.6 || threatened) this.hol
 }
 if (this.chargeTo === 'cs1' && me.t >= 0.12 && aiInRange(F, d, foe, 5)) this.holdAtk = 0;
 if (me.t > 2.2) this.holdAtk = 0;
-}
+},
 pickComboSkill(me, foe, d) {
 let best = null, bd = 0;
 for (const slot of ['skill', 'skill2']) {
@@ -9764,7 +9766,7 @@ if (K.groundOnly && !foe.onGround()) continue;
 if (F.dmg > bd) { bd = F.dmg; best = slot; }
 }
 return best;
-}
+},
 afterSkill(me, slot) {
 const id = slot === 'skill' ? me.ch.skill : me.ch.skill2, K = AI_KIT[id];
 if (!K) return;
@@ -9776,13 +9778,13 @@ else if (id === 'spindle' && this.L.combo >= 3) this.plan([['skill2', 0.3, 'hit'
 else if (id === 'flamehalberd' && this.L.combo >= 3) this.plan([['light', 0.36, 'hit'], ['skill2', 0.54, 'hit']]);   // 赤霄焰戟挂灼烧接烈环
 else if (id === 'gravwell' && this.L.combo >= 3) this.plan([['light', 0.34, 'hit'], ['light', 0.52, 'hit']]);   // 玄机星漩拉近接普攻
 else if (id === 'shellbash' && this.L.combo >= 3) this.plan([['light', 0.36, 'hit']]);   // 玄武冲撞接重击
-}
+},
 shouldBait(me, foe, hits) {
 const L = this.L, g = this.g;
 if (L.bait <= 0 || foe.breakCD > 0 || foe.ch.id === undefined) return false;
 const k = Math.max(1, Math.round(this.model.escN ? this.model.escHits : 3));
 return hits >= k - 1 && hits >= 1 && Math.random() < L.bait * g.bait * (this.model.escN ? 0.9 : 0.35);
-}
+},
 juggle(me, foe, d, to) {
 if (clock > (this.jugT || 0) || foe.state !== 'launched' || aiInv(foe, me) > 0.02 || foe.hp <= 0 || (foe.juggle || 0) >= 2) return false;
 const land = aiLandTime(foe);
@@ -9809,7 +9811,7 @@ const px = aiPredict(foe, Math.max(0.05, land - aiFrame(me, 'l1').hit)).x, want 
 const gap = Math.abs(px - me.x);
 this.dir = gap > want + 12 ? Math.sign(px - me.x) : gap < want - 40 ? -Math.sign(px - me.x) : 0;
 return true;
-}
+},
 punish(me, foe, d, to, afterBlock) {
 const L = this.L;
 if (!AI_FREE.includes(me.state) || !me.onGround()) return false;
@@ -9842,7 +9844,7 @@ else if (opts === 'skill' || opts === 'skill2') { this.press(opts); this.afterSk
 else if (opts === 'dl') { this.holdDown = 0.05; this.press('light'); }
 else { this.holdDown = 0; this.press('light'); }
 return true;
-}
+},
 punishOptions(me, foe, d, window) {
 let best = null, bv = 0;
 const high = !foe.onGround() && foe.y < -100;
@@ -9867,19 +9869,19 @@ const f1 = aiFrame(me, 'l1');
 consider('l1', f1, f1.dmg * 3.2);   // 轻击能接一整套
 consider('dl', aiFrame(me, 'dl'), aiFrame(me, 'dl').dmg * 3);
 return best;
-}
+},
 beatJailed(me, foe, d, to) {
 const F = aiFrame(me, 'l1');
 this.queue.length = 0; this.holdDown = 0;
 if (aiInRange(F, d, foe, -6)) { this.dir = 0; this.press('light', 'jail'); }
 else this.dir = to;
-}
+},
 respectCounter(me, foe, d, to) {
 this.stopAll();
 if (foe.skill === 'echowall') { if (d < 140) this.dir = -to; return true; }
 if (d < 200) this.dir = -to; else this.dir = 0;
 return true;
-}
+},
 oki(me, foe, d, to) {
 const L = this.L, g = this.g;
 if (!this.okiPlan) {
@@ -9921,7 +9923,7 @@ const F = aiFrame(me, 'l1');
 const want = Math.max(F.min, F.max - 25);
 this.dir = d > want + 10 ? to : d < want - 30 ? -to : 0;
 if (vuln <= F.hit + 0.01 && aiInRange(F, d, foe)) { this.dir = 0; this.press('light'); this.okiPlan.done = true; }
-}
+},
 baitWait(me, foe, d, to) {
 const L = this.L;
 if (foe.escInvul && !foe.onGround()) {
@@ -9934,7 +9936,7 @@ return;
 if (foe.state === 'getup' && !foe.invul) { this.mode = 'neutral'; this.punish(me, foe, d, to, false); return; }
 if (clock - this.modeT > 1.0 && !foe.escInvul) { this.mode = 'neutral'; return; }
 this.holdDown = Math.max(this.holdDown, 0.08); this.dir = 0;
-}
+},
 inAir(me, foe, d, to) {
 const L = this.L;
 this.dir = to;
@@ -9950,7 +9952,7 @@ const dx = Math.abs(pf.x - pm.x), dy = pf.y - pm.y, reach = a1.box[2] + 18 * (fo
 const slop = (1 - L.skill) * 70;
 if (dx < reach + slop && dy < 112 + a1.box[3] - 6 + slop && dy > a1.box[1] + 6 - slop && aiInv(foe, me) <= 0.05 && Math.random() < 0.25 + 0.75 * L.aggr) this.press('light');
 if (me.ch.fly && me.vy > -100 && me.y > -120 && d > 220 && Math.random() < 0.05) this.flyUntil = clock + rand(0.3, 0.9);
-}
+},
 actValue(f, opp, key, d) {
 let F = aiFrame(f, key);
 if (key === 'l1' && f.ch.inkShot && (f.ink || 0) < INK_COST) F = { min: 0, max: f.moves.l1.box[2] + 18, hit: f.moves.l1.su, dmg: f.moves.l1.dmg, ht: null };
@@ -9963,7 +9965,7 @@ rel = cd <= 0 ? 1 : cd < 0.8 ? 0.5 : 0.05;
 if (K.groundOnly && !opp.onGround()) rel *= 0.2;
 } else if (key === 'special') { if (f.meter < 100) return 0; rel = 0.8; }
 return F.dmg * rel / (0.2 + aiHitTime(F, d)) * aiModeActionWeight(f, opp, key, d);
-}
+},
 matchup(me, foe) {
 if (this.mu && this.mu.me === me.ch.id && this.mu.foe === foe.ch.id) return this.mu;
 const kit = f => [AI_KIT[f.ch.skill] || {}, AI_KIT[f.ch.skill2] || {}];
@@ -9980,8 +9982,8 @@ heavy: (foe.ch.stat.guardStab || 1) >= 1.25, fly: !!foe.ch.fly,
 mu.rush = mu.foeZone && !mu.meZone;
 mu.kite = mu.meZone && !mu.foeZone;
 return this.mu = mu;
-}
-ready(f, slot) { return !!slot && (slot === 'skill' ? f.skillCD : f.skill2CD) <= 0.15; }
+},
+ready(f, slot) { return !!slot && (slot === 'skill' ? f.skillCD : f.skill2CD) <= 0.15; },
 muWeight(me, foe, key, d) {
 if (!this.L.matchup) return 1;
 const mu = this.matchup(me, foe);
@@ -9995,7 +9997,7 @@ if (key === 'cs2' && mu.heavy) w *= 1.3;                                        
 if (mu.rush && (key === 'air' || (id && K.role === 'rush'))) w *= 1.3;
 if (mu.kite && id && K.role === 'proj') w *= 1.3;
 return Math.max(0.05, 1 + (w - 1) * this.g.adapt);
-}
+},
 matchupMap(me, foe) {
 if (this.map && clock - this.map.t < 0.35 && this.map.foe === foe) return this.map;
 const n = 46, mine = new Float32Array(n), theirs = new Float32Array(n);
@@ -10027,7 +10029,7 @@ if (this.ready(foe, mu.counter) && want < 220) want += 50 * a;   // 站在架招
 want = Math.max(58, want);   // 保持健康近战间距，避免近战 AI 反复顶撞对手身体
 this.map = { t: clock, foe, mine, theirs, want };
 return this.map;
-}
+},
 neutral(me, foe, d, to) {
 const L = this.L, g = this.g;
 this.dir = 0;
@@ -10133,7 +10135,7 @@ this.stepT = clock + rand(0.16, 0.45);
 this.dir = this.stepDir;
 }
 if (L.bait > 0.5 && d < aiFrame(me, 'l1').max + 40 && Math.random() < 0.06 * g.bait && this.model.aggr > 0.4) { this.press('light', 'feint'); this.holdDown = 0.08; }
-}
+},
 doAct(me, foe, d, to, key) {
 switch (key) {
 case 'l1': this.holdDown = 0; this.press('light'); return;
@@ -10142,7 +10144,7 @@ case 'cs1': case 'cs2': this.startCharge(me, foe, d, key); return;
 case 'air': this.dir = to; this.plan([['jump', 0], ['light', 0.58]]); return;
 default: this.press(key); this.afterSkill(me, key);
 }
-}
+},
 antiAir(me, foe, d, to) {
 const L = this.L, g = this.g;
 if (d > 340 || Math.random() > L.punish * (0.3 + g.antiAir)) return false;
@@ -10182,16 +10184,16 @@ this.holdDown = 0.22; return true;
 }
 }
 return false;
-}
+},
 startCharge(me, foe, d, kind) {
 this.chargeTo = kind;
 if (this.L.error >= 0.15) { this.dir = 0; this.plan([['chargeStart', 0.16 + this.L.error * 0.5]]); return; }
 this.holdAtk = 9; this.chargeT0 = clock; this.c.atkT = clock - 0.001;
-}
+},
 hasZoning(f) {
 const q = AI_KIT[f.ch.skill], r = AI_KIT[f.ch.skill2];
 return (q && q.role === 'proj') || (r && r.role === 'proj') || !!f.ch.inkShot;
-}
+},
 ultWouldHit(me, foe, d, inCombo) {
 const U = AI_ULT[me.ch.ult] || {}, F = aiFrame(me, 'special');
 if (aiInv(foe, me) > 0.1 || foe.hp <= 0) return false;
@@ -10201,7 +10203,7 @@ const stuck = AI_HURT.includes(foe.state) || foe.state === 'getup' || foe.jailT 
 if (U.contact) return aiInRange(F, d, foe, -10) && (stuck || this.L.ult < 0.9 || foe.breakCD > 0.5);
 if (!aiInRange(F, d, foe, 0)) return false;
 return stuck || foe.breakCD > 1.5 || this.L.ult < 0.9;
-}
+},
 keepAway(me, foe, d, to) {
 const L = this.L;
 const far = 420;
@@ -10210,7 +10212,7 @@ if (d < 200 && foe.state === 'attack') this.holdDown = 0.25;
 if (this.hasZoning(me) && Math.random() < 0.4) { const ps = this.projSlot(me); if (ps && d > 200 && aiInRange(aiFrame(me, ps), d, foe)) { this.press(ps); return; } if (me.ch.inkShot && (me.ink || 0) > 40 && d > 200) { this.press('light'); return; } }
 const cornered = (me.x < WALL + 140 && to > 0) || (me.x > STAGE_W - WALL - 140 && to < 0);
 if (cornered && d < 260 && me.onGround()) { this.dir = to; this.plan([['jump', 0], ['jump', 0.24]]); }
-}
+},
 dodgeAvalanche(me, foe, to, free) {
 if (this.avaKey !== this.ev) { this.avaKey = this.ev; this.avaRoll = Math.random(); }
 if (this.avaRoll > this.L.block) return false;   // 这次没看出来该跳
@@ -10223,7 +10225,9 @@ if (free && t < 0.5 && t > 0.14) { this.press('jump'); this.dir = -to; return tr
 if (t <= 0.14 && me.breakCD <= 0) { this.press('dash'); return true; }
 this.dir = -to;   // 还早：先往外走，等时机再跳
 return true;
-}
+},
+});
+Object.assign(AIBrain.prototype, {
 liyingRoute(me, foe, d, to) {
 const L = this.L, cs = me.clones || [];
 if (!cs.length || me.skill2CD > 0 || !['idle', 'walk', 'air', 'block'].includes(me.state) || foe.hp <= 0 || !this.seen) return false;
@@ -10243,7 +10247,7 @@ let far = null; for (const c of cs) if (!far || Math.abs(c.x - foe.x) > Math.abs
 if (far && Math.abs(far.x - foe.x) > 320 && pickCloneDir(me, foe, far) && Math.random() < L.skill * 0.6) return go(far);
 }
 return false;
-}
+},
 cixianRoute(me, foe, d, to) {
 const L = this.L;
 if (L.combo < 3 || foe.hp <= 0) return false;
@@ -10257,7 +10261,7 @@ if (rReady && me.onGround() && d > 120 && d < MAG.rMinusRange - 40 && Math.abs(f
 this.stopAll(); this.press('skill2', 'cixian'); this.cxNext = clock + 0.5; return true;
 }
 return false;
-}
+},
 chixiaoRoute(me, foe, d, to) {
 const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
 if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen || L.combo < 3 || clock < (this.cx2Next || 0)) return false;
@@ -10269,7 +10273,7 @@ if (!burning && me.skillCD <= 0 && d > 110 && d < 350 && Math.abs(foe.y - me.y) 
 this.stopAll(); this.press('skill', 'chixiao'); this.afterSkill(me, 'skill'); this.cx2Next = clock + 0.55; return true;
 }
 return false;
-}
+},
 xuanjiRoute(me, foe, d, to) {
 const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
 if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen || L.combo < 3 || clock < (this.xjNext || 0)) return false;
@@ -10280,7 +10284,7 @@ if (me.skillCD <= 0 && d > 250 && d < 660 && this.chance(L.skill * 0.7)) {
 this.stopAll(); this.press('skill', 'xuanji'); this.xjNext = clock + 0.5; return true;
 }
 return false;
-}
+},
 qingluanRoute(me, foe, d, to) {
 const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
 if (!free || foe.hp <= 0 || clock < (this.qlNext || 0)) return false;
@@ -10298,7 +10302,7 @@ if (L.combo >= 3 && me.skillCD <= 0 && d > 140 && d < 460 && foe.invul <= 0 && t
 this.stopAll(); this.press('skill', 'qingluan_kite'); this.qlNext = clock + 0.5; return true;
 }
 return false;
-}
+},
 xuanwuRoute(me, foe, d, to) {
 const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
 if (!free || foe.hp <= 0 || foe.invul > 0 || !this.seen || L.combo < 3 || clock < (this.xwNext || 0)) return false;
@@ -10309,7 +10313,7 @@ if (me.skillCD <= 0 && d > 95 && d < 320 && ['attack', 'charge', 'walk', 'idle']
 this.stopAll(); this.press('skill', 'xuanwu_bash'); this.afterSkill(me, 'skill'); this.xwNext = clock + 0.6; return true;
 }
 return false;
-}
+},
 aiAdaptStance(me, foe, d) {
 if (!me.relicStanceUnlocked || (me.relicStanceCd || 0) > 0 || !me.onGround() || !AI_FREE.includes(me.state)) return;
 if (this.L.read < 0.3 || clock < (this.stanceNext || 0)) return;
@@ -10325,7 +10329,7 @@ if (want && want !== me.relicStance) {
 this.press('relicStance', 'stance_adapt');
 this.stanceNext = clock + 1.4;
 }
-}
+},
 aiMapObjectives(me, foe, d, to) {
 const mp = typeof mapNow === 'function' ? mapNow() : null;
 const env = M.mapEnv;
@@ -10392,7 +10396,7 @@ const stair = typeof battleStairTarget === 'function' ? battleStairTarget(me, ta
 if (stair !== null) this.dir = Math.sign(stair - me.x);
 else if (goal && Math.abs(goal.x - me.x) > 35) this.dir = Math.sign(goal.x - me.x);
 }
-}
+},
 aiTeamTactics(me, foe, d, to) {
 if (typeof isMulti !== 'function' || !isMulti() || (typeof isRaid === 'function' && isRaid())) return false;
 if (this.L.read < 0.3 || !me.onGround() || !AI_FREE.includes(me.state)) return false;
@@ -10429,7 +10433,7 @@ if ((foe.guard || 100) < 30 && d < 200 && this.L.punish >= 0.5 && foe.state === 
 this.startCharge(me, foe, d, 'cs2'); return true;
 }
 return false;
-}
+},
 lingqueRoute(me, foe, d, to) {
 const L = this.L, free = AI_FREE.includes(me.state) || me.state === 'air';
 if (!free || foe.hp <= 0 || aiInv(foe, me) > 0 || !this.seen) return false;
@@ -10461,11 +10465,11 @@ const open = stuck || ['attack', 'skill', 'charge', 'getup', 'idle', 'walk'].inc
 if (open && foe.state !== 'block' && roll(L.skill * (L.read >= 0.3 ? 1 : 0.6))) return act('skill', 0.35);
 }
 return false;
-}
+},
 steerAvalanche(me, foe) {
 this.dir = Math.abs(me.x - foe.x) > 30 ? Math.sign(foe.x - me.x) : 0;
 if (Math.abs(me.x - foe.x) < 70 && me.t > 0.2) this.holdDown = 0.3;
-}
+},
 blind(me) {
 const c = this.c;
 if ((me.state === 'launched' || (me.state === 'hitstun' && me.comboHits >= 3)) && me.breakCD <= 0 && me.t > 0.1 && Math.random() < this.L.block * 0.012) this.press('dash');
@@ -10484,7 +10488,7 @@ else if (r < 0.75) this.dir = 0;
 this.holdAtk = 0;
 c.held.down = this.holdDown > 0; c.held.atk = false; c.held.jump = false;
 c.held.left = this.dir < 0; c.held.right = this.dir > 0;
-}
+},
 watch2v2(me, foe, d, to) {
 if (!(typeof is2v2 === 'function' && is2v2()) || typeof ARENA2V2 === 'undefined') return false;
 const cx = STAGE_W / 2, orb = ARENA2V2.orb;
@@ -10521,8 +10525,8 @@ if (ARENA2V2.geysers && (me.skillCD > 2.2 || me.skill2CD > 2.2)) {
 for (const gy of ARENA2V2.geysers) if (gy.cd <= 0 && Math.abs(me.x - gy.x) < 180 && Math.abs(me.x - gy.x) > 30 && Math.random() < 0.35) { this.dir = Math.sign(gy.x - me.x); return true; }
 }
 return false;
-}
-}
+},
+});
 </script>
 <script>window.RYBoot&&RYBoot.p(0.3)</script>
 <script>

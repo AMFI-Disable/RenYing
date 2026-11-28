@@ -52,8 +52,13 @@ export function levelData() {
   return Function(dataFiles().map(p => readFileSync(ROOT + p, 'utf8')).join('\n') + '\nreturn DIFFICULTIES;')();
 }
 
+export function aiSource() {
+  const dir = ROOT + 'src/ai/';
+  return readdirSync(dir).filter(n => /^\d\d-[a-z0-9-]+\.js$/.test(n)).sort().map(n => readFileSync(dir + n, 'utf8')).join('\n');
+}
+
 export function gameSource() {
   const brain = existsSync(ROOT + 'src/models/ai-brain.json') ? readFileSync(ROOT + 'src/models/ai-brain.json', 'utf8') : '{}';
   return `(typeof window !== 'undefined' ? window : globalThis).RENYING_AI_BRAIN = ${brain};\n`
-    + readFileSync(ROOT + 'src/ai.js', 'utf8') + '\n' + gameJs();
+    + aiSource() + '\n' + gameJs();
 }

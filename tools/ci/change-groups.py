@@ -37,14 +37,14 @@ def main():
     # 每一组：改到列出的目录（第一个元组）或文件（第二个元组），就要跑这一组测试
     groups = {
         "all": "tools/tests/test.mjs" in paths,
-        "game": any(matches(path, ("src/data/", "src/game/", "tools/checks/", "tools/tests/combat/"), (
-            "src/ai.js", "src/anticheat.js", "src/net-p2p.js", "src/models/ai-brain.json",
+        "game": any(matches(path, ("src/data/", "src/game/", "src/ai/", "tools/checks/", "tools/tests/combat/"), (
+            "src/anticheat.js", "src/net-p2p.js", "src/models/ai-brain.json",
             "tools/tests/combat-test.mjs", "tools/tests/rollback-test.mjs",
             "tools/tests/netplay-test.mjs", "tools/tests/anticheat-test.mjs",
             "tools/tests/ai-lingque-test.mjs", "tools/tests/test.mjs",
         )) for path in paths),
-        "ai": any(matches(path, ("tools/ai/", "src/models/", "src/data/heroes/"), (
-            "src/ai.js", "tools/tests/test-ai.mjs", "tools/tests/ai-tactics-test.mjs",
+        "ai": any(matches(path, ("src/ai/", "tools/ai/", "src/models/", "src/data/heroes/"), (
+            "tools/tests/test-ai.mjs", "tools/tests/ai-tactics-test.mjs",
         )) for path in paths),
         "cloud": any(matches(path, ("cloudflare/", "src/game/05-ui/24-account", "src/game/05-ui/19-progress-02-", "src/game/24-account", "src/game/19-progress-02-"), (
             "src/cloud.js", "tools/tests/cloud-test.mjs", "tools/tests/sync-test.mjs",
@@ -62,8 +62,8 @@ def main():
             "src/page.html", "src/style.css", "src/armory.js", "src/social.js",
             "index.html", "tools/build.py", "tools/tests/test.mjs",
         )) for path in paths),
-        "offline": any(matches(path, ("src/qfx/", "src/data/", "src/game/", "src/pages/", "assets/"), (
-            "src/ai.js", "renying-offline.html", "tools/build.py", "tools/tests/rollback-test.mjs",
+        "offline": any(matches(path, ("src/qfx/", "src/data/", "src/game/", "src/ai/", "src/pages/", "assets/"), (
+            "renying-offline.html", "tools/build.py", "tools/tests/rollback-test.mjs",
             "tools/tests/test.mjs",
         )) for path in paths),
     }
