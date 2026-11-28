@@ -829,3 +829,8 @@
     box-shadow: 0 0 0 3px rgba(233,196,106,.22), 0 0 18px rgba(233,196,106,.45); transition: left .09s ease-out, top .09s ease-out, width .09s ease-out, height .09s ease-out; }
   body.kbnav #kbRing.on { display: block; }
   @media (prefers-reduced-motion: reduce) { #kbRing { transition: none; } }
+
+/* 点将台在窄屏（如 1024 宽）上：招式卡标题的伤害说明可以换行，不再横向撑出卡片；
+   英文的阵位名（Vanguard 等）比 50px 的选人槽宽，和矮屏的快速车轮战一样允许在词中换行 */
+.bpmovedeck .dhitname { white-space: normal; flex-wrap: wrap; }
+html:lang(en) #bp .slot2, html:lang(en) #bp .slot2 .lab { overflow-wrap: anywhere; }
