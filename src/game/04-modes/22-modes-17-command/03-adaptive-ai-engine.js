@@ -149,14 +149,26 @@ function cmdAdaptiveEval(t) {
   T.autoSub = res.sub;
   T.autoReason = res.reason;
 }
-function squadAdaptiveEval(t) {
+// 没有统帅的多人局里「智策」自动战术：只算、不写状态。领队按 cpuTeamwork 认（录像和联机里玩家的 Ctrl 不在 human 里，不能用 human.includes）
+function squadAdaptiveCompute(t) {
   const mates = sideFighters(t).filter(f => !f.hidden && f.hp > 0);
-  const lf = mates.find(f => human.includes(f.ctrl)) || mates[0];
+  const lf = mates.find(f => !cpuTeamwork(f)) || mates[0];
   const foes = lf ? foesOf(lf).filter(e => !e.hidden && e.hp > 0) : [];
-  const res = cmdComputeAdaptive(t, mates, foes, null, lf, foes[0] || null);
+  return cmdComputeAdaptive(t, mates, foes, null, lf, foes[0] || null);
+}
+function squadAdaptiveEval(t) {
+  const res = squadAdaptiveCompute(t);
   if (!M.squadAuto) M.squadAuto = [{}, {}, {}, {}];
   M.squadAuto[t] = res;
   return res;
+}
+// 每 0.5 秒在 step() 里统一重算一次（M.squadAuto 在回滚快照里）：以前是电脑想招时顺手写，
+// 本机私用的 AI（secretThink）、回放、联机重算里想招的次数不一样，写出来的状态就对不上
+function squadAutoTick() {
+  if (M.cmd || !isMulti() || (typeof isRaid === 'function' && isRaid()) || !M.squadOrders) return;
+  if (clock - (M.squadAutoT === undefined ? -9 : M.squadAutoT) < 0.5) return;
+  M.squadAutoT = clock;
+  for (let t = 0; t < teamCount(); t++) if ((M.squadOrders[t] || 'auto') === 'auto') squadAdaptiveEval(t);
 }
 // 电脑统帅：找最近的、还有人的对手队伍，结合智策评估动态切换战术；难度越高越准
 function cmdAiEval(t) {
@@ -425,7 +437,7 @@ function cmdAiMod(me, foe, d) {
 }
 function squadAiMod(me, foe, d) {
   if (M.cmd) return cmdAiMod(me, foe, d);
-  if (!isMulti() || human.includes(me.ctrl) || (typeof isRaid === 'function' && isRaid())) return null;
+  if (!isMulti() || !cpuTeamwork(me) || (typeof isRaid === 'function' && isRaid())) return null;
   const t = fighterTeam(me);
   const ord = (M.squadOrders && M.squadOrders[t]) || 'auto';
   const fm = (M.teamFormation && M.teamFormation[t]) || 'auto';
@@ -433,15 +445,12 @@ function squadAiMod(me, foe, d) {
   let role = CMD_ROLES[roleIdx] ? CMD_ROLES[roleIdx].id : 'auto';
   let tac = ({ focus: 'spear', protect: 'wall', spread: 'raid' }[ord]) || null;
   if (ord === 'auto') {
-    if (!M.squadAuto || !M.squadAuto[t] || (clock - (M.squadAutoT || -9) >= 0.5)) {
-      M.squadAutoT = clock;
-      squadAdaptiveEval(t);
-    }
-    tac = (M.squadAuto && M.squadAuto[t] && M.squadAuto[t].sub) || 'spear';
+    const cached = M.squadAuto && M.squadAuto[t] && M.squadAuto[t].sub ? M.squadAuto[t] : squadAdaptiveCompute(t);   // 只读：重算在 squadAutoTick
+    tac = cached.sub || 'spear';
     if (role === 'auto') role = heroTacticProfile(me).prefRole;
   }
   const allies = sideFighters(t);
-  const leader = allies.find(x => !x.hidden && x.hp > 0 && human.includes(x.ctrl)) || allies[0];
+  const leader = allies.find(x => !x.hidden && x.hp > 0 && !cpuTeamwork(x)) || allies[0];
   return buildTacticAiMod(me, foe, d, tac, role, fm, leader, allies);
 }
 

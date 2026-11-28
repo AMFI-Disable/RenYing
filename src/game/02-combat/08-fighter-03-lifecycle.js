@@ -47,7 +47,8 @@ function applyMayhemStats(f) {
 }
 function startRound() {
   M.cmd = null;
-  const defTac = typeof getDefaultTeamTactic === 'function' ? getDefaultTeamTactic() : 'auto';
+  // 赛前默认战术：联机、回放怎么取见 matchDefaultTactic
+  const defTac = typeof matchDefaultTactic === 'function' ? matchDefaultTactic() : 'auto';
   const defOrd = ({ spear: 'focus', wall: 'protect', raid: 'spread', auto: 'auto' })[defTac] || 'auto';
   M.squadOrders = [defOrd, 'auto', 'auto', 'auto'];
   M.squadAuto = [{}, {}, {}, {}];

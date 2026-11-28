@@ -71,6 +71,13 @@ try {
   if (savedTac && CMD_TACTICS[savedTac]) defaultTeamTactic = savedTac;
 } catch (e) {}
 function getDefaultTeamTactic() { return CMD_TACTICS[defaultTeamTactic] ? defaultTeamTactic : 'auto'; }
+// 这一局开打用的默认战术：赛前偏好只是本机设置，联机两边可能不一样，回放时看的人也可能改过，
+// 所以联机一律「智策」，回放用录像里记下的那一个（录像 meta.tac0，见 recBegin）
+function matchDefaultTactic() {
+  if (M.mode === 'net') return 'auto';
+  if (M.mode === 'replay') { const t = REPLAY.m && REPLAY.m.tac0; return CMD_TACTICS[t] ? t : 'auto'; }
+  return getDefaultTeamTactic();
+}
 function setDefaultTeamTactic(tac) {
   const next = CMD_TACTICS[tac] ? tac : 'auto';
   defaultTeamTactic = next;
@@ -102,7 +109,7 @@ const cmdRand = (a, b) => a + grnd() * (b - a);
 
 function cmdRoundInit() {
   M.cmd = null;
-  if (!isLargeTeam() || M.watchAi || M.mode === 'demo' || M.mode === 'replay') return;
+  if (!isLargeTeam() || M.watchAi || M.mode === 'demo') return;   // 回放也要建统帅：统帅加气血、电脑统帅换战术都在模拟里，少了回放就和实战对不上
   const tc = teamCount();
   const C = { team: [], role: new Array(MAX_FIGHTERS).fill(0), sel: -1, tgtCount: new Array(MAX_FIGHTERS).fill(0), obsT: 0, tabAt: 0, hint: 0 };
   for (let t = 0; t < tc; t++) {
@@ -116,7 +123,7 @@ function cmdRoundInit() {
     });
   }
   M.cmd = C;
-  const pref = getDefaultTeamTactic();
+  const pref = matchDefaultTactic();
   for (let t = 0; t < tc; t++) {
     const cmdr = FIGHTERS[C.team[t].cmdr];
     if (cmdr) cmdApplyHp(cmdr);
@@ -129,11 +136,12 @@ function cmdRoundInit() {
       C.team[t].log.push('auto');
     }
   }
-  for (const f of allFighters()) { f.cmdTgt = -1; f.cmdTgtT = 0; f.cmdHitBy = -1; f.cmdHitT = -99; }
+  // 新一回合还没人选过目标：上一局留下的 f.target 不能算进「集火程度」，不然实战和回放（从录像快照恢复）开局算出的战术不一样
+  for (const f of allFighters()) { f.cmdTgt = -1; f.cmdTgtT = 0; f.cmdHitBy = -1; f.cmdHitT = -99; f.target = null; }
   cmdObserve();
   for (let t = 0; t < tc; t++) if (C.team[t].tactic === 'auto') cmdAdaptiveEval(t);
   const lt = localTeam();
-  if (cmdIsHumanTeam(lt)) say(`你是统帅 · ${CMD_TACTICS[pref].n}（1/2/3/4 或 Tab）`, 2.4, 'go');
+  if (cmdIsHumanTeam(lt) && M.mode !== 'replay') say(`你是统帅 · ${CMD_TACTICS[pref].n}（1/2/3/4 或 Tab）`, 2.4, 'go');
 }
 function cmdApplyHp(f) {
   f.maxHp = Math.round(f.maxHp * CMD_HP_BONUS); f.hp = f.lagHp = f.maxHp;

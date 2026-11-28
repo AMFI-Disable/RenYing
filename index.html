@@ -28723,7 +28723,7 @@ f.guard = f.maxGuard = 500; f.meter = 100;
 }
 function startRound() {
 M.cmd = null;
-const defTac = typeof getDefaultTeamTactic === 'function' ? getDefaultTeamTactic() : 'auto';
+const defTac = typeof matchDefaultTactic === 'function' ? matchDefaultTactic() : 'auto';
 const defOrd = ({ spear: 'focus', wall: 'protect', raid: 'spread', auto: 'auto' })[defTac] || 'auto';
 M.squadOrders = [defOrd, 'auto', 'auto', 'auto'];
 M.squadAuto = [{}, {}, {}, {}];
@@ -32680,7 +32680,8 @@ return;
 if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（src/game/04-modes/22-world-03-rogue-coop.js）
 if (M.mode === 'world') worldUpdate(); else if (!isClient()) updateMatch(); else M.t += STEP;
 if (isMulti() && M.phase !== 'ko') for (const f of allFighters()) if (!f.hidden && f.hp > 0) foeOf(f);
-if (M.cmd) cmdTick();   // 团战的统帅：观察对面、电脑统帅换战术（22-modes-17-command.js）
+if (M.cmd) cmdTick();   // 团战的统帅：观察对面、电脑统帅换战术（22-modes-17-command/）
+else if (typeof squadAutoTick === 'function') squadAutoTick();   // 没有统帅的多人局：「智策」自动战术每 0.5 秒重算一次
 if (!ROLL.on && !REPLAY.on) { const player = allFighters().find(f => f.ctrl === human[0]); if (player) secretThink(player); }
 for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
 rpPoint();
@@ -32922,7 +32923,7 @@ function recBegin(kind) {
 M.reviewReady = false;
 const active = allFighters();
 Object.assign(REC, { on: true, bad: false, kind, f: 0, nf: 0, ev: [], tr: [], trStart: null, post: ['', ''], last: [-1, -1],
-meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), trainSlots: kind === 'net' ? [...((ROLL.slots || [])[localIdx()] || [])] : active.filter(f => human.includes(f.ctrl)).map(f => f.idx), mapActive: !!mapNow(), level: M.level || '', ch: [A.chIdx, B.chIdx], trEvery: TR_EVERY, st0: capState(), t: Date.now() } });
+meta: { v: VERSION, kind, mode: M.mode, playerSide: localIdx(), trainSlots: kind === 'net' ? [...((ROLL.slots || [])[localIdx()] || [])] : active.filter(f => human.includes(f.ctrl)).map(f => f.idx), mapActive: !!mapNow(), level: M.level || '', tac0: typeof getDefaultTeamTactic === 'function' ? getDefaultTeamTactic() : 'auto', ch: [A.chIdx, B.chIdx], trEvery: TR_EVERY, st0: capState(), t: Date.now() } });
 if (M.hasBuffs && M.competitiveScrolls) REC.meta.competitiveScrolls = JSON.parse(JSON.stringify(M.competitiveScrolls));
 if (isLargeTeam()) {
 const tc = teamCount(), n = active.length;
@@ -51629,6 +51630,11 @@ const savedTac = localStorage.getItem('renying-default-tactic');
 if (savedTac && CMD_TACTICS[savedTac]) defaultTeamTactic = savedTac;
 } catch (e) {}
 function getDefaultTeamTactic() { return CMD_TACTICS[defaultTeamTactic] ? defaultTeamTactic : 'auto'; }
+function matchDefaultTactic() {
+if (M.mode === 'net') return 'auto';
+if (M.mode === 'replay') { const t = REPLAY.m && REPLAY.m.tac0; return CMD_TACTICS[t] ? t : 'auto'; }
+return getDefaultTeamTactic();
+}
 function setDefaultTeamTactic(tac) {
 const next = CMD_TACTICS[tac] ? tac : 'auto';
 defaultTeamTactic = next;
@@ -51656,7 +51662,7 @@ const cmdTacName = id => (id && CMD_TACTICS[id]) ? CMD_TACTICS[id].n : '无令';
 const cmdRand = (a, b) => a + grnd() * (b - a);
 function cmdRoundInit() {
 M.cmd = null;
-if (!isLargeTeam() || M.watchAi || M.mode === 'demo' || M.mode === 'replay') return;
+if (!isLargeTeam() || M.watchAi || M.mode === 'demo') return;   // 回放也要建统帅：统帅加气血、电脑统帅换战术都在模拟里，少了回放就和实战对不上
 const tc = teamCount();
 const C = { team: [], role: new Array(MAX_FIGHTERS).fill(0), sel: -1, tgtCount: new Array(MAX_FIGHTERS).fill(0), obsT: 0, tabAt: 0, hint: 0 };
 for (let t = 0; t < tc; t++) {
@@ -51670,7 +51676,7 @@ obs: { cx: 0, spread: 0, focus: 0, n: 0 }, dealt: 0, taken: 0, log: [],
 });
 }
 M.cmd = C;
-const pref = getDefaultTeamTactic();
+const pref = matchDefaultTactic();
 for (let t = 0; t < tc; t++) {
 const cmdr = FIGHTERS[C.team[t].cmdr];
 if (cmdr) cmdApplyHp(cmdr);
@@ -51683,11 +51689,11 @@ C.team[t].autoSub = CMD_ORDER[(grnd() * 3) | 0];
 C.team[t].log.push('auto');
 }
 }
-for (const f of allFighters()) { f.cmdTgt = -1; f.cmdTgtT = 0; f.cmdHitBy = -1; f.cmdHitT = -99; }
+for (const f of allFighters()) { f.cmdTgt = -1; f.cmdTgtT = 0; f.cmdHitBy = -1; f.cmdHitT = -99; f.target = null; }
 cmdObserve();
 for (let t = 0; t < tc; t++) if (C.team[t].tactic === 'auto') cmdAdaptiveEval(t);
 const lt = localTeam();
-if (cmdIsHumanTeam(lt)) say(`你是统帅 · ${CMD_TACTICS[pref].n}（1/2/3/4 或 Tab）`, 2.4, 'go');
+if (cmdIsHumanTeam(lt) && M.mode !== 'replay') say(`你是统帅 · ${CMD_TACTICS[pref].n}（1/2/3/4 或 Tab）`, 2.4, 'go');
 }
 function cmdApplyHp(f) {
 f.maxHp = Math.round(f.maxHp * CMD_HP_BONUS); f.hp = f.lagHp = f.maxHp;
@@ -52163,14 +52169,23 @@ if (cur !== res.sub) T.autoAt = clock;
 T.autoSub = res.sub;
 T.autoReason = res.reason;
 }
-function squadAdaptiveEval(t) {
+function squadAdaptiveCompute(t) {
 const mates = sideFighters(t).filter(f => !f.hidden && f.hp > 0);
-const lf = mates.find(f => human.includes(f.ctrl)) || mates[0];
+const lf = mates.find(f => !cpuTeamwork(f)) || mates[0];
 const foes = lf ? foesOf(lf).filter(e => !e.hidden && e.hp > 0) : [];
-const res = cmdComputeAdaptive(t, mates, foes, null, lf, foes[0] || null);
+return cmdComputeAdaptive(t, mates, foes, null, lf, foes[0] || null);
+}
+function squadAdaptiveEval(t) {
+const res = squadAdaptiveCompute(t);
 if (!M.squadAuto) M.squadAuto = [{}, {}, {}, {}];
 M.squadAuto[t] = res;
 return res;
+}
+function squadAutoTick() {
+if (M.cmd || !isMulti() || (typeof isRaid === 'function' && isRaid()) || !M.squadOrders) return;
+if (clock - (M.squadAutoT === undefined ? -9 : M.squadAutoT) < 0.5) return;
+M.squadAutoT = clock;
+for (let t = 0; t < teamCount(); t++) if ((M.squadOrders[t] || 'auto') === 'auto') squadAdaptiveEval(t);
 }
 function cmdAiEval(t) {
 const C = M.cmd, T = C.team[t], me = C.team[t].obs;
@@ -52416,7 +52431,7 @@ return buildTacticAiMod(me, foe, d, tac, role, fm, cmdFighter(t), sideFighters(t
 }
 function squadAiMod(me, foe, d) {
 if (M.cmd) return cmdAiMod(me, foe, d);
-if (!isMulti() || human.includes(me.ctrl) || (typeof isRaid === 'function' && isRaid())) return null;
+if (!isMulti() || !cpuTeamwork(me) || (typeof isRaid === 'function' && isRaid())) return null;
 const t = fighterTeam(me);
 const ord = (M.squadOrders && M.squadOrders[t]) || 'auto';
 const fm = (M.teamFormation && M.teamFormation[t]) || 'auto';
@@ -52424,15 +52439,12 @@ const roleIdx = (M.teamRoles && M.teamRoles[me.idx]) || 0;
 let role = CMD_ROLES[roleIdx] ? CMD_ROLES[roleIdx].id : 'auto';
 let tac = ({ focus: 'spear', protect: 'wall', spread: 'raid' }[ord]) || null;
 if (ord === 'auto') {
-if (!M.squadAuto || !M.squadAuto[t] || (clock - (M.squadAutoT || -9) >= 0.5)) {
-M.squadAutoT = clock;
-squadAdaptiveEval(t);
-}
-tac = (M.squadAuto && M.squadAuto[t] && M.squadAuto[t].sub) || 'spear';
+const cached = M.squadAuto && M.squadAuto[t] && M.squadAuto[t].sub ? M.squadAuto[t] : squadAdaptiveCompute(t);   // 只读：重算在 squadAutoTick
+tac = cached.sub || 'spear';
 if (role === 'auto') role = heroTacticProfile(me).prefRole;
 }
 const allies = sideFighters(t);
-const leader = allies.find(x => !x.hidden && x.hp > 0 && human.includes(x.ctrl)) || allies[0];
+const leader = allies.find(x => !x.hidden && x.hp > 0 && !cpuTeamwork(x)) || allies[0];
 return buildTacticAiMod(me, foe, d, tac, role, fm, leader, allies);
 }
 function cmdDmgMul(att, def) {
