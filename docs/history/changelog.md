@@ -12,6 +12,8 @@ All notable changes, features, and architectural capabilities of this project ar
 
 - The training frame inspector no longer shows over the tutorial or stage waves. No Worker change.
 
+- English mode: the training combo cards, mastery levels, second stances, AI tiers and default team tactic now show English, and long labels in the Draft, Community, Saga and Single Player panels wrap on phones instead of clipping. No Worker change.
+
 - Added `tools/audits/mode-switch-audit.mjs` to CI: it quits every local mode and fails if an overlay or match-scoped state leaks into the next screen.
 
 - Added `docs/design/mode-feature-matrix.md`, corrected stale source paths in comments and docs, and renumbered `src/data/30-ui-copy-23-training-watch.js`, `src/data/30-ui-copy-24-heirloom-and-modes.js`, `src/game/05-ui/24-account-02-legacy-lb.js` and `src/game/05-ui/24-account-03-lobby.js` so no two files share a number.

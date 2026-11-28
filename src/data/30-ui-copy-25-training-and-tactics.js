@@ -1,0 +1,56 @@
+// 英文界面词条 · 训练场改版（招式教学、自由与情景、连招试炼、天道演武）、专精称号、赛前默认战术、社区分享。
+// 规则和其他 30-ui-copy 文件一样：键必须和源码里的中文一字不差，同一个键只写一次。
+// 带数字或侠客招式名的句子（「专精 Lv.3」「试炼 1/3」「基础起手 · 普攻接…」「普攻命中 → Q · …」「二式 · …」）在 src/i18n.js 的 PATTERNS_EN 里按模板翻。
+Object.assign(UI_COPY_EN, {
+  // 训练场（src/pages/02-mode-hall.html、src/game/05-ui/21-buttons-02-training.js）
+  "招式教学：自选侠客、架势与课程范围，循序渐进掌握全部攻防核心机制！": "Move Lessons: choose a hero, a stance and a lesson range, then learn every core attack and defense mechanic step by step.",
+  "自选侠客与架势，按步骤掌握移动、连击、蓄力斩、技能、格挡、精准招架、腾空闪与奥义。": "Choose a hero and a stance, then learn movement, combos, charged slashes, skills, blocking, perfect parries, air dodges and ultimates step by step.",
+  "选择教学侠客": "Choose a hero for the lesson",
+  "教学架势": "Lesson stance",
+  "教学课程范围": "Lesson range",
+  "自由与情景：木人桩与无数值膨胀 AI 实战对练、实时帧数检视与六大专项情景！": "Free Play and Scenarios: dummy practice, AI sparring with standard stats, live frame data and six focused drills.",
+  "对手类型": "Opponent type",
+  "AI 实战对练（纯智能难度）": "AI sparring (skill-based difficulty only)",
+  "站立": "Stand",
+  "格挡": "Block",
+  "招架": "Parry",
+  "连段": "Combo",
+  "起跳": "Jump",
+  "AI 境界": "AI Level",
+  "木人桩模式：可精确控制对手站桩、格挡、弹反、连段与受压闪避，并实时查看帧数差与判定框。": "Dummy mode: set exactly how the dummy stands, blocks, parries, combos and escapes pressure, and watch frame advantage and hitboxes live.",
+  "AI 实战拆招": "AI Sparring Breakdown",
+  "高台与空战应对": "High Ground and Air Defense",
+  "选择训练侠客": "Choose a hero to train",
+  "训练架势": "Training stance",
+  "训练对手类型": "Training opponent type",
+  "木人桩行为": "Dummy behavior",
+  "训练 AI 境界": "Training AI level",
+  "选择AI对手侠客": "Choose the AI opponent's hero",
+  "连招试炼：选择 20 位侠客与架势，精准命中校验自动进阶并赢取专精经验与墨锭！": "Combo Trials: pick any of the 20 heroes and a stance. Each clean hit advances the trial and earns mastery XP and Ink.",
+  "试炼架势": "Trial stance",
+  "普攻命中": "Light Attack Hit",
+  "宗师": "Master",
+  "天道演武": "AI Exhibition",
+  "天道演武：挑选 AI 境界与对战模式，观摩全 AI 高手同屏演武切磋！": "AI Exhibition: pick an AI Level and a mode, then watch all-AI masters fight.",
+  "先在上方挑选「AI 境界」，再选择下方玩法模式，观摩顶尖电脑侠客同屏演武。": "Pick an AI Level above, then choose a mode below to watch the strongest computer heroes fight.",
+  "八强单败淘汰武林大会：亲自参赛或观战全 AI 演武角逐盟主！": "Eight-player single-elimination tournament: enter yourself or watch an all-AI bracket compete for the title.",
+  // 专精称号（src/data/18-combo-trials.js 的 MASTERY_TITLES）
+  "初窥门径": "First Steps",
+  "登堂入室": "Adept",
+  "炉火纯青": "Refined",
+  "出神入化": "Masterful",
+  "武林泰斗": "Martial Luminary",
+  "剑心通明": "Clear Blade Heart",
+  "天人合一": "One With Heaven",
+  "绝世无双": "Peerless",
+  "万法归宗": "All Paths United",
+  // 设置 · 赛前默认战术（src/game/04-modes/22-modes-17-command/、src/game/05-ui/17-home-04-settings.js）
+  "默认团队战术": "Default team tactic",
+  "锋矢集火": "Spearhead Focus Fire",
+  "铁壁固守": "Ironwall Hold",
+  "游袭包抄": "Raiders Flank",
+  // 训练场连段卡（src/data/18-combo-trials.js）、二式标签
+  "二式": "Stance II",
+  // 社区（src/social.js）
+  "分享最近一局战绩与回放码": "Share your latest match result and replay code",
+});

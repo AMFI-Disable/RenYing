@@ -81,6 +81,15 @@
   // 这里按模板换：$1 之类照常可用，也可以直接给一个替换函数。
   const EN_DUR = s => String(s).replace(/(\d+)\s*天/g, '$1d').replace(/(\d+)\s*小时/g, '$1h').replace(/(\d+)\s*分(?:钟)?/g, '$1m');
   const PATTERNS_EN = [
+    // 训练场连段卡、专精等级、二式名
+    [/^专精 Lv\.(\d+)$/, (m0, n) => `Mastery Lv.${n}`],
+    [/^Lv\.(\d+) (.+)$/, (m, n, t) => lookup(t) ? `Lv.${n} ${lookup(t)}` : m],
+    [/^试炼 (\d+)\/(\d+)$/, (m0, a, b) => `Trials ${a}/${b}`],
+    [/^基础起手 · 普攻接(.+)$/, (m, mv) => lookup(mv) ? `Opener · Light Attack into ${lookup(mv)}` : m],
+    [/^双技连携 · (.+)转(.+)$/, (m, a, b) => lookup(a) && lookup(b) ? `Skill Link · ${lookup(a)} into ${lookup(b)}` : m],
+    [/^绝学收尾 · 破势接(.+)$/, (m, mv) => lookup(mv) ? `Finisher · Guard Break into ${lookup(mv)}` : m],
+    [/^(.+) → (.+)$/, m => { const out = m.split(' → ').map(p => (/[一-鿿]/.test(p) ? lookup(p.trim()) : p)); return out.every(Boolean) ? out.join(' → ') : m; }],
+    [/^(.+式)$/, m => { const hs = typeof window !== 'undefined' && window.HERO_STANCES; const hit = hs && Object.values(hs).find(v => v && v.name === m); return hit && hit.en ? hit.en : m; }],
     [/^“蓄满(.+)，格挡在它面前像纸一样薄。”$/, (m, move) => lookup(move) ? `“Fully charge ${lookup(move)} to break a guard.”` : m],
     [/^“凌空使出(.+)，制空追击一气呵成。”$/, (m, move) => lookup(move) ? `“Use ${lookup(move)} to follow up in midair.”` : m],
     [/^“(.+)一出，(.+)让对手措手不及。”$/, (m, move, effect) => lookup(move) && lookup(effect) ? `“Catch your opponent off guard with ${lookup(move)}. Effect: ${lookup(effect)}.”` : m],

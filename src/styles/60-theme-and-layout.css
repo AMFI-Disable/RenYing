@@ -834,3 +834,13 @@
    英文的阵位名（Vanguard 等）比 50px 的选人槽宽，和矮屏的快速车轮战一样允许在词中换行 */
 .bpmovedeck .dhitname { white-space: normal; flex-wrap: wrap; }
 html:lang(en) #bp .slot2, html:lang(en) #bp .slot2 .lab { overflow-wrap: anywhere; }
+
+/* 手机竖屏（390 宽）英文：按钮、状态条的英文比中文长，允许换行，不再撑出面板 */
+@media (max-width: 480px) {
+  .go, .ghost, .soc-status { white-space: normal; overflow-wrap: anywhere; }
+  #community .cxhead > div { flex-wrap: wrap; min-width: 0; }
+  .saga-heroes { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .saga-heroes button, .saga-route { min-width: 0; overflow-wrap: anywhere; }
+  .soc-n small { white-space: normal; }
+  html #single .single-action-row .go, html #single .single-action-row .go.alt { height: auto !important; padding-top: 8px !important; padding-bottom: 8px !important; }
+}
