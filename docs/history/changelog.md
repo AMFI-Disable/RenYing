@@ -16,6 +16,16 @@ All notable changes, features, and architectural capabilities of this project ar
 
 - Allowed long key binding labels to wrap in Settings so the full action name remains readable.
 
+## [1.3.0] - 2026-11-27
+
+### Added
+
+- **3v3 Relay Bench Assist & Hot-Tag Swap (`src/game/04-modes/22-modes-01-tag3.js`, `src/game/02-combat/09-actions-03-fighter/03-tactics-and-physics.js`, `src/game/02-combat/11-loop-02-step.js`, `src/game/03-render/16-hud-02-bars.js`)**: added 20-hero deterministic bench assist cameos (`T` tap, 14s cooldown, 25% meter) and Hot-Tag Relay Swaps (`Down + T`, 35% meter, 2.5s re-tag lockout) for 3v3 Relay (`tag3`), stored inside rollback-serialized match state (`M.tag3Assist`, `M.tag3BenchHp`) with a compact `援` pip beside the 3v3 squad discs. No Worker change.
+- **8 Cross-Hero Elemental & Weapon Combo Synergies (`src/game/02-combat/10-hits-04-synergies.js`, `src/game/02-combat/10-hits-02-effects.js`, `src/ai/05-brain-hero-routes-and-team.js`)**: added 8 deterministic allied combo reactions (`flame_cyclone`, `conductive_ink`, `frost_shatter`, `harmonic_echo`, `shadow_hook`, `gale_feather`, `iron_aegis`, `silk_resonance`) across multi-fighter team modes with a 2.4s trigger window, 3.5s per-target cooldown, strict 1v1 isolation, and team AI follow-up awareness in `aiTeamTactics()`. No Worker change.
+- **Living Ink Battlefield (`残墨`/`墨爆`) & Shareable Battle Scroll (`src/game/02-combat/10-hits-05-living-ink.js`, `src/game/02-combat/08-fighter-03-lifecycle.js`, `src/game/02-combat/10-hits-01-collision.js`, `src/game/03-render/12-draw-01-stages.js`, `src/pages/06-modals-and-overlays.html`)**: added a bounded 12-zone deterministic floor ink ring buffer (`M.inkZones`, 12s fade) painted by heavy strikes and ultimates, `墨爆` Calligraphy Flash on Blade Clash inside ink (+8 meter and nearby non-ultimate projectile clear, respecting `reducedFlash` and 32-player crowd LOD), and client-side `<canvas>` PNG export (`#endScrollBtn`, `战局墨卷`) on `#end`. No Worker change.
+- **Interactive Replay Takeover Drills (`src/game/02-combat/11-loop-03-replay.js`, `src/game/05-ui/21-buttons-02-training.js`, `src/pages/06-modals-and-overlays.html`)**: added one-click `接管此局` (`#rpTakeover`) on the replay bar (`#rpBar`) cloning the exact replay keyframe into an 8-second live Training Lab drill against recorded opponent inputs (handing off to God AI after recorded input ends), with `Backspace` instant reset and `Escape` clean return to the replay bar. No Worker change.
+- **v1.3.0 Regression Suite & Bilingual Copy Parity (`tools/tests/combat/96-v130-synergy-ink-takeover.mjs`, `tools/tests/combat-test.mjs`, `src/data/30-ui-copy-20-gaps.js`, `src/game/01-engine/01-core.js`)**: added automated verification covering all 20 heroes' bench assists, Hot-Tag swaps, all 8 synergies and 1v1 isolation, Living Ink cap/clash/rollback, and Replay Takeover start/reset/exit (`129/129` combat checks passing, `4/4` rollback tests passing), added full English copy parity (`--strict-copy`), and bumped `VERSION` to `1.3.0`. Zero Cloudflare D1 reads/writes added; no Worker change.
+
 ## [1.2.0] - 2026-11-27
 
 ### Added
