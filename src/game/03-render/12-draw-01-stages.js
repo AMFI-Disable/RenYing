@@ -155,13 +155,39 @@ function drawStorySetting(setting, gy, sc) {
   }
 }
 
+let _bgStaticLayer = null;
+function getBgStaticLayer(sky, bg) {
+  if (typeof document === 'undefined' || W <= 0 || H <= 0) return null;
+  const key = W + 'x' + H + '|' + sky.join(',');
+  if (_bgStaticLayer && _bgStaticLayer.key === key) return _bgStaticLayer.cv;
+  const cv2 = document.createElement('canvas');
+  cv2.width = Math.max(1, Math.round(W));
+  cv2.height = Math.max(1, Math.round(H));
+  const x2 = cv2.getContext && cv2.getContext('2d');
+  if (!x2) return null;
+  const skyG = x2.createLinearGradient(0, 0, 0, H);
+  skyG.addColorStop(0, sky[0]); skyG.addColorStop(0.48, sky[1]); skyG.addColorStop(0.78, sky[2]); skyG.addColorStop(1, sky[3]);
+  x2.fillStyle = skyG; x2.fillRect(0, 0, W, H);
+  const wash = x2.createRadialGradient(W * 0.65, H * 0.24, H * 0.05, W * 0.55, H * 0.35, W * 0.75);
+  wash.addColorStop(0, 'rgba(239, 230, 210, 0.08)');
+  wash.addColorStop(0.5, 'rgba(180, 195, 220, 0.02)');
+  wash.addColorStop(1, 'rgba(4, 6, 12, 0.28)');
+  x2.fillStyle = wash; x2.fillRect(0, 0, W, H);
+  _bgStaticLayer = { key, cv: cv2 };
+  return cv2;
+}
 function drawBackground(sc) {
   const setting = storyBackdrop();
   const T = setting || SCN, sky = T ? T.sky : ['#060914', '#141b30', '#262b44', '#181c2b'], mc = T ? T.mist : SCN_DEF.mist;
   const bg = bgGrads(sky, mc, !!(T && T.legend));
-  ctx.fillStyle = bg.sky; ctx.fillRect(0, 0, W, H);
-  // 宣纸水墨暗纹晕染（四角微暗、天际微亮）
-  ctx.fillStyle = bg.wash; ctx.fillRect(0, 0, W, H);
+  const cachedBg = getBgStaticLayer(sky, bg);
+  if (cachedBg) {
+    ctx.drawImage(cachedBg, 0, 0, W, H);
+  } else {
+    ctx.fillStyle = bg.sky; ctx.fillRect(0, 0, W, H);
+    // 宣纸水墨暗纹晕染（四角微暗、天际微亮）
+    ctx.fillStyle = bg.wash; ctx.fillRect(0, 0, W, H);
+  }
   // 雷雨天：偶尔闪一下
   if (T && T.storm) { const k = Math.floor(clock * 0.4), ph = clock * 0.4 - k; if (hash(k) < 0.45 && ph < 0.12) { ctx.fillStyle = `rgba(200,170,255,${0.22 * (1 - ph / 0.12)})`; ctx.fillRect(0, 0, W, H); } }
   // 星星

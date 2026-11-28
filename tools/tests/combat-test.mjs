@@ -34,6 +34,7 @@ import overhaulSystems from './combat/80-overhaul-systems.mjs';
 import teamCommand from './combat/90-team-command.mjs';
 import overhaulAudit from './combat/95-overhaul-audit.mjs';
 import v130SynergyInkTakeover from './combat/96-v130-synergy-ink-takeover.mjs';
+import v140ModeAiPerf from './combat/97-v140-mode-ai-perf.mjs';
 
 console.log('===== RenYing Combat Mechanics & AI Capabilities Suite =====\n');
 
@@ -252,6 +253,7 @@ const testSuite = [
   ...teamCommand,
   ...overhaulAudit,
   ...v130SynergyInkTakeover,
+  ...v140ModeAiPerf,
 ];
 
 let failed = 0;
