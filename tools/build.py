@@ -178,6 +178,15 @@ def ai_parts():
 def ai_source():
     return "".join(read(SRC, *p) for p in ai_parts())
 
+
+def iife_parts(folder):
+    """通用闭包模块目录（如 src/cloud/、src/armory/）：按编号顺序拼进同一立即执行函数"""
+    return [(folder, n) for n in numbered(folder)]
+
+
+def iife_source(folder):
+    return "(function() {\n  'use strict';\n" + "".join(read(SRC, *p) for p in iife_parts(folder)) + "\n})();\n"
+
 # ===========================================================================
 # 3. 压缩：去掉 CSS / JS 的注释和空行
 # ===========================================================================
@@ -286,7 +295,7 @@ def page(offline):
             + "<script>\n" + compact_js(read(SRC, "errlog.js")) + "\n</script>\n"
             + "<script>\n" + read(ASSETS, "peerjs.min.js") + "\n</script>\n"
             + boot_step(0.2)
-            + "<script>\n" + compact_js(read(SRC, "cloud.js")) + "\n</script>\n"
+            + "<script>\n" + compact_js(iife_source("cloud")) + "\n</script>\n"
             + "<script>\n" + compact_js(read(SRC, "i18n.js")) + "\n</script>\n"
             + "<script>\n" + compact_js(ai_source()) + "\n</script>\n"
             + boot_step(0.3)
@@ -450,10 +459,13 @@ def check_js(strict_copy=False):
 
     # ---- 1. 列出所有检查：(出错时的标题, 命令参数, 标准输入) ----
     jobs = []
-    for name in ("cloud.js", "i18n.js", "net-p2p.js", "social.js", "armory-core.js", "armory.js", "anticheat.js"):
+    for name in ("i18n.js", "net-p2p.js", "social.js", "armory-core.js", "armory.js", "anticheat.js"):
         # 源文件本身，和 compact_js 压缩后的样子各查一遍（压缩出错说明 compact_js 把代码切坏了）
         jobs.append((f"src/{name} 语法错误：", [node, "--check", os.path.join(SRC, name)], None, name))
         jobs.append((f"src/{name} 压缩后语法错误：", [node, "--check", "-"], compact_js(read(SRC, name)), name))
+    for folder in ("cloud",):
+        jobs.append((f"src/{folder}/ 语法错误：", [node, "--check", "-"], iife_source(folder), None))
+        jobs.append((f"src/{folder}/ 压缩后语法错误：", [node, "--check", "-"], compact_js(iife_source(folder)), None))
     for part in ai_parts():
         jobs.append((f"src/{'/'.join(part)} 语法错误：", [node, "--check", os.path.join(SRC, *part)], None, None))
     jobs.append(("src/ai/ 拼起来压缩后语法错误：", [node, "--check", "-"], compact_js(ai_source()), None))

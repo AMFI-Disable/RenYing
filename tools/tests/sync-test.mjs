@@ -14,7 +14,10 @@ import vm from 'node:vm';
 const ROOT = new URL('../..', import.meta.url);
 const FILE = process.argv.includes('--bundle') ? 'cloudflare/worker.bundle.js' : 'cloudflare/worker.js';
 const { default: worker } = await import(new URL(FILE, ROOT));
-const CLOUD_JS = fs.readFileSync(new URL('src/cloud.js', ROOT), 'utf8');
+const CLOUD_DIR = new URL('src/cloud/', ROOT);
+const CLOUD_JS = "(function() {\n  'use strict';\n"
+  + fs.readdirSync(CLOUD_DIR).filter(n => /^\d\d-[a-z0-9-]+\.js$/.test(n)).sort().map(n => fs.readFileSync(new URL(n, CLOUD_DIR), 'utf8')).join('\n')
+  + "\n})();\n";
 
 let pass = 0, fail = 0;
 const ok = (cond, label, extra) => {

@@ -46,15 +46,15 @@ def main():
         "ai": any(matches(path, ("src/ai/", "tools/ai/", "src/models/", "src/data/heroes/"), (
             "tools/tests/test-ai.mjs", "tools/tests/ai-tactics-test.mjs",
         )) for path in paths),
-        "cloud": any(matches(path, ("cloudflare/", "src/game/05-ui/24-account", "src/game/05-ui/19-progress-02-", "src/game/24-account", "src/game/19-progress-02-"), (
-            "src/cloud.js", "tools/tests/cloud-test.mjs", "tools/tests/sync-test.mjs",
+        "cloud": any(matches(path, ("src/cloud/", "cloudflare/", "src/game/05-ui/24-account", "src/game/05-ui/19-progress-02-", "src/game/24-account", "src/game/19-progress-02-"), (
+            "tools/tests/cloud-test.mjs", "tools/tests/sync-test.mjs",
             "tools/tests/world-test.mjs", "tools/tests/test.mjs",
         )) for path in paths),
-        "economy": any(matches(path, ("src/armory", "cloudflare/", "src/game/05-ui/19-progress-03-", "src/game/19-progress-03-"), (
-            "src/anticheat.js", "src/cloud.js", "tools/tests/econ-test.mjs", "tools/tests/test.mjs",
+        "economy": any(matches(path, ("src/armory", "src/cloud/", "cloudflare/", "src/game/05-ui/19-progress-03-", "src/game/19-progress-03-"), (
+            "src/anticheat.js", "tools/tests/econ-test.mjs", "tools/tests/test.mjs",
         )) for path in paths),
-        "worker": any(matches(path, ("cloudflare/",), (
-            "src/armory-core.js", "src/armory.js", "src/cloud.js",
+        "worker": any(matches(path, ("src/cloud/", "cloudflare/"), (
+            "src/armory-core.js", "src/armory.js",
             "tools/tests/predeploy-check.mjs", "tools/tests/world-test.mjs",
             "tools/tests/rollback-test.mjs", "tools/tests/test.mjs", "tools/build.py",
         )) for path in paths),

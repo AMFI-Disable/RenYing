@@ -11,7 +11,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
-const SRC = path.join(ROOT, 'src', 'cloud.js');
+const CLOUD_DIR = path.join(ROOT, 'src', 'cloud');
+const CLOUD_JS = "(function() {\n  'use strict';\n"
+  + fs.readdirSync(CLOUD_DIR).filter(n => /^\d\d-[a-z0-9-]+\.js$/.test(n)).sort().map(n => fs.readFileSync(path.join(CLOUD_DIR, n), 'utf8')).join('\n')
+  + "\n})();\n";
 
 let pass = 0, fail = 0;
 const ok = (cond, label, extra) => {
@@ -117,7 +120,7 @@ async function boot() {
   const worker = makeWorker();
   const { g, store } = makeEnv(worker);
   const ctx = vm.createContext(g);
-  vm.runInContext(fs.readFileSync(SRC, 'utf8'), ctx, { filename: 'cloud.js' });
+  vm.runInContext(CLOUD_JS, ctx, { filename: 'cloud.js' });
   await sleep(20);
   return { CloudSave: g.CloudSave, worker, store, g };
 }
