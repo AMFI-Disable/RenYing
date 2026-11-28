@@ -19,7 +19,7 @@
 //           look 画法和配色，ai.range 电脑喜欢站的距离。beats/weakTo 只给电脑选人、禁人时打分用，界面上不显示。
 //   forest  斩妖列传（打小怪剧情）：title、place、synopsis、stageNames 五关名字、waveDialogues 四波台词、bossIntro 魔首登场
 //           （hero、heroName 自动从 id 和 char.name 补上）
-//   saga    侠客列传（引擎在 src/game/22-saga.js）。每条路 5 节：前四节按顺序打，第 3 节打完要做一个抉择（记成 flag），
+//   saga    侠客列传（引擎在 src/game/04-modes/22-saga.js）。每条路 5 节：前四节按顺序打，第 3 节打完要做一个抉择（记成 flag），
 //           第 5 节的对话、对手和结局跟着这个抉择走。
 //           一节：place 地点、name 标题、pre 开打前的对话、fight 这一战、post 打赢后的对话、choice 抉择（只有一节有）。
 //             对话一行是 [说话的人, 话]，说话的人写 '' 是旁白。

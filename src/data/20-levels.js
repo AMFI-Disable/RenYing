@@ -1,17 +1,17 @@
 // ======================= 电脑难度表 =======================
 // 每档电脑难度一项，按从易到难排。改某一档有多强、叫什么、怎么介绍，只改这里。
-// 游戏里的 LEVELS（AI 参数）、AI_LEVEL_KEYS、LV_NAME、AI_PROFILES 都是在 src/game/01-core.js 从这张表拆出来的。
+// 游戏里的 LEVELS（AI 参数）、AI_LEVEL_KEYS、LV_NAME、AI_PROFILES 都是在 src/game/01-engine/01-core.js 从这张表拆出来的。
 //
 // { id, name, ai | blend, badge, badgeCol, desc, traits, foeHp, reward }
 //   id        英文编号，存档、回放、关卡、天梯都用它，定了就别改                                              （必填）
 //   name      中文名（关卡、回放列表、对局信息都显示这个）                                                    （必填）
-//   ai        这一档电脑的“手速与见识”（src/ai.js 的 AIBrain 读，写在 this.L 里）                     （ai 和 blend 二选一）
+//   ai        这一档电脑的“手速与见识”（src/ai/ 的 AIBrain 读，写在 this.L 里）                     （ai 和 blend 二选一）
 //             react [最快, 最慢] 看到对手出招到能反应的秒数    think [最快, 最慢] 立回时多久想一次
 //             block 看到来招时防住的几率    jg 精准招架几率    punish 抓破绽几率    combo 一套最多打几下
 //             cancel 连招取消接技能几率    tech 落地受身几率    breaker 腾空闪用得多好    oki 压起身几率
 //             bait 骗闪几率    read 记对手习惯的本事    lead 领先后避战    error 失误几率    skill 技能用得准不准
 //             ult 大招用得准不准    aggr 主动程度    genes 是否用训练出来的角色打法    matchup 是否按双方角色针对
-//   blend     不单独写参数，对局时按玩家水平在两档之间插值：[较弱的一档, 较强的一档]（宿敌用，见 src/ai.js 的 aiBlendLevel）
+//   blend     不单独写参数，对局时按玩家水平在两档之间插值：[较弱的一档, 较强的一档]（宿敌用，见 src/ai/ 的 aiBlendLevel）
 //   badge     选难度时显示的小标签          badgeCol 小标签的颜色
 //   desc      选难度时的介绍（写清楚这一档会什么、不会什么）    traits 介绍下面的几个关键词
 //             （badge / badgeCol / desc / traits 只有能在选难度界面直接选的档要写）

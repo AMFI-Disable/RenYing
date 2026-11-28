@@ -1,7 +1,7 @@
 /* =====================================================================
    刃影武库 · 规则核心
    ---------------------------------------------------------------------
-   浏览器（src/armory.js）和云端（cloudflare/worker.js）共用这一份规则：
+   浏览器（src/armory/）和云端（cloudflare/worker.js）共用这一份规则：
    收藏品和武器箱、品质与概率、开箱次数、斩数、货郎、商店（武器箱和货郎按固定价格卖）、
    玩家市场（只有玩家之间买卖饰品，价格由玩家自己定）、熔铸契、对局掉落、每周补给、江湖行动。
    这里不碰页面，只改传进来的存档对象 s，所以同一份代码在服务器上跑出来的结果和本机一模一样。
@@ -133,7 +133,7 @@
   // 本机的领取记录（localStorage）不算数：换设备、清缓存、退出再登录都领不到第二次。离线版和本机账号没有服务器，照旧本机算
   // 任务：[按天 d / 按周 w / 活动 e, 看哪个数, 要多少, 给多少墨锭]；数只认服务器记过的对局（matchEnd 带开局票的那些）
   C.TASKS = { d1: ['d', 'games', 1, 30], d2: ['d', 'combo', 5, 40], d3: ['d', 'wins', 1, 50], w1: ['w', 'games', 5, 120], w2: ['w', 'wins', 3, 180], w3: ['w', 'ults', 5, 200], e1000: ['e', 'cpu', 3, 1000] };
-  C.EVENT = { start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 4, 16) };   // 全皮肤限免活动（和 src/game/01-core.js 的 FREE_SKIN_EVENT 一样）：活动任务、系统补偿只在这段时间能领
+  C.EVENT = { start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 4, 16) };   // 全皮肤限免活动（和 src/game/01-engine/01-core.js 的 FREE_SKIN_EVENT 一样）：活动任务、系统补偿只在这段时间能领
   C.inEvent = now => now >= C.EVENT.start && now < C.EVENT.end;
   C.RW = { comp: 500, tut: 300, star: 30, sagaNode: 40, sagaEnd: 150, sagaNodes: 5, sagaEnds: 2, stages: 5 };   // 补偿、教程、每颗关卡星、列传每节、每个结局；每部列传 5 节 2 个结局，每章 5 关
 
@@ -434,7 +434,7 @@
   C.charOf = k => own(PREFIX, String(k).split('_')[0]) || '';
   // 退场侠客的饰品：精简到 20 位侠客时退场的 16 位里，只有幽篁（yu_）和破浪（pl_）在武库里有饰品，一共 14 款。
   // 每款换成同一个武器箱、同一档品质、同一个位置上接替它的那一款。存档、挂单、记录里读到旧编号一律换成新编号，斩数照旧。
-  // 上一版读存档时直接丢掉了这些旧款：服务器按流水找回（cloudflare/worker/30-admin-helpers.js 的 retiredRestore），本机账号按可穿的皮肤补（src/armory.js）
+  // 上一版读存档时直接丢掉了这些旧款：服务器按流水找回（cloudflare/worker/30-admin-helpers.js 的 retiredRestore），本机账号按可穿的皮肤补（src/armory/）
   C.RETIRED = { yu_sf1: 'ql_sf1', pl_sf1: 'xw_sf1', yu_ic1: 'ql_ic1', pl_ic1: 'xw_ic1', yu_ic3: 'ql_ic3', yu_ic4: 'ql_ic4',
     pl_st1: 'xw_st1', pl_st2: 'xw_st2', pl_st3: 'xw_st3', pl_st4: 'xw_st4', yu_ym1: 'xw_ym1', yu_ym2: 'xw_ym2', yu_ym3: 'ql_ym3', yu_ym4: 'li_ym4' };
   C.isRetired = k => typeof k === 'string' && own(C.RETIRED, k) !== undefined;

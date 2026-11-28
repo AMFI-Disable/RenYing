@@ -1,4 +1,4 @@
-// 无画面沙盒用的游戏代码：训练好的 AI 数据 + src/ai.js + src/data/ + src/game/（和 tools/build.py 打包的顺序一样）
+// 无画面沙盒用的游戏代码：训练好的 AI 数据 + src/ai/ + src/data/ + src/game/（和 tools/build.py 打包的顺序一样）
 import { readFileSync, existsSync, readdirSync, statSync } from 'node:fs';
 
 import { fileURLToPath } from 'node:url';

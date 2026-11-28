@@ -6,7 +6,7 @@
 // transform, so its recorded x/y are world coordinates, not screen coordinates.
 // Usage: node tools/audits/hud-audit.mjs [outdir] [width] [height]
 //
-// 找 bug 提示：报告里每一条是一处画布文字（状态、文字、字号、位置）；字号低于下限的会列在最后，照文字内容去 src/game/16-draw-ui.js 搜。
+// 找 bug 提示：报告里每一条是一处画布文字（状态、文字、字号、位置）；字号低于下限的会列在最后，照文字内容去 src/game/03-render/16-hud-*.js 搜。
 import { spawn } from 'node:child_process';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';

@@ -9,7 +9,7 @@
 <!-- 刃影主页面的骨架：tools/build.py 把下面几个 @ 占位标记换成样式和脚本，生成根目录的 index.html（每个标记只能有一个）。
      @style 全部样式（src/style.css + src/styles/）；@music 背景音乐（只有离线版内嵌）；@scripts 游戏和各模块的脚本；@qfx 青锋行。
      每个界面是 #wrap 里一个 class="scr" 的 div（菜单 #menu、单人 #single、联机 #netp、点将台 #bp、账号 #acc、
-     武库 #armory、任务 #tasks、结算 #end ……），showScreen(id)（src/game/21-buttons-01-screen-controls.js）按一张固定的名单
+     武库 #armory、任务 #tasks、结算 #end ……），showScreen(id)（src/game/05-ui/21-buttons-01-screen-controls.js）按一张固定的名单
      切换 on，新加的界面要记得加进那张名单。
      找 bug 提示：某个界面打不开，先看这里有没有那个 id；按钮没反应去 src/game/21-buttons-*.js 找它的 id。 -->
 <script>try { if (localStorage.getItem('renying-lang') === 'en') document.documentElement.classList.add('boot-en'); } catch (e) {}</script>   <!-- 以前选过英文：首页一开始就给顶栏留位置（style.css 的 html.boot-en） -->
@@ -5535,7 +5535,7 @@ window.RYBoot = (function () {
         </div>
         <p class="xiwu-info-body" id="xiwuInfoBody"></p>
       </div>
-      <!-- 电脑境界：大厅最上面，对电脑的各模式（论剑、3v3、2v2、天机、山河异境、神决）共用这一条，选了会记住。见 src/game/21-buttons-01-screen-controls.js 的 setPickLevel -->
+      <!-- 电脑境界：大厅最上面，对电脑的各模式（论剑、3v3、2v2、天机、山河异境、神决）共用这一条，选了会记住。见 src/game/05-ui/21-buttons-01-screen-controls.js 的 setPickLevel -->
       <div id="aiLvHome">
         <div class="ai-lv-bar" id="aiLvBar">
           <div class="sec-head-row">
@@ -5958,7 +5958,7 @@ window.RYBoot = (function () {
         </div>
       </div>
 
-      <!-- 墨球蹴鞠 · 把墨球打进对方球门（src/game/22-modes-09-cuju.js） -->
+      <!-- 墨球蹴鞠 · 把墨球打进对方球门（src/game/04-modes/22-modes-09-cuju/） -->
       <div data-sec="cuju" class="single-sec-pane" style="display:none">
         <div class="sec-head-row">
           <h3 class="spt">墨球蹴鞠 · 先进三球</h3>
@@ -6860,7 +6860,7 @@ window.RYBoot = (function () {
       </div>
     </div>
   </div>
-  <!-- 木人试剑：对手行为栏（src/game/21-buttons-02-training.js 的 dummyBar*，动作表在 src/data/14-dummy.js） -->
+  <!-- 木人试剑：对手行为栏（src/game/05-ui/21-buttons-02-training.js 的 dummyBar*，动作表在 src/data/14-dummy.js） -->
   <button class="dummy-bar-btn hidden" id="dummyBarBtn" type="button">对手行为</button>
   <div class="dummy-bar hidden" id="dummyBar" role="dialog" aria-modal="true" aria-label="对手行为">
     <div class="db-head"><b>对手行为与 AI 难度</b><span class="db-key" id="dummyBarKey"></span><button class="mm-cancel" id="dummyBarClose" type="button">继续练</button></div>
@@ -10564,7 +10564,7 @@ cpuWatch: { bp: 'duel', local: true, sides: ['苍龙 (AI)', '赤凤 (AI)'] },
 chaos: { bp: 'open', local: true, foe: '电脑' },
 mayhem: { bp: 'open', local: true, foe: '电脑' },
 maps: { bp: 'open', local: true, foe: '电脑' },   // 山河异境：投票选地图（src/data/12-maps.js）
-cuju: { bp: 'open', local: true, foe: '电脑' },   // 墨球蹴鞠：把墨球打进对方球门（src/game/04-modes/22-modes-09-cuju.js）
+cuju: { bp: 'open', local: true, foe: '电脑' },   // 墨球蹴鞠：把墨球打进对方球门（src/game/04-modes/22-modes-09-cuju/）
 cuju2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 墨球蹴鞠
 koth: { bp: 'open', local: true, foe: '电脑' },   // 灵坛争锋：占领灵坛 + 无限复活
 koth2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 灵坛争锋
@@ -31598,7 +31598,7 @@ function applyHit(att, def, m, pt) {
 if (typeof bastionOn === 'function' && bastionOn() && typeof bastionModifyHit === 'function') m = bastionModifyHit(att, def, m);
 if (M.mode === 'net' && !RESIM) NET.matchHits = (NET.matchHits || 0) + 1;   // 回滚重算不能再记一次，不然两边会算成不一样
 if (def.forestProxy) { forestHit(att, m, pt); return; }
-if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 22-world.js
+if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 src/game/04-modes/22-world-01-net-combat.js
 if (cujuOn()) def.hp = def.lagHp = def.maxHp;   // 墨球蹴鞠不比气血：挨打照样硬直、倒地，但永远打不倒
 if (typeof partyOn === 'function' && partyOn() && M.party) {
 if (M.party.kind === 'potato') partyTransferBomb(def.idx);
@@ -32677,7 +32677,7 @@ superFreeze -= STEP;
 rpPoint(); updateFighter(superOwner, foeOf(superOwner)); rpPost(); if (!RESIM) { animFighter(superOwner); updateFX(STEP); }
 return;
 }
-if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（22-world.js）
+if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（src/game/04-modes/22-world-03-rogue-coop.js）
 if (M.mode === 'world') worldUpdate(); else if (!isClient()) updateMatch(); else M.t += STEP;
 if (isMulti() && M.phase !== 'ko') for (const f of allFighters()) if (!f.hidden && f.hp > 0) foeOf(f);
 if (M.cmd) cmdTick();   // 团战的统帅：观察对面、电脑统帅换战术（22-modes-17-command.js）
@@ -33759,7 +33759,7 @@ $id('rpPause').addEventListener('click', () => { REPLAY.paused = !REPLAY.paused;
 $id('rpHz').addEventListener('input', e => { REPLAY.hz = Math.max(1, Math.min(120, Math.round(+e.target.value || 120))); REPLAY.frameAcc = 0; replayInspectRender(); });
 $id('rpHitbox').addEventListener('click', () => { if (!REPLAY.on || M.phase === 'end') return; debugHitbox = !debugHitbox; replayInspectRender(); });
 $id('rpStep').addEventListener('click', replayStep);
-$id('rpExit').addEventListener('click', toMenu);
+$id('rpExit').addEventListener('click', () => toMenu());
 if ($id('rpScrub')) {
 $id('rpScrub').addEventListener('input', e => { if (REPLAY.on) replaySeek(+e.target.value); });
 }
@@ -46101,7 +46101,7 @@ function trainInspectUpdate() {
 const panel = $id('trainInspect');
 if (!panel) return;
 const inTrial = typeof TRIAL_RUN !== 'undefined' && TRIAL_RUN.active;
-const active = M.mode === 'train' && !REPLAY.on && !inTrial && M.phase !== 'end' && !currentScreen;
+const active = M.mode === 'train' && !TUT && !FOREST.on && !REPLAY.on && !inTrial && M.phase !== 'end' && !currentScreen;
 panel.classList.toggle('hidden', !active || paused || DB.open);
 trainInspectRender();
 trainLabUpdate();
@@ -46558,6 +46558,18 @@ toMenuScreen: () => { singleSec('chaos'); showScreen('single'); },
 saga: {
 toMenuScreen: () => { singleSec('saga'); showScreen('single'); },
 },
+melee: {
+toMenuScreen: () => { singleSec('melee'); showScreen('single'); },   // 大型团战：退出后回习武大厅的团战页，不回首页
+},
+ctf: {
+toMenuScreen: () => { singleSec('ctf'); showScreen('single'); },   // 大型团战：退出后回习武大厅的团战页，不回首页
+},
+quad: {
+toMenuScreen: () => { singleSec('quad'); showScreen('single'); },   // 大型团战：退出后回习武大厅的团战页，不回首页
+},
+gauntlet: {
+toMenuScreen: () => { singleSec('gauntlet'); showScreen('single'); },   // 大型团战：退出后回习武大厅的团战页，不回首页
+},
 cpu: {
 rematch: () => {
 if (M.quick) {   // 从首页直接开打的：同一个角色、同一个难度，换个随机对手再来
@@ -46649,6 +46661,8 @@ paused = false; BP = null; watch2v2Bp = null; B.dummy = false; if (!keepRoom && 
 const prevMode = M.mode;
 const handler = MODE_HANDLERS[prevMode];
 if (handler && handler.onLeave) handler.onLeave();
+M.map = null;
+M.towerPerks = []; M.foeScrolls = []; M.scRun = {};
 M.mode = 'demo';
 if (returnHome) showScreen('menu');
 else if (handler && handler.toMenuScreen) handler.toMenuScreen();
@@ -46656,7 +46670,7 @@ else showScreen('menu');
 if (prevMode !== 'demo') startMatch('demo');   // 首页背景那场比武本来就还在打，别重新摆一次
 if (keepRoom && !returnHome) selectMode('net');
 }
-document.getElementById('quitBtn').addEventListener('click', toMenu);
+document.getElementById('quitBtn').addEventListener('click', () => toMenu());
 document.getElementById('menuBtn').addEventListener('click', () => { if (typeof statMatchQuit === 'function') statMatchQuit(); toMenu(true); });
 function renderTag3() {}
 function tag3Rematch() {
@@ -60677,7 +60691,7 @@ swift: { name: '迅影', en: 'Swift', cost: 400, kos: 10, desc: '冷却缩短 18
 heavy: { name: '破军', en: 'Ruin', cost: 600, kos: 25, desc: '威力提升 18% 且破防增强 25%，冷却延长 16%。' },
 };
 C.TASKS = { d1: ['d', 'games', 1, 30], d2: ['d', 'combo', 5, 40], d3: ['d', 'wins', 1, 50], w1: ['w', 'games', 5, 120], w2: ['w', 'wins', 3, 180], w3: ['w', 'ults', 5, 200], e1000: ['e', 'cpu', 3, 1000] };
-C.EVENT = { start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 4, 16) };   // 全皮肤限免活动（和 src/game/01-core.js 的 FREE_SKIN_EVENT 一样）：活动任务、系统补偿只在这段时间能领
+C.EVENT = { start: Date.UTC(2026, 9, 21, 16), end: Date.UTC(2026, 10, 4, 16) };   // 全皮肤限免活动（和 src/game/01-engine/01-core.js 的 FREE_SKIN_EVENT 一样）：活动任务、系统补偿只在这段时间能领
 C.inEvent = now => now >= C.EVENT.start && now < C.EVENT.end;
 C.RW = { comp: 500, tut: 300, star: 30, sagaNode: 40, sagaEnd: 150, sagaNodes: 5, sagaEnds: 2, stages: 5 };   // 补偿、教程、每颗关卡星、列传每节、每个结局；每部列传 5 节 2 个结局，每章 5 关
 C.TIERS = ['mil', 'res', 'cla', 'cov', 'gold'];

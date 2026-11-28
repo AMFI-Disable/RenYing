@@ -231,10 +231,10 @@ More in the wiki: [Multiplayer And Netcode](https://github.com/BigBrainDevBros/R
 | `src/page.html`, `src/style.css`, `src/styles/` | Page markup (with build markers) and styles joined in filename order |
 | `src/game/` | The game, split into numbered files that `tools/build.py` joins in order |
 | `src/data/` | Data tables: one file per hero in `src/data/heroes/`, modes, draft orders, maps, AI levels, English UI text. Checked at build time by `tools/checks/data-check.mjs` |
-| `src/ai.js` | Computer opponents |
+| `src/ai/` | Computer opponents |
 | `src/net-p2p.js` | Peer-to-peer connection |
-| `src/cloud.js` | Accounts and cloud saves |
-| `src/armory-core.js`, `src/armory.js` | Armory rules and armory screens |
+| `src/cloud/` | Accounts and cloud saves |
+| `src/armory-core.js`, `src/armory/` | Armory rules and armory screens |
 | `src/anticheat.js` | Client-side integrity checks |
 | `src/social.js`, `src/errlog.js`, `src/i18n.js` | Community features, error reports, translation lookup |
 | `src/qfx/` | Sources of the 青锋行 mini-game |

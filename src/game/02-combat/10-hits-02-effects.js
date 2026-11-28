@@ -11,7 +11,7 @@ function applyHit(att, def, m, pt) {
   if (typeof bastionOn === 'function' && bastionOn() && typeof bastionModifyHit === 'function') m = bastionModifyHit(att, def, m);
   if (M.mode === 'net' && !RESIM) NET.matchHits = (NET.matchHits || 0) + 1;   // 回滚重算不能再记一次，不然两边会算成不一样
   if (def.forestProxy) { forestHit(att, m, pt); return; }
-  if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 22-world.js
+  if (def.worldProxy) { worldHit(att, m, pt); return; }   // 开放世界：打到的是服务器上的妖物，见 src/game/04-modes/22-world-01-net-combat.js
   if (cujuOn()) def.hp = def.lagHp = def.maxHp;   // 墨球蹴鞠不比气血：挨打照样硬直、倒地，但永远打不倒
   if (typeof partyOn === 'function' && partyOn() && M.party) {
     if (M.party.kind === 'potato') partyTransferBomb(def.idx);

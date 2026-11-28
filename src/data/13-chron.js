@@ -2,7 +2,7 @@
 // 所有分线、所有侠客一起往下推同一卷剧情：全服只有一份进度（存在 D1 的 chron 表，cloudflare/worker.js 的 chron* 一节），只会往前走。
 // 每一节要全服一起完成一个目标（斩妖、在某一段斩妖、讨伐妖王、斩完几劫、关键战告捷），够数了就进下一节；
 // 这一节出过力的云端账号能领一次奖励（墨锭，每 CHRON.MJ_EVERY 节还有一卷个人秘卷），掉线、换线、过几天再来都能补领，只领一次。
-// 浏览器（src/game/22-world.js）和服务器（打包进 cloudflare/worker.bundle.js）用的是这同一份表。
+// 浏览器（src/game/04-modes/22-world-*.js）和服务器（打包进 cloudflare/worker.bundle.js）用的是这同一份表。
 //   CH       章：n 名字，d 开章时的一句话。前 50 章每章 CHRON.PER 节，最后一章（尾声）CHRON.TAIL 节
 //   PLAN     一章里每一节的目标，按顺序排；尾声把这一排走两遍
 //   GOAL     目标：need(ch) 全服要完成多少（ch 是第几章，从 0 数），t 这一节的说明

@@ -100,7 +100,7 @@ Object.assign(UI_COPY_EN, {
   "好局": "Good game",
   "承让": "Well fought",
   "无法连接到云端服务器，请检查网络连接或接口配置": "Can't reach the cloud server. Check your network connection or the server settings",
-  // 武库（src/armory.js、src/armory-core.js）：标签页、说明和武器箱名
+  // 武库（src/armory/、src/armory-core.js）：标签页、说明和武器箱名
   "皮肤图鉴": "Skin Codex",
   "武学": "Martial Arts",
   "徽记 · 灵宠 · 装备": "Badges · Pets · Loadouts",

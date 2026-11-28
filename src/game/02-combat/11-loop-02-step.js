@@ -11,7 +11,7 @@ function step() {
     rpPoint(); updateFighter(superOwner, foeOf(superOwner)); rpPost(); if (!RESIM) { animFighter(superOwner); updateFX(STEP); }
     return;
   }
-  if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（22-world.js）
+  if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（src/game/04-modes/22-world-03-rogue-coop.js）
   if (M.mode === 'world') worldUpdate(); else if (!isClient()) updateMatch(); else M.t += STEP;
   // 多人对局：每帧开头所有人先选一次目标（foeOf 会记住目标）。以前只有电脑在想招时选，回放里没人想招，目标换得晚一帧就走样了
   if (isMulti() && M.phase !== 'ko') for (const f of allFighters()) if (!f.hidden && f.hp > 0) foeOf(f);

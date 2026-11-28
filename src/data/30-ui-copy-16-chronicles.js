@@ -2,7 +2,7 @@
 // 规则：键必须和源码里的中文一字不差（改了中文要同步改这里，否则那句会退回中文）；同一个键只写一次，
 // 后写的会悄悄盖掉先写的（tools/checks/data-check.mjs 会查重、查过期）。
 Object.assign(UI_COPY_EN, {
-  // 全服肉鸽 · 江湖长卷（src/data/13-chron.js 的章名、开章语、每节剧情，src/game/22-world.js 的 HUD 和提示）
+  // 全服肉鸽 · 江湖长卷（src/data/13-chron.js 的章名、开章语、每节剧情，src/game/04-modes/22-world-*.js 的 HUD 和提示）
   "竹林初劫": "First Trial in the Bamboo",
   "竹林里妖气初起，第一批侠客拔剑入林。": "Demon energy stirs in the bamboo, and the first heroes draw their swords.",
   "夜枭鸣山": "Owls Cry on the Mountain",

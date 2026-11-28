@@ -10,7 +10,7 @@
 //   按原因去下面对应的那一段找；改完跑 node tools/tests/test-ai.mjs。
 
 // ---------- 1. 难度 ----------
-// 每档难度的参数（反应、格挡、连段、骗闪……）在 src/data/20-levels.js 的 DIFFICULTIES 里，src/game/01-core.js 拆成 LEVELS 和 AI_LEVEL_KEYS。
+// 每档难度的参数（反应、格挡、连段、骗闪……）在 src/data/20-levels.js 的 DIFFICULTIES 里，src/game/01-engine/01-core.js 拆成 LEVELS 和 AI_LEVEL_KEYS。
 // 这个文件比数据表先加载，所以只在函数里用 LEVELS，不在加载时读。
 // 个性化“宿敌”难度：在劲敌和绝顶之间按 k（0.55~1.45）插值
 function aiBlendLevel(k) {

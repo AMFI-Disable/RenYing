@@ -9,14 +9,14 @@
 // ROOM_MODES：联机房间的规则（netRoomMode），点将台的写法同上，另外：
 //   slots   [房主控制的侠客, 加入的人控制的侠客]，编号 0 A、1 B、2 C、3 D；其余侠客由电脑控制
 //   four    场上四个人（2v2）；raid 同袍肉鸽（三人打魔首 B）；rule 'chaos' 天机乱斗 / 'mayhem' 神决的随机词条 / 'maps' 山河异境的地图
-// 找 bug 提示：某个模式开局不对，先查这里的设定，再查 src/game/08-fighter-match.js 的 startMatch 怎么读它。
+// 找 bug 提示：某个模式开局不对，先查这里的设定，再查 src/game/02-combat/08-fighter-03-lifecycle.js 的 startMatch 怎么读它。
 const MODES = {
   cpu: { bp: 'duel', local: true, foe: '电脑' },
   cpuWatch: { bp: 'duel', local: true, sides: ['苍龙 (AI)', '赤凤 (AI)'] },
   chaos: { bp: 'open', local: true, foe: '电脑' },
   mayhem: { bp: 'open', local: true, foe: '电脑' },
   maps: { bp: 'open', local: true, foe: '电脑' },   // 山河异境：投票选地图（src/data/12-maps.js）
-  cuju: { bp: 'open', local: true, foe: '电脑' },   // 墨球蹴鞠：把墨球打进对方球门（src/game/04-modes/22-modes-09-cuju.js）
+  cuju: { bp: 'open', local: true, foe: '电脑' },   // 墨球蹴鞠：把墨球打进对方球门（src/game/04-modes/22-modes-09-cuju/）
   cuju2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 墨球蹴鞠
   koth: { bp: 'open', local: true, foe: '电脑' },   // 灵坛争锋：占领灵坛 + 无限复活
   koth2v2: { bp: 'duo', team: true, local: true, us: '我方战队', foe: '敌方战队' },   // 2v2 灵坛争锋

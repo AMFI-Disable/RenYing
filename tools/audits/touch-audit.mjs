@@ -4,7 +4,7 @@
 // drives them with synthetic touches to confirm they move and attack.
 // Usage: node tools/audits/touch-audit.mjs [outdir]
 //
-// 找 bug 提示：模拟的是触屏设备（不是缩小窗口）；摇杆、按钮的位置和大小问题看截图，判定在 src/game/20-tutorial-rollback-touch.js。
+// 找 bug 提示：模拟的是触屏设备（不是缩小窗口）；摇杆、按钮的位置和大小问题看截图，判定在 src/game/05-ui/20-touch.js。
 import { spawn } from 'node:child_process';
 import { mkdirSync, writeFileSync, readFileSync, openSync, existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';

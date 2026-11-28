@@ -12,7 +12,7 @@ This note lists every local and online mode, the shared systems each one uses to
 | Battle map | Layered arenas for large team fights | `battleMapDef` in the same file |
 | Mayhem rule | Ten times meter, no cooldowns | `mayhemOn` in the same file |
 | Scrolls | Run buffs (`M.towerPerks`, `M.foeScrolls`) and drafted competitive scrolls | `scOn` and `scIds` in `src/game/04-modes/22-scrolls.js` |
-| Commander | Tactics, formations and teammate tasks | `teamCmdEligible` in `src/game/04-modes/22-modes-17-command.js` |
+| Commander | Tactics, formations and teammate tasks | `teamCmdEligible` in `src/game/04-modes/22-modes-17-command/` |
 | Online room | Friend room rule for rollback netplay | `ROOM_MODES` in `src/data/10-modes.js` |
 | Rematch and quit | What "again" starts and where "quit" returns to | `MODE_HANDLERS` and `toMenu` in `src/game/05-ui/22-match-flow.js` |
 | Recording | Local replay and match review | `recBegin` in `src/game/02-combat/11-loop-03-replay.js` |
@@ -69,4 +69,4 @@ These are the gaps found while building the matrix and the mode switch audit. Ea
 
 ## Sources
 
-`src/data/10-modes.js`, `src/game/02-combat/08-fighter-01-entity.js`, `src/game/02-combat/08-fighter-02-maps-arena.js`, `src/game/04-modes/22-scrolls.js`, `src/game/04-modes/22-modes-17-command.js`, `src/game/05-ui/17-home-02-mode-hall.js`, `src/game/05-ui/21-buttons-01-screen-controls.js`, `src/game/05-ui/22-match-flow.js`, `src/pages/05-account-and-progression.html`.
+`src/data/10-modes.js`, `src/game/02-combat/08-fighter-01-entity.js`, `src/game/02-combat/08-fighter-02-maps-arena.js`, `src/game/04-modes/22-scrolls.js`, `src/game/04-modes/22-modes-17-command/`, `src/game/05-ui/17-home-02-mode-hall.js`, `src/game/05-ui/21-buttons-01-screen-controls.js`, `src/game/05-ui/22-match-flow.js`, `src/pages/05-account-and-progression.html`.

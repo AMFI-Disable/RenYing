@@ -2,7 +2,7 @@
 // 规则：键必须和源码里的中文一字不差（改了中文要同步改这里，否则那句会退回中文）；同一个键只写一次，
 // 后写的会悄悄盖掉先写的（tools/checks/data-check.mjs 会查重、查过期）。
 Object.assign(UI_COPY_EN, {
-  // 开放世界 / 全服肉鸽（src/game/22-world.js）
+  // 开放世界 / 全服肉鸽（src/game/04-modes/22-world-*.js）
   "土地庙": "Shrine",
   "侠客": "Hero",
   "状态": "Status",

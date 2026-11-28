@@ -209,7 +209,7 @@ const SKIN_RE = /^[a-z0-9_]{1,24}$/;
 const BAN_MS = 24 * 3600e3;
 const CODE_USES = 100000;              // 一个兑换码最多让这么多个号领
 const RDM_MAX = 10, RDM_IP_MAX = 30;   // 一小时里输错这么多次兑换码就先锁一小时（每个号、每个 IP）
-// 游戏里写死的几个码（src/game.js 的 redeemCode 先认它们）：服务器上不建同名的，不然玩家永远领不到
+// 游戏里写死的几个码（src/game/05-ui/19-progress-03-rewards.js 的 redeemCode 先认它们）：服务器上不建同名的，不然玩家永远领不到
 const CODE_LOCAL = ['LOCK', 'RELOCK', 'RENYING666', 'RENYING888', 'SWORD2026', 'MOYUGIFT', 'ZODIAC2026STAR', C.UNIVERSAL_PROMO_CODE, C.HEIRLOOM_PROMO_CODE];
 // 以前不进库存的“绑定”皮肤（关卡奖励、老账号带过来的）：这一天之前建的号，第一次动武库时一次性换成库存里的饰品，
 // 之后能卖能熔铸。之后建的号不换：网页报上来的皮肤服务器核对不了，换成能卖的饰品就等于能凭空变出墨锭

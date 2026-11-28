@@ -2,7 +2,7 @@
 // 规则和其他 30-ui-copy 文件一样：键必须和源码里的中文一字不差，同一个键只写一次。
 // 拼出来的句子（「传世 · 斩数 · 青锋 | 青花龙泉」「司南浑仪 · 武库」）靠 i18n.js 按分隔符逐段查，所以这里只要每一段都有译文。
 Object.assign(UI_COPY_EN, {
-  // 天工传世 · 器灵纪（src/armory-core.js、src/armory.js）
+  // 天工传世 · 器灵纪（src/armory-core.js、src/armory/）
   "传世": "Heirloom",
   "斩数": "Kill Counter",
   "传世斩数": "Heirloom Kill Counter",

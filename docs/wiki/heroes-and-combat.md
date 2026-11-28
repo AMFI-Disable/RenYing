@@ -73,4 +73,4 @@ Startup, active and recovery frames for every normal attack, skill and ultimate 
 
 ## Where Hero Data Lives / 侠客数据在哪
 
-One file per hero in [`src/data/heroes/`](https://github.com/BigBrainDevBros/RenYing/tree/main/src/data/heroes): stats, balance multipliers, look, AI range, AI draft picks and both stories. The field reference is at the top of `src/data/00-heroes.js`, and `tools/checks/data-check.mjs` fails the build if a field is missing or wrong. Skill logic is in `src/game/03-skills.js` and ultimates in `src/game/04-ults.js`.
+One file per hero in [`src/data/heroes/`](https://github.com/BigBrainDevBros/RenYing/tree/main/src/data/heroes): stats, balance multipliers, look, AI range, AI draft picks and both stories. The field reference is at the top of `src/data/00-heroes.js`, and `tools/checks/data-check.mjs` fails the build if a field is missing or wrong. Skill logic is in `src/game/02-combat/03-skills/` and ultimates in `src/game/02-combat/04-ults/`.
