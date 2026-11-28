@@ -32,6 +32,7 @@ import mapsTerrainAndMatchups from './combat/60-maps-terrain-and-matchups.mjs';
 import loadouts from './combat/70-loadouts.mjs';
 import overhaulSystems from './combat/80-overhaul-systems.mjs';
 import teamCommand from './combat/90-team-command.mjs';
+import overhaulAudit from './combat/95-overhaul-audit.mjs';
 
 console.log('===== RenYing Combat Mechanics & AI Capabilities Suite =====\n');
 
@@ -248,6 +249,7 @@ const testSuite = [
   ...loadouts,
   ...overhaulSystems,
   ...teamCommand,
+  ...overhaulAudit,
 ];
 
 let failed = 0;

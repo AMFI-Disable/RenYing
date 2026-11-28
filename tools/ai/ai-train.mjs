@@ -29,7 +29,9 @@ const BRAIN = ROOT + 'src/models/ai-brain.json';
 const LOG = ROOT + 'src/models/ai-train-log.txt';
 const args = process.argv.slice(2), arg = (k, d) => { const i = args.indexOf('--' + k); return i >= 0 ? args[i + 1] : d; };
 const STAGE = arg('stage', 'global'), SWEEPS = +arg('sweeps', 2), LEVEL = arg('level', 'god');
+const REPORT = arg('report', '');
 const MODES = arg('modes', 'duel').split(',');
+const runStartedAt = Date.now(), acceptedUpdates = [];
 const ONLY = arg('heroes') ? arg('heroes').split(',') : HEROES;
 const OPPONENTS = (arg('opponents') ? arg('opponents').split(',') : HEROES).map(id => HEROES.indexOf(id));
 // 每次比较的场数（每对角色左右各 REP 场）与接受门槛（胜率差）
@@ -120,7 +122,7 @@ for (let sw = 1; sw <= SWEEPS; sw++) {
         log(`  ${k} ${cur}→${v}  ${(w * 100).toFixed(1)}% 复核 ${(w2 * 100).toFixed(1)}%  ${ok ? '接受' : '不要'}`);
         if (ok) { took = v; break; }
       }
-      if (took !== null) { for (const h of HEROES) champ[h][k] = took; save(); } else step[k] /= 2;
+      if (took !== null) { for (const h of HEROES) champ[h][k] = took; save(); acceptedUpdates.push({ sweep: sw, stage: 'global', gene: k, from: cur, to: took }); } else step[k] /= 2;
       log(`第 ${sw} 轮 ${k}（${((Date.now() - t0) / 1000).toFixed(0)} 秒）= ${champ[HEROES[0]][k]}`);
     } else {
       const lines = [];
@@ -136,7 +138,7 @@ for (let sw = 1; sw <= SWEEPS; sw++) {
           const [wc2, wb2] = await evalHeroPair(hi, cand, REP);   // 复核
           if ((wc - wb + wc2 - wb2) / 2 >= GAIN * 0.75) { took = { v, d: (wc - wb + wc2 - wb2) / 2 }; break; }
         }
-        if (took) { champ[h][k] = took.v; save(); lines.push(`${NAMES[hi]} ${cur}→${took.v}(+${(took.d * 100).toFixed(1)}%)`); }
+        if (took) { champ[h][k] = took.v; save(); acceptedUpdates.push({ sweep: sw, stage: 'hero', hero: h, gene: k, from: cur, to: took.v, gainPct: +(took.d * 100).toFixed(2) }); lines.push(`${NAMES[hi]} ${cur}→${took.v}(+${(took.d * 100).toFixed(1)}%)`); }
       }
       if (!lines.length) step[k] /= 2;
       log(`第 ${sw} 轮 ${k}（${((Date.now() - t0) / 1000).toFixed(0)} 秒）${lines.length ? lines.join('  ') : '没有角色变'}`);
@@ -144,5 +146,8 @@ for (let sw = 1; sw <= SWEEPS; sw++) {
   }
 }
 save();
+if (REPORT) {
+  writeFileSync(REPORT, JSON.stringify({ finishedAt: new Date().toISOString(), durationSec: +((Date.now() - runStartedAt) / 1000).toFixed(2), stage: STAGE, level: LEVEL, lvKey: LVKEY || null, modes: MODES, sweeps: SWEEPS, heroes: ONLY, genes: KEYS, acceptedUpdates }, null, 2));
+}
 pool.close();
 log('训练结束，基因已写入 src/models/ai-brain.json');

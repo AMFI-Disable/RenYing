@@ -17,7 +17,9 @@ Object.assign(AIBrain.prototype, {
 
     // 对手关在醉翁亭里（动不了、打不飞）：冲过去一直普攻，能打多少打多少
     if (foe.jailT > 0.1 && foe.hp > 0 && AI_FREE.includes(me.state) && me.onGround()) return this.beatJailed(me, foe, d, to);
-    // 凌雀：飞梭挂印记 → 换影引爆（重置换影）→ 追击 / 大招再挂印记，按难度决定会打到哪一步
+    // 青锋 / 玉箫 / 凌雀 / 离影 / 磁仙 / 赤霄 / 玄机 / 青鸾 / 玄武：侠客专属连段与团队战术
+    if (me.ch.id === 'qingfeng' && this.qingfengRoute(me, foe, d, to)) return;
+    if (me.ch.id === 'yuxiao' && this.yuxiaoRoute(me, foe, d, to)) return;
     if (me.ch.id === 'lingque' && me.state === 'skill' && me.skill === 'shadowdash') this.lqDash = clock;
     if (me.ch.id === 'lingque' && this.lingqueRoute(me, foe, d, to)) return;
     // 离影：对手打空 / 收招时渡到他身后的雾身反打；残血被压时渡到离对手最远的雾身拉开

@@ -13,22 +13,35 @@ function step() {
   }
   if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（22-world.js）
   if (M.mode === 'world') worldUpdate(); else if (!isClient()) updateMatch(); else M.t += STEP;
+  const fs = allFighters();
   // 多人对局：每帧开头所有人先选一次目标（foeOf 会记住目标）。以前只有电脑在想招时选，回放里没人想招，目标换得晚一帧就走样了
-  if (isMulti() && M.phase !== 'ko') for (const f of allFighters()) if (!f.hidden && f.hp > 0) foeOf(f);
-  if (M.cmd) cmdTick();   // 团战的统帅：观察对面、电脑统帅换战术（22-modes-17-command.js）
-  if (!ROLL.on && !REPLAY.on) { const player = allFighters().find(f => f.ctrl === human[0]); if (player) secretThink(player); }
-  for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
+  if (isMulti() && M.phase !== 'ko') {
+    for (let i = 0; i < fs.length; i++) { const f = fs[i]; if (!f.hidden && f.hp > 0) foeOf(f); }
+  }
+  if (M.cmd) cmdTick();   // 团战的统帅：观察对面、电脑统帅换战术（22-modes-17-command/）
+  if (!ROLL.on && !REPLAY.on) {
+    for (let i = 0; i < fs.length; i++) { if (fs[i].ctrl === human[0]) { secretThink(fs[i]); break; } }
+  }
+  for (let i = 0; i < fs.length; i++) {
+    const f = fs[i];
+    if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) {
+      if (M.phase === 'ko') f.ctrl.clear();
+      else f.ctrl.think(f, foeOf(f));
+    }
+  }   // 分出胜负后电脑收手，好让赢家举剑
   rpPoint();
-  if (typeof spatialInvalidate === 'function') spatialInvalidate();
-  for (const f of allFighters()) {
+  const hasSpatial = typeof spatialInvalidate === 'function';
+  if (hasSpatial) spatialInvalidate();
+  for (let i = 0; i < fs.length; i++) {
+    const f = fs[i];
     if (f.hidden) continue;
     const ox = f.x;
     updateFighter(f, foeOf(f));
-    if (Math.abs(f.x - ox) > 24 && typeof spatialInvalidate === 'function') spatialInvalidate();
+    if (hasSpatial && Math.abs(f.x - ox) > 24) spatialInvalidate();
   }
   if (isMulti() && !battleMapOn()) updateArena2v2(STEP);
   if (M.mode === 'train' && TRAIN.frameProbe && !RESIM) {
-    const p = TRAIN.frameProbe, ready = f => ['idle', 'walk', 'air', 'block'].includes(f.state);
+    const p = TRAIN.frameProbe, ready = f => f.state === 'idle' || f.state === 'walk' || f.state === 'air' || f.state === 'block';
     if (p.attacker === null && ready(A)) p.attacker = clock;
     if (p.defender === null && ready(B)) p.defender = clock;
     if (p.attacker !== null && p.defender !== null) { TRAIN.advantage = Math.round((p.defender - p.attacker) / STEP); TRAIN.frameProbe = null; }
@@ -36,7 +49,8 @@ function step() {
   mapTick(STEP);   // 山河异境：风、天雷、酒雾（不在山河异境就什么都不做）
   // 倒下的人一直躺着：落地后不管之前是什么状态（受身、被打、技能收招）都按回地上，不再站起来
   if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (isMulti() && M.phase === 'fight'))) {
-    for (const f of allFighters()) {
+    for (let i = 0; i < fs.length; i++) {
+      const f = fs[i];
       if (!f.hidden && f.hp <= 0 && f.onGround() && f.state !== 'knockdown' && f.state !== 'launched') {
         f.state = 'knockdown'; f.t = 0; f.vx *= 0.5; f.invul = 99; f.move = null; f.skill = null; f.airRecover = false; f.escInvul = false;
       }
@@ -44,8 +58,8 @@ function step() {
   }
   rpPost();
   pushApart();
-  if (typeof spatialInvalidate === 'function') spatialInvalidate();
-  if (!RESIM) { for (const f of allFighters()) if (!f.hidden) animFighter(f); }
+  if (hasSpatial) spatialInvalidate();
+  if (!RESIM) { for (let i = 0; i < fs.length; i++) if (!fs[i].hidden) animFighter(fs[i]); }
   updateDecoys();
   cujuAimHook();
   updateProjs();
@@ -56,11 +70,14 @@ function step() {
   trSample();
   if (FOREST.on) forestUpdate();
   if (!RESIM) updateFX(STEP);
-  if (!RESIM) for (const p of petals) {
-    p.x += (p.vx + Math.sin(clock + p.ph) * 20) * STEP; p.y += p.vy * STEP; p.r += STEP * 2;
-    if (p.y > 30) { p.y = rand(-800, -500); p.x = rand(cam.x - 900, cam.x + 900); }
+  if (!RESIM) {
+    for (let i = 0; i < petals.length; i++) {
+      const p = petals[i];
+      p.x += (p.vx + Math.sin(clock + p.ph) * 20) * STEP; p.y += p.vy * STEP; p.r += STEP * 2;
+      if (p.y > 30) { p.y = rand(-800, -500); p.x = rand(cam.x - 900, cam.x + 900); }
+    }
+    for (let i = 0; i < comboUI.length; i++) if (comboUI[i].t > 0) comboUI[i].t -= STEP;
   }
-  if (!RESIM) for (const c of comboUI) c.t -= STEP;
 }
 const cam = { x: STAGE_W / 2, y: 0, zoom: 1, userZoom: 1, userZoomTarget: 1, userZoomT: 0 };
 const CAM_USER_ZOOM_MIN = 0.55;

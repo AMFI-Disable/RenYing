@@ -9238,8 +9238,9 @@ if (this.debug) { const st = (new Error().stack || '').split('\n')[2] || ''; thi
 }
 plan(list) { this.queue = list.map(([a, dt, cond]) => ({ at: clock + dt, a, cond })); }
 stopAll() { this.queue.length = 0; this.holdAtk = 0; this.c.held.atk = false; }
-chance(p) { return Math.random() < p; }
-err() { return this.L.error > 0 && Math.random() < this.L.error; }
+rand() { return (typeof netSim === 'function' && netSim() && typeof grnd === 'function') ? grnd() : Math.random(); }
+chance(p) { return this.rand() < p; }
+err() { return this.L.error > 0 && this.rand() < this.L.error; }
 think(me, foe) {
 if (!foe || !me.ch || !foe.ch) return;
 if (this.heroId !== me.ch.id) { this.heroId = me.ch.id; this.g = this.geneOverride ? Object.assign(aiDefaultGenes(), this.geneOverride) : this.L.genes ? aiGenes(me.ch.id, this.lvKey) : aiDefaultGenes(); }
@@ -9675,6 +9676,8 @@ if (me.state === 'dash') return;
 if (this.holdAtk > 0 && AI_FREE.includes(me.state) && clock - (this.chargeT0 || 0) < 0.42) return;   // 正在按住攻击等着进蓄力
 if (this.afterBlock && AI_FREE.includes(me.state)) { this.afterBlock = false; if (this.punish(me, foe, d, to, true)) return; }
 if (foe.jailT > 0.1 && foe.hp > 0 && AI_FREE.includes(me.state) && me.onGround()) return this.beatJailed(me, foe, d, to);
+if (me.ch.id === 'qingfeng' && this.qingfengRoute(me, foe, d, to)) return;
+if (me.ch.id === 'yuxiao' && this.yuxiaoRoute(me, foe, d, to)) return;
 if (me.ch.id === 'lingque' && me.state === 'skill' && me.skill === 'shadowdash') this.lqDash = clock;
 if (me.ch.id === 'lingque' && this.lingqueRoute(me, foe, d, to)) return;
 if (me.ch.id === 'liying' && this.liyingRoute(me, foe, d, to)) return;
@@ -10229,6 +10232,26 @@ return true;
 },
 });
 Object.assign(AIBrain.prototype, {
+qingfengRoute(me, foe, d, to) {
+const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
+if (!free || foe.hp <= 0 || aiInv(foe, me) > 0 || !this.seen || L.combo < 3 || clock < (this.qfNext || 0)) return false;
+const foeOpen = foe.rooted || AI_HURT.includes(foe.state) || (foe.state === 'attack' && foe.move && foe.t > foe.move.su + foe.move.ac);
+if (me.skill2CD <= 0 && (foe.rooted || (foeOpen && d > 95 && d < 360)) && Math.abs(foe.y - me.y) < 120 && this.chance(L.skill * 0.9)) {
+this.stopAll(); this.press('skill2', 'qingfeng_swordqi'); this.qfNext = clock + 0.45; return true;
+}
+if (me.skillCD <= 0 && d > 110 && d < 310 && Math.abs(foe.y - me.y) < 100 && foe.state !== 'block' && foeOpen && this.chance(L.skill * 0.82)) {
+this.stopAll(); this.press('skill', 'qingfeng_gale'); this.afterSkill(me, 'skill'); this.qfNext = clock + 0.55; return true;
+}
+return false;
+},
+yuxiaoRoute(me, foe, d, to) {
+const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
+if (!free || foe.hp <= 0 || aiInv(foe, me) > 0 || !this.seen || L.combo < 3 || clock < (this.yxNext || 0)) return false;
+if ((me.notes || 0) >= 3 && me.skillCD <= 0 && d > 120 && d < 520 && Math.abs(foe.y - me.y) < 130 && this.chance(L.skill * 0.92)) {
+this.stopAll(); this.press('skill', 'yuxiao_fullnote'); this.yxNext = clock + 0.55; return true;
+}
+return false;
+},
 liyingRoute(me, foe, d, to) {
 const L = this.L, cs = me.clones || [];
 if (!cs.length || me.skill2CD > 0 || !['idle', 'walk', 'air', 'block'].includes(me.state) || foe.hp <= 0 || !this.seen) return false;
@@ -10416,6 +10439,13 @@ if (da < nearAllyD) { nearAllyD = da; nearAlly = a; }
 if (foesNear >= 2 && alliesNear === 0 && me.hp < me.maxHp * 0.65 && nearAlly && nearAllyD > 200) {
 this.dir = Math.sign(nearAlly.x - me.x) || -to;
 return true;
+}
+if (this.L.read >= 0.45 && me.hp > me.maxHp * 0.35 && !this.queue.length) {
+const hurtMate = allies.find(a => sameFloor(a, me) && AI_HURT.includes(a.state) && Math.abs(a.x - me.x) < 280);
+if (hurtMate && Math.abs(foe.x - hurtMate.x) < 200 && d > 110 && this.chance(0.55 * this.L.read)) {
+this.dir = Math.sign(foe.x - me.x) || to;
+return true;
+}
 }
 const prof = aiHeroTactic(me.ch.id), role = prof.teamRole || 'skirmisher';
 if ((role === 'zoner' || role === 'support') && d < 250) {
@@ -32457,16 +32487,16 @@ if (s === 'idle') {
 if (arch === 'assassin') { out.hip[1] += 5; out.neck[0] += 7; out.neck[1] += 6; out.hf[0] += 6; out.hb[0] -= 6; out.sw += 0.35; }
 else if (hid === 'xuanwu' || arch === 'tank') { out.hip[1] += 3; out.ff[0] += 4; out.fb[0] -= 4; out.hf[1] -= 4; out.sw -= 0.25; }
 else if (hid === 'qingluan') { const fl = Math.sin(clock * 2.6 + f.idx) * 3.5; out.hip[1] -= 4 + fl * 0.5; out.neck[1] -= 4 + fl * 0.5; out.hf[1] -= 8 + fl; out.hb[0] -= 8; }
-else if (hid === 'leiming') { out.hip[1] += 4; out.neck[0] += 8; out.hf = [28, -76]; out.hb = [10, -74]; out.sw = 0; }
-else if (hid === 'yuxiao') { out.hf = [16, -82]; out.hb = [10, -82]; out.sw = 1.25; }
+else if (hid === 'leiming') { out.hip[1] += 4; out.neck[0] += 8; out.hf[0] = 28; out.hf[1] = -76; out.hb[0] = 10; out.hb[1] = -74; out.sw = 0; }
+else if (hid === 'yuxiao') { out.hf[0] = 16; out.hf[1] = -82; out.hb[0] = 10; out.hb[1] = -82; out.sw = 1.25; }
 else if (hid === 'xuanji') { out.neck[0] -= 2; out.hf[1] -= 10; out.hb[0] -= 8; out.sw -= 0.4; }
 }
 } else if (s === 'walk') {
 const ph = f.walkPh, sn = Math.sin(ph), cs = Math.cos(ph);
 const stride = arch === 'assassin' ? 22 : (arch === 'tank' ? 14 : 18);
 const lift = arch === 'assassin' ? 15 : (arch === 'tank' ? 8 : 12);
-out.ff = [4 + sn * stride, -Math.max(0, cs) * lift];
-out.fb = [-4 - sn * stride, -Math.max(0, -cs) * lift];
+out.ff[0] = 4 + sn * stride; out.ff[1] = -Math.max(0, cs) * lift;
+out.fb[0] = -4 - sn * stride; out.fb[1] = -Math.max(0, -cs) * lift;
 if (arch === 'assassin') { out.neck[0] += 10; out.hip[1] += 4; }
 else if (arch === 'tank') { out.hip[1] += 2; out.neck[0] += 2; }
 const weight = clamp((f.ch && f.ch.stat && f.ch.stat.weight) || 1, 0.75, 1.4);
@@ -32513,8 +32543,8 @@ if (f.flash > 0 && s === 'hitstun') { out.neck[0] -= 4; }
 if (s === 'charge' && f.t >= CHARGE_FULL) { out.hf[0] += rand(-1.2, 1.2); out.hf[1] += rand(-1.2, 1.2); }
 if (s === 'charge' && Math.abs(f.vx) > 8) {   // 蓄力小碎步
 const sn = Math.sin(f.walkPh);
-out.ff = [22 + sn * 9, -Math.max(0, Math.cos(f.walkPh)) * 6];
-out.fb = [-26 - sn * 9, -Math.max(0, -Math.cos(f.walkPh)) * 6];
+out.ff[0] = 22 + sn * 9; out.ff[1] = -Math.max(0, Math.cos(f.walkPh)) * 6;
+out.fb[0] = -26 - sn * 9; out.fb[1] = -Math.max(0, -Math.cos(f.walkPh)) * 6;
 }
 return out;
 }
@@ -32522,9 +32552,12 @@ function animFighter(f) {
 if (f.state === 'walk' || (f.state === 'skill' && Math.abs(f.vx) > 20)) f.walkPh += STEP * f.vx * f.face * 0.055;
 const tp = targetPose(f);
 const a = f.snap ? 1 : 1 - Math.exp(-tp.k * STEP);
-for (const j of JOINTS) { f.j[j][0] += (tp[j][0] - f.j[j][0]) * a; f.j[j][1] += (tp[j][1] - f.j[j][1]) * a; }
+for (let ji = 0; ji < JOINTS.length; ji++) {
+const j = JOINTS[ji], fj = f.j[j], tj = tp[j];
+fj[0] += (tj[0] - fj[0]) * a; fj[1] += (tj[1] - fj[1]) * a;
+}
 f.j.sw += (tp.sw - f.j.sw) * a;
-if (f.state === 'skill' && f.skill === 'spin') { f.j.sw = f.t * 26; f.j.hf = [44, -72]; }   // 枪在身前旋转
+if (f.state === 'skill' && f.skill === 'spin') { f.j.sw = f.t * 26; f.j.hf[0] = 44; f.j.hf[1] = -72; }   // 枪在身前旋转
 if (f.snap && f.state === 'special' && f.sp !== 'final') f.snap = false;
 const rotT = f.state === 'launched' ? clamp(f.vy / 1600, -0.7, 0.7) * -1 : 0;
 f.rot += (rotT - f.rot) * (1 - Math.exp(-10 * STEP));
@@ -32532,14 +32565,28 @@ f.sk = skeleton(f);
 const swinging = (f.state === 'attack' && f.move && f.t > f.move.su * 0.45 && f.t < f.move.su + f.move.ac + 0.05)
 || (f.state === 'special' && ['dash', 'flurry', 'final', 'thrusts', 'slam', 'sweep', 'rush'].includes(f.sp))
 || (f.state === 'skill' && (f.skPh === 1 || f.skPh === 2) && f.t < 0.22);
-if (swinging) f.trail.push({ b: f.sk.bladeMid, t: f.sk.tip, h: f.sk.guard, life: 1 });
-for (const e of f.trail) e.life -= STEP / 0.16;
-while (f.trail.length && f.trail[0].life <= 0) f.trail.shift();
-if (f.trail.length > 28) f.trail.shift();
+const trail = f.trail;
+if (swinging) trail.push({ b: f.sk.bladeMid, t: f.sk.tip, h: f.sk.guard, life: 1 });
+const tDecay = STEP / 0.16;
+let tw = 0, tStart = trail.length > 28 ? trail.length - 28 : 0;
+for (let i = tStart; i < trail.length; i++) {
+const e = trail[i]; e.life -= tDecay;
+if (e.life > 0) trail[tw++] = e;
+}
+trail.length = tw;
 f.ghostT -= STEP;
-if ((f.escInvul || f.state === 'dash' || (f.state === 'special' && f.sp !== 'charge' && f.sp !== 'cast' && f.sp !== 'wave') || (f.state === 'skill' && f.skPh === 1 && SKILLS[f.skill] && SKILLS[f.skill].nofric)) && f.ghostT <= 0) { f.ghosts.push({ sk: f.sk, life: 1 }); f.ghostT = 0.022; }
-for (const g of f.ghosts) g.life -= STEP / 0.22;
-while (f.ghosts.length && f.ghosts[0].life <= 0) f.ghosts.shift();
+const ghosts = f.ghosts;
+if ((f.escInvul || f.state === 'dash' || (f.state === 'special' && f.sp !== 'charge' && f.sp !== 'cast' && f.sp !== 'wave') || (f.state === 'skill' && f.skPh === 1 && SKILLS[f.skill] && SKILLS[f.skill].nofric)) && f.ghostT <= 0) {
+if (ghosts.length < 18) ghosts.push({ sk: f.sk, life: 1 });
+f.ghostT = 0.022;
+}
+const gDecay = STEP / 0.22;
+let gw = 0;
+for (let i = 0; i < ghosts.length; i++) {
+const g = ghosts[i]; g.life -= gDecay;
+if (g.life > 0) ghosts[gw++] = g;
+}
+ghosts.length = gw;
 updateScarf(f);
 if (f.lagDelay > 0) f.lagDelay -= STEP; else f.lagHp = damp(f.lagHp, f.hp, 6, STEP);
 }
@@ -32680,28 +32727,42 @@ return;
 }
 if (M.worldKey) worldKeyStep();   // 全服肉鸽的关键战：伤害交给服务器（22-world.js）
 if (M.mode === 'world') worldUpdate(); else if (!isClient()) updateMatch(); else M.t += STEP;
-if (isMulti() && M.phase !== 'ko') for (const f of allFighters()) if (!f.hidden && f.hp > 0) foeOf(f);
-if (M.cmd) cmdTick();   // 团战的统帅：观察对面、电脑统帅换战术（22-modes-17-command.js）
-if (!ROLL.on && !REPLAY.on) { const player = allFighters().find(f => f.ctrl === human[0]); if (player) secretThink(player); }
-for (const f of allFighters()) if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) { if (M.phase === 'ko') f.ctrl.clear(); else f.ctrl.think(f, foeOf(f)); }   // 分出胜负后电脑收手，好让赢家举剑
+const fs = allFighters();
+if (isMulti() && M.phase !== 'ko') {
+for (let i = 0; i < fs.length; i++) { const f = fs[i]; if (!f.hidden && f.hp > 0) foeOf(f); }
+}
+if (M.cmd) cmdTick();   // 团战的统帅：观察对面、电脑统帅换战术（22-modes-17-command/）
+if (!ROLL.on && !REPLAY.on) {
+for (let i = 0; i < fs.length; i++) { if (fs[i].ctrl === human[0]) { secretThink(fs[i]); break; } }
+}
+for (let i = 0; i < fs.length; i++) {
+const f = fs[i];
+if (!f.hidden && f.hp > 0 && f.ctrl && f.ctrl.think) {
+if (M.phase === 'ko') f.ctrl.clear();
+else f.ctrl.think(f, foeOf(f));
+}
+}   // 分出胜负后电脑收手，好让赢家举剑
 rpPoint();
-if (typeof spatialInvalidate === 'function') spatialInvalidate();
-for (const f of allFighters()) {
+const hasSpatial = typeof spatialInvalidate === 'function';
+if (hasSpatial) spatialInvalidate();
+for (let i = 0; i < fs.length; i++) {
+const f = fs[i];
 if (f.hidden) continue;
 const ox = f.x;
 updateFighter(f, foeOf(f));
-if (Math.abs(f.x - ox) > 24 && typeof spatialInvalidate === 'function') spatialInvalidate();
+if (hasSpatial && Math.abs(f.x - ox) > 24) spatialInvalidate();
 }
 if (isMulti() && !battleMapOn()) updateArena2v2(STEP);
 if (M.mode === 'train' && TRAIN.frameProbe && !RESIM) {
-const p = TRAIN.frameProbe, ready = f => ['idle', 'walk', 'air', 'block'].includes(f.state);
+const p = TRAIN.frameProbe, ready = f => f.state === 'idle' || f.state === 'walk' || f.state === 'air' || f.state === 'block';
 if (p.attacker === null && ready(A)) p.attacker = clock;
 if (p.defender === null && ready(B)) p.defender = clock;
 if (p.attacker !== null && p.defender !== null) { TRAIN.advantage = Math.round((p.defender - p.attacker) / STEP); TRAIN.frameProbe = null; }
 }
 mapTick(STEP);   // 山河异境：风、天雷、酒雾（不在山河异境就什么都不做）
 if (M.mode !== 'train' && (M.phase === 'ko' || M.phase === 'end' || (isMulti() && M.phase === 'fight'))) {
-for (const f of allFighters()) {
+for (let i = 0; i < fs.length; i++) {
+const f = fs[i];
 if (!f.hidden && f.hp <= 0 && f.onGround() && f.state !== 'knockdown' && f.state !== 'launched') {
 f.state = 'knockdown'; f.t = 0; f.vx *= 0.5; f.invul = 99; f.move = null; f.skill = null; f.airRecover = false; f.escInvul = false;
 }
@@ -32709,8 +32770,8 @@ f.state = 'knockdown'; f.t = 0; f.vx *= 0.5; f.invul = 99; f.move = null; f.skil
 }
 rpPost();
 pushApart();
-if (typeof spatialInvalidate === 'function') spatialInvalidate();
-if (!RESIM) { for (const f of allFighters()) if (!f.hidden) animFighter(f); }
+if (hasSpatial) spatialInvalidate();
+if (!RESIM) { for (let i = 0; i < fs.length; i++) if (!fs[i].hidden) animFighter(fs[i]); }
 updateDecoys();
 cujuAimHook();
 updateProjs();
@@ -32721,11 +32782,14 @@ if (typeof petTickAll === 'function') petTickAll();
 trSample();
 if (FOREST.on) forestUpdate();
 if (!RESIM) updateFX(STEP);
-if (!RESIM) for (const p of petals) {
+if (!RESIM) {
+for (let i = 0; i < petals.length; i++) {
+const p = petals[i];
 p.x += (p.vx + Math.sin(clock + p.ph) * 20) * STEP; p.y += p.vy * STEP; p.r += STEP * 2;
 if (p.y > 30) { p.y = rand(-800, -500); p.x = rand(cam.x - 900, cam.x + 900); }
 }
-if (!RESIM) for (const c of comboUI) c.t -= STEP;
+for (let i = 0; i < comboUI.length; i++) if (comboUI[i].t > 0) comboUI[i].t -= STEP;
+}
 }
 const cam = { x: STAGE_W / 2, y: 0, zoom: 1, userZoom: 1, userZoomTarget: 1, userZoomT: 0 };
 const CAM_USER_ZOOM_MIN = 0.55;
@@ -33933,14 +33997,33 @@ const vw = W / worldScale();
 cam.x = vw >= STAGE_W + 200 ? STAGE_W / 2 : clamp(cam.x, vw / 2 - 100, STAGE_W + 100 - vw / 2);
 return;
 }
-const tracked = isMulti() ? allFighters().filter(f => !f.hidden && f.hp > 0) : [A, B];
-const pool = cujuOn() && M.cuju && M.cuju.ball ? [...allFighters(), M.cuju.ball] : (tracked.length >= 2 ? tracked : [A, B]);   // 墨球蹴鞠：镜头也框住墨球
 let minX = Infinity, maxX = -Infinity, minY = 0;
-for (let i = 0; i < pool.length; i++) {
-const f = pool[i];
+if (cujuOn() && M.cuju && M.cuju.ball) {
+const fs = allFighters();
+for (let i = 0; i < fs.length; i++) {
+const f = fs[i];
 if (f.x < minX) minX = f.x;
 if (f.x > maxX) maxX = f.x;
 if (f.y < minY) minY = f.y;
+}
+const b = M.cuju.ball;
+if (b.x < minX) minX = b.x;
+if (b.x > maxX) maxX = b.x;
+if (b.y < minY) minY = b.y;
+} else if (isMulti()) {
+const fs = allFighters();
+let cnt = 0;
+for (let i = 0; i < fs.length; i++) {
+const f = fs[i];
+if (f.hidden || f.hp <= 0) continue;
+cnt++;
+if (f.x < minX) minX = f.x;
+if (f.x > maxX) maxX = f.x;
+if (f.y < minY) minY = f.y;
+}
+if (cnt < 2) { minX = Math.min(A.x, B.x); maxX = Math.max(A.x, B.x); minY = Math.min(0, A.y, B.y); }
+} else {
+minX = Math.min(A.x, B.x); maxX = Math.max(A.x, B.x); minY = Math.min(0, A.y, B.y);
 }
 const mid = (minX + maxX) / 2, d = maxX - minX, base = H / 560;
 const padW = isMulti() ? 680 : 340;

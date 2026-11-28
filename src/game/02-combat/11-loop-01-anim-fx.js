@@ -124,16 +124,16 @@ function targetPose(f) {
       if (arch === 'assassin') { out.hip[1] += 5; out.neck[0] += 7; out.neck[1] += 6; out.hf[0] += 6; out.hb[0] -= 6; out.sw += 0.35; }
       else if (hid === 'xuanwu' || arch === 'tank') { out.hip[1] += 3; out.ff[0] += 4; out.fb[0] -= 4; out.hf[1] -= 4; out.sw -= 0.25; }
       else if (hid === 'qingluan') { const fl = Math.sin(clock * 2.6 + f.idx) * 3.5; out.hip[1] -= 4 + fl * 0.5; out.neck[1] -= 4 + fl * 0.5; out.hf[1] -= 8 + fl; out.hb[0] -= 8; }
-      else if (hid === 'leiming') { out.hip[1] += 4; out.neck[0] += 8; out.hf = [28, -76]; out.hb = [10, -74]; out.sw = 0; }
-      else if (hid === 'yuxiao') { out.hf = [16, -82]; out.hb = [10, -82]; out.sw = 1.25; }
+      else if (hid === 'leiming') { out.hip[1] += 4; out.neck[0] += 8; out.hf[0] = 28; out.hf[1] = -76; out.hb[0] = 10; out.hb[1] = -74; out.sw = 0; }
+      else if (hid === 'yuxiao') { out.hf[0] = 16; out.hf[1] = -82; out.hb[0] = 10; out.hb[1] = -82; out.sw = 1.25; }
       else if (hid === 'xuanji') { out.neck[0] -= 2; out.hf[1] -= 10; out.hb[0] -= 8; out.sw -= 0.4; }
     }
   } else if (s === 'walk') {
     const ph = f.walkPh, sn = Math.sin(ph), cs = Math.cos(ph);
     const stride = arch === 'assassin' ? 22 : (arch === 'tank' ? 14 : 18);
     const lift = arch === 'assassin' ? 15 : (arch === 'tank' ? 8 : 12);
-    out.ff = [4 + sn * stride, -Math.max(0, cs) * lift];
-    out.fb = [-4 - sn * stride, -Math.max(0, -cs) * lift];
+    out.ff[0] = 4 + sn * stride; out.ff[1] = -Math.max(0, cs) * lift;
+    out.fb[0] = -4 - sn * stride; out.fb[1] = -Math.max(0, -cs) * lift;
     if (arch === 'assassin') { out.neck[0] += 10; out.hip[1] += 4; }
     else if (arch === 'tank') { out.hip[1] += 2; out.neck[0] += 2; }
     const weight = clamp((f.ch && f.ch.stat && f.ch.stat.weight) || 1, 0.75, 1.4);
@@ -183,8 +183,8 @@ function targetPose(f) {
   if (s === 'charge' && f.t >= CHARGE_FULL) { out.hf[0] += rand(-1.2, 1.2); out.hf[1] += rand(-1.2, 1.2); }
   if (s === 'charge' && Math.abs(f.vx) > 8) {   // 蓄力小碎步
     const sn = Math.sin(f.walkPh);
-    out.ff = [22 + sn * 9, -Math.max(0, Math.cos(f.walkPh)) * 6];
-    out.fb = [-26 - sn * 9, -Math.max(0, -Math.cos(f.walkPh)) * 6];
+    out.ff[0] = 22 + sn * 9; out.ff[1] = -Math.max(0, Math.cos(f.walkPh)) * 6;
+    out.fb[0] = -26 - sn * 9; out.fb[1] = -Math.max(0, -Math.cos(f.walkPh)) * 6;
   }
   return out;
 }
@@ -192,27 +192,44 @@ function animFighter(f) {
   if (f.state === 'walk' || (f.state === 'skill' && Math.abs(f.vx) > 20)) f.walkPh += STEP * f.vx * f.face * 0.055;
   const tp = targetPose(f);
   const a = f.snap ? 1 : 1 - Math.exp(-tp.k * STEP);
-  for (const j of JOINTS) { f.j[j][0] += (tp[j][0] - f.j[j][0]) * a; f.j[j][1] += (tp[j][1] - f.j[j][1]) * a; }
+  for (let ji = 0; ji < JOINTS.length; ji++) {
+    const j = JOINTS[ji], fj = f.j[j], tj = tp[j];
+    fj[0] += (tj[0] - fj[0]) * a; fj[1] += (tj[1] - fj[1]) * a;
+  }
   f.j.sw += (tp.sw - f.j.sw) * a;
-  if (f.state === 'skill' && f.skill === 'spin') { f.j.sw = f.t * 26; f.j.hf = [44, -72]; }   // 枪在身前旋转
+  if (f.state === 'skill' && f.skill === 'spin') { f.j.sw = f.t * 26; f.j.hf[0] = 44; f.j.hf[1] = -72; }   // 枪在身前旋转
   if (f.snap && f.state === 'special' && f.sp !== 'final') f.snap = false;
   // 身体旋转（被击飞时翻滚）
   const rotT = f.state === 'launched' ? clamp(f.vy / 1600, -0.7, 0.7) * -1 : 0;
   f.rot += (rotT - f.rot) * (1 - Math.exp(-10 * STEP));
   f.sk = skeleton(f);
-  // 剑光拖尾
+  // 剑光拖尾（原地压缩，避免每帧 O(N) shift 分配）
   const swinging = (f.state === 'attack' && f.move && f.t > f.move.su * 0.45 && f.t < f.move.su + f.move.ac + 0.05)
     || (f.state === 'special' && ['dash', 'flurry', 'final', 'thrusts', 'slam', 'sweep', 'rush'].includes(f.sp))
     || (f.state === 'skill' && (f.skPh === 1 || f.skPh === 2) && f.t < 0.22);
-  if (swinging) f.trail.push({ b: f.sk.bladeMid, t: f.sk.tip, h: f.sk.guard, life: 1 });
-  for (const e of f.trail) e.life -= STEP / 0.16;
-  while (f.trail.length && f.trail[0].life <= 0) f.trail.shift();
-  if (f.trail.length > 28) f.trail.shift();
-  // 残影
+  const trail = f.trail;
+  if (swinging) trail.push({ b: f.sk.bladeMid, t: f.sk.tip, h: f.sk.guard, life: 1 });
+  const tDecay = STEP / 0.16;
+  let tw = 0, tStart = trail.length > 28 ? trail.length - 28 : 0;
+  for (let i = tStart; i < trail.length; i++) {
+    const e = trail[i]; e.life -= tDecay;
+    if (e.life > 0) trail[tw++] = e;
+  }
+  trail.length = tw;
+  // 残影（原地压缩）
   f.ghostT -= STEP;
-  if ((f.escInvul || f.state === 'dash' || (f.state === 'special' && f.sp !== 'charge' && f.sp !== 'cast' && f.sp !== 'wave') || (f.state === 'skill' && f.skPh === 1 && SKILLS[f.skill] && SKILLS[f.skill].nofric)) && f.ghostT <= 0) { f.ghosts.push({ sk: f.sk, life: 1 }); f.ghostT = 0.022; }
-  for (const g of f.ghosts) g.life -= STEP / 0.22;
-  while (f.ghosts.length && f.ghosts[0].life <= 0) f.ghosts.shift();
+  const ghosts = f.ghosts;
+  if ((f.escInvul || f.state === 'dash' || (f.state === 'special' && f.sp !== 'charge' && f.sp !== 'cast' && f.sp !== 'wave') || (f.state === 'skill' && f.skPh === 1 && SKILLS[f.skill] && SKILLS[f.skill].nofric)) && f.ghostT <= 0) {
+    if (ghosts.length < 18) ghosts.push({ sk: f.sk, life: 1 });
+    f.ghostT = 0.022;
+  }
+  const gDecay = STEP / 0.22;
+  let gw = 0;
+  for (let i = 0; i < ghosts.length; i++) {
+    const g = ghosts[i]; g.life -= gDecay;
+    if (g.life > 0) ghosts[gw++] = g;
+  }
+  ghosts.length = gw;
   updateScarf(f);
   if (f.lagDelay > 0) f.lagDelay -= STEP; else f.lagHp = damp(f.lagHp, f.hp, 6, STEP);
 }

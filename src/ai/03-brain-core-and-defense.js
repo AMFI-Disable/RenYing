@@ -37,8 +37,9 @@ class AIBrain {
   // 计划一串按键：[按键, 几秒后, 'hit'（只在对手被打中/被定住时才按）]
   plan(list) { this.queue = list.map(([a, dt, cond]) => ({ at: clock + dt, a, cond })); }
   stopAll() { this.queue.length = 0; this.holdAtk = 0; this.c.held.atk = false; }
-  chance(p) { return Math.random() < p; }
-  err() { return this.L.error > 0 && Math.random() < this.L.error; }
+  rand() { return (typeof netSim === 'function' && netSim() && typeof grnd === 'function') ? grnd() : Math.random(); }
+  chance(p) { return this.rand() < p; }
+  err() { return this.L.error > 0 && this.rand() < this.L.error; }
 
   think(me, foe) {
     if (!foe || !me.ch || !foe.ch) return;

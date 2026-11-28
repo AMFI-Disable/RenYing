@@ -159,14 +159,33 @@ function updateCamera(dt) {
     cam.x = vw >= STAGE_W + 200 ? STAGE_W / 2 : clamp(cam.x, vw / 2 - 100, STAGE_W + 100 - vw / 2);
     return;
   }
-  const tracked = isMulti() ? allFighters().filter(f => !f.hidden && f.hp > 0) : [A, B];
-  const pool = cujuOn() && M.cuju && M.cuju.ball ? [...allFighters(), M.cuju.ball] : (tracked.length >= 2 ? tracked : [A, B]);   // 墨球蹴鞠：镜头也框住墨球
   let minX = Infinity, maxX = -Infinity, minY = 0;
-  for (let i = 0; i < pool.length; i++) {
-    const f = pool[i];
-    if (f.x < minX) minX = f.x;
-    if (f.x > maxX) maxX = f.x;
-    if (f.y < minY) minY = f.y;
+  if (cujuOn() && M.cuju && M.cuju.ball) {
+    const fs = allFighters();
+    for (let i = 0; i < fs.length; i++) {
+      const f = fs[i];
+      if (f.x < minX) minX = f.x;
+      if (f.x > maxX) maxX = f.x;
+      if (f.y < minY) minY = f.y;
+    }
+    const b = M.cuju.ball;
+    if (b.x < minX) minX = b.x;
+    if (b.x > maxX) maxX = b.x;
+    if (b.y < minY) minY = b.y;
+  } else if (isMulti()) {
+    const fs = allFighters();
+    let cnt = 0;
+    for (let i = 0; i < fs.length; i++) {
+      const f = fs[i];
+      if (f.hidden || f.hp <= 0) continue;
+      cnt++;
+      if (f.x < minX) minX = f.x;
+      if (f.x > maxX) maxX = f.x;
+      if (f.y < minY) minY = f.y;
+    }
+    if (cnt < 2) { minX = Math.min(A.x, B.x); maxX = Math.max(A.x, B.x); minY = Math.min(0, A.y, B.y); }
+  } else {
+    minX = Math.min(A.x, B.x); maxX = Math.max(A.x, B.x); minY = Math.min(0, A.y, B.y);
   }
   const mid = (minX + maxX) / 2, d = maxX - minX, base = H / 560;
   // 2v2 / 同袍肉鸽：多名侠客同台，镜头退一档，把 2600 宽的奇阵擂台框得舒服些

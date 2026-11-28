@@ -1,5 +1,27 @@
 // ======================= 电脑 AI：侠客专属连段路线与多人团战协同 =======================
 Object.assign(AIBrain.prototype, {
+  // 青锋：疾风斩穿刺定身会刷新剑气冷却，中近距离先手或确反接剑气挑飞压制
+  qingfengRoute(me, foe, d, to) {
+    const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
+    if (!free || foe.hp <= 0 || aiInv(foe, me) > 0 || !this.seen || L.combo < 3 || clock < (this.qfNext || 0)) return false;
+    const foeOpen = foe.rooted || AI_HURT.includes(foe.state) || (foe.state === 'attack' && foe.move && foe.t > foe.move.su + foe.move.ac);
+    if (me.skill2CD <= 0 && (foe.rooted || (foeOpen && d > 95 && d < 360)) && Math.abs(foe.y - me.y) < 120 && this.chance(L.skill * 0.9)) {
+      this.stopAll(); this.press('skill2', 'qingfeng_swordqi'); this.qfNext = clock + 0.45; return true;
+    }
+    if (me.skillCD <= 0 && d > 110 && d < 310 && Math.abs(foe.y - me.y) < 100 && foe.state !== 'block' && foeOpen && this.chance(L.skill * 0.82)) {
+      this.stopAll(); this.press('skill', 'qingfeng_gale'); this.afterSkill(me, 'skill'); this.qfNext = clock + 0.55; return true;
+    }
+    return false;
+  },
+  // 玉箫：满 3 音律时清音波不可格挡且减速挑飞，高难度中距离主动释放压制
+  yuxiaoRoute(me, foe, d, to) {
+    const L = this.L, free = AI_FREE.includes(me.state) && me.onGround();
+    if (!free || foe.hp <= 0 || aiInv(foe, me) > 0 || !this.seen || L.combo < 3 || clock < (this.yxNext || 0)) return false;
+    if ((me.notes || 0) >= 3 && me.skillCD <= 0 && d > 120 && d < 520 && Math.abs(foe.y - me.y) < 130 && this.chance(L.skill * 0.92)) {
+      this.stopAll(); this.press('skill', 'yuxiao_fullnote'); this.yxNext = clock + 0.55; return true;
+    }
+    return false;
+  },
   // ----- 凌雀的连段路线 -----
   // 印记（雀芒，5 秒）由飞梭和大招挂上；带印记时换影穿刺会引爆、挑空，并把换影冷却清零，所以能接第二次换影追击。
   // 难度越高会的越多：寻常只会“有印记就引爆”；劲敌会等对手闪不了再引爆、引爆后接换影追击；
@@ -214,6 +236,14 @@ Object.assign(AIBrain.prototype, {
     if (foesNear >= 2 && alliesNear === 0 && me.hp < me.maxHp * 0.65 && nearAlly && nearAllyD > 200) {
       this.dir = Math.sign(nearAlly.x - me.x) || -to;
       return true;
+    }
+    // 1b. 队友正在挨打/被挑飞且在支援范围内：主动贴近打断施压的敌人
+    if (this.L.read >= 0.45 && me.hp > me.maxHp * 0.35 && !this.queue.length) {
+      const hurtMate = allies.find(a => sameFloor(a, me) && AI_HURT.includes(a.state) && Math.abs(a.x - me.x) < 280);
+      if (hurtMate && Math.abs(foe.x - hurtMate.x) < 200 && d > 110 && this.chance(0.55 * this.L.read)) {
+        this.dir = Math.sign(foe.x - me.x) || to;
+        return true;
+      }
     }
     const prof = aiHeroTactic(me.ch.id), role = prof.teamRole || 'skirmisher';
     // 2. 远程/辅助职业：前排队友正在贴身牵制目标时保持后排安全输出距离
