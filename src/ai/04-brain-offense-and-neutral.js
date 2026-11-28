@@ -450,6 +450,7 @@ Object.assign(AIBrain.prototype, {
     }
     if (this.watch2v2(me, foe, d, to)) return;
     if (this.aiTeamTactics(me, foe, d, to)) return;
+    if (typeof this.aiRelayAndInk === 'function' && this.aiRelayAndInk(me, foe, d, to)) return;
     const cm = typeof squadAiMod === 'function' ? squadAiMod(me, foe, d) : (M.cmd ? cmdAiMod(me, foe, d) : null);   // 战队指挥战术与阵型：适用于 2v2、3v3–16v16 团战、夺旗、四象
     if (cm && cm.retreat && !this.holdAtk) {
       this.dir = cm.dir || -to;

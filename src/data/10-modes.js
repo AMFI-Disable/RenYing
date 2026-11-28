@@ -42,7 +42,9 @@ const ROOM_MODES = {
   mayhem: { bp: 'open', slots: [[0], [1]], rule: 'mayhem' },
   maps: { bp: 'open', slots: [[0], [1]], rule: 'maps' },   // 山河异境：两边各投一票选地图
   cuju: { bp: 'open', slots: [[0], [1]], rule: 'cuju' },   // 墨球蹴鞠：好友房联机踢球
+  cuju2v2: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true, rule: 'cuju' },   // 2v2 墨球蹴鞠好友房
   koth: { bp: 'open', slots: [[0], [1]], rule: 'koth' },   // 灵坛争锋：好友房抢坛
+  koth2v2: { bp: 'duo', team: true, us: '我方战队', slots: [[0], [2]], four: true, rule: 'koth' },   // 2v2 灵坛争锋好友房
   party: { bp: 'open', slots: [[0], [1]], rule: 'party' },   // 江湖百戏：好友房趣味百戏
   bastion: { bp: 'open', slots: [[0], [1]], rule: 'bastion' },   // 天枢守境：随时加入传音守城与远征
   melee: { bp: 'open', slots: [[0], [1]], rule: 'melee', teamSize: 8 },   // 群雄会战：联机大型团战（支持至 16v16 = 32 人）

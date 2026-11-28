@@ -86,7 +86,7 @@ function updateArena2v2(dt) {
 
 // ---------- 山河异境的地图（src/data/12-maps.js）----------
 // 这一局在哪张图记在 M.map，跟着 M 进回滚存档和录像（st0），两边、回放里都一样。普通对战、排位没有 M.map，就是原来的平地
-const mayhemOn = () => M.mode === 'mayhem' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'mayhem') || ((['cpu', 'pvp', 'maps', 'tag3', 'melee', 'ctf', '2v2', 'watch2v2', 'replay', 'net'].includes(M.mode)) && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
+const mayhemOn = () => M.mode === 'mayhem' || (M.mode === 'replay' && REPLAY.on && REPLAY.m && REPLAY.m.mode === 'mayhem') || ((['cpu', 'pvp', 'maps', 'tag3', 'melee', 'ctf', 'quad', 'gauntlet', '2v2', 'watch2v2', 'replay', 'net'].includes(M.mode)) && M.teamMutator === 'mayhem') || (netRoom() || {}).rule === 'mayhem';
 const mapsOn = () => {
   if (M.mode === 'replay' && REPLAY.on) {
     const m = REPLAY.m || {};

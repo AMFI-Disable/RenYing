@@ -273,6 +273,33 @@ Object.assign(AIBrain.prototype, {
     }
     return false;
   },
+  // 3v3 援护出招 / 换阵热切 + 残墨战场拼刀（墨爆）感知
+  aiRelayAndInk(me, foe, d, to) {
+    if (!me.onGround() || !AI_FREE.includes(me.state) || this.L.read < 0.35 || clock < (this.relayInkNext || 0)) return false;
+    // 1. 3v3 车轮战：低血换阵热切（Down+T）与压制期援护出招（T）
+    if (M.mode === 'tag3' && M.tag3Assist && typeof tag3BenchSlot === 'function') {
+      const side = me.idx % 2;
+      const st = M.tag3Assist;
+      const bench = tag3BenchSlot(side);
+      if (st && bench) {
+        const hotCost = typeof TAG3_HOTTAG_COST === 'number' ? TAG3_HOTTAG_COST : 35;
+        const astCost = typeof TAG3_ASSIST_COST === 'number' ? TAG3_ASSIST_COST : 25;
+        const tagLock = (st.tagLock && st.tagLock[side]) || 0;
+        const cd = (st.cd && st.cd[side]) || 0;
+        if (this.L.read >= 0.45 && me.hp < me.maxHp * 0.32 && me.meter >= hotCost && tagLock <= 0 && this.chance(0.5 * this.L.read)) {
+          this.stopAll(); this.holdDown = 0.08; this.press('rally', 'tag3_hottag'); this.relayInkNext = clock + 1.2; return true;
+        }
+        if (cd <= 0 && me.meter >= astCost && d < 340 && (AI_HURT.includes(foe.state) || d < 220) && this.chance(0.42 * this.L.skill)) {
+          this.stopAll(); this.holdDown = 0; this.press('rally', 'tag3_assist'); this.relayInkNext = clock + 1.0; return true;
+        }
+      }
+    }
+    // 2. 残墨战场：身处残墨内遇敌近身出招时主动拼刀触发「墨爆」（+8 真元并清散近身非大招飞行道具）
+    if (this.L.read >= 0.45 && typeof inkZoneAt === 'function' && inkZoneAt(me.x, me.y) && foe.state === 'attack' && d < 165 && this.chance(0.38 * this.L.punish)) {
+      this.stopAll(); this.holdDown = 0; this.press('light', 'ink_clash'); this.relayInkNext = clock + 0.65; return true;
+    }
+    return false;
+  },
   lingqueRoute(me, foe, d, to) {
     const L = this.L, free = AI_FREE.includes(me.state) || me.state === 'air';
     if (!free || foe.hp <= 0 || aiInv(foe, me) > 0 || !this.seen) return false;
