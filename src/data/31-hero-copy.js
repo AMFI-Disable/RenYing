@@ -1264,7 +1264,6 @@ Object.assign(UI_COPY_EN, {
   "我给这条加个附注。睡觉也算用过。": "I’ll add a note to the rule. Sleeping counts.",
   "燕尾救生锚": "Swallowtail Rescue Anchor",
   "回拉": "Haul Back",
-  "报数": "Sound Off",
   "挺起火耙冲刺，命中引燃对手。": "Rush forward behind the fire rake and set the opponent alight on hit.",
   "横抡火耙，卷出的火轮挑飞近处对手并点燃他们。": "Sweep the rake to send out a ring of fire that launches and burns nearby opponents.",
   "腾跃至半空连掷五道爆裂烈焰火流星轰击敌方各层，随即火戟贯地爆开焚天火环与飞石，造成范围击飞与持续灼烧。": "Leap skyward to hurl five explosive meteors across enemy layers, then slam down to erupt a fiery ring and debris that launches and burns.",

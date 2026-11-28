@@ -619,5 +619,24 @@ Object.assign(UI_COPY_EN, {
   "接管此局": "Take Over",
   "复盘接管 · 8秒残局演练": "Replay Takeover · 8s Drill",
   "已重置残局接管帧": "Takeover frame reset",
-  "已导出本局战局墨卷": "Battle Scroll PNG exported"
+  "已导出本局战局墨卷": "Battle Scroll PNG exported",
+  // v1.5.0: 回放置顶筛选预览、观战遥测与历史赛季履历
+  "置顶": "Pin",
+  "已置顶": "Pinned",
+  "全部回放": "All Replays",
+  "仅看置顶": "Pinned Only",
+  "多人团战": "Team Battles",
+  "单人与人机": "Solo & AI",
+  "筛选回放模式": "Filter replay mode",
+  "搜索侠客、模式或对手": "Search hero, mode, or opponent",
+  "搜索回放": "Search replays",
+  "回放预览": "Replay Preview",
+  "回放码不完整或格式有误": "Replay code is incomplete or invalid",
+  "请粘贴 RYRP2: 开头的回放分享码": "Paste a replay share code starting with RYRP2:",
+  "当前筛选条件下没有匹配的回放。": "No replays match the current filter.",
+  "历史最高": "All-Time Peak",
+  "赛季履历": "Season Archive",
+  "你的历史成绩": "Your Archived Rank",
+  "残墨": "Ink Zones",
+  "就绪": "Ready"
 });

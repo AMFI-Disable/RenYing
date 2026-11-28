@@ -28,6 +28,19 @@ All notable changes, features, and architectural capabilities of this project ar
 
 ---
 
+## [1.5.0] - 2026-11-28
+
+### Added
+
+- **Replay Library Pinning, Mode/Hero Filtering, `RYRP2:` Quick Preview & UI Modularization (`src/game/02-combat/11-loop-03-replay.js`, `src/game/02-combat/11-loop-03c-replay-ui.js`, `src/pages/05-account-and-progression.html`, `src/styles/85-page-replays-spectator-tournament.css`)**: extracted the `#replays` Library UI into `11-loop-03c-replay-ui.js`; added favorite pinning (`rpTogglePin`, up to 5 pinned replays protected from LRU auto-eviction by `rpTrimList`), a compact mode/hero filter bar (`#rpFilterMode`, `#rpFilterQuery`), and live `RYRP2:` code metadata preview (`#rpCodePreview`) before import. No Worker change.
+- **Enhanced Live Spectator Telemetry (`src/game/04-modes/22-modes-18-tournament/01-spectator-hud.js`)**: enriched the read-only `#specHud` ticker with active Living Ink zone count (`残墨`), 3v3 Bench Assist readiness/cooldown (`援`), and active Cross-Hero Synergy (`武学共鸣`) indicators without touching simulation or rollback state. No Worker change.
+- **All-Time Peak Tier Badge & Seasonal Ranked Archive Strip (`src/game/05-ui/24-account-01-auth.js`, `src/game/05-ui/24-account-02-legacy-lb.js`, `src/pages/05-account-and-progression.html`)**: added `rkPeakArchive()` to surface the player's all-time peak tier and past-season chips (`#adSeasonHist`) in `#acc` and personal archived rank notes when browsing historical seasons in `#lb`, using existing `PROF.rkHist` with zero D1 writes. No Worker change.
+- **Multi-Mode Performance Budget Gate & v1.5.0 Regression Suite (`tools/tests/perf-budget.mjs`, `tools/tests/combat/98-v150-replay-spec-rank.mjs`, `tools/tests/combat-test.mjs`)**: upgraded `perf-budget.mjs` with `--multi` and `--json` flags benchmarking 1v1 (`0.10 ms/frame`), 3v3 Relay (`0.08 ms/frame`), and 32-player 16v16 (`1.45 ms/frame`), and added 3 regression checks (`135/135` combat checks passing). No Worker change.
+
+### Fixed
+
+- **Replay `训AI` Export `ReferenceError` & Account UI Icon/Copy Polish (`src/game/02-combat/11-loop-03-replay.js`, `src/game/05-ui/24-account-01-auth.js`, `src/game/05-ui/24-account-02-legacy-lb.js`, `src/data/31-hero-copy.js`, `src/data/30-ui-copy-20-gaps.js`)**: restored `trSamples(m)` via `trEpisodes(m).flatMap(...)` so clicking `训AI` in `#replays` exports real 19-dimensional trajectories cleanly; removed stray Unicode emojis in `#acc` buttons/messages; removed the orphaned `"报数"` translation key in `31-hero-copy.js`; and added full English copy parity (`--strict-copy`). Zero Cloudflare D1 reads/writes added; no Worker change.
+
 ## [1.4.0] - 2026-11-28
 
 ### Added
